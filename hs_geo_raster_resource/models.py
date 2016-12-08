@@ -2,18 +2,17 @@ import json
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
-from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
 
 
-
-# extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
-# stores the converted WGS84 geographic coordinate system projection coverage, see issue #210 on github for details
+# extended metadata for raster resource type to store the original box type coverage
+# since the core metadata coverage stores the converted WGS84 geographic coordinate
+# system projection coverage, see issue #210 on github for details
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -24,9 +23,14 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'southlimit':southernmost coordinate value,
                 'westlimit':westernmost coordinate value,
                 'units:units applying to 4 limits (north, east, south & east),
-                'projection': name of the projection (optional)}"
+                'projection': name of the projection (optional),
+                'projection_string: OGC WKT string of the projection (optional),
+                'datum: projection datum name (optional),
+                }"
     """
-    _value = models.CharField(max_length=1024, null=True)
+    _value = models.CharField(max_length=10000, null=True)
+    # projection_string = models.TextField(null=True, blank=True)
+    # datum = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -39,8 +43,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """
-        The '_value' subelement needs special processing. (Check if the 'value' includes the required info and convert
-        'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required info and convert 'value' dict as Json string to be the '_value' subelement value.)
+        The base class create() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
 
@@ -55,11 +60,13 @@ class OriginalCoverage(AbstractMetaDataElement):
         if value_arg_dict:
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For coverage of type 'box' values for one or more "
+                                          "bounding box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                                   'projection', 'projection_string', 'datum')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
@@ -72,8 +79,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         """
-        The '_value' subelement needs special processing. (Convert the 'value' dict as Json string to be the "_value"
-        subelement value.) The base class update() can't do it.
+        The '_value' subelement needs special processing.
+        (Convert the 'value' dict as Json string to be the "_value" subelement value.)
+        The base class update() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
@@ -83,7 +91,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_dict = cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                              'projection_name', 'projection_string', 'datum'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
@@ -100,7 +109,8 @@ class OriginalCoverage(AbstractMetaDataElement):
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
     # required fields
-    # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
+    # has to call the field name rather than bandName, which seems to be enforced by
+    # the AbstractMetaDataElement;
     # otherwise, got an error indicating required "name" field does not exist
     name = models.CharField(max_length=500, null=True)
     variableName = models.TextField(max_length=100, null=True)
@@ -161,7 +171,7 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif",".zip")
+        return (".tif", ".zip")
 
     @classmethod
     def allow_multiple_file_upload(cls):
@@ -173,8 +183,8 @@ class RasterResource(BaseResource):
         # can have only 1 file
         return False
 
-
-# this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
+# this would allow us to pick up additional form elements for the template
+# before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
 
 
@@ -245,27 +255,33 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
+            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue',
+                               'cellSizeYValue', 'cellDataType']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue',
-                               'method', 'comment']
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
+                               'maximumValue', 'minimumValue', 'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:
-            ori_coverage = self.originalCoverage;
+            ori_coverage = self.originalCoverage
             cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
-            #raster original coverage is of box type
+            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' %
+                                                  self.NAMESPACES['rdf'])
+            # raster original coverage is of box type
             cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
-                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+                        % (ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
+                           ori_coverage.value['southlimit'], ori_coverage.value['westlimit'],
+                           ori_coverage.value['units'])
 
-            if 'projection' in ori_coverage.value:
-                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
+            for meta_element in ori_coverage.value:
+                if meta_element == 'projection':
+                    cov_value += '; projection_name={}'.format(ori_coverage.value[meta_element])
+                if meta_element in ['projection_string', 'datum']:
+                    cov_value += '; {}={}'.format(meta_element, ori_coverage.value[meta_element])
 
             rdf_coverage_value.text = cov_value
 
@@ -278,5 +294,3 @@ class RasterMetaData(CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.delete()
         self.bandInformation.delete()
-
-import receivers

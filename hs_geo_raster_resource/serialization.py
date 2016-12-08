@@ -1,12 +1,9 @@
 import xml.sax
-
 import rdflib
 
 from django.db import transaction
 
 from hs_core.serialization import GenericResourceMeta
-
-from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage
 
 
 class RasterResourceMeta(GenericResourceMeta):
@@ -38,19 +35,22 @@ class RasterResourceMeta(GenericResourceMeta):
             # Get name
             name_lit = self._rmeta_graph.value(o, hsterms.name)
             if name_lit is None:
-                msg = "Name for CellInformation was not found for resource {0}".format(self.root_uri)
+                msg = "Name for CellInformation was not found for resource {0}".\
+                    format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.cell_info.name = str(name_lit)
             # Get rows
             rows_lit = self._rmeta_graph.value(o, hsterms.rows)
             if rows_lit is None:
-                msg = "Rows attribute was not found for CellInformation for resource {0}".format(self.root_uri)
+                msg = "Rows attribute was not found for CellInformation for resource {0}".\
+                    format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.cell_info.rows = int(str(rows_lit))
             # Get columns
             columns_lit = self._rmeta_graph.value(o, hsterms.columns)
             if columns_lit is None:
-                msg = "Columns attribute was not found for CellInformation for resource {0}".format(self.root_uri)
+                msg = "Columns attribute was not found for CellInformation for resource {0}".\
+                    format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.cell_info.columns = int(str(columns_lit))
             # Get cellSizeXValue
@@ -94,19 +94,22 @@ class RasterResourceMeta(GenericResourceMeta):
                 # Get name
                 name_lit = self._rmeta_graph.value(o, hsterms.name)
                 if name_lit is None:
-                    msg = "Name for BandInformation was not found for resource {0}".format(self.root_uri)
+                    msg = "Name for BandInformation was not found for resource {0}".\
+                        format(self.root_uri)
                     raise GenericResourceMeta.ResourceMetaException(msg)
                 band_info.name = str(name_lit)
                 # Get variableName
                 varname_lit = self._rmeta_graph.value(o, hsterms.variableName)
                 if varname_lit is None:
-                    msg = "variableName for BandInformation was not found for resource {0}".format(self.root_uri)
+                    msg = "variableName for BandInformation was not found for resource {0}".\
+                        format(self.root_uri)
                     raise GenericResourceMeta.ResourceMetaException(msg)
                 band_info.variableName = str(varname_lit)
                 # Get variableUnit
                 varunit_lit = self._rmeta_graph.value(o, hsterms.variableUnit)
                 if varunit_lit is None:
-                    msg = "variableUnit for BandInformation was not found for resource {0}".format(self.root_uri)
+                    msg = "variableUnit for BandInformation was not found for resource {0}".\
+                        format(self.root_uri)
                     raise GenericResourceMeta.ResourceMetaException(msg)
                 band_info.variableUnit = str(varunit_lit)
                 # Get method
@@ -142,7 +145,8 @@ class RasterResourceMeta(GenericResourceMeta):
         if self.cell_info:
             resource.metadata.cellInformation.delete()
             resource.metadata.create_element('CellInformation', name=self.cell_info.name,
-                                             rows=self.cell_info.rows, columns=self.cell_info.columns,
+                                             rows=self.cell_info.rows,
+                                             columns=self.cell_info.columns,
                                              cellSizeXValue=self.cell_info.cellSizeXValue,
                                              cellSizeYValue=self.cell_info.cellSizeYValue,
                                              cellDataType=self.cell_info.cellDataType,
@@ -151,8 +155,10 @@ class RasterResourceMeta(GenericResourceMeta):
             for band in resource.metadata.bandInformation:
                 band.delete()
             for b in self.band_info:
-                resource.metadata.create_element('BandInformation', name=b.name, variableName=b.variableName,
-                                                 variableUnit=b.variableUnit, method=b.method, comment=b.comment)
+                resource.metadata.create_element('BandInformation', name=b.name,
+                                                 variableName=b.variableName,
+                                                 variableUnit=b.variableUnit, method=b.method,
+                                                 comment=b.comment)
         if self.spatial_reference:
             resource.metadata.originalCoverage.delete()
             values = {'units': self.spatial_reference.units,
@@ -273,6 +279,7 @@ class RasterResourceMeta(GenericResourceMeta):
                 elif key == 'projection':
                     self.projection = value
 
+
 class RasterResourceSAXHandler(xml.sax.ContentHandler):
     def __init__(self):
         xml.sax.ContentHandler.__init__(self)
@@ -339,7 +346,8 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
         elif name == 'rdf:Description':
             if self._get_bandinfo:
                 if self._get_bandinfo_details:
-                    msg = "Error: nested rdf:Description elements within hsterms:BandInformation element."
+                    msg = "Error: nested rdf:Description elements " \
+                          "within hsterms:BandInformation element."
                     raise xml.sax.SAXException(msg)
                 # Create new band info
                 self.band_info.append(RasterResourceMeta.BandInformation())
@@ -348,35 +356,40 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
         elif name == 'hsterms:name':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_name:
-                    raise xml.sax.SAXException("Error: nested hsterms:name elements within hsterms:BandInformation.")
+                    raise xml.sax.SAXException("Error: nested hsterms:name elements "
+                                               "within hsterms:BandInformation.")
                 self._get_bandinfo_name = True
                 self._bandinfo_name = []
 
         elif name == 'hsterms:variableName':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_var_name:
-                    raise xml.sax.SAXException("Error: nested hsterms:variableName elements within hsterms:BandInformation.")
+                    raise xml.sax.SAXException("Error: nested hsterms:variableName elements "
+                                               "within hsterms:BandInformation.")
                 self._get_bandinfo_var_name = True
                 self._bandinfo_var_name = []
 
         elif name == 'hsterms:variableUnit':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_var_unit:
-                    raise xml.sax.SAXException("Error: nested hsterms:variableUnit elements within hsterms:BandInformation.")
+                    raise xml.sax.SAXException("Error: nested hsterms:variableUnit elements "
+                                               "within hsterms:BandInformation.")
                 self._get_bandinfo_var_unit = True
                 self._bandinfo_var_unit = []
 
         elif name == 'hsterms:method':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_method:
-                    raise xml.sax.SAXException("Error: nested hsterms:method elements within hsterms:BandInformation.")
+                    raise xml.sax.SAXException("Error: nested hsterms:method elements "
+                                               "within hsterms:BandInformation.")
                 self._get_bandinfo_method = True
                 self._bandinfo_method = []
 
         elif name == 'hsterms:comment':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_comment:
-                    raise xml.sax.SAXException("Error: nested hsterms:comment elements within hsterms:BandInformation.")
+                    raise xml.sax.SAXException("Error: nested hsterms:comment elements "
+                                               "within hsterms:BandInformation.")
                 self._get_bandinfo_comment = True
                 self._bandinfo_comment = []
 

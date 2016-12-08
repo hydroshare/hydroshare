@@ -230,24 +230,30 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
             if element_name == 'subject':
-                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success', 'element_name': element_name,
+                                      'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = _get_spatial_coverage_data(res)
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
             else:
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
 
             return JsonResponse(ajax_response_data)
         else:
@@ -263,7 +269,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
+    handler_response = pre_metadata_element_update.send(sender=sender_resource,
+                                                        element_name=element_name,
                                                         element_id=element_id, request=request)
     is_update_success = False
     err_msg = "Failed to update metadata element '{}'. {}."
@@ -273,7 +280,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
-                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
+                    post_handler_response = post_metadata_element_update.send(
+                        sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
                     # this is how we handle if a post_metadata_element_update receiver
                     # is not implemented in the resource type's receivers.py
@@ -302,7 +310,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
@@ -313,12 +322,14 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
 
             return JsonResponse(ajax_response_data)
         else:
@@ -404,6 +415,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
              collection=collection_res
              )
         o.resource_owners.add(*owners_list)
+
+    post_delete_resource.send(sender=type(res), request=request, user=user,
+                              resource_shortkey=shortkey, resource=res,
+                              resource_title=res_title, resource_type=res_type, **kwargs)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -512,6 +527,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
+    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -616,14 +632,9 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
-        if user.uaccess.can_unshare_resource_with_user(res, user_to_unshare_with):
-            # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
-            user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
-        else:
-            # requesting user is the original grantor of privilege to user_to_unshare_with
-            # COUCH: This can raise a PermissionDenied exception without a guard such as
-            # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
-            user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
+        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+        user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if not user.uaccess.can_view_resource(res):
@@ -640,12 +651,9 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
     group_to_unshare_with = utils.group_from_id(group_id)
 
     try:
-        if user.uaccess.can_unshare_resource_with_group(res, group_to_unshare_with):
-            # requesting user is the resource owner or admin
-            user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
-        else:
-            # requesting user is the original grantor of privilege to group_to_unshare_with
-            user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        # requesting user is the resource owner or admin or already has privilege
+        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+        user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if not user.uaccess.can_view_resource(res):
@@ -773,13 +781,6 @@ class GroupCreateForm(GroupForm):
 
 
 class GroupUpdateForm(GroupForm):
-    active = forms.CharField(required=False)
-
-    def clean_active(self):
-        data = self.cleaned_data['active']
-        if data not in ('on', ''):
-            raise forms.ValidationError("Invalid active value.")
-        return data
 
     def update(self, group_to_update, request):
         frm_data = self.cleaned_data
@@ -787,7 +788,6 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
-        group_to_update.gaccess.active = frm_data['active'] == 'on'
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -900,7 +900,7 @@ def create_resource(request, *args, **kwargs):
     #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
-        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
@@ -954,6 +954,31 @@ def update_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@login_required
+def delete_user_group(request, group_id, *args, **kwargs):
+    """This one is not really deleting the group object, rather setting the active status
+    to False (delete) which can be later restored (undelete) )"""
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, False)
+        messages.success(request, "Group delete was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group delete errors: You don't have permission to delete"
+                                " this group.")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def restore_user_group(request, group_id, *args, **kwargs):
+    """This one is for setting the active status of the group back to True"""
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, True)
+        messages.success(request, "Group restore was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group restore errors: You don't have permission to restore"
+                                " this group.")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
@@ -1150,41 +1175,51 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 
 @login_required
-def get_user_data(request, user_id, *args, **kwargs):
+def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
     This view function must be called as an AJAX call
 
-    :param user_id: id if the user for whom data is needed
+    :param user_or_group_id: id of the user or group for which data is needed
+    :param is_group : (string) 'false' if the id is for a group, 'true' if id is for a user
     :return: JsonResponse() containing user data
     """
-    user = utils.user_from_id(user_id)
+    user_data = {}
+    if is_group == 'false':
+        user = utils.user_from_id(user_or_group_id)
 
-    if user.userprofile.middle_name:
-        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
-    else:
-        user_name = "{} {}".format(user.first_name, user.last_name)
-
-    user_data = {'name': user_name, 'email': user.email}
-    user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
-    if user.userprofile.phone_1:
-        user_data['phone'] = user.userprofile.phone_1
-    elif user.userprofile.phone_2:
-        user_data['phone'] = user.userprofile.phone_2
-    else:
-        user_data['phone'] = ''
-
-    address = ''
-    if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
-        address = user.userprofile.state
-    if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
-        if len(address) > 0:
-            address += ', ' + user.userprofile.country
+        if user.userprofile.middle_name:
+            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
         else:
-            address = user.userprofile.country
+            user_name = "{} {}".format(user.first_name, user.last_name)
 
-    user_data['address'] = address
-    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
-    user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+        user_data['name'] = user_name
+        user_data['email'] = user.email
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+        if user.userprofile.phone_1:
+            user_data['phone'] = user.userprofile.phone_1
+        elif user.userprofile.phone_2:
+            user_data['phone'] = user.userprofile.phone_2
+        else:
+            user_data['phone'] = ''
+
+        address = ''
+        if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
+            address = user.userprofile.state
+        if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
+            if len(address) > 0:
+                address += ', ' + user.userprofile.country
+            else:
+                address = user.userprofile.country
+
+        user_data['address'] = address
+        user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+        user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+    else:
+        group = utils.group_from_id(user_or_group_id)
+        user_data['organization'] = group.name
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
+                                                         uid=group.pk)
+        user_data['description'] = group.gaccess.description
 
     return JsonResponse(user_data)
 
@@ -1268,14 +1303,9 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     for user in all_shared_users:
         if user not in users_to_keep:
             try:
-                if requesting_user.uaccess.can_unshare_resource_with_user(resource, user):
-                    # requesting user is the resource owner or requesting_user is self unsharing
-                    requesting_user.uaccess.unshare_resource_with_user(resource, user)
-                else:
-                    # requesting user is the original grantor of privilege to user
-                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as
-                    # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
-                    requesting_user.uaccess.undo_share_resource_with_user(resource, user)
+                # requesting user is the resource owner or requesting_user is self unsharing
+                # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+                requesting_user.uaccess.unshare_resource_with_user(resource, user)
 
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
@@ -1360,15 +1390,21 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(group_to_join__gaccess__active=False).all()
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
+            group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
 
+        active_groups = [g for g in groups if g.gaccess.active]
+        inactive_groups = [g for g in groups if not g.gaccess.active]
+        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
+            group_to_join__gaccess__active=False)
         return {
             'profile_user': u,
-            'groups': groups,
-            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u).exclude(group_to_join__gaccess__active=False),
+            'groups': active_groups,
+            'inactive_groups': inactive_groups,
+            'my_pending_requests': my_pending_requests,
             'group_membership_requests': group_membership_requests
         }
 
@@ -1400,7 +1436,7 @@ class GroupView(TemplateView):
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.filter(resource=res, group=g).first()
+            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)

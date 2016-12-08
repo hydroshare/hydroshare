@@ -2,7 +2,6 @@ import os
 import sqlite3
 import tempfile
 import shutil
-from dateutil import parser
 
 from xml.etree import ElementTree as ET
 
@@ -15,14 +14,14 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, \
     TimeSeriesResult, CVVariableType, CVVariableName, CVSpeciation, CVElevationDatum, CVSiteType, \
     CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic, TimeSeriesMetaData, \
     UTCOffSet
 
 
-class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestTimeSeriesMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -174,7 +173,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             )
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
-        self._test_metadata_extraction()
+        super(TestTimeSeriesMetaData, self).timeseries_metadata_extraction()
 
     def test_metadata_extraction_on_sqlite_file_add(self):
         # resource creation with uploaded sqlite file
@@ -213,7 +212,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
 
-        self._test_metadata_extraction()
+        super(TestTimeSeriesMetaData, self).timeseries_metadata_extraction()
 
     def test_metadata_on_content_file_delete(self):
         # test that metadata is NOT deleted (except format element) on content file deletion
@@ -2188,160 +2187,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
         self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
-
-    def _test_metadata_extraction(self):
-        # there should one content file
-        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
-
-        # there should be one contributor element
-        self.assertEqual(self.resTimeSeries.metadata.contributors.all().count(), 1)
-
-        # test core metadata after metadata extraction
-        extracted_title = "Water temperature data from the Little Bear River, UT"
-        self.assertEqual(self.resTimeSeries.metadata.title.value, extracted_title)
-
-        # there should be an abstract element
-        self.assertNotEqual(self.resTimeSeries.metadata.description, None)
-        extracted_abstract = "This dataset contains time series of observations of water " \
-                             "temperature in the Little Bear River, UT. Data were recorded every " \
-                             "30 minutes. The values were recorded using a HydroLab MS5 " \
-                             "multi-parameter water quality sonde connected to a Campbell " \
-                             "Scientific datalogger."
-
-        self.assertEqual(self.resTimeSeries.metadata.description.abstract.strip(),
-                         extracted_abstract)
-
-        # there should be 2 coverage element -  box type and period type
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 2)
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(), 1)
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(
-            type='period').count(), 1)
-
-        box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'Unknown')
-        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 41.718473)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
-        self.assertEqual(box_coverage.value['southlimit'], 41.495409)
-        self.assertEqual(box_coverage.value['westlimit'], -111.946402)
-
-        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(
-            type='period').first()
-        self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                         parser.parse('01/01/2008').date())
-        self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                         parser.parse('01/31/2008').date())
-
-        # there should be one format element
-        self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
-        format_element = self.resTimeSeries.metadata.formats.all().first()
-        self.assertEqual(format_element.value, 'application/sqlite')
-
-        # there should be one subject element
-        self.assertEqual(self.resTimeSeries.metadata.subjects.all().count(), 1)
-        subj_element = self.resTimeSeries.metadata.subjects.all().first()
-        self.assertEqual(subj_element.value, 'Temperature')
-
-        # there should be a total of 7 timeseries
-        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 7)
-
-        # testing extended metadata elements
-
-        # test 'site' - there should be 7 sites
-        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 7)
-        # each site be associated with one series id
-        for site in self.resTimeSeries.metadata.sites.all():
-            self.assertEqual(len(site.series_ids), 1)
-
-        # test the data for a specific site
-        site = self.resTimeSeries.metadata.sites.filter(site_code='USU-LBR-Paradise').first()
-        self.assertNotEqual(site, None)
-        site_name = 'Little Bear River at McMurdy Hollow near Paradise, Utah'
-        self.assertEqual(site.site_name, site_name)
-        self.assertEqual(site.elevation_m, 1445)
-        self.assertEqual(site.elevation_datum, 'NGVD29')
-        self.assertEqual(site.site_type, 'Stream')
-
-        # test 'variable' - there should be 1 variable element
-        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
-        variable = self.resTimeSeries.metadata.variables.all().first()
-        # there should be 7 series ids associated with this one variable
-        self.assertEqual(len(variable.series_ids), 7)
-        # test the data for a variable
-        self.assertEqual(variable.variable_code, 'USU36')
-        self.assertEqual(variable.variable_name, 'Temperature')
-        self.assertEqual(variable.variable_type, 'Water Quality')
-        self.assertEqual(variable.no_data_value, -9999)
-        self.assertEqual(variable.variable_definition, None)
-        self.assertEqual(variable.speciation, 'Not Applicable')
-
-        # test 'method' - there should be 1 method element
-        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 1)
-        method = self.resTimeSeries.metadata.methods.all().first()
-        # there should be 7 series ids associated with this one method element
-        self.assertEqual(len(method.series_ids), 7)
-        self.assertEqual(method.method_code, '28')
-        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
-                      'using ODM Tools.'
-        self.assertEqual(method.method_name, method_name)
-        self.assertEqual(method.method_type, 'Instrument deployment')
-        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
-                     'using ODM Tools.'
-        self.assertEqual(method.method_description, method_des)
-        self.assertEqual(method.method_link, None)
-
-        # test 'processing_level' - there should be 1 processing_level element
-        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
-        proc_level = self.resTimeSeries.metadata.processing_levels.all().first()
-        # there should be 7 series ids associated with this one element
-        self.assertEqual(len(proc_level.series_ids), 7)
-        self.assertEqual(proc_level.processing_level_code, 1)
-        self.assertEqual(proc_level.definition, 'Quality controlled data')
-        explanation = 'Quality controlled data that have passed quality assurance procedures ' \
-                      'such as routine estimation of timing and sensor calibration or visual ' \
-                      'inspection and removal of obvious errors. An example is USGS published ' \
-                      'streamflow records following parsing through USGS quality control ' \
-                      'procedures.'
-        self.assertEqual(proc_level.explanation, explanation)
-
-        # test 'timeseries_result' - there should be 7 timeseries_result element
-        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 7)
-        ts_result = self.resTimeSeries.metadata.time_series_results.filter(
-            series_ids__contains=['182d8fa3-1ebc-11e6-ad49-f45c8999816f']).first()
-        self.assertNotEqual(ts_result, None)
-        # there should be only 1 series id associated with this element
-        self.assertEqual(len(ts_result.series_ids), 1)
-        self.assertEqual(ts_result.units_type, 'Temperature')
-        self.assertEqual(ts_result.units_name, 'degree celsius')
-        self.assertEqual(ts_result.units_abbreviation, 'degC')
-        self.assertEqual(ts_result.status, 'Unknown')
-        self.assertEqual(ts_result.sample_medium, 'Surface Water')
-        self.assertEqual(ts_result.value_count, 1441)
-        self.assertEqual(ts_result.aggregation_statistics, 'Average')
-
-        # test for CV lookup tables
-        # there should be 23 CV_VariableType records
-        self.assertEqual(self.resTimeSeries.metadata.cv_variable_types.all().count(), 23)
-        # there should be 805 CV_VariableName records
-        self.assertEqual(self.resTimeSeries.metadata.cv_variable_names.all().count(), 805)
-        # there should be 145 CV_Speciation records
-        self.assertEqual(self.resTimeSeries.metadata.cv_speciations.all().count(), 145)
-        # there should be 51 CV_SiteType records
-        self.assertEqual(self.resTimeSeries.metadata.cv_site_types.all().count(), 51)
-        # there should be 5 CV_ElevationDatum records
-        self.assertEqual(self.resTimeSeries.metadata.cv_elevation_datums.all().count(), 5)
-        # there should be 25 CV_MethodType records
-        self.assertEqual(self.resTimeSeries.metadata.cv_method_types.all().count(), 25)
-        # there should be 179 CV_UnitsType records
-        self.assertEqual(self.resTimeSeries.metadata.cv_units_types.all().count(), 179)
-        # there should be 4 CV_Status records
-        self.assertEqual(self.resTimeSeries.metadata.cv_statuses.all().count(), 4)
-        # there should be 17 CV_Medium records
-        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
-        # there should be 17 CV_aggregationStatistics records
-        self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
-        # there should not be any UTCOffset element
-        self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
 
     def _test_sqlite_file_is_blank(self):
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resTimeSeries,

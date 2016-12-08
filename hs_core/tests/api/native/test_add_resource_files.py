@@ -13,6 +13,36 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestAddResourceFiles, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.user = create_account(
+            'shauntheta@gmail.com',
+            username='shaun',
+            first_name='Shaun',
+            last_name='Livingston',
+            superuser=False,
+            groups=[]
+        )
+
+        # create files
+        self.n1 = "test1.txt"
+        self.n2 = "test2.txt"
+        self.n3 = "test3.txt"
+
+        test_file = open(self.n1, 'w')
+        test_file.write("Test text file in test1.txt")
+        test_file.close()
+
+        test_file = open(self.n2, 'w')
+        test_file.write("Test text file in test2.txt")
+        test_file.close()
+
+        test_file = open(self.n3, 'w')
+        test_file.write("Test text file in test3.txt")
+        test_file.close()
+
+        # open files for read and upload
+        self.myfile1 = open(self.n1, "r")
+        self.myfile2 = open(self.n2, "r")
+        self.myfile3 = open(self.n3, "r")
 
     def tearDown(self):
         super(TestAddResourceFiles, self).tearDown()
@@ -27,32 +57,9 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         os.remove(self.myfile3.name)
 
     def test_add_files(self):
-        user = create_account(
-            'shauntheta@gmail.com',
-            username='shaun',
-            first_name='Shaun',
-            last_name='Livingston',
-            superuser=False,
-            groups=[]
-        )
-
-        # create files
-        n1 = "test1.txt"
-        n2 = "test2.txt"
-        n3 = "test3.txt"
-
-        open(n1, "w").close()
-        open(n2, "w").close()
-        open(n3, "w").close()
-
-        # open files for read and upload
-        self.myfile1 = open(n1, "r")
-        self.myfile2 = open(n2, "r")
-        self.myfile3 = open(n3, "r")
-
         # create a resource
         res = create_resource(resource_type='GenericResource',
-                              owner=user,
+                              owner=self.user,
                               title='Test Resource',
                               metadata=[],)
 
@@ -71,6 +78,6 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
             file_list.append(f.resource_file.name.split('/')[-1])
 
         # check if the file name is in the list of files
-        self.assertTrue(n1 in file_list, "file 1 has not been added")
-        self.assertTrue(n2 in file_list, "file 2 has not been added")
-        self.assertTrue(n3 in file_list, "file 3 has not been added")
+        self.assertTrue(self.n1 in file_list, "file 1 has not been added")
+        self.assertTrue(self.n2 in file_list, "file 2 has not been added")
+        self.assertTrue(self.n3 in file_list, "file 3 has not been added")

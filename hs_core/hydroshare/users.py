@@ -1,6 +1,6 @@
 import json
 
-from django.core.exceptions import MultipleObjectsReturned
+from django.core.exceptions import MultipleObjectsReturned, PermissionDenied
 from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
@@ -514,6 +514,22 @@ def delete_group_owner(group, user):
     """
     # TODO: this does not check whether this act removes the last owner! 
     GroupOwnership.objects.filter(group=group, owner=user).delete()
+
+
+def set_group_active_status(user, group_id, status):
+    """
+    This sets the group active status to True or False
+    :param user: User who wants to set this group status flag
+    :param group_id: id of the group for which the active status to be set
+    :param status: True or False
+    :return:
+    """
+    group = group_from_id(group_id)
+    if user.uaccess.can_change_group_flags(group):
+        group.gaccess.active = status
+        group.gaccess.save()
+    else:
+        raise PermissionDenied()
 
 
 def get_discoverable_groups():
