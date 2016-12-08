@@ -1,20 +1,14 @@
 
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
+
 
 class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
 
@@ -49,7 +43,6 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-
     def test_02_create(self):
         """Create a new group"""
         dog = self.dog
@@ -58,17 +51,22 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(dog.uaccess.view_groups.count(), 0)
 
         # user 'dog' create a new group called 'arfers'
-        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group",
-                                          purpose="Our purpose to collaborate on hydrology")
+        arfers = dog.uaccess.create_group(
+            title='arfers',
+            description="This is arfers group",
+            purpose="Our purpose to collaborate on hydrology")
 
         # TODO:
         # test the attributes (title, description) of the group object
         self.assertEqual(arfers.name, 'arfers')
         self.assertEqual(arfers.gaccess.description, "This is arfers group")
-        self.assertEqual(arfers.gaccess.purpose, "Our purpose to collaborate on hydrology")
+        self.assertEqual(
+            arfers.gaccess.purpose,
+            "Our purpose to collaborate on hydrology")
 
         arfers.delete()
-        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group")
+        arfers = dog.uaccess.create_group(
+            title='arfers', description="This is arfers group")
         self.assertEqual(arfers.name, 'arfers')
         self.assertEqual(arfers.gaccess.description, "This is arfers group")
         self.assertEqual(arfers.gaccess.purpose, None)
@@ -98,9 +96,15 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(dog.uaccess.can_change_group_flags(arfers))
         self.assertTrue(dog.uaccess.can_delete_group(arfers))
-        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
-        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
-        self.assertTrue(dog.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                arfers, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                arfers, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                arfers, PrivilegeCodes.VIEW))
 
         # membership
         self.assertTrue(dog in arfers.gaccess.members)
@@ -113,30 +117,46 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state for other user
         self.assertFalse(cat.uaccess.can_change_group_flags(arfers))
         self.assertFalse(cat.uaccess.can_delete_group(arfers))
-        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
-        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
-        self.assertFalse(cat.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            cat.uaccess.can_share_group(
+                arfers, PrivilegeCodes.OWNER))
+        self.assertFalse(
+            cat.uaccess.can_share_group(
+                arfers, PrivilegeCodes.CHANGE))
+        self.assertFalse(
+            cat.uaccess.can_share_group(
+                arfers, PrivilegeCodes.VIEW))
 
         # membership for other user
         self.assertTrue(cat not in arfers.gaccess.members)
 
-        # test django admin's group access permissions - admin has not been given any access over the group by anyone
-        # even though admin does not own the group, admin can do anything to a group
+        # test django admin's group access permissions -
+        # admin has not been given any access over the group by anyone
+        # even though admin does not own the group, admin can do anything to a
+        # group
         self.assertFalse(self.admin.uaccess.owns_group(arfers))
         self.assertTrue(self.admin.uaccess.can_change_group(arfers))
         self.assertTrue(self.admin.uaccess.can_change_group_flags(arfers))
         self.assertTrue(self.admin.uaccess.can_view_group(arfers))
-        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.OWNER))
-        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.CHANGE))
-        self.assertTrue(self.admin.uaccess.can_share_group(arfers, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            self.admin.uaccess.can_share_group(
+                arfers, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            self.admin.uaccess.can_share_group(
+                arfers, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            self.admin.uaccess.can_share_group(
+                arfers, PrivilegeCodes.VIEW))
         self.assertTrue(self.admin.uaccess.can_delete_group(arfers))
         self.admin.uaccess.delete_group(arfers)
 
     def test_04_retract_group(self):
         """Owner can retract a group"""
         dog = self.dog
-        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group",
-                                          purpose="Our purpose to collaborate on hydrology")
+        arfers = dog.uaccess.create_group(
+            title='arfers',
+            description="This is arfers group",
+            purpose="Our purpose to collaborate on hydrology")
 
         # check that it got created
         self.assertEqual(dog.uaccess.owned_groups.count(), 1)
@@ -162,6 +182,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
 
 class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
     "Test creatng a group: flags and isolation"
+
     def setUp(self):
         super(T15CreateGroup, self).setUp()
         global_reset()
@@ -193,7 +214,8 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.meowers = self.cat.uaccess.create_group(title='meowers', description='We are the meowers group')
+        self.meowers = self.cat.uaccess.create_group(
+            title='meowers', description='We are the meowers group')
 
     def test_01_default_group_ownership(self):
         "Defaults for group ownership are correct"
@@ -245,7 +267,6 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_change_group(meowers))
         self.assertTrue(self.admin.uaccess.can_view_group(meowers))
 
-
     def test_03_change_group_not_discoverable(self):
         "Can make a group not discoverable"
         dog = self.dog
@@ -263,7 +284,8 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
 
-        # public -> discoverable; test that an unprivileged user can read the group now
+        # public -> discoverable; test that an unprivileged user can read the
+        # group now
         self.assertTrue(dog.uaccess.can_view_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
         self.assertFalse(dog.uaccess.owns_group(meowers))
@@ -272,5 +294,3 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_view_group(meowers))
         self.assertTrue(self.admin.uaccess.can_change_group(meowers))
         self.assertFalse(self.admin.uaccess.owns_group(meowers))
-
-

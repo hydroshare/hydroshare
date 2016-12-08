@@ -35,12 +35,16 @@ class ToolResource(BaseResource):
         md = ToolMetaData()
         return self._get_metadata(md)
 
+    @property
+    def can_be_published(self):
+        return False
+
 processor_for(ToolResource)(resource_processor)
 
 
 class AppHomePageUrl(AbstractMetaDataElement):
     term = 'AppHomePageUrl'
-    value = models.CharField(max_length=1024, null=True)
+    value = models.CharField(max_length=1024, blank=True, default="")
 
     class Meta:
         # AppHomePageUrl element is not repeatable
@@ -49,7 +53,7 @@ class AppHomePageUrl(AbstractMetaDataElement):
 
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
-    value = models.CharField(max_length=1024, null=True)
+    value = models.CharField(max_length=1024, blank=True, default="")
 
     class Meta:
         # RequestUrlBase element is not repeatable
@@ -74,7 +78,7 @@ class SupportedResTypeChoices(models.Model):
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
-    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, null=True, blank=True)
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, blank=True)
 
     def get_supported_res_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
@@ -124,7 +128,7 @@ class SupportedSharingStatusChoices(models.Model):
 
 class SupportedSharingStatus(AbstractMetaDataElement):
     term = 'SupportedSharingStatus'
-    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, null=True, blank=True)
+    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, blank=True)
 
     def get_sharing_status_str(self):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])
@@ -169,7 +173,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
-    url = models.CharField(max_length=1024, null=True, blank=True)
+    value = models.CharField(max_length=1024, blank=True, default="")
 
     class Meta:
         # ToolVersion element is not repeatable
@@ -207,19 +211,29 @@ class ToolMetaData(CoreMetaData):
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
-        if not self.url_bases.all().first():
-            missing_required_elements.append('App-launching Url Pattern')
-        elif not self.url_bases.all().first().value:
-            missing_required_elements.append('App-launching Url Pattern')
+        # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
+        if (not self.url_bases.all().first() or not self.url_bases.all().first().value) \
+           and (not self.homepage_url.all().first() or not self.homepage_url.all().first().value):
+                missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
+        else:
+            # If one between App-launching URL Pattern and Supported Res Type presents,
+            # the other must present as well
+            if self.url_bases.all().first() and self.url_bases.all().first().value:
+                if not self.supported_res_types.all().first() \
+                   or not self.supported_res_types.all().first().supported_res_types.count() > 0:
+                    missing_required_elements.append('Supported Resource Types')
 
-        if not self.supported_res_types.all().first():
-            missing_required_elements.append('Supported Resource Types')
-        elif not self.supported_res_types.all().first().supported_res_types.count() > 0:
-            missing_required_elements.append('Supported Resource Types')
+            if self.supported_res_types.all().first() \
+               and self.supported_res_types.all().first().supported_res_types.count() > 0:
+                if not self.url_bases.all().first() or not self.url_bases.all().first().value:
+                    missing_required_elements.append('App-launching URL Pattern')
 
-        if self.supported_sharing_status.all().first():
-            if not self.supported_sharing_status.all().first().sharing_status.count() > 0:
-                missing_required_elements.append('Supported Sharing Status')
+            # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
+            if self.supported_res_types.all().first() \
+               and self.supported_res_types.all().first().supported_res_types.count() > 0:
+                if not self.supported_sharing_status.all().first() \
+                   or not self.supported_sharing_status.all().first().sharing_status.count() > 0:
+                    missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
 

@@ -17,6 +17,7 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
+from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
@@ -229,7 +230,7 @@ class ExternalProfileLink(models.Model):
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     address = models.CharField(max_length=250, null=True, blank=True)
@@ -260,9 +261,18 @@ class Party(AbstractMetaDataElement):
             creator_order = 1
             if party:
                 creator_order = party.order + 1
+
+            if 'name' not in kwargs and 'organization' not in kwargs:
+                raise ValidationError(
+                    "Either an organization or name is required for a creator element")
+
             if 'name' in kwargs:
                 if len(kwargs['name'].strip()) == 0:
-                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+                    if 'organization' in kwargs:
+                        if len(kwargs['organization'].strip()) == 0:
+                            raise ValidationError(
+                                "Either the name or organization must not be blank for the creator "
+                                "element")
 
             kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
@@ -1346,49 +1356,63 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
+    def parse_citation_name(self, name, first_author=False):
+        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        first_names = None
+        if "," in name:
+            name_parts = name.split(",")
+            if len(name_parts) == 0:
+                return CREATOR_NAME_ERROR
+            elif len(name_parts) == 1:
+                last_names = name_parts[0]
+            elif len(name_parts) == 2:
+                first_names = name_parts[1]
+                first_names = first_names.split()
+                last_names = name_parts[0]
+            else:
+                return CREATOR_NAME_ERROR
+        else:
+            name_parts = name.split()
+            if len(name_parts) == 0:
+                return CREATOR_NAME_ERROR
+            elif len(name_parts) > 1:
+                first_names = name_parts[:-1]
+                last_names = name_parts[-1]
+            else:
+                last_names = name_parts[0]
+
+        if first_names:
+            initials_list = [i[0] for i in first_names]
+            initials = u". ".join(initials_list) + "."
+            if first_author:
+                author_name = u"{last_name}, {initials}"
+            else:
+                author_name = u"{initials} {last_name}"
+            author_name = author_name.format(last_name=last_names,
+                                             initials=initials
+                                             )
+        else:
+            author_name = u"{last_name}".format(last_name=last_names)
+
+        return author_name + ", "
+
     def get_citation(self):
         citation_str_lst = []
 
-        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         CITATION_ERROR = "Failed to generate citation."
 
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split()
-        if len(name_parts) == 0:
-            return CREATOR_NAME_ERROR
-
-        if len(name_parts) > 2:
-            author_name = "{last_name}, {first_initial}. {middle_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0],
-                                             middle_initial=name_parts[1][0])
-            citation_str_lst.append(author_name)
-
+        if first_author.organization and not first_author.name:
+            citation_str_lst.append(first_author.organization + ", ")
         else:
-            author_name = "{last_name}, {first_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0])
-            citation_str_lst.append(author_name)
+            citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split()
-            if len(name_parts) == 0:
-                return CREATOR_NAME_ERROR
-
-            if len(name_parts) > 2:
-                author_name = "{first_initial}. {middle_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 middle_initial=name_parts[1][0],
-                                                 last_name=name_parts[-1])
-                citation_str_lst.append(author_name)
-
-            else:
-                author_name = "{first_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 last_name=name_parts[-1])
-
-                citation_str_lst.append(author_name)
+            if author.organization and not author.name:
+                citation_str_lst.append(author.organization + ", ")
+            elif author.name and len(author.name.strip()) != 0:
+                citation_str_lst.append(self.parse_citation_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
@@ -1421,14 +1445,14 @@ class AbstractResource(ResourcePermissionsMixin):
         date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
                                  citation_date.start_date.year)
         if ref_rel:
-            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
+            citation_str_lst.append(u", {ref_rel_value}, last accessed {creation_date}.".format(
                 ref_rel_value=ref_rel.value,
                 creation_date=date_str))
         elif repl_rel:
-            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                  creation_date=date_str,
-                                                                  url=hs_identifier.url))
+            citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
+                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
+                                                                   creation_date=date_str,
+                                                                   url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
@@ -1644,8 +1668,32 @@ class BaseResource(Page, AbstractResource):
             ROOT, pretty_print=pretty_print)
 
     @property
+    def size(self):
+        f_sizes = [f.resource_file.size
+                   if f.resource_file else 0
+                   for f in self.files.all()]
+        total_file_size = sum(f_sizes)
+        try:
+            f_sizes = [int(f.fed_resource_file_size)
+                       if f.fed_resource_file_size else 0
+                       for f in self.files.all()]
+            total_file_size += sum(f_sizes)
+        except SessionException:
+            pass
+        return total_file_size
+
+    @property
     def verbose_name(self):
         return self.get_content_model()._meta.verbose_name
+
+    @property
+    def can_be_published(self):
+        """
+        The property can be overriden by specific resource type which is not appropriate for
+        publication such as the Web App resource
+        :return:
+        """
+        return self.can_be_public_or_discoverable
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -2212,9 +2260,10 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        hsterms_name = etree.SubElement(dc_person_rdf_Description,
-                                        '{%s}name' % self.NAMESPACES['hsterms'])
-        hsterms_name.text = person.name
+        if person.name:
+            hsterms_name = etree.SubElement(dc_person_rdf_Description,
+                                            '{%s}name' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = person.name
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)

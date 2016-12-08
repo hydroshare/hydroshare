@@ -28,15 +28,17 @@
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
-            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
                 {% if missing_metadata_elements %}
                     {% if just_created %}
                         <strong>Congratulations! </strong>
-                        <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
+                        <span>Now that your resource has been created the following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish it or {% endif %}make it public or discoverable:</span>
                     {% else %}
-                        <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
+                        <span>The following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
                     {% endif %}
                     <ul>
                         {% for element in missing_metadata_elements %}
@@ -91,7 +93,7 @@
         <h2 id="resource-title">{{ title }}</h2>
         {% if tool_homepage_url %}
             <span id="apps-dropdown"/>
-            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open WebApp</a>
+            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
         {% if relevant_tools %}

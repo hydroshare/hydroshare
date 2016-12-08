@@ -87,6 +87,8 @@ def comment(request, template="generic/comments.html"):
     if isinstance(response, HttpResponse):
         return response
     obj, post_data = response
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     form = ThreadedCommentForm(request, obj, post_data)
     if form.is_valid():
         url = obj.get_absolute_url()
@@ -120,6 +122,8 @@ def rating(request):
     obj, post_data = response
     url = add_cache_bypass(obj.get_absolute_url().split("#")[0])
     response = redirect(url + "#rating-%s" % obj.id)
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     rating_form = RatingForm(request, obj, post_data)
     if rating_form.is_valid():
         rating_form.save()
@@ -136,16 +140,15 @@ def rating(request):
     return response
 
 
-def signup(request, template="accounts/account_signup.html"):
+def signup(request, template="accounts/account_signup.html", extra_context=None):
     """
-    Signup form.
+    Signup form. Overriding mezzanine's view function for signup submit
     """
     form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
         try:
             new_user = form.save()
         except ValidationError as e:
-            # form.add_error(None, e.message)
             messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
@@ -167,11 +170,23 @@ def signup(request, template="accounts/account_signup.html"):
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
                 return login_redirect(request)
-    context = {
-        "form": form,
-        "title": _("Sign up"),
-    }
-    return render(request, template, context)
+
+    # remove the key 'response' from errors as the user would have no idea what it means
+    form.errors.pop('response', None)
+    messages.error(request, form.errors)
+
+    # TODO: User entered data could be retained only if the following
+    # render function would work without messing up the css
+
+    # context = {
+    #     "form": form,
+    #     "title": _("Sign up"),
+    # }
+    # context.update(extra_context or {})
+    # return render(request, template, context)
+
+    # This one keeps the css but not able to retained user entered data.
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
