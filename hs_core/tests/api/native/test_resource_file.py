@@ -13,6 +13,7 @@ from hs_core.models import ResourceFile
 class TestResourceFileAPI(MockIRODSTestCaseMixin,
                           TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
+        super(TestResourceFileAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user to be used for creating the resource
         self.user = hydroshare.create_account(
@@ -54,6 +55,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.test_file_3 = open(self.test_file_name3, 'r')
 
     def tearDown(self):
+        super(TestResourceFileAPI, self).tearDown()
         self.test_file_1.close()
         os.remove(self.test_file_1.name)
         self.test_file_2.close()
@@ -84,36 +86,42 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(resfile.file_folder, None)
         self.assertEqual(resfile.storage_path, shortpath)
 
+        self.assertTrue(resfile.path_is_acceptable(shortpath))
+
+        # non-existent files should raise error
+        otherpath = os.path.join(self.res.short_id, "data", "contents", "file2.txt")
+        with self.assertRaises(ValidationError):
+            resfile.path_is_acceptable(otherpath)
+
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("file1.txt")
         # should match computed path
         self.assertEqual(resfile.file_folder, None)
         self.assertEqual(resfile.storage_path, shortpath)
+
         # now try to change that path to what it is already
         resfile.set_storage_path(shortpath)
         # should match computed path
         self.assertEqual(resfile.file_folder, None)
         self.assertEqual(resfile.storage_path, shortpath)
 
-        # should throw out a variety of invalid paths
-        # TODO: how to eliminate this particular error.
-        # dumbpath = 'x' + shortpath
-        # with self.assertRaises(ValidationError):
-        #     resfile.set_storage_path(dumbpath)
-        # self.assertEqual(resfile.file_folder, None)
-        # self.assertEqual(resfile.resource_file.name, shortpath)
-
-        dumbpath = self.res.short_id + "file1.txt"
-        with self.assertRaises(ValidationError):
-            resfile.set_storage_path(dumbpath)
+        # now try to change that path to a good path to a non-existent object
+        with self.assertRaises(ValidationError): 
+            resfile.set_storage_path(otherpath)
+        # should not change 
         self.assertEqual(resfile.file_folder, None)
-        self.assertEqual(resfile.resource_file.name, shortpath)
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # should throw out a variety of invalid paths
+        # TODO: how to eliminate this kind of error
+        # dumbpath = 'x' + shortpath
+        # dumbpath = self.res.short_id + "file1.txt"
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
 
     def test_unfederated_folder_path_setting(self):
-        """ an unfederated file in the root folder has the proper state after state changes """
+        """ an unfederated file in a subfolder has the proper state after state changes """
         # resource should not have any files at this point
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
@@ -121,7 +129,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         ResourceFile.create_folder(self.res, 'foo')
 
         # add one file to the resource
-        hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
+        hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -132,38 +140,44 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # determine where that file should live
         shortpath = os.path.join(self.res.short_id, "data",
-                                 "contents", "file1.txt")
+                                 "contents", "foo", "file1.txt")
 
         self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
 
+        self.assertTrue(resfile.path_is_acceptable(shortpath))
+
+        # non-existent files should raise error
+        otherpath = os.path.join(self.res.short_id, "data", "contents", "foo", "file2.txt")
+        with self.assertRaises(ValidationError):
+            resfile.path_is_acceptable(otherpath)
+
         # try setting to an unqualified name; should qualify it
-        resfile.set_storage_path("file1.txt")
+        resfile.set_storage_path("foo/file1.txt")
         # should match computed path
         self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
+
         # now try to change that path to what it is already
         resfile.set_storage_path(shortpath)
         # should match computed path
-        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.file_folder, "foo")
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # now try to change that path to a good path to a non-existent object
+        with self.assertRaises(ValidationError): 
+            resfile.set_storage_path(otherpath)
+        # should not change 
+        self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
 
         # should throw out a variety of invalid paths
         # TODO: how to eliminate this particular error.
         # dumbpath = 'x' + shortpath
-        # with self.assertRaises(ValidationError):
-        #     resfile.set_storage_path(dumbpath)
-        # self.assertEqual(resfile.file_folder, None)
-        # self.assertEqual(resfile.resource_file.name, shortpath)
-
-        dumbpath = self.res.short_id + "file1.txt"
-        with self.assertRaises(ValidationError):
-            resfile.set_storage_path(dumbpath)
-        self.assertEqual(resfile.file_folder, "foo")
-        self.assertEqual(resfile.resource_file.name, shortpath)
+        # dumbpath = self.res.short_id + "file1.txt"
 
         # clean up after folder test
-        ResourceFile.remove_folder(self.res, 'foo')
+        ResourceFile.remove_folder(self.res, 'foo', self.user)
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
