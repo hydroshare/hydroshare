@@ -132,6 +132,13 @@ class Variable(models.Model):
             return None
 
     @classmethod
+    def format_kwargs(cls, **kwargs):
+        msg_items = []
+        for k, v in kwargs.iteritems():
+            msg_items.append('%s=%s' % (unicode(k).encode(), unicode(v).encode()))
+        return ' '.join(msg_items)
+
+    @classmethod
     def record(cls, session, name, value=None):
         for i, (label, coercer) in enumerate(cls.TYPES, 0):
             try:

@@ -34,7 +34,7 @@
 
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
-                    {% if values and key != 'public' and key != 'discoverable' %}
+                    {% if values and key != 'public' and key != 'discoverable' and key != 'published' %}
                         <div id="faceting-{{ key }}">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
@@ -46,12 +46,8 @@
                                                 &nbsp; Filter by Subject
                                             {% elif key ==  'resource_type'%}
                                                 &nbsp; Filter by Resource Type
-                                            {% elif key ==  'public'%}
-                                                &nbsp; Filter by Public
                                             {% elif key ==  'owners_names'%}
                                                 &nbsp; Filter by Owner
-                                            {% elif key ==  'discoverable'%}
-                                                &nbsp; Filter by Discoverable
                                             {% endif %}
                                             <span class="glyphicon glyphicon-minus pull-left" >
 
@@ -92,7 +88,7 @@
                         <div id="availability" class="facet-list panel-collapse collapse in">
                             <ul class="list-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
-                                    {% if key == 'public' or key == 'discoverable' %}
+                                    {% if key == 'public' or key == 'discoverable' or key == 'published' %}
                                         {% for item in values %}
                                             {% if item.1 > 0 and item.0 != 'false' %}
                                                 <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
@@ -107,6 +103,8 @@
                                                             Private
                                                         {% elif key == 'discoverable' %}
                                                             Discoverable
+                                                        {% elif key == 'published' %}
+                                                            Published
                                                         {% endif %}
                                                     </label>
                                                 </li>

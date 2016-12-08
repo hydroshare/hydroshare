@@ -5,9 +5,8 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
-                                    ToolIconForm, UrlBaseValidationForm, \
-                                    SupportedSharingStatusValidationForm, \
-                                    AppHomePageUrlValidationForm
+                                    UrlValidationForm, \
+                                    SupportedSharingStatusValidationForm
 
 
 @receiver(pre_create_resource, sender=ToolResource)
@@ -34,17 +33,17 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
-        element_form = UrlBaseValidationForm(data=request.POST)
+        element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':
         element_form = SupportedResTypesValidationForm(data=request.POST)
     elif element_name == 'toolicon':
-        element_form = ToolIconForm(data=request.POST)
+        element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
-        element_form = AppHomePageUrlValidationForm(data=request.POST)
+        element_form = UrlValidationForm(data=request.POST)
     else:
         return {'is_valid': False, 'element_data_dict': None}
 

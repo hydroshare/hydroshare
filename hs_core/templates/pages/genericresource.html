@@ -60,7 +60,11 @@
                 {% include "resource-landing-page/abstract.html" %}
 
                 {# ======= Citation ======= #}
-                {% include "resource-landing-page/citation.html" %}
+                {% if metadata_form %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+                {% else %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+                {% endif %}
 
                 {# ======= Subject ======= #}
                 {% include "resource-landing-page/subject.html" %}
@@ -127,6 +131,11 @@
                         <li id="btn-download" data-menu-name="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
+                        </li>
+
+                        <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
+                            <span class="fa fa-link icon-blue"></span>
+                            <span>Get file URL</span>
                         </li>
                     </ul>
 
@@ -365,6 +374,12 @@
                                                             class="disabled"
                                                             title="Download">
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-get-link" data-toggle="modal"
+                                                            class="disabled" data-target="#get-file-url-dialog"
+                                                            title="Get file URL">
+                                                        <span class="fa fa-link icon-blue"></span>
                                                     </button>
 
                                                     {% if page.perms.change and metadata_form %}
@@ -1715,6 +1730,16 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+            // add input element to each of the comment/rating forms to track resource mode (edit or view)
+            var resourceMode = $("#resource-mode").val().toLowerCase();
+            var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
+            inputElementToAdd = inputElementToAdd.replace('mode_to_replace', resourceMode);
+            $("[id^=comment-]").find('form').each(function () {
+                $(this).append(inputElementToAdd);
+            });
+            // new comment form
+            $("#comment").append(inputElementToAdd);
+
             // On manage access interface, prevent form submission when pressing the enter key on the search box.
             $('#id_user-autocomplete').keypress(function (e) {
                 e = e || event;
@@ -1730,6 +1755,22 @@
             }
             $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
             $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
+
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onOrgTypeChange() {
+                var type = $(this).val();
+                $("div[data-hs-org-type]").hide();
+                $("div[data-hs-org-type='" + type + "']").show();
+            }
+            $("input[name='choose_org_type']").click(onOrgTypeChange);
+
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onPersonTypeChange() {
+                var type = $(this).val();
+                $("div[data-hs-person-type]").hide();
+                $("div[data-hs-person-type='" + type + "']").show();
+            }
+            $("input[name='add_author_person']").click(onPersonTypeChange);
 
 
             $("#citation-text").on("click", function (e) {
