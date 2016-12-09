@@ -1525,24 +1525,27 @@ def get_path(instance, filename, folder=None):
 
     """
 
+    # instance.content_object can be stale after changes. Re-fetch based upon key
+    resource = BaseResource.objects.get(pk=instance.resource.pk)
+    resource.refresh_from_db()
     # retrieve federation path -- if any -- from Resource object containing FileField
-    if instance.content_object.resource_federation_path:
+    if resource.resource_federation_path:
         # return FQN if set via resource_file = text_path
-        if filename.startswith(instance.content_object.resource_federation_path):
+        if filename.startswith(resource.resource_federation_path):
             return filename
         # federated iRODS storage prefix contains server reference
-        prefix = os.path.join(instance.content_object.resource_federation_path,
-                              instance.content_object.short_id, 'data', 'contents')
+        prefix = os.path.join(resource.resource_federation_path,
+                              resource.short_id, 'data', 'contents')
     else:
         # local iRODS storage
         # return FQNs set via resource_file = "text_path" unchanged.
-        if filename.startswith(instance.content_object.short_id):
+        if filename.startswith(resource.short_id):
             return filename
 
         # else interpret the current value of path as relative to a prefix,
         # with a possible additional folder
         # Compute FQN prefix
-        prefix = os.path.join(instance.content_object.short_id, 'data', 'contents')
+        prefix = os.path.join(resource.short_id, 'data', 'contents')
 
     if not folder:
         folder = instance.file_folder
@@ -1601,17 +1604,22 @@ class ResourceFile(models.Model):
         Regardless of whether the internal file name is qualified or not, get_path
         makes it fully qualified.
         """
-        if self.content_object.resource_federation_path:  # false if None or empty
+        # instance.content_object can be stale after changes.
+        # Re-fetch based upon key; bypass type system; it is not relevant
+        resource = BaseResource.objects.get(pk=self.resource.pk)
+        resource.refresh_from_db()
+        if resource.resource_federation_path:  # false if None or empty
             return self.fed_resource_file.name
         else:
             return self.resource_file.name
 
     # ResourceFile API handles file operations
-    def set_storage_path(self, path):
+    def set_storage_path(self, path, test_exists=True):
         """
         Bind this ResourceFile instance to an existing file.
 
         :param path: the path of the object.
+        :param test_exists: if True, test for path existence in iRODS
 
         Path can be absolute or relative.
 
@@ -1626,56 +1634,76 @@ class ResourceFile(models.Model):
         This records file_folder for future possible uploads and searches.
 
         """
-        folder, base = self.path_is_acceptable(path)
+        folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
-        if self.content_object.resource_federation_path:
+        self.save()
+
+        # self.content_object can be stale after changes. Re-fetch based upon key
+        # bypass type system; it is not relevant
+        resource = BaseResource.objects.get(pk=self.resource.pk)
+        resource.refresh_from_db()
+
+        # switch FileFields based upon federation path
+        if resource.resource_federation_path:
             # uses file_folder; must come after that setting.
             self.fed_resource_file = get_path(self, base)
             self.resource_file = None
         else:
             self.fed_resource_file = None
             self.resource_file = get_path(self, base)
+        self.save()
 
-    def path_is_acceptable(self, path):
-        """ Determine whether a path is acceptable for this resource file """
-        storage = self.content_object.get_irods_storage()
-        file_path = os.path.join(self.content_object.short_id, "data", "contents") + "/"
+    def path_is_acceptable(self, path, test_exists=True):
+        """
+        Determine whether a path is acceptable for this resource file
+
+        :param path: path to test
+        :param test_exists: if True, test for path existence in iRODS
+        """
+        # self.content_object can be stale after changes.
+        # Re-fetch based upon key; bypass type system; it is not relevant
+        resource = BaseResource.objects.get(pk=self.resource.pk)
+        resource.refresh_from_db()
+
+        if test_exists:
+            storage = resource.get_irods_storage()
+        locpath = os.path.join(resource.short_id, "data", "contents") + "/"
         relpath = path
-        if self.content_object.resource_federation_path and \
-                relpath.startswith(self.content_object.resource_federation_path + '/'):
-            if not storage.exists(path):
+        fedpath = resource.resource_federation_path
+        if fedpath and relpath.startswith(fedpath + '/'):
+            if test_exists and not storage.exists(path):
                 raise ValidationError("Federated path does not exist in irods")
-            plen = len(self.content_object.resource_federation_path)
-            relpath = relpath[plen+1:]  # omit /
+            plen = len(fedpath + '/')
+            relpath = relpath[plen:]  # omit /
 
             # strip resource id from path
-            if relpath.startswith(file_path):
-                plen = len(file_path)
+            if relpath.startswith(locpath):
+                plen = len(locpath)
                 relpath = relpath[plen:]  # omit /
             else:
+                print("in path_is_acceptable, relpath = " + relpath)
                 raise ValidationError("Malformed federated resource path")
-        elif path.startswith(file_path):
+        elif path.startswith(locpath):
             # strip optional local path prefix
-            if not storage.exists(path):
-                raise ValidationError("Federated path does not exist in irods")
-            plen = len(file_path)
+            if test_exists and not storage.exists(path):
+                raise ValidationError("Local path does not exist in irods")
+            plen = len(locpath)
             relpath = relpath[plen:]  # strip local prefix, omit /
 
         # now we have folder/file. We could have gotten this from the input, or
         # from stripping qualification folders. Note that this can contain
-        # misnamed header content misinterpreted as a folder
+        # misnamed header content misinterpreted as a folder unless one tests
+        # for existence
         if '/' in relpath:
             folder, base = relpath.rsplit('/', 1)
             abspath = get_path(self, base, folder=folder)
-            print("abspath = " + abspath)
-            if not storage.exists(abspath):
+            if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
             folder = None
             base = relpath
             abspath = get_path(self, base, folder=folder)
-            print("abspath = " + abspath)
-            if not storage.exists(abspath):
+            if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
 
         return folder, base

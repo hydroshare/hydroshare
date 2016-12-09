@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 
-from hs_core.models import ResourceFile
+from hs_core.models import ResourceFile, get_path
 
 
 class TestResourceFileAPI(MockIRODSTestCaseMixin,
@@ -31,37 +31,37 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
             'My Test Resource'
         )
 
-        # create three files
+        # create a file
         self.test_file_name1 = 'file1.txt'
-        self.test_file_name2 = 'file2.txt'
-        self.test_file_name3 = 'file3.txt'
-        self.file_name_list = [self.test_file_name1, self.test_file_name2, self.test_file_name3]
+        # self.test_file_name2 = 'file2.txt'
+        # self.test_file_name3 = 'file3.txt'
+        self.file_name_list = [self.test_file_name1, ]
 
         # put predictable contents into these
         test_file = open(self.test_file_name1, 'w')
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        test_file = open(self.test_file_name2, 'w')
-        test_file.write("Test text file in file2.txt")
-        test_file.close()
+        # test_file = open(self.test_file_name2, 'w')
+        # test_file.write("Test text file in file2.txt")
+        # test_file.close()
 
-        test_file = open(self.test_file_name3, 'w')
-        test_file.write("Test text file in file3.txt")
-        test_file.close()
+        # test_file = open(self.test_file_name3, 'w')
+        # test_file.write("Test text file in file3.txt")
+        # test_file.close()
 
         self.test_file_1 = open(self.test_file_name1, 'r')
-        self.test_file_2 = open(self.test_file_name2, 'r')
-        self.test_file_3 = open(self.test_file_name3, 'r')
+        # self.test_file_2 = open(self.test_file_name2, 'r')
+        # self.test_file_3 = open(self.test_file_name3, 'r')
 
     def tearDown(self):
         super(TestResourceFileAPI, self).tearDown()
         self.test_file_1.close()
         os.remove(self.test_file_1.name)
-        self.test_file_2.close()
-        os.remove(self.test_file_2.name)
-        self.test_file_3.close()
-        os.remove(self.test_file_3.name)
+        # self.test_file_2.close()
+        # os.remove(self.test_file_2.name)
+        # self.test_file_3.close()
+        # os.remove(self.test_file_3.name)
 
     def test_unfederated_root_path_setting(self):
         """ an unfederated file in the root folder has the proper state after state changes """
@@ -80,8 +80,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         resfile = self.res.files.all()[0]
 
         # determine where that file should live
-        shortpath = os.path.join(self.res.short_id, "data",
-                                 "contents", "file1.txt")
+        shortpath = os.path.join(self.res.short_id, "data", "contents", "file1.txt")
 
         self.assertEqual(resfile.file_folder, None)
         self.assertEqual(resfile.storage_path, shortpath)
@@ -106,13 +105,12 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to a good path to a non-existent object
-        with self.assertRaises(ValidationError): 
+        with self.assertRaises(ValidationError):
             resfile.set_storage_path(otherpath)
-        # should not change 
+        # should not change
         self.assertEqual(resfile.file_folder, None)
         self.assertEqual(resfile.storage_path, shortpath)
 
-        # should throw out a variety of invalid paths
         # TODO: how to eliminate this kind of error
         # dumbpath = 'x' + shortpath
         # dumbpath = self.res.short_id + "file1.txt"
@@ -154,6 +152,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("foo/file1.txt")
+        resfile.refresh_from_db()
         # should match computed path
         self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
@@ -165,19 +164,168 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(resfile.storage_path, shortpath)
 
         # now try to change that path to a good path to a non-existent object
-        with self.assertRaises(ValidationError): 
+        with self.assertRaises(ValidationError):
             resfile.set_storage_path(otherpath)
-        # should not change 
+        # should not change
         self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
 
-        # should throw out a variety of invalid paths
         # TODO: how to eliminate this particular error.
         # dumbpath = 'x' + shortpath
         # dumbpath = self.res.short_id + "file1.txt"
 
         # clean up after folder test
-        ResourceFile.remove_folder(self.res, 'foo', self.user)
+        # ResourceFile.remove_folder(self.res, 'foo', self.user)
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_federated_root_path_logic(self):
+        """ a federated file path in the root folder has the proper state after state changes """
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        # add one file to the resource
+        hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
+
+        # resource should has only one file at this point
+        self.assertEqual(self.res.files.all().count(), 1,
+                         msg="resource file count didn't match")
+
+        # get the handle of the file created above
+        resfile = self.res.files.all()[0]
+
+        # cheat: set a fake federated path to test path logic
+        oldfedpath = self.res.resource_federation_path
+        oldpath = resfile.storage_path
+
+        # intentionally break path logic by setting an unused federation path
+        fedpath = "/myzone/home/myuser"
+        self.res.resource_federation_path = fedpath
+        self.res.save()
+        resfile.set_storage_path('file1.txt', test_exists=False)
+        resfile.resource_file = None
+        resfile.save()
+
+        self.assertEqual(self.res.resource_federation_path, fedpath)
+        self.assertEqual(resfile.storage_path, get_path(resfile, 'file1.txt'))
+
+        # determine where that file should live; THIS IS FAKE
+        shortpath = os.path.join(fedpath, self.res.short_id, "data",
+                                 "contents", "file1.txt")
+
+        # intentionally break the resource file path
+        resfile.set_storage_path(shortpath, test_exists=False)
+        self.assertEqual(shortpath, resfile.storage_path)
+
+        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        self.assertTrue(resfile.path_is_acceptable(shortpath, test_exists=False))
+
+        # non-existent files should raise error
+        otherpath = os.path.join(fedpath, self.res.short_id, "data", "contents", "file2.txt")
+        resfile.path_is_acceptable(otherpath, test_exists=False)
+
+        # try setting to an unqualified name; should qualify it
+        resfile.set_storage_path("file1.txt", test_exists=False)
+        # should match computed path
+        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # now try to change that path to what it is already
+        resfile.set_storage_path(shortpath, test_exists=False)
+        # should match computed path
+        self.assertEqual(resfile.file_folder, None)
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # now try to change that path to a good path to a non-existent object
+        resfile.set_storage_path(otherpath, test_exists=False)
+
+        # conclusion: strip off federation path
+        self.res.resource_federation_path = oldfedpath
+        self.res.save()
+        resfile.resource_file = oldpath
+        resfile.fed_resource_file = None
+        resfile.save()
+        self.res.refresh_from_db()
+
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)
+
+    def test_federated_folder_path_logic(self):
+        """ a federated file in a subfolder has the proper state after state changes """
+
+        # resource should not have any files at this point
+        self.assertEqual(self.res.files.all().count(), 0,
+                         msg="resource file count didn't match")
+
+        ResourceFile.create_folder(self.res, 'foo')
+
+        # add one file to the resource
+        hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
+
+        # resource should has only one file at this point
+        self.assertEqual(self.res.files.all().count(), 1,
+                         msg="resource file count didn't match")
+
+        # get the handle of the file created above
+        resfile = self.res.files.all()[0]
+
+        self.assertEqual(resfile.resource_file.name, os.path.join(self.res.short_id,
+                                                                  "data", "contents",
+                                                                  "foo", "file1.txt"))
+        self.assertEqual(resfile.file_folder, "foo")
+
+        # cheat: set a fake federated path to test path logic
+        fedpath = "/myzone/home/myuser"
+
+        # intentionally break path logic by setting an unused federation path
+        self.res.resource_federation_path = fedpath
+        self.res.save()
+        resfile.set_storage_path("foo/file1.txt", test_exists=False)
+
+        # determine where that file should live
+        shortpath = os.path.join(fedpath, self.res.short_id, "data",
+                                 "contents", "foo", "file1.txt")
+
+        self.assertEqual(shortpath, resfile.storage_path)
+
+        # this should result in an exact path
+        resfile.set_storage_path(shortpath, test_exists=False)
+
+        self.assertEqual(resfile.file_folder, "foo")
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        self.assertTrue(resfile.path_is_acceptable(shortpath, test_exists=False))
+
+        # non-existent files should raise error
+        otherpath = os.path.join(fedpath, self.res.short_id, "data", "contents", "foo", "file2.txt")
+
+        resfile.path_is_acceptable(otherpath, test_exists=False)
+
+        # try setting to an unqualified name; should qualify it
+        resfile.set_storage_path("foo/file1.txt", test_exists=False)
+        # should match computed path
+        self.assertEqual(resfile.file_folder, "foo")
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # now try to change that path to what it is already
+        resfile.set_storage_path(shortpath, test_exists=False)
+        # should match computed path
+        self.assertEqual(resfile.file_folder, "foo")
+        self.assertEqual(resfile.storage_path, shortpath)
+
+        # now try to change that path to a good path to a non-existent object
+        resfile.set_storage_path(otherpath, test_exists=False)
+
+        # conclusion: unfederate the resource
+        self.res.resource_federation_path = ""
+        self.res.save()
+        resfile.set_storage_path("foo/file1.txt", test_exists=False)
+        resfile.save()
+        self.res.refresh_from_db()
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
