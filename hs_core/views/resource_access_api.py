@@ -76,10 +76,81 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
         response_data = dict()
         response_data['users'] = user_resource_serializer(user_resource_privilege, many=True).data
-        if "groups" in request.query_params.keys() and group_resource_privilege:
-            response_data['groups'] = group_resource_serializer(group_resource_privilege, many=True).data
+        response_data['groups'] = group_resource_serializer(group_resource_privilege, many=True).data
 
         return Response(data=response_data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
+        user_access = UserAccess(user=request.user)
+        resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
+        keys = request.data.keys()
+
+        if "user_id" in keys and "group_id" in keys:
+            return Response(
+                data={'error': "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if "user_id" in keys and "privilege" in keys:
+            user_to_add = utils.user_from_id(request.data['user_id'])
+            user_access.share_resource_with_user(resource, user_to_add, request.data['privilege'])
+            return Response(
+                data={'success': "Resource access privileges added."},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+        if "group_id" in keys and "privilege" in keys:
+            group_to_add = utils.group_from_id(request.data['group_id'])
+            try:
+                user_access.share_resource_with_group(resource, group_to_add, request.data['privilege'])
+                return Response(
+                    data={'success': "Resource access privileges added."},
+                    status=status.HTTP_202_ACCEPTED
+                )
+            except Exception:
+                return Response(
+                    data={'error': "This group may not be added to any resources"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        return Response(
+            data={'error': "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            status=status.HTTP_200_OK
+        )
+
+    def delete(self, request, pk):
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
+        keys = request.query_params.keys()
+        user_access = UserAccess(user=request.user)
+        resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
+
+        if "user_id" in keys and "group_id" in keys:
+            return Response(
+                data={'error': "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if "user_id" in keys:
+            user_to_remove = utils.user_from_id(request.query_params['user_id'])
+            user_access.unshare_resource_with_user(resource, user_to_remove)
+            return Response(
+                data={'success': "Resource access privileges removed."},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+        if "group_id" in keys:
+            group_to_remove = utils.group_from_id(request.query_params['group_id'])
+            user_access.unshare_resource_with_group(resource, group_to_remove)
+            return Response(
+                data={'success': "Resource access privileges removed."},
+                status=status.HTTP_202_ACCEPTED
+            )
+
+        return Response(
+            data={'error': "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            status=status.HTTP_200_OK
+        )
 
     def get_serializer_classes(self):
         return (UserResourcePrivilegeSerializer, GroupResourcePrivilegeSerializer,)
@@ -95,44 +166,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         else:
             querysets = (
                 UserResourcePrivilege.objects.filter(resource=resource, user=user),
-                None
+                GroupResourcePrivilege.objects.filter(resource=resource, user=user)
             )
 
         return querysets
-
-    def delete(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
-        keys = request.query_params.keys()
-        user_access = UserAccess(user=request.user)
-        resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-
-        if "user_id" in keys and "group_id" in keys:
-            return Response(
-                data={'error': "Request cannot contain both a 'user' and a 'group' parameter."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if "user_id" in keys:
-            user_to_remove = utils.user_from_id(request.query_params['user_id'])
-            user_access.unshare_resource_with_user(resource, user_to_remove)
-            return Response(
-                data={'success': "Resource access privileges removed."},
-                status=status.HTTP_202_ACCEPTED
-            )
-
-        if "group_id" in keys:
-            group_to_remove = utils.group_from_id(request.query_params['group_id'])
-            user_access.unshare_resource_with_group(resource,group_to_remove)
-            return Response(
-                data={'success': "Resource access privileges removed."},
-                status=status.HTTP_202_ACCEPTED
-            )
-
-        return Response(
-            data={'error': "Request must contain a 'resource' ID as well as a 'user' or 'group' id."},
-            status=status.HTTP_200_OK
-        )
-
-        # def put(self, request, pk):
-    #     pass
-    #
