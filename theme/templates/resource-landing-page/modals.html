@@ -645,6 +645,15 @@
     </div>
 {%  endblock %}
 
+{%  block delete-self-access-to-resource %}
+    <div id="dialog-confirm-delete-self-access" title="Remove resource access?">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>
+        Are you sure you want to remove your own access to this resource?
+        You will no longer be able to access it without someone else sharing it with you again.
+    </p>
+</div>
+{%  endblock %}
+
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
      aria-hidden="true">

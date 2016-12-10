@@ -636,12 +636,11 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     user_to_unshare_with = utils.user_from_id(user_id)
     ajax_response_data = {'status': 'success'}
     try:
-        # requesting user is the resource owner or user is self unsharing
-        # (user is user_to_unshare_with)
         user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
-        if not user.uaccess.can_view_resource(res):
-            # user has no access to the resource - redirect to resource listing page
+        if user not in res.raccess.view_users:
+            # user has no explict access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
+
     except PermissionDenied as exp:
         ajax_response_data['status'] = 'error'
         ajax_response_data['message'] = exp.message
@@ -650,22 +649,21 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
 
 
 def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     group_to_unshare_with = utils.group_from_id(group_id)
-
+    ajax_response_data = {'status': 'success'}
     try:
-        # requesting user is the resource owner or admin or already has privilege
-        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
         user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
-
-        messages.success(request, "Resource unsharing was successful")
-        if not user.uaccess.can_view_resource(res):
-            # user has no access to the resource - redirect to resource listing page
-            return HttpResponseRedirect('/my-resources/')
+        if user not in res.raccess.view_users:
+            # user has no explicit access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
     except PermissionDenied as exp:
-        messages.error(request, exp.message)
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return JsonResponse(ajax_response_data)
 
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):

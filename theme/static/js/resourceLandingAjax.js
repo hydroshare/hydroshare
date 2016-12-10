@@ -74,7 +74,22 @@ function shareable_ajax_submit(event) {
     return false;
 }
 
-function unshare_resource_ajax_submit(form_id) {
+function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
+    if (typeof check_for_prompt === 'undefined'){
+        check_for_prompt = true;
+    }
+    if (typeof  remove_permission === 'undefined'){
+        remove_permission = true;
+    }
+    if (check_for_prompt){
+        if (!promptSelfRemovingAccess(form_id)){
+            return;
+        }
+    }
+    if (!remove_permission){
+        return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var url = $form.attr('action');
@@ -111,6 +126,50 @@ function unshare_resource_ajax_submit(form_id) {
     });
     //don't submit the form
     return false;
+}
+
+function promptSelfRemovingAccess(form_id){
+    $form = $('#' + form_id);
+    var url = $form.attr('action');
+    // check if we are unsharing a user or a group
+    var isUserUnsharing = false;
+    if(url.indexOf("unshare-resource-with-user") > 0){
+        isUserUnsharing = true;
+    }
+    if(!isUserUnsharing){
+        return true;
+    }
+    var formIDParts = form_id.split('-');
+    var userID = parseInt(formIDParts[formIDParts.length -1]);
+    var currentUserID = parseInt($("#current-user-id").val());
+    if (currentUserID != userID){
+        // no need to prompt for confirmation since self is not unsharing
+        return true;
+    }
+
+    // close the manage access panel (modal)
+    $("#manage-access .btn-primary").click();
+
+    // display remove access confirmation dialog
+    $( "#dialog-confirm-delete-self-access" ).dialog({
+      resizable: false,
+      height: "auto",
+      width: 500,
+      modal: true,
+      dialogClass: 'noclose',
+      buttons: {
+        Cancel: function() {
+          $( this ).dialog( "close" );
+          // show manage access control panel again
+          $("#manage-access").modal('show');
+          unshare_resource_ajax_submit(form_id, false, false);
+        },
+        "Remove": function() {
+          $( this ).dialog( "close" );
+          unshare_resource_ajax_submit(form_id, false, true);
+        }
+      }
+    });
 }
 
 function change_share_permission_ajax_submit(form_id) {
