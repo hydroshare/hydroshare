@@ -151,24 +151,33 @@ function promptSelfRemovingAccess(form_id){
     $("#manage-access .btn-primary").click();
 
     // display remove access confirmation dialog
-    $( "#dialog-confirm-delete-self-access" ).dialog({
-      resizable: false,
-      height: "auto",
-      width: 500,
-      modal: true,
-      dialogClass: 'noclose',
-      buttons: {
-        Cancel: function() {
-          $( this ).dialog( "close" );
-          // show manage access control panel again
-          $("#manage-access").modal('show');
-          unshare_resource_ajax_submit(form_id, false, false);
+    $("#dialog-confirm-delete-self-access").dialog({
+        resizable: false,
+        height: "auto",
+        width: 500,
+        modal: true,
+        dialogClass: 'noclose',
+        buttons: {
+            Cancel: function () {
+                $(this).dialog("close");
+                // show manage access control panel again
+                $("#manage-access").modal('show');
+                unshare_resource_ajax_submit(form_id, false, false);
+            },
+            "Remove": function () {
+                $(this).dialog("close");
+                unshare_resource_ajax_submit(form_id, false, true);
+            }
         },
-        "Remove": function() {
-          $( this ).dialog( "close" );
-          unshare_resource_ajax_submit(form_id, false, true);
+        open: function () {
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:first") // the first button
+                .addClass("btn btn-default");
+
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .addClass("btn btn-danger");
         }
-      }
     });
 }
 

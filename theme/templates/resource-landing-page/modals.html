@@ -1798,33 +1798,51 @@
                                   method="POST">
                                 {% csrf_token %}
 
-                                <div class="add-view-user-form">
-                                    {{ add_view_user_form.user }}
+                                <div class="row">
+                                    <div class="add-view-user-form col-xs-12 col-sm-6">
+                                        {{ add_view_user_form.user }}
+                                    </div>
+
+                                    <div class="add-view-group-form col-xs-12 col-sm-6">
+                                        {{ add_view_group_form.group }}
+                                    </div>
+
+                                    <div class="col-xs-12 col-sm-6">
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <div class="dropdown custom-dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="roles_list" data-toggle="dropdown"
+                                                            aria-haspopup="true">
+                                                        <span id="selected_role" data-role="view">Can view</span>
+                                                        <span class="caret"></span>
+                                                    </button>
+
+                                                    <ul id="list-roles" class="dropdown-menu"
+                                                        aria-labelledby="roles_list">
+                                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="view">Can view</a></li>
+                                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="edit">Can edit</a></li>
+                                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a
+                                                                data-role="owner">Is owner</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="col-xs-6">
+                                                <a id="btn-invite"
+                                                   onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                   class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
+                                                        class="button-label">&nbspAdd</span></a>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
                                 </div>
 
-                                <div class="add-view-group-form">
-                                    {{ add_view_group_form.group }}
-                                </div>
-
-                                <div class="dropdown custom-dropdown">
-                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                            id="roles_list" data-toggle="dropdown"
-                                            aria-haspopup="true">
-                                        <span id="selected_role" data-role="view">Can view</span>
-                                        <span class="caret"></span>
-                                    </button>
-
-                                    <ul id="list-roles" class="dropdown-menu"
-                                        aria-labelledby="roles_list">
-                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
-                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
-                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
-                                    </ul>
-                                </div>
-
-                                <a id="btn-invite" onclick="share_resource_ajax_submit('add-access-form'); return false;"
-                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">&nbspAdd</span></a>
                             </form>
                         </div>
                     </div>
