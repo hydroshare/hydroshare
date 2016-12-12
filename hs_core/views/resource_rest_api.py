@@ -7,7 +7,7 @@ import logging
 import json
 
 from django.core.urlresolvers import reverse
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, SuspiciousFileOperation
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.sites.models import Site
@@ -15,10 +15,9 @@ from django.contrib.sites.models import Site
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
-from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
@@ -830,19 +829,24 @@ class ResourceFileCRUD(APIView):
             request.FILES.update(old_file_data)
         return request
 
-    def get(self, request, pk, filename):
+    def get(self, request, pk, pathname):
         resource, _, _ = view_utils.authorize(
                 request, pk,
                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        view_utils.irods_path_is_allowed(filename)
-        if not resource.supports_folders and '/' in filename:
-            raise ValidationError("Resource type does not support subfolders")
+
+        if not resource.supports_folders and '/' in pathname:
+            return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            f = hydroshare.get_resource_file(pk, filename)
+            view_utils.irods_path_is_allowed(pathname)
+        except (ValidationError, SuspiciousFileOperation) as ex:
+            return Response(ex.message, status_code=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            f = hydroshare.get_resource_file(pk, pathname)
         except ObjectDoesNotExist:
             err_msg = 'File with file name {file_name} does not exist for resource with ' \
-                      'resource id {res_id}'.format(file_name=filename, res_id=pk)
+                      'resource id {res_id}'.format(file_name=pathname, res_id=pk)
             raise NotFound(detail=err_msg)
 
         # redirects to django_irods/views.download function
@@ -851,16 +855,16 @@ class ResourceFileCRUD(APIView):
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
-    def post(self, request, pk, filename):
+    def post(self, request, pk, pathname):
         """
         Add a file to a resource.
         :param request:
         :param pk: Primary key of the resource (i.e. resource short ID)
-        :param filename: the path to the containing folder in the folder hierarchy
+        :param pathname: the path to the containing folder in the folder hierarchy
         :return:
 
-        Leaving out filename results in calling a different class function
-        that stores in the root directory
+        Leaving out pathname in the URI calls a different class function in ResourceFileListCreate
+        that stores in the root directory instead.
         """
         resource, _, _ = view_utils.authorize(request, pk,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -891,7 +895,7 @@ class ResourceFileCRUD(APIView):
         try:
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
-                                                                          folder=filename,
+                                                                          folder=pathname,
                                                                           user=request.user,
                                                                           extract_metadata=True)
 
@@ -905,24 +909,29 @@ class ResourceFileCRUD(APIView):
         resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, pk, filename):
+    def delete(self, request, pk, pathname):
         resource, _, user = view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        view_utils.irods_path_is_allowed(filename)
-        if not resource.supports_folders and '/' in filename:
-            raise ValidationError("Resource type does not support folders")
+
+        if not resource.supports_folders and '/' in pathname:
+            return Response("Resource type does not support folders", status.HTTP_403_FORBIDDEN)
 
         try:
-            hydroshare.delete_resource_file(pk, filename, user)
+            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+        except (ValidationError, SuspiciousFileOperation) as ex:
+            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            hydroshare.delete_resource_file(pk, pathname, user)
         except ObjectDoesNotExist as ex:    # matching file not found
             raise NotFound(detail=ex.message)
 
         # prepare response data
-        response_data = {'resource_id': pk, 'file_name': filename}
+        response_data = {'resource_id': pk, 'file_name': pathname}
         resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk, filename):
+    def put(self, request, pk, pathname):
         # TODO: (Brian) Currently we do not have this action for the front end. Will implement
         # in the next iteration. Implement only after we have a decision on when to validate a file
         raise NotImplementedError()

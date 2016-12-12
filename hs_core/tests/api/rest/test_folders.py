@@ -1,7 +1,6 @@
 import json
 from rest_framework import status
 from hs_core.models import ResourceFile
-# from django_irods.storage import IrodsStorage
 from hs_core.models import get_path
 
 
@@ -56,6 +55,12 @@ class TestFolders(HSRESTTestCase):
         # delete that folder: should be possible
         response = self.client.delete(url2, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # should not be able to ls non-existent folder
+        response = self.client.get(url2, {})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        content = json.loads(response.content)
+        self.assertEqual(content, 'Cannot list path')
 
     def test_file_in_folder(self):
         rtype = 'GenericResource'

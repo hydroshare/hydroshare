@@ -52,7 +52,7 @@ urlpatterns = patterns('',
     #     name='add_resource_file'),
 
     # Patterns are now checked in the view class.
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>.+)/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
         name='get_update_delete_resource_file'),
 
@@ -60,7 +60,7 @@ urlpatterns = patterns('',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<path>.*)/$', 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$', 
         views.resource_folder_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
 

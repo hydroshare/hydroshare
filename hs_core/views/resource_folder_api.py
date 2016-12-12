@@ -21,7 +21,7 @@ class ResourceFolders(APIView):
     """
     allowed_methods = ('GET', 'PUT', 'DELETE')
 
-    def get(self, request, pk, path):
+    def get(self, request, pk, pathname):
         """
         list a given folder
 
@@ -35,30 +35,28 @@ class ResourceFolders(APIView):
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
-        try:
-            view_utils.irods_path_is_allowed(path)  # check for hacking attempts
-        except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-        except SuspiciousFileOperation as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-
         if not resource.supports_folders:
             return Response("Resource type does not support subfolders",
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            contents = view_utils.list_folder(pk, path)
+            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+        except (ValidationError, SuspiciousFileOperation) as ex:
+            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            contents = view_utils.list_folder(pk, pathname)
         except SessionException:
             return Response("Cannot list path", status=status.HTTP_404_NOT_FOUND)
 
         return Response(
             {'resource_id': pk,
-             'path': path,
+             'path': pathname,
              'files': contents[1],
              'folders': contents[0]},
             status=status.HTTP_200_OK)
 
-    def put(self, request, pk, path):
+    def put(self, request, pk, pathname):
         """ create a given folder if not present and allowed
 
         """
@@ -71,25 +69,23 @@ class ResourceFolders(APIView):
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
-        try:
-            view_utils.irods_path_is_allowed(path)  # check for hacking attempts
-        except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-        except SuspiciousFileOperation as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-
         if not resource.supports_folders:
             return Response("Resource type does not support subfolders",
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.create_folder(pk, path)
+            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+        except (ValidationError, SuspiciousFileOperation) as ex:
+            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            view_utils.create_folder(pk, pathname)
         except SessionException:
             raise ValidationError("Cannot create folder")
-        return Response(data={'resource_id': pk, 'path': path},
+        return Response(data={'resource_id': pk, 'path': pathname},
                         status=status.HTTP_201_CREATED)
 
-    def delete(self, request, pk, path):
+    def delete(self, request, pk, pathname):
         """
         Delete a folder.
 
@@ -103,23 +99,21 @@ class ResourceFolders(APIView):
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
-        try:
-            view_utils.irods_path_is_allowed(path)  # check for hacking attempts
-        except ValidationError as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-        except SuspiciousFileOperation as ex:
-            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
-
         if not resource.supports_folders:
             return Response("Resource type does not support subfolders",
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.remove_folder(request.user, pk, path)
+            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+        except (ValidationError, SuspiciousFileOperation) as ex:
+            return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            view_utils.remove_folder(request.user, pk, pathname)
         except SessionException:
             return Response("Cannot remove folder", status=status.HTTP_400_BAD_REQUEST)
 
-        view_utils.remove_irods_folder_in_django(resource, resource.get_irods_storage(), path)
+        view_utils.remove_irods_folder_in_django(resource, resource.get_irods_storage(), pathname)
 
-        return Response(data={'resource_id': pk, 'path': path},
+        return Response(data={'resource_id': pk, 'path': pathname},
                         status=status.HTTP_200_OK)
