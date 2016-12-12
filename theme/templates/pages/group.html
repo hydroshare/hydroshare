@@ -546,57 +546,117 @@
                                     <th><input class="all-rows-selector" type="checkbox"></th>
                                     <th>Type</th>
                                     <th>Title</th>
-                                    <th>Owners</th>
+                                    <th>First Author</th>
+                                    <th>Date Created</th>
                                     <th>Last modified</th>
-                                    <th>Subject</th>{# Used in table processing #}
-                                    <th>Authors</th>{# Used in table processing #}
-                                    <th>Permission Level</th>{# Used in table processing #}
-                                    <th>Labels</th>{# Used in table processing #}
-                                    <th>Favorite</th>{# Used in table processing #}
-                                    <th>Last modified</th>{# Used in table processing #}
-                                    <th>Sharing Status</th>{# Used in table processing #}
-                                    <th>Grantor</th>{# Used in table processing #}
+                                    <th>Subject</th>
+                                    {# Used in table processing #}
+                                    <th>Authors</th>
+                                    {# Used in table processing #}
+                                    <th>Permission Level</th>
+                                    {# Used in table processing #}
+                                    <th>Labels</th>
+                                    {# Used in table processing #}
+                                    <th>Favorite</th>
+                                    {# Used in table processing #}
+                                    <th>Last modified</th>
+                                    {# Used in table processing #}
+                                    <th>Sharing Status</th>
+                                    {# Used in table processing #}
+                                    <th>Date Created</th>
+                                    {# Used in table processing #}
                                 </tr>
                                 </thead>
                                 <tbody>
                                     {% for res in group_resources %}
                                         <tr data-tr-index="{{ forloop.counter0 }}">
-                                            <td></td> {# Empty for now, needed for the script to run correctly #}
+                                            {# Selection controls #}
+                                            <td>
+                                                <input class="row-selector" type="checkbox">
+                                                {% if res.is_favorite %}
+                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                          data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                          method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="DELETE">
+                                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                                    </form>
+                                                {% else %}
+                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                          data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
+
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                          method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="CREATE">
+                                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                                    </form>
+                                                {% endif %}
+
+                                                <span class="glyphicon glyphicon-tag btn-inline-label"
+                                                      data-toggle="dropdown" aria-expanded="false"></span>
+
+                                                <div class="dropdown-menu inline-dropdown" role="menu">
+                                                    <div class="panel-body" role="form">
+                                                        <ul data-resource-id="{{ res.short_id }}"
+                                                            class="list-group list-labels">
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            {# Type #}
                                             <td>
                                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                                 {% if res|resource_type == "Generic" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Geographic Raster" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Model Program Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Model Instance Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Time Series" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Web App Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "HIS Referenced Time Series" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Script Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Collection Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
@@ -625,31 +685,43 @@
 
                                                     {% if res.raccess.published %}
                                                         {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                            <img src="{{ STATIC_URL }}img/pending.png"
+                                                                 alt="Pending Publication"
                                                                  title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
                                                         {% endif %}
                                                     {% else %}
                                                         {% if res.raccess.shareable %}
-                                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                            <img src="{{ STATIC_URL }}img/shareable.png"
+                                                                 alt="Sharable Resource"
                                                                  title="Shareable"/>
                                                         {% else %}
-                                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                                            <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                                 alt="Non Sharable Resource"
                                                                  title="Not Shareable"/>
                                                         {% endif %}
                                                     {% endif %}
                                                 </div>
                                             </td>
+                                            {# Title #}
                                             <td>
-                                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                                <strong><a
+                                                        href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
                                             </td>
-                                            <td>{% for owner in res.raccess.owners.all %}
-                                                  {% if forloop.counter0 > 0 %} · {% endif %}
-                                                <span>{{ owner|contact|safe }}</span>
-                                            {% endfor %}</td>
+                                            {# First Author #}
+                                            {% if res.first_creator.description %}
+                                                <td>
+                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+                                                </td>
+                                            {% else %}
+                                                <td>{{ res.first_creator.name }}</td>
+                                            {% endif %}
+                                            {# Date Created #}
+                                            <td>{{ res.created|date:"m/d/Y" }}, {{ res.created|time }}</td>
+                                            {# Last Modified #}
                                             <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
-                                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
                                                 {% endfor %}
                                             </td>
                                             <td>
@@ -693,6 +765,7 @@
                                                     Private
                                                 {% endif %}
                                             </td>
+                                            <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
                                             <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
@@ -913,62 +986,87 @@
     <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 
     <script>
+        var ACTIONS_COL = 0;
+        var RESOURCE_TYPE_COL = 1;
+        var TITLE_COL = 2;
+        var OWNER_COL = 3;
+        var DATE_CREATED_COL = 4;
+        var LAST_MODIFIED_COL = 5;
+        var SUBJECT_COL = 6;
+        var AUTHORS_COL = 7;
+        var PERM_LEVEL_COL = 8;
+        var LABELS_COL = 9;
+        var FAVORITE_COL = 10;
+        var LAST_MODIF_SORT_COL = 11;
+        var SHARING_STATUS_COL = 12;
+        var DATE_CREATED_SORT_COL = 13;
+        var ACCESS_GRANTOR_COL = 14;
+
         var colDefs = [
             {
-                "targets": [0],     // Row selector and controls
+                "targets": [ACTIONS_COL],     // Row selector and controls
                 "visible": false,
             },
             {
-                "targets": [1],     // Resource type
+                "targets": [RESOURCE_TYPE_COL],     // Resource type
                 "width": "100px"
             },
             {
-                "targets": [0],     // Actions
+                "targets": [ACTIONS_COL],     // Actions
                 "orderable": false,
                 "searchable": false,
                 "width": "70px"
             },
             {
-                "targets": [4],     // Last modified
-                "iDataSort": 10
+                "targets": [LAST_MODIFIED_COL],     // Last modified
+                "iDataSort": LAST_MODIF_SORT_COL
             },
             {
-                "targets": [5],     // Subject
+                "targets": [DATE_CREATED_COL],     // Created
+                "iDataSort": DATE_CREATED_SORT_COL
+            },
+            {
+                "targets": [SUBJECT_COL],     // Subject
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [6],     // Authors
+                "targets": [AUTHORS_COL],     // Authors
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [7],     // Permission level
+                "targets": [PERM_LEVEL_COL],     // Permission level
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [8],     // Labels
+                "targets": [LABELS_COL],     // Labels
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [9],     // Favorite
+                "targets": [FAVORITE_COL],     // Favorite
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [10],     // Last modified (for sorting)
+                "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
                 "visible": false,
                 "searchable": true
             },
             {
-                "targets": [11],     // Sharing status
+                "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [SHARING_STATUS_COL],     // Sharing status
                 "visible": false,
                 "searchable": false
             },
             {
-                "targets": [12],     // Access Grantor
+                "targets": [ACCESS_GRANTOR_COL],     // Access Grantor
                 "visible": false,
                 "searchable": true
             }
