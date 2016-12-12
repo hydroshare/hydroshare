@@ -299,6 +299,9 @@ function metadata_update_ajax_submit(form_id){
         Metadata failed to update.\
     </div>';
 
+    if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
+        metadata_update_ajax_submit.resourceSatusDisplayed = false;
+    }
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
     var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
@@ -403,15 +406,19 @@ function metadata_update_ajax_submit(form_id){
                                 promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be published or made public";
                             else
                                 promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be made public";
-                            if (json_response.hasOwnProperty('res_public_status')){
-                                if (json_response.res_public_status.toLowerCase() === "not public"){
-                                // if the resource is already public no need to show the following alert message
-                                customAlert(promptMessage, 3000);
+                            if (!metadata_update_ajax_submit.resourceSatusDisplayed){
+                                metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                                if (json_response.hasOwnProperty('res_public_status')){
+                                    if (json_response.res_public_status.toLowerCase() === "not public"){
+                                    // if the resource is already public no need to show the following alert message
+                                    customAlert(promptMessage, 3000);
+                                    }
+                                }
+                                else {
+                                    customAlert(promptMessage, 3000);
                                 }
                             }
-                            else {
-                                customAlert(promptMessage, 3000);
-                            }
+
                             $("#btn-public").prop("disabled", false);
                             $("#btn-discoverable").prop("disabled", false);
                             $("#missing-metadata-or-file").fadeOut();
