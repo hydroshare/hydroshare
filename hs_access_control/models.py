@@ -396,13 +396,11 @@ class UserAccess(models.Model):
         but cannot remove self-ownership if that would leave the group with no
         owner.
         """
-        # The following code doesn't pass flake8 because it does not understand
-        # the python native type "unicode"
-        # if __debug__:
-        #     assert isinstance(title, (str, unicode))
-        #     assert isinstance(description, (str, unicode))
-        #     if purpose:
-        #         assert isinstance(purpose, (str, unicode))
+        if __debug__:
+            assert isinstance(title, (str, unicode))
+            assert isinstance(description, (str, unicode))
+            if purpose:
+                assert isinstance(purpose, (str, unicode))
 
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
@@ -1535,18 +1533,6 @@ class UserAccess(models.Model):
         This function returns False exactly when share_resource_with_group will raise
         an exception if called.
         """
-        # if __debug__:  # during testing only, check argument types and preconditions
-        #     assert isinstance(this_resource, BaseResource)
-        #     assert this_privilege >= PrivilegeCodes.OWNER \
-        #         and this_privilege <= PrivilegeCodes.VIEW
-        #     if this_user is not None:
-        #         assert isinstance(this_user, User)
-
-        # if not self.user.is_active:
-        #     raise PermissionDenied("Requesting user is not active")
-        # if not this_user.is_active:
-        #     raise PermissionDenied("Target user is not active")
-
         return self.can_share_resource(this_resource, this_privilege, user=this_user)
 
     def __check_share_resource_with_user(self, this_resource, this_user, this_privilege):
