@@ -153,6 +153,7 @@ function promptSelfRemovingAccess(form_id){
     // display remove access confirmation dialog
     $("#dialog-confirm-delete-self-access").dialog({
         resizable: false,
+        draggable: false,
         height: "auto",
         width: 500,
         modal: true,
