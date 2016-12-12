@@ -703,3 +703,5 @@ def irods_path_is_allowed(path):
         raise ValidationError("Empty file paths are not allowed")
     if '/../' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")
