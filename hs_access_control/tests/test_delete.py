@@ -1,23 +1,16 @@
 
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
-
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_access_control.models import PrivilegeCodes
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset
 
 
 class T13Delete(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T13Delete, self).setUp()
         global_reset()
@@ -76,16 +69,23 @@ class T13Delete(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.verdi = hydroshare.create_resource(resource_type='GenericResource',
-                                                owner=self.dog,
-                                                title='Guiseppe Verdi',
-                                                metadata=[],)
+        self.verdi = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='Guiseppe Verdi',
+            metadata=[],
+        )
 
-        self.operas = self.dog.uaccess.create_group(title="operas", description="We are the operas")
-        self.dog.uaccess.share_resource_with_user(self.verdi, self.cat, PrivilegeCodes.CHANGE)
-        self.dog.uaccess.share_resource_with_group(self.verdi, self.operas, PrivilegeCodes.CHANGE)
-        self.singers = self.dog.uaccess.create_group(title='singers', description="We are the singers")
-        self.dog.uaccess.share_group_with_user(self.singers, self.cat, PrivilegeCodes.CHANGE)
+        self.operas = self.dog.uaccess.create_group(
+            title="operas", description="We are the operas")
+        self.dog.uaccess.share_resource_with_user(
+            self.verdi, self.cat, PrivilegeCodes.CHANGE)
+        self.dog.uaccess.share_resource_with_group(
+            self.verdi, self.operas, PrivilegeCodes.CHANGE)
+        self.singers = self.dog.uaccess.create_group(
+            title='singers', description="We are the singers")
+        self.dog.uaccess.share_group_with_user(
+            self.singers, self.cat, PrivilegeCodes.CHANGE)
 
     def test_01_delete_resource(self):
         """Delete works for resources: privileges are deleted with resource"""
@@ -103,5 +103,3 @@ class T13Delete(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_delete_group(singers))
         dog.uaccess.delete_group(singers)
         self.assertFalse(dog.uaccess.can_delete_group(singers))
-
-

@@ -15,11 +15,10 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
     AbstractMetaDataElement
 from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
-# extended metadata for raster resource type to store the original box type coverage since
-# the core metadata coverage
-# stores the converted WGS84 geographic coordinate system projection coverage,
-# see issue #210 on github for details
 
+# extended metadata for raster resource type to store the original box type coverage
+# since the core metadata coverage stores the converted WGS84 geographic coordinate
+# system projection coverage, see issue #210 on github for details
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -30,9 +29,12 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'southlimit':southernmost coordinate value,
                 'westlimit':westernmost coordinate value,
                 'units:units applying to 4 limits (north, east, south & east),
-                'projection': name of the projection (optional)}"
+                'projection': name of the projection (optional),
+                'projection_string: OGC WKT string of the projection (optional),
+                'datum: projection datum name (optional),
+                }"
     """
-    _value = models.CharField(max_length=1024, null=True)
+    _value = models.CharField(max_length=10000, null=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -45,8 +47,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """
-        The '_value' subelement needs special processing. (Check if the 'value' includes the required info and convert
-        'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required info and convert 'value' dict as Json string to be the '_value' subelement value.)
+        The base class create() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
 
@@ -61,11 +64,13 @@ class OriginalCoverage(AbstractMetaDataElement):
         if value_arg_dict:
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For coverage of type 'box' values for one or more "
+                                          "bounding box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                                   'projection', 'projection_string', 'datum')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
@@ -78,8 +83,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         """
-        The '_value' subelement needs special processing. (Convert the 'value' dict as Json string to be the "_value"
-        subelement value.) The base class update() can't do it.
+        The '_value' subelement needs special processing.
+        (Convert the 'value' dict as Json string to be the "_value" subelement value.)
+        The base class update() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
@@ -89,7 +95,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_dict = cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                              'projection_name', 'projection_string', 'datum'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
@@ -103,6 +110,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_to_xml_container(self, container):
+        # TODO: Pabitra - include the new attributes of this element
         NAMESPACES = CoreMetaData.NAMESPACES
         cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
         cov_term = '{%s}' + 'box'
@@ -121,6 +129,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     def get_html_form(self, resource):
+        # TODO: Pabitra - include the new attributes of this element
         from .forms import OriginalCoverageSpatialForm
 
         ori_coverage_data_dict = dict()
@@ -134,10 +143,11 @@ class OriginalCoverage(AbstractMetaDataElement):
         originalcov_form = OriginalCoverageSpatialForm(initial=ori_coverage_data_dict,
                                      res_short_id=resource.short_id if resource else None,
                                      element_id=self.id if self else None)
-        
+
         return originalcov_form
 
     def get_html(self, pretty=True):
+        # TODO: Pabitra - include the new attributes of this element
         # Using the dominate module to generate the
         # html to display data for this element (resource view mode)
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
@@ -327,7 +337,7 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif",".zip")
+        return (".tif", ".zip")
 
     @classmethod
     def allow_multiple_file_upload(cls):
@@ -339,9 +349,8 @@ class RasterResource(BaseResource):
         # can have only 1 file
         return False
 
-
-# this would allow us to pick up additional form elements for the template before the template
-# is displayed via Mezzanine page processor
+# this would allow us to pick up additional form elements for the template
+# before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
 
 
@@ -457,7 +466,6 @@ class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        # this works because the superclass we want is listed first
         xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)
 
         # create an etree xml object
@@ -497,11 +505,12 @@ class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
                            ori_coverage.value['southlimit'], ori_coverage.value['westlimit'],
                            ori_coverage.value['units'])
 
-            if 'projection' in ori_coverage.value:
-                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
+            for meta_element in ori_coverage.value:
+                if meta_element == 'projection':
+                    cov_value += '; projection_name={}'.format(ori_coverage.value[meta_element])
+                if meta_element in ['projection_string', 'datum']:
+                    cov_value += '; {}={}'.format(meta_element, ori_coverage.value[meta_element])
 
             rdf_coverage_value.text = cov_value
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
-import receivers

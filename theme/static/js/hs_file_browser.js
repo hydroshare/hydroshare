@@ -88,6 +88,7 @@ function updateSelectionMenuContext() {
     var flagDisableCut = false;
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
+    var flagDisableGetLink = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
@@ -95,6 +96,7 @@ function updateSelectionMenuContext() {
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableGetLink = true;
     }
     else if (selected.length == 1) {    // Unused for now
 
@@ -106,6 +108,7 @@ function updateSelectionMenuContext() {
         flagDisableZip = true;
         flagDisableDelete = true;
         flagDisableDownload = true;
+        flagDisableGetLink = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -117,6 +120,7 @@ function updateSelectionMenuContext() {
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
         flagDisableUnzip = true;
+        flagDisableGetLink = true;
     }
 
     if (!sourcePaths.length) {
@@ -154,6 +158,10 @@ function updateSelectionMenuContext() {
     // Download
     menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
     $("#fb-download").toggleClass("disabled", flagDisableDownload);
+
+    // Get file URL
+    menu.children("li[data-menu-name='get-link']").toggleClass("disabled", flagDisableGetLink);
+    $("#fb-get-link").toggleClass("disabled", flagDisableGetLink);
 
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
@@ -224,7 +232,7 @@ function bindFileBrowserItemEvents() {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
-
+                
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
@@ -840,6 +848,47 @@ $(document).ready(function () {
         $('#txtName').closest(".modal-content").find(".btn-primary").toggleClass("disabled", false);
     });
 
+    $('#get-file-url-dialog').on('shown.bs.modal', function () {
+        $('#txtFileURL').focus();
+
+        // Select the file name by default
+        var input = document.getElementById("txtFileURL");
+        var startPos = 0;
+        var endPos = $("#txtFileURL").val().length;
+
+        if (typeof input.selectionStart != "undefined") {
+            input.selectionStart = startPos;
+            input.selectionEnd = endPos;
+        } else if (document.selection && document.selection.createRange) {
+            // IE branch
+            input.select();
+            var range = document.selection.createRange();
+            range.collapse(true);
+            range.moveEnd("character", endPos);
+            range.moveStart("character", startPos);
+            range.select();
+        }
+    });
+
+    $(".click-select-all").click(function () {
+        var input = $(this);
+        var startPos = 0;
+        var endPos = input.val().length;
+
+        if (typeof this.selectionStart != "undefined") {
+            this.selectionStart = startPos;
+            this.selectionEnd = endPos;
+        } else if (document.selection && document.selection.createRange) {
+            // IE branch
+            this.select();
+            var range = document.selection.createRange();
+            range.collapse(true);
+            range.moveEnd("character", endPos);
+            range.moveStart("character", startPos);
+            range.select();
+        }
+    });
+
     // Create folder at current directory
     $("#btn-create-folder").click(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
@@ -1066,6 +1115,15 @@ $(document).ready(function () {
         link.remove();
     }
 
+    // Get file URL method
+    $("#btn-get-link, #fb-get-link").click(function () {
+        var file = $("#fb-files-container li.ui-selected");
+        var URL = file.attr("data-url");
+        var basePath = window.location.protocol + "//" + window.location.host;
+        // currentURL = currentURL.substring(0, currentURL.length - 1); // Strip last "/"
+        $("#txtFileURL").val(basePath + URL);
+    });
+
     // set geo raster file type method
      $("#btn-set-geo-file-type").click(function () {
          var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
@@ -1103,7 +1161,6 @@ $(document).ready(function () {
              }, 1000);
          });
       });
-
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {

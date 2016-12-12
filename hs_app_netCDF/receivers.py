@@ -30,11 +30,13 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
     file_selected = False
     in_file_name = ''
-
+    nc_file_name = ''
     if files:
         file_selected = True
         in_file_name = files[0].file.name
+        nc_file_name = os.path.splitext(files[0].name)[0]
     elif fed_res_fnames:
+        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
         ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
@@ -141,7 +143,6 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = os.path.splitext(files[0].name)[0]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -240,10 +241,13 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
     file_selected = False
     in_file_name = ''
+    nc_file_name = ''
     if files:
         file_selected = True
         in_file_name = files[0].file.name
+        nc_file_name = os.path.splitext(files[0].name)[0]
     elif fed_res_fnames:
+        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
         ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
@@ -378,7 +382,6 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = files[0].name[:-3]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]

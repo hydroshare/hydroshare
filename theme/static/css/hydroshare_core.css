@@ -30,6 +30,15 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     padding-top: 10px;
 }
 
+.container>.navbar-header, .container>.navbar-collapse {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.navbar-inverse .navbar-collapse, .navbar-inverse .navbar-form {
+    border-color: #DDD;
+}
+
 .navbar-toggle {
     background: #B5B5B5;
     border-color: #8C8C8C !important;
@@ -67,10 +76,12 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	height: 160px;
 	padding: 0;
 	background: #FFF;
-	border: 1px solid #DDD;
+	border: 1px solid #c3c3c3;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
+	-webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+	-moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
@@ -2342,15 +2353,6 @@ button.loading {
     background-position: 50% 50%;
 }
 
-.full-width-tabs {
-    margin-left: -2000px;
-    margin-right: -2000px;
-    padding-left: 2000px;
-    padding-right: 2000px;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 12px;
-}
-
 .full-width-tabs-container .panel-heading {
     color: #757575;
     text-shadow: 0 1px 0 #fff;
@@ -3052,7 +3054,7 @@ h4.title {
     overflow-x: hidden;
 }
 #pub-agreement-frame {
-	border: 0px none;
+	border: 0 none;
 	height: 1500px;
 	margin-top: -90px;
 	margin-bottom: -950px;
@@ -3074,10 +3076,6 @@ h4.title {
 
 .carousel-control, .carousel-inner {
 	height: 100%;
-}
-
-.carousel-inner {
-	background: #6D6D6D;
 }
 
 .carousel-inner > .item {
@@ -3229,7 +3227,7 @@ h4.title {
 
 .arrow_box:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #DDD;
+    border-bottom-color: #a2a2a2;
     border-width: 11px;
     margin-left: -11px;
 }
@@ -3296,7 +3294,7 @@ h4.title {
 }
 
 .home-page-block {
-    margin-bottom: 60px;
+    margin-bottom: 30px;
 }
 
 div.description.active {
@@ -3954,6 +3952,10 @@ form#covereage-search-fields {
 	padding: 1px;
 }
 
+.click-select-all {
+	cursor: default !important;
+}
+
 #fb-sort ul li.active {
 	pointer-events: none;
 }
@@ -4181,7 +4183,7 @@ span.fb-control-square {
 	margin-right: 15px;
 }
 
-.selection-menu .fa {
+.selection-menu .fa, .selection-menu .glyphicon {
 	font-size: 18px;
 	margin-right: 10px;
 }

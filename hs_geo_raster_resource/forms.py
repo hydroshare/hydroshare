@@ -2,40 +2,55 @@ import copy
 
 from django.forms import ModelForm, BaseFormSet
 from django import forms
-from django.forms.models import formset_factory
-
-from crispy_forms.layout import *
+from crispy_forms.layout import Layout, HTML, Fieldset
 from crispy_forms.helper import FormHelper
-from crispy_forms.bootstrap import *
 
-from models import *
+from models import BandInformation, CellInformation
 from hs_core.forms import BaseFormHelper, get_crispy_form_fields
+from django.forms.models import formset_factory
 
 
 class OriginalCoverageFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
-        form_field_names = ['projection', 'units', 'northlimit', 'westlimit', 'southlimit',
-                            'eastlimit']
+        # the order in which the model fields are listed for the FieldSet
+        # is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        form_field_names = ['projection', 'datum' 'units', 'projection_string' 'northlimit',
+                            'westlimit', 'southlimit', 'eastlimit']
         crispy_form_fields = get_crispy_form_fields(form_field_names)
         layout = Layout(*crispy_form_fields)
 
-        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference', *args, **kwargs)
+        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id,
+                                                         element_id, element_name, layout,
+                                                         element_name_label='Spatial Reference',
+                                                         *args, **kwargs)
 
 
 class OriginalCoverageSpatialForm(forms.Form):
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System',widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    projection = forms.CharField(max_length=100, required=False,
+                                 label='Coordinate Reference System',
+                                 widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    northlimit = forms.DecimalField(label='North Extent',
+                                    widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    eastlimit = forms.DecimalField(label='East Extent',
+                                   widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    southlimit = forms.DecimalField(label='South Extent',
+                                    widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    westlimit = forms.DecimalField(label='West Extent',
+                                   widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit',
+                            widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    projection_string = forms.CharField(required=False, label='Coordinate String',
+                                        widget=forms.Textarea(attrs={'readonly': 'readonly'}))
+    datum = forms.CharField(max_length=1000, required=False, label='Datum',
+                            widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
-        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
+        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='OriginalCoverage')
         self.delete_modal_form = None
         self.number = 0
         self.delete_modal_form = None
@@ -70,13 +85,19 @@ class OriginalCoverageSpatialForm(forms.Form):
         if 'projection' in temp_cleaned_data:
             if len(temp_cleaned_data['projection']) == 0:
                 del temp_cleaned_data['projection']
+        if 'projection_string' in temp_cleaned_data:
+            if len(temp_cleaned_data['projection_string']) == 0:
+                del temp_cleaned_data['projection_string']
+        if 'datum' in temp_cleaned_data:
+            if len(temp_cleaned_data['datum']) == 0:
+                del temp_cleaned_data['datum']
 
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 
         if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
+            del self.cleaned_data['northlimit']
         if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
+            del self.cleaned_data['eastlimit']
         if 'southlimit' in self.cleaned_data:
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:
@@ -85,12 +106,17 @@ class OriginalCoverageSpatialForm(forms.Form):
             del self.cleaned_data['units']
         if 'projection' in self.cleaned_data:
             del self.cleaned_data['projection']
+        if 'projection_string' in self.cleaned_data:
+            del self.cleaned_data['projection_string']
+        if 'datum' in self.cleaned_data:
+            del self.cleaned_data['datum']
 
         return self.cleaned_data
 
 
 class CellInfoFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None,
+                 element_name=None, *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the
         # order these fields will be displayed
@@ -98,13 +124,17 @@ class CellInfoFormHelper(BaseFormHelper):
         crispy_form_fields = get_crispy_form_fields(form_field_names)
         layout = Layout(*crispy_form_fields)
 
-        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
+        super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id,
+                                                 element_id, element_name, layout,
+                                                 element_name_label='Cell Information',
+                                                 *args, **kwargs)
 
 
 class CellInfoForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CellInfoForm, self).__init__(*args, **kwargs)
-        self.helper = CellInfoFormHelper(allow_edit, res_short_id, element_id, element_name='CellInformation')
+        self.helper = CellInfoFormHelper(allow_edit, res_short_id,
+                                         element_id, element_name='CellInformation')
 
         if not allow_edit:
             for field in self.fields.values():
@@ -116,11 +146,11 @@ class CellInfoForm(ModelForm):
         fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
         exclude = ['content_object']
         widgets = {'rows': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'columns': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'cellSizeXValue': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'cellSizeYValue': forms.TextInput(attrs={'readonly': 'readonly'}),
-                    'cellDataType': forms.TextInput(attrs={'readonly': 'readonly'}),
-                }
+                   'columns': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   'cellSizeXValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   'cellSizeYValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   'cellDataType': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   }
 
 
 class CellInfoValidationForm(forms.Form):
@@ -133,16 +163,19 @@ class CellInfoValidationForm(forms.Form):
 
 # repeatable element related forms
 class BandBaseFormHelper(FormHelper):
-    def __init__(self, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
+    def __init__(self, res_short_id=None, element_id=None, element_name=None,
+                 element_layout=None, *args, **kwargs):
         super(BandBaseFormHelper, self).__init__(*args, **kwargs)
 
         if res_short_id:
             self.form_method = 'post'
             if element_id:
                 self.form_tag = True
-                self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % (res_short_id, element_name, element_id)
+                self.form_action = "/hsapi/_internal/%s/%s/%s/update-metadata/" % \
+                                   (res_short_id, element_name, element_id)
             else:
-                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % (res_short_id, element_name)
+                self.form_action = "/hsapi/_internal/%s/%s/add-metadata/" % \
+                                   (res_short_id, element_name)
                 self.form_tag = False
         else:
             self.form_tag = False
@@ -154,17 +187,20 @@ class BandBaseFormHelper(FormHelper):
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,
-                                     HTML('<div style="margin-top:10px">'
-                                          '<button type="submit" class="btn btn-primary">Save changes</button>'
-                                          '</div>')
-                            )
-                         )
+                                     HTML("""
+                                     <div style="margin-top:10px">
+                                     <button type="submit" class="btn btn-primary">
+                                     Save changes</button>
+                                     </div>
+                                     """)
+                                     )
+                                )
         else:
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,
-                            )
-                          )
+                                     )
+                                )
 
 
 class BandInfoFormHelper(BandBaseFormHelper):
@@ -177,7 +213,8 @@ class BandInfoFormHelper(BandBaseFormHelper):
         crispy_form_fields = get_crispy_form_fields(form_field_names)
         layout = Layout(*crispy_form_fields)
 
-        super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout, *args, **kwargs)
+        super(BandInfoFormHelper, self).__init__(res_short_id, element_id,
+                                                 element_name, layout, *args, **kwargs)
 
 
 class BandInfoForm(ModelForm):
@@ -210,7 +247,8 @@ class BandInfoForm(ModelForm):
 
     class Meta:
         model = BandInformation
-        fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue', 'method', 'comment']
+        fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue',
+                  'minimumValue', 'method', 'comment']
         exclude = ['content_object']
         # set the form layout of each field here.
         widgets = {'variableName': forms.TextInput(),
@@ -247,28 +285,30 @@ class BaseBandInfoFormSet(BaseFormSet):
 
 BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, extra=0)
 
-BandInfoLayoutEdit = Layout(
-    HTML('{% load crispy_forms_tags %} '
-         '<div class="col-sm-12 pull-left">'
-             '<div id="variables" class="well">'
-                 '<div class="row">'
-                     '{% for form in bandinfo_formset.forms %}'
-                     '<div class="col-sm-6 col-xs-12">'
-                         '<form id="{{form.form_id}}" action="{{ form.action }}" method="POST" enctype="multipart/form-data">'
-                             '{% crispy form %}'
-                             '<div class="row" style="margin-top:10px">'
-                                 '<div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">'
-                                     '<button type="button" class="btn btn-primary pull-right" '
-                                     'onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;"'
-                                     '>Save Changes</button>'
-                                 '</div>'
-                             '</div>'
-                         '</form>'
-                     '</div>'
-                     '{% endfor %}'
-                 '</div>'
-             '</div>'
-         '</div>'
-         )
-)
-
+BandInfoLayoutEdit = Layout(HTML("""
+{% load crispy_forms_tags %}
+     <div class="col-sm-12 pull-left">
+         <div id="variables" class="well">
+             <div class="row">
+                 {% for form in bandinfo_formset.forms %}
+                 <div class="col-sm-6 col-xs-12">
+                     <form id="{{form.form_id}}" action="{{ form.action }}" method="POST"
+                     enctype="multipart/form-data">
+                         {% crispy form %}
+                         <div class="row" style="margin-top:10px">'
+                             <div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">
+                                 <button type="button" class="btn btn-primary pull-right"
+                                 onclick="metadata_update_ajax_submit({{ form.form_id_button }});
+                                 return false;"
+                                 >Save Changes</button>
+                             </div>
+                         </div>
+                     </form>
+                 </div>
+                 {% endfor %}
+             </div>
+         </div>
+     </div>
+"""
+                                 )
+                            )

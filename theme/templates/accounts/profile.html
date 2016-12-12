@@ -161,7 +161,7 @@
                                     <fieldset class="col-sm-4">
                                         <label>Username *</label>
                                         <input id="id_username" class="form-control form-required" value="{{ profile_user.username }}" name="username">
-                                        <small class="text-muted">Only letters, numbers, dashes or underscores.</small>
+                                        <small class="text-muted">Only letters, numbers, dashes, +, @, dot, or underscores.</small>
                                     </fieldset>
                                 </div>
 
@@ -251,7 +251,7 @@
 
             <div class="full-width-tabs-container" id="user-profile-tabs">
                 <!-- Nav tabs -->
-                <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active">
                         <a href="#overview" aria-controls="home" role="tab"
                            data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
@@ -908,9 +908,10 @@
             return  flagRequiredElements && flagPasswords && flagEmail && flagUsername;
         }
 
-        // Only letters, numbers and dashes or underscore.
+        // Only letters, numbers, dashes, dot, underscore, +, or @
+        // to conform to the same user name validation rules in Django
         function validateUserName() {
-            var regex = /^[a-zA-Z0-9-_]+$/;
+            var regex = /^[a-zA-Z0-9-_.@+]+$/;
             var username = $("#id_username");
 
             if (!username.val()) {

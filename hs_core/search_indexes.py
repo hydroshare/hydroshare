@@ -16,6 +16,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     subjects = indexes.MultiValueField(faceted=True)
     public = indexes.BooleanField(faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
+    published = indexes.BooleanField(faceted=True)
     created = indexes.DateTimeField(model_attr='created', faceted=True)
     modified = indexes.DateTimeField(model_attr='updated', faceted=True)
     organizations = indexes.MultiValueField(faceted=True)
@@ -119,6 +120,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_public(self, obj):
         if hasattr(obj, 'raccess'):
             if obj.raccess.public:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+
+    def prepare_published(self, obj):
+        if hasattr(obj, 'raccess'):
+            if obj.raccess.published:
                 return True
             else:
                 return False

@@ -80,12 +80,12 @@ def check_doi_activation():
                                                    TYPE='result'))
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
-            success_cnt_elem = root.find('.//success_count')
+            failure_cnt_elem = root.find('.//failure_count')
             success = False
-            if rec_cnt_elem is not None and success_cnt_elem is not None:
-                rec_cnt = rec_cnt_elem.text
-                success_cnt = success_cnt_elem.text
-                if rec_cnt == success_cnt:
+            if rec_cnt_elem is not None and failure_cnt_elem is not None:
+                rec_cnt = int(rec_cnt_elem.text)
+                failure_cnt = int(failure_cnt_elem.text)
+                if rec_cnt > 0 and failure_cnt == 0:
                     res.doi = act_doi
                     res.save()
                     success = True

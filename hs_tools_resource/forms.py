@@ -6,6 +6,7 @@ from crispy_forms.layout import Layout, Field
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
     SupportedSharingStatus, AppHomePageUrl
 from hs_core.forms import BaseFormHelper
+from utils import get_SupportedResTypes_choices
 
 
 # TODO: reference hs_core.forms
@@ -42,8 +43,8 @@ class UrlBaseForm(ModelForm):
         exclude = ['content_object']
 
 
-class UrlBaseValidationForm(forms.Form):
-    value = forms.URLField(max_length=1024)
+class UrlValidationForm(forms.Form):
+    value = forms.URLField(max_length=1024, required=False)
 
 
 class AppHomePageUrlFormHelper(BaseFormHelper):
@@ -75,10 +76,6 @@ class AppHomePageUrlForm(ModelForm):
         model = AppHomePageUrl
         fields = ['value']
         exclude = ['content_object']
-
-
-class AppHomePageUrlValidationForm(forms.Form):
-    value = forms.URLField(max_length=1024)
 
 
 class VersionFormHelper(BaseFormHelper):
@@ -126,7 +123,7 @@ class ToolIconFormHelper(BaseFormHelper):
         # FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                Field('url', css_class=field_width)
+                Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = 'Icon URL'
         super(ToolIconFormHelper, self).__init__(allow_edit,
@@ -145,29 +142,12 @@ class ToolIconForm(ModelForm):
                                          res_short_id,
                                          element_id,
                                          element_name='ToolIcon')
-        self.fields['url'].label = ""
+        self.fields['value'].label = ""
 
     class Meta:
         model = ToolIcon
-        fields = ['url']
+        fields = ['value']
         exclude = ['content_object']
-
-
-class ToolIconValidationForm(forms.Form):
-    url = forms.CharField(max_length=1024)
-
-SupportedResTypes_choices = (
-    ('GenericResource', 'Generic Resource'),
-    ('RasterResource', 'Raster Resource'),
-    ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
-    ('TimeSeriesResource', 'Time Series Resource'),
-    ('NetcdfResource', 'NetCDF Resource'),
-    ('ModelProgramResource', 'Model Program Resource'),
-    ('ModelInstanceResource', 'Model Instance Resource'),
-    ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-    ('GeographicFeatureResource', 'Geographic Feature Resource'),
-    ('ScriptResource', 'Script Resource'),
-)
 
 
 class MetadataField(Field):
@@ -193,7 +173,7 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 
 class SupportedResTypesForm(ModelForm):
     supported_res_types = forms.\
-        MultipleChoiceField(choices=SupportedResTypes_choices,
+        MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                             widget=forms.CheckboxSelectMultiple(
                                     attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -222,7 +202,7 @@ class SupportedResTypesForm(ModelForm):
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
+    supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                                                     required=False)
 
 SupportedSharingStatus_choices = (
