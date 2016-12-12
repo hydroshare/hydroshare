@@ -152,7 +152,6 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("foo/file1.txt")
-        resfile.refresh_from_db()
         # should match computed path
         self.assertEqual(resfile.file_folder, "foo")
         self.assertEqual(resfile.storage_path, shortpath)
@@ -204,11 +203,14 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         fedpath = "/myzone/home/myuser"
         self.res.resource_federation_path = fedpath
         self.res.save()
+        # must load changes into resfile from self.res before setting storage path
+        resfile.content_object.refresh_from_db()
         resfile.set_storage_path('file1.txt', test_exists=False)
-        resfile.resource_file = None
-        resfile.save()
 
+        print("storage path is " + str(resfile.storage_path))
+        print("get_path is " + get_path(resfile, 'file1.txt'))
         self.assertEqual(self.res.resource_federation_path, fedpath)
+
         self.assertEqual(resfile.storage_path, get_path(resfile, 'file1.txt'))
 
         # determine where that file should live; THIS IS FAKE
@@ -246,10 +248,9 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # conclusion: strip off federation path
         self.res.resource_federation_path = oldfedpath
         self.res.save()
-        resfile.resource_file = oldpath
-        resfile.fed_resource_file = None
-        resfile.save()
-        self.res.refresh_from_db()
+        # must load changes into resfile from self.res before setting storage path
+        resfile.content_object.refresh_from_db()
+        resfile.set_storage_path(oldpath, test_exists=False)
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
@@ -280,11 +281,10 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # cheat: set a fake federated path to test path logic
         fedpath = "/myzone/home/myuser"
-
-        # intentionally break path logic by setting an unused federation path
         self.res.resource_federation_path = fedpath
         self.res.save()
-        resfile.set_storage_path("foo/file1.txt", test_exists=False)
+        resfile.content_object.refresh_from_db()
+        resfile.set_storage_path('foo/file1.txt', test_exists=False)
 
         # determine where that file should live
         shortpath = os.path.join(fedpath, self.res.short_id, "data",
@@ -323,9 +323,8 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # conclusion: unfederate the resource
         self.res.resource_federation_path = ""
         self.res.save()
+        resfile.content_object.refresh_from_db()
         resfile.set_storage_path("foo/file1.txt", test_exists=False)
-        resfile.save()
-        self.res.refresh_from_db()
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)

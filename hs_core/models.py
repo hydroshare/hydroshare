@@ -1526,8 +1526,7 @@ def get_path(instance, filename, folder=None):
     """
 
     # instance.content_object can be stale after changes. Re-fetch based upon key
-    resource = BaseResource.objects.get(pk=instance.resource.pk)
-    resource.refresh_from_db()
+    resource = instance.resource
     # retrieve federation path -- if any -- from Resource object containing FileField
     if resource.resource_federation_path:
         # return FQN if set via resource_file = text_path
@@ -1608,8 +1607,7 @@ class ResourceFile(models.Model):
         """
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
-        resource = BaseResource.objects.get(pk=self.resource.pk)
-        resource.refresh_from_db()
+        resource = self.resource
         if resource.resource_federation_path:  # false if None or empty
             return self.fed_resource_file.name
         else:
@@ -1626,7 +1624,7 @@ class ResourceFile(models.Model):
         Path can be absolute or relative.
 
             * absolute paths contain full irods path to local or federated object.
-            * relative paths start with anything else and ican start with optional folder
+            * relative paths start with anything else and can start with optional folder
 
         :raises ValidationError: if the pathname is inconsistent with resource configuration.
         It is rather important that applications call this rather than simply calling
@@ -1642,8 +1640,7 @@ class ResourceFile(models.Model):
 
         # self.content_object can be stale after changes. Re-fetch based upon key
         # bypass type system; it is not relevant
-        resource = BaseResource.objects.get(pk=self.resource.pk)
-        resource.refresh_from_db()
+        resource = self.resource
 
         # switch FileFields based upon federation path
         if resource.resource_federation_path:
@@ -1664,8 +1661,7 @@ class ResourceFile(models.Model):
         """
         # self.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
-        resource = BaseResource.objects.get(pk=self.resource.pk)
-        resource.refresh_from_db()
+        resource = self.resource
 
         if test_exists:
             storage = resource.get_irods_storage()
