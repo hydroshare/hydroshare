@@ -17,7 +17,7 @@ import netCDF4
 import numpy
 
 
-# Functions for General Purpose #################################################
+# Functions for General Purpose
 def get_nc_dataset(nc_file_name):
     """
     (string)-> object
@@ -192,7 +192,7 @@ def get_nc_variable_coordinate_meta(nc_dataset, nc_variable_name):
     return nc_variable_coordinate_meta
 
 
-# Functions for Coordinate Variable################################################
+# Functions for Coordinate Variable
 # coordinate variable has the following attributes:
 # 1) it has 1 dimension
 # 2) its name is the same as its dimension name (COARDS convention)
@@ -396,7 +396,7 @@ def get_nc_grid_mapping_crs_name(nc_dataset):
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
     nc_grid_mapping_crs_name = ''
 
-    if hasattr(nc_grid_mapping_variable, 'crs_wkt')or \
+    if hasattr(nc_grid_mapping_variable, 'crs_wkt') or \
        hasattr(nc_grid_mapping_variable, 'spatial_ref'):
         projection_string = nc_grid_mapping_variable.crs_wkt\
                             if hasattr(nc_grid_mapping_variable, 'crs_wkt')\

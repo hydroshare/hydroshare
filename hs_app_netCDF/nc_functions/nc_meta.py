@@ -59,7 +59,7 @@ def get_nc_meta_dict(nc_file_name):
     return nc_meta_dict
 
 
-# Functions for dublin  core meta ###############################################################
+# Functions for dublin core meta
 def get_dublin_core_meta(nc_dataset):
     """
     (object)-> dict
@@ -440,7 +440,7 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
     return limit_meta
 
 
-# Functions for type specific meta ##############################################
+# Functions for type specific meta
 def get_type_specific_meta(nc_dataset):
     """
     (object)-> dict

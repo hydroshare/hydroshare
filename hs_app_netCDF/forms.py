@@ -70,7 +70,7 @@ class OriginalCoverageForm(forms.Form):
         return form_id
 
     @property
-    def form_if_button(self):
+    def form_id_button(self):
         form_id = 'id_original_coverage_%s' % self.number
         return "'" + form_id + "'"
 
@@ -158,9 +158,6 @@ class VariableFormHelper(FormHelper):
                      Field('missing_value', css_class=field_width)
                      ),
             )
-
-        # super(VariableFormHelper, self).__init__(allow_edit, res_short_id,
-        # element_id, element_name, layout,  *args, **kwargs)
 
 
 class VariableForm(ModelForm):

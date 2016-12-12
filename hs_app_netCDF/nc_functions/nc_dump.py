@@ -44,7 +44,7 @@ def get_netcdf_header_file(nc_file_name, dump_folder=''):
     # name with no file extension
     nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1])
     nc_dump_file_folder = dump_folder if dump_folder else os.getcwd()
-    nc_dump_file_name = nc_dump_file_folder+'/'+nc_file_basename+'_header_info.txt'
+    nc_dump_file_name = nc_dump_file_folder + '/' + nc_file_basename + '_header_info.txt'
     nc_dump_file = open(nc_dump_file_name, 'w')
 
     # write the nc_dump string in text fle
@@ -52,10 +52,6 @@ def get_netcdf_header_file(nc_file_name, dump_folder=''):
         if get_nc_dump_string_by_ncdump(nc_file_name) else get_nc_dump_string(nc_file_name)
     if dump_string:
         nc_dump_file.write(dump_string)
-        print '{0}_header_info.txt is created'.format(nc_file_basename)
-    else:
-        print 'Failed to create the header info file'
-        print nc_file_basename
 
 
 def get_nc_dump_string_by_ncdump(nc_file_name):
