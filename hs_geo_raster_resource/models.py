@@ -96,7 +96,7 @@ class OriginalCoverage(AbstractMetaDataElement):
             value_dict = cov.value
 
             for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
-                              'projection_name', 'projection_string', 'datum'):
+                              'projection', 'projection_string', 'datum'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
@@ -110,7 +110,6 @@ class OriginalCoverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_to_xml_container(self, container):
-        # TODO: Pabitra - include the new attributes of this element
         NAMESPACES = CoreMetaData.NAMESPACES
         cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
         cov_term = '{%s}' + 'box'
@@ -123,8 +122,11 @@ class OriginalCoverage(AbstractMetaDataElement):
                        self.value['southlimit'], self.value['westlimit'],
                        self.value['units'])
 
-        if 'projection' in self.value:
-            cov_value += '; projection=%s' % self.value['projection']
+        for meta_element in self.value:
+            if meta_element == 'projection':
+                cov_value += '; projection_name={}'.format(self.value[meta_element])
+            if meta_element in ['projection_string', 'datum']:
+                cov_value += '; {}={}'.format(meta_element, self.value[meta_element])
 
         rdf_coverage_value.text = cov_value
 
@@ -133,8 +135,10 @@ class OriginalCoverage(AbstractMetaDataElement):
         from .forms import OriginalCoverageSpatialForm
 
         ori_coverage_data_dict = dict()
-        ori_coverage_data_dict['units'] = self.value['units']
         ori_coverage_data_dict['projection'] = self.value.get('projection', None)
+        ori_coverage_data_dict['datum'] = self.value.get('datum', None)
+        ori_coverage_data_dict['projection_string'] = self.value.get('projection_string', None)
+        ori_coverage_data_dict['units'] = self.value['units']
         ori_coverage_data_dict['northlimit'] = self.value['northlimit']
         ori_coverage_data_dict['eastlimit'] = self.value['eastlimit']
         ori_coverage_data_dict['southlimit'] = self.value['southlimit']
@@ -147,7 +151,6 @@ class OriginalCoverage(AbstractMetaDataElement):
         return originalcov_form
 
     def get_html(self, pretty=True):
-        # TODO: Pabitra - include the new attributes of this element
         # Using the dominate module to generate the
         # html to display data for this element (resource view mode)
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
@@ -161,11 +164,16 @@ class OriginalCoverage(AbstractMetaDataElement):
                 with tbody():
                     with tr():
                         get_th('Coordinate Reference System')
-                        td(self.value['projection'])
+                        td(self.value.get('projection', ''))
                     with tr():
                         get_th('Coordinate Reference System Unit')
                         td(self.value['units'])
-
+                    with tr():
+                        get_th('Datum')
+                        td(self.value.get('datum', ''))
+                    with tr():
+                        get_th('Coordinate String')
+                        td(self.value.get('projection_string', ''))
             h4('Extent')
             with table(cls='custom-table'):
                 with tbody():

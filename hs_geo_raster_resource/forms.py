@@ -17,7 +17,7 @@ class OriginalCoverageFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet
         # is the order these fields will be displayed
         field_width = 'form-control input-sm'
-        form_field_names = ['projection', 'datum' 'units', 'projection_string' 'northlimit',
+        form_field_names = ['projection', 'datum', 'projection_string', 'units', 'northlimit',
                             'westlimit', 'southlimit', 'eastlimit']
         crispy_form_fields = get_crispy_form_fields(form_field_names)
         layout = Layout(*crispy_form_fields)
