@@ -71,7 +71,7 @@ def get_nc_variable_original_meta(nc_dataset, nc_variable_name):
     return nc_variable_original_meta
 
 
-# Functions for coordinate information of the dataset ########################################
+# Functions for coordinate information of the dataset
 # The functions below will call functions defined for auxiliary, coordinate and bounds variables.
 def get_nc_variables_coordinate_type_mapping(nc_dataset):
     """
@@ -228,7 +228,7 @@ def get_nc_coordinate_variable_namelist(nc_dataset):
     return nc_coordinate_variable_namelist
 
 
-# Functions for Auxiliary Coordinate Variable ###########################################
+# Functions for Auxiliary Coordinate Variable
 # auxiliary variable has the following attributes:
 # 1) it is used when the variable dimensions are not representing the lat, lon,
 #    time and vertical coordinate
@@ -271,7 +271,7 @@ def get_nc_auxiliary_coordinate_variables(nc_dataset):
     return nc_auxiliary_coordinate_variables
 
 
-# Functions for Bounds Variable ######################################################
+# Functions for Bounds Variable
 # the Bounds variable has the following attributes:
 # 1) bounds variable is used to define the cell
 # 2) It is associated with the coordinate or auxiliary coordinate variable.
@@ -310,7 +310,7 @@ def get_nc_coordinate_bounds_variable_namelist(nc_dataset):
     return nc_coordinate_bounds_variable_namelist
 
 
-# Function for Data Variable ################################################
+# Function for Data Variable
 def get_nc_data_variables(nc_dataset):
     """
     (object) -> dict
@@ -341,7 +341,7 @@ def get_nc_data_variable_namelist(nc_dataset):
     return nc_data_variable_namelist
 
 
-# Function for Grid Mapping Variable ########################################################
+# Function for Grid Mapping Variable 
 def get_nc_grid_mapping_variable_name(nc_dataset):
     """
     (object)-> string
