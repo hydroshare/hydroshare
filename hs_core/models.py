@@ -1885,6 +1885,8 @@ class BaseResource(Page, AbstractResource):
             f_sizes = [int(f.fed_resource_file_size)
                        if f.fed_resource_file_size else 0
                        for f in self.files.all()]
+            # TODO: this is not the total file size. It is only for federated files.
+            # TODO: It also does not include metadata sizes. Suggest an iRODS call instead. 
             total_file_size += sum(f_sizes)
         except SessionException:
             pass
