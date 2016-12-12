@@ -142,9 +142,10 @@ class OriginalCoverage(AbstractMetaDataElement):
         ori_coverage_data_dict['southlimit'] = self.value['southlimit']
         ori_coverage_data_dict['westlimit'] = self.value['westlimit']
 
-        originalcov_form = OriginalCoverageSpatialForm(initial=ori_coverage_data_dict,
-                                     res_short_id=resource.short_id if resource else None,
-                                     element_id=self.id if self else None)
+        originalcov_form = OriginalCoverageSpatialForm(
+            initial=ori_coverage_data_dict,
+            res_short_id=resource.short_id if resource else None,
+            element_id=self.id if self else None)
 
         return originalcov_form
 
