@@ -1564,13 +1564,15 @@ def _path_is_allowed(path):
         raise ValidationError("Empty file paths are not allowed")
     if '/../' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
-    # the file_folder attribute makes uploads work properly. It is otherwise not used.
+    # This is used to direct uploads to a subfolder of the root folder. See get_path above.
     file_folder = models.CharField(max_length=255, null=True)
     resource_file = models.FileField(upload_to=get_path, max_length=500,
                                      null=True, blank=True, storage=IrodsStorage())
@@ -1810,6 +1812,17 @@ class BaseResource(Page, AbstractResource):
             return IrodsStorage('federated')
         else:
             return IrodsStorage()
+
+    @property
+    def root_path(self):
+        """
+        Return the root folder of the iRODS structure containing
+        resource files.
+        """
+        if self.resource_federation_path:
+            return os.path.join(self.resource_federation_path, self.short_id)
+        else:
+            return self.short_id
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
