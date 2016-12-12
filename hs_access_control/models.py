@@ -773,21 +773,6 @@ class UserAccess(models.Model):
         the target of the sharing.
 
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert this_privilege >= PrivilegeCodes.OWNER \
-                and this_privilege <= PrivilegeCodes.VIEW
-            if user is not None:
-                assert isinstance(user, User)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
-        if user is not None:
-            if not user.is_active:
-                raise PermissionDenied("Grantee user is not active")
-
         access_group = this_group.gaccess
 
         # access control logic:
@@ -918,6 +903,13 @@ class UserAccess(models.Model):
             assert isinstance(this_user, User)
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
 
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+
         # raise a PermissionDenied exception if user self is not allowed to do this.
         self.__check_share_group_with_user(this_group, this_user, this_privilege)
 
@@ -970,6 +962,13 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
             assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Grantee user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
 
         self.__check_unshare_group_with_user(this_group, this_user)
 
@@ -1027,17 +1026,7 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_group_with_user(self, this_group, this_user):
-
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_group, Group)
-            assert isinstance(this_user, User)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_user.is_active:
-            raise PermissionDenied("Grantee user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
+        """ Check whether an unshare of a group with a user is permitted. """
 
         if this_user not in this_group.gaccess.members:
             raise PermissionDenied("User is not a member of the group")
@@ -1479,17 +1468,6 @@ class UserAccess(models.Model):
         the target of the sharing.
 
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
-            if user is not None:
-                assert isinstance(user, User)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if user is not None and not user.is_active:
-            raise PermissionDenied("Target user is not active")
-
         # translate into ResourceAccess object
         access_resource = this_resource.raccess
 
@@ -1557,17 +1535,17 @@ class UserAccess(models.Model):
         This function returns False exactly when share_resource_with_group will raise
         an exception if called.
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert this_privilege >= PrivilegeCodes.OWNER \
-                and this_privilege <= PrivilegeCodes.VIEW
-            if this_user is not None:
-                assert isinstance(this_user, User)
+        # if __debug__:  # during testing only, check argument types and preconditions
+        #     assert isinstance(this_resource, BaseResource)
+        #     assert this_privilege >= PrivilegeCodes.OWNER \
+        #         and this_privilege <= PrivilegeCodes.VIEW
+        #     if this_user is not None:
+        #         assert isinstance(this_user, User)
 
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if this_user is not None and not this_user.is_active:
-            raise PermissionDenied("Target user is not active")
+        # if not self.user.is_active:
+        #     raise PermissionDenied("Requesting user is not active")
+        # if not this_user.is_active:
+        #     raise PermissionDenied("Target user is not active")
 
         return self.can_share_resource(this_resource, this_privilege, user=this_user)
 
@@ -1585,17 +1563,6 @@ class UserAccess(models.Model):
         This determines whether the current user can share a resource with
         a specific user.
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert this_privilege >= PrivilegeCodes.OWNER \
-                and this_privilege <= PrivilegeCodes.VIEW
-            assert isinstance(this_user, User)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_user.is_active:
-            raise PermissionDenied("Target user is not active")
-
         return self.__check_share_resource(this_resource, this_privilege, user=this_user)
 
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
@@ -1617,6 +1584,7 @@ class UserAccess(models.Model):
                 and this_privilege <= PrivilegeCodes.VIEW
 
         access_group = this_group.gaccess
+
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
         if not access_group.active:
@@ -1641,18 +1609,6 @@ class UserAccess(models.Model):
         This determines whether the current user can share a resource with
         a specific group.
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert isinstance(this_group, Group)
-            assert this_privilege >= PrivilegeCodes.OWNER \
-                and this_privilege <= PrivilegeCodes.VIEW
-
-        access_group = this_group.gaccess
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not access_group.active:
-            raise PermissionDenied("Group to share with is not active")
-
         if this_privilege == PrivilegeCodes.OWNER:
             raise PermissionDenied("Groups cannot own resources")
         if this_privilege < PrivilegeCodes.OWNER or this_privilege > PrivilegeCodes.VIEW:
@@ -1662,6 +1618,7 @@ class UserAccess(models.Model):
         if not self.can_share_resource(this_resource, this_privilege):
             raise PermissionDenied("User has insufficient sharing privilege over resource")
 
+        access_group = this_group.gaccess
         if self.user not in access_group.members and not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
@@ -1698,6 +1655,11 @@ class UserAccess(models.Model):
             assert isinstance(this_resource, BaseResource)
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
 
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Target user is not active")
+
         # check that this is allowed and raise exception otherwise.
         self.__check_share_resource_with_user(this_resource, this_user, this_privilege)
 
@@ -1733,6 +1695,11 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("Target user is not active")
 
         # check that this is allowed and raise exception otherwise.
         self.__check_unshare_resource_with_user(this_resource, this_user)
@@ -1794,15 +1761,6 @@ class UserAccess(models.Model):
 -       Note that can_unshare_X is parallel to unshare_X and returns False exactly
 -       when __check_unshare_X and unshare_X will raise an exception.
         """
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert isinstance(this_user, User)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_user.is_active:
-            raise PermissionDenied("Grantee user is not active")
-
         if this_user not in this_resource.raccess.view_users:
             raise PermissionDenied("User is not a member of the group")
 
@@ -1845,6 +1803,12 @@ class UserAccess(models.Model):
             assert this_privilege >= PrivilegeCodes.OWNER \
                 and this_privilege <= PrivilegeCodes.VIEW
 
+        access_group = this_group.gaccess
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not access_group.active:
+            raise PermissionDenied("Group to share with is not active")
+
         # validate the request as allowed
         self.__check_share_resource_with_group(this_resource, this_group, this_privilege)
 
@@ -1883,6 +1847,11 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
             assert isinstance(this_group, Group)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
 
         # check that this is allowed
         self.__check_unshare_resource_with_group(this_resource, this_group)
@@ -1930,16 +1899,7 @@ class UserAccess(models.Model):
             return False
 
     def __check_unshare_resource_with_group(self, this_resource, this_group):
-
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-            assert isinstance(this_group, Group)
-
-        if not self.user.is_active:
-            raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active:
-            raise PermissionDenied("Group is not active")
-
+        """ check that one can unshare a group with a resource, raise PermissionDenied if not """
         if this_group not in this_resource.raccess.view_groups:
             raise PermissionDenied("Group does not have access to resource")
 
@@ -2226,7 +2186,7 @@ class GroupAccess(models.Model):
                                        u2ugp__group=self.group,
                                        u2ugp__privilege=PrivilegeCodes.CHANGE)
 
-        else:  # this_privilege == PrivilegeCodes.ViEW
+        else:  # this_privilege == PrivilegeCodes.VIEW
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
                                        u2ugp__privilege=PrivilegeCodes.VIEW)
