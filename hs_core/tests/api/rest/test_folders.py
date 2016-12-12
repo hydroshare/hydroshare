@@ -55,7 +55,7 @@ class TestFolders(HSRESTTestCase):
         # delete that folder: should be possible
         response = self.client.delete(url2, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
