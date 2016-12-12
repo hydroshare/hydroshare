@@ -3,13 +3,11 @@ from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
-from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import *
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
@@ -328,6 +326,7 @@ class CellInformation(AbstractMetaDataElement):
                         td(self.cellDataType)
 
         return root_div.render(pretty=pretty)
+
 
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):

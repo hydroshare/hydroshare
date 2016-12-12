@@ -476,7 +476,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # direct replacement does not work
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource,
-                                        fed_resource_file_name_or_path=tgt_name)
+                                                   fed_resource_file_name_or_path=tgt_name)
             res_file.mime_type = get_file_mime_type(res_file.fed_resource_file_name_or_path)
             res_file.save()
         else:
@@ -489,7 +489,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 new_str = old_str.replace(src_name, tgt_name)
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
-                                            fed_resource_file_name_or_path=new_str)
+                                                       fed_resource_file_name_or_path=new_str)
                 res_file.mime_type = get_file_mime_type(res_file.fed_resource_file_name_or_path)
                 res_file.save()
     else:
