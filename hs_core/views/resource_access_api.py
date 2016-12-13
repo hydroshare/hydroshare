@@ -107,31 +107,36 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         if "group_id" in keys and "privilege" in keys:
             group_to_add = utils.group_from_id(request.data['group_id'])
             try:
-                user_access.share_resource_with_group(resource, group_to_add, request.data['privilege'])
+                user_access.share_resource_with_group(resource,
+                                                      group_to_add,
+                                                      request.data['privilege'])
                 return Response(
                     data={'success': "Resource access privileges added."},
                     status=status.HTTP_202_ACCEPTED
                 )
-            except Exception as e:
+            except Exception:
                 return Response(
-                    data={'error': "This group may not be added to any resources." },
+                    data={'error': "This group may not be added to any resources."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
         return Response(
-            data={'error': "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            data={'error':
+                      "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
             status=status.HTTP_200_OK
         )
 
     def delete(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
+        view_utils.authorize(request, pk,
+                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
         keys = request.query_params.keys()
         user_access = UserAccess(user=request.user)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
 
         if "user_id" in keys and "group_id" in keys:
             return Response(
-                data={'error': "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
+                data={'error':
+                          "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -152,7 +157,8 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
             )
 
         return Response(
-            data={'error': "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            data={'error':
+                      "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
             status=status.HTTP_200_OK
         )
 
