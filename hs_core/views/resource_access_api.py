@@ -120,9 +120,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+        message = "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"
         return Response(
-            data={'error':
-                      "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            data={'error': message},
             status=status.HTTP_200_OK
         )
 
@@ -134,9 +134,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
 
         if "user_id" in keys and "group_id" in keys:
+            message = "Request cannot contain both a 'user_id' and a 'group_id' parameter."
             return Response(
-                data={'error':
-                          "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
+                data={'error': message},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -156,9 +156,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_202_ACCEPTED
             )
 
+        message = "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"
         return Response(
-            data={'error':
-                      "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"},
+            data={'error': message},
             status=status.HTTP_200_OK
         )
 
