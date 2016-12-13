@@ -256,8 +256,6 @@ class AbstractFileMetaData(models.Model):
                 with div(cls="form-group"):
                     with div(cls="control-group"):
                         legend('Title')
-                        # label("Title", cls="control-label requiredField",
-                        #       fr="file_dataset_name")
                         with div(cls="controls"):
                             input(value=dataset_name,
                                   cls="form-control input-sm textinput textInput",
@@ -487,8 +485,8 @@ class AbstractLogicalFile(models.Model):
         # metadata as part of deleting a resource file object. However, if custom logic requires
         # deleting logical file object (lfo) then instead of using lfo.delete(), you must use
         # lfo.logical_delete()
+
         from hs_core.hydroshare.resource import delete_resource_file
-        self.delete_metadata()
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
@@ -496,11 +494,8 @@ class AbstractLogicalFile(models.Model):
                                      delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
         metadata = self.metadata
         super(AbstractLogicalFile, self).delete()
         metadata.delete()
-
-    def delete_metadata(self):
-        # delete all metadata associated with this file type
-        if self.has_metadata:
-            self.metadata.delete_all_elements()

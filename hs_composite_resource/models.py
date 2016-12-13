@@ -16,8 +16,11 @@ class CompositeResource(BaseResource):
 
     @property
     def can_be_public_or_discoverable(self):
+        # resource level metadata check
         if not super(CompositeResource, self).can_be_public_or_discoverable:
             return False
+
+        # filetype level metadata check
         for lf in self.logical_files:
             if not lf.metadata.has_all_required_elements():
                 return False
@@ -75,7 +78,7 @@ class CompositeResource(BaseResource):
         tgt_file_dir = os.path.dirname(tgt_full_path)
         src_file_dir = os.path.dirname(src_full_path)
 
-        def check_targe_directory():
+        def check_target_directory():
             path_to_check = ''
             if istorage.exists(tgt_file_dir):
                 path_to_check = tgt_file_dir
@@ -112,13 +115,13 @@ class CompositeResource(BaseResource):
                 raise ValidationError(err_msg)
 
             # check if the target directory allows stuff to be moved there
-            check_targe_directory()
+            check_target_directory()
         else:
             # src_full_path is a folder path without file name
             # tgt_full_path also must be a folder path without file name
             # check that if the target folder contains any files and if any of those files
             # allow moving stuff there
-            check_targe_directory()
+            check_target_directory()
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed

@@ -1459,9 +1459,10 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.fed_resource_file.delete()
 
             if fl.logical_file is not None:
-                fl.logical_file.delete_metadata()
-                # delete of metadata deletes the logical file (one-to-one relation)
-                # so no need for fl.logical_file.delete()
+                # delete of metadata file deletes the logical file (one-to-one relation)
+                # so no need for fl.logical_file.delete() and deleting of metadata file
+                # object deletes (cascade delete) all the contained GenericRelated metadata
+                # elements
                 fl.logical_file.metadata.delete()
 
             fl.delete()
