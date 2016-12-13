@@ -52,8 +52,20 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         self.r3_resource = hydroshare.create_resource(
             resource_type='GenericResource', owner=self.A_user, title='R3', metadata=[],)
 
-    def test_01_resource_unshared_state(self):
-        "Resources cannot be accessed by users with no access"
+        self.A_group = self.A_user.uaccess\
+            .create_group(title='Test Group A',
+                          description="This group is all about testing")
+
+        self.B_group = self.B_user.uaccess\
+            .create_group(title='Test Group B',
+                          description="This group is all about testing")
+
+        self.C_group = self.C_user.uaccess\
+            .create_group(title='Test Group C',
+                          description="This group is all about testing")
+
+    def test_01_user_level_access(self):
+        "Test all options for user-level access (the default)"
         A_user = self.A_user
         B_user = self.B_user
         C_user = self.C_user
@@ -193,3 +205,65 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             is_equal_to_as_set(
                 foo, [
                     r1_resource, r2_resource, r3_resource]))
+
+    def test_02_group_level_access(self):
+
+        A_user = self.A_user
+        B_user = self.B_user
+        A_group = self.A_group
+        B_group = self.B_group
+        r1_resource = self.r1_resource
+        r2_resource = self.r2_resource
+        r3_resource = self.r3_resource
+
+        # A owns everything
+        g = A_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource, r2_resource, r3_resource]))
+
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        A_user.uaccess.share_resource_with_group(r1_resource, A_group, PrivilegeCodes.CHANGE)
+
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        A_user.uaccess.share_group_with_user(A_group, B_user, PrivilegeCodes.CHANGE)
+
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+
+        # no user owned resources
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+
+        # mixed dominance relationships:
+        # in situations where there is a higher privilege,
+        # lower privilege should be eliminated, even if from a different source
+
+        B_user.uaccess.share_resource_with_group(r1_resource, B_group, PrivilegeCodes.CHANGE)
+        A_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.OWNER)
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
