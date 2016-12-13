@@ -1200,7 +1200,7 @@ class UserAccess(models.Model):
                                    .distinct()
 
     # TODO: make this conformant to Sphinx conventions.
-    def get_resources_with_explicit_access(self, this_privilege):
+    def get_resources_with_explicit_access(self, this_privilege, via_user=True, via_group=False):
         """
         Get a list of resources that the user has the specified privilege
         Args:
@@ -1217,32 +1217,82 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         if this_privilege == PrivilegeCodes.OWNER:
-            return BaseResource.objects\
-                .filter(r2urp__privilege=this_privilege,
-                        r2urp__user=self.user)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(r2urp__user=self.user,
-                                 r2urp__privilege__lt=this_privilege))
+            if via_user:
+                return BaseResource.objects\
+                    .filter(r2urp__privilege=this_privilege,
+                            r2urp__user=self.user)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(r2urp__user=self.user,
+                                     r2urp__privilege__lt=this_privilege))
+            else:
+                # groups can't own resources
+                return BaseResource.objects.empty()
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
+            uquery = Q(raccess__immutable=False,
+                       r2urp__privilege=this_privilege,
+                       r2urp__user=self.user)
+            uexcl = Q(raccess__immutable=False,
+                      r2urp__privilege__lt=this_privilege,
+                      r2urp__user=self.user)
+
+            gquery = Q(raccess__immutable=False,
+                       r2grp__privilege=this_privilege,
+                       r2grp__group__g2ugp__user=self.user)
+            gexcl = Q(raccess__immutable=False,
+                      r2grp__privilege__lt=this_privilege,
+                      r2grp__group__g2ugp__user=self.user)
+
+            if via_user and via_group:
+                query = uquery | gquery
+                excl = uexcl | gexcl
+            elif via_user:
+                query = uquery
+                excl = uexcl
+            elif via_group:
+                query = gquery
+                excl = gexcl
+            else:
+                # nothing matches
+                return BaseResource.objects.empty()
+
             return BaseResource.objects\
-                .filter(raccess__immutable=False,
-                        r2urp__privilege=this_privilege,
-                        r2urp__user=self.user)\
+                .filter(query)\
                 .exclude(pk__in=BaseResource.objects
-                         .filter(r2urp__user=self.user,
-                                 r2urp__privilege__lt=this_privilege))
+                         .filter(excl)).distinct()
 
         else:  # this_privilege == PrivilegeCodes.ViEW
             # VIEW includes CHANGE+immutable as well as explicit VIEW
             # TODO: make this query more efficient, if possible!
+            # CHANGE does not include immutable resources
+            uquery = Q(r2urp__privilege=this_privilege,
+                       r2urp__user=self.user)
+            uexcl = Q(r2urp__privilege__lt=this_privilege,
+                      r2urp__user=self.user)
+
+            gquery = Q(r2grp__privilege=this_privilege,
+                       r2grp__group__g2ugp__user=self.user)
+            gexcl = Q(r2grp__privilege__lt=this_privilege,
+                      r2grp__group__g2ugp__user=self.user)
+
+            if via_user and via_group:
+                query = uquery | gquery
+                excl = uexcl | gexcl
+            elif via_user:
+                query = uquery
+                excl = uexcl
+            elif via_group:
+                query = gquery
+                excl = gexcl
+            else:
+                # nothing matches
+                return BaseResource.objects.empty()
+
             view = BaseResource.objects\
-                .filter(r2urp__privilege=PrivilegeCodes.VIEW,
-                        r2urp__user=self.user)\
+                .filter(query)\
                 .exclude(pk__in=BaseResource.objects
-                         .filter(r2urp__user=self.user,
-                                 r2urp__privilege__lt=PrivilegeCodes.VIEW))
+                         .filter(excl))
 
             immutable = BaseResource.objects\
                 .filter(raccess__immutable=True,
