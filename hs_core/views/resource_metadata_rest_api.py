@@ -184,7 +184,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        # Update science metadata based on resourcemetadata.xml uploaded
+        # Update science metadata
         resource, authorized, user = view_utils.authorize(
             request, pk,
             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
