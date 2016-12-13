@@ -13,7 +13,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 class PrivilegeField(serializers.Field):
     def to_representation(self, privilege):
-       return PrivilegeCodes.PRIVILEGE_CHOICES[privilege-1][1]
+        return PrivilegeCodes.PRIVILEGE_CHOICES[privilege-1][1]
 
 
 class GroupResourcePrivilegeSerializer(serializers.ModelSerializer):
@@ -69,26 +69,32 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     allowed_methods = ('GET', 'PUT', 'DELETE')
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS)
+        view_utils.authorize(request, pk,
+                             needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS)
 
         user_resource_serializer, group_resource_serializer = self.get_serializer_classes()
         user_resource_privilege, group_resource_privilege = self.get_queryset(pk, request.user)
 
         response_data = dict()
-        response_data['users'] = user_resource_serializer(user_resource_privilege, many=True).data
-        response_data['groups'] = group_resource_serializer(group_resource_privilege, many=True).data
+        response_data['users'] = \
+            user_resource_serializer(user_resource_privilege, many=True).data
+        response_data['groups'] = \
+            group_resource_serializer(group_resource_privilege, many=True).data
 
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
+        view_utils.authorize(request, pk,
+                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS)
         user_access = UserAccess(user=request.user)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         keys = request.data.keys()
 
         if "user_id" in keys and "group_id" in keys:
             return Response(
-                data={'error': "Request cannot contain both a 'user_id' and a 'group_id' parameter."},
+                data={
+                    'error': "Request cannot contain both a 'user_id' and a 'group_id' parameter."
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -108,9 +114,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                     data={'success': "Resource access privileges added."},
                     status=status.HTTP_202_ACCEPTED
                 )
-            except Exception:
+            except Exception as e:
                 return Response(
-                    data={'error': "This group may not be added to any resources"},
+                    data={'error': "This group may not be added to any resources." },
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
