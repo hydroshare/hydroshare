@@ -38,29 +38,14 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "contributors": [{
                 "name": "Test Name 1",
-                "description": "Desc 1",
-                "organization": "Org 1",
-                "email": "email1@email.com",
-                "address": "Address 1",
-                "phone": "1234567890",
-                "homepage": "http://homepage1.com"
+                "organization": "Org 1"
             }, {
                 "name": "Test Name 2",
-                "description": "Desc 2",
-                "organization": "Org 2",
-                "email": "email2@email.com",
-                "address": "Address 2",
-                "phone": "1234567891",
-                "homepage": "http://homepage2.com"
+                "organization": "Org 2"
             }],
             "creators": [{
                 "name": "Creator",
-                "description": "Desc",
-                "organization": "Org 1",
-                "email": "email1@email.com",
-                "address": "Address 1",
-                "phone": "1234567890",
-                "homepage": "http://homepage1.com"
+                "organization": "Org 1"
             }],
             "coverages": [{
                 "type": "box",
