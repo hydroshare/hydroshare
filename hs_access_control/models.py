@@ -1199,16 +1199,46 @@ class UserAccess(models.Model):
                                               r2grp__privilege__lte=PrivilegeCodes.CHANGE)))\
                                    .distinct()
 
-    # TODO: make this conformant to Sphinx conventions.
     def get_resources_with_explicit_access(self, this_privilege, via_user=True, via_group=False):
         """
-        Get a list of resources that the user has the specified privilege
-        Args:
-            this_privilege: one of the PrivilegeCodes
+        Get a list of resources over which the user has the specified privilege
+
+        :param this_privilege: A privilege code 1-3
+        :param via_user: True to incorporate user privilege
+        :param via_group: True to incorporate group privilege
 
         Returns: list of resource objects (QuerySet)
 
         Note: One must check the immutable flag if privilege < VIEW.
+
+        Note that in this computation,
+
+        * Setting both via_user and via_group to False is not an error, and
+          always returns an empty QuerySet.
+        * via_group is meaningless for OWNER privilege and is ignored.
+        * The default is via_user=True, via_group=False, which is the original
+          behavior of the routine before this revision.
+        * Immutable resources are listed as VIEW even if the user or group has CHANGE
+        * In the case of multiple privileges, the lowest privilege number
+          (highest privilege) wins.
+
+        However, please note that when via_user=True and via_group=True together, this applies
+        to the **total combined privilege** rather than individual privileges. A detailed
+        example:
+
+        * Garfield shares group Cats with Sylvester as CHANGE
+        * Garfield shares resource CatFood with Cats as CHANGE
+          (Now Sylvester has CHANGE over CatFood)
+        * Garfield shares resource CatFood with Sylvester as OWNER
+
+        Then
+
+            Sylvester.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                 via_user=True, via_group=True)
+
+        **does not contain CatFood,** because Sylvester is an OWNER through user privilege,
+        which "squashes" the group privilege, being higher.
+
         """
         if __debug__:
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
