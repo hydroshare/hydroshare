@@ -1545,6 +1545,14 @@ class UserAccess(models.Model):
         what entity it might be shared with. An optional user parameter determines
         the target of the sharing.
 
+        This routine was changed on 12/13/2016 to avoid a detected anomaly.
+        The "current privilege" of a user was previously that user's combined privilege
+        granted as an individual and by groups. This caused an anomaly in which
+        an individual could be made an OWNER of a group over which that user had CHANGE
+        privilege, but could not be granted individual CHANGE privilege due to interference
+        from the group privilege. This change makes that possible by separating the logic for
+        group and user-level permissions.
+
         """
         # translate into ResourceAccess object
         access_resource = this_resource.raccess
@@ -1561,10 +1569,12 @@ class UserAccess(models.Model):
         #   Permission for self
         # cannot downgrade privilege just by having sharing privilege.
 
+        # grantor is assumed to have total privilege
         grantor_priv = access_resource.get_effective_privilege(self.user)
-        # target of sharing has all privileges accorded by group, user
+        # Target of sharing is considered to have only user privilege for these purposes
+        # This makes user sharing independent of group sharing
         if user is not None:
-            grantee_priv = access_resource.get_effective_privilege(user)
+            grantee_priv = access_resource.get_effective_user_privilege(user)
 
         # check for user authorization
         if self.user.is_superuser:
@@ -1593,7 +1603,6 @@ class UserAccess(models.Model):
 
         # regardless of privilege, cannot remove last owner
         if user is not None:
-            grantee_priv = access_resource.get_effective_privilege(user)
             if grantee_priv == PrivilegeCodes.OWNER \
                     and this_privilege != PrivilegeCodes.OWNER \
                     and access_resource.owners.count() == 1:
