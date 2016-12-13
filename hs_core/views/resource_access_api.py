@@ -36,32 +36,30 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     """
     Read, update, or delete a resource
 
-    REST URL: hsapi/resource/{pk}
+    REST URL: hsapi/resource/{pk}/access
     HTTP method: GET
-    :return: (on success): The resource in zipped BagIt format.
+    :return: (on success): JSON representation of resource access with 'groups' and 'users' keys.
 
-    REST URL: hsapi/resource/{pk}
+    REST URL: hsapi/resource/{pk}/access?(user_id=#|group_id=#)
     HTTP method: DELETE
-    :return: (on success): JSON string of the format: {'resource_id':pk}
 
-    REST URL: hsapi/resource/{pk}
+    :type str
+    :param user_id: user ID to remove
+    :type str
+    :param group_id: group ID to remove
+    :return: (on success): Success or Error JSON object
+
+    REST URL: hsapi/resource/{pk}/access
     HTTP method: PUT
-    :return: (on success): JSON string of the format: {'resource_id':pk}
+    :return: (on success): Success or Error JSON object
 
-    :type   str
-    :param  pk: resource id
-    :rtype:  JSON string for http methods DELETE and PUT, and resource file data bytes for GET
-
-    :raises:
-    NotFound: return JSON format: {'detail': 'No resource was found for resource id':pk}
-    PermissionDenied: return JSON format: {'detail': 'You do not have permission to perform
-    this action.'}
-    ValidationError: return JSON format: {parameter-1': ['error message-1'], 'parameter-2':
-    ['error message-2'], .. }
-
-    :raises:
-    ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2':
-    ['error message-2'], .. }
+    :type str
+    :param user_id: user ID to remove
+    :type str
+    :param group_id: group ID to remove
+    :type PrivilegeCode int
+    :param privilege: PrivilegeCode to specifiy access level
+    :return: (on success): Success or Error JSON objectit
     """
 
     serializer_class = UserResourcePrivilegeSerializer
