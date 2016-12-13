@@ -41,7 +41,7 @@ Notes and quandaries
 
 from django.contrib.auth.models import User, Group
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F, Max
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
 # from pprint import pprint
@@ -87,7 +87,43 @@ class PrivilegeCodes(object):
     PRIVILEGE_NAMES = ('Unspecified', 'Owner', 'Change', 'View', 'None')
 
 
-class UserGroupPrivilege(models.Model):
+class PrivilegeBase(models.Model):
+    """
+    Shared methods for Privileges
+
+    These polymorphic routines act on any type of foreign keys, so that
+    they are independent of the types of the base class members.
+    """
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def get_privilege(cls, **kwargs):
+        """ Get an effective privilege for a pair """
+        try:
+            return cls.objects.get(**kwargs).privilege
+        except cls.DoesNotExist:
+            return PrivilegeCodes.NONE
+
+    @classmethod
+    def update(cls, **kwargs):
+        """ Update an effective privilege record """
+        privilege = kwargs['privilege']
+        if privilege is not None and privilege < PrivilegeCodes.NONE:
+            del kwargs['privilege']
+            with transaction.atomic():
+                record, create = cls.objects.get_or_create(defaults={'privilege': privilege},
+                                                           **kwargs)
+                if not create:
+                    record.privilege = privilege
+                    record.save()
+        else:
+            del kwargs['privilege']
+            cls.objects.filter(**kwargs) \
+               .delete()
+
+
+class UserGroupPrivilege(PrivilegeBase):
     """ Privileges of a user over a group
 
     Having any privilege over a group is synonymous with membership.
@@ -135,7 +171,7 @@ class UserGroupPrivilege(models.Model):
                           str(self.grantor.username), str(self.grantor.id))
 
 
-class UserResourcePrivilege(models.Model):
+class UserResourcePrivilege(PrivilegeBase):
     """ Privileges of a user over a resource
 
     This model encodes privileges of individual users, like an access
@@ -182,7 +218,7 @@ class UserResourcePrivilege(models.Model):
                           str(self.grantor.username), str(self.grantor.id))
 
 
-class GroupResourcePrivilege(models.Model):
+class GroupResourcePrivilege(PrivilegeBase):
     """ Privileges of a group over a resource.
 
     The group privilege over a resource is never meaningful;
@@ -227,6 +263,539 @@ class GroupResourcePrivilege(models.Model):
                           str(self.resource.title).encode('ascii'),
                           str(self.resource.short_id).encode('ascii'),
                           str(self.grantor.username), str(self.grantor.id))
+
+
+class ProvenanceCodes(object):
+    """
+    Provenance states describe whether a privilege can be undone
+    State is a numeric code 1-3:
+
+        * 1 or ProvenanceCodes.ACTIVE:
+            Active; can be undone
+
+        * 2 or ProvenanceCodes.RESTORED:
+            Active; restored as the result of an undo. Can be undone.
+
+        * 3 or ProvenanceCodes.INITIAL:
+            Active; cannot be undone because it represents an initial state
+
+        * 4 or ProvenanceCodes.UNDONE:
+            Inactive; already undone, cannot be the result of an undo action.
+
+        * 5 or ProvenanceCodes.REUSED:
+            Inactive; restored as a record of type RESTORED.
+    """
+    ACTIVE = 1
+    RESTORED = 2
+    INITIAL = 3
+    UNDONE = 4
+    REUSED = 5
+    CHOICES = (
+        (ACTIVE,    'Active'),
+        (RESTORED,  'Restored'),
+        (INITIAL,   'Initial'),
+        (UNDONE,    'Undone'),
+        (REUSED,    'Reused')
+    )
+    NAMES = {
+        ACTIVE:     'ACTIVE',
+        RESTORED:   'RESTORED',
+        INITIAL:    'INITIAL',
+        UNDONE:     'UNDONE',
+        REUSED:     'REUSED'
+    }
+
+
+class ProvenanceBase(models.Model):
+    """Methods reused by all provenance classes
+
+    These methods are independent of the types of the foreign keys they act upon,
+    and so can be reused in all provenance classes.
+    """
+
+    class Meta:
+        abstract = True
+
+    # TODO: it's unclear whether this even works. The methods are in subclasses.
+    def __str__(self):
+        """print name for debugging"""
+        return 'grantee=' + str(self.grantee) + \
+               ', entity=' + str(self.entity) + \
+               ', privilege=' + PrivilegeCodes.NAMES[self.privilege] + \
+               ' (' + str(self.privilege) + ')' + \
+               ', grantor=' + str(self.grantor) + \
+               ', start=' + str(self.start) + \
+               ', state=' + ProvenanceCodes.NAMES[self.state] + \
+               ' (' + str(self.state) + ')'
+
+    def __unicode__(self):
+        """print name for debugging"""
+        return 'grantee=' + str(self.grantee) + \
+               ', entity=' + str(self.entity) + \
+               ', privilege=' + PrivilegeCodes.NAMES[self.privilege] + \
+               ' (' + str(self.privilege) + ')' + \
+               ', grantor=' + str(self.grantor) + \
+               ', start=' + str(self.start) + \
+               ', state=' + ProvenanceCodes.NAMES[self.state] + \
+               ' (' + str(self.state) + ')'
+
+    @classmethod
+    def __get_current_start(cls, **kwargs):
+        """ Get the last start time for a given pair """
+        result = cls.objects\
+            .filter(state__lte=ProvenanceCodes.INITIAL, **kwargs)\
+            .aggregate(Max('start'))
+        # This can be None if there is no start pair
+        return result['start__max']
+
+    @classmethod
+    def get_current_record(cls, **kwargs):
+        """ get the record in effect for a given pair """
+        # First, compute the latest start time for the privilege.
+        # This is the start of the effective record.
+        start = cls.__get_current_start(**kwargs)
+        # Then, fetch that unique record.
+        if start is not None:
+            return cls.objects\
+                .get(start=start, **kwargs)
+        else:
+            return None
+
+    @classmethod
+    def get_current_privilege(cls, **kwargs):
+        """ Get the privilege implied by provenance state """
+        result = cls.get_current_record(**kwargs)
+        if result is not None:
+            return result.privilege
+        else:
+            return PrivilegeCodes.NONE
+
+    @classmethod
+    def update(cls, **kwargs):
+        """ Update a provenance record """
+        if kwargs['state'] is None:
+            kwargs['state'] = ProvenanceCodes.ACTIVE
+        cls.objects.create(**kwargs)
+
+    @classmethod
+    def __get_undo_share_start(cls, **kwargs):
+        """ Get the previous start time for undo """
+        last = cls.__get_current_start(**kwargs)
+        if last is not None:
+            result = cls.objects\
+                .filter(start__lt=last,
+                        state__lte=ProvenanceCodes.INITIAL,
+                        **kwargs) \
+                .aggregate(Max('start'))
+            return result['start__max']
+        else:
+            return None
+
+    @classmethod
+    def __get_undo_share_record(cls, **kwargs):
+        """ get the previous records for a given pair """
+        # First, compute the latest start time for the privilege.
+        # This is the start of the effective record.
+        start = cls.__get_undo_share_start(**kwargs)
+
+        # Then, fetch that (hopefully) unique record(s). There is a small chance of non-uniqueness.
+        if start is not None:
+            return cls.objects.get(start=start, **kwargs)
+        else:
+            return None
+
+    @classmethod
+    def undo_share(cls, **kwargs):
+        """
+        Undo one provenance change
+
+        To undo a change, one must find the last record and step back one time step.
+        One must also prevent backstep records from themselves being backstepped.
+        Thus, one marks both the record being undone as "undone" and the action that undoes
+        it as "reused" so that neither record will be used for another "undo".
+
+        Usage:
+        ------
+
+                cls.undo_share({destination-args}, grantor={user})
+
+        where {destination-args} consist of the pair of entities (user/group, user/resource,
+        or group/resource) being controlled. The correct combination depends upon the subclass
+        in which this routine is inherited.  E.g.,
+
+                UserResourcePrivilege.undo_share(resource={resource}, user={user}, grantor={user})
+
+        is one such combination.
+        """
+        current = cls.get_current_record(**kwargs)
+        if current is None or current.state == ProvenanceCodes.INITIAL:
+            raise PermissionDenied("No privilege to roll back")
+
+        previous = cls.__get_undo_share_record(**kwargs)
+        if previous is not None:
+
+            # create a undo_share record that itself cannot be backstepped over.
+            cls.update(privilege=previous.privilege,
+                       grantor=previous.grantor,
+                       state=ProvenanceCodes.RESTORED,
+                       **kwargs)
+            # this marks the reinstated record as inactive.
+            previous.state = ProvenanceCodes.REUSED
+            previous.save()
+        else:
+            # put in a record revoking all privilege -- cannot be undone
+            cls.update(privilege=PrivilegeCodes.NONE,
+                       grantor=current.grantor,
+                       state=ProvenanceCodes.INITIAL,
+                       **kwargs)
+
+        # this marks the current record as overridden
+        current.state = ProvenanceCodes.UNDONE
+        current.save()
+
+    @classmethod
+    def share(cls, **kwargs):
+        """
+        Share a thing with a user or group
+
+        The thing can be a resource or group.  This is an unprotected method that does
+        an unconditional share.  Use this only to completely bypass access control.
+
+        Usage
+        -----
+
+                cls.share({destination-args}, privilege={privilege-code}, grantor={user})
+
+        where {destination-args} consist of the pair of entities (user/group, user/resource,
+        or group/resource) being controlled. The correct combination depends upon the subclass
+        in which this routine is inherited.  E.g.,
+
+                UserResourcePrivilege.share(resource={resource}, user={user},
+                                            privilege={privilege}, grantor={user})
+
+        is one such combination.
+        """
+        cls.update(state=ProvenanceCodes.ACTIVE, **kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        """
+        Unshare a thing with a user or group
+
+        The thing can be a resource or group.  This is an unprotected method that does
+        an unconditional unshare.  Use this only for privileged unshare. Otherwise,
+        use undo_share
+
+        Usage
+        -----
+
+                cls.unshare({destination-args}, grantor={user})
+
+        where {destination-args} consist of the pair of entities (user/group, user/resource,
+        or group/resource) being controlled. this is exactly equivalent with:
+
+                cls.share(grantor={user}, {destination-args},
+                          privilege=PrivilegeCodes.NONE)
+
+        where {destination-args} consist of the pair of entities (user/group, user/resource,
+        or group/resource) being controlled. The correct combination depends upon the subclass
+        in which this routine is inherited.  E.g.,
+
+                UserResourcePrivilege.unshare(resource={resource}, user={user}, grantor={user})
+
+        is one such combination.
+
+        Unshares can be undone using undo_share.
+
+        """
+        cls.update(state=ProvenanceCodes.ACTIVE, privilege=PrivilegeCodes.NONE, **kwargs)
+
+
+class UserGroupProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a user over a group
+
+    Having any privilege over a group is synonymous with membership.
+
+    This is an append-only ledger of group privilege that serves as complete provenance
+    of access changes.  At any time, one privilege applies to each grantee and group.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table UserGroupPrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    complete time-based journal of what privilege was in effect when.
+
+    Limited time-based undo is supported with an "state" variable. This allows one to undo
+    privileges one at a time in the order in which they were granted. Undo differs from
+    unshare in two important ways:
+
+    * It is unprivileged; one can undo anything one did, regardless of current privilege.
+
+    * It is limited to last operation performed on the pair.  If someone else asserts a
+      different privilege via share or unshare, this makes the undo impossible.
+
+    * Undo becomes possible again when the operations that came after it are undone.
+
+    """
+    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    user = models.ForeignKey(User,
+                             null=False,
+                             editable=False,
+                             related_name='u2ugq',
+                             help_text='user to be granted privilege')
+
+    group = models.ForeignKey(Group,
+                              null=False,
+                              editable=False,
+                              related_name='g2ugq',
+                              help_text='group to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=False,
+                                editable=False,
+                                related_name='x2ugq',
+                                help_text='grantor of privilege')
+
+    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
+                                editable=False,
+                                default=ProvenanceCodes.ACTIVE)
+
+    class Meta:
+        unique_together = ('user', 'group', 'start')
+
+    @property
+    def grantee(self):
+        return self.user
+
+    @property
+    def entity(self):
+        return self.group
+
+    @staticmethod
+    def get_undo_share_users(group, grantor):
+        """ get the users for which a specific grantee can roll back privilege """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(group, Group)
+
+        # users are those last granted a privilege over the entity by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        selected = User.objects.filter(u2ugq__group=group)\
+                               .annotate(start=Max('u2ugq__start'))\
+                               .filter(u2ugq__start=F('start'),
+                                       u2ugq__grantor=grantor,
+                                       u2ugq__state__lte=ProvenanceCodes.RESTORED)
+        # launder out annotations used to select users
+        return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
+
+    @classmethod
+    def update(cls, group, user, privilege, grantor, state=ProvenanceCodes.ACTIVE):
+        """ Update a provenance record """
+        super(UserGroupProvenance, cls).update(group=group,
+                                               user=user,
+                                               privilege=privilege,
+                                               grantor=grantor,
+                                               state=state)
+
+
+class UserResourceProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a user over a group.
+
+    This is an append-only ledger of group privilege that serves as complete provenance
+    of access changes.  At any one time, one privilege applies to each user and group.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table UserResourcePrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    time-based journal of what privilege was in effect when.
+
+    Limited time-based undo is supported with an "state" variable. This allows one to undo
+    privileges one at a time in the order in which they were granted. Undo differs from
+    unshare in two important ways:
+
+    * It is unprivileged; one can undo anything one did, regardless of current privilege.
+
+    * It is limited to last operation performed on the pair.  If someone else asserts a
+      different privilege via share or unshare, this makes the undo impossible.
+
+    * Undo becomes possible again when the operations that came after it are undone.
+    """
+
+    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    user = models.ForeignKey(User,
+                             null=False,
+                             editable=False,
+                             related_name='u2urq',
+                             help_text='user to be granted privilege')
+
+    resource = models.ForeignKey(BaseResource,
+                                 null=False,
+                                 editable=False,
+                                 related_name='r2urq',
+                                 help_text='resource to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=False,
+                                editable=False,
+                                related_name='x2urq',
+                                help_text='grantor of privilege')
+
+    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
+                                editable=False,
+                                default=ProvenanceCodes.ACTIVE)
+
+    class Meta:
+        unique_together = ('user', 'resource', 'start')
+
+    @property
+    def grantee(self):
+        return self.user
+
+    @property
+    def entity(self):
+        return self.resource
+
+    @staticmethod
+    def get_undo_share_users(resource, grantor):
+        """ get the users for which a specific user can roll back privilege """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(resource, BaseResource)
+
+        # users are those last granted a privilege over the resource by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        selected = User.objects.filter(u2urq__resource=resource)\
+                               .annotate(start=Max('u2urq__start'))\
+                               .filter(u2urq__start=F('start'),
+                                       u2urq__grantor=grantor,
+                                       u2urq__state__lte=ProvenanceCodes.RESTORED)
+        # launder out annotations used to select users
+        return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
+
+    @classmethod
+    def update(cls, resource, user, privilege, grantor, state=ProvenanceCodes.ACTIVE):
+        """ Update a provenance record """
+        super(UserResourceProvenance, cls).update(resource=resource,
+                                                  user=user,
+                                                  privilege=privilege,
+                                                  grantor=grantor,
+                                                  state=state)
+
+
+class GroupResourceProvenance(ProvenanceBase):
+    """
+    Provenance of privileges of a group over a resource.
+
+    The group privilege over a resource is not directly meaningful.
+    it is resolved instead into user privilege for each member of
+    the group, as listed in UserGroupProvenance above.
+
+    This is an append-only ledger of group privilege that serves as complete provenance
+    of access changes.  At any one time, one privilege applies to each user and resource.
+    This is the privilege with the latest start date.  For performance reasons, this
+    information is cached in a separate table GroupResourcePrivilege.
+
+    To undo a privilege, one appends a record to this table with PrivilegeCodes.NONE.
+    This is indistinguishable from having no record at all.  Thus, this provides a
+    time-based journal of what privilege was in effect when.
+
+    Limited time-based undo is supported with an "state" variable. This allows one to undo
+    privileges one at a time in the order in which they were granted. Undo differs from
+    unshare in two important ways:
+
+    * It is unprivileged; one can undo anything one did, regardless of current privilege.
+
+    * It is limited to last operation performed on the pair.  If someone else asserts a
+      different privilege via share or unshare, this makes the undo impossible.
+
+    * Undo becomes possible again when the operations that came after it are undone.
+    """
+
+    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+                                    editable=False,
+                                    default=PrivilegeCodes.VIEW)
+
+    start = models.DateTimeField(editable=False, auto_now_add=True)
+
+    group = models.ForeignKey(Group,
+                              null=False,
+                              editable=False,
+                              related_name='g2grq',
+                              help_text='group to be granted privilege')
+
+    resource = models.ForeignKey(BaseResource,
+                                 null=False,
+                                 editable=False,
+                                 related_name='r2grq',
+                                 help_text='resource to which privilege applies')
+
+    grantor = models.ForeignKey(User,
+                                null=False,
+                                editable=False,
+                                related_name='x2grq',
+                                help_text='grantor of privilege')
+
+    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
+                                editable=False,
+                                default=ProvenanceCodes.ACTIVE)
+
+    class Meta:
+        unique_together = ('group', 'resource', 'start')
+
+    @property
+    def grantee(self):
+        return self.group
+
+    @property
+    def entity(self):
+        return self.resource
+
+    @staticmethod
+    def get_undo_share_groups(resource, grantor):
+        """ get the groups for which a specific user can roll back privilege """
+
+        if __debug__:
+            assert isinstance(grantor, User)
+            assert isinstance(resource, BaseResource)
+
+        # groups are those last granted a privilege over the resource by the grantor
+        # This syntax is curious due to undesirable semantics of .exclude.
+        # All conditions on the filter must be specified in the same filter statement.
+        # We wish to avoid the state INITIAL, which cannot be undone.
+        selected = Group.objects.filter(g2grq__resource=resource)\
+            .annotate(start=Max('g2grq__start'))\
+            .filter(g2grq__start=F('start'),
+                    g2grq__grantor=grantor,
+                    g2grq__state__lte=ProvenanceCodes.RESTORED)
+
+        # launder out annotations used to select users
+        return Group.objects.filter(pk__in=selected)
+
+    @classmethod
+    def update(cls, resource, group, privilege, grantor, state=ProvenanceCodes.ACTIVE):
+        """ Update a provenance record """
+        super(GroupResourceProvenance, cls).update(resource=resource,
+                                                   group=group,
+                                                   privilege=privilege,
+                                                   grantor=grantor,
+                                                   state=state)
 
 
 class UserAccess(models.Model):
