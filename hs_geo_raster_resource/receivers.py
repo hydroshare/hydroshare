@@ -27,6 +27,7 @@ from hs_file_types import raster_meta_extract
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
 
+
 def raster_file_validation(files, ref_tmp_file_names=[]):
     error_info = []
     vrt_file_path = ''
