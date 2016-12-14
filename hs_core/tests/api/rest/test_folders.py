@@ -101,18 +101,10 @@ class TestFolders(HSRESTTestCase):
                          str.format("{}/data/contents/foo/test.txt",
                                     res_id))
 
-        # list that folder: should work, should contain one file
+        # list that folder: should contain one file and one folder
         response = self.client.get(url2, {})
         content = json.loads(response.content)
         self.assertEqual(len(content['folders']), 1)
         self.assertEqual(content['folders'][0], 'bar')
-        # these do not work due to a bug in list_folder
-        # self.assertEqual(len(content['files']), 1)
-        # self.assertEqual(content['files'][0], 'test.txt')
-
-        # raw, brute force validation that file was written
-        # irodsPath = str.format("{}/data/contents/foo", res_id)
-        # istorage = IrodsStorage()
-        # stdout = istorage.session.run("ils", None, path)[0].split("\n")
-        # print("ils output:")
-        # print(stdout)
+        self.assertEqual(len(content['files']), 1)
+        self.assertEqual(content['files'][0], 'test.txt')
