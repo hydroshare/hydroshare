@@ -167,7 +167,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(ori_coverage.value['westlimit'], 442274.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'],
-                         'NAD83 / UTM zone 12N Transverse_Mercator')
+                         'NAD83 / UTM zone 12N')
 
         # testing extended metadata element: cell information
         cell_info = logical_file.metadata.cellInformation
@@ -262,7 +262,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(ori_coverage.value['westlimit'], 445574.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'meter')
         self.assertEqual(ori_coverage.value['projection'],
-                         'NAD83 / UTM zone 12N Transverse_Mercator')
+                         'NAD83 / UTM zone 12N')
 
         # testing extended metadata element: cell information
         cell_info = logical_file.metadata.cellInformation

@@ -22,8 +22,7 @@ from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
 from models import RasterResource
-import raster_meta_extract
-
+from hs_file_types import raster_meta_extract
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page

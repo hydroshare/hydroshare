@@ -14,7 +14,7 @@ import shutil
 import tempfile
 
 from hs_core.hydroshare.utils import resource_modified, get_file_from_irods
-from hs_geo_raster_resource import raster_meta_extract
+from hs_file_types import raster_meta_extract
 from hs_geo_raster_resource.models import RasterResource
 
 copy_res_fail = []
