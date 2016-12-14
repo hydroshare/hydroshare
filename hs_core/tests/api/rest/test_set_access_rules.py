@@ -116,7 +116,7 @@ class TestSetAccessRules(HSRESTTestCase):
         get_response = self.client.get(access_url)
         self.assertEqual(2, len(get_response.data['users']))
         self.assertEqual(0, len(get_response.data['groups']))
-        self.assertEqual("View", get_response.data['users'][1]['privilege'])
+        self.assertEqual("Owner", get_response.data['users'][1]['privilege'])
         self.assertEqual(self.secondUser.id, get_response.data['users'][1]['user'])
 
         delete_response = self.client.delete(access_url + "?user_id=" + str(self.secondUser.id))
