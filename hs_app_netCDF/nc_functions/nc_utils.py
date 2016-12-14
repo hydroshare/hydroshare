@@ -341,7 +341,7 @@ def get_nc_data_variable_namelist(nc_dataset):
     return nc_data_variable_namelist
 
 
-# Function for Grid Mapping Variable 
+# Functions for Grid Mapping Variable
 def get_nc_grid_mapping_variable_name(nc_dataset):
     """
     (object)-> string
