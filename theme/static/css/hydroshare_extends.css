@@ -284,3 +284,8 @@ float the buttons inside it. This prevents collapsing. */
 .form-actions:after {
   clear: both;
 }
+
+.noclose .ui-dialog-titlebar-close
+{
+    display:none;
+}

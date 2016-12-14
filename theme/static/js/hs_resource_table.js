@@ -3,6 +3,22 @@
  */
 var resourceTable;
 
+var ACTIONS_COL = 0;
+var RESOURCE_TYPE_COL = 1;
+var TITLE_COL = 2;
+var OWNER_COL = 3;
+var DATE_CREATED_COL = 4;
+var LAST_MODIFIED_COL = 5;
+var SUBJECT_COL = 6;
+var AUTHORS_COL = 7;
+var PERM_LEVEL_COL = 8;
+var LABELS_COL = 9;
+var FAVORITE_COL = 10;
+var LAST_MODIF_SORT_COL = 11;
+var SHARING_STATUS_COL = 12;
+var DATE_CREATED_SORT_COL = 13;
+var ACCESS_GRANTOR_COL = 14;
+
 $(document).ready(function () {
 /*==================================================
     Table columns
@@ -10,18 +26,21 @@ $(document).ready(function () {
     1 - Resource Type
     2 - Title
     3 - Owner
-    4 - Last Modified
-    5 - Subject
-    6 - Authors
-    7 - Permission Level
-    8 - Labels
-    9 - Favorite
-    10 - Last modified (sortable format)
-    11 - Sharing Status
+    4 - Date Created
+    5 - Last Modified
+    6 - Subject
+    7 - Authors
+    8 - Permission Level
+    9 - Labels
+    10 - Favorite
+    11 - Last modified (sortable format)
+    12 - Sharing Status
+    13 - Date created (sortable format)
+    14 - Access Grantor
 ==================================================*/
 
     resourceTable = $("#item-selectors").DataTable({
-        "order": [[4, "desc"]],
+        "order": [[DATE_CREATED_COL, "desc"]],
         "paging": false,
         "info": false,
         "columnDefs": colDefs
@@ -202,8 +221,7 @@ function label_ajax_submit() {
                     var label = el[0].value;
 
                     var rowIndex = parseInt(tableRow.attr("data-tr-index"));
-                    var labelsColIndex = 8;   // Index of the labels column in the table
-                    var currentCell = resourceTable.cell(rowIndex,labelsColIndex);
+                    var currentCell = resourceTable.cell(rowIndex,LABELS_COL);
 
                     var dataColLabels = currentCell.data().replace(/\s+/g,' ').split(","); // List of labels already applied to the resource;
 
@@ -316,9 +334,8 @@ function updateLabelLists() {
     if (dropdowns) {
         for (var i = 0; i < dropdowns.length; i++) {
             var rowIndex = parseInt($(dropdowns[i]).closest("tr").attr("data-tr-index"));
-            var labelsColIndex = 8;
 
-            var dataColLabels = resourceTable.cell(rowIndex,labelsColIndex).data().replace(/\s+/g,' ').split(",");
+            var dataColLabels = resourceTable.cell(rowIndex,LABELS_COL).data().replace(/\s+/g,' ').split(",");
 
             for (var j = 0; j < dataColLabels.length; j++) {
                 var label = dataColLabels[j].trim();
@@ -453,10 +470,10 @@ function updateLabelCount() {
     var viewableCount = 0;
 
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
-        var dataColLabels = this.data()[8].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
-        var dataColFavorite = this.data()[9].trim();
-        var dataColPermissionLevel = this.data()[7].trim();
-        var sharingStatus = this.data()[11].trim();
+        var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
+        var dataColFavorite = this.data()[FAVORITE_COL].trim();
+        var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
+        var sharingStatus = this.data()[SHARING_STATUS_COL].trim();
 
         if (dataColPermissionLevel == "Owned") {
             ownedCount++;
@@ -585,15 +602,17 @@ function typeQueryStrings () {
     1 - Resource Type
     2 - Title
     3 - Owner
-    4 - Last Modified
-    5 - Subject
-    6 - Authors
-    7 - Permission Level
-    8 - Labels
-    9 - Favorite
-    10 - Last modified (sortable format)
-    11 - Sharing Status
-    12 - Access Grantor
+    4 - Date Created
+    5 - Last Modified
+    6 - Subject
+    7 - Authors
+    8 - Permission Level
+    9 - Labels
+    10 - Favorite
+    11 - Last modified (sortable format)
+    12 - Sharing Status
+    13 - Date created (sortable format)
+    14 - Access Grantor
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
@@ -632,22 +651,22 @@ $.fn.dataTable.ext.search.push (
 
             // Filter the table for each value
 
-            if (inputType && data[1].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
+            if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
                 return false;
             }
 
-            if (inputSubject && data[5].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
+            if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
                 return false;
             }
 
-            if (inputAuthor && data[6].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
+            if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
                 return false;
             }
 
             //---------------- Facets filter--------------------
             // Owned by me
             if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-                if (data[7] != "Owned") {
+                if (data[PERM_LEVEL_COL] != "Owned") {
                     return false;
                 }
             }
@@ -655,11 +674,11 @@ $.fn.dataTable.ext.search.push (
             // Editable by me
             if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
                 // published resources are not editable
-                var sharingStatus = data[11].trim();
+                var sharingStatus = data[SHARING_STATUS_COL].trim();
                 if (sharingStatus.indexOf('Published') != -1)
                     return false;
 
-                if (data[7] != "Owned" && data[7] != "Editable") {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Editable") {
                     return false;
                 }
             }
@@ -667,11 +686,11 @@ $.fn.dataTable.ext.search.push (
             // Viewable by me
             if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
                 // published resources are viewable
-                var sharingStatus = data[11].trim();
+                var sharingStatus = data[SHARING_STATUS_COL].trim();
                 if (sharingStatus.indexOf('Published') != -1)
                     return true;
 
-                if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
+                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Viewable" && data[PERM_LEVEL_COL] != "Editable") {
                     return false;
                 }
             }
@@ -682,7 +701,7 @@ $.fn.dataTable.ext.search.push (
                 var grantorFlag = false;
                 for (var i = 0; i < grantors.length; i++) {
                     var user = parseInt($(grantors[i]).attr("data-grantor-id"));
-                    if (parseInt(data[12]) == user) {
+                    if (parseInt(data[ACCESS_GRANTOR_COL]) == user) {
                         grantorFlag = true;
                     }
                 }
@@ -698,7 +717,7 @@ $.fn.dataTable.ext.search.push (
                 if ($(labelCheckboxes[i]).prop("checked") == true) {
                     var label = $(labelCheckboxes[i]).attr("data-label");
 
-                    var dataColLabels = data[8].replace(/\s+/g,' ').split(",");
+                    var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
                     for (var h = 0; h < dataColLabels.length; h++) {
                         dataColLabels[h] = dataColLabels[h].trim();
                     }
@@ -711,7 +730,7 @@ $.fn.dataTable.ext.search.push (
 
             // Favorite
             if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                if (data[9] != "Favorite") {
+                if (data[FAVORITE_COL] != "Favorite") {
                     return false;
                 }
             }

@@ -19,6 +19,7 @@
         <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
         <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
         <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
+        <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
             <div class="row">

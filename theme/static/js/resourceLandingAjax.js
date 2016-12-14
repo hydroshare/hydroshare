@@ -74,7 +74,22 @@ function shareable_ajax_submit(event) {
     return false;
 }
 
-function unshare_resource_ajax_submit(form_id) {
+function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
+    if (typeof check_for_prompt === 'undefined'){
+        check_for_prompt = true;
+    }
+    if (typeof  remove_permission === 'undefined'){
+        remove_permission = true;
+    }
+    if (check_for_prompt){
+        if (!promptSelfRemovingAccess(form_id)){
+            return;
+        }
+    }
+    if (!remove_permission){
+        return;
+    }
+
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     var url = $form.attr('action');
@@ -86,11 +101,22 @@ function unshare_resource_ajax_submit(form_id) {
         dataType: 'html',
         data: datastring,
         success: function (result) {
-            $form.parent().closest("tr").remove();
-            if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
-                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+            var json_response = JSON.parse(result);
+            if (json_response.status == "success") {
+                if (json_response.hasOwnProperty('redirect_to')){
+                    window.location.href = json_response.redirect_to;
+                }
+                $form.parent().closest("tr").remove();
+                if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
+                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                }
+                setPointerEvents(true);
             }
-            setPointerEvents(true);
+            else {
+                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                setPointerEvents(true);
+            }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
@@ -100,6 +126,60 @@ function unshare_resource_ajax_submit(form_id) {
     });
     //don't submit the form
     return false;
+}
+
+function promptSelfRemovingAccess(form_id){
+    $form = $('#' + form_id);
+    var url = $form.attr('action');
+    // check if we are unsharing a user or a group
+    var isUserUnsharing = false;
+    if(url.indexOf("unshare-resource-with-user") > 0){
+        isUserUnsharing = true;
+    }
+    if(!isUserUnsharing){
+        return true;
+    }
+    var formIDParts = form_id.split('-');
+    var userID = parseInt(formIDParts[formIDParts.length -1]);
+    var currentUserID = parseInt($("#current-user-id").val());
+    if (currentUserID != userID){
+        // no need to prompt for confirmation since self is not unsharing
+        return true;
+    }
+
+    // close the manage access panel (modal)
+    $("#manage-access .btn-primary").click();
+
+    // display remove access confirmation dialog
+    $("#dialog-confirm-delete-self-access").dialog({
+        resizable: false,
+        draggable: false,
+        height: "auto",
+        width: 500,
+        modal: true,
+        dialogClass: 'noclose',
+        buttons: {
+            Cancel: function () {
+                $(this).dialog("close");
+                // show manage access control panel again
+                $("#manage-access").modal('show');
+                unshare_resource_ajax_submit(form_id, false, false);
+            },
+            "Remove": function () {
+                $(this).dialog("close");
+                unshare_resource_ajax_submit(form_id, false, true);
+            }
+        },
+        open: function () {
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:first") // the first button
+                .addClass("btn btn-default");
+
+            $(this).closest(".ui-dialog")
+                .find(".ui-dialog-buttonset button:nth-child(2)") // the first button
+                .addClass("btn btn-danger");
+        }
+    });
 }
 
 function change_share_permission_ajax_submit(form_id) {
@@ -299,6 +379,9 @@ function metadata_update_ajax_submit(form_id){
         Metadata failed to update.\
     </div>';
 
+    if (typeof metadata_update_ajax_submit.resourceSatusDisplayed == 'undefined'){
+        metadata_update_ajax_submit.resourceSatusDisplayed = false;
+    }
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
     var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
@@ -403,15 +486,19 @@ function metadata_update_ajax_submit(form_id){
                                 promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be published or made public";
                             else
                                 promptMessage = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Resource Status:</strong> This resource can be made public";
-                            if (json_response.hasOwnProperty('res_public_status')){
-                                if (json_response.res_public_status.toLowerCase() === "not public"){
-                                // if the resource is already public no need to show the following alert message
-                                customAlert(promptMessage, 3000);
+                            if (!metadata_update_ajax_submit.resourceSatusDisplayed){
+                                metadata_update_ajax_submit.resourceSatusDisplayed = true;
+                                if (json_response.hasOwnProperty('res_public_status')){
+                                    if (json_response.res_public_status.toLowerCase() === "not public"){
+                                    // if the resource is already public no need to show the following alert message
+                                    customAlert(promptMessage, 3000);
+                                    }
+                                }
+                                else {
+                                    customAlert(promptMessage, 3000);
                                 }
                             }
-                            else {
-                                customAlert(promptMessage, 3000);
-                            }
+
                             $("#btn-public").prop("disabled", false);
                             $("#btn-discoverable").prop("disabled", false);
                             $("#missing-metadata-or-file").fadeOut();
