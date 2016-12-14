@@ -13,7 +13,8 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import MockIRODSTestCaseMixin
-from ..views import set_file_type, add_metadata_element
+from ..views import set_file_type, add_metadata_element, update_metadata_element, \
+    update_key_value_metadata, delete_key_value_metadata
 from ..utils import set_file_to_geo_raster_file_type
 
 
@@ -86,7 +87,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
 
-    def test_add_metadata_to_raster_file_type(self):
+    def test_add_update_metadata_to_raster_file_type(self):
         self.raster_file_obj = open(self.raster_file, 'r')
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
@@ -115,6 +116,94 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual('success', response_dict['status'])
         # now the raster file should have temporal coverage element
         self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+
+        # test updating temporal coverage
+        url_params['element_id'] = logical_file.metadata.temporal_coverage.id
+        url = reverse('update_file_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'start': '1/1/2011', 'end': '12/12/2016'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_metadata_element(request, hs_file_type="GeoRasterLogicalFile",
+                                           file_type_id=logical_file.id, element_name='coverage',
+                                           element_id=logical_file.metadata.temporal_coverage.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        temporal_coverage = logical_file.metadata.temporal_coverage
+        self.assertEqual(temporal_coverage.value['start'], '2011-01-01')
+        self.assertEqual(temporal_coverage.value['end'], '2016-12-12')
+
+    def test_CRUD_key_value_metadata_raster_file_type(self):
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # set the tif file to GeoRasterFile type
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
+        # no key/value metadata for the raster file type yet
+        self.assertEqual(logical_file.metadata.extra_metadata, {})
+        url_params = {'hs_file_type': 'GeoRasterLogicalFile',
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('update_file_keyvalue_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'key': 'key-1', 'value': 'value-1'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
+                                             file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # there should be key/value metadata for the raster file type yet
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertNotEqual(logical_file.metadata.extra_metadata, {})
+        self.assertEqual(logical_file.metadata.extra_metadata['key-1'], 'value-1')
+
+        # update existing key value metadata - updating both key and value
+        request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-2',
+                                               'key_original': 'key-1'})
+        request.user = self.user
+        response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
+                                             file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-2')
+        self.assertNotIn('key-1', logical_file.metadata.extra_metadata.keys())
+
+        # update existing key value metadata - updating value only
+        request = self.factory.post(url, data={'key': 'key-2', 'value': 'value-1',
+                                               'key_original': 'key-2'})
+        request.user = self.user
+        response = update_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
+                                             file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.metadata.extra_metadata['key-2'], 'value-1')
+
+        # delete key/value data using the view function
+        request = self.factory.post(url, data={'key': 'key-2'})
+        request.user = self.user
+        # this the view function we are testing
+        response = delete_key_value_metadata(request, hs_file_type="GeoRasterLogicalFile",
+                                             file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # at this point there should not be any key/value metadata
+        self.assertEqual(logical_file.metadata.extra_metadata, {})
 
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.raster_file_obj,
