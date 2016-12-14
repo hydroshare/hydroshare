@@ -108,7 +108,18 @@
             <div class="col-sm-9">
                 <div class="row">
                     <div class="col-sm-12">
-                        <h4>Groups that I am in</h4>
+                        {%  if inactive_groups %}
+                            <div class="row">
+                                <div class="col-sm-9 col-xs-9">
+                                    <h4>Groups that I am in</h4>
+                                </div>
+                                <div class="col-sm-3 col-xs-3" style="margin-top: 10px; text-align: right">
+                                    <a id="show-deleted-groups" href="#" data-toggle="collapse" data-target="#deleted-groups">Show deleted groups</a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <h4>Groups that I am in</h4>
+                        {% endif %}
                         <hr class="solid">
                         {% if groups %}
                             <table class="groups-table">
@@ -140,12 +151,50 @@
                                             <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
                                         </td>
 
-                                        <td><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
+                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
                                     </tr>
 
                                 {% endfor %}
                             </table>
-                        {% else %}
+                        {% endif %}
+
+                        {% if inactive_groups %}
+                            <hr>
+                            <table class="groups-table collapse" id="deleted-groups">
+                                {% for group in inactive_groups %}
+                                    <tr>
+                                        <td>
+                                            {% if group.gaccess.picture and group.gaccess.picture.url %}
+                                                <div class="group-image-wrapper">
+                                                    <div class="group-image-small"
+                                                         style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                                                </div>
+                                            {% else %}
+                                                <div class="group-image-wrapper">
+                                                    <div class="group-image-small"
+                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <h4><a href="/group/{{ group.id }}" style="color: red">{{ group.name }}</a></h4>
+                                            {% if group.gaccess.public %}
+                                                <img src="/static/img/public.png" alt="Public Group" title="Public Group">
+                                            {% elif group.gaccess.discoverable %}
+                                                <img src="/static/img/discoverable.png" alt="Discoverable Group" title="Discoverable Group">
+                                            {% else %}
+                                                <img src="/static/img/private.png" alt="Private Group" title="Private Group">
+                                            {% endif %}
+                                            <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
+                                        </td>
+
+                                        <td style="text-align: right"><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        {%  endif %}
+                        {% if not groups and not inactive_groups %}
                             <i>You have not joined any groups.</i>
                         {% endif %}
                     </div>
@@ -284,6 +333,14 @@
                 var input = $(this).parents('.input-group').find(':text');
                 input.val(label);
             });
+            $("#show-deleted-groups").click(function () {
+                if ($(this).text() === "Show deleted groups"){
+                    $(this).text("Hide deleted groups");
+                }
+                else {
+                    $(this).text("Show deleted groups");
+                }
+            })
         });
     </script>
 {% endblock %}

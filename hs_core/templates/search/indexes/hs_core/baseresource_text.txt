@@ -5,6 +5,7 @@
 {{ object.metadata.description }}
 {{ object.public }}
 {{ object.discoverable }}
+{{ object.published }}
 {{ object.created }}
 {{ object.modified }}
 {{ object.rating_sum }}

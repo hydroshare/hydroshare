@@ -7,7 +7,7 @@ from hs_core.discovery_form import DiscoveryForm
 # returned JSON objects array is used for building the map view
 class DiscoveryJsonView(FacetedSearchView):
     # set facet fields
-    facet_fields = ['creators', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable']
+    facet_fields = ['creators', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable', 'published']
     # declare form class to use in this view
     form_class = DiscoveryForm
 

@@ -554,7 +554,7 @@ class CreatorForm(PartyForm):
 
 class PartyValidationForm(forms.Form):
     description = forms.URLField(required=False, validators=[validate_user_url])
-    name = forms.CharField(max_length=100)
+    name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
     email = forms.EmailField(required=False)
     address = forms.CharField(max_length=250, required=False)
@@ -571,8 +571,10 @@ class PartyValidationForm(forms.Form):
     def clean(self):
         cleaned_data = super(PartyValidationForm, self).clean()
         name = cleaned_data.get('name', None)
-        if not name or len(name.strip()) == 0:
-            self._errors['name'] = ["A value for name is missing"]
+        org = cleaned_data.get('organization', None)
+        if not org:
+            if not name or len(name.strip()) == 0:
+                self._errors['name'] = ["A value for name or organization is required but both are missing"]
 
         return self.cleaned_data
 

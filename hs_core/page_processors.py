@@ -95,7 +95,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         if is_authorized:
                             tool_url = tool_res_obj.metadata.url_bases.first().value \
                                 if tool_res_obj.metadata.url_bases.first() else None
-                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().value \
                                 if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                             hs_term_dict_user = {}
                             hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
