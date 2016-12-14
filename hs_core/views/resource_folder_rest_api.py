@@ -1,4 +1,4 @@
-import os 
+import os
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -46,7 +46,7 @@ class ResourceFolders(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        relpath = os.path.join('data', 'contents', pathname) 
+        relpath = os.path.join('data', 'contents', pathname)
         try:
             contents = view_utils.list_folder(pk, relpath)
         except SessionException:
@@ -81,8 +81,8 @@ class ResourceFolders(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        # relativise the path 
-        relpath = os.path.join('data', 'contents', pathname) 
+        # relativise the path
+        relpath = os.path.join('data', 'contents', pathname)
         try:
             view_utils.create_folder(pk, relpath)
         except SessionException:
@@ -113,8 +113,8 @@ class ResourceFolders(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        # relativise the path 
-        relpath = os.path.join('data', 'contents', pathname) 
+        # relativise the path
+        relpath = os.path.join('data', 'contents', pathname)
         try:
             view_utils.remove_folder(request.user, pk, relpath)
         except SessionException:
