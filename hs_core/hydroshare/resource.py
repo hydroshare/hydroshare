@@ -967,8 +967,8 @@ def delete_format_metadata_after_delete_file(resource, file_name):
 
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
-    Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
-    is raised.
+    Deletes an individual file from a HydroShare resource. If the file does not exist,
+    the Exceptions.NotFound exception is raised.
 
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
@@ -976,6 +976,9 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     pk - The unique HydroShare identifier for the resource from which the file will be deleted
     filename - Name of the file to be deleted from the resource
     user - requesting user
+    delete_logical_file - If True then the ResourceFile object to be deleted if it is part of a
+    LogicalFile object then the LogicalFile object will be deleted which deletes all associated
+    ResourceFile objects and file type metadata objects.
 
     Returns:    The pid of the resource from which the file was deleted
 
@@ -1017,6 +1020,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
         if filter_condition(f):
             if delete_logical_file:
                 if f.logical_file is not None:
+                    # logical_delete() calls this function (recursive) to delete each of
+                    # its contained ResourceFile objects
                     f.logical_file.logical_delete(user)
                     return filename_or_id
             # send signal

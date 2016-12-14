@@ -702,7 +702,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     :param tgt_path: the relative paths for the target file or folder under res_id collection
     :param validate_move_rename: if True, then only ask resource type to check if this action is
             allowed. Sometimes resource types internally want to take this action but disallow
-            this action by a user. In that case resource types set this parameter to True to allow
+            this action by a user. In that case resource types set this parameter to False to allow
             this action.
     :return:
     """

@@ -14,9 +14,10 @@ from gdalconst import GA_ReadOnly
 
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file_only
+from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 import raster_meta_extract
@@ -74,74 +75,72 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
                 metadata.append({'BandInformation': band_info})
 
             log.info("Geo raster file type metadata extraction was successful.")
-            # first delete the raster file that we retrieved from irods
-            logical_file_to_delete = res_file.logical_file
-            # TODO: modify delete_resource_file_only() to delete logical file
-            delete_resource_file_only(resource, res_file)
-            if logical_file_to_delete is not None:
-                logical_file_to_delete.logical_delete(user)
+            with transaction.atomic():
+                # first delete the raster file that we retrieved from irods
+                # for setting it to raster file type
+                delete_resource_file(resource.short_id, res_file.id, user)
+                # create a geo raster logical file object to be associated with resource files
+                logical_file = GeoRasterLogicalFile.create()
+                logical_file.dataset_name = file_name
+                logical_file.save()
 
-            # create a geo raster logical file object to be associated with resource files
-            logical_file = GeoRasterLogicalFile.create()
-            logical_file.dataset_name = file_name
-            logical_file.save()
+                try:
+                    # create a folder for the raster file type using the base file name as the
+                    # name for the new folder
+                    new_folder_path = 'data/contents/{}'.format(file_name)
+                    # To avoid folder creation failure when there is already matching
+                    # directory path, first check that the folder does not exist
+                    # If folder path exists then change the folder name by adding a number
+                    # to the end
+                    istorage = resource.get_irods_storage()
+                    counter = 0
+                    while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
+                        new_file_name = file_name + "_{}".format(counter)
+                        new_folder_path = 'data/contents/{}'.format(new_file_name)
+                        counter += 1
 
-            try:
-                # create a folder for the raster file type using the base file name as the
-                # name for the new folder
-                new_folder_path = 'data/contents/{}'.format(file_name)
-                # To avoid folder creation failure when there is already matching
-                # directory path, first check that the folder does not exist
-                # If folder path exists then change the folder name by adding a number to the end
-                istorage = resource.get_irods_storage()
-                counter = 0
-                while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-                    new_file_name = file_name + "_{}".format(counter)
-                    new_folder_path = 'data/contents/{}'.format(new_file_name)
-                    counter += 1
+                    create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
 
-                create_folder(resource.short_id, new_folder_path)
-                log.info("Folder created:{}".format(new_folder_path))
+                    # add all new files to the resource
+                    resource_files = []
+                    for f in files_to_add_to_resource:
+                        uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
+                        new_res_file = utils.add_file_to_resource(resource, uploaded_file)
+                        # set the logical file for each resource file we added
+                        new_res_file.logical_file_content_object = logical_file
+                        new_res_file.save()
 
-                # add all new files to the resource
-                resource_files = []
-                for f in files_to_add_to_resource:
-                    uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
-                    new_res_file = utils.add_file_to_resource(resource, uploaded_file)
-                    # set the logical file for each resource file we added
-                    new_res_file.logical_file_content_object = logical_file
-                    new_res_file.save()
+                        resource_files.append(new_res_file)
+                        new_res_file_base_name = utils.get_resource_file_name_and_extension(
+                            new_res_file)[1]
 
-                    resource_files.append(new_res_file)
-                    new_res_file_base_name = utils.get_resource_file_name_and_extension(
-                        new_res_file)[1]
+                        # rename/move the file to the new folder - keep the original file name
+                        src_path = 'data/contents/{}'.format(new_res_file_base_name)
+                        tgt_path = os.path.join(new_folder_path, os.path.basename(f))
+                        move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path,
+                                                      validate_move_rename=False)
 
-                    # rename/move the file to the new folder - keep the original file name
-                    src_path = 'data/contents/{}'.format(new_res_file_base_name)
-                    tgt_path = os.path.join(new_folder_path, os.path.basename(f))
-                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path,
-                                                  validate_move_rename=False)
+                    log.info("Geo raster file type - new files were added to the resource.")
+                except Exception as ex:
+                    msg = "Geo raster file type. Error when setting file type. Error:{}"
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
+                    raise ex
+                finally:
+                    # remove temp dir
+                    if os.path.isdir(temp_dir):
+                        shutil.rmtree(temp_dir)
 
-                log.info("Geo raster file type - new files were added to the resource.")
-            except Exception as ex:
-                msg = "Geo raster file type. Error when setting file type. Error:{}"
-                msg = msg.format(ex.message)
-                log.exception(msg)
-                raise ex
-            finally:
-                # remove temp dir
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
+                log.info("Geo raster file type was created.")
 
-            log.info("Geo raster file type was created.")
-
-            # use the extracted metadata to populate file metadata
-            for element in metadata:
-                # here k is the name of the element
-                # v is a dict of all element attributes/field names and field values
-                k, v = element.items()[0]
-                logical_file.metadata.create_element(k, **v)
-            log.info("Geo raster file type - metadata was saved to DB")
+                # use the extracted metadata to populate file metadata
+                for element in metadata:
+                    # here k is the name of the element
+                    # v is a dict of all element attributes/field names and field values
+                    k, v = element.items()[0]
+                    logical_file.metadata.create_element(k, **v)
+                log.info("Geo raster file type - metadata was saved to DB")
         else:
             err_msg = "Geo raster file type file validation failed.{}".format(' '.join(error_info))
             log.info(err_msg)
