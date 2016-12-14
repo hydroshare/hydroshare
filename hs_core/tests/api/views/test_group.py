@@ -540,31 +540,33 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         url_params = {'shortkey': self.resource.short_id, 'group_id': new_group.id}
         url = reverse('unshare_resource_with_group', kwargs=url_params)
         request = self.factory.post(url)
-        request.META['HTTP_REFERER'] = "/some_url/"
-        self._set_request_message_attributes(request)
         request.user = self.john
-        response = unshare_resource_with_group(request, shortkey=self.resource.short_id, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        response = unshare_resource_with_group(request, shortkey=self.resource.short_id,
+                                               group_id=new_group.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content['status'], 'success')
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
 
-        # test group member unsharing a resource redirects to '/my-resources/' when the user has no
-        # more view access to the resource
+        # test group member (non-owner) unsharing a resource with a group
+        # returns response status as 'error' and the group is not unshared
 
         # let make mike a member of group
         self.john.uaccess.share_group_with_user(new_group, self.mike, PrivilegeCodes.VIEW)
         self.assertIn(new_group, self.mike.uaccess.view_groups)
 
-        # let mike have view permission on resource
-        self.john.uaccess.share_resource_with_user(self.resource, self.mike, PrivilegeCodes.VIEW)
+        # let john share the resource with group
+        self.john.uaccess.share_resource_with_group(self.resource, new_group, PrivilegeCodes.VIEW)
+        self.assertIn(self.resource, new_group.gaccess.view_resources)
 
-        # let mike share the resource with group
-        request.META['HTTP_REFERER'] = "/my-resource/"
+        # let mike unshare the resource with group
         request.user = self.mike
-        response = unshare_resource_with_group(request, shortkey=self.resource.short_id, group_id=new_group.id)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-        self.assertNotIn(self.resource, new_group.gaccess.view_resources)
+        response = unshare_resource_with_group(request, shortkey=self.resource.short_id,
+                                               group_id=new_group.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_content = json.loads(response.content)
+        self.assertEqual(response_content['status'], 'error')
+        self.assertIn(self.resource, new_group.gaccess.view_resources)
 
     def test_make_group_membership_request(self):
         # test that user can make request to join a group
