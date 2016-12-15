@@ -543,7 +543,10 @@
                 "searchable": false
             }
         ];
+        $(document).ready(function () {
+          start_resource_table();
+          $.fn.dataTable.ext.search.push(hs_resource_table_custom_search);
+        }
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}
-
