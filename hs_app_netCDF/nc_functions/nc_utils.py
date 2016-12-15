@@ -396,20 +396,19 @@ def get_nc_grid_mapping_crs_name(nc_dataset):
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
     nc_grid_mapping_crs_name = ''
 
-    if hasattr(nc_grid_mapping_variable, 'crs_wkt') or \
-       hasattr(nc_grid_mapping_variable, 'spatial_ref'):
-        projection_string = nc_grid_mapping_variable.crs_wkt\
-                            if hasattr(nc_grid_mapping_variable, 'crs_wkt')\
-                            else nc_grid_mapping_variable.spatial_ref
-        try:
-            spatial_ref = osr.SpatialReference()
-            spatial_ref.ImportFromWkt(projection_string)
-            if spatial_ref.IsProjected():
-                nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('projcs', 0)
-            else:
-                nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('geogcs', 0)
-        except Exception:
-            pass
+    for attribute_name in ['crs_wkt', 'spatial_ref', 'crs_wkt']:
+        if hasattr(nc_grid_mapping_variable, attribute_name):
+            projection_string = getattr(nc_grid_mapping_variable, attribute_name)
+            try:
+                spatial_ref = osr.SpatialReference()
+                spatial_ref.ImportFromWkt(projection_string)
+                if spatial_ref.IsProjected():
+                    nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('projcs', 0)
+                else:
+                    nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('geogcs', 0)
+                break
+            except Exception:
+                break
 
     if nc_grid_mapping_crs_name == '':
         nc_grid_mapping_crs_name = get_nc_grid_mapping_projection_name(nc_dataset)

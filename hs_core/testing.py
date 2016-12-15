@@ -355,7 +355,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resNetcdf.metadata.title.value, extracted_title)
 
         # there should be an abstract element
-        self.assertNotEquals(self.resNetcdf.metadata.description, None)
+        self.assertNotEqual(self.resNetcdf.metadata.description, None)
         extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
                              "Balance (UEB) model.It includes the simulation result " \
                              "of snow water equivalent during the period " \

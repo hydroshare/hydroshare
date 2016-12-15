@@ -83,7 +83,7 @@ class OriginalCoverageForm(forms.Form):
         for key in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
             value = temp_cleaned_data.get(key, None)
             if not value:
-                self._errors[key] = ["Info for $s is missing" % key]
+                self._errors[key] = ["Info for %s is missing" % key]
                 is_form_errors = True
                 del self.cleaned_data[key]
 
