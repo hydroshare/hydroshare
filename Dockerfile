@@ -1,4 +1,4 @@
-FROM mjstealey/hs_docker_base:1.7.5
+FROM mjstealey/hs_docker_base:1.10.0
 MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###

@@ -564,3 +564,6 @@ LOGGING = {
 TRACKING_SESSION_TIMEOUT = 60 * 15
 TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
 TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
+
+# info django that a reverse proxy sever (nginx) is handling ssl/https for it
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

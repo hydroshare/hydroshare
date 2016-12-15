@@ -282,6 +282,7 @@ class BaseBandInfoFormSet(BaseFormSet):
             bands_data.append({'BandInformation': band_data})
         return bands_data
 
+
 BandInfoFormSet = formset_factory(BandInfoForm, formset=BaseBandInfoFormSet, extra=0)
 
 BandInfoLayoutEdit = Layout(HTML("""

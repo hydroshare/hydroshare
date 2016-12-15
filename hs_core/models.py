@@ -2016,6 +2016,8 @@ def new_get_content_model(self):
         rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
         return rt.objects.get(id=self.id)
     return old_get_content_model(self)
+
+
 Page.get_content_model = new_get_content_model
 
 

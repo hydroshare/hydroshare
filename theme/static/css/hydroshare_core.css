@@ -1230,9 +1230,7 @@ a[data-toggle='tab']{
 }
 
 .add-view-user-form, .add-view-group-form {
-    width: 60%;
-    display: inline-block;
-    float: left;
+   margin-bottom: 10px;
 }
 
 #id_user-wrapper, #id_group-wrapper {
@@ -1492,10 +1490,10 @@ body > .main-container {
 }
 
 .btn-add-access {
-	height: 32px;
-	top: 0;
+	height: 34px;
 	border-radius: 0;
-	margin: 0 2px;
+	width: 100%;
+	padding-top: 7px;
 }
 
 #invite-to-group .btn-add-access {
@@ -2010,15 +2008,12 @@ td.user-actions > span:hover {
 }
 
 #manage-access form .dropdown, #invite-to-group .dropdown {
-    display:inline;
-    border-radius:0;
-	float: left;
-	margin-left: 2px;
+	width: 100%;
 }
 
-#roles_list{
-    border-radius: 0;
-	width: 100px;
+#roles_list {
+	border-radius: 0;
+	width: 100%;
 }
 
 .access-table tbody > tr {
@@ -4372,6 +4367,16 @@ div#fb-file-operations-controls {
 #discover-map-legend{
 	z-index: 0;
 	position: absolute;
-	top: 0px;
-	right:0px;
+	top: 0;
+	right:0;
+}
+
+.ui-dialog {
+	-webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+	z-index: 1032 !important;
+}
+
+.ui-widget-overlay {
+	z-index: 1031 !important;
 }

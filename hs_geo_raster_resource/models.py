@@ -357,6 +357,7 @@ class RasterResource(BaseResource):
         # can have only 1 file
         return False
 
+
 # this would allow us to pick up additional form elements for the template
 # before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
