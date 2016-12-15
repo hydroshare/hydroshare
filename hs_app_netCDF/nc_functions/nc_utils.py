@@ -396,7 +396,7 @@ def get_nc_grid_mapping_crs_name(nc_dataset):
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
     nc_grid_mapping_crs_name = ''
 
-    for attribute_name in ['crs_wkt', 'spatial_ref', 'crs_wkt']:
+    for attribute_name in ['crs_wkt', 'spatial_ref', 'esri_pe_string']:
         if hasattr(nc_grid_mapping_variable, attribute_name):
             projection_string = getattr(nc_grid_mapping_variable, attribute_name)
             try:
@@ -433,11 +433,13 @@ def get_nc_grid_mapping_projection_import_string_dict(nc_dataset):
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
 
     # get the projection string and type
-    if hasattr(nc_grid_mapping_variable, 'crs_wkt')or \
-       hasattr(nc_grid_mapping_variable, 'spatial_ref'):
-        projection_string = nc_grid_mapping_variable.crs_wkt\
-                            if hasattr(nc_grid_mapping_variable, 'crs_wkt') \
-                            else nc_grid_mapping_variable.spatial_ref
+    projection_string = ''
+    for attribute_name in ['crs_wkt', 'spatial_ref', 'esri_pe_string']:
+        if hasattr(nc_grid_mapping_variable, attribute_name):
+            projection_string = getattr(nc_grid_mapping_variable, attribute_name)
+            break
+
+    if projection_string:
         projection_type = 'WKT String'
         try:
             spatial_ref = osr.SpatialReference()
