@@ -1250,10 +1250,7 @@ class UserAccess(models.Model):
             if via_user:
                 return BaseResource.objects\
                     .filter(r2urp__privilege=this_privilege,
-                            r2urp__user=self.user)\
-                    .exclude(pk__in=BaseResource.objects
-                             .filter(r2urp__user=self.user,
-                                     r2urp__privilege__lt=this_privilege))
+                            r2urp__user=self.user)
             else:
                 # groups can't own resources
                 return BaseResource.objects.empty()
