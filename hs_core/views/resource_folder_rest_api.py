@@ -120,7 +120,5 @@ class ResourceFolders(APIView):
         except SessionException:
             return Response("Cannot remove folder", status=status.HTTP_400_BAD_REQUEST)
 
-        view_utils.remove_irods_folder_in_django(resource, resource.get_irods_storage(), pathname)
-
         return Response(data={'resource_id': pk, 'path': pathname},
                         status=status.HTTP_200_OK)

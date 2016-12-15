@@ -1543,7 +1543,7 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
     # This is used to direct uploads to a subfolder of the root folder. See get_path above.
-    file_folder = models.CharField(max_length=255, null=True)
+    file_folder = models.CharField(max_length=4096, null=True)
     resource_file = models.FileField(upload_to=get_path, max_length=500,
                                      null=True, blank=True,
                                      storage=IrodsStorage())
