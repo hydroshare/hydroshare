@@ -550,7 +550,7 @@ def remove_irods_folder_in_django(resource, istorage, foldername, user):
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, resource_file__icontains=foldername)
 
-        # delete all uniqie logicalfiles associated with all resource files to be deleted
+        # delete all unique logical file objects associated with any resource files to be deleted
         # from django as they need to be deleted differently
         logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
         for lf in logical_files:

@@ -17,32 +17,41 @@ from .models import GeoRasterLogicalFile
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
-    """This view function must be called using ajax call"""
+    """This view function must be called using ajax call.
+    Note: Response status code is always 200 (OK). Client needs check the
+    the response 'status' key for success or failure.
+    """
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-
+    response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
-        return JsonResponse({'message': err_msg}, status=status.HTTP_401_UNAUTHORIZED)
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     if res.resource_type != "CompositeResource":
         err_msg = "File type can be set only for files in composite resource."
-        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     if hs_file_type != "GeoRaster":
-        err_msg = "Currently a file can be set to Geo Raster file type."
-        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        err_msg = "Currently a file can be set to Geo Raster file type only."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     try:
         set_file_to_geo_raster_file_type(resource=res, file_id=file_id, user=request.user)
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to Geo Raster file type. " \
               "Raster metadata extraction was successful."
-        return JsonResponse({'message': msg}, status=status.HTTP_200_OK)
+        response_data['message'] = msg
+        response_data['status'] = 'success'
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     except ValidationError as ex:
-        return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        response_data['message'] = ex.message
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @login_required

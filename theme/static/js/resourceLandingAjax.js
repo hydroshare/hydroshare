@@ -468,14 +468,33 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
 }
 
 function set_file_type_ajax_submit(url) {
+    $alert_success = '<div class="alert alert-success" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File type was successful.\
+    </div>';
+
     return $.ajax({
         type: "POST",
         url: url,
         dataType: 'html',
         async: true,
         success: function (result) {
+            var json_response = JSON.parse(result);
+            if (json_response.status === 'success'){
+                $alert_success = $alert_success.replace("File type was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-success").alert('close');
+                });
+            }
+            else {
+                display_error_message('Failed to set file type', json_response.message);
+            }
+
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
+            display_error_message('Failed to set file type', xhr.responseText);
         }
     });
 }
