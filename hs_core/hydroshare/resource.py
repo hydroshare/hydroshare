@@ -3,8 +3,6 @@ import zipfile
 import shutil
 import logging
 import string
-import copy
-
 import requests
 
 from django.conf import settings
@@ -510,23 +508,30 @@ def create_resource(
     return resource
 
 
-def create_new_version_empty_resource(pk, user):
+def create_empty_resource(pk, user, action='version'):
     """
-    Create a new version for a resource with empty content and empty metadata. This new version
-    resource object is then used to create metadata and content from its original resource.
-    This separate routine is needed to return a new version resource object to the calling
-    view so that if an exception is raised, this empty resource object can be deleted for clean-up
+    Create a resource with empty content and empty metadata for resource versioning or copying.
+    This empty resource object is then used to create metadata and content from its original
+    resource. This separate routine is needed to return a new resource object to the calling
+    view so that if an exception is raised, this empty resource object can be deleted for clean-up.
     Args:
-        pk: the unique HydroShare identifier for the resource that is to be versioned.
-        user: the requesting user who requests to create a new version for the resource
+        pk: the unique HydroShare identifier for the resource that is to be versioned or copied.
+        user: the user who requests to create a new version for the resource or copy the resource.
+        action: "version" or "copy" with default action being "version"
     Returns:
-        the empyt new resource that is created as an initial new version for the original resource
-        which is then further populated with metadata and content in a subsequent step
-
+        the empty new resource that is created as an initial new version or copy for the original
+        resource which is then further populated with metadata and content in a subsequent step
     """
     res = utils.get_resource_by_shortkey(pk)
-    if not user.uaccess.owns_resource(res):
-        raise ValidationError('Only resource owners can create new versions')
+    if action == 'version':
+        if not user.uaccess.owns_resource(res):
+            raise ValidationError('Only resource owners can create new versions')
+    elif action == 'copy':
+        if not user.uaccess.view_resource(res):
+            raise ValidationError('You do not have permission to view this resource')
+    else:
+        raise ValidationError('Input parameter error: action needs to be version or copy')
+
     # create the resource without files and without creating bags first
     new_resource = create_resource(
         resource_type=res.resource_type,
@@ -539,12 +544,42 @@ def create_new_version_empty_resource(pk, user):
     return new_resource
 
 
+def copy_resource(ori_res, new_res):
+    """
+    Populate metadata and contents from ori_res object to new_res object to make new_res object
+    as a copy of the ori_res object
+    Args:
+        ori_res: the original resource that is to be copied.
+        new_res: the new_res to be populated with metadata and content from the original resource
+        as a copy of the original resource
+    Returns:
+        the new resource copied from the original resource
+    """
+
+    # add files directly via irods backend file operation
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private=True)
+
+    utils.copy_and_create_metadata(ori_res, new_res)
+
+    new_res.metadata.sources.all().delete()
+    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+    new_res.metadata.create_element('source', derived_from=hs_identifier)
+
+    # create bag for the new resource
+    hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
+
+    return new_res
+
+
 def create_new_version_resource(ori_res, new_res, user):
     """
-    Populate metadata and contents from ori_res object to new_res object to make new_res object as a new version of the ori_res object
+    Populate metadata and contents from ori_res object to new_res object to make new_res object as
+    a new version of the ori_res object
     Args:
         ori_res: the original resource that is to be versioned.
-        new_res: the new_res to be populated with metadata and content from the original resource to make it a new version
+        new_res: the new_res to be populated with metadata and content from the original resource
+        to make it a new version
+        user: the requesting user
     Returns:
         the new versioned resource for the original resource and thus obsolete the original resource
 
@@ -557,50 +592,8 @@ def create_new_version_resource(ori_res, new_res, user):
     # add files directly via irods backend file operation
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
-    # link copied resource files to Django resource model
-    res_id_len = len(ori_res.short_id)
-    files = ResourceFile.objects.filter(object_id=ori_res.id)
-    for n, f in enumerate(files):
-        if f.fed_resource_file_name_or_path:
-            ResourceFile.objects.create(content_object=new_res,
-                                        resource_file=None,
-                                        fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
-                                        fed_resource_file_size=f.fed_resource_file_size)
-        elif f.fed_resource_file:
-            ori_file_path = f.fed_resource_file.name
-            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-            # find idx2 to start right after resource id
-            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
-            if idx1 > 0:
-                new_file_path = ori_file_path[0:idx1] + \
-                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
-                                '/' + new_res.short_id + ori_file_path[idx2:]
-                ResourceFile.objects.create(content_object=new_res, fed_resource_file=new_file_path)
-        elif f.resource_file:
-            ori_file_path = f.resource_file.name
-            new_file_path = new_res.short_id + ori_file_path[res_id_len:]
-            ResourceFile.objects.create(content_object=new_res, resource_file=new_file_path)
-
     # copy metadata from source resource to target new-versioned resource except three elements
-    exclude_elements = ['identifier', 'publisher', 'date']
-    new_res.metadata.copy_all_elements_from(ori_res.metadata, exclude_elements)
-
-    # create Identifier element that is specific to the new versioned resource
-    new_res.metadata.create_element('identifier', name='hydroShareIdentifier',
-                                         url='{0}/resource/{1}'.format(utils.current_site_url(), new_res.short_id))
-
-    # create date element that is specific to the new versioned resource
-    new_res.metadata.create_element('date', type='created', start_date=new_res.created)
-    new_res.metadata.create_element('date', type='modified', start_date=new_res.updated)
-
-    # copy date element to the new versioned resource if exists
-    if ori_res.metadata.dates.all().filter(type='valid'):
-        res_valid_date = new_res.metadata.dates.all().filter(type='valid')[0]
-        new_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date, end_date=res_valid_date.end_date)
-
-    if ori_res.metadata.dates.all().filter(type='available'):
-        res_avail_date = new_res.metadata.dates.all().filter(type='available')[0]
-        new_res.metadata.create_element('date', type='available', start_date=res_avail_date.start_date, end_date=res_avail_date.end_date)
+    utils.copy_and_create_metadata(ori_res, new_res)
 
     # add or update Relation element to link source and target resources
     hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
@@ -615,14 +608,6 @@ def create_new_version_resource(ori_res, new_res, user):
 
     hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
     new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-
-    if ori_res.resource_type.lower() == "collectionresource":
-        # clone contained_res list of original collection and add to new collection
-        # note that new version collection will not contain "deleted resources"
-        new_res.resources = ori_res.resources.all()
-
-    # create the key/value metadata
-    new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res, ori_res.resource_federation_path)

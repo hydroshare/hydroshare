@@ -66,6 +66,15 @@
                         {% endif %}
                     </form>
                 {% endif %}
+                {% if user.is_authenticated %}
+                    {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
+                        <a href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/">
+                            <span data-toggle="tooltip" data-placement="auto"
+                                  title="Copy this resource"
+                                  class="glyphicon glyphicon-import icon-button icon-blue"></span>
+                        </a>
+                    {% endif %}
+                {% endif %}
             {% endif %}
         {% else %}
             <a href="{{ cm.get_absolute_url }}">

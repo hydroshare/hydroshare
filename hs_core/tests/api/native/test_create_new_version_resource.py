@@ -88,23 +88,23 @@ class TestNewVersionResource(TestCase):
     def test_new_version_generic_resource(self):
         # test to make sure only owners can version a resource
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.VIEW)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         # add key/value metadata to original resource
         self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
         self.res_generic.save()
 
-        new_res_generic = hydroshare.create_new_version_empty_resource(self.res_generic.short_id,
+        new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
                                                                        self.owner)
         # test to make sure the new versioned empty resource has no content files
         self.assertEqual(new_res_generic.files.all().count(), 0)
@@ -187,19 +187,19 @@ class TestNewVersionResource(TestCase):
     def test_new_version_raster_resource(self):
         # test to make sure only owners can version a resource
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.VIEW)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
-        new_res_raster = hydroshare.create_new_version_empty_resource(self.res_raster.short_id,
+        new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
                                                                       self.owner)
         new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster,
                                                                 self.owner)

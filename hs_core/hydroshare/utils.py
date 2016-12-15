@@ -7,6 +7,7 @@ import tempfile
 import logging
 import shutil
 import string
+import copy
 from uuid import uuid4
 import errno
 
@@ -443,10 +444,18 @@ def serialize_system_metadata(res):
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
 
-
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
+    """
+    Copy resource files and AVUs from source resource to target resource including both
+    on iRODS storage and on Django database
+    :param src_res_id: source resource uuid
+    :param dest_res_id: target resource uuid
+    :param set_to_private: set target resource to private if True. The default is False.
+    :return:
+    """
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
+    tgt_res = get_resource_by_shortkey(dest_res_id)
     istorage = src_res.get_irods_storage()
     if src_res.resource_federation_path:
         src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
@@ -464,6 +473,73 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
             else:
                 istorage.setAVU(dest_coll, avu_name, value)
 
+    # link copied resource files to Django resource model
+    res_id_len = len(src_res.short_id)
+    files = ResourceFile.objects.filter(object_id=src_res.id)
+    for n, f in enumerate(files):
+        if f.fed_resource_file_name_or_path:
+            ResourceFile.objects.create(
+                content_object=tgt_res,
+                resource_file=None,
+                fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
+                fed_resource_file_size=f.fed_resource_file_size)
+        elif f.fed_resource_file:
+            ori_file_path = f.fed_resource_file.name
+            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            # find idx2 to start right after resource id
+            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
+            if idx1 > 0:
+                new_file_path = ori_file_path[0:idx1] + \
+                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
+                                '/' + tgt_res.short_id + ori_file_path[idx2:]
+                ResourceFile.objects.create(content_object=tgt_res,
+                                            fed_resource_file=new_file_path)
+        elif f.resource_file:
+            ori_file_path = f.resource_file.name
+            new_file_path = tgt_res.short_id + ori_file_path[res_id_len:]
+            ResourceFile.objects.create(content_object=tgt_res, resource_file=new_file_path)
+
+        if src_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new collection resource will not contain "deleted resources"
+            tgt_res.resources = src_res.resources.all()
+
+
+def copy_and_create_metadata(src_res, dest_res):
+    """
+    Copy metadata from source resource to target resource except identifier, publisher, and date
+    which need to be created for the target resource as appropriate. This method is used for
+    resource copying and versioning.
+    :param src_res: source resource
+    :param dest_res: target resource
+    :return:
+    """
+    # copy metadata from source resource to target resource except three elements
+    exclude_elements = ['identifier', 'publisher', 'date']
+    dest_res.metadata.copy_all_elements_from(src_res.metadata, exclude_elements)
+
+    # create Identifier element that is specific to the new resource
+    dest_res.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                    url='{0}/resource/{1}'.format(current_site_url(),
+                                                                  dest_res.short_id))
+
+    # create date element that is specific to the new resource
+    dest_res.metadata.create_element('date', type='created', start_date=dest_res.created)
+    dest_res.metadata.create_element('date', type='modified', start_date=dest_res.updated)
+
+    # copy date element to the new resource if exists
+    if src_res.metadata.dates.all().filter(type='valid'):
+        res_valid_date = dest_res.metadata.dates.all().filter(type='valid')[0]
+        dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
+                                        end_date=res_valid_date.end_date)
+
+    if src_res.metadata.dates.all().filter(type='available'):
+        res_avail_date = dest_res.metadata.dates.all().filter(type='available')[0]
+        dest_res.metadata.create_element('date', type='available',
+                                        start_date=res_avail_date.start_date,
+                                        end_date=res_avail_date.end_date)
+    # create the key/value metadata
+    dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user

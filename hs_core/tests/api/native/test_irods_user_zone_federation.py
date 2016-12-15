@@ -164,7 +164,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(ori_res.files.all().count(), 1,
                          msg="Number of content files is not equal to 1")
 
-        new_res = hydroshare.create_new_version_empty_resource(ori_res.short_id, self.user)
+        new_res = hydroshare.create_empty_resource(ori_res.short_id, self.user)
         new_res = hydroshare.create_new_version_resource(ori_res, new_res, self.user)
         # only need to test file-related attributes
         # ensure new versioned resource is created in the same federation zone as original resource

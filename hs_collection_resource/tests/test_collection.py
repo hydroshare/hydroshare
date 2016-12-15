@@ -5,7 +5,7 @@ from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import create_resource, create_account, \
-     create_new_version_empty_resource, create_new_version_resource, \
+     create_empty_resource, create_new_version_resource, \
      update_science_metadata
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
@@ -680,7 +680,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new version of collection
-        new_collection = create_new_version_empty_resource(self.resCollection.short_id, self.user1)
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1)
 
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
