@@ -11,8 +11,7 @@ from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
 
-from hs_file_types.models import GenericLogicalFile
-from hs_file_types.utils import set_file_to_geo_raster_file_type
+from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
 
 
 class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -398,7 +397,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
         gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
 
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         # add generic logical file type metadata
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
@@ -439,7 +438,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                   files=(self.raster_file_obj,), user=self.user)
 
         res_file = self.composite_resource.files.all().first()
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         # raster logical file should have a coverage element of type box
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]

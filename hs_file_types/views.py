@@ -11,7 +11,7 @@ from rest_framework import status
 
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from hs_core.hydroshare.utils import resource_modified
-from .utils import set_file_to_geo_raster_file_type
+
 from .models import GeoRasterLogicalFile
 
 
@@ -41,7 +41,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     try:
-        set_file_to_geo_raster_file_type(resource=res, file_id=file_id, user=request.user)
+        GeoRasterLogicalFile.set_file_type(resource=res, file_id=file_id, user=request.user)
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to Geo Raster file type. " \
               "Raster metadata extraction was successful."

@@ -15,7 +15,7 @@ from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import MockIRODSTestCaseMixin
 from ..views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata
-from ..utils import set_file_to_geo_raster_file_type
+from ..models import GeoRasterLogicalFile
 
 
 class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
@@ -93,7 +93,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterFile type
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -139,7 +139,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         res_file = self.composite_resource.files.first()
 
         # set the tif file to GeoRasterFile type
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 

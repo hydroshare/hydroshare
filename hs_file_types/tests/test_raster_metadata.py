@@ -16,7 +16,6 @@ from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
 from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
-from hs_file_types.utils import set_file_to_geo_raster_file_type
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
 
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
@@ -91,7 +90,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that the resource file is not associated with any logical file
         # self.assertEqual(res_file.has_logical_file, False)
         # set the tif file to GeoRasterFile type
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test the resource now has 2 files (vrt file added as part of metadata extraction)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -201,7 +200,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that the resource file is not associated with any logical file
         # self.assertEqual(res_file.has_logical_file, False)
         # set the zip file to GeoRasterFile type
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test the resource now has 3 files (one vrt file and 2 tif files)
         self.assertEqual(self.composite_resource.files.all().count(), 3)
@@ -301,7 +300,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
 
         # set tif file to GeoRasterFileType
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # check that the resource file is associated with a logical file
         res_file = hydroshare.utils.get_resource_files_by_extension(
@@ -312,7 +311,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # trying to set this tif file again to geo raster file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
-            set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
     def test_set_file_type_to_geo_raster_invalid_file_3(self):
         # here we are using an invalid raster zip file for setting it
@@ -330,7 +329,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # extract metadata by setting to geo raster file type
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
 
         # test that we can update raster specific metadata at the file level
@@ -523,7 +522,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -562,7 +561,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -598,7 +597,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -635,7 +634,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -676,7 +675,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         # test renaming of files that are associated with raster LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 2)
         src_path = 'data/contents/small_logan/small_logan.tif'
@@ -709,7 +708,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         # extract metadata
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
 
         # test the get_html() for CellInformation element
@@ -749,7 +748,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
@@ -795,7 +794,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # extract metadata from the tif file
-        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
 
@@ -820,7 +819,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # trying to set this invalid tif file to geo raster file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
-            set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+            GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)

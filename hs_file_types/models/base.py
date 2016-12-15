@@ -472,11 +472,11 @@ class AbstractLogicalFile(models.Model):
         return self.files.all().first().resource
 
     @property
-    def allow_resource_file_move(self):
+    def supports_resource_file_move(self):
         return True
 
     @property
-    def allow_resource_file_rename(self):
+    def supports_resource_file_rename(self):
         return True
 
     def logical_delete(self, user, delete_res_files=True):

@@ -64,8 +64,8 @@ class CompositeResource(BaseResource):
                 res_file_objs = self.files.filter(object_id=self.id,
                                                   resource_file__contains=path_to_check).all()
             for res_file_obj in res_file_objs:
-                if not res_file_obj.logical_file.allow_resource_file_rename or \
-                        not res_file_obj.logical_file.allow_resource_file_move:
+                if not res_file_obj.logical_file.supports_resource_file_rename or \
+                        not res_file_obj.logical_file.supports_resource_file_move:
                     raise ValidationError(err_msg)
 
     def check_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
@@ -97,8 +97,8 @@ class CompositeResource(BaseResource):
                         object_id=self.id,
                         resource_file__contains=path_to_check).all()
                 for res_file_obj in res_file_objs:
-                    if not res_file_obj.logical_file.allow_resource_file_rename or \
-                            not res_file_obj.logical_file.allow_resource_file_move:
+                    if not res_file_obj.logical_file.supports_resource_file_rename or \
+                            not res_file_obj.logical_file.supports_resource_file_move:
                         raise ValidationError(err_msg)
 
         if self.resource_federation_path:
@@ -110,8 +110,8 @@ class CompositeResource(BaseResource):
                                              resource_file=src_full_path).first()
         if res_file_obj is not None:
             # src_full_path contains file name
-            if not res_file_obj.logical_file.allow_resource_file_rename or \
-                    not res_file_obj.logical_file.allow_resource_file_move:
+            if not res_file_obj.logical_file.supports_resource_file_rename or \
+                    not res_file_obj.logical_file.supports_resource_file_move:
                 raise ValidationError(err_msg)
 
             # check if the target directory allows stuff to be moved there
