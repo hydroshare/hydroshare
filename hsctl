@@ -16,8 +16,8 @@ sed -i '/^\s*$/d' ${CONFIG_DIRECTORY}/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare dockerworker defaultworker)
-HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
+HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
+HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
 OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
@@ -59,10 +59,10 @@ stop_nginx() {
 restart_hs() {
     echo "RESTART HYDROSHARE:"
     stop_nginx
-    docker-compose stop hydroshare defaultworker dockerworker
+    docker-compose stop hydroshare defaultworker
     delete_celerybeat_scheduler
     preflight_hs
-    docker-compose start hydroshare defaultworker dockerworker
+    docker-compose start hydroshare defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
@@ -207,10 +207,6 @@ preflight_hs() {
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
     sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
     sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
-    # Generate init-dockerworker
-    cp -rf ${HS_PATH}/scripts/templates/init-dockerworker.template ${HS_PATH}/init-dockerworker
-    sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-dockerworker
-    sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-dockerworker
 }
 
 loaddb_hs() {
@@ -379,7 +375,6 @@ reset_all_hs() {
     if [[ -f celerybeat.pid ]]; then rm -f celerybeat.pid; fi
     if [[ -f init-hydroshare ]]; then rm -f init-hydroshare; fi
     if [[ -f init-defaultworker ]]; then rm -f init-defaultworker; fi
-    if [[ -f init-dockerworker ]]; then rm -f init-dockerworker; fi
     if [[ -f docker-compose.yml ]]; then rm -f docker-compose.yml; fi
     if [[ -f run-server ]]; then rm -f run-server; fi
     if [[ -f schema.xml ]]; then rm -f schema.xml; fi
