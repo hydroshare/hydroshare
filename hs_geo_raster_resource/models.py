@@ -484,41 +484,12 @@ class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            # TODO: Pabitra - use the elements' add_to_xml_container() here instead
-            # of the following code
-            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                               'cellDataType']
-            self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
+            self.cellInformation.add_to_xml_container(container)
 
         for band_info in self.bandInformations:
-            # TODO: Pabitra - use the elements' add_to_xml_container() here instead
-            # of the following code
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
-                               'maximumValue', 'minimumValue',
-                               'method', 'comment']
-            self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
+            band_info.add_to_xml_container(container)
 
         if self.originalCoverage:
-            # TODO: Pabitra - use the elements' add_to_xml_container() here instead
-            # of the following code
-            ori_coverage = self.originalCoverage
-            cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms,
-                                                  '{%s}value' % self.NAMESPACES['rdf'])
-            # raster original coverage is of box type
-            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        % (ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
-                           ori_coverage.value['southlimit'], ori_coverage.value['westlimit'],
-                           ori_coverage.value['units'])
-
-            for meta_element in ori_coverage.value:
-                if meta_element == 'projection':
-                    cov_value += '; projection_name={}'.format(ori_coverage.value[meta_element])
-                if meta_element in ['projection_string', 'datum']:
-                    cov_value += '; {}={}'.format(meta_element, ori_coverage.value[meta_element])
-
-            rdf_coverage_value.text = cov_value
+            self.originalCoverage.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
