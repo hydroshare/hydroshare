@@ -415,6 +415,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 log.error(err_msg)
                 raise ValidationError(err_msg)
 
+
 def _raster_file_validation(raster_file):
     """ raster_file is the temp file retrieved from irods and stored on temp dir in django """
 
@@ -500,6 +501,7 @@ def _raster_file_validation(raster_file):
             error_info.append(msg)
 
     return error_info, new_resource_files_to_add
+
 
 def _create_vrt_file(tif_file):
     """ tif_file exists in temp directory - retrieved from irods """
