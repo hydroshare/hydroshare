@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resourcefile',
             name='file_folder',
-            field=models.CharField(max_length=255, null=True),
+            field=models.CharField(max_length=4096, null=True),
         ),
     ]
