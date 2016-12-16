@@ -123,7 +123,7 @@ class CompositeResource(BaseResource):
             # allow moving stuff there
             check_target_directory()
 
+
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(CompositeResource)(resource_processor)
-
