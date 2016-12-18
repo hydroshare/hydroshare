@@ -473,10 +473,28 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def supports_resource_file_move(self):
+        """allows a resource file that is part of this logical file type to be moved"""
         return True
 
     @property
     def supports_resource_file_rename(self):
+        """allows a resource file that is part of this logical file type to be renamed"""
+        return True
+
+    @property
+    def supports_zip(self):
+        """allows a folder containing resource file(s) that are part of this logical file type
+        to be zipped"""
+        return True
+
+    @property
+    def supports_delete_original_folder_on_zip(self):
+        """allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
+    @property
+    def supports_unzip(self):
+        """allows a zip file that is part of this logical file type to get unzipped"""
         return True
 
     def logical_delete(self, user, delete_res_files=True):

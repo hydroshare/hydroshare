@@ -274,6 +274,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         # resource files that are part of this logical file can't be renamed
         return False
 
+    @property
+    def supports_delete_original_folder_on_zip(self):
+        """does not allow the original folder to be deleted upon zipping of that folder"""
+        return False
+
     @classmethod
     def set_file_type(cls, resource, file_id, user):
         """

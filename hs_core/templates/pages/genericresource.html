@@ -351,7 +351,7 @@
                                                             </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite Resource" %}
                                                             <button id="fb-zip"
                                                                     class="disabled"
                                                                     title="Zip Folder" data-toggle="modal"

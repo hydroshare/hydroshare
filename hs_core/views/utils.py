@@ -409,6 +409,7 @@ def show_relations_section(res_obj):
 def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created zip file to Django resource model
     b_add_file = False
+    file_format_type = get_file_mime_type(filename)
     if resource:
         if resource.resource_federation_path:
             if resource.resource_federation_path in filename:
@@ -417,22 +418,24 @@ def link_irods_file_to_django(resource, filename, size=0):
             if not ResourceFile.objects.filter(object_id=resource.id,
                                                fed_resource_file_name_or_path=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
-                                            resource_file=None,
+                                            resource_file=None, mime_type=file_format_type,
                                             fed_resource_file_name_or_path=filename,
                                             fed_resource_file_size=size)
                 b_add_file = True
 
         elif not ResourceFile.objects.filter(object_id=resource.id,
                                              resource_file=filename).exists():
-                ResourceFile.objects.create(content_object=resource,
+                ResourceFile.objects.create(content_object=resource, mime_type=file_format_type,
                                             resource_file=filename)
                 b_add_file = True
 
         if b_add_file:
-            file_format_type = get_file_mime_type(filename)
+            # file_format_type = get_file_mime_type(filename)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
-
+            # this should assign a logical file object to this new zip file
+            # if this resource supports logical file
+            resource.set_default_logical_file()
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
@@ -586,6 +589,16 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     else:
         res_coll_input = os.path.join(res_id, input_coll_path)
 
+    # check resource supports zipping of a folder
+    if not resource.supports_zip(res_coll_input):
+        raise ValidationError("Folder zipping is not supported.")
+
+    # check if resource supports deleting the original folder after zipping
+    if bool_remove_original:
+        if not resource.supports_delete_original_folder_on_zip(input_coll_path):
+            raise ValidationError("Deleting of original folder is not allowed after "
+                                  "zipping of a folder.")
+
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
@@ -630,6 +643,9 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     else:
         zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
 
+    if not resource.supports_unzip(zip_with_rel_path):
+        raise ValidationError("Unzipping of this file is not supported.")
+
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
     istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
@@ -657,7 +673,8 @@ def create_folder(res_id, folder_path):
     else:
         coll_path = os.path.join(res_id, folder_path)
 
-    resource.check_folder_creation(coll_path)
+    if not resource.supports_folder_creation(coll_path):
+        raise ValidationError("Folder creation is not allowed here.")
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -726,7 +743,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
-        resource.check_move_or_rename_file_or_folder(src_full_path, tgt_full_path)
+        if not resource.supports_move_or_rename_file_or_folder(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
 
     istorage.moveFile(src_full_path, tgt_full_path)
 

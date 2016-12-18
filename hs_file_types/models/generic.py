@@ -126,7 +126,7 @@ class GenericFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
-        # overidding the base class method
+        # overriding the base class method
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
@@ -152,7 +152,8 @@ class GenericFileMetaData(AbstractFileMetaData):
 
 
 class GenericLogicalFile(AbstractLogicalFile):
-    # each resource file is assigned this logical file type on upload to Composite Resource
+    """ Each resource file is assigned an instance of this logical file type on upload to
+    Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
     data_type = "Generic data"
 

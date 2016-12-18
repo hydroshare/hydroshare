@@ -1468,6 +1468,7 @@ class AbstractResource(ResourcePermissionsMixin):
             fl.delete()
         hs_bagit.delete_bag(self)
 
+        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
 
@@ -1694,6 +1695,38 @@ class AbstractResource(ResourcePermissionsMixin):
                         logical_files_list.append(res_file.logical_file)
         return logical_files_list
 
+    @property
+    def supports_logical_file(self):
+        """If this resource allows associating resource file objects with logical file"""
+        return False
+
+    def set_default_logical_file(self):
+        """Sets an instance of default logical file type to any resource file objects of
+        this instance of the resource that is not already associated with a logical file.
+        Each specific resource type needs to override this function in order to to support logical
+        file types"""
+        pass
+
+    def supports_folder_creation(self, folder_full_path):
+        """If resource supports creation of folder at the specified path"""
+        return True
+
+    def supports_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
+        """If file/folder rename/move is allowed by this resource"""
+        return True
+
+    def supports_zip(self, folder_to_zip):
+        """if resource supports the specified folder to be zipped"""
+        return True
+
+    def supports_unzip(self, file_to_unzip):
+        """if resource supports the unzipping of the specified file"""
+        return True
+
+    def supports_delete_original_folder_on_zip(self, original_folder):
+        """if resource allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1774,6 +1807,8 @@ class ResourceFile(models.Model):
 
     @property
     def can_set_file_type(self):
+        # currently user can set file type only for files with extension
+        # tif or zip.
         return self.extension in ('.tif', '.zip') and (self.logical_file is None or
                                                        self.logical_file_type_name ==
                                                        "GenericLogicalFile")
@@ -1984,18 +2019,6 @@ class BaseResource(Page, AbstractResource):
         hs_term_dict["HS_RES_TYPE"] = self.resource_type
 
         return hs_term_dict
-
-    def check_folder_creation(self, folder_full_path):
-        """this checks if it is allowed to create a folder by the given path
-        if not allowed then raises ValidationError. Subclasses need to override this method
-        """
-        pass
-
-    def check_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
-        """checks if file/folder rename/move is allowed
-        If not allowed, raises ValidationError. Subclasses need to override this method
-        """
-        pass
 
 
 class GenericResource(BaseResource):
