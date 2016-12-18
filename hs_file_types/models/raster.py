@@ -32,43 +32,10 @@ from hs_file_types import raster_meta_extract
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
-class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
+class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     _cell_information = GenericRelation(CellInformation)
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
-
-    @classmethod
-    def get_supported_element_names(cls):
-        # TODO: check if this method has been unit tested
-        elements = super(GeoRasterFileMetaData, cls).get_supported_element_names()
-        elements.append('CellInformation')
-        elements.append('BandInformation')
-        elements.append('OriginalCoverage')
-        return elements
-
-    def delete_all_elements(self):
-        super(GeoRasterFileMetaData, self).delete_all_elements()
-        if self.cellInformation:
-            self.cellInformation.delete()
-        if self.originalCoverage:
-            self.originalCoverage.delete()
-
-        self.bandInformations.all().delete()
-
-    def has_all_required_elements(self):
-        # TODO: check if this method has been unit tested
-        if not super(GeoRasterFileMetaData, self).has_all_required_elements():
-            return False
-        if self.coverages.count() == 0:
-            return False
-        if not self.cellInformation:
-            return False
-        if not self.originalCoverage:
-            return False
-        if self.bandInformations.count() == 0:
-            return False
-
-        return True
 
     def get_html(self):
         """

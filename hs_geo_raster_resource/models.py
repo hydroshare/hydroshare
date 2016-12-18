@@ -363,9 +363,8 @@ class RasterResource(BaseResource):
 processor_for(RasterResource)(resource_processor)
 
 
-# This mixin should not generate any new migration for this resource type
 class GeoRasterMetaDataMixin(models.Model):
-
+    """This class must be the first class in the multi-inheritance list of classes"""
     class Meta:
         abstract = True
 
@@ -381,80 +380,10 @@ class GeoRasterMetaDataMixin(models.Model):
     def originalCoverage(self):
         return self._ori_coverage.all().first()
 
-    # TODO: Pabitra - make it work or delete this commented code
-    # def has_all_required_elements(self):
-    #     # this works because the superclass we want is listed first
-    #     # Pabitra: This didn't work for me
-    #     if not super(type(self), self).has_all_required_elements():
-    #         return False
-    #     if not self.cellInformation:
-    #         return False
-    #     if self.bandInformations.count() == 0:
-    #         return False
-    #     if not self.coverages.all().filter(type='box').first():
-    #         return False
-    #     return True
-
-    # TODO: Pabitra - make it work or delete this commented code
-    # def get_required_missing_elements(self):
-    #     # this works because the superclass we want is listed first
-    #     # Pabitra: This didn't work for me
-    #     missing_required_elements = super(type(self), self).get_required_missing_elements()
-    #     if not self.coverages.all().filter(type='box').first():
-    #         missing_required_elements.append('Spatial Coverage: Box')
-    #     if not self.cellInformation:
-    #         missing_required_elements.append('Cell Information')
-    #     if not self.bandInformations:
-    #         missing_required_elements.append('Band Information')
-    #
-    #     return missing_required_elements
-
-    # TODO: Pabitra - make it work or delete this commented code
-    # def delete_all_elements(self):
-    #     # this works because the superclass we want is listed first
-    #     # Pabitra: This didn't work for me
-    #     super(type(self), self).delete_all_elements()
-    #     if self.cellInformation:
-    #         self.cellInformation.delete()
-    #     if self.originalCoverage:
-    #         self.originalCoverage.delete()
-    #     self.bandInformations.delete()
-
-
-# this additional inheritance from GeoRasterMetaDataMixin should not generate new migration
-class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
-    # required non-repeatable cell information metadata elements
-    _cell_information = GenericRelation(CellInformation)
-    _band_information = GenericRelation(BandInformation)
-    _ori_coverage = GenericRelation(OriginalCoverage)
-
-    @property
-    def resource(self):
-        return RasterResource.objects.filter(object_id=self.id).first()
-
-    @classmethod
-    def get_supported_element_names(cls):
-        # get the names of all core metadata elements
-        elements = super(RasterMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('CellInformation')
-        elements.append('BandInformation')
-        elements.append('OriginalCoverage')
-        return elements
-
-    def get_required_missing_elements(self):
-        missing_required_elements = super(RasterMetaData, self).get_required_missing_elements()
-        if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage: Box')
-        if not self.cellInformation:
-            missing_required_elements.append('Cell Information')
-        if not self.bandInformations:
-            missing_required_elements.append('Band Information')
-
-        return missing_required_elements
-
     def has_all_required_elements(self):
-        if not super(RasterMetaData, self).has_all_required_elements():
+        # this works because the superclass we want is listed first
+        # Pabitra: This didn't work for me
+        if not super(GeoRasterMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.cellInformation:
             return False
@@ -464,13 +393,50 @@ class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
             return False
         return True
 
+    def get_required_missing_elements(self):
+        # this works because the superclass we want is listed first
+        # Pabitra: This didn't work for me
+        missing_required_elements = super(GeoRasterMetaDataMixin,
+                                          self).get_required_missing_elements()
+        if not self.coverages.all().filter(type='box').first():
+            missing_required_elements.append('Spatial Coverage: Box')
+        if not self.cellInformation:
+            missing_required_elements.append('Cell Information')
+        if not self.bandInformations:
+            missing_required_elements.append('Band Information')
+
+        return missing_required_elements
+
     def delete_all_elements(self):
-        super(RasterMetaData, self).delete_all_elements()
+        # this works because the superclass we want is listed first
+        # Pabitra: This didn't work for me
+        super(GeoRasterMetaDataMixin, self).delete_all_elements()
         if self.cellInformation:
             self.cellInformation.delete()
         if self.originalCoverage:
             self.originalCoverage.delete()
         self.bandInformations.delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(GeoRasterMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('CellInformation')
+        elements.append('BandInformation')
+        elements.append('OriginalCoverage')
+        return elements
+
+
+class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
+    # required non-repeatable cell information metadata elements
+    _cell_information = GenericRelation(CellInformation)
+    _band_information = GenericRelation(BandInformation)
+    _ori_coverage = GenericRelation(OriginalCoverage)
+
+    @property
+    def resource(self):
+        return RasterResource.objects.filter(object_id=self.id).first()
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
