@@ -221,7 +221,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        # TODO: check if there is a unit test for this method
         # file types allowed in this logical file group are: .tif and .vrt
         return [".tif", ".vrt"]
 

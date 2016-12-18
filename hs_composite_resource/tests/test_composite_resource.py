@@ -3,6 +3,7 @@ import os
 import tempfile
 import shutil
 
+from django.core.files.uploadedfile import UploadedFile
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 
@@ -10,6 +11,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
 
@@ -627,6 +629,54 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
+
+    def test_supports_folder_creation(self):
+        """Here we are testing the function supports_folder_creation()
+        """
+        self._create_composite_resource()
+        # add a file to the resource which will be part of  a GenericLogicalFile object
+        self.generic_file_obj = UploadedFile(file=open(self.generic_file, 'rb'),
+                                             name=os.path.basename(self.generic_file))
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.generic_file_obj,), user=self.user)
+
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # res_file = self.composite_resource.files.first()
+        # self.assertEqual(res_file.resource_file.name, 'generic_file.txt')
+        # we should be able to create this new folder
+        new_folder_path = "data/contents/my-new-folder"
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        # create the folder
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the file to this new folder
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + self.generic_file_name,
+                                      new_folder_path + "/" + self.generic_file_name)
+        # test that we should be able to create a folder inside the folder that contains
+        # a resource file that is part of a Generic Logical file
+        new_folder_path = "data/contents/my-new-folder/another-folder"
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+
+        # add a raster tif file to the resource which will be part of
+        # a GoeRasterLogicalFile object
+        self.raster_file_obj = UploadedFile(file=open(self.raster_file, 'rb'),
+                                            name=os.path.basename(self.raster_file))
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.raster_file_obj,), user=self.user)
+
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # make the tif as part of the GeoRasterLogicalFile
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        self.assertTrue(tif_res_file.resource_file.name.endswith(
+            "/data/contents/small_logan/small_logan.tif"))
+        # test that creating a folder at "/data/contents/small_logan/" is not supported
+        # as that folder contains a resource file that's part of GeoRaster logical file
+        new_folder_path = "/data/contents/small_logan/my-new-folder"
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
