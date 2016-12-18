@@ -437,6 +437,7 @@ def link_irods_file_to_django(resource, filename, size=0):
             # if this resource supports logical file
             resource.set_default_logical_file()
 
+
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
