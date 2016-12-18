@@ -498,11 +498,17 @@ class AbstractLogicalFile(models.Model):
         return True
 
     def logical_delete(self, user, delete_res_files=True):
-        # deletes the logical file as well as all resource files associated with this logical file
-        # mostly this will be used by the system to delete logical file object and associated
-        # metadata as part of deleting a resource file object. However, if custom logic requires
-        # deleting logical file object (lfo) then instead of using lfo.delete(), you must use
-        # lfo.logical_delete()
+        """
+        Deletes the logical file as well as all resource files associated with this logical file.
+        This function is primarily used by the system to delete logical file object and associated
+        metadata as part of deleting a resource file object. Any time a request is made to
+        deleted a specific resource file object, if the the requested file is part of a
+        logical file then all files in the same logical file group will be deleted. if custom logic
+        requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
+        use LFO.logical_delete()
+        :param delete_res_files If True all resource files that are prat of this logical file will
+        be deleted
+        """
 
         from hs_core.hydroshare.resource import delete_resource_file
         # delete all resource files associated with this instance of logical file
@@ -514,6 +520,9 @@ class AbstractLogicalFile(models.Model):
         # delete logical file first then delete the associated metadata file object
         # deleting the logical file object will not automatically delete the associated
         # metadata file object
-        metadata = self.metadata
+        metadata = self.metadata if self.has_metadata else None
         super(AbstractLogicalFile, self).delete()
-        metadata.delete()
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()

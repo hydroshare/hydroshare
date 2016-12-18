@@ -360,7 +360,7 @@ def get_resource_files_by_extension(resource, file_extension):
 
 def get_resource_file_by_name(resource, file_name):
     for res_file in resource.files.all():
-        fl_name, _ = get_resource_file_name_and_extension(res_file)
+        _, fl_name, _ = get_resource_file_name_and_extension(res_file)
         if fl_name == file_name:
             return res_file
     return None

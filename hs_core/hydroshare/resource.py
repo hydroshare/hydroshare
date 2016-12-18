@@ -1012,8 +1012,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
         if filter_condition(f):
             if delete_logical_file:
                 if f.logical_file is not None:
-                    # logical_delete() calls this function (recursive) to delete each of
-                    # its contained ResourceFile objects
+                    # logical_delete() calls this function (delete_resource_file())
+                    # to delete each of its contained ResourceFile objects
                     f.logical_file.logical_delete(user)
                     return filename_or_id
             # send signal
