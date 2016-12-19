@@ -635,10 +635,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         """
         self._create_composite_resource()
         # add a file to the resource which will be part of  a GenericLogicalFile object
-        self.generic_file_obj = UploadedFile(file=open(self.generic_file, 'rb'),
-                                             name=os.path.basename(self.generic_file))
-        resource_file_add_process(resource=self.composite_resource,
-                                  files=(self.generic_file_obj,), user=self.user)
+        self._add_generic_file_to_resource()
 
         self.assertEqual(self.composite_resource.files.count(), 1)
         # res_file = self.composite_resource.files.first()
@@ -659,11 +656,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add a raster tif file to the resource which will be part of
         # a GoeRasterLogicalFile object
-        self.raster_file_obj = UploadedFile(file=open(self.raster_file, 'rb'),
-                                            name=os.path.basename(self.raster_file))
-        resource_file_add_process(resource=self.composite_resource,
-                                  files=(self.raster_file_obj,), user=self.user)
-
+        self._add_raster_file_to_resource()
         self.assertEqual(self.composite_resource.files.count(), 2)
         # make the tif as part of the GeoRasterLogicalFile
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
@@ -678,9 +671,36 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         new_folder_path = "/data/contents/small_logan/my-new-folder"
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
 
+    def test_supports_move_or_rename_file_or_folder(self):
+        """here we are testing the function supports_move_or_rename_file_or_folder()"""
+        # TODO: implement
+        pass
+
+    def test_supports_zip(self):
+        """Here we are testing the function supports_zip()"""
+        # TODO: implement
+        pass
+
+    def test_supports_delete_original_folder_on_zip(self):
+        """Here we are testing the function supports_delete_original_folder_on_zip()"""
+        # TODO: implement
+        pass
+
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
              resource_type='CompositeResource',
              owner=self.user,
              title='Test Composite Resource'
          )
+
+    def _add_generic_file_to_resource(self):
+        self.generic_file_obj = UploadedFile(file=open(self.generic_file, 'rb'),
+                                             name=os.path.basename(self.generic_file))
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.generic_file_obj,), user=self.user)
+
+    def _add_raster_file_to_resource(self):
+        self.raster_file_obj = UploadedFile(file=open(self.raster_file, 'rb'),
+                                            name=os.path.basename(self.raster_file))
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.raster_file_obj,), user=self.user)

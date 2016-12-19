@@ -62,7 +62,7 @@ class CompositeResource(BaseResource):
 
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
-        # TODO: Need to have unit tests for this function
+
         path_parts = folder_full_path.split("/")
         # remove the new folder name from the path
         path_parts = path_parts[:-1]
