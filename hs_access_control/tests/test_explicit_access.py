@@ -84,8 +84,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.OWNER)
         self.assertTrue(
             is_equal_to_as_set(
-                foo, [
-                    r1_resource, r2_resource, r3_resource]))
+                foo, [r1_resource, r2_resource, r3_resource]))
         foo = A_user.uaccess.get_resources_with_explicit_access(
             PrivilegeCodes.CHANGE)
         self.assertTrue(is_equal_to_as_set(foo, []))
@@ -96,8 +95,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.OWNER)
         self.assertTrue(
             is_equal_to_as_set(
-                foo, [
-                    r1_resource, r2_resource, r3_resource]))
+                foo, [r1_resource, r2_resource, r3_resource]))
         foo = C_user.uaccess.get_resources_with_explicit_access(
             PrivilegeCodes.CHANGE)
         self.assertTrue(is_equal_to_as_set(foo, []))
@@ -138,8 +136,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.VIEW)
         self.assertTrue(
             is_equal_to_as_set(
-                foo, [
-                    r1_resource, r2_resource, r3_resource]))
+                foo, [r1_resource, r2_resource, r3_resource]))
 
         C_user.uaccess.share_resource_with_user(
             r1_resource, B_user, PrivilegeCodes.CHANGE)
@@ -156,8 +153,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.CHANGE)
         self.assertTrue(
             is_equal_to_as_set(
-                foo, [
-                    r1_resource, r2_resource, r3_resource]))
+                foo, [r1_resource, r2_resource, r3_resource]))
         foo = B_user.uaccess.get_resources_with_explicit_access(
             PrivilegeCodes.VIEW)
         self.assertTrue(is_equal_to_as_set(foo, []))
@@ -203,8 +199,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.VIEW)
         self.assertTrue(
             is_equal_to_as_set(
-                foo, [
-                    r1_resource, r2_resource, r3_resource]))
+                foo, [r1_resource, r2_resource, r3_resource]))
 
     def test_02_group_level_access(self):
 
@@ -256,14 +251,146 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
                                                               via_user=True,
                                                               via_group=True)
+        # should be OWNER now
         self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
 
+        # OWNER squashes CHANGE
         g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
                                                               via_user=True,
                                                               via_group=True)
+
         self.assertTrue(is_equal_to_as_set(g, []))
 
+        # OWNER squashes VIEW
         g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
                                                               via_user=True,
                                                               via_group=True)
         self.assertTrue(is_equal_to_as_set(g, []))
+
+    def test_03_immutability(self):
+
+        A_user = self.A_user
+        B_user = self.B_user
+        C_user = self.C_user
+        B_group = self.B_group
+        r1_resource = self.r1_resource
+        r2_resource = self.r2_resource
+        r3_resource = self.r3_resource
+
+        # A owns everything
+        g = A_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource, r2_resource, r3_resource]))
+
+        # grant change access via user
+        A_user.uaccess.share_resource_with_user(r1_resource, B_user, PrivilegeCodes.CHANGE)
+        B_user.uaccess.share_resource_with_group(r1_resource, B_group, PrivilegeCodes.CHANGE)
+        B_user.uaccess.share_group_with_user(B_group, C_user, PrivilegeCodes.VIEW)
+
+        # B_user's CHANGE should be present
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        # C_user's CHANGE should not be present for user
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        # C_user's CHANGE should be present only for group
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        # now set immutable
+        r1_resource.raccess.immutable = True
+        r1_resource.raccess.save()
+
+        # immutable should squash CHANGE privilege to VIEW
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = B_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=True,
+                                                              via_group=False)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+
+        # C_user's CHANGE should be squashed to VIEW
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+
+        # owner squashes CHANGE + immutable
+        A_user.uaccess.share_resource_with_user(r1_resource, C_user, PrivilegeCodes.OWNER)
+
+        # when accounting for user privileges,
+        # C_user's OWNER should not be squashed to VIEW
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=True,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+
+        # but not accounting for users should leave it alone
+        # C_user's OWNER should be ignored and squashed to VIEW
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, []))
+        g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                              via_user=False,
+                                                              via_group=True)
+        self.assertTrue(is_equal_to_as_set(g, [r1_resource]))

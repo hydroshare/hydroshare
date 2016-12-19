@@ -1215,7 +1215,8 @@ class UserAccess(models.Model):
 
         * Setting both via_user and via_group to False is not an error, and
           always returns an empty QuerySet.
-        * via_group is meaningless for OWNER privilege and is ignored.
+        * Via_group is meaningless for OWNER privilege and is ignored.
+        * Exclusion clauses are meaningless for via_user as a user can have only one privilege.
         * The default is via_user=True, via_group=False, which is the original
           behavior of the routine before this revision.
         * Immutable resources are listed as VIEW even if the user or group has CHANGE
@@ -1253,7 +1254,7 @@ class UserAccess(models.Model):
                             r2urp__user=self.user)
             else:
                 # groups can't own resources
-                return BaseResource.objects.empty()
+                return BaseResource.objects.none()
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
@@ -1273,31 +1274,36 @@ class UserAccess(models.Model):
 
             if via_user and via_group:
                 query = uquery | gquery
-                excl = uexcl | gexcl
+                excl = uexcl | gexcl  # user privilege can squash group privilege
             elif via_user:
                 query = uquery
-                excl = uexcl
+                excl = None  # users have one privilege
             elif via_group:
                 query = gquery
-                excl = gexcl
+                excl = None  # groups cannot OWN
             else:
                 # nothing matches
-                return BaseResource.objects.empty()
+                return BaseResource.objects.none()
 
-            return BaseResource.objects\
-                .filter(query)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(excl)).distinct()
+            if excl:
+                return BaseResource.objects\
+                    .filter(query)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(excl)).distinct()
+            else:
+                return BaseResource.objects\
+                    .filter(query).distinct()
 
-        else:  # this_privilege == PrivilegeCodes.ViEW
+        else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE+immutable as well as explicit VIEW
             # TODO: make this query more efficient, if possible!
             # CHANGE does not include immutable resources
+
+            # step one: compute view resources explicitly:
             uquery = Q(r2urp__privilege=this_privilege,
                        r2urp__user=self.user)
             uexcl = Q(r2urp__privilege__lt=this_privilege,
                       r2urp__user=self.user)
-
             gquery = Q(r2grp__privilege=this_privilege,
                        r2grp__group__g2ugp__user=self.user)
             gexcl = Q(r2grp__privilege__lt=this_privilege,
@@ -1305,30 +1311,60 @@ class UserAccess(models.Model):
 
             if via_user and via_group:
                 query = uquery | gquery
-                excl = uexcl | gexcl
+                excl = uexcl | gexcl  # user privilege can override group privilege
             elif via_user:
                 query = uquery
-                excl = uexcl
+                excl = None  # only one privilege per user
             elif via_group:
                 query = gquery
-                excl = gexcl
+                excl = gexcl  # CHANGE from other source squashes VIEW
             else:
                 # nothing matches
-                return BaseResource.objects.empty()
+                return BaseResource.objects.none()
 
-            view = BaseResource.objects\
-                .filter(query)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(excl))
+            if excl:
+                view = BaseResource.objects\
+                    .filter(query)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(excl))
+            else:
+                view = BaseResource.objects\
+                    .filter(query)
 
-            immutable = BaseResource.objects\
-                .filter(raccess__immutable=True,
-                        r2urp__privilege=PrivilegeCodes.CHANGE,
-                        r2urp__user=self.user)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(raccess__immutable=True,
-                                 r2urp__user=self.user,
-                                 r2urp__privilege__lt=PrivilegeCodes.CHANGE))
+            # step 2: compute immutable privileges, whose privilege is CHANGE
+            # with no other privilege < CHANGE (OWNER). Since groups can't own,
+            # there is no exclusion for them.
+            uquery = Q(raccess__immutable=True,
+                       r2urp__privilege=PrivilegeCodes.CHANGE,
+                       r2urp__user=self.user)
+            uexcl = Q(raccess__immutable=True,
+                      r2urp__privilege__lt=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user)
+            gquery = Q(raccess__immutable=True,
+                       r2grp__privilege=PrivilegeCodes.CHANGE,
+                       r2grp__group__g2ugp__user=self.user)
+
+            if via_user and via_group:
+                query = uquery | gquery
+                excl = uexcl  # user OWNER can override group CHANGE
+            elif via_user:
+                query = uquery
+                excl = None  # users have one privilege per resource
+            elif via_group:
+                query = gquery
+                excl = None  # groups can't own resources
+            else:
+                # nothing matches
+                return BaseResource.objects.none()
+
+            if excl:
+                immutable = BaseResource.objects\
+                    .filter(query)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(excl))
+            else:
+                immutable = BaseResource.objects\
+                    .filter(query)
 
             return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
 
@@ -2410,6 +2446,7 @@ class ResourceAccess(models.Model):
         specified privilege via group privilege over the resource will be included in the list
         :return:
         """
+        # TODO: This does not account for immutable flag. Should it?
         if include_user_granted_access and include_group_granted_access:
             return User.objects.filter(Q(is_active=True) &
                                        (Q(u2urp__resource=self.resource,
