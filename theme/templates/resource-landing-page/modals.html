@@ -645,6 +645,16 @@
     </div>
 {%  endblock %}
 
+{%  block delete-self-access-to-resource %}
+    <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access">
+    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
+        This action will remove your access to this resource and you will no longer be able to
+        access it without someone else sharing it with you again. This is not reversible,
+        so <strong>Remove</strong> with caution.
+    </p>
+</div>
+{%  endblock %}
+
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
      aria-hidden="true">
@@ -1788,33 +1798,51 @@
                                   method="POST">
                                 {% csrf_token %}
 
-                                <div class="add-view-user-form">
-                                    {{ add_view_user_form.user }}
+                                <div class="row">
+                                    <div class="add-view-user-form col-xs-12 col-sm-6">
+                                        {{ add_view_user_form.user }}
+                                    </div>
+
+                                    <div class="add-view-group-form col-xs-12 col-sm-6">
+                                        {{ add_view_group_form.group }}
+                                    </div>
+
+                                    <div class="col-xs-12 col-sm-6">
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <div class="dropdown custom-dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="roles_list" data-toggle="dropdown"
+                                                            aria-haspopup="true">
+                                                        <span id="selected_role" data-role="view">Can view</span>
+                                                        <span class="caret"></span>
+                                                    </button>
+
+                                                    <ul id="list-roles" class="dropdown-menu"
+                                                        aria-labelledby="roles_list">
+                                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="view">Can view</a></li>
+                                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="edit">Can edit</a></li>
+                                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a
+                                                                data-role="owner">Is owner</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="col-xs-6">
+                                                <a id="btn-invite"
+                                                   onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                   class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
+                                                        class="button-label">&nbspAdd</span></a>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
                                 </div>
 
-                                <div class="add-view-group-form">
-                                    {{ add_view_group_form.group }}
-                                </div>
-
-                                <div class="dropdown custom-dropdown">
-                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                            id="roles_list" data-toggle="dropdown"
-                                            aria-haspopup="true">
-                                        <span id="selected_role" data-role="view">Can view</span>
-                                        <span class="caret"></span>
-                                    </button>
-
-                                    <ul id="list-roles" class="dropdown-menu"
-                                        aria-labelledby="roles_list">
-                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
-                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
-                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
-                                    </ul>
-                                </div>
-
-                                <a id="btn-invite" onclick="share_resource_ajax_submit('add-access-form'); return false;"
-                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">&nbspAdd</span></a>
                             </form>
                         </div>
                     </div>
@@ -2068,6 +2096,35 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade in" id="get-file-url-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="rename" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Get file URL</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <fieldset class="col-sm-12">
+                        <div class="input-group">
+                            <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
+                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 {% block extra_js %}
     <script type="text/javascript">

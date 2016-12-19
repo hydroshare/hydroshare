@@ -1121,10 +1121,13 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
-    if not resource.can_be_public_or_discoverable:
-        raise ValidationError("This resource cannot be published since it does not have required metadata or content files.")
+    if not resource.can_be_published():
+        raise ValidationError("This resource cannot be published since it does not have required "
+                              "metadata or content files or this resource type is not allowed "
+                              "for publication.")
 
-    # append pending to the doi field to indicate DOI is not activated yet. Upon successful activation, "pending" will be removed from DOI field
+    # append pending to the doi field to indicate DOI is not activated yet. Upon successful
+    # activation, "pending" will be removed from DOI field
     resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 

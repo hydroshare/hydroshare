@@ -528,14 +528,17 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
+    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
     return _share_resource(request, shortkey, privilege, user_id, user_or_group='user')
 
 
 def share_resource_with_group(request, shortkey, privilege, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
     return _share_resource(request, shortkey, privilege, group_id, user_or_group='group')
 
 
@@ -628,41 +631,40 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
 
 
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_unshare_with = utils.user_from_id(user_id)
-
+    ajax_response_data = {'status': 'success'}
     try:
-        # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
-        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
         user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
+        if user not in res.raccess.view_users:
+            # user has no explict access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
 
-        messages.success(request, "Resource unsharing was successful")
-        if not user.uaccess.can_view_resource(res):
-            # user has no access to the resource - redirect to resource listing page
-            return HttpResponseRedirect('/my-resources/')
     except PermissionDenied as exp:
-        messages.error(request, exp.message)
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return JsonResponse(ajax_response_data)
 
 
 def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     group_to_unshare_with = utils.group_from_id(group_id)
-
+    ajax_response_data = {'status': 'success'}
     try:
-        # requesting user is the resource owner or admin or already has privilege
-        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
         user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
-
-        messages.success(request, "Resource unsharing was successful")
-        if not user.uaccess.can_view_resource(res):
-            # user has no access to the resource - redirect to resource listing page
-            return HttpResponseRedirect('/my-resources/')
+        if user not in res.raccess.view_users:
+            # user has no explicit access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
     except PermissionDenied as exp:
-        messages.error(request, exp.message)
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return JsonResponse(ajax_response_data)
 
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
@@ -781,13 +783,6 @@ class GroupCreateForm(GroupForm):
 
 
 class GroupUpdateForm(GroupForm):
-    active = forms.CharField(required=False)
-
-    def clean_active(self):
-        data = self.cleaned_data['active']
-        if data not in ('on', ''):
-            raise forms.ValidationError("Invalid active value.")
-        return data
 
     def update(self, group_to_update, request):
         frm_data = self.cleaned_data
@@ -795,7 +790,6 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
-        group_to_update.gaccess.active = frm_data['active'] == 'on'
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -962,6 +956,31 @@ def update_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@login_required
+def delete_user_group(request, group_id, *args, **kwargs):
+    """This one is not really deleting the group object, rather setting the active status
+    to False (delete) which can be later restored (undelete) )"""
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, False)
+        messages.success(request, "Group delete was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group delete errors: You don't have permission to delete"
+                                " this group.")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def restore_user_group(request, group_id, *args, **kwargs):
+    """This one is for setting the active status of the group back to True"""
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, True)
+        messages.success(request, "Group restore was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group restore errors: You don't have permission to restore"
+                                " this group.")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
@@ -1373,15 +1392,21 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(group_to_join__gaccess__active=False).all()
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
+            group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
 
+        active_groups = [g for g in groups if g.gaccess.active]
+        inactive_groups = [g for g in groups if not g.gaccess.active]
+        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
+            group_to_join__gaccess__active=False)
         return {
             'profile_user': u,
-            'groups': groups,
-            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u).exclude(group_to_join__gaccess__active=False),
+            'groups': active_groups,
+            'inactive_groups': inactive_groups,
+            'my_pending_requests': my_pending_requests,
             'group_membership_requests': group_membership_requests
         }
 

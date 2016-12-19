@@ -30,6 +30,15 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     padding-top: 10px;
 }
 
+.container>.navbar-header, .container>.navbar-collapse {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.navbar-inverse .navbar-collapse, .navbar-inverse .navbar-form {
+    border-color: #DDD;
+}
+
 .navbar-toggle {
     background: #B5B5B5;
     border-color: #8C8C8C !important;
@@ -67,10 +76,12 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	height: 160px;
 	padding: 0;
 	background: #FFF;
-	border: 1px solid #DDD;
+	border: 1px solid #c3c3c3;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
+	-webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+	-moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
@@ -1219,9 +1230,7 @@ a[data-toggle='tab']{
 }
 
 .add-view-user-form, .add-view-group-form {
-    width: 60%;
-    display: inline-block;
-    float: left;
+   margin-bottom: 10px;
 }
 
 #id_user-wrapper, #id_group-wrapper {
@@ -1481,10 +1490,10 @@ body > .main-container {
 }
 
 .btn-add-access {
-	height: 32px;
-	top: 0;
+	height: 34px;
 	border-radius: 0;
-	margin: 0 2px;
+	width: 100%;
+	padding-top: 7px;
 }
 
 #invite-to-group .btn-add-access {
@@ -1999,15 +2008,12 @@ td.user-actions > span:hover {
 }
 
 #manage-access form .dropdown, #invite-to-group .dropdown {
-    display:inline;
-    border-radius:0;
-	float: left;
-	margin-left: 2px;
+	width: 100%;
 }
 
-#roles_list{
-    border-radius: 0;
-	width: 100px;
+#roles_list {
+	border-radius: 0;
+	width: 100%;
 }
 
 .access-table tbody > tr {
@@ -2340,15 +2346,6 @@ button.loading {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: 50% 50%;
-}
-
-.full-width-tabs {
-    margin-left: -2000px;
-    margin-right: -2000px;
-    padding-left: 2000px;
-    padding-right: 2000px;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 12px;
 }
 
 .full-width-tabs-container .panel-heading {
@@ -3052,7 +3049,7 @@ h4.title {
     overflow-x: hidden;
 }
 #pub-agreement-frame {
-	border: 0px none;
+	border: 0 none;
 	height: 1500px;
 	margin-top: -90px;
 	margin-bottom: -950px;
@@ -3074,10 +3071,6 @@ h4.title {
 
 .carousel-control, .carousel-inner {
 	height: 100%;
-}
-
-.carousel-inner {
-	background: #6D6D6D;
 }
 
 .carousel-inner > .item {
@@ -3229,7 +3222,7 @@ h4.title {
 
 .arrow_box:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #DDD;
+    border-bottom-color: #a2a2a2;
     border-width: 11px;
     margin-left: -11px;
 }
@@ -3296,7 +3289,7 @@ h4.title {
 }
 
 .home-page-block {
-    margin-bottom: 60px;
+    margin-bottom: 30px;
 }
 
 div.description.active {
@@ -3954,6 +3947,10 @@ form#covereage-search-fields {
 	padding: 1px;
 }
 
+.click-select-all {
+	cursor: default !important;
+}
+
 #fb-sort ul li.active {
 	pointer-events: none;
 }
@@ -4179,7 +4176,7 @@ span.fb-control-square {
 	margin-right: 15px;
 }
 
-.selection-menu .fa {
+.selection-menu .fa, .selection-menu .glyphicon {
 	font-size: 18px;
 	margin-right: 10px;
 }
@@ -4368,6 +4365,16 @@ div#fb-file-operations-controls {
 #discover-map-legend{
 	z-index: 0;
 	position: absolute;
-	top: 0px;
-	right:0px;
+	top: 0;
+	right:0;
+}
+
+.ui-dialog {
+	-webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+	z-index: 1032 !important;
+}
+
+.ui-widget-overlay {
+	z-index: 1031 !important;
 }
