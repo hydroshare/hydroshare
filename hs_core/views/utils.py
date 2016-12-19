@@ -504,14 +504,19 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # since resource_file is a FileField which cannot be directly renamed,
             # this old ResourceFile object has to be deleted followed by creation of
             # a new ResourceFile with new file associated that replace the old one
+
+            # check if the resource file is part of a logical file
             logical_file = res_file_obj[0].logical_file if res_file_obj[0].has_logical_file \
                 else None
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
             res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
+            # if the file we deleted was part a logical file then we have to make the
+            # recreated resource file part of the logical file object
             if logical_file is not None:
-                res_file.logical_file_content_object = logical_file
+                logical_file.add_resource_file(res_file)
+
             res_file.save()
 
         else:
@@ -522,13 +527,18 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             for fobj in res_file_objs:
                 old_str = fobj.resource_file.name
                 new_str = old_str.replace(src_name, tgt_name)
+                # get the logical file object associated with the resource file
+                # so that we cam make the recreated resource file part of the same
+                # logical file object
                 logical_file = fobj.logical_file if fobj.has_logical_file else None
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
                 res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
+                # make the recreated resource file part of the logical file
                 if logical_file is not None:
-                    res_file.logical_file_content_object = logical_file
+                    logical_file.add_resource_file(res_file)
+
                 res_file.save()
 
 

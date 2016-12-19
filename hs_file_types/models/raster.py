@@ -307,6 +307,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     delete_resource_file(resource.short_id, res_file.id, user)
                     # create a geo raster logical file object to be associated with resource files
                     logical_file = cls.create()
+                    # by default set the dataset_name attribute of the logical file to the
+                    # name of the file selected to set file type
                     logical_file.dataset_name = file_name
                     logical_file.save()
 
@@ -334,9 +336,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(resource, uploaded_file)
-                            # set the logical file for each resource file we added
-                            new_res_file.logical_file_content_object = logical_file
-                            new_res_file.save()
+                            # make each resource file we added as part of the logical file
+                            logical_file.add_resource_file(new_res_file)
 
                             resource_files.append(new_res_file)
                             new_res_file_base_name = utils.get_resource_file_name_and_extension(

@@ -497,6 +497,22 @@ class AbstractLogicalFile(models.Model):
         """allows a zip file that is part of this logical file type to get unzipped"""
         return True
 
+    def add_resource_file(self, res_file):
+        """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
+        is already associated with any other logical file object, this function does not do
+        anything to that logical object. The caller needs to take necessary action for the
+        previously associated logical file object. If res_file is already part of this
+        logical file, it raise ValidationError.
+
+        :param res_file an instance of ResourceFile
+        """
+
+        if res_file in self.files.all():
+            raise ValidationError("Resource file is already part of this logical file.")
+
+        res_file.logical_file_content_object = self
+        res_file.save()
+
     def logical_delete(self, user, delete_res_files=True):
         """
         Deletes the logical file as well as all resource files associated with this logical file.
