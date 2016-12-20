@@ -20,7 +20,6 @@ from django.utils.timezone import now
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
-from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
@@ -1413,6 +1412,12 @@ class AbstractResource(ResourcePermissionsMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
+    # definition of resource logic
+    @property
+    def supports_folders(self):
+        """ returns whether folder operations are supported. Computed for polymorphic types"""
+        return False
+
     @classmethod
     def bag_url(cls, resource_id):
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
@@ -1733,23 +1738,40 @@ class AbstractResource(ResourcePermissionsMixin):
 
 
 def get_path(instance, filename):
+    """
+    Dynamically determine storage path for a FileField based upon whether resource is federated
+
+    :param instance: instance of ResourceFile containing the FileField;
+    :param filename: the filename to be used; derived from upload data
+
+    The instance points to the Resource record, which contains the federation path.
+    """
+    # retrieve federation path -- if any -- from Resource object containing FileField
     if instance.content_object.resource_federation_path:
-        return os.path.join(instance.content_object.resource_federation_path,
-                            instance.content_object.short_id, 'data',
-                            'contents', filename)
+        # federated iRODS storage
+        prefix = os.path.join(instance.content_object.resource_federation_path,
+                              instance.content_object.short_id, 'data', 'contents')
     else:
-        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+        # local iRODS storage
+        prefix = os.path.join(instance.content_object.short_id, 'data', 'contents')
+
+    if instance.file_folder is not None:
+        # use subfolder
+        return os.path.join(prefix, instance.file_folder, filename)
+    else:
+        # use root folder
+        return os.path.join(prefix, filename)
 
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
-
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                     storage=IrodsStorage()
-                                     if getattr(settings, 'USE_IRODS', False)
-                                     else DefaultStorage())
+    # This is used to direct uploads to a subfolder of the root folder. See get_path above.
+    file_folder = models.CharField(max_length=4096, null=True)
+    resource_file = models.FileField(upload_to=get_path, max_length=500,
+                                     null=True, blank=True,
+                                     storage=IrodsStorage())
     # the following optional fields are added for use by federated iRODS resources where
     # resources are created in the local federated zone rather than hydroshare zone, in
     # which case resource_file is empty, and we record iRODS logical resource file name
@@ -1757,9 +1779,9 @@ class ResourceFile(models.Model):
     # operations fed_resource_file in particular is a counterpart of resource_file, but
     # handles files uploaded from local disk and store the files to federated zone rather
     # than hydroshare zone.
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                         storage=IrodsStorage('federated') if getattr(
-                                             settings, 'USE_IRODS', False) else DefaultStorage())
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
+                                         null=True, blank=True,
+                                         storage=IrodsStorage('federated'))
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
@@ -1901,11 +1923,16 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
-    def get_irods_collection_path(self):
-        res_coll = self.short_id
+    @property
+    def root_path(self):
+        """
+        Return the root folder of the iRODS structure containing
+        resource files.
+        """
         if self.resource_federation_path:
-            res_coll = os.path.join(self.resource_federation_path, res_coll)
-        return res_coll
+            return os.path.join(self.resource_federation_path, self.short_id)
+        else:
+            return self.short_id
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
@@ -2023,6 +2050,10 @@ class BaseResource(Page, AbstractResource):
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
+
+    @property
+    def supports_folders(self):
+        return True
 
     class Meta:
         verbose_name = 'Generic'

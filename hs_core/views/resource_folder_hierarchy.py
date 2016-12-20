@@ -48,6 +48,7 @@ def data_store_structure(request):
     if not store_path:
         return HttpResponse('Bad request - store_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
+    # this is federated if warranted, automatically, by choosing an appropriate session.
     istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
         res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
