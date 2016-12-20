@@ -638,8 +638,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self._add_generic_file_to_resource()
 
         self.assertEqual(self.composite_resource.files.count(), 1)
-        # res_file = self.composite_resource.files.first()
-        # self.assertEqual(res_file.resource_file.name, 'generic_file.txt')
         # we should be able to create this new folder
         new_folder_path = "data/contents/my-new-folder"
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
@@ -672,9 +670,91 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
 
     def test_supports_move_or_rename_file_or_folder(self):
-        """here we are testing the function supports_move_or_rename_file_or_folder()"""
-        # TODO: implement
-        pass
+        """here we are testing the function supports_move_or_rename_file_or_folder() of the
+        composite resource class"""
+
+        self._create_composite_resource()
+        # add a file to the resource which will be part of  a GenericLogicalFile object
+        self._add_generic_file_to_resource()
+
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        # test that we can rename the resource file that's part of the GenericLogical File
+        gen_res_file = self.composite_resource.files.first()
+        gen_res_file_basename = hydroshare.utils.get_resource_file_name_and_extension(
+            gen_res_file)[1]
+        self.assertEqual(self.generic_file_name, gen_res_file_basename)
+        src_full_path = self.composite_resource.short_id + 'data/contents/' + self.generic_file_name
+        tgt_full_path = self.composite_resource.short_id + 'data/contents/renamed_file.txt'
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), True)
+
+        # create a new folder so that we can test if the generic file can be moved there
+        # or not
+        new_folder_path = "data/contents/my-new-folder"
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        # create the folder
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the file to this new folder
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
+            self.generic_file_name
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), True)
+
+        # test that if a folder contains a resource file that's part of a GenericLogicalFile
+        # that folder can be renamed
+        # now move the file to this new folder
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + self.generic_file_name,
+                                      new_folder_path + "/" + self.generic_file_name)
+
+        # test rename folder
+        src_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/'
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder-1/'
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), True)
+
+        # add a raster tif file to the resource which will be part of
+        # a GoeRasterLogicalFile object
+        self._add_raster_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # make the tif as part of the GeoRasterLogicalFile
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        self.assertTrue(tif_res_file.resource_file.name.endswith(
+            "/data/contents/small_logan/small_logan.tif"))
+
+        # test renaming of any files that are part of GeoRasterLogicalFile is not allowed
+        src_full_path = self.composite_resource.short_id + '/data/contents/small_logan/' + \
+            self.raster_file_name
+        tgt_full_path = self.composite_resource.short_id + \
+            '/data/contents/small_logan/small_logan_1.tif'
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), False)
+
+        # test rename folder that contains resource files that are part of the GeoRasterLogicalFile
+        # is allowed
+        src_full_path = self.composite_resource.short_id + '/data/contents/small_logan'
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/small_logan_1'
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), True)
+
+        # test that we can't  move a file to a folder that contains resource files that are part
+        # of GeoRasterLogicalFile object
+        src_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
+            self.generic_file_name
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/small_logan/' + \
+            self.generic_file_name
+        # this is the function we are testing
+        self.assertEqual(self.composite_resource.supports_move_or_rename_file_or_folder(
+            src_full_path, tgt_full_path), False)
 
     def test_supports_zip(self):
         """Here we are testing the function supports_zip()"""
