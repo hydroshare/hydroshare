@@ -39,9 +39,12 @@ from hs_core.models import GenericResource, resource_processor, CoreMetaData, Re
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
+from . import resource_metadata_rest_api
 from . import user_rest_api
 from . import resource_folder_hierarchy
+
 from . import resource_access_api
+from . import resource_folder_rest_api
 
 from hs_core.hydroshare import utils
 

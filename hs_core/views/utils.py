@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
 
@@ -557,10 +558,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        res_coll_input = os.path.join(resource.resource_federation_path, res_id, input_coll_path)
-    else:
-        res_coll_input = os.path.join(res_id, input_coll_path)
+    res_coll_input = os.path.join(resource.root_path, input_coll_path)
 
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
@@ -574,8 +572,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
             full_path_name, basename, _ = \
                 hydroshare.utils.get_resource_file_name_and_extension(f)
             if resource.resource_federation_path:
-                full_path_name = os.path.join(resource.resource_federation_path, res_id,
-                                              full_path_name)
+                full_path_name = os.path.join(resource.root_path, full_path_name)
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, basename, user)
 
@@ -600,11 +597,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        zip_with_full_path = os.path.join(resource.resource_federation_path, res_id,
-                                          zip_with_rel_path)
-    else:
-        zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
+    zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
 
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
@@ -628,10 +621,7 @@ def create_folder(res_id, folder_path):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        coll_path = os.path.join(res_id, folder_path)
+    coll_path = os.path.join(resource.root_path, folder_path)
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -647,10 +637,7 @@ def remove_folder(user, res_id, folder_path):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        coll_path = os.path.join(res_id, folder_path)
+    coll_path = os.path.join(resource.root_path, folder_path)
 
     istorage.delete(coll_path)
 
@@ -665,6 +652,22 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user)
 
 
+def list_folder(res_id, folder_path):
+    """
+    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param folder_path: the relative path for the folder to be listed under res_id collection.
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    coll_path = os.path.join(resource.root_path, folder_path)
+
+    return istorage.listdir(coll_path)
+
+
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
@@ -677,12 +680,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
-        tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
-    else:
-        src_full_path = os.path.join(res_id, src_path)
-        tgt_full_path = os.path.join(res_id, tgt_path)
+    src_full_path = os.path.join(resource.root_path, src_path)
+    tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
     tgt_file_name = os.path.basename(tgt_full_path)
     tgt_file_dir = os.path.dirname(tgt_full_path)
@@ -690,6 +689,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     src_file_dir = os.path.dirname(src_full_path)
 
     # ensure the target_full_path contains the file name to be moved or renamed to
+    # if we are moving directories, put the filename into the request.
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
@@ -701,3 +701,13 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)
+
+
+def irods_path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if '/../' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")
