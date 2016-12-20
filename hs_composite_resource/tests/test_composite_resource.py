@@ -758,13 +758,91 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_supports_zip(self):
         """Here we are testing the function supports_zip()"""
-        # TODO: implement
-        pass
+        self._create_composite_resource()
+
+        # test that a folder containing a resource file that's part of the GenericLogicalFile
+        # can be zipped
+        # add a file to the resource which will be part of  a GenericLogicalFile object
+        self._add_generic_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        new_folder_path = "data/contents/my-new-folder"
+        # create the folder
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the file to this new folder
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
+            self.generic_file_name
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + self.generic_file_name,
+                                      new_folder_path + "/" + self.generic_file_name)
+        folder_to_zip = self.composite_resource.short_id + '/data/contents/my-new-folder'
+        # test that we can zip the folder my_new_folder
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+
+        # test that a folder containing resource files that are part of the GeorasterLogicalFile
+        # can be zipped
+        self._add_raster_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # make the tif as part of the GeoRasterLogicalFile
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        # resource file exists in a new folder 'small_logan'
+        self.assertTrue(tif_res_file.resource_file.name.endswith(
+            "/data/contents/small_logan/small_logan.tif"))
+        folder_to_zip = self.composite_resource.short_id + '/data/contents/small_logan'
+        # test that we can zip the folder small_logan
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
 
     def test_supports_delete_original_folder_on_zip(self):
-        """Here we are testing the function supports_delete_original_folder_on_zip()"""
-        # TODO: implement
-        pass
+        """Here we are testing the function supports_delete_original_folder_on_zip() of the
+        composite resource class"""
+
+        self._create_composite_resource()
+
+        # test that a folder containing a resource file that's part of the GenericLogicalFile
+        # can be deleted after that folder gets zipped
+        # add a file to the resource which will be part of  a GenericLogicalFile object
+        self._add_generic_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 1)
+        new_folder_path = "data/contents/my-new-folder"
+        # create the folder
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        # now move the file to this new folder
+        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
+                        self.generic_file_name
+        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
+                                      'data/contents/' + self.generic_file_name,
+                                      new_folder_path + "/" + self.generic_file_name)
+        folder_to_zip = self.composite_resource.short_id + '/data/contents/my-new-folder'
+        # test that we can zip the folder my_new_folder
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+        # this is the function we are testing - my-new-folder can be deleted
+        self.assertEqual(self.composite_resource.supports_delete_original_folder_on_zip(
+            folder_to_zip), True)
+
+        # test that a folder containing a resource file that's part of the GeoRasterLogicalFile
+        # can't be deleted after that folder gets zipped
+
+        # add a file to the resource which will be part of  a GeoRasterLogicalFile object
+        self._add_raster_file_to_resource()
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # make the tif as part of the GeoRasterLogicalFile
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        tif_res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, '.tif')[0]
+        # resource file exists in a new folder 'small_logan'
+        self.assertTrue(tif_res_file.resource_file.name.endswith(
+            "/data/contents/small_logan/small_logan.tif"))
+        folder_to_zip = self.composite_resource.short_id + '/data/contents/small_logan'
+        # test that we can zip the folder my_new_folder
+        self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+        # this is the function we are testing - small_logan folder can't be deleted
+        self.assertEqual(self.composite_resource.supports_delete_original_folder_on_zip(
+            folder_to_zip), False)
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
