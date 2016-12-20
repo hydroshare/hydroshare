@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
-from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource

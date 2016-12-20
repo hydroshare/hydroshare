@@ -769,8 +769,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # create the folder
         create_folder(self.composite_resource.short_id, new_folder_path)
         # now move the file to this new folder
-        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
-            self.generic_file_name
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
                                       'data/contents/' + self.generic_file_name,
                                       new_folder_path + "/" + self.generic_file_name)
@@ -810,8 +808,6 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # create the folder
         create_folder(self.composite_resource.short_id, new_folder_path)
         # now move the file to this new folder
-        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
-                        self.generic_file_name
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
                                       'data/contents/' + self.generic_file_name,
                                       new_folder_path + "/" + self.generic_file_name)
