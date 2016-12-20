@@ -20,6 +20,7 @@ from django.utils.timezone import now
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
+from django.core.files import File
 from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
@@ -1283,6 +1284,7 @@ class AbstractResource(ResourcePermissionsMixin):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
+        # TODO: not federated
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 
@@ -1308,7 +1310,7 @@ class AbstractResource(ResourcePermissionsMixin):
         from hydroshare import hs_bagit
         for fl in self.files.all():
             if fl.fed_resource_file_name_or_path:
-                istorage = IrodsStorage('federated')
+                istorage = FedStorage()
                 if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
                     istorage.delete('{}/{}'.format(self.resource_federation_path,
                                                    fl.fed_resource_file_name_or_path))
@@ -1514,6 +1516,15 @@ class AbstractResource(ResourcePermissionsMixin):
 
 def get_path(instance, filename, folder=None):
     """
+    Get a path from a ResourceFile, filename, and folder
+    """
+    if not folder:
+        folder = instance.file_folder
+    return get_resource_path(instance.resource, filename, folder)
+
+
+def get_resource_path(resource, filename, folder=None):
+    """
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
     :param instance: instance of ResourceFile containing the FileField;
@@ -1525,8 +1536,6 @@ def get_path(instance, filename, folder=None):
 
     """
 
-    # instance.content_object can be stale after changes. Re-fetch based upon key
-    resource = instance.resource
     # retrieve federation path -- if any -- from Resource object containing FileField
     if resource.resource_federation_path:
         # return FQN if set via resource_file = text_path
@@ -1546,9 +1555,6 @@ def get_path(instance, filename, folder=None):
         # Compute FQN prefix
         prefix = os.path.join(resource.short_id, 'data', 'contents')
 
-    if not folder:
-        folder = instance.file_folder
-
     if folder is not None:
         # use subfolder
         return os.path.join(prefix, folder, filename)
@@ -1567,31 +1573,127 @@ def _path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
+class FedStorage(IrodsStorage):
+    """
+    The constructor of a Django storage object must have no arguments.
+    This simple workaround accomplishes that.
+    """
+    def __init__(self):
+        super(FedStorage, self).__init__("federated")
+
+
 class ResourceFile(models.Model):
+    """
+    Represent a file in a resource.
+    """
+
+    # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
+
     # This is used to direct uploads to a subfolder of the root folder. See get_path above.
-    file_folder = models.CharField(max_length=255, null=True)
-    resource_file = models.FileField(upload_to=get_path, max_length=500,
+    file_folder = models.CharField(max_length=4096, null=True)
+
+    # This pair of FileFields deals with the fact that there are two kinds of storage
+    resource_file = models.FileField(upload_to=get_path, max_length=4096,
                                      null=True, blank=True, storage=IrodsStorage())
-    # the following optional fields are added for use by federated iRODS resources where
-    # resources are created in the local federated zone rather than hydroshare zone, in
-    # which case resource_file is empty, and we record iRODS logical resource file name
-    # and file size for customized copy or move operations for resource creation and other
-    # operations fed_resource_file in particular is a counterpart of resource_file, but
-    # handles files uploaded from local disk and store the files to federated zone rather
-    # than hydroshare zone.
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
-                                         null=True, blank=True, storage=IrodsStorage('federated'))
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                         null=True, blank=True, storage=FedStorage())
     # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # TODO: why is size a CharField???
+    # DEPRECATED: use native size() routine
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
+    @classmethod
+    def create(cls, resource, file, folder=None, source=None, move=False):
+        """
+        Create takes arguments that are invariant of storage medium.
+        These are turned into a path that is suitable for the medium.
+        Federation must be initialized first at the resource level.
+
+        :param resource: resource that contains the file.
+        :param file: a File or a string.
+        :param folder: the folder in which to store the file.
+        :param source: an iRODS path from which to copy the file.
+        :param move: if True, move the file rather than copying.
+
+        There are two main usages to this constructor:
+
+        * uploading a file from a form or REST call:
+
+                ResourceFile.create(resource=r, file=File(...something...), folder=d)
+
+        * copying a file internally from iRODS:
+
+                ResourceFile.create(resource=r, file=name, folder=d, source=s, move=True)
+          or
+                ResourceFile.create(resource=r, file=name, folder=d, source=s, move=False)
+
+        A third form is less common and presumes that the file already exists in iRODS:
+
+        * pointing to an existing file:
+
+                ResourceFile.create(resource=r, file=name, folder=d)
+
+        """
+        # bind to appropriate resource
+        kwargs = {}
+        if __debug__:
+            assert isinstance(resource, BaseResource)
+        kwargs['content_object'] = resource
+
+        kwargs['file_folder'] = folder
+
+        # if file is an open file, use native copy by setting appropriate variables
+        if isinstance(file, File):
+            if resource.resource_federation_path:
+                kwargs['resource_file'] = None
+                kwargs['fed_resource_file'] = file
+            else:
+                kwargs['resource_file'] = file
+                kwargs['fed_resource_file'] = None
+
+        else:  # if file is not an open file, then it's a basename (string)
+            if file is None and source is not None:
+                root, file = os.path.split(source)  # take from source path
+            target = get_resource_path(resource, file, folder=folder)
+            if source is not None:
+                istorage = resource.get_irods_storage()
+                if not move:
+                    istorage.copyFiles(source, target)
+                else:
+                    istorage.moveFile(source, target)
+            # we've copied or moved if necessary; now set the paths
+            if resource.resource_federation_path:
+                kwargs['resource_file'] = None
+                kwargs['fed_resource_file'] = target
+            else:
+                kwargs['resource_file'] = target
+                kwargs['fed_resource_file'] = None
+
+        # Actually create the file record
+        # when file is a File, the file is copied to storage in this step
+        # otherwise, the copy must precede this step.
+        return ResourceFile.objects.create(**kwargs)
 
     @property
     def resource(self):
         return self.content_object
+
+    @property
+    def size(self):
+        if self.resource.resource_federation_path:
+            return self.fed_resource_file.size()
+        else:
+            return self.resource_file.size()
+
+    @property
+    def exists(self):
+        if self.resource.resource_federation_path:
+            return self.fed_resource_file.exists()
+        else:
+            return self.resource_file.exists()
 
     @property
     def storage_path(self):
@@ -1601,9 +1703,6 @@ class ResourceFile(models.Model):
         The output depends upon whether the IrodsStorage instance is running
         in federated mode.
 
-        The heavy lifting in this routine is accomplished via get_path.
-        Regardless of whether the internal file name is qualified or not, get_path
-        makes it fully qualified.
         """
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
@@ -1633,6 +1732,10 @@ class ResourceFile(models.Model):
 
         This records file_folder for future possible uploads and searches.
 
+        The heavy lifting in this routine is accomplished via get_path.
+        Regardless of whether the internal file name is qualified or not, get_path
+        makes it fully qualified.
+
         """
         folder, base = self.path_is_acceptable(path, test_exists=test_exists)
         self.file_folder = folder
@@ -1652,17 +1755,63 @@ class ResourceFile(models.Model):
             self.resource_file = get_path(self, base)
         self.save()
 
+    @property
+    def short_path(self):
+        """
+        Return the unqualified path to the file object.
+        This path is invariant of where the object is stored.
+        """
+        if self.resource.resource_federation_path:
+            folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
+        else:
+            folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
+        return os.path.join(folder, base)
+
+    def set_short_path(self, path):
+        """
+        Set a path to a given path, relative to resource root
+
+        There is some question as to whether the short path should be stored explicitly or
+        derived as in short_path above. The latter is computationally expensive but results
+        in a single point of truth.
+        """
+        folder, base = os.path.split(path)
+        if folder == "":
+            folder = None
+        self.file_folder = folder  # must precede call to get_path
+        if self.resource.resource_federation_path:
+            self.resource_file = None
+            self.fed_resource_file = get_path(self, base)
+        else:
+            self.resource_file = get_path(self, base)
+            self.fed_resource_file = None
+        self.save()
+
     def path_is_acceptable(self, path, test_exists=True):
         """
         Determine whether a path is acceptable for this resource file
 
+        Called inside ResourceFile objects to check paths
+
         :param path: path to test
         :param test_exists: if True, test for path existence in iRODS
-        """
-        # self.content_object can be stale after changes.
-        # Re-fetch based upon key; bypass type system; it is not relevant
-        resource = self.resource
 
+        """
+        return ResourceFile.resource_path_is_acceptable(self.resource, path, test_exists)
+
+    @classmethod
+    def resource_path_is_acceptable(cls, resource, path, test_exists=True):
+        """
+        Determine whether a path is acceptable for this resource file
+
+        Called outside ResourceFile objects or before such an object exists
+
+        :param path: path to test
+        :param test_exists: if True, test for path existence in iRODS
+
+        This has the side effect of returning the short path for the resource
+        as a folder/filename pair.
+        """
         if test_exists:
             storage = resource.get_irods_storage()
         locpath = os.path.join(resource.short_id, "data", "contents") + "/"
@@ -1679,7 +1828,6 @@ class ResourceFile(models.Model):
                 plen = len(locpath)
                 relpath = relpath[plen:]  # omit /
             else:
-                print("in path_is_acceptable, relpath = " + relpath)
                 raise ValidationError("Malformed federated resource path")
         elif path.startswith(locpath):
             # strip optional local path prefix
@@ -1693,14 +1841,14 @@ class ResourceFile(models.Model):
         # misnamed header content misinterpreted as a folder unless one tests
         # for existence
         if '/' in relpath:
-            folder, base = relpath.rsplit('/', 1)
-            abspath = get_path(self, base, folder=folder)
+            folder, base = os.path.split(relpath)
+            abspath = get_resource_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
             folder = None
             base = relpath
-            abspath = get_path(self, base, folder=folder)
+            abspath = get_resource_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
 
@@ -1717,7 +1865,36 @@ class ResourceFile(models.Model):
     # def move_irods(self, source_path, dest_path=None):
     #     """ move an irods file into this object, setting all paths appropriately """
 
-    # classmethods do things that affect all files.
+    # classmethods do things that query or affect all files.
+
+    @classmethod
+    def get(cls, resource, file, folder=None):
+        """
+        Get a ResourceFile record via its short path. 
+        """
+        if resource.resource_federation_path:
+            return ResourceFile.objects.get(resource_id=resource.id,
+                                            fed_resource_file__name=get_resource_path(resource,
+                                                                                      file,
+                                                                                      folder))
+        else:
+            return ResourceFile.objects.get(resource_id=resource.id,
+                                            resource_file__name=get_resource_path(resource,
+                                                                                  file,
+                                                                                  folder))
+
+    @classmethod
+    def list(cls, resource, folder):
+        if not folder.startswith(resource.base_path):
+            folder = os.path.join(resource.base_path, folder)
+        if resource.resource_federation_path:
+            return ResourceFile.objects.filter(
+                resource_id=resource.id,
+                fed_resource_file__name__startswith=folder)
+        else:
+            return ResourceFile.objects.filter(
+                resource_id=resource.id,
+                resource_file__name__startswith=folder)
 
     @classmethod
     def create_folder(cls, resource, folder):
@@ -1805,7 +1982,7 @@ class BaseResource(Page, AbstractResource):
 
     def get_irods_storage(self):
         if self.resource_federation_path:
-            return IrodsStorage('federated')
+            return FedStorage()
         else:
             return IrodsStorage()
 

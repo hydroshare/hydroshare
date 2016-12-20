@@ -815,55 +815,23 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     :return: The identifier of the ResourceFile added.
     """
     if f:
-        if fed_res_file_name_or_path:
-            ret = ResourceFile.objects.create(content_object=resource,
-                                              file_folder=folder,
-                                              resource_file=None,
-                                              fed_resource_file=File(f) if not isinstance(
-                                                  f, UploadedFile) else f)
-        else:
-            ret = ResourceFile.objects.create(content_object=resource,
-                                              file_folder=folder,
-                                              resource_file=File(f) if not isinstance(
-                                                  f, UploadedFile) else f,
-                                              fed_resource_file=None)
+        # See ResourceFile.__init__ for details of these arguments
+        ret = ResourceFile.create(resource=resource, folder=folder, file=File(f)
+                                  if not isinstance(f, UploadedFile) else f)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
-    elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
-        size = get_fed_zone_file_size(fed_res_file_name_or_path)
-        ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
-                                          fed_resource_file=None,
-                                          fed_resource_file_name_or_path=fed_res_file_name_or_path,
-                                          fed_resource_file_size=size)
-        try:
-            from_fname = fed_res_file_name_or_path
-            filename = from_fname.rsplit('/')[-1]
 
-            if resource.resource_federation_path:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'
-                to_fname = to_fname.format(base_path=resource.resource_federation_path,
-                                           res_id=resource.short_id, file_name=filename)
-                istorage = IrodsStorage('federated')
-            else:
-                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id,
-                                                                       file_name=filename)
-                istorage = IrodsStorage()
-            if fed_copy_or_move == 'copy':
-                istorage.copyFiles(from_fname, to_fname)
-            else:
-                istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare proxy
-            # account space
-            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(
-                file_name=filename)
-            ret.save()
+    elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
+        move = (fed_copy_or_move == 'move')
+        try:
+            ret = ResourceFile.create(resource=resource, folder=folder,
+                                      source=fed_res_file_name_or_path, move=move)
         except SessionException as ex:
-            # delete the file added if there is any exception
-            ret.delete()
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
 
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
+
     else:
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')

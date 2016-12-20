@@ -561,25 +561,8 @@ def create_new_version_resource(ori_res, new_res, user):
     res_id_len = len(ori_res.short_id)
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
-        if f.fed_resource_file_name_or_path:
-            ResourceFile.objects.create(content_object=new_res,
-                                        resource_file=None,
-                                        fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
-                                        fed_resource_file_size=f.fed_resource_file_size)
-        elif f.fed_resource_file:
-            ori_file_path = f.fed_resource_file.name
-            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-            # find idx2 to start right after resource id
-            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
-            if idx1 > 0:
-                new_file_path = ori_file_path[0:idx1] + \
-                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
-                                '/' + new_res.short_id + ori_file_path[idx2:]
-                ResourceFile.objects.create(content_object=new_res, fed_resource_file=new_file_path)
-        elif f.resource_file:
-            ori_file_path = f.resource_file.name
-            new_file_path = new_res.short_id + ori_file_path[res_id_len:]
-            ResourceFile.objects.create(content_object=new_res, resource_file=new_file_path)
+        folder, base = f.parse()
+        ResourceFile.create(resource=new_res, folder=folder, file=base) 
 
     # copy metadata from source resource to target new-versioned resource except three elements
     exclude_elements = ['identifier', 'publisher', 'date']
@@ -676,12 +659,13 @@ def update_resource(
     """
     resource = utils.get_resource_by_shortkey(pk)
 
+    # TODO: this loses track of folders!
     if files:
         ResourceFile.objects.filter(object_id=resource.id).delete()
         for file in files:
-            ResourceFile.objects.create(
-                content_object=resource,
-                resource_file=File(file) if not isinstance(file, UploadedFile) else file
+            ResourceFile.create(
+                resource=resource,
+                file=File(file) if not isinstance(file, UploadedFile) else file
             )
 
     if 'owner' in kwargs:
