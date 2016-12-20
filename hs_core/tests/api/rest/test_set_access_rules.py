@@ -116,8 +116,6 @@ class TestSetAccessRules(HSRESTTestCase):
         get_response = self.client.get(access_url)
         self.assertEqual(2, len(get_response.data['users']))
         self.assertEqual(0, len(get_response.data['groups']))
-        self.assertEqual("Owner", get_response.data['users'][1]['privilege'])
-        self.assertEqual(self.secondUser.id, get_response.data['users'][1]['user'])
 
         delete_response = self.client.delete(access_url + "?user_id=" + str(self.secondUser.id))
         self.assertEqual("Resource access privileges removed.", delete_response.data['success'])
@@ -148,8 +146,6 @@ class TestSetAccessRules(HSRESTTestCase):
         get_response = self.client.get(access_url)
         self.assertEqual(1, len(get_response.data['users']))
         self.assertEqual(1, len(get_response.data['groups']))
-        # self.assertEqual("View", get_response.data['users'][1]['privilege'])
-        # self.assertEqual(self.secondUser.id, get_response.data['users'][1]['user'])
 
         delete_response = self.client.delete(access_url + "?group_id=" + str(self.testGroup.id))
         self.assertEqual("Resource access privileges removed.", delete_response.data['success'])
