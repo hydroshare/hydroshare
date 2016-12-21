@@ -127,6 +127,17 @@ function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permissi
     //don't submit the form
     return false;
 }
+function showWaitDialog(){
+    // display wait for the process to complete dialog
+    return $("#wait-to-complete").dialog({
+        resizable: false,
+        draggable: false,
+        height: "auto",
+        width: 400,
+        modal: true,
+        dialogClass: 'noclose'
+    });
+}
 
 function promptSelfRemovingAccess(form_id){
     $form = $('#' + form_id);
@@ -554,12 +565,14 @@ function set_file_type_ajax_submit(url) {
         File type was successful.\
     </div>';
 
+    var waitDialog = showWaitDialog();
     return $.ajax({
         type: "POST",
         url: url,
         dataType: 'html',
         async: true,
         success: function (result) {
+            waitDialog.dialog("close");
             var json_response = JSON.parse(result);
             if (json_response.status === 'success'){
                 $alert_success = $alert_success.replace("File type was successful.", json_response.message);
@@ -574,6 +587,7 @@ function set_file_type_ajax_submit(url) {
 
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
+            waitDialog.dialog("close");
             display_error_message('Failed to set file type', xhr.responseText);
         }
     });
