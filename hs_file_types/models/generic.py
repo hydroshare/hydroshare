@@ -12,9 +12,7 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 class GenericFileMetaData(AbstractFileMetaData):
     def get_html(self):
-        # in the template we can insert necessary html code for displaying all
-        # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html |safe }}
+        """overrides the base class function"""
 
         html_string = super(GenericFileMetaData, self).get_html()
         if not self.has_metadata:
@@ -34,11 +32,8 @@ class GenericFileMetaData(AbstractFileMetaData):
         return template.render(context)
 
     def get_html_forms(self, datatset_name_form=True):
-        # in the template we can insert necessary html code for displaying all
-        # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html |safe }}
+        """overrides the base class function"""
 
-        # TODO: Refactor
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GenericFileMetaData, self).get_html_forms()
@@ -126,7 +121,7 @@ class GenericFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
-        # overriding the base class method
+        """overriding the base class method"""
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:

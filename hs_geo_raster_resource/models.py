@@ -108,6 +108,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
         NAMESPACES = CoreMetaData.NAMESPACES
         cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
         cov_term = '{%s}' + 'box'
@@ -129,7 +131,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     def get_html_form(self, resource):
-        # TODO: Pabitra - include the new attributes of this element
+        """Generates html form code for this metadata element so that this element can be edited"""
+
         from .forms import OriginalCoverageSpatialForm
 
         ori_coverage_data_dict = dict()
@@ -150,8 +153,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         return originalcov_form
 
     def get_html(self, pretty=True):
-        # Using the dominate module to generate the
-        # html to display data for this element (resource view mode)
+        """Generates html code for displaying data for this metadata element"""
+
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
 
         def get_th(heading_name):
@@ -217,14 +220,16 @@ class BandInformation(AbstractMetaDataElement):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of this metadata element"""
+
         bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
                            'maximumValue', 'minimumValue',
                            'method', 'comment']
         add_metadata_element_to_xml(container, self, bandinfo_fields)
 
     def get_html(self, pretty=True):
-        # Using the dominate module to generate the
-        # html to display data for this element (resource view mode)
+        """Generates html code for displaying data for this metadata element"""
+
         root_div = div(cls="col-xs-12 pull-left", style="margin-bottom:40px;")
 
         def get_th(heading_name):
@@ -287,11 +292,15 @@ class CellInformation(AbstractMetaDataElement):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of this metadata element"""
+
         cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
                            'cellDataType']
         add_metadata_element_to_xml(container, self, cellinfo_fields)
 
     def get_html_form(self, resource):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
         from .forms import CellInfoForm
         cellinfo_form = CellInfoForm(instance=self,
                                      res_short_id=resource.short_id if resource else None,
@@ -299,8 +308,8 @@ class CellInformation(AbstractMetaDataElement):
         return cellinfo_form
 
     def get_html(self, pretty=True):
-        # Using the dominate module to generate the
-        # html to display data for this element (resource view mode)
+        """Generates html code for displaying data for this metadata element"""
+
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
 
         def get_th(heading_name):
@@ -381,8 +390,6 @@ class GeoRasterMetaDataMixin(models.Model):
         return self._ori_coverage.all().first()
 
     def has_all_required_elements(self):
-        # this works because the superclass we want is listed first
-        # Pabitra: This didn't work for me
         if not super(GeoRasterMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.cellInformation:
@@ -394,8 +401,6 @@ class GeoRasterMetaDataMixin(models.Model):
         return True
 
     def get_required_missing_elements(self):
-        # this works because the superclass we want is listed first
-        # Pabitra: This didn't work for me
         missing_required_elements = super(GeoRasterMetaDataMixin,
                                           self).get_required_missing_elements()
         if not self.coverages.all().filter(type='box').first():
@@ -408,8 +413,6 @@ class GeoRasterMetaDataMixin(models.Model):
         return missing_required_elements
 
     def delete_all_elements(self):
-        # this works because the superclass we want is listed first
-        # Pabitra: This didn't work for me
         super(GeoRasterMetaDataMixin, self).delete_all_elements()
         if self.cellInformation:
             self.cellInformation.delete()

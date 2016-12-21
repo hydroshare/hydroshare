@@ -38,12 +38,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     _ori_coverage = GenericRelation(OriginalCoverage)
 
     def get_html(self):
-        """
-        generates template based html for all metadata associated with raster logical file
-        that can be dynamically injected to existing html document for metadata viewing or can be
-        included as part of the html document using this
-        single line: {{ logical_file.metadata.get_html }}
-        """
+        """overrides the base class function"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
         html_string += self.spatial_coverage.get_html()
@@ -61,12 +56,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return template.render(context)
 
     def get_html_forms(self, datatset_name_form=True):
-        """
-        generates html form code for all metadata associated with raster file type
-        that can by dynamically injected to existing html document using jquery or loaded
-        into an html document by including this single line:
-        {{ logical_file.metadata.get_html_forms }}
-        """
+        """overrides the base class function"""
+
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
@@ -175,7 +166,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
-        # overidding the base class method
+        """overriding the base class method"""
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
@@ -201,6 +192,9 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all metadata elements associated with this
+        logical file type instance"""
+
         container_to_add_to = super(GeoRasterFileMetaData, self).add_to_xml_container(container)
         if self.originalCoverage:
             self.originalCoverage.add_to_xml_container(container_to_add_to)
@@ -216,28 +210,28 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        # only .zip and .tif file can be set to this logical file group
+        """only .zip and .tif file can be set to this logical file group"""
         return [".zip", ".tif"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        # file types allowed in this logical file group are: .tif and .vrt
+        """file types allowed in this logical file group are: .tif and .vrt"""
         return [".tif", ".vrt"]
 
     @classmethod
     def create(cls):
-        # this custom method MUST be used to create an instance of this class
+        """this custom method MUST be used to create an instance of this class"""
         raster_metadata = GeoRasterFileMetaData.objects.create()
         return cls.objects.create(metadata=raster_metadata)
 
     @property
     def supports_resource_file_move(self):
-        # resource files that are part of this logical file can't be moved
+        """resource files that are part of this logical file can't be moved"""
         return False
 
     @property
     def supports_resource_file_rename(self):
-        # resource files that are part of this logical file can't be renamed
+        """resource files that are part of this logical file can't be renamed"""
         return False
 
     @property

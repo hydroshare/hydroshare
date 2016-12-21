@@ -31,8 +31,10 @@ class AbstractFileMetaData(models.Model):
         self.save()
 
     def get_html(self):
-        # subclass must override
-        # returns a string representing html code for display of metadata in view mode
+        """Generates html for displaying all metadata elements associated with this logical file.
+        Subclass must override to include additional html for additional metadata it supports.
+        """
+
         dataset_name_div = div()
         if self.logical_file.dataset_name:
             with dataset_name_div:
@@ -62,6 +64,11 @@ class AbstractFileMetaData(models.Model):
             return dataset_name_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
+        """generates html forms for all the metadata elements associated with this logical file
+        type
+        :param datatset_name_form If True then a form for editing dataset_name (title) attribute is
+        included
+        """
         root_div = div()
 
         def get_add_keyvalue_button():
@@ -140,6 +147,10 @@ class AbstractFileMetaData(models.Model):
         return self.coverages.filter(type='period').first()
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all the metadata elements associated with this
+        logical file type instance. Subclass must override this if it has additional metadata
+        elements."""
+
         NAMESPACES = CoreMetaData.NAMESPACES
         dataset_container = etree.SubElement(
             container, '{%s}Dataset' % NAMESPACES['hsterms'])
@@ -174,6 +185,9 @@ class AbstractFileMetaData(models.Model):
         return rdf_Description
 
     def add_extra_metadata_to_xml_container(self, container):
+        """Generates xml+rdf representation of the all the key/value metadata associated
+        with an instance of the logical file type"""
+
         for key, value in self.extra_metadata.iteritems():
             hsterms_key_value = etree.SubElement(
                 container, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
@@ -242,6 +256,8 @@ class AbstractFileMetaData(models.Model):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
+        """Subclass must implement this function to validate data for for the
+        specified metadata element (element_name)"""
         raise NotImplementedError
 
     def _get_dataset_name_form(self):
