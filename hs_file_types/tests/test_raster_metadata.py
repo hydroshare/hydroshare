@@ -702,34 +702,6 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
-    def test_metadata_element_html(self):
-        # here we are testing the get_html() function of the metadata element
-        # we have implemented get_html() for only CellInformation element
-        self.raster_file_obj = open(self.raster_file, 'r')
-        self._create_composite_resource()
-
-        res_file = self.composite_resource.files.first()
-        # extract metadata
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
-        res_file = self.composite_resource.files.first()
-
-        # test the get_html() for CellInformation element
-        cellinfo_html = u'<div class="col-xs-6 col-sm-6" style="margin-bottom:40px;">' \
-                        u'<legend>Cell Information</legend><table class="custom-table">' \
-                        u'<tbody><tr><th class="text-muted">Rows</th>' \
-                        u'<td>230</td></tr><tr>' \
-                        u'<th class="text-muted">Columns</th><td>329</td></tr><tr>' \
-                        u'<th class="text-muted">Cell Size X Value</th><td>30.0</td></tr><tr>' \
-                        u'<th class="text-muted">Cell Size Y Value</th><td>30.0</td></tr>' \
-                        u'<tr><th class="text-muted">Cell Data Type</th><td>Float32</td></tr>' \
-                        u'</tbody></table></div>'
-        logical_file = res_file.logical_file
-        self.maxDiff = None
-        self.assertEqual(logical_file.metadata.cellInformation.get_html(pretty=False),
-                         cellinfo_html)
-
-        # TODO: test get_html() for remaining elements
-
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.raster_file_obj,
                                      name=os.path.basename(self.raster_file_obj.name))
