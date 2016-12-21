@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
-        ('hs_core', '0029_auto_20161123_1858'),
+        ('hs_core', '0030_resourcefile_file_folder'),
     ]
 
     operations = [
