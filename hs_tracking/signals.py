@@ -5,7 +5,7 @@ from hs_core.signals import pre_download_file, post_delete_resource, post_create
 
 from .models import Session
 from .models import Variable
-from .utils import get_client_ip, get_user_type, get_user_email_domain
+from .utils import get_client_ip, get_user_type, get_user_email_domain, is_human
 
 
 @receiver(user_logged_in, dispatch_uid='id_capture_login')
@@ -25,6 +25,10 @@ def capture_download(**kwargs):
 
     # exit early if the request is not passed in as a kwarg
     if 'request' not in kwargs.keys():
+        return
+
+    # exit early if not human (necessary b/c this action does not require log in)
+    if kwargs['request'].is_crawler:
         return
 
     # get input kwargs
