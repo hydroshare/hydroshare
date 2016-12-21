@@ -149,7 +149,7 @@ def data_store_folder_zip(request):
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'name': output_zip_fname,
                      'size': size,
@@ -209,7 +209,7 @@ def data_store_folder_unzip(request):
                        "iRODS error follows: "
         return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
@@ -257,7 +257,7 @@ def data_store_create_folder(request):
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'new_folder_rel_path': folder_path}
 
@@ -348,7 +348,7 @@ def data_store_file_or_folder_move_or_rename(request):
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
-        return HttpResponse(ex.message, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
 
