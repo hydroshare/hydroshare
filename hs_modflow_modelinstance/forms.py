@@ -507,6 +507,7 @@ class GeneralElementsValidationForm(forms.Form):
         required=False)
     subsidencePackage = forms.CharField(max_length=100, required=False)
 
+
 ModelInputLayoutEdit = Layout(
         HTML('<div class="col-xs-12 col-sm-6"> '
              '<div class="form-group" id="modelinput"> '
