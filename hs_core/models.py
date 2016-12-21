@@ -2355,55 +2355,7 @@ class CoreMetaData(models.Model):
             self._create_person_element(etree, rdf_Description, contributor)
 
         for coverage in self.coverages.all():
-            # TODO: (Pabitra) use the coverage element's add_to_xml_container()
-            # to replace the following code
-            dc_coverage = etree.SubElement(rdf_Description, '{%s}coverage' % self.NAMESPACES['dc'])
-            cov_dcterm = '{%s}' + coverage.type
-            dc_coverage_dcterms = etree.SubElement(dc_coverage,
-                                                   cov_dcterm % self.NAMESPACES['dcterms'])
-            rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
-                                                  '{%s}value' % self.NAMESPACES['rdf'])
-            if coverage.type == 'period':
-                start_date = parser.parse(coverage.value['start'])
-                end_date = parser.parse(coverage.value['end'])
-                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
-                                                                  end_date.isoformat())
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-
-            elif coverage.type == 'point':
-                cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'],
-                                                             coverage.value['north'],
-                                                             coverage.value['units'])
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'elevation' in coverage.value:
-                    cov_value = cov_value + '; elevation=%s' % coverage.value['elevation']
-                    if 'zunits' in coverage.value:
-                        cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            else:
-                # this is box type
-                cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                            % (coverage.value['northlimit'], coverage.value['eastlimit'],
-                               coverage.value['southlimit'], coverage.value['westlimit'],
-                               coverage.value['units'])
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'uplimit' in coverage.value:
-                    cov_value = cov_value + '; uplimit=%s' % coverage.value['uplimit']
-                if 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; downlimit=%s' % coverage.value['downlimit']
-                if 'uplimit' in coverage.value or 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            rdf_coverage_value.text = cov_value
+            coverage.add_to_xml_container(rdf_Description)
 
         for dt in self.dates.all():
             dc_date = etree.SubElement(rdf_Description, '{%s}date' % self.NAMESPACES['dc'])
