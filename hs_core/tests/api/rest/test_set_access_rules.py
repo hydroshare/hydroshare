@@ -153,6 +153,27 @@ class TestSetAccessRules(HSRESTTestCase):
         get_response = self.client.get(access_url)
         self.assertEqual(0, len(get_response.data['groups']))
 
+    def test_no_access(self):
+        rtype = 'GenericResource'
+        title = 'My Test resource'
+        keywords = ('foo', 'bar')
+        abstract = 'This is a resource used for testing /hsapi/resource/{id}/access/'
+        new_res = resource.create_resource(rtype,
+                                           self.secondUser,
+                                           title,
+                                           keywords=keywords)
+        new_res.metadata.create_element('description', abstract=abstract)
+        res_id = new_res.short_id
+        self.resources_to_delete.append(res_id)
+
+        access_url = "/hsapi/resource/{res_id}/access/".format(res_id=res_id)
+
+        put_response = self.client.put(access_url, {
+            "privilege": PrivilegeCodes.VIEW,
+            "group_id": self.testGroup.id
+        }, format='json')
+        self.assertEqual("You do not have permission to perform this action.", put_response.data['detail'])
+
     def test_errors(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
