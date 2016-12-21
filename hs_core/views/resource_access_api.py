@@ -34,7 +34,7 @@ class UserResourcePrivilegeSerializer(serializers.ModelSerializer):
 
 class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     """
-    Read, update, or delete a resource
+    Read, update, or delete access permission for a resource
 
     REST URL: hsapi/resource/{pk}/access
     HTTP method: GET
@@ -43,9 +43,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     REST URL: hsapi/resource/{pk}/access?(user_id=#|group_id=#)
     HTTP method: DELETE
 
-    :type str
+    :type int
     :param user_id: user ID to remove
-    :type str
+    :type int
     :param group_id: group ID to remove
     :return: (on success): Success or Error JSON object
 
@@ -53,9 +53,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     HTTP method: PUT
     :return: (on success): Success or Error JSON object
 
-    :type str
+    :type int
     :param user_id: user ID to remove
-    :type str
+    :type int
     :param group_id: group ID to remove
     :type PrivilegeCode int
     :param privilege: PrivilegeCode to specifiy access level
@@ -123,7 +123,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         message = "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"
         return Response(
             data={'error': message},
-            status=status.HTTP_200_OK
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     def delete(self, request, pk):
@@ -159,7 +159,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         message = "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"
         return Response(
             data={'error': message},
-            status=status.HTTP_200_OK
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     def get_serializer_classes(self):
