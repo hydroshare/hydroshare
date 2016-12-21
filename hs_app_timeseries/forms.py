@@ -649,6 +649,7 @@ def _set_form_helper_layout(common_layout, element_name, is_show_element_code_se
         )
     return layout
 
+
 UpdateSQLiteLayout = Layout(HTML("""
 <div id="sql-file-update" class="row"
 {% if not cm.can_update_sqlite_file or not cm.metadata.is_dirty %}style="display:none;

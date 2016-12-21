@@ -39,6 +39,7 @@ class ToolResource(BaseResource):
     def can_be_published(self):
         return False
 
+
 processor_for(ToolResource)(resource_processor)
 
 

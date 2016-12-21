@@ -764,7 +764,7 @@ def add_resource_files(pk, *files, **kwargs):
         for ifname in ifnames:
             # TODO: fed_res_file_name_or_path --> "source" or "source path" 
             # TODO: fed_copy_or_move --> copy_or_move 
-            ret.append(utils.add_file_to_resource(resource, None, 
+            ret.append(utils.add_file_to_resource(resource, None, folder=folder, 
                                                   fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
     if not ret:
@@ -772,14 +772,6 @@ def add_resource_files(pk, *files, **kwargs):
         utils.create_empty_contents_directory(resource)
 
     return ret
-
-
-# TODO: Incorrect implementation. Needs fixing if we ever need this api
-def update_system_metadata(pk, **kwargs):
-    """
-
-    """
-    return update_science_metadata(pk, **kwargs)
 
 
 def update_science_metadata(pk, metadata):
