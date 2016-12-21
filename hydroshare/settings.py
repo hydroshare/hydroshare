@@ -366,6 +366,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
+    "hs_core.security.CrawlerBlocker",
 )
 
 # Store these package names here as they may change in the future since
