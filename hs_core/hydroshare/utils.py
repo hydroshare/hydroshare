@@ -815,7 +815,6 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     :return: The identifier of the ResourceFile added.
     """
     if f:
-        # See ResourceFile.__init__ for details of these arguments
         ret = ResourceFile.create(resource=resource, folder=folder, file=File(f)
                                   if not isinstance(f, UploadedFile) else f)
         # add format metadata element if necessary
@@ -824,6 +823,7 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
         move = (fed_copy_or_move == 'move')
         try:
+            # create from existing iRODS file
             ret = ResourceFile.create(resource=resource, folder=folder,
                                       source=fed_res_file_name_or_path, move=move)
         except SessionException as ex:

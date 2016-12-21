@@ -205,6 +205,7 @@ def update_resource_file(pk, filename, f):
     Exception.ServiceFailure - The service is unable to process the request
     """
     resource = utils.get_resource_by_shortkey(pk)
+    # TODO: does not work with federation 
     for rf in ResourceFile.objects.filter(object_id=resource.id):
         if os.path.basename(rf.resource_file.name) == filename:
             rf.resource_file.delete()
@@ -442,6 +443,7 @@ def create_resource(
             fed_zone_home_path = fed_res_path
             resource.resource_federation_path = fed_res_path
             resource.save()
+        # TODO: not good to default this from file names; they could differ in paths!
         elif fed_res_file_names:
             fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names[0])
             resource.resource_federation_path = fed_zone_home_path
@@ -520,7 +522,7 @@ def create_new_version_empty_resource(pk, user):
         pk: the unique HydroShare identifier for the resource that is to be versioned.
         user: the requesting user who requests to create a new version for the resource
     Returns:
-        the empyt new resource that is created as an initial new version for the original resource
+        the empty new resource that is created as an initial new version for the original resource
         which is then further populated with metadata and content in a subsequent step
 
     """
@@ -720,11 +722,11 @@ def add_resource_files(pk, *files, **kwargs):
     REST URL:  PUT /resource/{pid}/files/{file}
 
     Parameters:
-    pid - Unique HydroShare identifier for the resource that is to be updated.
+    pk - Unique HydroShare identifier for the resource that is to be updated.
     files - A list of file-like objects representing files that will be added
     to the existing resource identified by pid
 
-    Returns:    The pid assigned to the updated resource
+    Returns:    A list of files added to the resource
 
     Return Type:    pid
 
@@ -734,37 +736,25 @@ def add_resource_files(pk, *files, **kwargs):
     Exception.ServiceFailure - The service is unable to process the request
 
     Notes:
-    For mutable resources (resources not formally published), the update adds the file that is passed
-    to this method to the resource. For immutable resources (formally published resources), this method creates a new
-    resource that is a new version of the formally published resource. HydroShare will record the update by storing the
-    SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata
-    HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they
-    accurately represent the relationship between the new and old objects. HydroShare MUST also set
-    SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in
-    HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on
-    SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version.
-    Once a resource is obsoleted, no other resources can obsolete it.
+    This does **not** handle mutability; changes to immutable resources should be denied. 
 
     """
     resource = utils.get_resource_by_shortkey(pk)
+    # TODO: rename this parameter. It has little to do with federation. 
+    # It could be used for local user files. 
     fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
-    fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
+    # TODO: ditto here: this can be used for federated or unfederated files. 
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
     folder = kwargs.pop('folder', None) 
+    if __debug__: 
+        assert len(kwargs) == 0 
 
     for f in files: 
-        if fed_zone_home_path:
-            # user has selected files from a federated iRODS zone, so files uploaded from local disk
-            # need to be stored to the federated iRODS zone rather than HydroShare zone as well
-            ret.append(utils.add_file_to_resource(resource, f, folder=folder, fed_res_file_name_or_path=fed_zone_home_path))
-        elif resource.resource_federation_path:
-            # file needs to be added to a resource in a federated zone
-            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
-        else:
-            ret.append(utils.add_file_to_resource(resource, f, folder=folder))
+        ret.append(utils.add_file_to_resource(resource, f, folder=folder))
     if fed_res_file_names:
+        # TODO: this is unnecessary complexity; pass a list. File names can contain ','!
         if isinstance(fed_res_file_names, basestring):
             ifnames = string.split(fed_res_file_names, ',')
         elif isinstance(fed_res_file_names, list):
@@ -772,11 +762,15 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             return ret
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
+            # TODO: fed_res_file_name_or_path --> "source" or "source path" 
+            # TODO: fed_copy_or_move --> copy_or_move 
+            ret.append(utils.add_file_to_resource(resource, None, 
+                                                  fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
+
     return ret
 
 
@@ -906,25 +900,12 @@ def delete_resource_file_only(resource, f):
     Args:
         resource: the resource from which the file f is to be deleted
         f: the ResourceFile object to be deleted
-    Returns: file name that has been deleted
+    Returns: unqualified relative path to file that has been deleted
     '''
-    fed_path = resource.resource_federation_path
-    if fed_path:
-        if f.fed_resource_file:
-            # file was originally from local disk, but is currently stored in federated irods zone
-            file_name = f.fed_resource_file.name
-            f.fed_resource_file.delete()
-        elif f.fed_resource_file_name_or_path:
-            # file was originally from federated irods zone, and is currently stored in the
-            # same federated irods zone
-            file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path);
-            utils.delete_fed_zone_file(file_name)
-    else:
-        # file was originally from local disk, and is currently stored in main irods hydroshare zone
-        file_name = f.resource_file.name
-        f.resource_file.delete()
+    # TODO: resource is redundant; f --> resource
+    short_path = f.short_path
     f.delete()
-    return file_name
+    return short_path
 
 
 def delete_format_metadata_after_delete_file(resource, file_name):

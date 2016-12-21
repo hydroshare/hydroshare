@@ -1677,6 +1677,14 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
+    def delete(self): 
+        """ Delete a resource file record and the file contents """
+        if self.resource_file: 
+            self.resource_file.delete()
+        if self.fed_resource_file: 
+            self.fed_resource_file.delete()
+        super(ResourceFile, self).delete()
+
     @property
     def resource(self):
         return self.content_object
