@@ -503,7 +503,7 @@ def set_dirty_bag_flag(resource):
     # resource so that xml metadata files need to be generated on-demand
 
     istorage = resource.get_irods_storage()
-    res_coll = resource.get_irods_collection_path()
+    res_coll = resource.root_path
     istorage.setAVU(res_coll, "bag_modified", "true")
     istorage.setAVU(res_coll, "metadata_dirty", "true")
 
