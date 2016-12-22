@@ -1573,7 +1573,6 @@ body > .main-container {
 
 .content-block {
 	display: table;
-	width: 100%;
 }
 
 #comment, .comment-reply-form {
@@ -2259,7 +2258,7 @@ button.loading {
 }
 
 .coverage-container {
-    margin-top: -20px; margin-bottom:20px;
+	margin-bottom:20px;
 }
 
 .invalid-input {
@@ -2463,11 +2462,8 @@ div.affiliation {
     float: left;
 }
 
-.abstract-block {
-    color: #757575;
-    border-left: 3px solid #CCC;
-    padding-left: 5px;
-      margin-top: 10px;
+#div_id_abstract textarea {
+    resize: vertical;
 }
 
 form.act-on-request button {
