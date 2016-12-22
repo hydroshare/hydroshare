@@ -1195,7 +1195,7 @@ class UserAccess(models.Model):
                                            (Q(r2urp__user=self.user,
                                               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
                                             Q(r2grp__group__gaccess__active=True,
-                                                r2grp__group__g2ugp__user=self.user,
+                                              r2grp__group__g2ugp__user=self.user,
                                               r2grp__privilege__lte=PrivilegeCodes.CHANGE)))\
                                    .distinct()
 
@@ -1256,117 +1256,109 @@ class UserAccess(models.Model):
                 # groups can't own resources
                 return BaseResource.objects.none()
 
+        # CHANGE does not include immutable resources
         elif this_privilege == PrivilegeCodes.CHANGE:
-            # CHANGE does not include immutable resources
-            uquery = Q(raccess__immutable=False,
-                       r2urp__privilege=this_privilege,
-                       r2urp__user=self.user)
-            uexcl = Q(raccess__immutable=False,
-                      r2urp__privilege__lt=this_privilege,
-                      r2urp__user=self.user)
-
-            gquery = Q(raccess__immutable=False,
-                       r2grp__privilege=this_privilege,
-                       r2grp__group__g2ugp__user=self.user)
-            gexcl = Q(raccess__immutable=False,
-                      r2grp__privilege__lt=this_privilege,
-                      r2grp__group__g2ugp__user=self.user)
-
             if via_user and via_group:
-                query = uquery | gquery
-                excl = uexcl | gexcl  # user privilege can squash group privilege
-            elif via_user:
-                query = uquery
-                excl = None  # users have one privilege
-            elif via_group:
-                query = gquery
-                excl = None  # groups cannot OWN
-            else:
-                # nothing matches
-                return BaseResource.objects.none()
+                uquery = Q(raccess__immutable=False,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
 
-            if excl:
+                gquery = Q(raccess__immutable=False,
+                           r2grp__privilege=PrivilegeCodes.CHANGE,
+                           r2grp__group__g2ugp__user=self.user)
+
+                # exclude owners; immutability doesn't matter for them
+                uexcl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                          r2urp__user=self.user)
+
                 return BaseResource.objects\
-                    .filter(query)\
+                    .filter(uquery | gquery)\
                     .exclude(pk__in=BaseResource.objects
-                             .filter(excl)).distinct()
-            else:
+                             .filter(uexcl)).distinct()
+
+            elif via_user:
+                query = Q(raccess__immutable=False,
+                          r2urp__privilege=PrivilegeCodes.CHANGE,
+                          r2urp__user=self.user)
                 return BaseResource.objects\
                     .filter(query).distinct()
 
+            elif via_group:
+                query = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2ugp__user=self.user)
+                return BaseResource.objects\
+                    .filter(query).distinct()
+
+            else:
+                # nothing matches
+                return BaseResource.objects.none()
+
         else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE+immutable as well as explicit VIEW
-            # TODO: make this query more efficient, if possible!
             # CHANGE does not include immutable resources
 
-            # step one: compute view resources explicitly:
-            uquery = Q(r2urp__privilege=this_privilege,
-                       r2urp__user=self.user)
-            uexcl = Q(r2urp__privilege__lt=this_privilege,
-                      r2urp__user=self.user)
-            gquery = Q(r2grp__privilege=this_privilege,
-                       r2grp__group__g2ugp__user=self.user)
-            gexcl = Q(r2grp__privilege__lt=this_privilege,
-                      r2grp__group__g2ugp__user=self.user)
-
             if via_user and via_group:
-                query = uquery | gquery
-                excl = uexcl | gexcl  # user privilege can override group privilege
+
+                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                           r2urp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
+
+                gquery = \
+                    Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                      r2grp__group__g2ugp__user=self.user,
+                      r2grp__group__gaccess__active=True) | \
+                    Q(raccess__immutable=True,
+                      r2grp__privilege=PrivilegeCodes.CHANGE,
+                      r2grp__group__g2ugp__user=self.user,
+                      r2grp__group__gaccess__active=True)
+
+                # pick up change and owner, use to override VIEW for groups
+                uexcl = \
+                    Q(raccess__immutable=False,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user) | \
+                    Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                      r2urp__user=self.user)
+
+                # pick up non-immutable CHANGE, use to override VIEW for groups
+                gexcl = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2ugp__user=self.user,
+                          r2grp__group__gaccess__active=True)
+
+                return BaseResource.objects\
+                    .filter(uquery | gquery)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(uexcl | gexcl)).distinct()
+
             elif via_user:
-                query = uquery
-                excl = None  # only one privilege per user
+
+                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                           r2urp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
+
+                return BaseResource.objects\
+                    .filter(uquery).distinct()
+
             elif via_group:
-                query = gquery
-                excl = gexcl  # CHANGE from other source squashes VIEW
+
+                gquery = Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                           r2grp__group__g2ugp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2grp__privilege=PrivilegeCodes.CHANGE,
+                           r2grp__group__g2ugp__user=self.user)
+
+                return BaseResource.objects\
+                    .filter(gquery).distinct()
+
             else:
                 # nothing matches
                 return BaseResource.objects.none()
-
-            if excl:
-                view = BaseResource.objects\
-                    .filter(query)\
-                    .exclude(pk__in=BaseResource.objects
-                             .filter(excl))
-            else:
-                view = BaseResource.objects\
-                    .filter(query)
-
-            # step 2: compute immutable privileges, whose privilege is CHANGE
-            # with no other privilege < CHANGE (OWNER). Since groups can't own,
-            # there is no exclusion for them.
-            uquery = Q(raccess__immutable=True,
-                       r2urp__privilege=PrivilegeCodes.CHANGE,
-                       r2urp__user=self.user)
-            uexcl = Q(raccess__immutable=True,
-                      r2urp__privilege__lt=PrivilegeCodes.CHANGE,
-                      r2urp__user=self.user)
-            gquery = Q(raccess__immutable=True,
-                       r2grp__privilege=PrivilegeCodes.CHANGE,
-                       r2grp__group__g2ugp__user=self.user)
-
-            if via_user and via_group:
-                query = uquery | gquery
-                excl = uexcl  # user OWNER can override group CHANGE
-            elif via_user:
-                query = uquery
-                excl = None  # users have one privilege per resource
-            elif via_group:
-                query = gquery
-                excl = None  # groups can't own resources
-            else:
-                # nothing matches
-                return BaseResource.objects.none()
-
-            if excl:
-                immutable = BaseResource.objects\
-                    .filter(query)\
-                    .exclude(pk__in=BaseResource.objects
-                             .filter(excl))
-            else:
-                immutable = BaseResource.objects\
-                    .filter(query)
-
-            return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
 
     #############################################
     # Check access permissions for self (user)
