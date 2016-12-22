@@ -1,7 +1,7 @@
 {% load hydroshare_tags %}
 
 {% if not metadata_form %}
-<div class="col-sm-12">
+<div class="col-sm-6">
     <table class="info-table">
         <tr><th>Authors:</th><td id="authors">
             {% for cr in creators %}
@@ -33,7 +33,7 @@
     </table>
 </div>
 {% else %}
-    <div class="col-sm-12">
+    <div class="col-sm-6">
         <table class="info-table">
             <tr>
                 <th>Authors:</th>

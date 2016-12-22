@@ -3,225 +3,228 @@
 <div class="col-sm-12 content-block">
     <h3>How to cite</h3>
 
-    <div class="input-group" style="margin-bottom: 30px">
-        <span id="citation-text">{{ citation }}</span>
-        <span class="input-group-addon"><span class="glyphicon glyphicon-book"
-                data-toggle="tooltip" data-placement="bottom" title="Click on the text to select."></span></span>
-    </div>
-
-    {#        ======= Sharing =======#}
-    {% if not metadata_form %}
-        {% if rights.statement or rights.url %}
-            <div id="rights">
-                {% if rights.statement %}
-                    <span class="rights-text">{{ rights.statement }} </span>
-                {% endif %}
-
-                {% if rights.url %}
-                    <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
-                {% endif %}
-            </div>
-            {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
-            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
-            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
-            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
-            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
-            {% endif %}
-        {% endif %}
-    {% else %}
-        <div class="row">
-            <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
-                  id="id-rights" method="post">
-                {% csrf_token %}
-                <fieldset>
-                    <div class="col-md-6">
-                        <span for="select_license"> Select a license </span>
-                                <span data-toggle="tooltip" data-placement="auto"
-                                      title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                      class="glyphicon glyphicon-info-sign text-muted"></span>
-                        <select id="select_license" class="form-control">
-                            <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
-                            <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
-                            <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
-                            <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
-                            <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
-                            <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
-                            <option value="other">Other</option>
-                        </select>
-                        <img id="img-badge" class="cc-image"
-                                {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
-                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
-                                {% endif %}/>
-                    </div>
-                    <div class="col-md-6">
-                        <div id="div_id_statement" class="control-group">
-                            <span for="id_statement"> Statement</span>
-
-                            <div class="controls">
-                                    <textarea class="form-control input-sm textarea" cols="40"
-                                              id="id_statement" name="statement" readonly="True">{{ cm.metadata.rights.statement }}</textarea>
-                            </div>
-                        </div>
-                        <div id="div_id_url" class="control-group">
-                            <span for="id_url">Url</span>
-
-                            <div class="controls">
-                                <input class="form-control input-sm urlinput" id="id_url"
-                                       maxlength="200" name="url" readonly="True" type="url"
-                                       value={{ cm.metadata.rights.url }}>
-                            </div>
-                        </div>
-
-                        <button type="button" class="btn btn-primary pull-right"
-                                onclick="metadata_update_ajax_submit('id-rights'); return false;"
-                                style="display: none;">Save changes
-                        </button>
-                    </div>
-                </fieldset>
-            </form>
-        </div>
-    {% endif %}
-
-    <div id="sharing-status" class="row">
-        <div class="col-sm-12"><h4>Sharing status:</h4></div>
-        {% if can_change_resource_flags %}
-            <div class="col-sm-12">
-                <div class="btn-group" role="group">
-                    {# -------- PUBLIC -------- #}
-                    {% if cm.raccess.public %}
-                        <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded by anyone.' type="button"
-                                class="btn btn-default active">Public
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                              method="POST">
-                            {% csrf_token %}
-                            <input name="t" type="hidden" value="make_public"/>
-                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
-                            <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
-                                    id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded by anyone.' type="submit"
-                                    class="btn btn-default">Public
-                            </button>
-                        </form>
-                    {% endif %}
-
-                    {# -------- DISCOVERABLE -------- #}
-                    {% if not cm.raccess.public and discoverable %}
-                        <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                title='Metadata is public but data is protected.' type="button"
-                                class="btn btn-default active">Discoverable
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                              method="POST">
-                            <input name="t" type="hidden" value="make_discoverable"/>
-                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
-                            {% csrf_token %}
-                            <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
-                                    id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                    title='Metadata is public but data is protected.' type="submit"
-                                    class="btn btn-default">Discoverable
-                            </button>
-                        </form>
-                    {% endif %}
-
-                    {# -------- PRIVATE -------- #}
-                    {% if not cm.raccess.public and not discoverable %}
-                        <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded only by designated users or research groups.'
-                                type="button" class="btn btn-default active">Private
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                              method="POST">
-                            <input name="t" type="hidden" value="make_private"/>
-                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
-                            {% csrf_token %}
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                    title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                    class="btn btn-default">Private
-                            </button>
-                        </form>
-                    {% endif %}
-                </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-6">
+            <div class="input-group" style="margin-bottom: 30px">
+                <span id="citation-text">{{ citation }}</span>
+                <span class="input-group-addon"><span class="glyphicon glyphicon-book"
+                        data-toggle="tooltip" data-placement="bottom" title="Click on the text to select."></span></span>
             </div>
 
-            {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
-                <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
-                        Hyrax server in order to provide OPeNDAP service for this resource. </div>
-            {% endif %}
+            {#======= Sharing =======#}
+            {% if not metadata_form %}
+                {% if rights.statement or rights.url %}
+                    <div id="rights">
+                        {% if rights.statement %}
+                            <span class="rights-text">{{ rights.statement }} </span>
+                        {% endif %}
 
-            {% if is_owner_user %}
-                <div id="shareable-container" class="col-sm-12 height-fix">
-                    {#   Shareable flag    #}
-                    <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                          method="POST">
+                        {% if rights.url %}
+                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                        {% endif %}
+                    </div>
+                    {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                    {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                        <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                <div class="row">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                          id="id-rights" method="post">
                         {% csrf_token %}
+                        <fieldset>
+                            <div class="col-md-6">
+                                <span for="select_license"> Select a license </span>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                              class="glyphicon glyphicon-info-sign text-muted"></span>
+                                <select id="select_license" class="form-control">
+                                    <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
+                                    <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <img id="img-badge" class="cc-image"
+                                        {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                        {% endif %}/>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="div_id_statement" class="control-group">
+                                    <span for="id_statement"> Statement</span>
 
-                        <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
-                               {% else %}value="make_shareable"{% endif %}/>
+                                    <div class="controls">
+                                            <textarea class="form-control input-sm textarea" cols="40"
+                                                      id="id_statement" name="statement" readonly="True">{{ cm.metadata.rights.statement }}</textarea>
+                                    </div>
+                                </div>
+                                <div id="div_id_url" class="control-group">
+                                    <span for="id_url">Url</span>
 
-                        <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners may grant access to the resource.">
-                          <span class="input-group-addon">
-                            <input id="btn-shareable" type="checkbox"
-                                          {% if cm.raccess.shareable %}checked{% endif %}>
-                          </span>
-                          <span class="form-control">Shareable</span>
-                        </div><!-- /input-group -->
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" id="id_url"
+                                               maxlength="200" name="url" readonly="True" type="url"
+                                               value={{ cm.metadata.rights.url }}>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn btn-primary pull-right"
+                                        onclick="metadata_update_ajax_submit('id-rights'); return false;"
+                                        style="display: none;">Save changes
+                                </button>
+                            </div>
+                        </fieldset>
                     </form>
                 </div>
             {% endif %}
-        {% else %}
-            <div class="col-sm-12">
-                {% if cm.raccess.published %}
-                    <strong class="label-public">&nbsp;Published</strong>
-                {% elif cm.raccess.public %}
-                    <strong class="label-public">&nbsp;Public</strong>
-                {% elif cm.raccess.discoverable %}
-                    <strong class="label-discoverable">&nbsp;Discoverable</strong>
-                {% else %}
-                    <strong class="label-private">&nbsp;Private</strong>
+        </div>
+
+        <div class="col-sm-6 col-xs-12 sharing-status-container">
+            <h5>Sharing status:</h5>
+            {% if can_change_resource_flags %}
+                    <div class="btn-group" role="group">
+                        {# -------- PUBLIC -------- #}
+                        {% if cm.raccess.public %}
+                            <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded by anyone.' type="button"
+                                    class="btn btn-default active">Public
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                {% csrf_token %}
+                                <input name="t" type="hidden" value="make_public"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                                        id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded by anyone.' type="submit"
+                                        class="btn btn-default">Public
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {# -------- DISCOVERABLE -------- #}
+                        {% if not cm.raccess.public and discoverable %}
+                            <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                    title='Metadata is public but data is protected.' type="button"
+                                    class="btn btn-default active">Discoverable
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                <input name="t" type="hidden" value="make_discoverable"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                {% csrf_token %}
+                                <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                                        id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                        title='Metadata is public but data is protected.' type="submit"
+                                        class="btn btn-default">Discoverable
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {# -------- PRIVATE -------- #}
+                        {% if not cm.raccess.public and not discoverable %}
+                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded only by designated users or research groups.'
+                                    type="button" class="btn btn-default active">Private
+                            </button>
+                        {% else %}
+                            <form class="pull-left"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                                  method="POST">
+                                <input name="t" type="hidden" value="make_private"/>
+                                <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
+                                {% csrf_token %}
+                                <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                        title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
+                                        class="btn btn-default">Private
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+
+                {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
+                    <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
+                            Hyrax server in order to provide OPeNDAP service for this resource. </div>
                 {% endif %}
-                {% if cm.raccess.published %}
-                    {% if "pending" in cm.doi or "failure" in cm.doi %}&#8210; Note that the DOI will not be available until
-                        it has been registered and activated.{% endif %}
-                {% else %}
-                    &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
+
+                {% if is_owner_user %}
+                    <div id="shareable-container" class="height-fix">
+                        {#   Shareable flag    #}
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                              method="POST">
+                            {% csrf_token %}
+
+                            <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
+                                   {% else %}value="make_shareable"{% endif %}/>
+
+                            <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners may grant access to the resource.">
+                              <span class="input-group-addon">
+                                <input id="btn-shareable" type="checkbox"
+                                              {% if cm.raccess.shareable %}checked{% endif %}>
+                              </span>
+                              <span class="form-control">Shareable</span>
+                            </div><!-- /input-group -->
+                        </form>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="col-sm-12">
+                    {% if cm.raccess.published %}
+                        <strong class="label-public">&nbsp;Published</strong>
+                    {% elif cm.raccess.public %}
+                        <strong class="label-public">&nbsp;Public</strong>
+                    {% elif cm.raccess.discoverable %}
+                        <strong class="label-discoverable">&nbsp;Discoverable</strong>
+                    {% else %}
+                        <strong class="label-private">&nbsp;Private</strong>
+                    {% endif %}
+                    {% if cm.raccess.published %}
+                        {% if "pending" in cm.doi or "failure" in cm.doi %}&#8210; Note that the DOI will not be available until
+                            it has been registered and activated.{% endif %}
+                    {% else %}
+                        &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div id="user-permission-msg">
+                {% if is_owner_user %}
+                    <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
+                {% elif is_edit_user %}
+                    <div class="alert alert-info" role="alert">You have been given specific permission to
+                        {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>
+                {% elif is_view_user %}
+                    <div class="alert alert-info" role="alert">You have been given specific permission to view this resource.</div>
                 {% endif %}
             </div>
-        {% endif %}
-
-        <div id="user-permission-msg" class="col-sm-6 col-xs-12">
-            {% if is_owner_user %}
-                <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
-            {% elif is_edit_user %}
-                <div class="alert alert-info" role="alert">You have been given specific permission to
-                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>
-            {% elif is_view_user %}
-                <div class="alert alert-info" role="alert">You have been given specific permission to view this resource.</div>
-            {% endif %}
         </div>
+
     </div>
 </div>

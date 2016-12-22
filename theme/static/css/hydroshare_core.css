@@ -2252,6 +2252,32 @@ button.loading {
 }
 
 /*  =============== Coverage Tab - Google map css ================ */
+
+.sharing-status-container > div {
+	margin-bottom: 20px;
+}
+
+#coverageMap[data-mode="view"] {
+	width:100%;
+	height: 220px;
+}
+
+.coordinates-list-container {
+    position: absolute;
+    top: 0;
+    margin: 25px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.coordinates-list-container .list-group-item {
+	padding: 5px;
+}
+
+.coordinates-list-container .list-group {
+	margin-bottom: 0;
+}
+
 #coverageMap {
 	height:350px;
 	border:1px solid #DDD;

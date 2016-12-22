@@ -1,7 +1,7 @@
 {#        ======= Subject =======#}
 {% if not metadata_form %}
     {% if keywords %}
-    <div class="col-sm-6 content-block">
+    <div class="col-sm-12 content-block">
         <h3>Subject</h3>
 
         <p id="keywords">{{ keywords }}</p>
@@ -13,7 +13,7 @@
     </div>
     {% endif %}
 {% else %}
-    <div class="col-sm-6 content-block">
+    <div class="col-sm-12 content-block">
         <h3>Subject</h3>
         <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
               method="post">

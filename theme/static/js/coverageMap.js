@@ -17,6 +17,12 @@ $(document).ready(function () {
     $("#id_eastlimit").bind('input', drawRectangleOnTextChange);
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
+
+    // google.maps.event.addListenerOnce(coverageMap, 'idle', function () {
+    //     // Move the map components inside the map container the first time the map is loaded
+    //     var elements = $('.map-component').detach();
+    //     $("#coverageMap").prepend(elements);
+    // });
 });
 
 function initMap() {
@@ -42,7 +48,8 @@ function initMap() {
             mapTypeIds: [
                 google.maps.MapTypeId.ROADMAP,
                 google.maps.MapTypeId.SATELLITE
-            ]
+            ],
+            position: google.maps.ControlPosition.TOP_RIGHT
         }
     });
     if (!shapeType) {

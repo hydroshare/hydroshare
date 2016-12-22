@@ -4,41 +4,19 @@
             <div class="col-sm-12 col-xs-12 content-block" id="coverage-spatial">
                 <div class="row">
                     <div class="col-sm-12">
-                        <h3>Coverage</h3>
-                        <div class="coverage-container">
-                            <table class="info-table">
-                                <tbody>
-                                {% if spatial_coverage.name %}
-                                    <tr>
-                                        <th class="text-muted">Place/Area Name</th>
-                                        <td>{{ spatial_coverage.name }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if temporal_coverage %}
-                                    <tr>
-                                        <th class="text-muted">Start Date</th>
-                                        <td>{{ temporal_coverage.start_date }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th class="text-muted">End Date</th>
-                                        <td>{{ temporal_coverage.end_date }}</td>
-                                    </tr>
-
-                                {% endif %}
-
-                                </tbody>
-                            </table>
+                        <div>
+                            <span>{% if spatial_coverage.name %}{{ spatial_coverage.name }}{% endif %}</span>
+                            <small class="text-muted">{% if temporal_coverage %}(Start Date:
+                                {{ temporal_coverage.start_date }}, End Date: {{ temporal_coverage.end_date }}
+                                ){% endif %}</small>
                         </div>
-                    </div>
-
-                    <div class="col-sm-8">
-                        <div id="coverageMap" data-shape-type="{{ spatial_coverage.type }}"></div>
-                        <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
+                        <div id="coverageMap" data-mode="view" data-shape-type="{{ spatial_coverage.type }}"></div>
+                        <i id="resetZoomBtn" class="glyphicon glyphicon-record map-component" data-toggle="tooltip"
                            data-placement="left" title="Recenter on selected area/point"></i>
                     </div>
 
-                    <div class="col-sm-4">
-                        {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                        <div class="coordinates-list-container">
                             <ul class="list-group">
                                 {% if spatial_coverage.type == 'point' %}
                                     {% if spatial_coverage.east %}
@@ -74,19 +52,18 @@
                                     {% endif %}
                                 {% endif %}
                             </ul>
-                            <div class="text-muted" style="margin-top:20px;">
+                        </div>
+                        <div class="text-muted col-sm-12">
                                 {% if spatial_coverage.projection %}
-                                    <div>{{ spatial_coverage.projection }}</div>
+                                    <small>{{ spatial_coverage.projection }}</small>
                                 {% endif %}
                                 {% if spatial_coverage.units %}
-                                    <div>{{ spatial_coverage.units }}</div>
+                                    <small>{{ spatial_coverage.units }}</small>
                                 {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-
         </div>
     </div>
 {% else %}

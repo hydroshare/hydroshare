@@ -1,12 +1,12 @@
 {% if not metadata_form %}
     {% if abstract %}
-        <div class="col-sm-12 col-lg-6 content-block">
+        <div class="col-xs-12 content-block">
             <h3>Abstract</h3>
             <span class="abstract">{{ abstract|urlize|linebreaks }}</span>
         </div>
     {% endif %}
 {% else %}
-    <div class="col-sm-12 col-lg-6 content-block">
+    <div class="col-xs-12 content-block">
         <h3>Abstract</h3>
         {% if cm.metadata.description %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
