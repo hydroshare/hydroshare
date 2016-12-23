@@ -58,12 +58,12 @@
                 {% include "resource-landing-page/resource-header.html" %}
 
                 {# ======= Coverage ======= #}
-                {% include "resource-landing-page/coverage.html" %}
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+                    {% include "resource-landing-page/coverage.html" %}
+                {% endif %}
 
                 {# ======= Abstract ======= #}
                 {% include "resource-landing-page/abstract.html" %}
-
-
 
                 {# ======= Citation ======= #}
                 {% if metadata_form %}
@@ -1969,26 +1969,6 @@
                     //$(this).css('border-color', 'gray');
                     $(this).closest("form").find("button").show();
                 });
-            });
-
-            // Initialize date pickers
-            $(".dateinput").each(function () {
-                $(this).datepicker({
-                    format: 'mm-dd-yyyy',
-                    yearRange: "-1000:+1000",
-                    changeMonth: true,
-                    changeYear: true,
-                    showAnim: "slideDown",
-                });
-                $(this).on('change', function () {
-                    $(this).closest("form").find("button").show();
-                });
-            });
-
-            // Format and set stored dates
-            $(".dateinput").each(function () {
-                var date = new Date($(this).val().toString('m/d/y'));
-                $(this).datepicker("setDate", date);
             });
 
             // init ExtraMetadata Table

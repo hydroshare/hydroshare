@@ -22,8 +22,31 @@ $(document).ready(function () {
         google.maps.event.addDomListener(window, "load", initMap);
     }
 
+    // Initialize date pickers
+    $(".dateinput").each(function () {
+        $(this).datepicker({
+            format: 'mm-dd-yyyy',
+            yearRange: "-1000:+1000",
+            changeMonth: true,
+            changeYear: true,
+            showAnim: "slideDown",
+        });
+        $(this).on('change', function () {
+            $(this).closest("form").find("button").show();
+        });
+    });
 
+    // Format and set stored dates
+    $(".dateinput").each(function () {
+        var date = new Date($(this).attr("data-date"));
+        $(this).datepicker("setDate", date);
+    });
 
+    // Format and set stored dates
+    $(".format-date").each(function () {
+        var date = new Date($(this).attr("data-date"));
+        $(this).text(date.getMonth() + "/" + date.getDate() + "/" + date.getFullYear());
+    });
 });
 
 function drawInitialShape() {
@@ -218,13 +241,7 @@ function initMap() {
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
             allOverlays.push(e);
         });
-        google.maps.event.addListener(coverageMap, 'idle', function(){
-            // do something only the first time the map is loaded
-            console.log("Loaded");
-        });
     }
-
-
 }
 
 function drawMarkerOnTextChange(){
