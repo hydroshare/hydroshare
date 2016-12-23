@@ -18,12 +18,144 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
-    // google.maps.event.addListenerOnce(coverageMap, 'idle', function () {
-    //     // Move the map components inside the map container the first time the map is loaded
-    //     var elements = $('.map-component').detach();
-    //     $("#coverageMap").prepend(elements);
-    // });
+    if ($("#coverageMap").length) {
+        google.maps.event.addDomListener(window, "load", initMap);
+    }
+
+
+
 });
+
+function drawInitialShape() {
+        google.maps.event.addDomListener(window, "load", initMap);
+
+        // This field is populated if the page is in view mode
+        var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+
+        var resourceType = $("#resource-type").val();
+        var spatialCoverageType = $("#spatial-coverage-type").val();
+        // Center the map
+        if (shapeType || resourceType === "Time Series") {
+            deleteAllShapes();
+            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+                var myLatLng;
+                if (shapeType == "point") {
+                    // resource view mode
+                    myLatLng = {
+                        lat: parseFloat($("#cov_north").text()),
+                        lng: parseFloat($("#cov_east").text())
+                    };
+                }
+                else {
+                    // time series resource in edit mode
+                    myLatLng = {
+                        lat: parseFloat($("#id_north").val()),
+                        lng: parseFloat($("#id_east").val())
+                    };
+                    if ($('#id_north').val()) {
+                        $("#id_name").prop('readonly', false);
+                    }
+                }
+
+                if (!myLatLng.lat || !myLatLng.lng) {
+                    return;
+                }
+                // Define the rectangle and set its editable property to true.
+                var marker = new google.maps.Marker({
+                    position: myLatLng,
+                    map: coverageMap
+                });
+                allShapes.push(marker);
+                // Center map at new market
+                coverageMap.setCenter(marker.getPosition());
+                $("#resetZoomBtn").click(function () {
+                    coverageMap.setCenter(marker.getPosition());
+                });
+            }
+            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+                var bounds;
+                if (shapeType == "box") {
+                    //resource view mode
+                    bounds = {
+                        north: parseFloat($("#cov_northlimit").text()),
+                        south: parseFloat($("#cov_southlimit").text()),
+                        east: parseFloat($("#cov_eastlimit").text()),
+                        west: parseFloat($("#cov_westlimit").text())
+                    };
+                }
+                else {
+                    // time series resource edit mode
+                    bounds = {
+                        north: parseFloat($("#id_northlimit").val()),
+                        south: parseFloat($("#id_southlimit").val()),
+                        east: parseFloat($("#id_eastlimit").val()),
+                        west: parseFloat($("#id_westlimit").val())
+                    };
+                    if ($('#id_northlimit').val()) {
+                        $("#id_name").prop('readonly', false);
+                    }
+                }
+
+                if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
+                    return;
+                }
+                // Define the rectangle and set its editable property to true.
+                var rectangle = new google.maps.Rectangle({
+                    bounds: bounds,
+                    editable: false,
+                    draggable: false
+                });
+                rectangle.setMap(coverageMap);
+                allShapes.push(rectangle);
+                zoomCoverageMap(bounds);
+                $("#resetZoomBtn").click(function () {
+                    zoomCoverageMap(bounds);
+                });
+            }
+        }
+        else {
+            if ($("#id_type_1").is(":checked")) {
+                drawRectangleOnTextChange();
+            }
+            else {
+                drawMarkerOnTextChange();
+            }
+        }
+        $("#id-coverage-spatial input:radio").change(function () {
+            if ($(this).val() == "point") {
+                $("#div_id_north").show();
+                $("#div_id_east").show();
+                $("#div_id_elevation").show();
+                $("#div_id_northlimit").hide();
+                $("#div_id_eastlimit").hide();
+                $("#div_id_southlimit").hide();
+                $("#div_id_westlimit").hide();
+                $("#div_id_uplimit").hide();
+                $("#div_id_downlimit").hide();
+                drawMarkerOnTextChange();
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
+            }
+            else {
+                $("#div_id_north").hide();
+                $("#div_id_east").hide();
+                $("#div_id_elevation").hide();
+                $("#div_id_northlimit").show();
+                $("#div_id_eastlimit").show();
+                $("#div_id_southlimit").show();
+                $("#div_id_westlimit").show();
+                $("#div_id_uplimit").show();
+                $("#div_id_downlimit").show();
+                drawRectangleOnTextChange();
+                drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
+            }
+            // Show save changes button
+            $("#coverage-spatial").find(".btn-primary").show();
+        });
+        if (sessionStorage.signininfo) {
+            $("#sign-in-info").text(sessionStorage.signininfo);
+            $("#btn-select-irods-file").show();
+        }
+}
 
 function initMap() {
     var shapeType;
@@ -52,6 +184,8 @@ function initMap() {
             position: google.maps.ControlPosition.TOP_RIGHT
         }
     });
+
+    drawInitialShape();
     if (!shapeType) {
         drawingManager = new google.maps.drawing.DrawingManager({
             drawingControl: true,
@@ -84,7 +218,13 @@ function initMap() {
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function (e) {
             allOverlays.push(e);
         });
+        google.maps.event.addListener(coverageMap, 'idle', function(){
+            // do something only the first time the map is loaded
+            console.log("Loaded");
+        });
     }
+
+
 }
 
 function drawMarkerOnTextChange(){

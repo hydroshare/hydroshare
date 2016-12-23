@@ -1042,6 +1042,10 @@ table.info-table td{
     padding-left:15px;
 }
 
+table.info-table {
+	margin-bottom: 20px;
+}
+
 #resourceSpecificTab{
     overflow-x:hidden;
 }
@@ -1317,13 +1321,10 @@ table.table-plain td{
     box-shadow: inset 0 1px 0 #ffffff;
 }
 
-#coverageTab{
+#coverageTab {
     overflow-x:hidden;
 }
 
-#coverageTab{
-    overflow-x:hidden;
-}
 .tab-elements > .tabs-body {
     min-height: 150px;
     border: 1px solid #ddd;
@@ -2256,6 +2257,11 @@ button.loading {
 .sharing-status-container > div {
 	margin-bottom: 20px;
 }
+
+#img-badge {
+	margin-bottom: 10px;
+}
+
 
 #coverageMap[data-mode="view"] {
 	width:100%;

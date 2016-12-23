@@ -1,3 +1,5 @@
+{% load geoanalytics_tags hydroshare_tags %}
+
 {% if not metadata_form %}
     <div class="col-lg-6 col-xs-12">
         <div class="row">
@@ -11,7 +13,7 @@
                                 ){% endif %}</small>
                         </div>
                         <div id="coverageMap" data-mode="view" data-shape-type="{{ spatial_coverage.type }}"></div>
-                        <i id="resetZoomBtn" class="glyphicon glyphicon-record map-component" data-toggle="tooltip"
+                        <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
                            data-placement="left" title="Recenter on selected area/point"></i>
                     </div>
 
@@ -267,35 +269,34 @@
                             {% csrf_token %}
                             <fieldset>
                                 <div class="row">
-
-
-                                    <div id="div_id_start" class="control-group col-xs-6">
+                                    <div id="div_id_start" class="control-group col-xs-4">
                                         <label for="id_start" class="control-label requiredField">
                                             Start Date<span class="asteriskField">*</span></label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm dateinput" id="id_start"
-                                                   name="start" type="text"
-                                                   value="{{ coverage_temporal_form.initial.start }}">
+                                                   name="start" type="text" data-date="{{ coverage_temporal_form.initial.start}}"
+                                                   >
                                         </div>
                                     </div>
-                                    <div id="div_id_end" class="control-group col-xs-6">
+                                    <div id="div_id_end" class="control-group col-xs-4">
                                         <label for="id_end" class="control-label requiredField">End
                                             Date<span class="asteriskField">*</span></label>
 
                                         <div class="controls">
                                             <input class="form-control input-sm dateinput" id="id_end"
-                                                   name="end" type="text"
-                                                   value="{{ coverage_temporal_form.initial.end }}">
+                                                   name="end" type="text" data-date="{{ coverage_temporal_form.initial.end }}"
+                                                   >
                                         </div>
-                                </div>
                                     </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
-                                            style="display: none;">Save changes
-                                    </button>
+                                    <div style="margin-top:20px" class="col-xs-4">
+                                        <button type="button" class="btn btn-primary pull-right"
+                                                onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
+                                                style="display: none;">Save changes
+                                        </button>
+                                    </div>
                                 </div>
+
                             </fieldset>
                         </form>
                     {% endif %}
