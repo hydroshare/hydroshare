@@ -216,7 +216,7 @@
 
             <div id="user-permission-msg">
                 {% if is_owner_user %}
-                    <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
+                    <div class="alert alert-info" role="alert"><i class="fa fa-lock" aria-hidden="true"></i> You are the owner of this resource.</div>
                 {% elif is_edit_user %}
                     <div class="alert alert-info" role="alert">You have been given specific permission to
                         {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>

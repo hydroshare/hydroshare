@@ -29,20 +29,20 @@ $(document).ready(function () {
             yearRange: "-1000:+1000",
             changeMonth: true,
             changeYear: true,
-            showAnim: "slideDown",
+            showAnim: "slideDown"
         });
         $(this).on('change', function () {
             $(this).closest("form").find("button").show();
         });
     });
 
-    // Format and set stored dates
+    // Set stored dates
     $(".dateinput").each(function () {
         var date = new Date($(this).attr("data-date"));
-        $(this).datepicker("setDate", date);
+        $(this).datepicker("setDate", date);    // Date format already set in widget. No need to format it.
     });
 
-    // Format and set stored dates
+    // Format and display dates in view mode
     $(".format-date").each(function () {
         var date = new Date($(this).attr("data-date"));
         $(this).text(date.getMonth() + "/" + date.getDate() + "/" + date.getFullYear());
@@ -50,8 +50,6 @@ $(document).ready(function () {
 });
 
 function drawInitialShape() {
-        google.maps.event.addDomListener(window, "load", initMap);
-
         // This field is populated if the page is in view mode
         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
 
