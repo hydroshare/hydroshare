@@ -129,6 +129,7 @@ class TestCaseCommonUtilities(object):
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[2],
                                       'data/contents/new_' + file_name_list[2])
+
         # move the first two files in file_name_list to the new folder
         move_or_rename_file_or_folder(user, res.short_id,
                                       'data/contents/' + file_name_list[0],
@@ -202,6 +203,8 @@ class TestCaseCommonUtilities(object):
                                           str(file_cnt) + " != 3")
 
         # test unzipping the file succeeds now after deleting the existing file
+        # TODO: this causes a multiple delete because the
+        # TODO: paths are valid now. 
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()

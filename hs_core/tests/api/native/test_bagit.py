@@ -44,6 +44,7 @@ class TestBagIt(TestCase):
     def test_create_bag_files(self):
         # this is the api call we are testing
         irods_storage_obj = hs_bagit.create_bag_files(self.test_res)
+        print(type(irods_storage_obj))
         self.assertTrue(isinstance(irods_storage_obj, IrodsStorage))
 
     def test_create_bag_by_irods(self):

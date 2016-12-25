@@ -461,7 +461,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
-                               fed_copy_or_move=fed_copy_or_move, fed_zone_home_path=fed_zone_home_path)
+                               fed_copy_or_move=fed_copy_or_move)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)

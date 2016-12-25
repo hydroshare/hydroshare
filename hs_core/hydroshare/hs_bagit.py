@@ -32,21 +32,14 @@ def delete_bag(resource):
     """
     res_id = resource.short_id
 
-    res_path = res_id
-    bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_path = '{}/{}'.format(resource.resource_federation_path, res_path)
-        bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
-    else:
-        istorage = IrodsStorage()
-    # delete resource directory first to remove all generated bag-related files for the resource
-    istorage.delete(res_path)
+    istorage = resource.get_irods_storage()
 
-    # the resource bag may not exist due to on-demand bagging
-    if istorage.exists(bagname):
-        # delete the resource bag
-        istorage.delete(bagname)
+    # delete resource directory first to remove all generated bag-related files for the resource
+    if istorage.exists(resource.root_path): 
+        istorage.delete(resource.root_path)
+
+    if istorage.exists(resource.bag_path):
+        istorage.delete(resource.bag_path)
 
     # delete the bags table
     for bag in resource.bags.all():

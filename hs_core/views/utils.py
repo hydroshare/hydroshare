@@ -25,7 +25,8 @@ from ga_resources.utils import get_user
 
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
+from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, \
+                           ResourceFile, get_resource_path
 from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
@@ -415,7 +416,7 @@ def link_irods_file_to_django(resource, filename, size=0):
         folder, base = os.path.split(filename)
         try:
             ResourceFile.get(resource=resource, file=base, folder=folder)
-        except NotFound:
+        except ObjectDoesNotExist:
             # this does not copy the file from anywhere; it must exist already
             ResourceFile.create(resource=resource, file=base, folder=folder)
             b_add_file = True
@@ -459,24 +460,28 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     :param tgt_name: the file or folder full path name to be renamed to
     :return:
     """
+    # checks src_name as a side effect.
     folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
                                                             test_exists=False)
     try:
         res_file_obj = ResourceFile.get(resource=resource, file=base, folder=folder)
-        # have to delete the original one and create the new one;
-        # direct replacement does not work
-        res_file_obj.delete()  # does not delete file itself
-        folder, base = ResourceFile.resource_path_is_acceptable(resource, tgt_name)
-        ResourceFile.create(resource=resource, file=base, folder=folder)
+        # checks tgt_name as a side effect.
+        ResourceFile.resource_path_is_acceptable(resource, tgt_name,
+                                                 test_exists=True)
+        res_file_obj.set_storage_path(tgt_name)
 
+    # TODO: it is possible that the source is not found and the
+    # task is not to rename a directory.  This renames the directory anyway.
     except NotFound:
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list(resource, src_name)
+
         for fobj in res_file_objs:
-            fobj.delete()
-            folder, base = ResourceFile.resource_path_is_acceptable(resource, tgt_name,
-                                                                    test_exists=False)
-            ResourceFile.create(resource=resource, file=base, folder=folder)
+            src_path = fobj.storage_path
+            # replace src_name with tgt_name
+
+            new_path = src_path.replace(src_name, tgt_name, 1)
+            fobj.set_storage_path(new_path)
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername):
@@ -630,6 +635,10 @@ def list_folder(res_id, folder_path):
     return istorage.listdir(coll_path)
 
 
+# TODO: this doesn't take short paths
+# TODO: It takes full paths including data/contents. 
+# TODO: Thus the renaming must be adjusted. 
+
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
@@ -657,6 +666,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
 
     istorage.moveFile(src_full_path, tgt_full_path)
 
+    # TODO: this takes a full path, not a partial path. 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)
