@@ -1489,6 +1489,7 @@ class AbstractResource(ResourcePermissionsMixin):
         To disallow all file upload, return an empty tuple ( return ())
 
         By default all file types are supported
+        """
         return (".*",)
 
     @classmethod

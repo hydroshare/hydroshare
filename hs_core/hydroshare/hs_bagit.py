@@ -32,9 +32,12 @@ def delete_bag(resource):
     """
     res_id = resource.short_id
 
+    # TODO: resource.get_storage would be easier to remember. 
     istorage = resource.get_irods_storage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
+    # TODO: this will cause a cascade delete problem with the resource. 
+    # TODO: We need to revise resource deletion  or decide not to do this. 
     if istorage.exists(resource.root_path): 
         istorage.delete(resource.root_path)
 
@@ -42,10 +45,12 @@ def delete_bag(resource):
         istorage.delete(resource.bag_path)
 
     # delete the bags table
+    # TODO: what is this for? Why were extra bags created in the first place?
     for bag in resource.bags.all():
         bag.delete()
 
 
+# TODO: remove the federated zone home path; it is determined by the resource 
 def create_bag_files(resource, fed_zone_home_path=''):
     """
     create and update files needed by bagit operation that is conducted on iRODS server; no bagit
@@ -61,21 +66,23 @@ def create_bag_files(resource, fed_zone_home_path=''):
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
 
-    if fed_zone_home_path:
-        istorage = IrodsStorage('federated')
-    else:
-        istorage = IrodsStorage()
+    istorage = resource.get_irods_storage()
 
     # has to make bagit_path unique even for the same resource with same update time
     # to accommodate asynchronous multiple file move operations for the same resource
-    bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+    # TODO: This should be a method in Resource. 
+    # TODO: This disagrees with the permanent bag storage path. 
+    temp_bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+
+    # TODO: this causes a potential race condition if two people try to run the bagit code
+    # TODO: at the same time. Encapsulate in Resource. 
 
     try:
-        os.makedirs(bagit_path)
+        os.makedirs(temp_bagit_path)
     except OSError as ex:
         if ex.errno == errno.EEXIST:
-            shutil.rmtree(bagit_path)
-            os.makedirs(bagit_path)
+            shutil.rmtree(temp_bagit_path)
+            os.makedirs(temp_bagit_path)
         else:
             raise Exception(ex.message)
 
@@ -88,22 +95,25 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # istorage.saveFile('', to_file_name, create_directory=True)
 
     # create resourcemetadata.xml and upload it to iRODS
-    from_file_name = '{path}/resourcemetadata.xml'.format(path=bagit_path)
+    from_file_name = os.path.join(temp_bagit_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         out.write(resource.metadata.get_xml())
 
-    to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-                            fed_zone_home_path=fed_zone_home_path,
-                            rel_path=to_file_name)
+    # TODO: this conflicts with the location of resourcemetadata.xml in other files. 
+    # TODO: I conclude that it is a temporary location. 
+    # TODO: we need an arbitrary hashed filename to avoid race conditions. 
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
+    # This is the URL of the whole site. 
+    # TODO: move this to BaseResource. 
     current_site_url = current_site_url()
-    hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
-                                                          res_id=resource.short_id)
+    # This is the qualified resource url. 
+    hs_res_url = os.path.join(current_site_url, 'resource', resource.short_id, 'data')
+    # this is the path to the resourcemedata file for download 
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
+    # this is the path to the resourcemap file for download 
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     # make the resource map:
@@ -142,18 +152,12 @@ def create_bag_files(resource, fed_zone_home_path=''):
         prefix_len = len(prefix_str)
 
         file_name_with_rel_path = ''
-        if f.fed_resource_file_name_or_path:
-            # move or copy the file under the user account to under local hydro proxy account
-            # in federated zone
-            idx = f.fed_resource_file_name_or_path.find(prefix_str)
-            if idx >= 0:
-                file_name_with_rel_path = f.fed_resource_file_name_or_path[idx+prefix_len:]
-        elif f.resource_file:
-            idx = f.resource_file.name.find(prefix_str)
-            file_name_with_rel_path = f.resource_file.name[idx+prefix_len:]
-        elif f.fed_resource_file:
-            idx = f.fed_resource_file.name.find(prefix_str)
-            file_name_with_rel_path = f.fed_resource_file.name[idx+prefix_len:]
+        # TODO: refactor to utilize root path name 
+        # move or copy the file under the user account to under local hydro proxy account
+        # in federated zone
+        idx = f.resource.root_path.find(prefix_str)
+        if idx >= 0:
+            file_name_with_rel_path = f.fed_resource_file_name_or_path[idx+prefix_len:]
 
         if file_name_with_rel_path:
             res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
