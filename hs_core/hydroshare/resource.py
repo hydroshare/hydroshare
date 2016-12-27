@@ -351,7 +351,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), fed_res_file_names='', fed_res_path='', fed_copy_or_move=None,
+        files=(), source_names='', fed_res_path='', fed_copy_or_move=None,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
@@ -397,7 +397,7 @@ def create_resource(
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param extra_metadata: one dict containing keys and corresponding values { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
-    :param fed_res_file_names: the file names separated by comma from a federated zone to be
+    :param source_names: the file names separated by comma from a federated zone to be
                                used to create the resource in the federated zone, default is empty string
     :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
                          indicate where the resource is stored, default is empty string
@@ -443,9 +443,9 @@ def create_resource(
             resource.resource_federation_path = fed_res_path
             resource.save()
         # TODO: not good to default this from file names; they could differ in paths!
-        # TODO: this option should be eliminated. 
-        elif fed_res_file_names:
-            fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names[0])
+        # TODO: this option should be eliminated. Require explicit zone path
+        elif source_names:
+            fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
             resource.resource_federation_path = fed_zone_home_path
             resource.save()
 
@@ -460,7 +460,7 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
+            add_resource_files(resource.short_id, *files, source_names=source_names,
                                fed_copy_or_move=fed_copy_or_move)
 
         # by default resource is private
@@ -742,7 +742,7 @@ def add_resource_files(pk, *files, **kwargs):
     resource = utils.get_resource_by_shortkey(pk)
     # TODO: rename this parameter. It has little to do with federation. 
     # It could be used for local user files. 
-    fed_res_file_names=kwargs.pop('fed_res_file_names', '')
+    source_names=kwargs.pop('source_names', '')
     ret = []
     # for adding files to existing resources, the default action is copy
     # TODO: ditto here: this can be used for federated or unfederated files. 
@@ -753,20 +753,20 @@ def add_resource_files(pk, *files, **kwargs):
 
     for f in files: 
         ret.append(utils.add_file_to_resource(resource, f, folder=folder))
-    if fed_res_file_names:
+    if source_names:
         # TODO: this is unnecessary complexity; pass a list. File names can contain ','!
-        if isinstance(fed_res_file_names, basestring):
-            ifnames = string.split(fed_res_file_names, ',')
-        elif isinstance(fed_res_file_names, list):
-            ifnames = fed_res_file_names
+        if isinstance(source_names, basestring):
+            ifnames = string.split(source_names, ',')
+        elif isinstance(source_names, list):
+            ifnames = source_names
         else:
             return ret
         for ifname in ifnames:
-            # TODO: fed_res_file_name_or_path --> "source" or "source path" 
-            # TODO: fed_copy_or_move --> copy_or_move 
-            ret.append(utils.add_file_to_resource(resource, None, folder=folder, 
-                                                  fed_res_file_name_or_path=ifname,
-                                                  fed_copy_or_move=fed_copy_or_move))
+	    move = (fed_copy_or_move == 'move') 
+            ret.append(utils.add_file_to_resource(resource, None, 
+						  folder=folder, 
+                                                  source=ifname,
+                                                  move=move))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
