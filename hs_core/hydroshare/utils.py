@@ -477,7 +477,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
+        create_bag_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
@@ -758,8 +758,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               fed_res_file_names=fed_res_file_names,
-                                               fed_zone_home_path=resource.resource_federation_path)
+                                               fed_res_file_names=fed_res_file_names)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file

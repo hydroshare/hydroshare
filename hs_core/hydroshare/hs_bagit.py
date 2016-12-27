@@ -35,9 +35,10 @@ def delete_bag(resource):
     # TODO: resource.get_storage would be easier to remember. 
     istorage = resource.get_irods_storage()
 
-    # delete resource directory first to remove all generated bag-related files for the resource
+    # delete resource directory first to remove all generated bag-related 
+    # files for the resource
     # TODO: this will cause a cascade delete problem with the resource. 
-    # TODO: We need to revise resource deletion  or decide not to do this. 
+    # TODO: determine what files are actually deleted other than ResourceFiles.
     if istorage.exists(resource.root_path): 
         istorage.delete(resource.root_path)
 
@@ -51,16 +52,15 @@ def delete_bag(resource):
 
 
 # TODO: remove the federated zone home path; it is determined by the resource 
-def create_bag_files(resource, fed_zone_home_path=''):
+def create_bag_files(resource):
     """
-    create and update files needed by bagit operation that is conducted on iRODS server; no bagit
-    operation is performed, only files that will be included in the bag are created or updated.
+    create and update files needed by bagit operation that is conducted on iRODS server; 
+    no bagit operation is performed, only files that will be included in the bag are created 
+    or updated.
 
     Parameters:
     :param resource: A resource whose files will be created or updated to be included in the
     resource bag.
-    :param fed_zone_home_path: Optional, A passed-in non-empty value that indicates that the
-    resource needs to be created in a federated zone rather than in the default hydroshare zone.
     :return: istorage, an IrodsStorage object that will be used by subsequent operation to
     create a bag on demand as needed.
     """
@@ -207,19 +207,13 @@ def create_bag_files(resource, fed_zone_home_path=''):
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
-    to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=to_file_name)
-
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
-
     shutil.rmtree(bagit_path)
     return istorage
 
 
-def create_bag(resource, fed_zone_home_path=''):
+def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from
     the current filesystem of the resource, then zip it up and add it to the resource. The new
@@ -232,23 +226,14 @@ def create_bag(resource, fed_zone_home_path=''):
 
     Parameters:
     :param resource: (subclass of AbstractResource) A resource to create a bag for.
-           fed_zone_home_path: default is empty indicating the resource bag should be created and
-                               stored in the default hydroshare zone; a non-empty string value
-                               indicates the absolute logical home path for the federated zone where
-                               the new created bag should be stored in
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
 
-    istorage = create_bag_files(resource, fed_zone_home_path)
+    istorage = create_bag_files(resource)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
     # created when user clicks on download button
-    if fed_zone_home_path:
-        to_coll_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=resource.short_id)
-    else:
-        to_coll_name = resource.short_id
+    to_coll_name = resource.root_path 
 
     istorage.setAVU(to_coll_name, "bag_modified", "true")
 

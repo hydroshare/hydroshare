@@ -440,10 +440,10 @@ def create_resource(
 
         fed_zone_home_path = ''
         if fed_res_path:
-            fed_zone_home_path = fed_res_path
             resource.resource_federation_path = fed_res_path
             resource.save()
         # TODO: not good to default this from file names; they could differ in paths!
+        # TODO: this option should be eliminated. 
         elif fed_res_file_names:
             fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names[0])
             resource.resource_federation_path = fed_zone_home_path
@@ -508,7 +508,7 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
         if create_bag:
-            hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path)
+            hs_bagit.create_bag(resource)
     return resource
 
 
