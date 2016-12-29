@@ -17,7 +17,7 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
-from django_irods.icommands import SessionException
+# from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
@@ -1532,23 +1532,23 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 
-# TODO: change to get_resourcefile_path 
+# TODO: change to get_resourcefile_path
 def get_path(instance, filename, folder=None):
     """
     Get a path from a ResourceFile, filename, and folder
 
-    :param instance: instance of ResourceFile to use 
-    :param filename: file name to use (without folder) 
+    :param instance: instance of ResourceFile to use
+    :param filename: file name to use (without folder)
     :param folder: can override folder for ResourceFile instance
 
-    The filename is only a single name. This routine converts it to an absolute 
-    path that can be federated or local.  The instance points to the Resource record, 
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local.  The instance points to the Resource record,
     which contains the federation path. The folder in the instance will be used unless
-    overridden. 
+    overridden.
 
-    Note: this does not change the default behavior. 
-    Thus it can be used to compute a new path for file that 
-    one wishes to move. 
+    Note: this does not change the default behavior.
+    Thus it can be used to compute a new path for file that
+    one wishes to move.
     """
     if not folder:
         folder = instance.file_folder
@@ -1559,13 +1559,13 @@ def get_resource_path(resource, filename, folder=None):
     """
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
-    :param resource: resource containing the file. 
-    :param filename: name of file without folder. 
-    :param folder: folder of file 
+    :param resource: resource containing the file.
+    :param filename: name of file without folder.
+    :param folder: folder of file
 
-    The filename is only a single name. This routine converts it to an absolute 
-    path that can be federated or local. The resource contains information on how 
-    to do this. 
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local. The resource contains information on how
+    to do this.
 
     """
     # retrieve federation path -- if any -- from Resource object containing the file
@@ -1575,10 +1575,10 @@ def get_resource_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return os.path.join(self.file_path, folder, filename)
+        return os.path.join(resource.file_path, folder, filename)
     else:
         # use root folder
-        return os.path.join(self.file_path, filename)
+        return os.path.join(resource.file_path, filename)
 
 
 def _path_is_allowed(path):
@@ -1613,7 +1613,7 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    # This is used to direct uploads to a subfolder of the root folder for the resource. 
+    # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_path above.
     file_folder = models.CharField(max_length=4096, null=True)
 
@@ -1652,9 +1652,9 @@ class ResourceFile(models.Model):
                 ResourceFile.create(resource=r, file=name, folder=d, source=s, move=True)
           or
                 ResourceFile.create(resource=r, file=name, folder=d, source=s, move=False)
-        
+
         In this case, source is a full iRODS pathname of the place from which to copy or move
-        the file. The default is to copy the file and leave a copy in place. 
+        the file. The default is to copy the file and leave a copy in place.
 
         A third form is less common and presumes that the file already exists in iRODS:
 
@@ -1703,10 +1703,10 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
-    # # This is no longer needed. 
+    # # This is no longer needed.
     # # Semantics are cascade delete.
-    # # However, there is no delete for the directory in which the 
-    # # resource files are stored. This must be handled at the resource level. 
+    # # However, there is no delete for the directory in which the
+    # # resource files are stored. This must be handled at the resource level.
     # def delete(self):
     #     """ Delete a resource file record and the file contents """
     #     if __debug__:
@@ -2144,7 +2144,7 @@ class BaseResource(Page, AbstractResource):
         Return the total size of all data files in iRODS.
 
         This size does not include metadata. Just files. Specifically,
-        resourcemetadata.xml, systemmetadata.xml are not included in this 
+        resourcemetadata.xml, systemmetadata.xml are not included in this
         size estimate.
         """
         f_sizes = [f.resource_file.size
@@ -2159,7 +2159,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def can_be_published(self):
         """
-        Determine when data and metadata are complete enough for the resource to be published. 
+        Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for
         publication such as the Web App resource
@@ -2170,37 +2170,37 @@ class BaseResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         """
-        Get supported upload types for a resource. 
+        Get supported upload types for a resource.
 
         This can be overridden to choose which types of file can be uploaded by a subclass.
 
         By default, all file types are supported
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return ('.*')
 
     @classmethod
     def can_have_multiple_files(cls):
         """
-        Return True if multiple files can be uploaded. 
-        
+        Return True if multiple files can be uploaded.
+
         This can be overridden to choose how many files can be uploaded by a subclass.
 
-        By default, uploads are not limited. 
+        By default, uploads are not limited.
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return True
 
     @classmethod
     def can_have_files(cls):
         """
-        Return whether the resource supports files at all. 
+        Return whether the resource supports files at all.
 
         This can be overridden to choose whether files can be uploaded by a subclass.
-        
-        By default, uploads are allowed. 
+
+        By default, uploads are allowed.
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return True
 
     def get_hs_term_dict(self):
