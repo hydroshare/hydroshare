@@ -17,7 +17,7 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
-from django_irods.icommands import SessionException
+# from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
@@ -1277,6 +1277,9 @@ class AbstractResource(ResourcePermissionsMixin):
         """ returns whether folder operations are supported. Computed for polymorphic types"""
         return False
 
+    # TODO: Why isn't this a regular method? Why does it need to be a class method?
+    # It would seem to me that one only creates a bag after a resource has been created,
+    # so that this would be an instance method....
     @classmethod
     def bag_url(cls, resource_id):
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
@@ -1284,8 +1287,9 @@ class AbstractResource(ResourcePermissionsMixin):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
-        # TODO: not federated
-        istorage = IrodsStorage()
+        # type resolution is not relevant; grab base class instance. 
+        res = BaseResource.objects.get(short_id=resource_id) 
+        istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
 
         return bag_url
@@ -1296,12 +1300,17 @@ class AbstractResource(ResourcePermissionsMixin):
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
+    # TODO: there are too many ways to get to the resourcemap.
+    # 1. {id}/data/resourcemap.xml
+    # 2. {id}/resmap
+    # Choose one!
     @classmethod
     def resmap_url(cls, resource_id):
         resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
         resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
         return resmap_url
 
+    # TODO: this is inaccurate; resourcemap.xml != systemmetadata.xml
     @classmethod
     def sysmeta_path(cls, resource_id):
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
@@ -1309,31 +1318,34 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            if fl.fed_resource_file_name_or_path:
-                istorage = FedStorage()
-                if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
-                    istorage.delete('{}/{}'.format(self.resource_federation_path,
-                                                   fl.fed_resource_file_name_or_path))
-                else:
-                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
-                                                      self.short_id,
-                                                      fl.fed_resource_file_name_or_path))
-            elif fl.resource_file:
-                fl.resource_file.delete()
-            elif fl.fed_resource_file:
-                fl.fed_resource_file.delete()
+            # These deletes should now cascade properly.
+            # if fl.fed_resource_file_name_or_path:
+            #     istorage = FedStorage()
+            #     if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
+            #         istorage.delete('{}/{}'.format(self.resource_federation_path,
+            #                                        fl.fed_resource_file_name_or_path))
+            #     else:
+            #         istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
+            #                                           self.short_id,
+            #                                           fl.fed_resource_file_name_or_path))
+            # elif fl.resource_file:
+            #     fl.resource_file.delete()
+            # elif fl.fed_resource_file:
+            #     fl.fed_resource_file.delete()
             fl.delete()
         hs_bagit.delete_bag(self)
-
         self.metadata.delete_all_elements()
         self.metadata.delete()
-
         super(AbstractResource, self).delete()
 
-    # this property needs to be overriden by any specific resource type
-    # that needs additional metadata elements on top of core metadata data elements
     @property
     def metadata(self):
+        """
+        Return a pointer to the metadata object for this resource.
+
+        This object can vary based upon resource type. Please override this function to
+        return the appropriate object for each resource type.
+        """
         md = CoreMetaData()  # only this line needs to be changed when you override
         return self._get_metadata(md)
 
@@ -1532,23 +1544,23 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 
-# TODO: change to get_resourcefile_path 
+# TODO: change to get_resourcefile_path
 def get_path(instance, filename, folder=None):
     """
     Get a path from a ResourceFile, filename, and folder
 
-    :param instance: instance of ResourceFile to use 
-    :param filename: file name to use (without folder) 
+    :param instance: instance of ResourceFile to use
+    :param filename: file name to use (without folder)
     :param folder: can override folder for ResourceFile instance
 
-    The filename is only a single name. This routine converts it to an absolute 
-    path that can be federated or local.  The instance points to the Resource record, 
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local.  The instance points to the Resource record,
     which contains the federation path. The folder in the instance will be used unless
-    overridden. 
+    overridden.
 
-    Note: this does not change the default behavior. 
-    Thus it can be used to compute a new path for file that 
-    one wishes to move. 
+    Note: this does not change the default behavior.
+    Thus it can be used to compute a new path for file that
+    one wishes to move.
     """
     if not folder:
         folder = instance.file_folder
@@ -1559,13 +1571,13 @@ def get_resource_path(resource, filename, folder=None):
     """
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
-    :param resource: resource containing the file. 
-    :param filename: name of file without folder. 
-    :param folder: folder of file 
+    :param resource: resource containing the file.
+    :param filename: name of file without folder.
+    :param folder: folder of file
 
-    The filename is only a single name. This routine converts it to an absolute 
-    path that can be federated or local. The resource contains information on how 
-    to do this. 
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local. The resource contains information on how
+    to do this.
 
     """
     # retrieve federation path -- if any -- from Resource object containing the file
@@ -1575,10 +1587,10 @@ def get_resource_path(resource, filename, folder=None):
     # otherwise, it is an unqualified name.
     if folder is not None:
         # use subfolder
-        return os.path.join(self.file_path, folder, filename)
+        return os.path.join(resource.file_path, folder, filename)
     else:
         # use root folder
-        return os.path.join(self.file_path, filename)
+        return os.path.join(resource.file_path, filename)
 
 
 def _path_is_allowed(path):
@@ -1613,7 +1625,7 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    # This is used to direct uploads to a subfolder of the root folder for the resource. 
+    # This is used to direct uploads to a subfolder of the root folder for the resource.
     # See get_path and get_resource_path above.
     file_folder = models.CharField(max_length=4096, null=True)
 
@@ -1652,9 +1664,9 @@ class ResourceFile(models.Model):
                 ResourceFile.create(resource=r, file=name, folder=d, source=s, move=True)
           or
                 ResourceFile.create(resource=r, file=name, folder=d, source=s, move=False)
-        
+
         In this case, source is a full iRODS pathname of the place from which to copy or move
-        the file. The default is to copy the file and leave a copy in place. 
+        the file. The default is to copy the file and leave a copy in place.
 
         A third form is less common and presumes that the file already exists in iRODS:
 
@@ -1703,10 +1715,10 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
-    # # This is no longer needed. 
+    # # This is no longer needed.
     # # Semantics are cascade delete.
-    # # However, there is no delete for the directory in which the 
-    # # resource files are stored. This must be handled at the resource level. 
+    # # However, there is no delete for the directory in which the
+    # # resource files are stored. This must be handled at the resource level.
     # def delete(self):
     #     """ Delete a resource file record and the file contents """
     #     if __debug__:
@@ -2050,11 +2062,11 @@ class BaseResource(Page, AbstractResource):
         return self.resource_federation_path is not None and \
                self.resource_federation_path != ''
 
+    # Paths relative to the resource
     @property
     def root_path(self):
         """
-        Return the root folder of the iRODS structure containing
-        resource files
+        Return the root folder of the iRODS structure containing resource files
 
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
@@ -2071,6 +2083,17 @@ class BaseResource(Page, AbstractResource):
         """
         return os.path.join(self.root_path, "data", "contents")
 
+    # These are currently classmethods
+    # @property
+    # def scimeta_path(self):
+    #     """ path to science metadata file (in iRODS) """
+    #     return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+
+    # @property
+    # def sysmeta_path(self):
+    #     """ path to system metadata file (in iRODS) """
+    #     return os.path.join(self.root_path, "data", "systemmetadata.xml")
+
     @property
     def bag_path(self):
         """
@@ -2082,6 +2105,28 @@ class BaseResource(Page, AbstractResource):
             return os.path.join(self.resource_federation_path, "bags", self.short_id + '.zip')
         else:
             return os.path.join("bags", self.short_id + '.zip')
+
+    # URIs relative to resource
+    # these are independent of federation strategy
+    # TODO: utilize "reverse" abstraction to tie this to urls.py for robustness
+
+    # add these one by one to avoid errors. 
+
+    # @property
+    # def root_uri(self):
+    #     pass
+
+    # @property
+    # def scimeta_uri(self):
+    #     return os.path.join(self.root_uri, 'scimeta')
+
+    # @property
+    # def sysmeta_uri(self):
+    #     return os.path.join(self.root_uri, 'sysmeta')
+
+    # @property
+    # def file_uri(self):
+    #     return os.path.join(self.root_uri, 'files')
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
@@ -2144,7 +2189,7 @@ class BaseResource(Page, AbstractResource):
         Return the total size of all data files in iRODS.
 
         This size does not include metadata. Just files. Specifically,
-        resourcemetadata.xml, systemmetadata.xml are not included in this 
+        resourcemetadata.xml, systemmetadata.xml are not included in this
         size estimate.
         """
         f_sizes = [f.resource_file.size
@@ -2159,7 +2204,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def can_be_published(self):
         """
-        Determine when data and metadata are complete enough for the resource to be published. 
+        Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for
         publication such as the Web App resource
@@ -2170,37 +2215,37 @@ class BaseResource(Page, AbstractResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         """
-        Get supported upload types for a resource. 
+        Get supported upload types for a resource.
 
         This can be overridden to choose which types of file can be uploaded by a subclass.
 
         By default, all file types are supported
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return ('.*')
 
     @classmethod
     def can_have_multiple_files(cls):
         """
-        Return True if multiple files can be uploaded. 
-        
+        Return True if multiple files can be uploaded.
+
         This can be overridden to choose how many files can be uploaded by a subclass.
 
-        By default, uploads are not limited. 
+        By default, uploads are not limited.
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return True
 
     @classmethod
     def can_have_files(cls):
         """
-        Return whether the resource supports files at all. 
+        Return whether the resource supports files at all.
 
         This can be overridden to choose whether files can be uploaded by a subclass.
-        
-        By default, uploads are allowed. 
+
+        By default, uploads are allowed.
         """
-        # TODO: this should be replaced by an instance method. 
+        # TODO: this should be replaced by an instance method.
         return True
 
     def get_hs_term_dict(self):

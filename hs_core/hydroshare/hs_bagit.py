@@ -204,18 +204,12 @@ def create_bag_files(resource, fed_zone_home_path=''):
         '<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
 
     # create resourcemap.xml and upload it to iRODS
-    from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
+    from_file_name = os.path.join(temp_bagit_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
-    to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=to_file_name)
-
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
-
-    shutil.rmtree(bagit_path)
+    shutil.rmtree(temp_bagit_path)
     return istorage
 
 

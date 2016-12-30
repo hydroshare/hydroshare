@@ -188,7 +188,8 @@ def get_federated_zone_home_path(filepath):
     else:
         return ''
 
-
+# TODO: this is replaced with ResourceFile.size, which works for 
+# both federated and unfederated resources 
 def get_fed_zone_file_size(fname):
     """
     Get size of a data object from iRODS user zone
@@ -202,7 +203,9 @@ def get_fed_zone_file_size(fname):
     irods_storage = IrodsStorage('federated')
     return irods_storage.size(fname)
 
-
+# TODO: replace with BaseResource.get_files, which wil copy files to a local zone 
+# and keep track of them there. Local cache variable records where they are stored
+# in ResourceFile. 
 def get_fed_zone_files(irods_fnames):
     """
     Get the files from iRODS federated zone to Django server for metadata extraction on-demand
@@ -239,6 +242,7 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
+# TODO: make the local cache file part of the ResourceFile state?
 def get_file_from_irods(res_file):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
@@ -282,6 +286,7 @@ def get_file_from_irods(res_file):
     return copied_file
 
 
+# TODO: should be ResourceFile.replace
 def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
     Replaces the specified resource file with file (new_file) by copying to iRODS
@@ -309,6 +314,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     resource_modified(ori_res, by_user=user, overwrite_bag=False)
 
 
+# TODO: should be inside ResourceFile, and federation logic should be transparent. 
 def get_resource_file_name_and_extension(res_file):
     """
     Gets the full file name with path, file base name, and extension of the specified resource file
@@ -330,6 +336,7 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
+# TODO: should be method of ResourceFile 
 def get_resource_file_url(res_file):
     """
     Gets the download url of the specified resource file
@@ -349,6 +356,7 @@ def get_resource_file_url(res_file):
     return f_url
 
 
+# TODO: should be classmethod of ResourceFile
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
     for res_file in resource.files.all():
@@ -358,6 +366,7 @@ def get_resource_files_by_extension(resource, file_extension):
     return matching_files
 
 
+# TODO: unnecessary since delete now cascades. 
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
@@ -402,9 +411,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:
         istorage.set_fed_zone_session()
-    src_file = 'bags/{resid}.zip'.format(resid=res_id)
-    if res.resource_federation_path:
-        src_file = os.path.join(res.resource_federation_path, src_file)
+    src_file = res.bag_path
+    # TODO: property of user 
     tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
         userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
@@ -465,7 +473,15 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 istorage.setAVU(dest_coll, avu_name, value)
 
 
+# TODO: should be BaseResource.mark_as_modified. 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
+    """ 
+    Set an AVU flag that forces the bag to be recreated before fetch. 
+
+    This indicates that some content of the bag has been edited. 
+
+    """
+
     resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
@@ -484,9 +500,16 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     set_dirty_bag_flag(resource)
 
 
+# TODO: should be part of BaseResource
 def set_dirty_bag_flag(resource):
-    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
-    # the resource is modified for on-demand bagging.
+    """
+    Set bag_modified=true AVU pair for the modified resource in iRODS 
+    to indicate that the resource is modified for on-demand bagging.
+
+    This is done so that the bag creation can be "lazy", in the sense that the 
+    bag is recreated only after multiple changes to the bag files, rather than 
+    after each change. It is created when someone attempts to download it. 
+    """
     res_coll = resource.short_id
     if resource.resource_federation_path:
         istorage = IrodsStorage('federated')
@@ -758,8 +781,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     from .resource import add_resource_files
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               fed_res_file_names=fed_res_file_names,
-                                               fed_zone_home_path=resource.resource_federation_path)
+                                               fed_res_file_names=fed_res_file_names)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
@@ -776,15 +798,10 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     return resource_file_objects
 
 
+# TODO: move this to BaseResource
 def create_empty_contents_directory(resource):
-    res_id = resource.short_id
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_contents_dir = '{}/{}/data/contents'.format(resource.resource_federation_path,
-                                                        res_id)
-    else:
-        istorage = IrodsStorage()
-        res_contents_dir = '{}/data/contents'.format(res_id)
+    res_contents_dir = resource.file_path 
+    istorage = resource.get_irods_storage() 
     if not istorage.exists(res_contents_dir):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
