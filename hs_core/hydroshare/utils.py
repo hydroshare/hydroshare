@@ -493,7 +493,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
+        create_bag_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
@@ -613,7 +613,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
-                                files=(), fed_res_file_names='', metadata=None,
+                                files=(), source_names='', metadata=None,
                                 requesting_user=None, **kwargs):
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
@@ -639,7 +639,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     page_url_dict = {}
     # this is needed since raster and feature resource types allows to upload a zip file,
     # then replace zip file with exploded files. If the zip file is loaded from hydroshare
-    # federation zone, the original zip file encoded in fed_res_file_names gets deleted
+    # federation zone, the original zip file encoded in source_names gets deleted
     # in this case and fed_res_path is used to keep the federation path, so that the resource
     # will be stored in the federated zone rather than the hydroshare zone
     fed_res_path = []
@@ -654,7 +654,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                              title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
                              validate_files=file_validation_dict,
-                             fed_res_file_names=fed_res_file_names,
+                             source_names=source_names,
                              user=requesting_user, fed_res_path=fed_res_path, **kwargs)
 
     if len(files) > 0:
@@ -760,7 +760,7 @@ def get_party_data_from_user(user):
 
 
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
-                                  fed_res_file_names='', **kwargs):
+                                  source_names='', **kwargs):
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -768,7 +768,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
-                                   fed_res_file_names=fed_res_file_names,
+                                   source_names=source_names,
                                    validate_files=file_validation_dict,
                                    extract_metadata=extract_metadata, **kwargs)
 
@@ -776,18 +776,18 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 
 def resource_file_add_process(resource, files, user, extract_metadata=False,
-                              fed_res_file_names='', **kwargs):
+                              source_names='', **kwargs):
 
     from .resource import add_resource_files
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               fed_res_file_names=fed_res_file_names)
+                                               source_names=source_names)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     post_add_files_to_resource.send(sender=resource.__class__, files=files,
-                                    fed_res_file_names=fed_res_file_names,
+                                    source_names=source_names,
                                     resource=resource, user=user,
                                     validate_files=file_validation_dict,
                                     extract_metadata=extract_metadata, **kwargs)

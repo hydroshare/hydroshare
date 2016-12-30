@@ -15,7 +15,7 @@ import bagit
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
-from django_irods.storage import IrodsStorage
+# from django_irods.storage import IrodsStorage
 
 
 class HsBagitException(Exception):
@@ -30,15 +30,14 @@ def delete_bag(resource):
     :param resource: the resource to delete the bag for.
     :return: none
     """
-    res_id = resource.short_id
-
-    # TODO: resource.get_storage would be easier to remember. 
+    # TODO: resource.get_storage would be easier to remember.
     istorage = resource.get_irods_storage()
 
-    # delete resource directory first to remove all generated bag-related files for the resource
-    # TODO: this will cause a cascade delete problem with the resource. 
-    # TODO: We need to revise resource deletion  or decide not to do this. 
-    if istorage.exists(resource.root_path): 
+    # delete resource directory first to remove all generated bag-related
+    # files for the resource
+    # TODO: this will cause a cascade delete problem with the resource.
+    # TODO: determine what files are actually deleted other than ResourceFiles.
+    if istorage.exists(resource.root_path):
         istorage.delete(resource.root_path)
 
     if istorage.exists(resource.bag_path):
@@ -50,17 +49,16 @@ def delete_bag(resource):
         bag.delete()
 
 
-# TODO: remove the federated zone home path; it is determined by the resource 
-def create_bag_files(resource, fed_zone_home_path=''):
+# TODO: remove the federated zone home path; it is determined by the resource
+def create_bag_files(resource):
     """
-    create and update files needed by bagit operation that is conducted on iRODS server; no bagit
-    operation is performed, only files that will be included in the bag are created or updated.
+    create and update files needed by bagit operation that is conducted on iRODS server;
+    no bagit operation is performed, only files that will be included in the bag are created
+    or updated.
 
     Parameters:
     :param resource: A resource whose files will be created or updated to be included in the
     resource bag.
-    :param fed_zone_home_path: Optional, A passed-in non-empty value that indicates that the
-    resource needs to be created in a federated zone rather than in the default hydroshare zone.
     :return: istorage, an IrodsStorage object that will be used by subsequent operation to
     create a bag on demand as needed.
     """
@@ -68,14 +66,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     istorage = resource.get_irods_storage()
 
-    # has to make bagit_path unique even for the same resource with same update time
-    # to accommodate asynchronous multiple file move operations for the same resource
-    # TODO: This should be a method in Resource. 
-    # TODO: This disagrees with the permanent bag storage path. 
+    # TODO: uuid4().hex not guaranteed unique. Just statistically unique.
     temp_bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
-
-    # TODO: this causes a potential race condition if two people try to run the bagit code
-    # TODO: at the same time. Encapsulate in Resource. 
 
     try:
         os.makedirs(temp_bagit_path)
@@ -99,21 +91,21 @@ def create_bag_files(resource, fed_zone_home_path=''):
     with open(from_file_name, 'w') as out:
         out.write(resource.metadata.get_xml())
 
-    # TODO: this conflicts with the location of resourcemetadata.xml in other files. 
-    # TODO: I conclude that it is a temporary location. 
-    # TODO: we need an arbitrary hashed filename to avoid race conditions. 
+    # TODO: this conflicts with the location of resourcemetadata.xml in other files.
+    # TODO: I conclude that it is a temporary location.
+    # TODO: we need an arbitrary hashed filename to avoid race conditions.
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
-    # This is the URL of the whole site. 
-    # TODO: move this to BaseResource. 
+    # This is the URL of the whole site.
+    # TODO: move this to BaseResource.
     current_site_url = current_site_url()
-    # This is the qualified resource url. 
+    # This is the qualified resource url.
     hs_res_url = os.path.join(current_site_url, 'resource', resource.short_id, 'data')
-    # this is the path to the resourcemedata file for download 
+    # this is the path to the resourcemedata file for download
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
-    # this is the path to the resourcemap file for download 
+    # this is the path to the resourcemap file for download
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     # make the resource map:
@@ -152,7 +144,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
         prefix_len = len(prefix_str)
 
         file_name_with_rel_path = ''
-        # TODO: refactor to utilize root path name 
+        # TODO: refactor to utilize root path name
         # move or copy the file under the user account to under local hydro proxy account
         # in federated zone
         idx = f.resource.root_path.find(prefix_str)
@@ -213,7 +205,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     return istorage
 
 
-def create_bag(resource, fed_zone_home_path=''):
+def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from
     the current filesystem of the resource, then zip it up and add it to the resource. The new
@@ -226,23 +218,14 @@ def create_bag(resource, fed_zone_home_path=''):
 
     Parameters:
     :param resource: (subclass of AbstractResource) A resource to create a bag for.
-           fed_zone_home_path: default is empty indicating the resource bag should be created and
-                               stored in the default hydroshare zone; a non-empty string value
-                               indicates the absolute logical home path for the federated zone where
-                               the new created bag should be stored in
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
 
-    istorage = create_bag_files(resource, fed_zone_home_path)
+    istorage = create_bag_files(resource)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
     # created when user clicks on download button
-    if fed_zone_home_path:
-        to_coll_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=resource.short_id)
-    else:
-        to_coll_name = resource.short_id
+    to_coll_name = resource.root_path
 
     istorage.setAVU(to_coll_name, "bag_modified", "true")
 

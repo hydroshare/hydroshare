@@ -158,8 +158,10 @@ def upload_add(request):
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
 
+    # TODO: fed_res_home_path needs to be renamed as source path 
+    # TODO: read resource type from resource, not from input file 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
-    fed_res_file_names = ''
+    source_names = ''
     irods_federated = False
     if not valid:
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
@@ -168,7 +170,7 @@ def upload_add(request):
         homepath = irods_fnames_list[0]
         irods_federated = utils.is_federated(homepath)
         if irods_federated:
-            fed_res_file_names = irods_fnames.split(',')
+            source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
