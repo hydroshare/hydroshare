@@ -226,13 +226,15 @@
                     </li>
                 {% endif %}
                 {% if cm.raccess.published %}
-                    <li class="list-group-item">
-                    <div>
-                        {% if "pending" in cm.doi or "failure" in cm.doi %}
-                            <small class="text-muted">Note that the DOI will not be available until it has been registered and activated.</small>
-                        {% endif %}
-                    </div>
-                    </li>
+                    {% if "pending" in cm.doi or "failure" in cm.doi %}
+                        <li class="list-group-item">
+                            <div>
+                                <small class="text-muted">Note that the DOI will not be available until it has been
+                                    registered and activated.
+                                </small>
+                            </div>
+                        </li>
+                    {% endif %}
                 {% else %}
                     <li class="list-group-item">
                     {% if cm.raccess.shareable %}
