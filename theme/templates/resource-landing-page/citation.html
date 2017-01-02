@@ -195,46 +195,60 @@
                     </div>
                 {% endif %}
             {% else %}
+                <ul class="list-group">
                 {% if cm.raccess.published %}
+                    <li class="list-group-item">
                     <div>
                         <img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/>
-                        <strong>&nbsp;Published</strong>
+                        <span>&nbsp;Published</span>
                     </div>
+                        </li>
                 {% elif cm.raccess.public %}
+                    <li class="list-group-item">
                     <div>
                         <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
-                        <strong>&nbsp;Public</strong>
+                        <span>&nbsp;Public</span>
                     </div>
+                    </li>
                 {% elif cm.raccess.discoverable %}
+                    <li class="list-group-item">
                     <div>
                         <img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/>
-                        <strong>&nbsp;Discoverable</strong>
+                        <span>&nbsp;Discoverable</span>
                     </div>
+                        </li>
                 {% else %}
+                    <li class="list-group-item">
                     <div>
                         <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
-                        <strong>&nbsp;Private</strong>
+                        <span>&nbsp;Private</span>
                     </div>
+                    </li>
                 {% endif %}
                 {% if cm.raccess.published %}
+                    <li class="list-group-item">
                     <div>
                         {% if "pending" in cm.doi or "failure" in cm.doi %}
-                            &#8210; Note that the DOI will not be available until it has been registered and activated.
+                            <small class="text-muted">Note that the DOI will not be available until it has been registered and activated.</small>
                         {% endif %}
                     </div>
+                    </li>
                 {% else %}
+                    <li class="list-group-item">
                     {% if cm.raccess.shareable %}
                         <div>
                             <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
-                            <strong>&nbsp;Shareable</strong>
+                            <span>&nbsp;Shareable</span>
                         </div>
                     {% else %}
                         <div>
                             <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/>
-                            <strong>&nbsp;Not Shareable</strong>
+                            <span>&nbsp;Not Shareable</span>
                         </div>
                     {% endif %}
+                    </li>
                 {% endif %}
+                </ul>
             {% endif %}
 
             <div id="user-permission-msg">
