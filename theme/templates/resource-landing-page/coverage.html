@@ -10,14 +10,12 @@
                             <div>{% if spatial_coverage.name %}{{ spatial_coverage.name }}{% endif %}</div>
                             {% if temporal_coverage %}
                             <small class="text-muted">
-
                                 <i class="fa fa-calendar" aria-hidden="true"></i> Start Date:&nbsp;
                                     <strong class="format-date" data-date="{{ temporal_coverage.start_date }}"></strong>
                                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                     <i class="fa fa-calendar" aria-hidden="true"></i>
                                     &nbsp;End Date:&nbsp;
                                     <strong class="format-date" data-date="{{ temporal_coverage.end_date }}"></strong>
-
                             </small>
                             {% endif %}
                         </div>
@@ -66,10 +64,13 @@
                         </div>
                         <div class="text-muted col-sm-12">
                                 {% if spatial_coverage.projection %}
-                                    <small>{{ spatial_coverage.projection }}</small>
+                                    <small><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;Projection:&nbsp;<strong>{{ spatial_coverage.projection }}</strong></small>
+                                {% endif %}
+                                {% if spatial_coverage.projection and spatial_coverage.units %}
+                                    &nbsp;&nbsp;&nbsp;
                                 {% endif %}
                                 {% if spatial_coverage.units %}
-                                    <small>{{ spatial_coverage.units }}</small>
+                                    <small><i class="fa fa-circle" aria-hidden="true"></i>&nbsp;Units:&nbsp;<strong>{{ spatial_coverage.units }}</strong></small>
                                 {% endif %}
                         </div>
                     {% endif %}
@@ -137,11 +138,11 @@
                                 <div class="col-sm-4">
 
                                     {% if spatial_coverage.projection %}
-                                        <small class="text-muted">WGS 84 EPSG:4326</small>
+                                        <small class="text-muted">{{ spatial_coverage.projection }}</small>
                                         <br>
                                     {% endif %}
                                     {% if spatial_coverage.units %}
-                                        <small class="text-muted">Decimal degrees</small>
+                                        <small class="text-muted">{{ spatial_coverage.units }}</small>
                                         <br>
                                     {% endif %}
                                     <br>
