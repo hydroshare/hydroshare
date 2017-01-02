@@ -245,6 +245,9 @@
                               id="id-coverage-temporal" method="post">
                             {% csrf_token %}
                             <fieldset>
+                                <div class="row">
+
+                                <div class="col-xs-12 col-sm-6">
                                 <div id="div_id_start" class="control-group">
                                     <label for="id_start" class="control-label requiredField">
                                         Start Date<span class="asteriskField">*</span></label>
@@ -254,6 +257,8 @@
                                                name="start" type="text">
                                     </div>
                                 </div>
+                                </div>
+                                <div class="col-xs-12 col-sm-6"
                                 <div id="div_id_end" class="control-group">
                                     <label for="id_end" class="control-label requiredField">End
                                         Date<span class="asteriskField">*</span></label>
@@ -263,11 +268,14 @@
                                                name="end" type="text">
                                     </div>
                                 </div>
+                                </div>
                                 <div style="margin-top:10px">
                                     <button type="button" class="btn btn-primary pull-right"
                                             onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
                                         Save changes
                                     </button>
+                                </div>
+
                                 </div>
                             </fieldset>
                         </form>

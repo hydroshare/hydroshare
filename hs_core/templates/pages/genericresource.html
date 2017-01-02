@@ -22,7 +22,7 @@
         <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
-            <div class="row">
+            <div>
                 {% block error %}
                     {%  if validation_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">

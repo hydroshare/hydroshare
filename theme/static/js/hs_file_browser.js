@@ -535,8 +535,7 @@ $(document).ready(function () {
     if (localStorage.getItem('file-browser-view')) {
         var view = localStorage.getItem('file-browser-view');
         // ------- switch to table view -------
-        $("#fb-files-container").removeClass("fb-view-grid");
-        $("#fb-files-container").removeClass("fb-view-list");
+        $("#fb-files-container").removeClass("fb-view-grid fb-view-list");
         $("#fb-files-container").addClass(view);
 
         $("#btn-group-view button").removeClass("active");
