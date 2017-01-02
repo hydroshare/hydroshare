@@ -8,8 +8,10 @@
                     <div class="col-sm-12">
                         <div>
                             {% if spatial_coverage.name %}
-                                <span class="text-muted">Coverage name: </span>
+                                <div>
+                                    <span class="text-muted">Coverage name: </span>
                                     <strong>{{ spatial_coverage.name }}</strong>
+                                </div>
                             {% endif %}
 
                             {% if temporal_coverage %}
