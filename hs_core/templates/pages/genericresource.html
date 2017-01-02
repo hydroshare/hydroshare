@@ -1511,7 +1511,7 @@
             }
             var file_count = $("#file-count").attr('value');
 
-            // set if multiple file can be uploaded
+            // set if multiple files can be uploaded
             var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
             if (allow_multiple_file_upload === "True") {
                 $("#file-multiple").text("Multiple file upload is allowed.");
@@ -1528,19 +1528,6 @@
                 }
             }
 
-            if ($("#id_type_1").is(':checked')) { //box type coverage
-                $("#div_id_north").hide();
-                $("#div_id_east").hide();
-                $("#div_id_elevation").hide();
-            }
-            if ($("#id_type_2").is(':checked')) { // point type coverage
-                $("#div_id_northlimit").hide();
-                $("#div_id_eastlimit").hide();
-                $("#div_id_southlimit").hide();
-                $("#div_id_westlimit").hide();
-                $("#div_id_uplimit").hide();
-                $("#div_id_downlimit").hide();
-            }
             if ($("input:button[value='Delete creator']").length == 1) {
                 $("input:button[value='Delete creator']").first().hide();
             }

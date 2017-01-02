@@ -7,7 +7,11 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <div>
-                            <div>{% if spatial_coverage.name %}{{ spatial_coverage.name }}{% endif %}</div>
+                            {% if spatial_coverage.name %}
+                                <span class="text-muted">Coverage name: </span>
+                                    <strong>{{ spatial_coverage.name }}</strong>
+                            {% endif %}
+
                             {% if temporal_coverage %}
                             <small class="text-muted">
                                 <i class="fa fa-calendar" aria-hidden="true"></i> Start Date:&nbsp;
@@ -63,15 +67,39 @@
                             </ul>
                         </div>
                         <div class="text-muted col-sm-12">
+                            <table class="info-table">
+                                <tbody>
                                 {% if spatial_coverage.projection %}
-                                    <small><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;Projection:&nbsp;<strong>{{ spatial_coverage.projection }}</strong></small>
-                                {% endif %}
-                                {% if spatial_coverage.projection and spatial_coverage.units %}
-                                    &nbsp;&nbsp;&nbsp;
+                                    <tr>
+                                        <td>
+                                            <small>
+                                            <i class="fa fa-globe" aria-hidden="true"></i>
+                                            <span>&nbsp;Coordinate System/Geographic Projection:&nbsp;</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                <strong>{{ spatial_coverage.projection }}</strong>
+                                            </small>
+                                        </td>
+                                    </tr>
                                 {% endif %}
                                 {% if spatial_coverage.units %}
-                                    <small><i class="fa fa-circle" aria-hidden="true"></i>&nbsp;Units:&nbsp;<strong>{{ spatial_coverage.units }}</strong></small>
+                                    <tr>
+                                        <td>
+                                            <small>
+                                                <i class="fa fa-tachometer" aria-hidden="true"></i>
+                                                <span>&nbsp;Coordinate Units:&nbsp;</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                <strong>{{ spatial_coverage.units }}</strong>
+                                            </small>
+                                    </tr>
                                 {% endif %}
+                                </tbody>
+                            </table>
                         </div>
                     {% endif %}
                 </div>
@@ -136,16 +164,23 @@
                                 </div>
 
                                 <div class="col-sm-4">
-
                                     {% if spatial_coverage.projection %}
-                                        <small class="text-muted">{{ spatial_coverage.projection }}</small>
+                                        <small class="text-muted">
+                                            <div><i class="fa fa-globe" aria-hidden="true"></i>&nbsp;Coordinate System/Geographic Projection:&nbsp;</div>
+                                            <div><strong>{{ spatial_coverage.projection }}</strong></div>
+                                        </small>
                                         <br>
                                     {% endif %}
                                     {% if spatial_coverage.units %}
-                                        <small class="text-muted">{{ spatial_coverage.units }}</small>
+                                        <small class="text-muted">
+                                            <div><i class="fa fa-tachometer" aria-hidden="true"></i>&nbsp;Coordinate Units:&nbsp;</div>
+                                            <div><strong>{{ spatial_coverage.units }}</strong></div>
+                                        </small>
                                         <br>
                                     {% endif %}
+
                                     <br>
+
                                     <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_north" class="control-label requiredField">
                                             Latitude<span class="asteriskField">*</span>
@@ -159,6 +194,7 @@
                                                   class="input-group-addon">°</span>
                                         </div>
                                     </div>
+
                                     <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_east" class="control-label requiredField">
                                             Longitude<span class="asteriskField">*</span>
@@ -172,6 +208,7 @@
                                                   class="input-group-addon">°</span>
                                         </div>
                                     </div>
+
                                     <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_northlimit" class="control-label requiredField">
                                             North Latitude<span class="asteriskField">*</span>
@@ -185,6 +222,7 @@
                                                   class="input-group-addon">°</span>
                                         </div>
                                     </div>
+
                                     <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_eastlimit" class="control-label requiredField">
                                             East Longitude<span class="asteriskField">*</span>
@@ -198,6 +236,7 @@
                                                   class="input-group-addon">°</span>
                                         </div>
                                     </div>
+
                                     <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_southlimit" class="control-label requiredField">
                                             South Latitude<span class="asteriskField">*</span>
@@ -211,6 +250,7 @@
                                                   class="input-group-addon">°</span>
                                         </div>
                                     </div>
+
                                     <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
                                         <label for="id_westlimit" class="control-label requiredField">
                                             West Longitude<span class="asteriskField">*</span>
@@ -225,12 +265,10 @@
                                         </div>
                                     </div>
 
-
                                     <button type="button" class="btn btn-primary pull-right"
                                             onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
                                             style="display: none;">Save changes
                                     </button>
-
                                 </div>
                             </fieldset>
                         </form>
@@ -246,36 +284,36 @@
                             {% csrf_token %}
                             <fieldset>
                                 <div class="row">
+                                    <div class="col-xs-12 col-sm-6">
+                                        <div id="div_id_start" class="control-group">
+                                            <label for="id_start" class="control-label requiredField">
+                                                Start Date<span class="asteriskField">*</span></label>
 
-                                <div class="col-xs-12 col-sm-6">
-                                <div id="div_id_start" class="control-group">
-                                    <label for="id_start" class="control-label requiredField">
-                                        Start Date<span class="asteriskField">*</span></label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_start"
-                                               name="start" type="text">
+                                            <div class="controls">
+                                                <input class="form-control input-sm dateinput" id="id_start"
+                                                       name="start" type="text">
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                </div>
-                                <div class="col-xs-12 col-sm-6"
-                                <div id="div_id_end" class="control-group">
-                                    <label for="id_end" class="control-label requiredField">End
-                                        Date<span class="asteriskField">*</span></label>
+                                    <div class="col-xs-12 col-sm-6">
+                                        <div id="div_id_end" class="control-group">
+                                            <label for="id_end" class="control-label requiredField">End
+                                                Date<span class="asteriskField">*</span></label>
 
-                                    <div class="controls">
-                                        <input class="form-control input-sm dateinput" id="id_end"
-                                               name="end" type="text">
+                                            <div class="controls">
+                                                <input class="form-control input-sm dateinput" id="id_end"
+                                                       name="end" type="text">
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                </div>
-                                <div style="margin-top:10px">
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
-                                        Save changes
-                                    </button>
-                                </div>
-
+                                    <div class="col-xs-12">
+                                        <div style="margin-top:10px">
+                                            <button type="button" class="btn btn-primary pull-right"
+                                                    onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
+                                                Save changes
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </fieldset>
                         </form>

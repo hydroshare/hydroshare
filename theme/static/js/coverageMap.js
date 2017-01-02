@@ -18,6 +18,22 @@ $(document).ready(function () {
     $("#id_southlimit").bind('input', drawRectangleOnTextChange);
     $("#id_westlimit").bind('input', drawRectangleOnTextChange);
 
+
+    // Set initial coverage fields state
+    if ($("#id_type_1").is(':checked')) { //box type coverage
+        $("#div_id_north").hide();
+        $("#div_id_east").hide();
+        $("#div_id_elevation").hide();
+    }
+    if ($("#id_type_2").is(':checked')) { // point type coverage
+        $("#div_id_northlimit").hide();
+        $("#div_id_eastlimit").hide();
+        $("#div_id_southlimit").hide();
+        $("#div_id_westlimit").hide();
+        $("#div_id_uplimit").hide();
+        $("#div_id_downlimit").hide();
+    }
+
     if ($("#coverageMap").length) {
         google.maps.event.addDomListener(window, "load", initMap);
     }
