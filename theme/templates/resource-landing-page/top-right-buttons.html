@@ -68,11 +68,13 @@
                 {% endif %}
                 {% if user.is_authenticated %}
                     {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
-                        <a href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/">
-                            <span data-toggle="tooltip" data-placement="auto"
-                                  title="Copy this resource"
-                                  class="glyphicon glyphicon-import icon-button icon-blue"></span>
-                        </a>
+                        {% if rights.statement and rights.statement != "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." and rights.statement != "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."%}
+                            <a id="copy-resource" data-toggle="modal" data-target="#copy-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="Copy this resource"
+                                      class="glyphicon glyphicon-import icon-button icon-blue"></span>
+                            </a>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             {% endif %}

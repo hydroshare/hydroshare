@@ -507,6 +507,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="copy-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="copy-resource-title">Copy This Resource</h4>
+            </div>
+            <div class="modal-body">
+                {{ rights.statement }}
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
+                In copying this resource you are ethically bound to respect the terms of this license.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/">Copy this resource</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="rep-resource-to-irods-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
