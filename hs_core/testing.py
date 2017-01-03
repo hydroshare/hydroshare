@@ -350,23 +350,23 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
 
         # test core metadata after metadata extraction
-        extracted_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to " \
-                          "June 2010"
+        extracted_title = "Snow water equivalent estimation at TWDEF site from " \
+                          "Oct 2009 to June 2010"
         self.assertEqual(self.resNetcdf.metadata.title.value, extracted_title)
 
         # there should be an abstract element
         self.assertNotEqual(self.resNetcdf.metadata.description, None)
-        extracted_abstract = "This netCDF data is the simulation output from Utah Energy Balance " \
-                             "(UEB) model.It includes the simulation result of snow water " \
-                             "equivalent during the period Oct. 2009 to June 2010 for TWDEF site " \
-                             "in Utah."
+        extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
+                             "Balance (UEB) model.It includes the simulation result " \
+                             "of snow water equivalent during the period " \
+                             "Oct. 2009 to June 2010 for TWDEF site in Utah."
         self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
 
         # there should be one source element
         self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
 
         # there should be one license element:
-        self.assertNotEqual(self.resNetcdf.metadata.rights.statement, 1)
+        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
         self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
@@ -398,10 +398,10 @@ class TestCaseCommonUtilities(object):
 
         # there should be 2 format elements
         self.assertEqual(self.resNetcdf.metadata.formats.all().count(), 2)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().filter(value='text/plain').count(),
-                         1)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().filter(
-            value='application/x-netcdf').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.formats.all().
+                         filter(value='text/plain').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.formats.all().
+                         filter(value='application/x-netcdf').count(), 1)
 
         # there should be one subject element
         self.assertEqual(self.resNetcdf.metadata.subjects.all().count(), 1)
@@ -410,9 +410,9 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEqual(ori_coverage, None)
+        self.assertNotEquals(ori_coverage, None)
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996'
+        proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
         self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
@@ -426,7 +426,7 @@ class TestCaseCommonUtilities(object):
 
         # test time variable
         var_time = self.resNetcdf.metadata.variables.all().filter(name='time').first()
-        self.assertNotEqual(var_time, None)
+        self.assertNotEquals(var_time, None)
         self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
         self.assertEqual(var_time.type, 'Float')
         self.assertEqual(var_time.shape, 'time')
@@ -434,7 +434,7 @@ class TestCaseCommonUtilities(object):
 
         # test x variable
         var_x = self.resNetcdf.metadata.variables.all().filter(name='x').first()
-        self.assertNotEqual(var_x, None)
+        self.assertNotEquals(var_x, None)
         self.assertEqual(var_x.unit, 'Meter')
         self.assertEqual(var_x.type, 'Float')
         self.assertEqual(var_x.shape, 'x')
@@ -442,7 +442,7 @@ class TestCaseCommonUtilities(object):
 
         # test y variable
         var_y = self.resNetcdf.metadata.variables.all().filter(name='y').first()
-        self.assertNotEqual(var_y, None)
+        self.assertNotEquals(var_y, None)
         self.assertEqual(var_y.unit, 'Meter')
         self.assertEqual(var_y.type, 'Float')
         self.assertEqual(var_y.shape, 'y')
@@ -450,7 +450,7 @@ class TestCaseCommonUtilities(object):
 
         # test SWE variable
         var_swe = self.resNetcdf.metadata.variables.all().filter(name='SWE').first()
-        self.assertNotEqual(var_swe, None)
+        self.assertNotEquals(var_swe, None)
         self.assertEqual(var_swe.unit, 'm')
         self.assertEqual(var_swe.type, 'Float')
         self.assertEqual(var_swe.shape, 'y,x,time')
@@ -459,9 +459,9 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(var_swe.missing_value, '-9999')
 
         # test grid mapping variable
-        var_grid = self.resNetcdf.metadata.variables.all().filter(
-            name='transverse_mercator').first()
-        self.assertNotEqual(var_grid, None)
+        var_grid = self.resNetcdf.metadata.variables.all().\
+            filter(name='transverse_mercator').first()
+        self.assertNotEquals(var_grid, None)
         self.assertEqual(var_grid.unit, 'Unknown')
         self.assertEqual(var_grid.type, 'Unknown')
         self.assertEqual(var_grid.shape, 'Not defined')

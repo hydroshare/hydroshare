@@ -753,20 +753,20 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+    folder = kwargs.pop('folder', None)
 
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
-            # need to be stored to the federated iRODS zone rather than HydroShare zone. A typical
-            # case is when user selected one file from federated zone, and select one file from
-            # local disk, in which case both files will be added to the federated user zone
-            ret.append(utils.add_file_to_resource(resource, f,
-                                                  fed_res_file_name_or_path=fed_zone_home_path))
+            # need to be stored to the federated iRODS zone rather than HydroShare zone as well
+            # TODO: why do we allow the federation prefix to vary in this statement?
+            ret.append(utils.add_file_to_resource(resource, f, folder=folder, fed_res_file_name_or_path=fed_zone_home_path))
         elif resource.resource_federation_path:
             # file needs to be added to a resource in a federated zone
-            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
+            # TODO: why do we allow the federation prefix to vary in this statement?
+            ret.append(utils.add_file_to_resource(resource, f, folder=folder, fed_res_file_name_or_path=resource.resource_federation_path))
         else:
-            ret.append(utils.add_file_to_resource(resource, f))
+            ret.append(utils.add_file_to_resource(resource, f, folder=folder))
     if fed_res_file_names:
         if isinstance(fed_res_file_names, basestring):
             ifnames = string.split(fed_res_file_names, ',')
@@ -775,7 +775,7 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             return ret
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
+            ret.append(utils.add_file_to_resource(resource, None, folder=folder, fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added

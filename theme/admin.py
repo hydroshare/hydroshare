@@ -18,4 +18,5 @@ class IconBoxInline(TabularDynamicInlineAdmin):
 class HomePageAdmin(PageAdmin):
     inlines = (IconBoxInline,)
 
+
 admin.site.register(HomePage, HomePageAdmin)

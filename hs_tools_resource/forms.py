@@ -205,6 +205,7 @@ class SupportedResTypesValidationForm(forms.Form):
     supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                                                     required=False)
 
+
 SupportedSharingStatus_choices = (
     ('Published', 'Published'),
     ('Public', 'Public'),

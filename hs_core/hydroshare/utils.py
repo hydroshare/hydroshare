@@ -830,8 +830,10 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 def resource_file_add_process(resource, files, user, extract_metadata=False,
                               fed_res_file_names='', **kwargs):
+
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files,
+    folder = kwargs.pop('folder', None)
+    resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                fed_res_file_names=fed_res_file_names,
                                                fed_zone_home_path=resource.resource_federation_path)
 
@@ -863,7 +865,8 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):
+def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
+                         fed_copy_or_move=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -890,19 +893,24 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     if f:
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
+                                              file_folder=folder,
                                               resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
+                                              file_folder=folder,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
+
+    # TODO: the use case for this now includes local user zone files, and not just federated files
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
-        ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
+        ret = ResourceFile.objects.create(content_object=resource,
+                                          resource_file=None,
                                           fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path,
                                           fed_resource_file_size=size)
@@ -911,20 +919,28 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
             filename = from_fname.rsplit('/')[-1]
 
             if resource.resource_federation_path:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'
-                to_fname = to_fname.format(base_path=resource.resource_federation_path,
-                                           res_id=resource.short_id, file_name=filename)
                 istorage = IrodsStorage('federated')
+                if folder:
+                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
+                                            'data', 'contents', folder, filename)
+                else:
+                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
+                                            'data', 'contents', filename)
             else:
-                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id,
-                                                                       file_name=filename)
                 istorage = IrodsStorage()
+                if folder:
+                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
+                                            folder, filename)
+                else:
+                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
+                                            filename)
+
             if fed_copy_or_move == 'copy':
                 istorage.copyFiles(from_fname, to_fname)
             else:
                 istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare proxy
-            # account space
+            # update file path now that file has been copied or moved to HydroShare
+            # proxy account space
             ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(
                 file_name=filename)
             ret.save()
