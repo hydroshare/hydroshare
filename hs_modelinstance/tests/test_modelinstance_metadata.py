@@ -69,11 +69,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # Upload any file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
+                                            user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
+                                        user=self.user, extract_metadata=False)
 
         # there should one content file
         self.assertEquals(self.resModelInstance.files.all().count(), 1)
@@ -84,11 +84,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # Upload any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=True)
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
+                                            user=self.user, extract_metadata=True)
 
-        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
-                                        extract_metadata=True)
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
+                                        user=self.user, extract_metadata=True)
 
         # there should two content files
         self.assertEquals(self.resModelInstance.files.all().count(), 2)
@@ -213,11 +213,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(self.resModelInstance.can_be_public_or_discoverable)
 
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
+                                            user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
+                                        user=self.user, extract_metadata=False)
 
         self.assertFalse(self.resModelInstance.can_be_public_or_discoverable)
 
@@ -248,11 +248,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_metadata_on_content_file_delete(self):
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
+                                            user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
+                                        user=self.user, extract_metadata=False)
 
         self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
@@ -264,6 +264,9 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be one format element
         self.assertEquals(self.resModelInstance.metadata.formats.all().count(), 1)
+
+        # created file should have a short path equal to the declared name
+        self.assertEquals(self.resModelInstance.files.all()[0].short_path, self.file_name) 
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resModelInstance.short_id, self.file_name, self.user)
@@ -285,11 +288,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_metadata_delete_on_resource_delete(self):
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
+                                            user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
+                                        user=self.user, extract_metadata=False)
 
         self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.resModelInstance.metadata.create_element('Subject', value="test subject")

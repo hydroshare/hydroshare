@@ -432,6 +432,7 @@ class ResourceFileCRUD(View):
         return self.add_resource_file(pk, filename)
 
     def delete(self, _, pk, filename):
+        # TODO: no User specified 
         return self.delete_resource_file(pk, filename)
 
     def get_resource_file(self, pk, filename):

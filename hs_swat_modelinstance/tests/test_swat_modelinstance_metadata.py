@@ -697,6 +697,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         # there should be one format element
         self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 1)
 
+        # file name should be the short path to the object 
+        self.assertEquals(self.resSWATModelInstance.files.all()[0].short_path, self.file_name) 
+
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name,
                                         self.user)

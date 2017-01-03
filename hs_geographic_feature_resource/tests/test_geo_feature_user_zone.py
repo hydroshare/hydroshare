@@ -67,7 +67,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         page_url_dict, res_title, metadata, fed_res_path = \
             hydroshare.utils.resource_pre_create_actions(
                 resource_type=resource_type, files=res_upload_files, resource_title=res_title,
-                page_redirect_url_key=url_key, fed_res_file_names=[fed_test_file_full_path])
+                page_redirect_url_key=url_key, source_names=[fed_test_file_full_path])
 
         for item_dict in metadata:
             self.assertEqual(len(item_dict.keys()), 1)
@@ -98,7 +98,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title=res_title,
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             fed_copy_or_move='copy',
             metadata=metadata)
@@ -106,7 +106,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         # test metadata is deleted after content file is deleted in user zone space
         for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
             try:
-                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id,
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.short_path,
                                                 self.user)
             # deleting one file may delete other relevant files as well, so ObjectDoesNotExist
             # exception is expected
@@ -124,11 +124,11 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
             fname=self.valid_file_name2)
         hydroshare.utils.resource_file_add_pre_process(
             resource=self.resGeoFeature,
-            files=res_add_files, user=self.user, fed_res_file_names=[fed_test_add_file_full_path])
+            files=res_add_files, user=self.user, source_names=[fed_test_add_file_full_path])
         hydroshare.utils.resource_file_add_process(resource=self.resGeoFeature,
                                                    files=res_add_files,
                                                    user=self.user,
-                                                   fed_res_file_names=[fed_test_add_file_full_path])
+                                                   source_names=[fed_test_add_file_full_path])
 
         self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
         self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename,

@@ -1826,7 +1826,12 @@ class ResourceFile(models.Model):
     def short_path(self):
         """
         Return the unqualified path to the file object.
-        This path is invariant of where the object is stored.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved. 
+
+        This is the path that should be used as a key to index things such as file type. 
         """
         if self.resource.resource_federation_path:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)

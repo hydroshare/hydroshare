@@ -65,13 +65,13 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
                            '2010',
             page_redirect_url_key=None,
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path])
+            source_names=[fed_test_file_full_path])
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
             self.user,
             'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             fed_copy_or_move='copy',
             metadata=metadata)
@@ -120,11 +120,11 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resNetcdf,
                                             files=res_add_files,
                                             user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path])
+                                            source_names=[fed_test_file_full_path])
         utils.resource_file_add_process(resource=self.resNetcdf,
                                         files=res_add_files,
                                         user=self.user,
-                                        fed_res_file_names=[fed_test_file_full_path])
+                                        source_names=[fed_test_file_full_path])
 
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
         self.assertEqual(CoreMetaData.objects.all().count(), 1)

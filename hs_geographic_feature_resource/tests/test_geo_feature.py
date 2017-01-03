@@ -348,7 +348,7 @@ class TestGeoFeature(TransactionTestCase):
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
         files.append(UploadedFile(file=open(target, 'r'),
                                   name='gis.osm_adminareas_v06_with_folder.zip'))
-        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user)
 
         self.assertEqual(len(files), 5)
         self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
@@ -392,7 +392,7 @@ class TestGeoFeature(TransactionTestCase):
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
         files.append(UploadedFile(file=open(target, 'r'),
                                   name='gis.osm_adminareas_v06_with_folder.zip'))
-        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user)
 
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
@@ -403,7 +403,7 @@ class TestGeoFeature(TransactionTestCase):
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".shp":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id,
-                                                res_f_obj.id,
+                                                res_f_obj.short_path,
                                                 self.user)
                 self.assertEqual(ResourceFile.objects.filter
                                  (object_id=self.resGeoFeature.id).count(), 0)
@@ -418,7 +418,7 @@ class TestGeoFeature(TransactionTestCase):
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
         files.append(UploadedFile(file=open(target, 'r'),
                                   name='gis.osm_adminareas_v06_with_folder.zip'))
-        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user)
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
         for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -427,7 +427,7 @@ class TestGeoFeature(TransactionTestCase):
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".prj":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id,
-                                                res_f_obj.id, self.user)
+                                                res_f_obj.short_path, self.user)
                 self.assertEqual(ResourceFile.objects.filter
                                  (object_id=self.resGeoFeature.id).count(), 4)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -449,7 +449,7 @@ class TestGeoFeature(TransactionTestCase):
         files = []
         target = 'hs_geographic_feature_resource/tests/states_shp_sample.zip'
         files.append(UploadedFile(file=open(target, 'r'), name='states_shp_sample.zip'))
-        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
+        hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user)
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 7)
         for res_f_obj in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -458,7 +458,7 @@ class TestGeoFeature(TransactionTestCase):
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".xml":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id,
-                                                res_f_obj.id, self.user)
+                                                res_f_obj.short_path, self.user)
                 self.assertEqual(ResourceFile.objects.filter
                                  (object_id=self.resGeoFeature.id).count(), 6)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -492,7 +492,7 @@ class TestGeoFeature(TransactionTestCase):
 
             if del_f_ext == ".prj":
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id,
-                                                res_f_obj.id, self.user)
+                                                res_f_obj.short_path, self.user)
                 self.assertEqual(ResourceFile.objects.filter
                                  (object_id=self.resGeoFeature.id).count(), 4)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):

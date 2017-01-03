@@ -536,12 +536,11 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
-            full_path_name, basename, _ = \
-                hydroshare.utils.get_resource_file_name_and_extension(f)
-            if resource.resource_federation_path:
-                full_path_name = os.path.join(resource.root_path, full_path_name)
+            # TODO: delete subfolders as necessary 
+            full_path_name = f.storage_path
+            # TODO: should be more specific here
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
-                delete_resource_file(res_id, basename, user)
+                delete_resource_file(res_id, f.short_path, user)
 
         # remove empty folder in iRODS
         istorage.delete(res_coll_input)
@@ -571,6 +570,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
+    # TODO: why was the zipfile part of the django ResourceFile's? 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
 

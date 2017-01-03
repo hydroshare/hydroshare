@@ -62,13 +62,13 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
             resource_title='My Test Raster Resource',
             page_redirect_url_key=None,
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path])
+            source_names=[fed_test_file_full_path])
         self.resRaster = hydroshare.create_resource(
             'RasterResource',
             self.user,
             'My Test Raster Resource',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             fed_copy_or_move='copy',
             metadata=metadata)
@@ -123,11 +123,11 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resRaster,
                                             files=res_add_files,
                                             user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path])
+                                            source_names=[fed_test_file_full_path])
         utils.resource_file_add_process(resource=self.resRaster,
                                         files=res_add_files,
                                         user=self.user,
-                                        fed_res_file_names=[fed_test_file_full_path])
+                                        source_names=[fed_test_file_full_path])
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
         # test metadata deletion when deleting a resource in user zone space

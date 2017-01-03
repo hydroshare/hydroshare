@@ -798,9 +798,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test adding files of different mime types creates one format element for each mime type
         res_file_3 = "file_three.tif"
         open(res_file_3, "w").close()
-
-        # open the file for read
         file_obj_3 = open(res_file_3, "r")
+
+        # reopen file_obj_1 for read
+        file_obj_1 = open(res_file_1, "r")
+
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -835,6 +837,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
+        # there should be only one file
+        self.assertEquals(res.files.all().count(), 1) 
+        
+        # that file should be file_one.txt 
+        self.assertEquals(res.files.all()[0].short_path, "file_one.txt") 
+
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
@@ -847,8 +855,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # open the file for read
         file_obj_2 = open(res_file_2, "r")
+        file_obj_1 = open(res_file_1, "r")
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
 
+        self.assertEquals(res.files.all().count(), 2) 
+
+        # TODO: why is this; this should not be....
         # there should be one format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
@@ -862,8 +874,16 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
+        print("before delete resource file") 
+        print(res.metadata.formats.all())
+        print(res.files.all()) 
+
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_2.name, self.user)
+
+        print("after delete resource file") 
+        print(res.metadata.formats.all())
+        print(res.files.all()) 
 
         # there should be not be any format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")

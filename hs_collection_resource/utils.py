@@ -59,6 +59,7 @@ def update_collection_list_csv(collection_obj):
         csv_full_name = CSV_FULL_NAME_TEMPLATE.format(collection_obj.short_id)
 
         # remove all files in bag
+        # TODO: I do not understand precisely why this is necessary
         for f in collection_obj.files.all():
             delete_resource_file_only(collection_obj, f)
 

@@ -180,8 +180,7 @@ def get_resource_file(pk, filename):
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if os.path.basename(f.resource_file.name) == filename:
             return f.resource_file
-    else:
-        raise ObjectDoesNotExist(filename)
+    raise ObjectDoesNotExist(filename)
 
 
 def update_resource_file(pk, filename, f):
@@ -351,7 +350,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names='', fed_res_path='', fed_copy_or_move=None,
+        files=(), source_names=[], fed_res_path='', fed_copy_or_move=None,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
@@ -442,9 +441,8 @@ def create_resource(
         if fed_res_path:
             resource.resource_federation_path = fed_res_path
             resource.save()
-        # TODO: not good to default this from file names; they could differ in paths!
         # TODO: this option should be eliminated. Require explicit zone path
-        elif source_names:
+        elif len(source_names) > 0:
             fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
             resource.resource_federation_path = fed_zone_home_path
             resource.save()
@@ -740,24 +738,26 @@ def add_resource_files(pk, *files, **kwargs):
 
     """
     resource = utils.get_resource_by_shortkey(pk)
-    # TODO: rename this parameter. It has little to do with federation. 
-    # It could be used for local user files. 
-    source_names=kwargs.pop('source_names', '')
     ret = []
+    source_names=kwargs.pop('source_names', [])
     # for adding files to existing resources, the default action is copy
-    # TODO: ditto here: this can be used for federated or unfederated files. 
+    # TODO: rename: this can be used for federated or unfederated files. 
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
     folder = kwargs.pop('folder', None) 
-    if __debug__: 
+
+    if __debug__:  # assure that there are no spurious kwargs left. 
         assert len(kwargs) == 0 
 
     for f in files: 
         ret.append(utils.add_file_to_resource(resource, f, folder=folder))
-    if source_names:
-        # TODO: this is unnecessary complexity; pass a list. File names can contain ','!
-        if isinstance(source_names, basestring):
-            ifnames = string.split(source_names, ',')
-        elif isinstance(source_names, list):
+
+    if len(source_names) > 0:
+        # TODO: eliminate string option; always pass a list. File names can contain ','!
+        # if isinstance(source_names, basestring):
+        #     ifnames = string.split(source_names, ',')
+        if __debug__: 
+            assert isinstance(source_names, list) 
+        if isinstance(source_names, list):
             ifnames = source_names
         else:
             return ret
@@ -861,6 +861,9 @@ def delete_resource(pk):
     return pk
 
 
+# TODO: should be ResourceFile.name.  
+# TODO: should standardize what name is. I think this is not a long name. 
+# I think it should be unqualified. 
 def get_resource_file_name(f):
     '''
     get the file name of a specific ResourceFile object f
@@ -876,12 +879,14 @@ def get_resource_file_name(f):
         # file was originally from local disk, but is currently stored in federated irods zone
         res_fname = f.fed_resource_file.name
     else:
+        # TODO: this option should not be possible. Always copy. Unnecessary state. 
         # file was originally from federated irods zone, and is currently stored in the
         # same federated irods zone
         res_fname = f.fed_resource_file_name_or_path
     return res_fname
 
 
+# TODO: this is overly complex. Recursively delete files with post-delete signal. 
 def delete_resource_file_only(resource, f):
     '''
     Delete the single resource file f from the resource without sending signals and
@@ -895,11 +900,20 @@ def delete_resource_file_only(resource, f):
     Returns: unqualified relative path to file that has been deleted
     '''
     # TODO: resource is redundant; f --> resource
+    # TODO: SOME WAY A LONG PATH GOT INTO THE SHORT PATHS
+    print(str.format("before delete of {}", f.short_path))
+    for r in resource.files.all(): 
+        print(str.format("  remaining: {}", r.short_path)) 
+    print(str.format("delete_resource_file_only {}", f.short_path)) 
     short_path = f.short_path
     f.delete()
+    print(str.format("after delete of {}", f.short_path))
+    for r in resource.files.all(): 
+        print(str.format("  remaining: {}", r.short_path)) 
     return short_path
 
 
+# TODO: this is overly complex. Use recursive delete
 def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
@@ -920,6 +934,7 @@ def delete_format_metadata_after_delete_file(resource, file_name):
             resource.metadata.delete_element(format_element.term, format_element.id)
 
 
+# TODO: remove option for file id. Require file short paths to be unique
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -955,41 +970,34 @@ def delete_resource_file(pk, filename_or_id, user):
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
     fed_path = resource.resource_federation_path
-    try:
-        file_id = int(filename_or_id)
-        filter_condition = lambda fl: fl.id == file_id
-    except ValueError:
-        if fed_path:
-            filter_condition = lambda fl: \
-                os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
-                    if fl.fed_resource_file_name_or_path else \
-                    os.path.basename(fl.fed_resource_file.name) == filename_or_id \
-                        if fl.fed_resource_file else False
-        else:
-            filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
+    # now only file names are supported; not ids
+    filter_condition = lambda fl: fl.short_path == filename_or_id 
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource,
-                                                       user=user)
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, 
+                                                       resource=resource, user=user)
             file_name = delete_resource_file_only(resource, f)
 
-            delete_format_metadata_after_delete_file(resource, file_name)
-            break
-    else:
-        raise ObjectDoesNotExist(filename_or_id)
+            # This presumes that the file is no longer in django 
+            delete_format_metadata_after_delete_file(resource, filename_or_id)
 
-    if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public_or_discoverable:
-            resource.raccess.public = False
-            resource.raccess.discoverable = False
-            resource.raccess.save()
+            if resource.raccess.public or resource.raccess.discoverable:
+                if not resource.can_be_public_or_discoverable:
+                    resource.raccess.public = False
+                    resource.raccess.discoverable = False
+                    resource.raccess.save()
 
-    # generate bag
-    utils.resource_modified(resource, user)
+            # generate bag
+            utils.resource_modified(resource, user)
 
-    return filename_or_id
+            return filename_or_id
+
+    # if execution gets here, file was not found 
+    raise ObjectDoesNotExist(str.format("resource {}, file {} not found", 
+                                        resource.short_id, filename_or_id))
+
 
 def get_resource_doi(res_id, flag=''):
     doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
