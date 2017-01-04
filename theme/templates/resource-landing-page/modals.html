@@ -517,12 +517,16 @@
             <div class="modal-body">
                 {{ rights.statement }}
                 <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
+                <p>
                 In copying this resource you are ethically bound to respect the terms of this license.
+                Please confirm that you accept the terms of this license below before you can copy this resource.
+                </p>
+                <input type="checkbox" id="agree-chk-copy"><label for="agree-chk-copy" class="checkbox-label">I accept the terms of this license.</label>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-danger"
-                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/">Copy this resource</a>
+                <a type="button" class="btn btn-danger" id="copy-btn"
+                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
             </div>
         </div>
     </div>

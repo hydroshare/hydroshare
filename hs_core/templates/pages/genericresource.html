@@ -1731,6 +1731,13 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+            $("#agree-chk-copy").on('click', function(e) {
+                e.stopImmediatePropagation();
+                if (e.currentTarget.checked)
+                    $('#copy-btn').removeAttr('disabled');
+                else
+                    $('#copy-btn').attr('disabled', 'disabled');
+            });
             // add input element to each of the comment/rating forms to track resource mode (edit or view)
             var resourceMode = $("#resource-mode").val().toLowerCase();
             var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
