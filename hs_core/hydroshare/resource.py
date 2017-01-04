@@ -527,7 +527,7 @@ def create_empty_resource(pk, user, action='version'):
         if not user.uaccess.owns_resource(res):
             raise ValidationError('Only resource owners can create new versions')
     elif action == 'copy':
-        if not user.uaccess.view_resource(res):
+        if not user.uaccess.can_view_resource(res):
             raise ValidationError('You do not have permission to view this resource')
     else:
         raise ValidationError('Input parameter error: action needs to be version or copy')
@@ -563,7 +563,8 @@ def copy_resource(ori_res, new_res):
 
     new_res.metadata.sources.all().delete()
     hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-    new_res.metadata.create_element('source', derived_from=hs_identifier)
+    if hs_identifier:
+        new_res.metadata.create_element('source', derived_from=hs_identifier.url)
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res, ori_res.resource_federation_path)

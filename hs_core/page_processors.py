@@ -107,7 +107,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                 relevant_tools.append(tl)
 
     just_created = False
-    new_version_create_resource_error = None
+    create_resource_error = None
     just_published = False
     if request:
         validation_error = check_for_validation(request)
@@ -116,9 +116,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_created' in request.session:
             del request.session['just_created']
 
-        new_version_create_resource_error = request.session.get('new_version_resource_creation_error', None)
-        if 'new_version_resource_creation_error' in request.session:
-            del request.session['new_version_resource_creation_error']
+        create_resource_error = request.session.get('resource_creation_error', None)
+        if 'resource_creation_error' in request.session:
+            del request.session['resource_creation_error']
 
         just_published = request.session.get('just_published', False)
         if 'just_published' in request.session:
@@ -194,7 +194,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'validation_error': validation_error if validation_error else None,
-                   'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
+                   'resource_creation_error': create_resource_error if create_resource_error else None,
                    'relevant_tools': relevant_tools,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,

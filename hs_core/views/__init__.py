@@ -465,11 +465,11 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
+        new_resource = hydroshare.copy_resource(res, new_resource)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
-        request.session['new_version_resource_creation_error'] = ex.message
+        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
     # go to resource landing page
@@ -489,9 +489,10 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.save()
         else:
             # cannot create new version for this resource since the resource is locked by another user
-            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for ' \
-                                                                     'this resource since another user is creating a ' \
-                                                                     'new version for this resource synchronously.'
+            request.session['resource_creation_error'] = 'Failed to create a new version for ' \
+                                                         'this resource since another user is ' \
+                                                         'creating a new version for this ' \
+                                                         'resource synchronously.'
             return HttpResponseRedirect(res.get_absolute_url())
 
     new_resource = None
@@ -508,7 +509,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         # release the lock if new version of the resource failed to create
         res.locked_time = None
         res.save()
-        request.session['new_version_resource_creation_error'] = ex.message
+        request.session['resource_creation_error'] = 'Failed to create a new version of ' \
+                                                     'this resource: ' + ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
     # release the lock if new version of the resource is created successfully
@@ -819,7 +821,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
+    
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
