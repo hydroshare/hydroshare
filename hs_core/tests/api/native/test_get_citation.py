@@ -1,4 +1,5 @@
 from unittest import TestCase
+from datetime import date
 
 from hs_core.hydroshare import resource
 from django.contrib.auth.models import Group, User
@@ -38,8 +39,9 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
-        correct_citation = 'Creator_LastName, C. (2016). Generic resource, HydroShare, {}'.format(
-            hs_url)
+        hs_date = str(date.today().year)
+        correct_citation = 'Creator_LastName, C. ({}). Generic resource, HydroShare, {}'\
+            .format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_no_comma(self):
@@ -49,8 +51,9 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
+        hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. Smith (2016). Generic resource, HydroShare, {}'.format(hs_url)
+                           'J. Smith ({}). Generic resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_comma(self):
@@ -60,8 +63,9 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
+        hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
-                           'J. Smith (2016). Generic resource, HydroShare, {}'.format(hs_url)
+                           'J. Smith ({}). Generic resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_multiple_first_and_last_names_comma(self):
@@ -72,9 +76,10 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
+        hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
                            'J. M. J. Smith William ' \
-                           '(2016). Generic resource, HydroShare, {}'.format(hs_url)
+                           '({}). Generic resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_multiple_first_and_last_names_no_comma(self):
@@ -85,9 +90,10 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
+        hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
                            'J. M. J. S. William ' \
-                           '(2016). Generic resource, HydroShare, {}'.format(hs_url)
+                           '({}). Generic resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_two_authors_and_organization(self):
@@ -100,10 +106,11 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
         citation = self.res.get_citation()
         hs_identifier = self.res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         hs_url = hs_identifier.url
+        hs_date = str(date.today().year)
         correct_citation = 'Creator_LastName, C., ' \
                            'J. M. J. Smith William, ' \
                            'U.S. Geological Survey ' \
-                           '(2016). Generic resource, HydroShare, {}'.format(hs_url)
+                           '({}). Generic resource, HydroShare, {}'.format(hs_date, hs_url)
         self.assertEqual(citation, correct_citation)
 
     def test_parse_citation_name(self):
