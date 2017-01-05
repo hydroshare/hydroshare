@@ -67,8 +67,14 @@
                     </form>
                 {% endif %}
                 {% if user.is_authenticated %}
-                    {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
-                        {% if rights.statement and rights.statement != "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." and rights.statement != "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."%}
+                    {% if rights.statement and cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
+                        {% if rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." or rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."%}
+                            <a disabled>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="You cannot copy because the license for this resource does not permit copying"
+                                      class="glyphicon glyphicon-import icon-button icon-blue"></span>
+                            </a>
+                        {% else %}
                             <a id="copy-resource" data-toggle="modal" data-target="#copy-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="auto"
                                       title="Copy this resource"
