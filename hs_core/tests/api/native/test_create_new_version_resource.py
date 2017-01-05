@@ -4,7 +4,7 @@ import shutil
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
@@ -87,17 +87,17 @@ class TestNewVersionResource(TestCase):
 
     def test_new_version_generic_resource(self):
         # test to make sure only owners can version a resource
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.VIEW)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         # add key/value metadata to original resource
@@ -186,17 +186,17 @@ class TestNewVersionResource(TestCase):
 
     def test_new_version_raster_resource(self):
         # test to make sure only owners can version a resource
-        with self.assertRaises(ValidationError):
-            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.VIEW)
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
