@@ -561,7 +561,6 @@ def copy_resource(ori_res, new_res):
 
     utils.copy_and_create_metadata(ori_res, new_res)
 
-    new_res.metadata.sources.all().delete()
     hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
     if hs_identifier:
         new_res.metadata.create_element('source', derived_from=hs_identifier.url)

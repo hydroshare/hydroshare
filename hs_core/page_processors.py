@@ -107,6 +107,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                 relevant_tools.append(tl)
 
     just_created = False
+    just_copied = False
     create_resource_error = None
     just_published = False
     if request:
@@ -115,6 +116,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+        just_copied = request.session.get('just_copied', False)
+        if 'just_copied' in request.session:
+            del request.session['just_copied']
 
         create_resource_error = request.session.get('resource_creation_error', None)
         if 'resource_creation_error' in request.session:
@@ -199,6 +204,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
+                   'just_copied': just_copied,
                    'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,

@@ -474,6 +474,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
 
     # go to resource landing page
     request.session['just_created'] = True
+    request.session['just_copied'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
@@ -821,7 +822,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
