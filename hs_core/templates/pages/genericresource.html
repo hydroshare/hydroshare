@@ -1494,10 +1494,10 @@
                 }
 
                 // If does not exist, add it
-                if (!exists && keyword[i] != "") {
+                if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
                     var li = $("<li class='tag'><span></span></li>");
                     li.find('span').text(keyword[i]);
-                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
                     $("#lst-tags").append(li);
 
                     $(".icon-remove").click(onRemoveKeyword);
