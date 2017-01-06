@@ -6,6 +6,7 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
 
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
@@ -274,7 +275,6 @@ function bindFileBrowserItemEvents() {
                 showFileTypeMetadata();
             }
             else{
-                var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
                 $("#fileTypeMetaDataTab").html(file_metadata_alert);
             }
 
@@ -465,7 +465,6 @@ function setBreadCrumbs(path) {
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, path);
-        var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
         $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 }
@@ -1135,6 +1134,7 @@ $(document).ready(function () {
          // Wait for the asynchronous calls to finish to get new folder structure
          $.when.apply($, calls).done(function () {
             refreshFileBrowser();
+            $("#fileTypeMetaDataTab").html(file_metadata_alert);
          });
       });
 
