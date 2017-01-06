@@ -444,6 +444,7 @@ def serialize_system_metadata(res):
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
 
+
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     """
     Copy resource files and AVUs from source resource to target resource including both
@@ -520,8 +521,8 @@ def copy_and_create_metadata(src_res, dest_res):
 
     # create Identifier element that is specific to the new resource
     dest_res.metadata.create_element('identifier', name='hydroShareIdentifier',
-                                    url='{0}/resource/{1}'.format(current_site_url(),
-                                                                  dest_res.short_id))
+                                     url='{0}/resource/{1}'.format(current_site_url(),
+                                                                   dest_res.short_id))
 
     # create date element that is specific to the new resource
     dest_res.metadata.create_element('date', type='created', start_date=dest_res.created)
@@ -531,15 +532,16 @@ def copy_and_create_metadata(src_res, dest_res):
     if src_res.metadata.dates.all().filter(type='valid'):
         res_valid_date = dest_res.metadata.dates.all().filter(type='valid')[0]
         dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
-                                        end_date=res_valid_date.end_date)
+                                         end_date=res_valid_date.end_date)
 
     if src_res.metadata.dates.all().filter(type='available'):
         res_avail_date = dest_res.metadata.dates.all().filter(type='available')[0]
         dest_res.metadata.create_element('date', type='available',
-                                        start_date=res_avail_date.start_date,
-                                        end_date=res_avail_date.end_date)
+                                         start_date=res_avail_date.start_date,
+                                         end_date=res_avail_date.end_date)
     # create the key/value metadata
     dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
+
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
     resource.last_changed_by = by_user

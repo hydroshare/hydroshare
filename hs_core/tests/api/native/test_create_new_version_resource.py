@@ -105,7 +105,7 @@ class TestNewVersionResource(TestCase):
         self.res_generic.save()
 
         new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
-                                                                       self.owner)
+                                                           self.owner)
         # test to make sure the new versioned empty resource has no content files
         self.assertEqual(new_res_generic.files.all().count(), 0)
 
@@ -200,7 +200,7 @@ class TestNewVersionResource(TestCase):
             hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
-                                                                      self.owner)
+                                                          self.owner)
         new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster,
                                                                 self.owner)
 
