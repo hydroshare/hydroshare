@@ -993,6 +993,28 @@ def delete_format_metadata_after_delete_file(resource, file_name):
             resource.metadata.delete_element(format_element.term, format_element.id)
 
 
+def filter_condition(filename_or_id, fed_path, fl):
+    """
+    Converted lambda defintion of filter_condition into def to conform to pep8 E731 rule: do not
+    assign a lambda expression, use a def
+    :param filename_or_id: passed in filename_or id as the filter
+    :param fed_path: resource federation path
+    :param fl: the ResourceFile object to filter against
+    :return: boolean indicating whether fl conforms to filename_or_id
+    """
+    try:
+        file_id = int(filename_or_id)
+        return fl.id == file_id
+    except ValueError:
+        if fed_path:
+            return os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
+                if fl.fed_resource_file_name_or_path else \
+                os.path.basename(fl.fed_resource_file.name) == filename_or_id \
+                if fl.fed_resource_file else False
+        else:
+            return os.path.basename(fl.resource_file.name) == filename_or_id
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist,
@@ -1031,21 +1053,9 @@ def delete_resource_file(pk, filename_or_id, user):
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
     fed_path = resource.resource_federation_path
-    try:
-        file_id = int(filename_or_id)
-        filter_condition = lambda fl: fl.id == file_id
-    except ValueError:
-        if fed_path:
-            filter_condition = lambda fl: \
-                os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
-                    if fl.fed_resource_file_name_or_path else \
-                    os.path.basename(fl.fed_resource_file.name) == filename_or_id \
-                        if fl.fed_resource_file else False
-        else:
-            filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
-        if filter_condition(f):
+        if filter_condition(filename_or_id, fed_path, f):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource,
                                                        user=user)
