@@ -145,7 +145,10 @@ function updateSelectionMenuContext() {
             flagDisableRename = true;
         }
     }
-    
+
+    // Show Create folder toolbar option
+    $("#fb-create-folder").toggleClass("disabled", false);
+
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
 
@@ -548,6 +551,7 @@ function onOpenFolder() {
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
 
+    var flagDisableCreateFolder = false;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
@@ -559,6 +563,12 @@ function onOpenFolder() {
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
+        var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+        if (logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableCreateFolder = true;
+        }
+        // Set Create folder toolbar option
+        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
     });
 
     $.when.apply($, calls).fail(function () {
