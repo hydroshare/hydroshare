@@ -1828,6 +1828,21 @@ class ResourceFile(models.Model):
         return get_resource_file_name_and_extension(self)[2]
 
     @property
+    def dir_path(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return os.path.dirname(get_resource_file_name_and_extension(self)[0])
+
+    @property
+    def full_path(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[0]
+
+    @property
+    def file_name(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[1]
+
+    @property
     def can_set_file_type(self):
         # currently user can set file type only for files with extension
         # tif or zip.

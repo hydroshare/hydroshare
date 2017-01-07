@@ -68,13 +68,9 @@ class CompositeResource(BaseResource):
         path_parts = path_parts[:-1]
         path_to_check = "/".join(path_parts)
         if not path_to_check.endswith("/data/contents"):
-            if self.resource_federation_path:
-                res_file_objs = self.files.filter(
-                    object_id=self.id,
-                    fed_resource_file_name_or_path__contains=path_to_check).all()
-            else:
-                res_file_objs = self.files.filter(object_id=self.id,
-                                                  resource_file__contains=path_to_check).all()
+            res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
+                             res_file_obj.dir_path == path_to_check]
+
             for res_file_obj in res_file_objs:
                 if not res_file_obj.logical_file.supports_resource_file_rename or \
                         not res_file_obj.logical_file.supports_resource_file_move:
@@ -99,28 +95,20 @@ class CompositeResource(BaseResource):
 
             if path_to_check and not path_to_check.endswith("data/contents"):
                 # it is not the base directory - it must be a directory under base dir
-                if self.resource_federation_path:
-                    res_file_objs = self.files.filter(
-                        object_id=self.id,
-                        fed_resource_file_name_or_path__contains=path_to_check).all()
-                else:
-                    res_file_objs = self.files.filter(
-                        object_id=self.id,
-                        resource_file__contains=path_to_check).all()
+                res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
+                                 res_file_obj.dir_path == path_to_check]
+
                 for res_file_obj in res_file_objs:
                     if not res_file_obj.logical_file.supports_resource_file_rename or \
                             not res_file_obj.logical_file.supports_resource_file_move:
                         return False
             return True
 
-        if self.resource_federation_path:
-            res_file_obj = self.files.filter(
-                object_id=self.id,
-                fed_resource_file_name_or_path=src_full_path).first()
-        else:
-            res_file_obj = self.files.filter(object_id=self.id,
-                                             resource_file=src_full_path).first()
-        if res_file_obj is not None:
+        res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
+                        res_file_obj.full_path == src_full_path]
+
+        if res_file_objs:
+            res_file_obj = res_file_objs[0]
             # src_full_path contains file name
             if not res_file_obj.logical_file.supports_resource_file_rename or \
                     not res_file_obj.logical_file.supports_resource_file_move:
