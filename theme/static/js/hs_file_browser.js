@@ -90,6 +90,7 @@ function updateSelectionMenuContext() {
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
     var flagDisableGetLink = false;
+    var flagDisableCreateFolder = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
@@ -146,8 +147,12 @@ function updateSelectionMenuContext() {
         }
     }
 
+    var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    if (logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableCreateFolder = true;
+        }
     // Show Create folder toolbar option
-    $("#fb-create-folder").toggleClass("disabled", false);
+    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
 
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
