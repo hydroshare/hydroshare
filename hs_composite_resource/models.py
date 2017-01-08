@@ -105,7 +105,7 @@ class CompositeResource(BaseResource):
             return True
 
         res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
-                        res_file_obj.full_path == src_full_path]
+                         res_file_obj.full_path == src_full_path]
 
         if res_file_objs:
             res_file_obj = res_file_objs[0]

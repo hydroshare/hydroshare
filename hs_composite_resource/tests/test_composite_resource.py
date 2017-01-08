@@ -666,7 +666,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             "/data/contents/small_logan/small_logan.tif"))
         # test that creating a folder at "/data/contents/small_logan/" is not supported
         # as that folder contains a resource file that's part of GeoRaster logical file
-        new_folder_path = "/data/contents/small_logan/my-new-folder"
+        new_folder_path = "{}/data/contents/small_logan/my-new-folder"
+        new_folder_path = new_folder_path.format(self.composite_resource.short_id)
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
 
     def test_supports_move_or_rename_file_or_folder(self):
