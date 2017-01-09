@@ -603,6 +603,7 @@ function refreshFileBrowser() {
         $(".selection-menu").hide();
         sourcePaths = [];
         updateSelectionMenuContext();
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 
     $.when.apply($, calls).fail(function () {
