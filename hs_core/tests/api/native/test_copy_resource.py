@@ -117,15 +117,15 @@ class TestCopyResource(TestCase):
             hydroshare.create_empty_resource(self.res_generic.short_id,
                                              self.nonowner,
                                              action='copy')
-        # ensure resource cannot be copied if the license does not allow derivation
+        # ensure resource cannot be copied if the license does not allow derivation by a non-owner
         with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_generic_lic_nd.short_id,
-                                             self.owner,
+                                             self.nonowner,
                                              action='copy')
 
         with self.assertRaises(PermissionDenied):
             hydroshare.create_empty_resource(self.res_generic_lic_nc_nd.short_id,
-                                             self.owner,
+                                             self.nonowner,
                                              action='copy')
 
         # add key/value metadata to original resource
