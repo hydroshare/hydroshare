@@ -233,7 +233,7 @@
                                  data-supported-files="{{ cm.get_supported_upload_file_types }}"
                                  data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                                  data-initial-file-count="{{ cm.files.all.count }}"
-                                 {% if cm|resource_type != "Generic" %}data-refresh-on-upload="true"{% endif %}
+                                 {% if cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
                                  class="file-browser"
                             >
 
