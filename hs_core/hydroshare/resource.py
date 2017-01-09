@@ -550,11 +550,12 @@ def create_empty_resource(pk, user, action='version'):
     elif action == 'copy':
         if not user.uaccess.can_view_resource(res):
             raise PermissionDenied('You do not have permission to view this resource')
-        if res.metadata.rights.statement == "This resource is shared under the Creative Commons " \
-                                            "Attribution-NoDerivs CC BY-ND." \
-                or res.metadata.rights.statement == "This resource is shared under the Creative " \
-                                                    "Commons Attribution-NoCommercial-NoDerivs " \
-                                                    "CC BY-NC-ND.":
+        if not user.uaccess.owns_resource(res) and \
+                (res.metadata.rights.statement == "This resource is shared under the Creative "
+                                                  "Commons Attribution-NoDerivs CC BY-ND."or
+                 res.metadata.rights.statement == "This resource is shared under the Creative "
+                                                  "Commons Attribution-NoCommercial-NoDerivs "
+                                                  "CC BY-NC-ND."):
             raise PermissionDenied('The license for this resource does not permit copying')
     else:
         raise ValidationError('Input parameter error: action needs to be version or copy')
