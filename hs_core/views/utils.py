@@ -180,7 +180,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
         elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
             authorized = user.uaccess.can_view_resource(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
-            authorized = user.uaccess.owns_resource(res)
+            authorized = user.uaccess.can_share_resource(res)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public
 
