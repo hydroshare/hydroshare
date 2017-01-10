@@ -548,14 +548,12 @@ def create_empty_resource(pk, user, action='version'):
         if not user.uaccess.owns_resource(res):
             raise PermissionDenied('Only resource owners can create new versions')
     elif action == 'copy':
+        # import here to avoid circular import
+        from hs_core.views.utils import can_user_copy_resource
         if not user.uaccess.can_view_resource(res):
             raise PermissionDenied('You do not have permission to view this resource')
-        if not user.uaccess.owns_resource(res) and \
-                (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                                  "Commons Attribution-NoDerivs CC BY-ND."or
-                 res.metadata.rights.statement == "This resource is shared under the Creative "
-                                                  "Commons Attribution-NoCommercial-NoDerivs "
-                                                  "CC BY-NC-ND."):
+        allow_copy = can_user_copy_resource(res, user)
+        if not allow_copy:
             raise PermissionDenied('The license for this resource does not permit copying')
     else:
         raise ValidationError('Input parameter error: action needs to be version or copy')

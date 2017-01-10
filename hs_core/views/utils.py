@@ -119,6 +119,27 @@ def run_script_to_update_hyrax_input_files(shortkey):
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
+def can_user_copy_resource(res, user):
+    """
+    Check whether resource copy is permitted or not
+    :param res: resource object to check for whether copy is allowed
+    :param user: the requesting user to check for whether copy is allowed
+    :return: return True if the resource can be copied; otherwise, return False
+    """
+    if not user.is_authenticated():
+        return False
+
+    if not user.uaccess.owns_resource(res) and \
+            (res.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoDerivs CC BY-ND." or
+                     res.metadata.rights.statement == "This resource is shared under the Creative "
+                                                      "Commons Attribution-NoCommercial-NoDerivs "
+                                                      "CC BY-NC-ND."):
+        return False
+
+    return True
+
+
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
               raises_exception=True):
     """

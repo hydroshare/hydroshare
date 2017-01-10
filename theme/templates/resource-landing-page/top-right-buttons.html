@@ -68,7 +68,7 @@
                 {% endif %}
                 {% if user.is_authenticated and rights.statement %}
                     {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
-                        {% if not is_owner_user and rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." or not is_owner_user and rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND."%}
+                        {% if not allow_resource_copy %}
                             <a disabled>
                                 <span data-toggle="tooltip" data-placement="auto"
                                       title="You cannot copy because the license for this resource does not permit copying"

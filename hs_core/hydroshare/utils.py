@@ -458,13 +458,13 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
     istorage = src_res.get_irods_storage()
+    src_coll = os.path.join(src_res.root_path, 'data')
     if src_res.resource_federation_path:
-        src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
         dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
         dest_coll += '/'
     else:
-        src_coll = src_res_id + '/data'
         dest_coll = dest_res_id + '/'
+
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
@@ -476,7 +476,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
 
     # link copied resource files to Django resource model
     res_id_len = len(src_res.short_id)
-    files = ResourceFile.objects.filter(object_id=src_res.id)
+    files = src_res.files.all()
     for n, f in enumerate(files):
         if f.fed_resource_file_name_or_path:
             ResourceFile.objects.create(
@@ -529,18 +529,21 @@ def copy_and_create_metadata(src_res, dest_res):
     dest_res.metadata.create_element('date', type='modified', start_date=dest_res.updated)
 
     # copy date element to the new resource if exists
-    if src_res.metadata.dates.all().filter(type='valid'):
-        res_valid_date = dest_res.metadata.dates.all().filter(type='valid')[0]
+    src_res_valid_date_filter = src_res.metadata.dates.all().filter(type='valid')
+    if src_res_valid_date_filter:
+        res_valid_date = src_res_valid_date_filter[0]
         dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
                                          end_date=res_valid_date.end_date)
 
-    if src_res.metadata.dates.all().filter(type='available'):
-        res_avail_date = dest_res.metadata.dates.all().filter(type='available')[0]
+    src_res_avail_date_filter = src_res.metadata.dates.all().filter(type='available')
+    if src_res_avail_date_filter:
+        res_avail_date = src_res_avail_date_filter[0]
         dest_res.metadata.create_element('date', type='available',
                                          start_date=res_avail_date.start_date,
                                          end_date=res_avail_date.end_date)
     # create the key/value metadata
     dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
+    dest_res.save()
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):

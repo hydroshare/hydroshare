@@ -1,11 +1,11 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, AbstractResource, GenericResource
+from hs_core.models import AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
-from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section, \
+    can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -138,6 +138,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         # then don't show content files
         show_content_files = content_model.raccess.public
 
+    allow_copy = can_user_copy_resource(content_model, user)
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -199,7 +201,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'validation_error': validation_error if validation_error else None,
-                   'resource_creation_error': create_resource_error if create_resource_error else None,
+                   'resource_creation_error': create_resource_error,
                    'relevant_tools': relevant_tools,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
@@ -210,6 +212,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
+                   'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
                    'belongs_to_collections': belongs_to_collections
         }
