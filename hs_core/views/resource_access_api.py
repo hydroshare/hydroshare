@@ -1,4 +1,4 @@
-
+from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from rest_framework import generics, serializers
 from rest_framework import status
@@ -174,9 +174,10 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
                 GroupResourcePrivilege.objects.filter(resource=resource)
             )
         else:
+            user_groups = Group.objects.filter(gaccess__g2ugp__user=user)
             querysets = (
                 UserResourcePrivilege.objects.filter(resource=resource, user=user),
-                GroupResourcePrivilege.objects.filter(resource=resource, user=user)
+                GroupResourcePrivilege.objects.filter(resource=resource, group__in=user_groups)
             )
 
         return querysets
