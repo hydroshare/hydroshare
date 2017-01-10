@@ -1319,19 +1319,6 @@ class AbstractResource(ResourcePermissionsMixin):
         from hydroshare import hs_bagit
         for fl in self.files.all():
             # These deletes should now cascade properly.
-            # if fl.fed_resource_file_name_or_path:
-            #     istorage = FedStorage()
-            #     if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
-            #         istorage.delete('{}/{}'.format(self.resource_federation_path,
-            #                                        fl.fed_resource_file_name_or_path))
-            #     else:
-            #         istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
-            #                                           self.short_id,
-            #                                           fl.fed_resource_file_name_or_path))
-            # elif fl.resource_file:
-            #     fl.resource_file.delete()
-            # elif fl.fed_resource_file:
-            #     fl.fed_resource_file.delete()
             fl.delete()
         hs_bagit.delete_bag(self)
         self.metadata.delete_all_elements()
@@ -1580,6 +1567,12 @@ def get_resource_path(resource, filename, folder=None):
     to do this.
 
     """
+    # strip qualifications off of folder if necessary
+    if folder is not None and folder.startswith(resource.root_path): 
+        folder = folder[len(resource.root_path):] 
+    if folder == '': 
+        folder = None
+
     # retrieve federation path -- if any -- from Resource object containing the file
     if filename.startswith(resource.file_path):
         return filename
@@ -1639,6 +1632,12 @@ class ResourceFile(models.Model):
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     # DEPRECATED: use native size() routine
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
+    def __str__(self): 
+        if self.resource.resource_federation_path: 
+            return self.fed_resource_file.name
+        else: 
+            return self.resource_file.name 
 
     @classmethod
     def create(cls, resource, file, folder=None, source=None, move=False):
@@ -1952,7 +1951,6 @@ class ResourceFile(models.Model):
                                             fed_resource_file=get_resource_path(resource,
                                                                                 file,
                                                                                 folder))
-        # TODO: search for resource appropriately.
         else:
             return ResourceFile.objects.get(object_id=resource.id,
                                             resource_file=get_resource_path(resource,
@@ -1961,16 +1959,24 @@ class ResourceFile(models.Model):
 
     @classmethod
     def list(cls, resource, folder):
-        if not folder.startswith(resource.base_path):
-            folder = os.path.join(resource.base_path, folder)
+        """
+        List a given folder
+
+        :param resource: resource for which to list the folder 
+        :param folder: folder listed as either short_path or fully qualified path 
+        """
+        if folder is None: 
+            folder = resource.file_path
+        elif not folder.startswith(resource.file_path):
+            folder = os.path.join(resource.file_path, folder)
         if resource.resource_federation_path:
             return ResourceFile.objects.filter(
-                resource_id=resource.id,
-                fed_resource_file__name__startswith=folder)
+                object_id=resource.id,
+                fed_resource_file__startswith=folder)
         else:
             return ResourceFile.objects.filter(
-                resource_id=resource.id,
-                resource_file__name__startswith=folder)
+                object_id=resource.id,
+                resource_file__startswith=folder)
 
     @classmethod
     def create_folder(cls, resource, folder):
@@ -1979,7 +1985,7 @@ class ResourceFile(models.Model):
         from hs_core.views.utils import create_folder
         _path_is_allowed(folder)
         # TODO: move code from location used below to here
-        create_folder(resource.short_id, folder)
+        create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
     @classmethod
     def remove_folder(cls, resource, folder, user):
@@ -1988,7 +1994,7 @@ class ResourceFile(models.Model):
         from hs_core.views.utils import remove_folder
         _path_is_allowed(folder)
         # TODO: move code from location used below to here
-        remove_folder(user, resource.short_id, folder)
+        remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
 
 class Bags(models.Model):
@@ -2085,6 +2091,8 @@ class BaseResource(Page, AbstractResource):
     def file_path(self):
         """
         Return the file path of the resource. This is the root path plus "data/contents".
+        
+        This is the root of the folder structure for resource files.
         """
         return os.path.join(self.root_path, "data", "contents")
 

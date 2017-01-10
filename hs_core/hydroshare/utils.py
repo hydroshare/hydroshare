@@ -247,7 +247,7 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
-# TODO: make the local cache file part of the ResourceFile state?
+# TODO: make the local cache file (and cleanup) part of the ResourceFile state?
 def get_file_from_irods(res_file):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
@@ -259,20 +259,9 @@ def get_file_from_irods(res_file):
     :return: location of the copied file
     """
     res = res_file.resource
-    if res_file.fed_resource_file or res_file.fed_resource_file_name_or_path:
-        istorage = IrodsStorage('federated')
-    else:
-        istorage = IrodsStorage()
-    if res_file.resource_file:
-        res_file_path = res_file.resource_file.name
-        file_name = os.path.basename(res_file.resource_file.name)
-    elif res_file.fed_resource_file:
-        res_file_path = res_file.fed_resource_file.name
-        file_name = os.path.basename(res_file.fed_resource_file.name)
-    else:
-        res_file_path = os.path.join(res.resource_federation_path, res.short_id,
-                                     res_file.fed_resource_file_name_or_path)
-        file_name = os.path.basename(res_file.fed_resource_file_name_or_path)
+    istorage = res.get_irods_storage() 
+    res_file_path = res_file.storage_path
+    file_name  = os.path.basename(res_file_path) 
 
     tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
     tmpfile = os.path.join(tmpdir, file_name)
@@ -301,19 +290,12 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     :param user: user who is replacing the resource file.
     :return:
     """
-
     ori_res = original_resource_file.resource
-    if original_resource_file.resource_file:
-        istorage = IrodsStorage()
-        destination_file = original_resource_file.resource_file.name
-    else:
-        istorage = IrodsStorage('federated')
-        if original_resource_file.fed_resource_file:
-            destination_file = original_resource_file.fed_resource_file.name
-        else:
-            destination_file = os.path.join(ori_res.resource_federation_path, ori_res.short_id,
-                                            original_resource_file.fed_resource_file_name_or_path)
-    istorage.saveFile(new_file, destination_file, True)
+    istorage = ori_res.get_irods_storage() 
+    ori_storage_path = original_resource_file.storage_path 
+
+    # Note: this doesn't update metadata at all. 
+    istorage.saveFile(new_file, ori_storage_path, True)
 
     # do this so that the bag will be regenerated prior to download of the bag
     resource_modified(ori_res, by_user=user, overwrite_bag=False)
@@ -328,14 +310,7 @@ def get_resource_file_name_and_extension(res_file):
     :return: (full filename with path, full file base name, file extension)
              ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")
     """
-    f_fullname = None
-    if res_file.resource_file:
-        f_fullname = res_file.resource_file.name
-    elif res_file.fed_resource_file:
-        f_fullname = res_file.fed_resource_file.name
-    elif res_file.fed_resource_file_name_or_path:
-        f_fullname = res_file.fed_resource_file_name_or_path
-
+    f_fullname = res_file.storage_path 
     f_basename = os.path.basename(f_fullname)
     _, file_ext = os.path.splitext(f_fullname)
 
@@ -349,16 +324,13 @@ def get_resource_file_url(res_file):
     :param res_file: an instance of ResourceFile for which download url is to be retrieved
     :return: download url for the resource file
     """
+    
     if res_file.resource_file:
         f_url = res_file.resource_file.url
     elif res_file.fed_resource_file:
-        idx = res_file.fed_resource_file.url.find('/data/contents/')
-        f_url = res_file.fed_resource_file.url[idx + 1:]
-    elif res_file.fed_resource_file_name_or_path:
-        f_url = res_file.fed_resource_file_name_or_path
-    else:
+        f_url = res_file.fed_resource_file.url
+    else: 
         f_url = ''
-
     return f_url
 
 
@@ -838,30 +810,14 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
 
     :return: The identifier of the ResourceFile added.
     """
-    # The fact that f can be a full pathname or a relative name is bad. 
-    # This makes it difficult to predict what will happen. 
     if f:
         if isinstance(f, basestring): 
-            print("found a local file name") 
             fname = os.path.basename(f)
         else: 
-            print("found some kind of File") 
             fname = os.path.basename(f.name)
         
         ret = ResourceFile.create(resource=resource, folder=folder, file=File(f)
                                   if not isinstance(f, UploadedFile) else f)
-
-        # override automatic renaming to avoid conflicts 
-        rel_path = fname
-        if folder is not None: 
-            rel_path = os.path.join(folder, fname) 
-        if rel_path != ret.short_path: 
-            print("found a need to rename") 
-            full_path = ret.storage_path
-            desired_path = get_resource_path(resource, fname, folder=folder)
-            print(str.format("current path is {}, desired path is {}", full_path, desired_path))
-        else: 
-            print("found no need to rename") 
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
@@ -876,12 +832,14 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
 
+        # add format metadata element if necessary
         file_format_type = get_file_mime_type(source_name)
 
     else:
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')
 
+    # TODO: generate this from data in ResourceFile 
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

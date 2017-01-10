@@ -30,13 +30,11 @@ def delete_bag(resource):
     :param resource: the resource to delete the bag for.
     :return: none
     """
-    # TODO: resource.get_storage would be easier to remember.
     istorage = resource.get_irods_storage()
 
     # delete resource directory first to remove all generated bag-related
     # files for the resource
-    # TODO: this will cause a cascade delete problem with the resource.
-    # TODO: determine what files are actually deleted other than ResourceFiles.
+    # TODO: this will cause a potential cascade delete problem with the resource.
     if istorage.exists(resource.root_path):
         istorage.delete(resource.root_path)
 
@@ -44,12 +42,11 @@ def delete_bag(resource):
         istorage.delete(resource.bag_path)
 
     # delete the bags table
-    # TODO: what is this for? Why were extra bags created in the first place?
+    # TODO: Why were extra bags created in the first place?
     for bag in resource.bags.all():
         bag.delete()
 
 
-# TODO: remove the federated zone home path; it is determined by the resource
 def create_bag_files(resource):
     """
     create and update files needed by bagit operation that is conducted on iRODS server;
@@ -91,15 +88,11 @@ def create_bag_files(resource):
     with open(from_file_name, 'w') as out:
         out.write(resource.metadata.get_xml())
 
-    # TODO: this conflicts with the location of resourcemetadata.xml in other files.
-    # TODO: I conclude that it is a temporary location.
-    # TODO: we need an arbitrary hashed filename to avoid race conditions.
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
     # This is the URL of the whole site.
-    # TODO: move this to BaseResource.
     current_site_url = current_site_url()
     # This is the qualified resource url.
     hs_res_url = os.path.join(current_site_url, 'resource', resource.short_id, 'data')
@@ -140,25 +133,13 @@ def create_bag_files(resource):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        prefix_str = 'data/contents/'
-        prefix_len = len(prefix_str)
-
-        file_name_with_rel_path = ''
-        # TODO: refactor to utilize root path name
-        # move or copy the file under the user account to under local hydro proxy account
-        # in federated zone
-        idx = f.resource.root_path.find(prefix_str)
-        if idx >= 0:
-            file_name_with_rel_path = f.fed_resource_file_name_or_path[idx+prefix_len:]
-
-        if file_name_with_rel_path:
-            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                hs_url=current_site_url,
-                res_id=resource.short_id,
-                file_name=file_name_with_rel_path)
-            resFiles.append(AggregatedResource(res_path))
-            resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(file_name_with_rel_path))
+        res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            hs_url=current_site_url,
+            res_id=resource.short_id,
+            file_name=f.short_path)
+        resFiles.append(AggregatedResource(res_uri))
+        resFiles[n]._ore.isAggregatedBy = ag_url
+        resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
     # Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -166,7 +147,7 @@ def create_bag_files(resource):
         a.add_resource(f)
 
     # handle collection resource type
-    # save cotained resource urls into resourcemap.xml
+    # save contained resource urls into resourcemap.xml
     if resource.resource_type == "CollectionResource" and resource.resources:
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id

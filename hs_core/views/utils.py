@@ -25,7 +25,7 @@ from ga_resources.utils import get_user
 
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
-from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, \
+from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
                            ResourceFile, get_resource_path
 from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
@@ -408,12 +408,19 @@ def show_relations_section(res_obj):
     return False
 
 
-def link_irods_file_to_django(resource, filename, size=0):
-    # link the newly created zip file to Django resource model
-    # filename is a short path
+# TODO: no handling of pre_create or post_create signals
+def link_irods_file_to_django(resource, filepath, size=0):
+    """
+    Link a newly created irods file to Django resource model
+
+    :param filepath: full path to file
+    :size: deprecated; size of file; not needed 
+    """
     b_add_file = False
+    # TODO: folder is an abstract concept... utilize short_path for whole API
     if resource:
-        folder, base = os.path.split(filename)
+        folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath, 
+                                                                test_exists=False) 
         try:
             ResourceFile.get(resource=resource, file=base, folder=folder)
         except ObjectDoesNotExist:
@@ -422,7 +429,7 @@ def link_irods_file_to_django(resource, filename, size=0):
             b_add_file = True
 
         if b_add_file:
-            file_format_type = get_file_mime_type(filename)
+            file_format_type = get_file_mime_type(filepath)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
 
@@ -431,20 +438,25 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
+
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: IrodsStorage object
-    :param foldername: the folder name
-    :param exclude: a tuple that includes file names to be excluded from linking under the folder;
-     default is empty meaning nothing is excluded.
+    :param istorage: REDUNDANT: IrodsStorage object
+    :param foldername: the folder name, as a fully qualified path 
+    :param exclude: UNUSED: a tuple that includes file names to be excluded from linking under the folder;
     :return:
     """
-    if resource and istorage and foldername:
+    if __debug__: 
+        assert(isinstance(resource, BaseResource))
+    istorage = resource.get_irods_storage()
+
+    if foldername:
         store = istorage.listdir(foldername)
         # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 size = istorage.size(file_path)
+                # This assumes that file_path is a full path 
                 link_irods_file_to_django(resource, file_path, size)
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
@@ -470,16 +482,13 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                  test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
 
-    # TODO: it is possible that the source is not found and the
-    # task is not to rename a directory.  This renames the directory anyway.
-    except NotFound:
+    except ObjectDoesNotExist: 
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list(resource, src_name)
 
         for fobj in res_file_objs:
             src_path = fobj.storage_path
-            # replace src_name with tgt_name
-
+            # naively replace src_name with tgt_name
             new_path = src_path.replace(src_name, tgt_name, 1)
             fobj.set_storage_path(new_path)
 
@@ -492,24 +501,20 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     :param foldername: the folder name that has been removed from iRODS
     :return:
     """
+    # TODO: Istorage parameter is redundant
+    # TODO: clarify foldername contents. Qualified or not? 
     if resource and istorage and foldername:
         if not foldername.endswith('/'):
             foldername += '/'
-        if resource.resource_federation_path:
-            if resource.resource_federation_path in foldername:
-                start_idx = len(resource.resource_federation_path) + len(resource.short_id) + 2
-                foldername = foldername[start_idx:]
-            res_file_set = ResourceFile.objects.filter(
-                object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
-        else:
-            res_file_set = ResourceFile.objects.filter(
-                object_id=resource.id, resource_file__icontains=foldername)
+        res_file_set = ResourceFile.objects.filter(
+            object_id=resource.id, storage_path__icontains=foldername)
         for f in res_file_set:
             filename = hydroshare.get_resource_file_name(f)
             f.delete()
             hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
 
+# TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible. 
 def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
     """
     Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for HydroShare
@@ -523,6 +528,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     after zipping.
     :return: output_zip_fname and output_zip_size pair
     """
+    if __debug__: 
+        assert(input_coll_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
@@ -530,15 +537,14 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    
     output_zip_size = istorage.size(output_zip_full_path)
 
     link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
-            # TODO: delete subfolders as necessary 
             full_path_name = f.storage_path
-            # TODO: should be more specific here
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, f.short_path, user)
 
@@ -561,6 +567,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     after unzipping.
     :return:
     """
+    if __debug__: 
+        assert(zip_with_rel_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
@@ -570,7 +578,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
-    # TODO: why was the zipfile part of the django ResourceFile's? 
+    # TODO: why was the zipfile part of the django ResourceFile's?
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
 
@@ -586,6 +594,8 @@ def create_folder(res_id, folder_path):
     res_id collection/directory
     :return:
     """
+    if __debug__: 
+        assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -602,6 +612,8 @@ def remove_folder(user, res_id, folder_path):
     :param folder_path: the relative path for the folder to be removed under res_id collection.
     :return:
     """
+    if __debug__: 
+        assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -628,6 +640,8 @@ def list_folder(res_id, folder_path):
     :param folder_path: the relative path for the folder to be listed under res_id collection.
     :return:
     """
+    if __debug__: 
+        assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -636,8 +650,8 @@ def list_folder(res_id, folder_path):
 
 
 # TODO: this doesn't take short paths
-# TODO: It takes full paths including data/contents. 
-# TODO: Thus the renaming must be adjusted. 
+# TODO: It takes full paths including data/contents.
+# TODO: Thus the renaming must be adjusted.
 
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
@@ -648,7 +662,13 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     :param src_path: the relative paths for the source file or folder under res_id collection
     :param tgt_path: the relative paths for the target file or folder under res_id collection
     :return:
+
+    Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
+    if __debug__: 
+        assert(src_path.startswith("data/contents/"))
+        assert(tgt_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     src_full_path = os.path.join(resource.root_path, src_path)
@@ -660,13 +680,12 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     src_file_dir = os.path.dirname(src_full_path)
 
     # ensure the target_full_path contains the file name to be moved or renamed to
-    # if we are moving directories, put the filename into the request.
+    # if we are moving to a directory, put the filename into the request.
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
     istorage.moveFile(src_full_path, tgt_full_path)
 
-    # TODO: this takes a full path, not a partial path. 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)

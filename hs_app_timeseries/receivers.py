@@ -35,9 +35,9 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
 
-    if files or fed_res_fnames:
+    if files or source_names:
         if resource.has_sqlite_file or resource.has_csv_file:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Resource already has the necessary content files.'
@@ -85,11 +85,11 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
     if files:
         file_name = files[0].name
-    elif fed_res_fnames:
-        file_name = os.path.basename(fed_res_fnames[0])
+    elif source_names:
+        file_name = os.path.basename(source_names[0])
 
     # extract metadata from the just uploaded file
     uploaded_file_to_process = None

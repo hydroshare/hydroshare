@@ -132,7 +132,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         file_list = []
         for f in res.files.all():
-            file_list.append(f.fed_resource_file_name_or_path.split('/')[-1])
+            file_list.append(f.storage_path.split('/')[-1])
         self.assertTrue(self.file_one in file_list,
                         msg='file 1 has not been added in the resource in user zone')
         self.assertTrue(self.file_two in file_list,

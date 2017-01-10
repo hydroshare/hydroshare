@@ -440,7 +440,9 @@ def create_resource(
         fed_zone_home_path = ''
         if fed_res_path:
             resource.resource_federation_path = fed_res_path
+            fed_zone_home_path = fed_res_path
             resource.save()
+
         # TODO: this option should be eliminated. Require explicit zone path
         elif len(source_names) > 0:
             fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
@@ -872,21 +874,10 @@ def get_resource_file_name(f):
     Returns:
         the file name of the ResourceFile object f
     '''
-    if f.resource_file:
-        # file was originally from local disk, and is currently stored in irods hydroshare zone
-        res_fname = f.resource_file.name
-    elif f.fed_resource_file:
-        # file was originally from local disk, but is currently stored in federated irods zone
-        res_fname = f.fed_resource_file.name
-    else:
-        # TODO: this option should not be possible. Always copy. Unnecessary state. 
-        # file was originally from federated irods zone, and is currently stored in the
-        # same federated irods zone
-        res_fname = f.fed_resource_file_name_or_path
-    return res_fname
+    return f.storage_path 
 
 
-# TODO: this is overly complex. Recursively delete files with post-delete signal. 
+# TODO: this is overly complex. Use logical file abstraction
 def delete_resource_file_only(resource, f):
     '''
     Delete the single resource file f from the resource without sending signals and
@@ -899,21 +890,12 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
     '''
-    # TODO: resource is redundant; f --> resource
-    # TODO: SOME WAY A LONG PATH GOT INTO THE SHORT PATHS
-    print(str.format("before delete of {}", f.short_path))
-    for r in resource.files.all(): 
-        print(str.format("  remaining: {}", r.short_path)) 
-    print(str.format("delete_resource_file_only {}", f.short_path)) 
     short_path = f.short_path
     f.delete()
-    print(str.format("after delete of {}", f.short_path))
-    for r in resource.files.all(): 
-        print(str.format("  remaining: {}", r.short_path)) 
     return short_path
 
 
-# TODO: this is overly complex. Use recursive delete
+# TODO: this is overly complex. Use recursive delete. 
 def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.

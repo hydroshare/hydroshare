@@ -187,7 +187,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     title = kwargs['title']
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
     fed_res_path = kwargs['fed_res_path']
     file_selected = False
 
@@ -195,19 +195,19 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
-    elif fed_res_fnames:
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         fed_tmpfile_name = ref_tmpfiles[0]
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(
             files,  ref_tmp_file_names=ref_tmpfiles)
-        ext = os.path.splitext(fed_res_fnames[0])[1]
+        ext = os.path.splitext(source_names[0])[1]
         if ext == '.zip':
             # clear up the original zip file so that it will not be added into the resource
-            fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
+            fed_res_path.append(utils.get_federated_zone_home_path(source_names[0]))
             # remove the temp zip file retrieved from federated zone
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
-            del fed_res_fnames[0]
+            del source_names[0]
 
         file_selected = True
 
@@ -244,7 +244,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         # remove temp file retrieved from federated zone for metadata extraction
-        if fed_res_fnames and fed_tmpfile_name:
+        if source_names and fed_tmpfile_name:
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
     else:
         # initialize required raster metadata to be place holders to be edited later by users
@@ -288,7 +288,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     files = kwargs['files']
     res = kwargs['resource']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
     validate_files_dict = kwargs['validate_files']
     file_selected = False
 
@@ -296,18 +296,18 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
-    elif fed_res_fnames:
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         fed_tmpfile_name = ref_tmpfiles[0]
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(
             files, ref_tmp_file_names=ref_tmpfiles)
-        ext = os.path.splitext(fed_res_fnames[0])[1]
+        ext = os.path.splitext(source_names[0])[1]
         if ext == '.zip':
             # remove the temp zip file retrieved from federated zone
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
             # clear up the original zip file so that it will not be added into the resource
-            del fed_res_fnames[0]
+            del source_names[0]
         file_selected = True
 
     if file_selected:
@@ -365,7 +365,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         # remove the temp file retrieved from federated zone for metadata extraction
-        if fed_res_fnames and fed_tmpfile_name:
+        if source_names and fed_tmpfile_name:
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
 
 
