@@ -281,7 +281,7 @@ class TestCopyResource(TestCase):
         # test to make sure the new copied resource is linked with the original resource via
         # isDerivedFrom Source metadata element
         self.assertEqual(new_res_raster.metadata.sources.all().count(), 1,
-                           msg="New copied resource does not has source element.")
+                         msg="New copied resource does not has source element.")
 
         derived_from_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                      self.res_raster.short_id)
