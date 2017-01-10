@@ -168,7 +168,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self, pk, user):
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
 
-        if resource.user_id == user.id:
+        if user in resource.raccess.owners:
             querysets = (
                 UserResourcePrivilege.objects.filter(resource=resource),
                 GroupResourcePrivilege.objects.filter(resource=resource)
