@@ -267,33 +267,14 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             # get the file from irods to temp dir
             temp_file = utils.get_file_from_irods(res_file)
             # validate the file
-            error_info, files_to_add_to_resource = _raster_file_validation(raster_file=temp_file)
+            error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file)
             if not error_info:
                 log.info("Geo raster file type file validation successful.")
                 # extract metadata
                 temp_dir = os.path.dirname(temp_file)
                 temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
                                       '.vrt' == os.path.splitext(f)[1]].pop()
-                res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
-                wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-                # add core metadata coverage - box
-                if wgs_cov_info:
-                    box = {'coverage': {'type': 'box', 'value': wgs_cov_info}}
-                    metadata.append(box)
-
-                # Save extended meta spatial reference
-                ori_cov = {'OriginalCoverage': {
-                    'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}}
-                metadata.append(ori_cov)
-
-                # Save extended meta cell info
-                res_md_dict['cell_info']['name'] = os.path.basename(temp_vrt_file_path)
-                metadata.append({'CellInformation': res_md_dict['cell_info']})
-
-                # Save extended meta band info
-                for band_info in res_md_dict['band_info'].values():
-                    metadata.append({'BandInformation': band_info})
-
+                metadata = extract_metadata(temp_vrt_file_path)
                 log.info("Geo raster file type metadata extraction was successful.")
                 with transaction.atomic():
                     # first delete the raster file that we retrieved from irods
@@ -382,7 +363,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 raise ValidationError(err_msg)
 
 
-def _raster_file_validation(raster_file):
+def raster_file_validation(raster_file):
     """ raster_file is the temp file retrieved from irods and stored on temp dir in django """
 
     error_info = []
@@ -392,7 +373,7 @@ def _raster_file_validation(raster_file):
     if ext == '.tif':
         # create the .vrt file
         try:
-            temp_vrt_file_path = _create_vrt_file(raster_file)
+            temp_vrt_file_path = create_vrt_file(raster_file)
         except Exception as ex:
             error_info.append(ex.message)
         else:
@@ -469,7 +450,31 @@ def _raster_file_validation(raster_file):
     return error_info, new_resource_files_to_add
 
 
-def _create_vrt_file(tif_file):
+def extract_metadata(temp_vrt_file_path):
+    metadata = []
+    res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
+    wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+    # add core metadata coverage - box
+    if wgs_cov_info:
+        box = {'coverage': {'type': 'box', 'value': wgs_cov_info}}
+        metadata.append(box)
+
+    # Save extended meta spatial reference
+    ori_cov = {'OriginalCoverage': {
+        'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}}
+    metadata.append(ori_cov)
+
+    # Save extended meta cell info
+    res_md_dict['cell_info']['name'] = os.path.basename(temp_vrt_file_path)
+    metadata.append({'CellInformation': res_md_dict['cell_info']})
+
+    # Save extended meta band info
+    for band_info in res_md_dict['band_info'].values():
+        metadata.append({'BandInformation': band_info})
+    return metadata
+
+
+def create_vrt_file(tif_file):
     """ tif_file exists in temp directory - retrieved from irods """
 
     log = logging.getLogger()
