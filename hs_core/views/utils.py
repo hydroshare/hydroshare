@@ -132,9 +132,9 @@ def can_user_copy_resource(res, user):
     if not user.uaccess.owns_resource(res) and \
             (res.metadata.rights.statement == "This resource is shared under the Creative "
                                               "Commons Attribution-NoDerivs CC BY-ND." or
-                     res.metadata.rights.statement == "This resource is shared under the Creative "
-                                                      "Commons Attribution-NoCommercial-NoDerivs "
-                                                      "CC BY-NC-ND."):
+             res.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoCommercial-NoDerivs "
+                                              "CC BY-NC-ND."):
         return False
 
     return True
