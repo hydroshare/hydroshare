@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from rest_framework.response import Response
 from rest_framework import generics, serializers
 from rest_framework import status
@@ -100,7 +100,9 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
             if int(request.data['privilege']) in (1, 2, 3, 4):
                 try:
                     user_to_add = utils.user_from_id(request.data['user_id'])
-                    user_access.share_resource_with_user(resource, user_to_add, request.data['privilege'])
+                    user_access.share_resource_with_user(resource,
+                                                         user_to_add,
+                                                         request.data['privilege'])
                     return Response(
                         data={'success': "Resource access privileges added."},
                         status=status.HTTP_202_ACCEPTED
