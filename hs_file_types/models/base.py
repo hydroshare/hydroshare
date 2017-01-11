@@ -504,7 +504,7 @@ class AbstractLogicalFile(models.Model):
         return True
 
     @property
-    def supports_delete_original_folder_on_zip(self):
+    def supports_delete_folder_on_zip(self):
         """allows the original folder to be deleted upon zipping of that folder"""
         return True
 

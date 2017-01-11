@@ -1716,7 +1716,7 @@ class AbstractResource(ResourcePermissionsMixin):
         """If resource supports creation of folder at the specified path"""
         return True
 
-    def supports_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
+    def supports_rename_path(self, src_full_path, tgt_full_path):
         """If file/folder rename/move is allowed by this resource"""
         return True
 
@@ -1728,7 +1728,7 @@ class AbstractResource(ResourcePermissionsMixin):
         """if resource supports the unzipping of the specified file"""
         return True
 
-    def supports_delete_original_folder_on_zip(self, original_folder):
+    def supports_delete_folder_on_zip(self, original_folder):
         """if resource allows the original folder to be deleted upon zipping of that folder"""
         return True
 

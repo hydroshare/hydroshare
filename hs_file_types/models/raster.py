@@ -235,7 +235,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return False
 
     @property
-    def supports_delete_original_folder_on_zip(self):
+    def supports_delete_folder_on_zip(self):
         """does not allow the original folder to be deleted upon zipping of that folder"""
         return False
 

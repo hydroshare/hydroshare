@@ -78,7 +78,7 @@ class CompositeResource(BaseResource):
 
         return True
 
-    def supports_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
+    def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed"""
 
         istorage = self.get_irods_storage()
@@ -142,7 +142,7 @@ class CompositeResource(BaseResource):
 
         return True
 
-    def supports_delete_original_folder_on_zip(self, original_folder):
+    def supports_delete_folder_on_zip(self, original_folder):
         """check if the specified folder can be deleted at the end of zipping that folder"""
 
         # find all the resource files in the folder to be deleted
@@ -157,7 +157,7 @@ class CompositeResource(BaseResource):
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped
         for res_file in res_file_objects:
-            if not res_file.logical_file.supports_delete_original_folder_on_zip:
+            if not res_file.logical_file.supports_delete_folder_on_zip:
                 return False
 
         return True

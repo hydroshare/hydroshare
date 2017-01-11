@@ -606,7 +606,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     # check if resource supports deleting the original folder after zipping
     if bool_remove_original:
-        if not resource.supports_delete_original_folder_on_zip(input_coll_path):
+        if not resource.supports_delete_folder_on_zip(input_coll_path):
             raise ValidationError("Deleting of original folder is not allowed after "
                                   "zipping of a folder.")
 
@@ -756,7 +756,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_move_or_rename_file_or_folder(src_full_path, tgt_full_path):
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File/folder move/rename is not allowed.")
 
     istorage.moveFile(src_full_path, tgt_full_path)
