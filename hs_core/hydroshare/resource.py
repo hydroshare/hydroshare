@@ -203,16 +203,20 @@ def update_resource_file(pk, filename, f):
     Exceptions.NotFound - The resource identified does not exist or the file identified by filename does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
+    # TODO: does not update metadata; does not check resource state 
     resource = utils.get_resource_by_shortkey(pk)
-    # TODO: does not work with federation 
     for rf in ResourceFile.objects.filter(object_id=resource.id):
-        if os.path.basename(rf.resource_file.name) == filename:
-            rf.resource_file.delete()
-            rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
-            rf.save()
+        if rf.short_path == filename:
+            if rf.resource_file: 
+                rf.resource_file.delete()
+                rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
+                rf.save()
+            if rf.fed_resource_file: 
+                rf.fed_resource_file.delete()
+                rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
+                rf.save()
             return rf
-    else:
-        raise ObjectDoesNotExist(filename)
+    raise ObjectDoesNotExist(filename)
 
 
 # TODO: incorrect implementation. Needs fixing if we ever need this api
@@ -755,11 +759,9 @@ def add_resource_files(pk, *files, **kwargs):
 
     if len(source_names) > 0:
         # TODO: eliminate string option; always pass a list. File names can contain ','!
-        # if isinstance(source_names, basestring):
-        #     ifnames = string.split(source_names, ',')
-        if __debug__: 
-            assert isinstance(source_names, list) 
-        if isinstance(source_names, list):
+        if isinstance(source_names, basestring):
+            ifnames = string.split(source_names, ',')
+        elif isinstance(source_names, list):
             ifnames = source_names
         else:
             return ret
@@ -937,23 +939,11 @@ def delete_resource_file(pk, filename_or_id, user):
     Exceptions.NotAuthorized - The user is not authorized
     Exceptions.NotFound - The resource identified by pid does not exist or the file identified by file does not exist
     Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  For mutable resources (resources that have not been formally published), this method modifies the resource by
-    deleting the file. For immutable resources (formally published resources), this method creates a new resource that
-    is a new version of the formally published resource. HydroShare will record the update by storing the
-    SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in their system metadata
-    HydroShare MUST check or set the values of SystemMetadata.obsoletes and SystemMetadata.obsoletedBy so that they
-    accurately represent the relationship between the new and old objects. HydroShare MUST also set
-    SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be available in
-    HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on
-    SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer
-    version. Once a resource is obsoleted, no other resources can obsolete it.
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
     fed_path = resource.resource_federation_path
-    # now only file names are supported; not ids
-    filter_condition = lambda fl: fl.short_path == filename_or_id 
+    filter_condition = lambda fl: (fl.short_path == filename_or_id or fl.id == filename_or_id)
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
@@ -963,7 +953,7 @@ def delete_resource_file(pk, filename_or_id, user):
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django 
-            delete_format_metadata_after_delete_file(resource, filename_or_id)
+            delete_format_metadata_after_delete_file(resource, file_name)
 
             if resource.raccess.public or resource.raccess.discoverable:
                 if not resource.can_be_public_or_discoverable:

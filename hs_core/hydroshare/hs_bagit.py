@@ -15,7 +15,6 @@ import bagit
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
-# from django_irods.storage import IrodsStorage
 
 
 class HsBagitException(Exception):

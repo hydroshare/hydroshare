@@ -271,25 +271,25 @@ def geofeature_pre_create_resource(sender, **kwargs):
     tmp_dir = None
     try:
         files = kwargs['files']
-        source_names = kwargs['source_names']
+        fed_res_fnames = kwargs['source_names']
         fed_res_path = kwargs['fed_res_path']
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
 
-        if files and source_names:
+        if files and fed_res_fnames:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please upload files from ' \
                                              'either local disk or irods, not both.'
             return
 
-        if files or source_names:
+        if files or fed_res_fnames:
             file_info_list = []  # [[full_name1, full_path1], [full_name2, full_path2], ...]
             for f in files:
                 f_info = [f.name, f.file.name]
                 file_info_list.append(f_info)
-            if source_names:
+            if fed_res_fnames:
                 # copy all irods files to django server to extract metadata
-                irods_file_path_list = utils.get_fed_zone_files(source_names)
+                irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
                 fed_tmpfile_name_list = []
                 for file_path in irods_file_path_list:
                     fed_tmpfile_name_list.append(file_path)
@@ -318,25 +318,21 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     metadata.extend(meta_array)
                     metadata.extend(parse_shp_xml(files_type['shp_xml_full_path']))
 
-                    if source_names:
+                    if fed_res_fnames:
                         # as long as there is a file uploaded from a fed'd
                         # irod zone, the res should be created in that fed'd zone
-                        
-                        new_fed_path = utils.get_federated_zone_home_path(source_names[0])
-                        if __debug__: 
-                            assert fed_res_path == new_fed_path or fed_res_path == ''
-                        fed_res_path = new_fed_path 
+                        # TODO: If fed_res_path is already set, this will break.
+                        fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
 
                     if uploaded_file_type == "zipped_shp":
-                        if source_names:
-                            # TODO: This presumes that only one file is uploaded. 
+                        if fed_res_fnames:
                             # remove the temp zip file retrieved from federated zone
                             if fed_tmpfile_name_list:
                                 shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             # zip file from fed'd irods zone should be extracted on django sever
                             # the original zip file should NOT be stored in res
                             # instead, those unzipped files should be stored
-                            del source_names[:]
+                            del fed_res_fnames[:]
 
                         del kwargs['files'][:]
                         kwargs['files'].extend(files_type["files_new"])
@@ -357,7 +353,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
         # remove all temp files retrieved from federated zone
-        if source_names and fed_tmpfile_name_list:
+        if fed_res_fnames and fed_tmpfile_name_list:
             for file_path in fed_tmpfile_name_list:
                 shutil.rmtree(os.path.dirname(file_path))
 
@@ -446,10 +442,10 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     res_obj = kwargs['resource']
     res_id = res_obj.short_id
     files = kwargs['files']
-    source_names = kwargs['source_names']
+    fed_res_fnames = kwargs['source_names']
 
     validate_files_dict = kwargs['validate_files']
-    if files and source_names:
+    if files and fed_res_fnames:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Please upload files from ' \
                                          'either local disk or irods, not both.'
@@ -462,9 +458,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     for f in files:
         f_info = [f.name, f.file.name]
         file_info_list.append(f_info)
-    if source_names:
+    if fed_res_fnames:
         # copy all irods files to django server to extract metadata
-        irods_file_path_list = utils.get_fed_zone_files(source_names)
+        irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
         fed_tmpfile_name_list = []
         for file_path in irods_file_path_list:
             fed_tmpfile_name_list.append(file_path)
@@ -609,7 +605,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                             ['subject']['value'])
 
                 if uploaded_file_type == "zipped_shp":
-                        if source_names:
+                        if fed_res_fnames:
                             # remove the temp zip file retrieved from federated zone
                             if fed_tmpfile_name_list:
                                 shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
@@ -627,7 +623,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
             # remove all temp files retrieved from federated zone
-            if source_names and fed_tmpfile_name_list:
+            if fed_res_fnames and fed_tmpfile_name_list:
                 for file_path in fed_tmpfile_name_list:
                     shutil.rmtree(os.path.dirname(file_path))
     except Exception as ex:
@@ -648,18 +644,14 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     try:
         files = kwargs['files']
-        source_names = kwargs.get('source_names', [])
-
-        # TODO: why is the file name lowercased here?  This is misnamed; this will always result in basenames. 
-        files_full_name_list = [f.name.lower() for f in files]
-
+        fed_res_fnames = kwargs.get('source_names', [])
         found_shp = False
         found_prj = False
 
-        if source_names:
-            for file_path in source_names:
-                file_full_name = os.path.basename(file_path)
-                # TODO: why is the file name lowercased here? Is the real objective to lowercase '.shp'?
+        files_full_name_list = [f.name.lower() for f in files]
+        if fed_res_fnames:
+            for file_path in fed_res_fnames:
+                file_full_name = file_path[file_path.rfind('/')+1:]
                 files_full_name_list.append(file_full_name.lower())
 
         for fn in files_full_name_list:
@@ -668,28 +660,36 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             elif fn.endswith(".prj"):
                 found_prj = True
 
-        # TODO: I don't understand this logic. 
-        # The objective is to parse a shape file. 
-        # It seems that this is only parsed if it is not present in the source_names list, which would mean 
-        # that it is not present in the res_file_list as well. 
         if found_prj and (not found_shp):
             res_file_list = resource.files.all()
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
-                # This copies all files into a temp directory 
                 for res_f in res_file_list:
-                    source = res_f.storage_path 
-                    f_fullname = os.path.basename(source) 
-                    # TODO: Why tolower here? Should be part of name cleaning instead. 
-                    target = os.path.join(tmp_dir,f_fullname.lower())
+                    if res_f.resource_file:
+                        # file is stored on hs irods
+                        source = res_f.resource_file.file.name
+                        f_fullname = res_f.resource_file.name
+                    elif res_f.fed_resource_file:
+                        # file is stored on fed'd user irods
+                        source = utils.get_fed_zone_files(res_f.storage_path)
+                        # os.path.join(resource.resource_federation_path, resource.short_id,
+                        #              res_f.fed_resource_file_name_or_path))[0]
+                        f_fullname = source
+                    # elif res_f.fed_resource_file:
+                    #     # was originally from local disk, but now is stored on fed'd user irods
+                    #     source = res_f.fed_resource_file.file.name
+                    #     f_fullname = res_f.fed_resource_file.name
+
+                    f_fullname = f_fullname[f_fullname.rfind('/')+1:]
+                    fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                    target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
-                    # TODO: Why is this being done here? Why is this necessary at all? 
-                    # for temp file retrieved from federation zone, it should be deleted after it is copied
-                    # if res_f.fed_resource_file_name_or_path:
-                    #     shutil.rmtree(source)
+                    # for temp file retrieved from federation zone,
+                    # it should be deleted after it is copied
+                    if res_f.fed_resource_file_name_or_path:
+                        shutil.rmtree(source)
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
-                shp_full_path = os.path.join(tmp_dir,ori_file_info.baseFilename + ".shp")
-                # TODO: we don't know if this exists! 
+                shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
                 parsed_md_dict = parse_shp(shp_full_path)
                 originalcoverage_obj = resource.metadata.originalcoverage.all().first()
                 if originalcoverage_obj:

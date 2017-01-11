@@ -506,12 +506,13 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     if resource and istorage and foldername:
         if not foldername.endswith('/'):
             foldername += '/'
-        res_file_set = ResourceFile.objects.filter(
-            object_id=resource.id, storage_path__icontains=foldername)
+        res_file_set = ResourceFile.objects.filter(object_id=resource.id)
+        folderpath = os.path.join(resource.root_path, foldername) 
         for f in res_file_set:
-            filename = hydroshare.get_resource_file_name(f)
-            f.delete()
-            hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+            filename = f.storage_path 
+            if filename.startswith(folderpath): 
+                f.delete()
+                hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
 
 # TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible. 
