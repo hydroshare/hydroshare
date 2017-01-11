@@ -74,7 +74,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         )
 
         # george creates a entity 'bikers'
-        self.bikers = self.george.uaccess.create_group('Bikers')
+        self.bikers = self.george.uaccess.create_group('Bikers', 'Of the human powered kind')
 
     def test_usergroupprivilege_get_current_record(self):
         george = self.george
@@ -91,7 +91,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
 
-    def test_usergroupprivilege_get_rollback_users(self):
+    def test_usergroupprivilege_get_undo_users(self):
         george = self.george
         bikers = self.bikers
         alva = self.alva
@@ -102,7 +102,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             grantor=george)
         self.assertTrue(
             is_equal_to_as_set(
-                UserGroupProvenance.get_rollback_users(
+                UserGroupProvenance.get_undo_users(
                     group=bikers,
                     grantor=george),
                 [alva]))
@@ -147,7 +147,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 user=alva),
             PrivilegeCodes.CHANGE)
 
-    def test_usergroupprivilege_rollback(self):
+    def test_usergroupprivilege_undo_share(self):
         george = self.george
         bikers = self.bikers
         alva = self.alva
@@ -186,19 +186,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers,
                 user=alva),
             PrivilegeCodes.VIEW)
-        UserGroupProvenance.rollback(group=bikers, user=alva)
+        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
                 user=alva),
             PrivilegeCodes.NONE)
-        UserGroupProvenance.rollback(group=bikers, user=alva)
+        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
                 user=alva),
             PrivilegeCodes.CHANGE)
-        UserGroupProvenance.rollback(group=bikers, user=alva)
+        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
@@ -224,7 +224,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers,
                 user=alva),
             PrivilegeCodes.CHANGE)
-        UserGroupProvenance.rollback(group=bikers, user=alva)
+        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
@@ -265,7 +265,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         UserGroupPrivilege.update(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             UserGroupPrivilege.get_privilege(
                 group=bikers,
@@ -284,7 +285,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         UserGroupPrivilege.update(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             UserGroupPrivilege.get_privilege(
                 group=bikers,
@@ -306,7 +308,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
 
-    def test_userresourceprivilege_get_rollback_users(self):
+    def test_userresourceprivilege_get_undo_users(self):
         george = self.george
         bikes = self.bikes
         alva = self.alva
@@ -316,12 +318,12 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             privilege=PrivilegeCodes.CHANGE,
             grantor=george)
         pprint(
-            UserResourceProvenance.get_rollback_users(
+            UserResourceProvenance.get_undo_users(
                 resource=bikes,
                 grantor=george))
         self.assertTrue(
             is_equal_to_as_set(
-                UserResourceProvenance.get_rollback_users(
+                UserResourceProvenance.get_undo_users(
                     resource=bikes,
                     grantor=george),
                 [alva]))
@@ -366,7 +368,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 user=alva),
             PrivilegeCodes.CHANGE)
 
-    def test_userresourceprivilege_rollback(self):
+    def test_userresourceprivilege_undo_share(self):
         george = self.george
         bikes = self.bikes
         alva = self.alva
@@ -405,19 +407,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.VIEW)
-        UserResourceProvenance.rollback(resource=bikes, user=alva)
+        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
         self.assertEqual(
             UserResourceProvenance.get_privilege(
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.NONE)
-        UserResourceProvenance.rollback(resource=bikes, user=alva)
+        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
         self.assertEqual(
             UserResourceProvenance.get_privilege(
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.CHANGE)
-        UserResourceProvenance.rollback(resource=bikes, user=alva)
+        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
         self.assertEqual(
             UserResourceProvenance.get_privilege(
                 resource=bikes,
@@ -443,7 +445,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.CHANGE)
-        UserResourceProvenance.rollback(resource=bikes, user=alva)
+        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
         self.assertEqual(
             UserResourceProvenance.get_privilege(
                 resource=bikes,
@@ -477,14 +479,15 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         bikes = self.bikes
         alva = self.alva
         self.assertEqual(
-            UserResourcePrivilege.get_privilege(
+            UserResourceProvenance.get_privilege(
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.NONE)
         UserResourcePrivilege.update(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             UserResourcePrivilege.get_privilege(
                 resource=bikes,
@@ -503,7 +506,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         UserResourcePrivilege.update(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             UserResourcePrivilege.get_privilege(
                 resource=bikes,
@@ -525,7 +529,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, bikers)
 
-    def test_groupresourceprivilege_get_rollback_groups(self):
+    def test_groupresourceprivilege_get_undo_groups(self):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
@@ -536,7 +540,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             grantor=george)
         self.assertTrue(
             is_equal_to_as_set(
-                GroupResourceProvenance.get_rollback_groups(
+                GroupResourceProvenance.get_undo_groups(
                     resource=bikes,
                     grantor=george),
                 [bikers]))
@@ -581,7 +585,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers),
             PrivilegeCodes.CHANGE)
 
-    def test_groupresourceprivilege_rollback(self):
+    def test_groupresourceprivilege_undo_share(self):
         george = self.george
         bikes = self.bikes
         bikers = self.bikers
@@ -620,19 +624,19 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 group=bikers),
             PrivilegeCodes.VIEW)
-        GroupResourceProvenance.rollback(resource=bikes, group=bikers)
+        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
                 resource=bikes,
                 group=bikers),
             PrivilegeCodes.NONE)
-        GroupResourceProvenance.rollback(resource=bikes, group=bikers)
+        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
                 resource=bikes,
                 group=bikers),
             PrivilegeCodes.CHANGE)
-        GroupResourceProvenance.rollback(resource=bikes, group=bikers)
+        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
                 resource=bikes,
@@ -658,7 +662,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 group=bikers),
             PrivilegeCodes.CHANGE)
-        GroupResourceProvenance.rollback(resource=bikes, group=bikers)
+        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
                 resource=bikes,
@@ -699,7 +703,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupResourcePrivilege.update(
             resource=bikes,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             GroupResourcePrivilege.get_privilege(
                 resource=bikes,
@@ -718,7 +723,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         GroupResourcePrivilege.update(
             resource=bikes,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE)
+            privilege=PrivilegeCodes.CHANGE, 
+            grantor=george)
         self.assertEqual(
             GroupResourcePrivilege.get_privilege(
                 resource=bikes,

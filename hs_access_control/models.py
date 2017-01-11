@@ -187,29 +187,68 @@ class UserGroupPrivilege(PrivilegeBase):
 
     @classmethod
     def share(cls, **kwargs):
+        """ share a group and update provenance """
+        if __debug__: 
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group) 
+            assert 'user' in kwargs 
+            assert isinstance(kwargs['user'], User) 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
+            assert 'privilege' in kwargs
+            assert kwargs['privilege'] >= PrivilegeCodes.OWNER and \
+                   kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert len(kwargs) == 4
         cls.update(**kwargs)
         UserGroupProvenance.update(**kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
+        """ unshare a group and update provenance """
+        if __debug__: 
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group) 
+            assert 'user' in kwargs 
+            assert isinstance(kwargs['user'], User) 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
     @classmethod
     def undo_share(cls, **kwargs):
+        """ undo a share of a group and update provenance """
+        if __debug__: 
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group) 
+            assert 'user' in kwargs 
+            assert isinstance(kwargs['user'], User) 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 3
         UserGroupProvenance.undo_share(**kwargs)
         del kwargs['grantor']
         r = UserGroupProvenance.get_current_record(**kwargs)
-        cls.update(**r)
+        cls.update(user=r.user, group=r.group, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
-    def get_undo_share_groups(cls, **kwargs):
-        """ Get a set of users for which the current user can undo privilege
+    def get_undo_users(cls, **kwargs):
+        """ Get a set of users for which a grantor can undo privilege
 
         :param group: group to check
         :param grantor: user that will undo privilege
+
+        This should not be called directly by developers! 
+        Use UserAccess.get_resource_undo_users instead. 
         """
-        return UserGroupProvenance.get_undo_share_groups(**kwargs)
+        if __debug__: 
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group) 
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 2
+        return UserGroupProvenance.get_undo_users(**kwargs)
 
 
 class UserResourcePrivilege(PrivilegeBase):
@@ -270,24 +309,36 @@ class UserResourcePrivilege(PrivilegeBase):
 
     @classmethod
     def undo_share(cls, **kwargs):
+        if __debug__: 
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource) 
+            assert 'user' in kwargs 
+            assert isinstance(kwargs['user'], User) 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
         UserResourceProvenance.undo_share(**kwargs)
-        del kwargs['grantor']
+        del kwargs['grantor'] 
         r = UserResourceProvenance.get_current_record(**kwargs)
-        cls.update(**r)
+        cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
-    def get_undo_share_users(cls, **kwargs):
+    def get_undo_users(cls, **kwargs):
         """ Get a set of users for which the current user can undo privilege
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
         """
-        return UserResourceProvenance.get_undo_share_groups(**kwargs)
+        if __debug__: 
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource) 
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 2
+        return UserResourceProvenance.get_undo_users(**kwargs)
 
 
 class GroupResourcePrivilege(PrivilegeBase):
     """ Privileges of a group over a resource.
-
     The group privilege over a resource is never meaningful;
     it is resolved instead into user privilege for each member of
     the group, as listed in UserGroupPrivilege above.
@@ -346,19 +397,32 @@ class GroupResourcePrivilege(PrivilegeBase):
     @classmethod
     def undo_share(cls, **kwargs):
         """ undo a share of a resource with a group and update provenance """
+        if __debug__: 
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource) 
+            assert 'group' in kwargs 
+            assert isinstance(kwargs['group'], Group) 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
         GroupResourceProvenance.undo_share(**kwargs)
         del kwargs['grantor']
         r = GroupResourceProvenance.get_current_record(**kwargs)
-        cls.update(**r)
+        cls.update(group=r.group, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
-    def get_undo_share_groups(cls, **kwargs):
+    def get_undo_groups(cls, **kwargs):
         """ Get a set of groups for which the current user can undo privilege
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
         """
-        return GroupResourceProvenance.get_undo_share_groups(**kwargs)
+        if __debug__: 
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource) 
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 2
+        return GroupResourceProvenance.get_undo_groups(**kwargs)
 
 
 class ProvenanceCodes(object):
@@ -450,6 +514,11 @@ class ProvenanceBase(models.Model):
         """ get the record in effect for a given pair """
         # First, compute the latest start time for the privilege.
         # This is the start of the effective record.
+        if __debug__: 
+            assert len(kwargs) == 2 
+        print("inside get_current_record:") 
+        for k in kwargs: 
+            print (str.format("  {}={}", k, kwargs[k]))
         start = cls.__get_current_start(**kwargs)
         # Then, fetch that unique record.
         if start is not None:
@@ -459,7 +528,7 @@ class ProvenanceBase(models.Model):
             return None
 
     @classmethod
-    def get_current_privilege(cls, **kwargs):
+    def get_privilege(cls, **kwargs):
         """ Get the privilege implied by provenance state """
         result = cls.get_current_record(**kwargs)
         if result is not None:
@@ -528,19 +597,27 @@ class ProvenanceBase(models.Model):
         Note that this does not modify the *Privilege class accordingly.
         That must be done separately.
         """
+        if __debug__: 
+            assert 'grantor' in kwargs 
+            assert isinstance(kwargs['grantor'], User) 
+            assert len(kwargs) == 3
+        grantor = kwargs['grantor'] 
+        del kwargs['grantor'] 
         current = cls.get_current_record(**kwargs)
         if current is None or current.state == ProvenanceCodes.INITIAL:
-            raise PermissionDenied("No privilege to roll back")
+            raise PermissionDenied("No privilege to undo")
+        if current.grantor != grantor: 
+            raise PermissionDenied("Current user is not grantor") 
 
         previous = cls.__get_undo_share_record(**kwargs)
         if previous is not None:
 
-            # create an undo_share record that itself cannot be backstepped over.
+            # create a rollback record that itself cannot be backstepped over.
             cls.update(privilege=previous.privilege,
                        grantor=previous.grantor,
                        state=ProvenanceCodes.RESTORED,
                        **kwargs)
-            # this marks the reinstated record as inactive.
+            # this marks the reinstated record as reused and inactive.
             previous.state = ProvenanceCodes.REUSED
             previous.save()
         else:
@@ -684,8 +761,8 @@ class UserGroupProvenance(ProvenanceBase):
     def entity(self):
         return self.group
 
-    @staticmethod
-    def get_undo_share_users(group, grantor):
+    @classmethod 
+    def get_undo_users(cls, group, grantor):
         """ get the users for which a specific grantee can roll back privilege """
 
         if __debug__:
@@ -777,8 +854,8 @@ class UserResourceProvenance(ProvenanceBase):
     def entity(self):
         return self.resource
 
-    @staticmethod
-    def get_undo_share_users(resource, grantor):
+    @classmethod 
+    def get_undo_users(cls, resource, grantor):
         """ get the users for which a specific user can roll back privilege """
 
         if __debug__:
@@ -874,8 +951,8 @@ class GroupResourceProvenance(ProvenanceBase):
     def entity(self):
         return self.resource
 
-    @staticmethod
-    def get_undo_share_groups(resource, grantor):
+    @classmethod 
+    def get_undo_groups(cls, resource, grantor):
         """ get the groups for which a specific user can roll back privilege """
 
         if __debug__:
@@ -1086,10 +1163,10 @@ class UserAccess(models.Model):
         raw_user = self.user
 
         # Must bootstrap access control system initially
-        UserGroupPrivilege.objects.create(group=raw_group,
-                                          user=raw_user,
-                                          grantor=raw_user,
-                                          privilege=PrivilegeCodes.OWNER)
+        UserGroupPrivilege.share(group=raw_group,
+                                 user=raw_user,
+                                 grantor=raw_user,
+                                 privilege=PrivilegeCodes.OWNER)
         return raw_group
 
     def delete_group(self, this_group):
@@ -2696,9 +2773,14 @@ class UserAccess(models.Model):
     # "undo" system based upon provenance
     #######################
 
+    # TODO: should we rename these to get_undo_users for each subfunction? 
     def get_group_undo_users(self, this_group):
         """ get a list of users that can be removed from group privilege by self """
-        return UserGroupPrivilege.get_undo_share_users(group=this_group)
+        return UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+
+    def can_undo_group_share(self, this_group, this_user): 
+        """ Check that a group share can be undone """
+        return this_user in self.get_group_undo_users(this_group) 
 
     def undo_share_group_with_user(self, this_group, this_user):
         """ undo a share with a user that was granted by self """
@@ -2706,7 +2788,7 @@ class UserAccess(models.Model):
 
     def get_resource_undo_users(self, this_resource):
         """ get a list of users that can be removed from resource privilege by self """
-        return UserResourcePrivilege.get_undo_share_users(resource=this_resource)
+        return UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
 
     def undo_share_resource_with_user(self, this_resource, this_user):
         """ undo a share with a user that was granted by self """
@@ -2714,12 +2796,11 @@ class UserAccess(models.Model):
 
     def get_resource_undo_groups(self, this_resource):
         """ get a list of groups that can be removed from resource privilege by self """
-        return GroupResourcePrivilege.get_undo_share_groups(resource=this_resource)
+        return GroupResourcePrivilege.get_undo_groups(resource=this_resource, grantor=self.user)
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """ undo a share with a group that was granted by self """
-        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group,
-                                          grantor=self.user)
+        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group, grantor=self.user)
 
 
 class GroupMembershipRequest(models.Model):
