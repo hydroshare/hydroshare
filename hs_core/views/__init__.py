@@ -35,7 +35,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -203,10 +203,13 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
                 if element_name == 'subject':
-                    keywords = [k.strip() for k in element_data_dict['value'].split(',')]
-                    if res.metadata.subjects.all().count() > 0:
-                        res.metadata.subjects.all().delete()
+                    # using set() to remove any duplicate keywords
+                    keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
+                    res.metadata.subjects.all().delete()
+                    keyword_maxlength = Subject._meta.get_field('value').max_length
                     for kw in keywords:
+                        if len(kw) > keyword_maxlength:
+                            kw = kw[:keyword_maxlength]
                         res.metadata.create_element(element_name, value=kw)
                     is_add_success = True
                 else:
@@ -1164,7 +1167,7 @@ def get_file(request, *args, **kwargs):
     from django_irods.icommands import RodsSession
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
-    session.runCmd("iinit");
+    session.runCmd("iinit")
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 

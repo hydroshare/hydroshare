@@ -194,14 +194,20 @@ preflight_hs() {
         cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
         sed -i 's!HS_SSH_SERVER!'"${PROD_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
         sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # disable /tests/ URL
+        sed -i 's!.*tests.html.*!    # QUNIT_TESTS_OFF!' ${HS_PATH}/hydroshare/urls.py
     elif [ "${USE_NGINX,,}" = true ]; then
         cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
         sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
         sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # enable /tests/ URL
+        sed -i 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
     else
         cp -rf ${HS_PATH}/scripts/run-dev-server ${HS_PATH}/run-server
         sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
         sed -i 's!HS_DJANGO_SERVER!'"${DEV_SERVER}"'!g' ${HS_PATH}/init-hydroshare
+        # enable /tests/ URL
+        sed -i 's!.*QUNIT_TESTS_OFF.*!    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),!' ${HS_PATH}/hydroshare/urls.py
     fi
     # Generate init-defaultworker
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker

@@ -646,13 +646,13 @@
 {%  endblock %}
 
 {%  block delete-self-access-to-resource %}
-    <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access">
-    <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
-        This action will remove your access to this resource and you will no longer be able to
-        access it without someone else sharing it with you again. This is not reversible,
-        so <strong>Remove</strong> with caution.
-    </p>
-</div>
+    <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access" style="display:none">
+        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
+            This action will remove your access to this resource and you will no longer be able to
+            access it without someone else sharing it with you again. This is not reversible,
+            so <strong>Remove</strong> with caution.
+        </p>
+    </div>
 {%  endblock %}
 
 {%  block wait-for-process-to-complete %}

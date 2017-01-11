@@ -2006,17 +2006,25 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def size(self):
-        f_sizes = [f.resource_file.size
-                   if f.resource_file else 0
-                   for f in self.files.all()]
-        total_file_size = sum(f_sizes)
+
+        total_file_size = 0
+
         try:
+            # compute the total file size for the resource
+            f_sizes = [f.resource_file.size
+                       if f.resource_file else 0
+                       for f in self.files.all()]
+            total_file_size = sum(f_sizes)
+
+            # compute the total file size for federated resource
             f_sizes = [int(f.fed_resource_file_size)
                        if f.fed_resource_file_size else 0
                        for f in self.files.all()]
             total_file_size += sum(f_sizes)
+
         except SessionException:
             pass
+
         return total_file_size
 
     @property
