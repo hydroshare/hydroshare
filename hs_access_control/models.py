@@ -77,19 +77,19 @@ class PrivilegeCodes(object):
     CHANGE = 2
     VIEW = 3
     NONE = 4
-    PRIVILEGE_CHOICES = (
+    CHOICES = (
         (OWNER, 'Owner'),
         (CHANGE, 'Change'),
         (VIEW, 'View')
         # (NONE, 'None') : disallow "no privilege" lines
     )
     # Names of privileges for printing
-    PRIVILEGE_NAMES = ('Unspecified', 'Owner', 'Change', 'View', 'None')
+    NAMES = ('Unspecified', 'Owner', 'Change', 'View', 'None')
 
 
 class PrivilegeBase(models.Model):
     """
-    Shared methods for Privileges
+    Shared methods for Privilege handling
 
     These polymorphic routines act on any type of foreign keys, so that
     they are independent of the types of the base class members.
@@ -108,19 +108,34 @@ class PrivilegeBase(models.Model):
     @classmethod
     def update(cls, **kwargs):
         """ Update an effective privilege record """
+        grantor = kwargs['grantor']
         privilege = kwargs['privilege']
         if privilege is not None and privilege < PrivilegeCodes.NONE:
             del kwargs['privilege']
+            del kwargs['grantor']
             with transaction.atomic():
-                record, create = cls.objects.get_or_create(defaults={'privilege': privilege},
+                record, create = cls.objects.get_or_create(defaults={'privilege': privilege,
+                                                                     'grantor': grantor},
                                                            **kwargs)
                 if not create:
                     record.privilege = privilege
+                    record.grantor = grantor
                     record.save()
         else:
             del kwargs['privilege']
+            del kwargs['grantor']
             cls.objects.filter(**kwargs) \
                .delete()
+
+    @classmethod
+    def share(cls, **kwargs):
+        """ A share operation is just an update operation."""
+        cls.update(cls, **kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        """ An unshare operation is just an update with privilege NONE."""
+        cls.update(cls, privilege=PrivilegeCodes.NONE, **kwargs)
 
 
 class UserGroupPrivilege(PrivilegeBase):
@@ -133,7 +148,7 @@ class UserGroupPrivilege(PrivilegeBase):
     group members.  However, this is currently disallowed.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
@@ -165,10 +180,36 @@ class UserGroupPrivilege(PrivilegeBase):
                           " over group '{}' (id={})" +
                           " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
-                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege],
+                          PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
                           str(self.group.name), str(self.group.id),
                           str(self.grantor.username), str(self.grantor.id))
+
+    @classmethod
+    def share(cls, **kwargs):
+        cls.update(**kwargs)
+        UserGroupProvenance.update(**kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+
+    @classmethod
+    def undo_share(cls, **kwargs):
+        UserGroupProvenance.undo_share(**kwargs)
+        del kwargs['grantor']
+        r = UserGroupProvenance.get_current_record(**kwargs)
+        cls.update(**r)
+
+    @classmethod
+    def get_undo_share_groups(cls, **kwargs):
+        """ Get a set of users for which the current user can undo privilege
+
+        :param group: group to check
+        :param grantor: user that will undo privilege
+        """
+        return UserGroupProvenance.get_undo_share_groups(**kwargs)
 
 
 class UserResourcePrivilege(PrivilegeBase):
@@ -179,7 +220,7 @@ class UserResourcePrivilege(PrivilegeBase):
     for other kinds of privilege.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
@@ -211,11 +252,37 @@ class UserResourcePrivilege(PrivilegeBase):
                           " over resource '{}' (id={})" +
                           " via grantor '{}' (id={})>",
                           str(self.user.username), str(self.user.id),
-                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege],
+                          PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
                           str(self.resource.title).encode('ascii'),
                           str(self.resource.short_id).encode('ascii'),
                           str(self.grantor.username), str(self.grantor.id))
+
+    @classmethod
+    def share(cls, **kwargs):
+        cls.update(**kwargs)
+        UserResourceProvenance.update(**kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+
+    @classmethod
+    def undo_share(cls, **kwargs):
+        UserResourceProvenance.undo_share(**kwargs)
+        del kwargs['grantor']
+        r = UserResourceProvenance.get_current_record(**kwargs)
+        cls.update(**r)
+
+    @classmethod
+    def get_undo_share_users(cls, **kwargs):
+        """ Get a set of users for which the current user can undo privilege
+
+        :param resource: resource to check
+        :param grantor: user that will undo privilege
+        """
+        return UserResourceProvenance.get_undo_share_groups(**kwargs)
 
 
 class GroupResourcePrivilege(PrivilegeBase):
@@ -226,7 +293,7 @@ class GroupResourcePrivilege(PrivilegeBase):
     the group, as listed in UserGroupPrivilege above.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
     start = models.DateTimeField(editable=False, auto_now=True)
@@ -258,11 +325,40 @@ class GroupResourcePrivilege(PrivilegeBase):
                           " over resource '{}' (id={})" +
                           " via grantor '{}' (id={})>",
                           str(self.group.name), str(self.group.id),
-                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege],
+                          PrivilegeCodes.NAMES[self.privilege],
                           str(self.privilege),
                           str(self.resource.title).encode('ascii'),
                           str(self.resource.short_id).encode('ascii'),
                           str(self.grantor.username), str(self.grantor.id))
+
+    @classmethod
+    def share(cls, **kwargs):
+        """ Share a resource with a group and update provenance """
+        cls.update(**kwargs)
+        GroupResourceProvenance.update(**kwargs)
+
+    @classmethod
+    def unshare(cls, **kwargs):
+        """ unshare a resource with a group and update provenance """
+        cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
+        GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
+
+    @classmethod
+    def undo_share(cls, **kwargs):
+        """ undo a share of a resource with a group and update provenance """
+        GroupResourceProvenance.undo_share(**kwargs)
+        del kwargs['grantor']
+        r = GroupResourceProvenance.get_current_record(**kwargs)
+        cls.update(**r)
+
+    @classmethod
+    def get_undo_share_groups(cls, **kwargs):
+        """ Get a set of groups for which the current user can undo privilege
+
+        :param resource: resource to check
+        :param grantor: user that will undo privilege
+        """
+        return GroupResourceProvenance.get_undo_share_groups(**kwargs)
 
 
 class ProvenanceCodes(object):
@@ -271,19 +367,26 @@ class ProvenanceCodes(object):
     State is a numeric code 1-3:
 
         * 1 or ProvenanceCodes.ACTIVE:
-            Active; can be undone
+            Active; can be undone. This is the resulting state after any share or unshare.
 
         * 2 or ProvenanceCodes.RESTORED:
-            Active; restored as the result of an undo. Can be undone.
+            Active; restored as the result of an undo. Can be undone by further undos.
 
         * 3 or ProvenanceCodes.INITIAL:
-            Active; cannot be undone because it represents an initial state
+            Active; cannot be undone because it represents an initial state. Corresponds to
+            PrivilegeCodes.NONE.
 
         * 4 or ProvenanceCodes.UNDONE:
             Inactive; already undone, cannot be the result of an undo action.
 
         * 5 or ProvenanceCodes.REUSED:
             Inactive; restored as a record of type RESTORED.
+
+        Note that
+
+        * states below or equal to 3 (INITIAL) are active.
+
+        * states greater than or equal to 3 (INITIAL) cannot be undone.
     """
     ACTIVE = 1
     RESTORED = 2
@@ -297,13 +400,7 @@ class ProvenanceCodes(object):
         (UNDONE,    'Undone'),
         (REUSED,    'Reused')
     )
-    NAMES = {
-        ACTIVE:     'ACTIVE',
-        RESTORED:   'RESTORED',
-        INITIAL:    'INITIAL',
-        UNDONE:     'UNDONE',
-        REUSED:     'REUSED'
-    }
+    NAMES = ('Unspecified', 'Active', 'Restored', 'Initial', 'Undone', 'Reused')
 
 
 class ProvenanceBase(models.Model):
@@ -375,6 +472,7 @@ class ProvenanceBase(models.Model):
         """ Update a provenance record """
         if kwargs['state'] is None:
             kwargs['state'] = ProvenanceCodes.ACTIVE
+        # This is an append-only create; no records are ever deleted
         cls.objects.create(**kwargs)
 
     @classmethod
@@ -423,9 +521,12 @@ class ProvenanceBase(models.Model):
         or group/resource) being controlled. The correct combination depends upon the subclass
         in which this routine is inherited.  E.g.,
 
-                UserResourcePrivilege.undo_share(resource={resource}, user={user}, grantor={user})
+                UserResourceProvenance.undo_share(resource={resource}, user={user}, grantor={user})
 
         is one such combination.
+
+        Note that this does not modify the *Privilege class accordingly.
+        That must be done separately.
         """
         current = cls.get_current_record(**kwargs)
         if current is None or current.state == ProvenanceCodes.INITIAL:
@@ -434,7 +535,7 @@ class ProvenanceBase(models.Model):
         previous = cls.__get_undo_share_record(**kwargs)
         if previous is not None:
 
-            # create a undo_share record that itself cannot be backstepped over.
+            # create an undo_share record that itself cannot be backstepped over.
             cls.update(privilege=previous.privilege,
                        grantor=previous.grantor,
                        state=ProvenanceCodes.RESTORED,
@@ -470,10 +571,13 @@ class ProvenanceBase(models.Model):
         or group/resource) being controlled. The correct combination depends upon the subclass
         in which this routine is inherited.  E.g.,
 
-                UserResourcePrivilege.share(resource={resource}, user={user},
+                UserResourceProvenance.share(resource={resource}, user={user},
                                             privilege={privilege}, grantor={user})
 
         is one such combination.
+
+        Note that this does not modify the *Privilege class accordingly.
+        That must be done separately.
         """
         cls.update(state=ProvenanceCodes.ACTIVE, **kwargs)
 
@@ -501,11 +605,14 @@ class ProvenanceBase(models.Model):
         or group/resource) being controlled. The correct combination depends upon the subclass
         in which this routine is inherited.  E.g.,
 
-                UserResourcePrivilege.unshare(resource={resource}, user={user}, grantor={user})
+                UserResourceProvenance.unshare(resource={resource}, user={user}, grantor={user})
 
         is one such combination.
 
         Unshares can be undone using undo_share.
+
+        Note that this does not modify the *Privilege class accordingly.
+        That must be done separately.
 
         """
         cls.update(state=ProvenanceCodes.ACTIVE, privilege=PrivilegeCodes.NONE, **kwargs)
@@ -538,7 +645,7 @@ class UserGroupProvenance(ProvenanceBase):
     * Undo becomes possible again when the operations that came after it are undone.
 
     """
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
 
@@ -631,7 +738,7 @@ class UserResourceProvenance(ProvenanceBase):
     * Undo becomes possible again when the operations that came after it are undone.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
 
@@ -728,7 +835,7 @@ class GroupResourceProvenance(ProvenanceBase):
     * Undo becomes possible again when the operations that came after it are undone.
     """
 
-    privilege = models.IntegerField(choices=PrivilegeCodes.PRIVILEGE_CHOICES,
+    privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
                                     editable=False,
                                     default=PrivilegeCodes.VIEW)
 
@@ -1480,18 +1587,10 @@ class UserAccess(models.Model):
         # raise a PermissionDenied exception if user self is not allowed to do this.
         self.__check_share_group_with_user(this_group, this_user, this_privilege)
 
-        # This logic implicitly limits one to one record per group and grantee.
-        with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
-            record, create = UserGroupPrivilege\
-                .objects\
-                .get_or_create(group=this_group,
-                               user=this_user,
-                               defaults={'grantor': self.user,
-                                         'privilege': this_privilege})
-            if not create:
-                record.privilege = this_privilege
-                record.grantor = self.user
-                record.save()
+        UserGroupPrivilege.share(group=this_group, user=this_user,
+                                 grantor=self.user, privilege=this_privilege)
+        UserGroupProvenance.share(group=this_group, user=this_user,
+                                  grantor=self.user, privilege=this_privilege)
 
     ####################################
     # (can_)unshare_group_with_user: check for and implement unshare
@@ -1538,17 +1637,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Group is not active")
 
         self.__check_unshare_group_with_user(this_group, this_user)
-
-        with transaction.atomic():
-            # if there is a different owner,
-            if UserGroupPrivilege.objects.filter(group=this_group,
-                                                 privilege=PrivilegeCodes.OWNER) \
-                                         .exclude(user=this_user).exists():
-                # then remove the record.
-                # this does not raise an exception if the object is not shared with the user
-                UserGroupPrivilege.objects.filter(group=this_group,
-                                                  user=this_user) \
-                                          .delete()
+        UserGroupPrivilege.unshare(group=this_group, user=this_user, grantor=self.user)
 
     def can_unshare_group_with_user(self, this_group, this_user):
         """
@@ -2306,19 +2395,10 @@ class UserAccess(models.Model):
 
         # check that this is allowed and raise exception otherwise.
         self.__check_share_resource_with_user(this_resource, this_user, this_privilege)
-
-        # This logic implicitly limits one to one record per resource and grantee.
-        with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
-            record, create = UserResourcePrivilege\
-                .objects\
-                .get_or_create(resource=this_resource,
-                               user=this_user,
-                               defaults={'grantor': self.user,
-                                         'privilege': this_privilege})
-            if not create:
-                record.privilege = this_privilege
-                record.grantor = self.user
-                record.save()
+        UserResourcePrivilege.share(resource=this_resource, user=this_user,
+                                    grantor=self.user, privilege=this_privilege)
+        UserResourceProvenance.share(resource=this_resource, user=this_user,
+                                     grantor=self.user, privilege=this_privilege)
 
     def unshare_resource_with_user(self, this_resource, this_user):
         """
@@ -2347,13 +2427,8 @@ class UserAccess(models.Model):
 
         # check that this is allowed and raise exception otherwise.
         self.__check_unshare_resource_with_user(this_resource, this_user)
-
-        # actually unshare the resource
-        with transaction.atomic():
-            # this does not raise an exception if the object is not shared with the user
-            UserResourcePrivilege.objects.filter(resource=this_resource,
-                                                 user=this_user) \
-                                         .delete()
+        UserResourcePrivilege.unshare(resource=this_resource, user=this_user,
+                                      grantor=self.user)
 
     def can_unshare_resource_with_user(self, this_resource, this_user):
 
@@ -2458,21 +2533,10 @@ class UserAccess(models.Model):
 
         # User is authorized and privilege is appropriate;
         # proceed to change the record if present.
-        # This logic implicitly limits one to one record per resource and requester.
-        with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
-            record, created = GroupResourcePrivilege\
-                .objects\
-                .get_or_create(resource=this_resource,
-                               group=this_group,
-                               defaults={'grantor': self.user,
-                                         'privilege': this_privilege})
-
-            # record.start=timezone.now() # now automatically set
-            if not created:
-                # no need to check for owner privilege; impossible
-                record.privilege = this_privilege
-                record.grantor = self.user
-                record.save()
+        GroupResourcePrivilege.share(resource=this_resource, group=this_group,
+                                     grantor=self.user, privilege=this_privilege)
+        GroupResourceProvenance.share(resource=this_resource, group=this_group,
+                                      grantor=self.user, privilege=this_privilege)
 
     def unshare_resource_with_group(self, this_resource, this_group):
         """
@@ -2499,13 +2563,7 @@ class UserAccess(models.Model):
 
         # check that this is allowed
         self.__check_unshare_resource_with_group(this_resource, this_group)
-
-        # remove the sharing record.
-        # this does not raise an exception if the object is not shared with the group
-        # due to a race condition
-        GroupResourcePrivilege.objects.filter(resource=this_resource,
-                                              group=this_group) \
-                                      .delete()
+        GroupResourcePrivilege.unshare(resource=this_resource, group=this_group, grantor=self.user)
 
     def can_unshare_resource_with_group(self, this_resource, this_group):
         """
@@ -2633,6 +2691,35 @@ class UserAccess(models.Model):
             return Group.objects.filter(g2ugp__user=self.user,
                                         g2ugp__privilege=PrivilegeCodes.OWNER,
                                         gaccess__active=True)
+
+    #######################
+    # "undo" system based upon provenance
+    #######################
+
+    def get_group_undo_users(self, this_group):
+        """ get a list of users that can be removed from group privilege by self """
+        return UserGroupPrivilege.get_undo_share_users(group=this_group)
+
+    def undo_share_group_with_user(self, this_group, this_user):
+        """ undo a share with a user that was granted by self """
+        UserGroupPrivilege.undo_share(group=this_group, user=this_user, grantor=self.user)
+
+    def get_resource_undo_users(self, this_resource):
+        """ get a list of users that can be removed from resource privilege by self """
+        return UserResourcePrivilege.get_undo_share_users(resource=this_resource)
+
+    def undo_share_resource_with_user(self, this_resource, this_user):
+        """ undo a share with a user that was granted by self """
+        UserResourcePrivilege.undo_share(resource=this_resource, user=this_user, grantor=self.user)
+
+    def get_resource_undo_groups(self, this_resource):
+        """ get a list of groups that can be removed from resource privilege by self """
+        return GroupResourcePrivilege.get_undo_share_groups(resource=this_resource)
+
+    def undo_share_resource_with_group(self, this_resource, this_group):
+        """ undo a share with a group that was granted by self """
+        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group,
+                                          grantor=self.user)
 
 
 class GroupMembershipRequest(models.Model):
