@@ -192,7 +192,8 @@ class TestSetAccessRules(HSRESTTestCase):
         # Empty PUT
         put_response = self.client.put(access_url, {}, format='json')
         self.assertEqual(
-            "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'",
+            "Request must contain a 'resource' ID as well as a 'user_id' or " \
+                  "'group_id', and 'privilege' must be one of 1, 2, or 3.",
             put_response.data['error'])
 
         # Incorrect PUT

@@ -97,30 +97,39 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
             )
 
         if "user_id" in keys and "privilege" in keys:
-            user_to_add = utils.user_from_id(request.data['user_id'])
-            user_access.share_resource_with_user(resource, user_to_add, request.data['privilege'])
-            return Response(
-                data={'success': "Resource access privileges added."},
-                status=status.HTTP_202_ACCEPTED
-            )
+            if int(request.data['privilege']) in (1, 2, 3, 4):
+                try:
+                    user_to_add = utils.user_from_id(request.data['user_id'])
+                    user_access.share_resource_with_user(resource, user_to_add, request.data['privilege'])
+                    return Response(
+                        data={'success': "Resource access privileges added."},
+                        status=status.HTTP_202_ACCEPTED
+                    )
+                except Exception:
+                    return Response(
+                        data={'error': "This resource may not be shared with that user."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
         if "group_id" in keys and "privilege" in keys:
-            group_to_add = utils.group_from_id(request.data['group_id'])
-            try:
-                user_access.share_resource_with_group(resource,
-                                                      group_to_add,
-                                                      request.data['privilege'])
-                return Response(
-                    data={'success': "Resource access privileges added."},
-                    status=status.HTTP_202_ACCEPTED
-                )
-            except Exception:
-                return Response(
-                    data={'error': "This group may not be added to any resources."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            if int(request.data['privilege']) in (1, 2, 3, 4):
+                group_to_add = utils.group_from_id(request.data['group_id'])
+                try:
+                    user_access.share_resource_with_group(resource,
+                                                          group_to_add,
+                                                          request.data['privilege'])
+                    return Response(
+                        data={'success': "Resource access privileges added."},
+                        status=status.HTTP_202_ACCEPTED
+                    )
+                except Exception:
+                    return Response(
+                        data={'error': "This group may not be added to any resources."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
-        message = "Request must contain a 'resource' ID as well as a 'user_id' or 'group_id'"
+        message = "Request must contain a 'resource' ID as well as a 'user_id' or " \
+                  "'group_id', and 'privilege' must be one of 1, 2, or 3."
         return Response(
             data={'error': message},
             status=status.HTTP_400_BAD_REQUEST
