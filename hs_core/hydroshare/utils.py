@@ -908,15 +908,19 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
     element object is used for naming the root xml element for this metadata element.
     If the root xml element needs to be named differently, then this needs to be a tuple
     with first element being the metadata element object and the second being the name
-    for the root element. Example: md_element=self.Creat or    # the term attribute of the
-    Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
+    for the root element.
+    Example:
+    md_element=self.Creator    # the term attribute of the Creator object will be used
+    md_element=(self.Creator, 'Author') # 'Author' will be used
 
     :param md_fields: a list of attribute names of the metadata element (if the name to be used
      in generating the xml element name is same as the attribute name then include the
      attribute name as a list item. if xml element name needs to be different from the
      attribute name then the list item must be a tuple with first element of the tuple being
      the attribute name and the second element being what will be used in naming the xml
-     element) Example: [('first_name', 'firstName'), 'phone', 'email']
+     element)
+     Example:
+     [('first_name', 'firstName'), 'phone', 'email']
      # xml sub-elements names: firstName, phone, email
     """
     from lxml import etree

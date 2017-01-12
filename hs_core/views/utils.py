@@ -408,7 +408,7 @@ def show_relations_section(res_obj):
 
 
 def link_irods_file_to_django(resource, filename, size=0):
-    # link the newly created zip file to Django resource model
+    # link the newly created file (**filename**) to Django resource model
     b_add_file = False
     file_format_type = get_file_mime_type(filename)
     if resource:
@@ -431,10 +431,9 @@ def link_irods_file_to_django(resource, filename, size=0):
                 b_add_file = True
 
         if b_add_file:
-            # file_format_type = get_file_mime_type(filename)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
-            # this should assign a logical file object to this new zip file
+            # this should assign a logical file object to this new file
             # if this resource supports logical file
             resource.set_default_logical_file()
 

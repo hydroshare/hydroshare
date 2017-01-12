@@ -123,6 +123,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         # file level form field ids need to changed so that they are different from
         # the ids used at the resource level for the same type of metadata elements
+        # Note: These string replacement operations need to be done in this particular
+        # order otherwise same element id will be replaced multiple times
         rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
         rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
         rendered_html = rendered_html.replace("id_start", "id_start_filetype")

@@ -1,4 +1,3 @@
-# coding=utf-8
 import os
 import tempfile
 import shutil
@@ -89,8 +88,6 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
-        # check that the resource file is not associated with any logical file
-        # self.assertEqual(res_file.has_logical_file, False)
         # set the tif file to GeoRasterFile type
         GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 

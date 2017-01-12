@@ -53,12 +53,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should not be any resource at this point
         self.assertEqual(BaseResource.objects.count(), 0)
-
-        self.composite_resource = hydroshare.create_resource(
-            resource_type='CompositeResource',
-            owner=self.user,
-            title='Test Raster File Metadata'
-        )
+        self._create_composite_resource()
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
@@ -104,7 +99,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self._create_composite_resource()
 
-        # there should not be aby GenericLogicalFile object at this point
+        # there should not be any GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # add a file to the resource

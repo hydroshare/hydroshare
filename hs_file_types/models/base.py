@@ -83,7 +83,6 @@ class AbstractFileMetaData(models.Model):
         with root_div:
             if datatset_name_form:
                 self._get_dataset_name_form()
-            # root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
             if self.extra_metadata:
                 root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
                 with root_div_extra:
@@ -538,7 +537,7 @@ class AbstractLogicalFile(models.Model):
         logical file then all files in the same logical file group will be deleted. if custom logic
         requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
         use LFO.logical_delete()
-        :param delete_res_files If True all resource files that are prat of this logical file will
+        :param delete_res_files If True all resource files that are part of this logical file will
         be deleted
         """
 

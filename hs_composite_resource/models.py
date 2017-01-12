@@ -63,10 +63,7 @@ class CompositeResource(BaseResource):
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
 
-        path_parts = folder_full_path.split("/")
-        # remove the new folder name from the path
-        path_parts = path_parts[:-1]
-        path_to_check = "/".join(path_parts)
+        path_to_check = folder_full_path[:folder_full_path.rfind("/")]
         if not path_to_check.endswith("/data/contents"):
             res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
                              res_file_obj.dir_path == path_to_check]
@@ -85,7 +82,7 @@ class CompositeResource(BaseResource):
         tgt_file_dir = os.path.dirname(tgt_full_path)
         src_file_dir = os.path.dirname(src_full_path)
 
-        def check_target_directory():
+        def check_directory():
             path_to_check = ''
             if istorage.exists(tgt_file_dir):
                 path_to_check = tgt_file_dir
@@ -115,13 +112,13 @@ class CompositeResource(BaseResource):
                 return False
 
             # check if the target directory allows stuff to be moved there
-            return check_target_directory()
+            return check_directory()
         else:
             # src_full_path is a folder path without file name
             # tgt_full_path also must be a folder path without file name
             # check that if the target folder contains any files and if any of those files
             # allow moving stuff there
-            return check_target_directory()
+            return check_directory()
 
     def supports_zip(self, folder_to_zip):
         """check if the given folder can be zipped or not"""
