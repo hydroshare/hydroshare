@@ -38,8 +38,10 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'EDIT_RESOURCE, '
                                'SET_RESOURCE_FLAG, '
                                'DELETE_RESOURCE, '
-                               'CREATE_RESOURCE_VERSION')
-ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5)
+                               'CREATE_RESOURCE_VERSION, '
+                               'VIEW_RESOURCE_ACCESS, '
+                               'EDIT_RESOURCE_ACCESS')
+ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
 
 
 # Since an SessionException will be raised for all irods-related operations from django_irods
@@ -175,6 +177,10 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
             authorized = user.uaccess.can_change_resource_flags(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
             authorized = user.uaccess.owns_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
+            authorized = user.uaccess.can_view_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
+            authorized = user.uaccess.can_share_resource(res, 2)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public
 
