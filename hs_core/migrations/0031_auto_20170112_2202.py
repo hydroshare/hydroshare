@@ -22,9 +22,4 @@ class Migration(migrations.Migration):
             name='logical_file_object_id',
             field=models.PositiveIntegerField(null=True, blank=True),
         ),
-        migrations.AddField(
-            model_name='resourcefile',
-            name='mime_type',
-            field=models.CharField(max_length=255, null=True, blank=True),
-        ),
     ]

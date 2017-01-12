@@ -1794,8 +1794,6 @@ class ResourceFile(models.Model):
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
 
-    mime_type = models.CharField(max_length=255, null=True, blank=True)
-
     @property
     def resource(self):
         return self.content_object
@@ -1821,6 +1819,11 @@ class ResourceFile(models.Model):
         if self.logical_file is not None:
             return self.logical_file.metadata
         return None
+
+    @property
+    def mime_type(self):
+        from .hydroshare.utils import get_file_mime_type
+        return get_file_mime_type(self.file_name)
 
     @property
     def extension(self):

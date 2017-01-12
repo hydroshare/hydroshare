@@ -832,12 +832,11 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
                                               file_folder=folder,
-                                              resource_file=None, mime_type=file_format_type,
+                                              resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              mime_type=file_format_type,
                                               file_folder=folder,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
@@ -847,7 +846,6 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
-                                          mime_type=file_format_type,
                                           fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path,
                                           fed_resource_file_size=size)

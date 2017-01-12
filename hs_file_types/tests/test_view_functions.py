@@ -13,9 +13,9 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import MockIRODSTestCaseMixin
-from ..views import set_file_type, add_metadata_element, update_metadata_element, \
+from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata
-from ..models import GeoRasterLogicalFile
+from hs_file_types.models import GeoRasterLogicalFile
 
 
 class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):

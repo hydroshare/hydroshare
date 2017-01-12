@@ -410,7 +410,6 @@ def show_relations_section(res_obj):
 def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created file (**filename**) to Django resource model
     b_add_file = False
-    file_format_type = get_file_mime_type(filename)
     if resource:
         if resource.resource_federation_path:
             if resource.resource_federation_path in filename:
@@ -419,18 +418,19 @@ def link_irods_file_to_django(resource, filename, size=0):
             if not ResourceFile.objects.filter(object_id=resource.id,
                                                fed_resource_file_name_or_path=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
-                                            resource_file=None, mime_type=file_format_type,
+                                            resource_file=None,
                                             fed_resource_file_name_or_path=filename,
                                             fed_resource_file_size=size)
                 b_add_file = True
 
         elif not ResourceFile.objects.filter(object_id=resource.id,
                                              resource_file=filename).exists():
-                ResourceFile.objects.create(content_object=resource, mime_type=file_format_type,
+                ResourceFile.objects.create(content_object=resource,
                                             resource_file=filename)
                 b_add_file = True
 
         if b_add_file:
+            file_format_type = get_file_mime_type(filename)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
             # this should assign a logical file object to this new file
@@ -479,10 +479,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # have to delete the original one and create the new one;
             # direct replacement does not work
             res_file_obj[0].delete()
-            res_file = ResourceFile.objects.create(content_object=resource,
-                                                   fed_resource_file_name_or_path=tgt_name)
-            res_file.mime_type = get_file_mime_type(res_file.fed_resource_file_name_or_path)
-            res_file.save()
+            ResourceFile.objects.create(content_object=resource,
+                                        fed_resource_file_name_or_path=tgt_name)
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
@@ -492,10 +490,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 old_str = fobj.fed_resource_file_name_or_path
                 new_str = old_str.replace(src_name, tgt_name)
                 fobj.delete()
-                res_file = ResourceFile.objects.create(content_object=resource,
-                                                       fed_resource_file_name_or_path=new_str)
-                res_file.mime_type = get_file_mime_type(res_file.fed_resource_file_name_or_path)
-                res_file.save()
+                ResourceFile.objects.create(content_object=resource,
+                                            fed_resource_file_name_or_path=new_str)
     else:
         res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                    resource_file=src_name)
@@ -511,13 +507,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
-            res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
             # if the file we deleted was part a logical file then we have to make the
             # recreated resource file part of the logical file object
             if logical_file is not None:
                 logical_file.add_resource_file(res_file)
-
-            res_file.save()
 
         else:
             # src_name and tgt_name are folder names
@@ -534,12 +527,9 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
-                res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
                 # make the recreated resource file part of the logical file
                 if logical_file is not None:
                     logical_file.add_resource_file(res_file)
-
-                res_file.save()
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername, user):
