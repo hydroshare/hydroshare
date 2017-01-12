@@ -42,6 +42,13 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
 
+        self.temp_dir = tempfile.mkdtemp()
+        self.netcdf_file_name_crs = 'netcdf_valid_crs.nc'
+        self.netcdf_file_crs = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name_crs)
+        target_temp_netcdf_file_crs = os.path.join(self.temp_dir, self.netcdf_file_name_crs)
+        shutil.copy(self.netcdf_file_crs, target_temp_netcdf_file_crs)
+        self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'r')
+
         self.netcdf_bad_file_name = 'netcdf_invalid.nc'
         self.netcdf_bad_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_bad_file_name)
         target_temp_bad_netcdf_file = os.path.join(self.temp_dir, self.netcdf_bad_file_name)
@@ -92,6 +99,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # file pre add process should raise validation error if we try to add a 2nd file
         # when the resource has already 2 content files
+
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
                                                 user=self.user,
@@ -121,9 +129,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
-        self.assertEqual(self.resNetcdf.metadata.title.value,
-                         'Snow water equivalent estimation at TWDEF site from Oct 2009 to June '
-                         '2010')
+        self.assertEqual(
+            self.resNetcdf.metadata.title.value,
+            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010')
 
         # there shouldn't any abstract element
         self.assertEqual(self.resNetcdf.metadata.description, None)
@@ -309,10 +317,10 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.resNetcdf.metadata.create_element(
             'originalcoverage',
             value=value,
-            projection_string_text='+proj=tmerc +lon_0=-111.0 '
-                                   '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
-            projection_string_type='Proj4 String')
-
+            projection_string_text='+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
+                                   '+y_0=0.0 +k_0=0.9996',
+            projection_string_type='Proj4 String'
+            )
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertEqual(ori_coverage.value, value)
         self.assertEqual(ori_coverage.projection_string_text,
@@ -327,6 +335,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                 projection_string_text='+proj=tmerc +lon_0=-111.0 '
                                        '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
                 projection_string_type='Proj4 String')
+
         # create variable element
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 0)
         self.resNetcdf.metadata.create_element('variable', name='SWE', type='Float',
@@ -353,9 +362,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # delete
         # variable deletion is not allowed
         with self.assertRaises(ValidationError):
-            self.resNetcdf.metadata.delete_element('variable',
-                                                   self.resNetcdf.metadata.variables.all().filter(
-                                                       name='SWE').first().id)
+            self.resNetcdf.metadata.delete_element(
+                'variable', self.resNetcdf.metadata.variables.all().filter(name='SWE').first().id)
 
         # update
         # update original coverage element
@@ -414,3 +422,58 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertTrue(self.resNetcdf.has_required_content_files())
         self.assertTrue(self.resNetcdf.metadata.has_all_required_elements())
         self.assertTrue(self.resNetcdf.can_be_public_or_discoverable)
+
+    def test_metadata_extraction_of_wkt_crs_on_resource_creation(self):
+        files = [UploadedFile(file=self.netcdf_file_obj_crs, name=self.netcdf_file_name_crs)]
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='NetcdfResource',
+            resource_title='Snow water equivalent estimation at TWDEF site '
+                           'from Oct 2009 to June 2010',
+            page_redirect_url_key=None,
+            files=files,
+            metadata=None,)
+
+        self.resNetcdf = hydroshare.create_resource(
+            'NetcdfResource',
+            self.user,
+            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
+            files=files,
+            metadata=metadata
+            )
+
+        self._test_metadata_extraction_wkt_crs()
+
+    def test_metadata_extraction_of_wkt_crs_on_content_file_add(self):
+        files = [UploadedFile(file=self.netcdf_file_obj_crs, name=self.netcdf_file_name_crs)]
+        utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
+                                        extract_metadata=False)
+
+        self._test_metadata_extraction_wkt_crs()
+
+    def _test_metadata_extraction_wkt_crs(self, create_res_mode=True):
+
+        # testing extended metadata element: original coverage
+        ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
+        self.assertNotEquals(ori_coverage, None)
+        self.assertEqual(ori_coverage.value['northlimit'], '4662377.44692')
+        self.assertEqual(ori_coverage.value['eastlimit'], '461939.019091')
+        self.assertEqual(ori_coverage.value['southlimit'], '4612607.44692')
+        self.assertEqual(ori_coverage.value['westlimit'], '432419.019091')
+        self.assertEqual(ori_coverage.value['units'], 'Meter')
+        self.assertEqual(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N')
+
+        self.assertEqual(ori_coverage.projection_string_type, 'WKT String')
+        proj_text = 'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
+                    'DATUM["North_American_Datum_1983",' \
+                    'SPHEROID["GRS 1980",6378137,298.2572221010002,AUTHORITY["EPSG","7019"]],' \
+                    'AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],' \
+                    'UNIT["degree",0.0174532925199433],' \
+                    'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
+                    'PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],' \
+                    'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
+                    'PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                    'AUTHORITY["EPSG","26912"]]'
+        self.assertEqual(ori_coverage.projection_string_text, proj_text)
+        self.assertEqual(ori_coverage.datum, 'North_American_Datum_1983')

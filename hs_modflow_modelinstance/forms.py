@@ -430,6 +430,11 @@ class ModelInputForm(ModelForm):
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id,
                                            element_name='ModelInput')
 
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
     @property
     def form_id(self):
         form_id = 'id_modelinput_%s' % self.number
@@ -506,6 +511,7 @@ class GeneralElementsValidationForm(forms.Form):
         choices=GeneralElements.outputControlPackageChoices,
         required=False)
     subsidencePackage = forms.CharField(max_length=100, required=False)
+
 
 ModelInputLayoutEdit = Layout(
         HTML('<div class="col-xs-12 col-sm-6"> '

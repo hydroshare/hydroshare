@@ -426,6 +426,11 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_metadata_element_update, sender=RasterResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
+    """
+    Since each of the Raster metadata element is required no need to listen to any delete signal
+    The Raster landing page should not have delete UI functionality for the resource
+    specific metadata elements
+    """
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
     if element_name == "cellinformation":
@@ -443,8 +448,3 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-"""
-Since each of the Raster metadata element is required no need to listen to any delete signal
-The Raster landing page should not have delete UI functionality for the resource
-specific metadata elements
-"""
