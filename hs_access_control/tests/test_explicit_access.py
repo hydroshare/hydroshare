@@ -1,7 +1,7 @@
 from django.test import TestCase
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import User, Group
 
-from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes, GroupResourcePrivilege
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -360,6 +360,11 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
                                                               via_user=False,
                                                               via_group=True)
+
+        for r in GroupResourcePrivilege.objects.filter(resource=r1_resource): 
+            print(str(r))
+            print("members of " + str(r.group) + ":" + str(r.group.gaccess.members))
+        print("g is " + str(g) + " expect [r1_resource]") 
         self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
 
         # owner squashes CHANGE + immutable

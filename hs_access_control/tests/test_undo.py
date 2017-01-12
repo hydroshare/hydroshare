@@ -197,11 +197,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         john = self.john
 
         # George grants Alva view privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -228,11 +227,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # George grants Alva privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -259,11 +257,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
-        UserResourcePrivilege.share(
+        alva.uaccess.share(
             resource=bikes,
             user=john,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=alva)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -296,7 +293,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=john,
             privilege=PrivilegeCodes.VIEW,
@@ -332,11 +329,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants Alva privilege over harps
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=harps,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         # old privileges didn't change
         self.assertEqual(
@@ -401,11 +397,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         john = self.john
 
         # George grants Alva view privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -433,11 +428,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # George grants Alva privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -464,11 +458,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
-        UserGroupPrivilege.share(
+        alva.uaccess.share(
             group=bikers,
             user=john,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=alva)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -501,11 +494,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=john,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -537,11 +529,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants Alva privilege over harpers
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=harpers,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         # old privileges didn't change
         self.assertEqual(
@@ -603,11 +594,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         alva = self.alva
 
         # George grants Bikers view privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=bikers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -635,11 +625,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # George grants Harpers change privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=harpers,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -665,11 +654,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva downgrades Harpers privilege
-        GroupResourcePrivilege.share(
+        alva.uaccess.share(
             resource=bikes,
             group=harpers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=alva)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -702,11 +690,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on  Harpers privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=harpers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -738,11 +725,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants bikers privilege over harps
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=harps,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         # old privileges didn't change
         self.assertEqual(
@@ -758,8 +744,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(
             is_equal_to_as_set(
                 GroupResourcePrivilege.get_undo_groups(
-                    resource=bikes, grantor=george), [
-                    bikers, harpers]))
+                    resource=bikes, grantor=george), 
+                [bikers, harpers]))
         record = GroupResourceProvenance.get_current_record(
             resource=bikes, group=bikers)
         self.assertEqual(record.resource, bikes)
@@ -824,11 +810,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(record is None)
 
         # George grants Alva view privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -856,7 +841,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Roll back alva's privilege
-        UserResourcePrivilege.undo_share(resource=bikes, user=alva, grantor=george)
+        george.uaccess.undo_share(resource=bikes, user=alva)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -884,11 +869,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, None)
 
         # George grants Alva privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -915,11 +899,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
-        UserResourcePrivilege.share(
+        alva.uaccess.share(
             resource=bikes,
             user=john,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=alva)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -952,11 +935,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             user=john,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -990,7 +972,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         # George changes mind and rolls back change
         print("BEFORE UNDO(bikes, john, george)") 
         printUserResourceState() 
-        UserResourcePrivilege.undo_share(resource=bikes, user=john, grantor=george)
+        george.uaccess.undo_share(resource=bikes, user=john)
         print("AFTER UNDO(bikes, john, george)") 
         printUserResourceState() 
 
@@ -1026,11 +1008,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # Crosstalk test: George grants Alva privilege over harps
-        UserResourcePrivilege.share(
+        george.uaccess.share(
             resource=harps,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         # old privileges didn't change
         self.assertEqual(
@@ -1083,7 +1064,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # now roll back privilege over harps
-        UserResourcePrivilege.undo_share(resource=harps, user=alva, grantor=george)
+        george.uaccess.undo_share(resource=harps, user=alva)
 
         self.assertEqual(
             UserResourceProvenance.get_privilege(
@@ -1140,11 +1121,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(record is None)
 
         # George grants Alva view privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -1172,7 +1152,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Roll back alva's privilege
-        UserGroupPrivilege.undo_share(group=bikers, user=alva, grantor=george)
+        george.uaccess.undo_share(group=bikers, user=alva, grantor=george)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -1200,11 +1180,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, None)
 
         # George grants Alva privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=alva,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -1231,11 +1210,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
-        UserGroupPrivilege.share(
+        alva.uaccess.share(
             group=bikers,
             user=john,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=alva)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -1268,11 +1246,11 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=bikers,
             user=john,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
+
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
@@ -1303,12 +1281,9 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # George changes mind and rolls back change
-        UserGroupPrivilege.undo_share(group=bikers, user=john, grantor=george)
+        george.uaccess.undo_share(group=bikers, user=john)
 
         # privilege has been rolled back
-        # prov = UserGroupProvenance.objects.all().order_by('start')
-        # for p in prov:
-        #     pprint(p)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
@@ -1340,11 +1315,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # Crosstalk test: George grants Alva privilege over harpers
-        UserGroupPrivilege.share(
+        george.uaccess.share(
             group=harpers,
             user=alva,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         # old privileges didn't change
         self.assertEqual(
@@ -1397,7 +1371,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # now roll back privilege over harpers
-        UserGroupPrivilege.undo_share(group=harpers, user=alva, grantor=george)
+        george.uaccess.undo_share(group=harpers, user=alva)
 
         self.assertEqual(
             UserGroupProvenance.get_privilege(
@@ -1455,11 +1429,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(record is None)
 
         # George grants bikers view privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=bikers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -1486,7 +1459,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Roll back bikers's privilege
-        GroupResourcePrivilege.undo_share(resource=bikes, group=bikers, grantor=george)
+        george.uaccess.undo_share(resource=bikes, group=bikers)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -1513,11 +1486,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, None)
 
         # George grants bikers privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=bikers,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=george)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -1544,11 +1516,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # Alva grants harpers privilege
-        GroupResourcePrivilege.share(
+        alva.uaccess.share(
             resource=bikes,
             group=harpers,
-            privilege=PrivilegeCodes.CHANGE,
-            grantor=alva)
+            privilege=PrivilegeCodes.CHANGE)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -1581,11 +1552,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on harpers' privilege
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=bikes,
             group=harpers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
@@ -1617,7 +1587,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # George changes mind and rolls back change
-        GroupResourcePrivilege.undo_share(resource=bikes, group=harpers, grantor=george)
+        george.uaccess.undo_share(resource=bikes, group=harpers)
 
         # privilege has been rolled back
         self.assertEqual(
@@ -1651,11 +1621,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, alva)
 
         # Crosstalk test: George grants bikers privilege over harps
-        GroupResourcePrivilege.share(
+        george.uaccess.share(
             resource=harps,
             group=bikers,
-            privilege=PrivilegeCodes.VIEW,
-            grantor=george)
+            privilege=PrivilegeCodes.VIEW)
 
         # old privileges didn't change
         self.assertEqual(
@@ -1708,7 +1677,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, george)
 
         # now roll back privilege over harps
-        GroupResourcePrivilege.undo_share(resource=harps, group=bikers, grantor=george)
+        george.uaccess.undo_share(resource=harps, group=bikers, grantor=george)
 
         self.assertEqual(
             GroupResourceProvenance.get_privilege(
