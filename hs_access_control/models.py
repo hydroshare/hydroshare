@@ -596,6 +596,8 @@ class ProvenanceBase(models.Model):
 
         Note that this does not modify the *Privilege class accordingly.
         That must be done separately.
+
+        **This is never used directly in normal programming.** Use the routines in UserAccess.
         """
         if __debug__: 
             assert 'grantor' in kwargs 
@@ -2773,12 +2775,11 @@ class UserAccess(models.Model):
     # "undo" system based upon provenance
     #######################
 
-    # TODO: should we rename these to get_undo_users for each subfunction? 
     def get_group_undo_users(self, this_group):
         """ get a list of users that can be removed from group privilege by self """
         return UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
 
-    def can_undo_group_share(self, this_group, this_user): 
+    def can_undo_group_user_share(self, this_group, this_user): 
         """ Check that a group share can be undone """
         return this_user in self.get_group_undo_users(this_group) 
 
@@ -2790,6 +2791,10 @@ class UserAccess(models.Model):
         """ get a list of users that can be removed from resource privilege by self """
         return UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
 
+    def can_undo_resource_user_share(self, this_resource, this_user): 
+        """ Check that a resource share can be undone """
+        return this_user in self.get_resource_undo_users(this_resource) 
+
     def undo_share_resource_with_user(self, this_resource, this_user):
         """ undo a share with a user that was granted by self """
         UserResourcePrivilege.undo_share(resource=this_resource, user=this_user, grantor=self.user)
@@ -2797,6 +2802,10 @@ class UserAccess(models.Model):
     def get_resource_undo_groups(self, this_resource):
         """ get a list of groups that can be removed from resource privilege by self """
         return GroupResourcePrivilege.get_undo_groups(resource=this_resource, grantor=self.user)
+
+    def can_undo_resource_group_share(self, this_resource, this_group): 
+        """ Check that a resource share can be undone """
+        return this_group in self.get_resource_undo_groups(this_resource) 
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """ undo a share with a group that was granted by self """
