@@ -97,7 +97,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             resource_type='GenericResource',
             owner=self.user,
             title='My Test Generic Resource in User Zone',
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_copy_or_move='move'
         )
 
@@ -123,7 +123,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_two)
         hydroshare.add_resource_files(
             res.short_id,
-            fed_res_file_names=[fed_test_file1_full_path, fed_test_file2_full_path],
+            source_names=[fed_test_file1_full_path, fed_test_file2_full_path],
             fed_copy_or_move='copy',
             fed_zone_home_path=res.resource_federation_path)
         # test resource has two files
@@ -154,7 +154,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             resource_type='GenericResource',
             owner=self.user,
             title='My Original Generic Resource in User Zone',
-            fed_res_file_names=[fed_test_file1_full_path],
+            source_names=[fed_test_file1_full_path],
             fed_copy_or_move='copy'
         )
         # make sure ori_res is created in federated user zone
@@ -186,7 +186,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             resource_type='GenericResource',
             owner=self.user,
             title='My Original Generic Resource in User Zone',
-            fed_res_file_names=[fed_file1_full_path, fed_file2_full_path, fed_file3_full_path],
+            source_names=[fed_file1_full_path, fed_file2_full_path, fed_file3_full_path],
             fed_copy_or_move='copy'
         )
         # make sure self.res is created in federated user zone

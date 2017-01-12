@@ -769,7 +769,7 @@ def add_resource_files(pk, *files, **kwargs):
 	    move = (fed_copy_or_move == 'move') 
             ret.append(utils.add_file_to_resource(resource, None, 
 						  folder=folder, 
-                                                  source=ifname,
+                                                  source_name=ifname,
                                                   move=move))
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
