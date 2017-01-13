@@ -13,6 +13,7 @@ groups, and resources, and determine what objects are accessible to which users.
 * track the provenance of privilege granting to:
 
    1) allow accounting for what happened.
+   2) allow limited undo of prior actions.
    3) limit each user to accumulating one privilege over a thing
 
 Notes and quandaries
@@ -55,9 +56,12 @@ from hs_core.models import BaseResource
 # TODO: setting published flag prohibits user from changing resource flags???
 # TODO: setting published flag allows administrator to change resource flags???
 
+
 class PolymorphismError(Exception):
     """ A function is called with an inappropriate combination of arguments """
+    # This is a generic exception.
     pass
+
 
 class PrivilegeCodes(object):
     """
@@ -96,13 +100,27 @@ class PrivilegeBase(models.Model):
 
     These polymorphic routines act on any type of foreign keys, so that
     they are independent of the types of the base class members.
+    They implement the major interactions with privileges, including
+    share, unshare, undo_share, and ensure that provenance and privilege
+    are always in sync with one another.
     """
     class Meta:
         abstract = True
 
     @classmethod
     def get_privilege(cls, **kwargs):
-        """ Get an effective privilege for a pair """
+        """
+        Get an effective privilege for a pair of keys
+
+        This works for any pair of attributes that together, form a key.
+        Examples include:
+
+            * UserResourcePrivilege.get_privilege(user={X}, resource={Y})
+            * GroupResourcePrivilege.get_privilege(group={X}, resource={Y})
+            * UserGroupPrivilege.get_privilege(user={X}, group={Y})
+
+        **This is a system routine** and not recommended for use in application code.
+        """
         try:
             return cls.objects.get(**kwargs).privilege
         except cls.DoesNotExist:
@@ -110,7 +128,21 @@ class PrivilegeBase(models.Model):
 
     @classmethod
     def update(cls, **kwargs):
-        """ Update an effective privilege record """
+        """
+        Update an effective privilege record without maintaining provenance.
+
+        This works for any pair of attributes that together, form a key, along with shared
+        parameters `grantor` and `privilege`.  Examples include:
+
+            * UserResourcePrivilege.update(user={X}, resource={Y}, privilege={Z}, grantor={W})
+            * GroupResourcePrivilege.update(group={X}, resource={Y}, privilege={Z}, grantor={W})
+            * UserGroupPrivilege.update(user={X}, group={Y}, privilege={Z}, grantor={W})
+
+        **This is a system routine** and not recommended for use in application code.
+        There are no access control rules applied; this routine is unconditional.
+        Only use this routine if you wish to completely bypass access control.
+        Note also that using this routine directly breaks provenance and disables undo.
+        """
         grantor = kwargs['grantor']
         privilege = kwargs['privilege']
         if privilege is not None and privilege < PrivilegeCodes.NONE:
@@ -132,12 +164,46 @@ class PrivilegeBase(models.Model):
 
     @classmethod
     def share(cls, **kwargs):
-        """ A share operation is just an update operation."""
+        """
+        Share an item with a user or group without maintaining provenance.
+
+        This works for any pair of attributes that together, form a key, along with shared
+        parameters `grantor` and `privilege`.  Examples include:
+
+            * UserResourcePrivilege.share(user={X}, resource={Y}, privilege={Z}, grantor={W})
+            * GroupResourcePrivilege.share(group={X}, resource={Y}, privilege={Z}, grantor={W})
+            * UserGroupPrivilege.share(user={X}, group={Y}, privilege={Z}, grantor={W})
+
+        A share operation is just an update operation.
+
+        **This is a system routine** and not recommended for use in application code.
+        There are no access control rules applied; this routine is unconditional.
+        Only use this routine if you wish to completely bypass access control.
+        Note also that using this routine directly breaks provenance and disables undo.
+        """
         cls.update(cls, **kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
-        """ An unshare operation is just an update with privilege NONE."""
+        """
+        Unshare an item with a user or group without maintaining provenance.
+
+        This works for any pair of attributes that together, form a key, along with shared
+        parameter `grantor`.  Examples include:
+
+            * UserResourcePrivilege.share(user={X}, resource={Y}, grantor={W})
+            * GroupResourcePrivilege.share(group={X}, resource={Y}, grantor={W})
+            * UserGroupPrivilege.share(user={X}, group={Y}, grantor={W})
+
+        An unshare operation is just an update operation with privilege=PrivilegeCodes.NONE.
+
+        **This is a system routine** and not recommended for use in application code.
+        There are no access control rules applied; this routine is unconditional.
+        Only use this routine if you wish to completely bypass access control.
+        Note also that using this routine directly breaks provenance and disables undo.
+
+        An unshare operation is just an update with privilege NONE.
+        """
         cls.update(cls, privilege=PrivilegeCodes.NONE, **kwargs)
 
 
@@ -148,7 +214,8 @@ class UserGroupPrivilege(PrivilegeBase):
 
     There is a reasonable meaning to PrivilegeCodes.NONE, which is to be
     a group member without the ability to discover the identities of other
-    group members.  However, this is currently disallowed.
+    group members.  However, this is currently disallowed. It is used in the
+    provenance models to record removing a privilege.
     """
 
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -190,7 +257,19 @@ class UserGroupPrivilege(PrivilegeBase):
 
     @classmethod
     def share(cls, **kwargs):
-        """ share a group and update provenance """
+        """
+        Share a group with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param group: target group.
+        :param user: target user.
+        :param privilege: privilege 1-4.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserGroupPrivilege.share(group={X}, user={Y}, privilege={Z}, grantor={W}
+        """
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -199,15 +278,27 @@ class UserGroupPrivilege(PrivilegeBase):
             assert 'grantor' in kwargs
             assert isinstance(kwargs['grantor'], User)
             assert 'privilege' in kwargs
-            assert kwargs['privilege'] >= PrivilegeCodes.OWNER and \
-                   kwargs['privilege'] <= PrivilegeCodes.NONE
+            assert \
+                kwargs['privilege'] >= PrivilegeCodes.OWNER and \
+                kwargs['privilege'] <= PrivilegeCodes.NONE
             assert len(kwargs) == 4
         cls.update(**kwargs)
         UserGroupProvenance.update(**kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
-        """ unshare a group and update provenance """
+        """
+        Unshare a group with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param group: target group.
+        :param user: target user.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserGroupPrivilege.unshare(group={X}, user={Y}, grantor={W})
+        """
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -221,7 +312,25 @@ class UserGroupPrivilege(PrivilegeBase):
 
     @classmethod
     def undo_share(cls, **kwargs):
-        """ undo a share of a group and update provenance """
+        """
+        Undo a share a group with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param group: target group.
+        :param user: target user.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserGroupPrivilege.undo_share(group={X}, user={Y}, grantor={W})
+
+        In practice:
+
+        The "undo" operation is independent of the privileges a user currently holds.
+        Suppose -- for example -- that a user holds CHANGE, grants that to another user,
+        and then loses CHANGE. The undo of the other user is still possible, even though the
+        original user no longer has the privilege.
+        """
         if __debug__:
             assert 'group' in kwargs
             assert isinstance(kwargs['group'], Group)
@@ -232,11 +341,10 @@ class UserGroupPrivilege(PrivilegeBase):
             assert len(kwargs) == 3
         grantor = kwargs['grantor']
         del kwargs['grantor']
-        r = UserGroupProvenance.get_current_record(**kwargs)
-        print("old current record is " + str(r))
+        # undo in provenance model; add a record that reinstates previous privilege.
         UserGroupProvenance.undo_share(grantor=grantor, **kwargs)
+        # read that record and post to privilege table.
         r = UserGroupProvenance.get_current_record(**kwargs)
-        print("new current record is " + str(r))
         cls.update(user=r.user, group=r.group, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
@@ -246,8 +354,8 @@ class UserGroupPrivilege(PrivilegeBase):
         :param group: group to check
         :param grantor: user that will undo privilege
 
-        This should not be called directly by developers!
-        Use UserAccess.get_resource_undo_users instead.
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.get_group_undo_users instead.
         """
         if __debug__:
             assert 'group' in kwargs
@@ -306,16 +414,60 @@ class UserResourcePrivilege(PrivilegeBase):
 
     @classmethod
     def share(cls, **kwargs):
+        """
+        Share a resource with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param user: target user.
+        :param privilege: privilege 1-4.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserResourcePrivilege.share(resource={X}, user={Y}, privilege={Z}, grantor={W})
+        """
         cls.update(**kwargs)
         UserResourceProvenance.update(**kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
+        """
+        Unshare a resource with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param user: target user.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserResourcePrivilege.unshare(resource={X}, user={Y}, grantor={W})
+        """
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
     @classmethod
     def undo_share(cls, **kwargs):
+        """
+        Undo a share of a resource with a user and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param user: target user.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            UserResourcePrivilege.undo_share(resource={X}, user={Y}, grantor={W})
+
+        In practice:
+
+        The "undo" operation is independent of the privileges a user currently holds.
+        Suppose -- for example -- that a user holds CHANGE, grants that to another user,
+        and then loses CHANGE. The undo of the other user is still possible, even though the
+        original user no longer has the privilege.
+        """
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -323,9 +475,12 @@ class UserResourcePrivilege(PrivilegeBase):
             assert isinstance(kwargs['user'], User)
             assert 'grantor' in kwargs
             assert isinstance(kwargs['grantor'], User)
+        # add an undo record to the provenance table.
         UserResourceProvenance.undo_share(**kwargs)
+        # read that record.
         del kwargs['grantor']
         r = UserResourceProvenance.get_current_record(**kwargs)
+        # post to privilege table.
         cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
@@ -334,6 +489,9 @@ class UserResourcePrivilege(PrivilegeBase):
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.get_resource_undo_users instead.
         """
         if __debug__:
             assert 'resource' in kwargs
@@ -345,8 +503,10 @@ class UserResourcePrivilege(PrivilegeBase):
 
 
 class GroupResourcePrivilege(PrivilegeBase):
-    """ Privileges of a group over a resource.
-    The group privilege over a resource is never meaningful;
+    """
+    Privileges of a group over a resource.
+
+    The group privilege over a resource is never directly meaningful;
     it is resolved instead into user privilege for each member of
     the group, as listed in UserGroupPrivilege above.
     """
@@ -391,18 +551,60 @@ class GroupResourcePrivilege(PrivilegeBase):
 
     @classmethod
     def share(cls, **kwargs):
-        """ Share a resource with a group and update provenance """
+        """
+        Share a resource with a group and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param group: target group.
+        :param privilege: privilege 1-4.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            GroupResourcePrivilege.share(resource={X}, group={Y}, privilege={Z}, grantor={W})
+        """
         cls.update(**kwargs)
         GroupResourceProvenance.update(**kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
-        """ unshare a resource with a group and update provenance """
+        """
+        Unshare a resource with a group and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param group: target group.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            GroupResourcePrivilege.unshare(resource={X}, group={Y}, grantor={W})
+        """
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
     @classmethod
     def undo_share(cls, **kwargs):
+        """
+        Undo a share of a resource with a group and update provenance
+
+        ***This completely bypasses access control*** but keeps provenance in sync.
+
+        :param resource: target resource.
+        :param group: target group.
+        :param grantor: user who requested privilege.
+
+        Usage:
+            GroupResourcePrivilege.undo_share(resource={X}, group={Y}, grantor={W})
+
+        In practice:
+
+        The "undo" operation is independent of the privileges a user currently holds.
+        Suppose -- for example -- that a user holds CHANGE, grants that to another user,
+        and then loses CHANGE. The undo of the other user is still possible, even though the
+        original user no longer has the privilege.
+        """
         """ undo a share of a resource with a group and update provenance """
         if __debug__:
             assert 'resource' in kwargs
@@ -422,6 +624,9 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         :param resource: resource to check
         :param grantor: user that will undo privilege
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.get_resource_undo_groups instead.
         """
         if __debug__:
             assert 'resource' in kwargs
@@ -441,7 +646,8 @@ class ProvenanceCodes(object):
             Active; can be undone. This is the resulting state after any share or unshare.
 
         * 2 or ProvenanceCodes.RESTORED:
-            Active; restored as the result of an undo. Can be undone by further undos.
+            Active; restored as the result of an undo. Can potentially be undone by further undos
+            until all privilege is removed.
 
         * 3 or ProvenanceCodes.INITIAL:
             Active; cannot be undone because it represents an initial state. Corresponds to
@@ -464,25 +670,15 @@ class ProvenanceBase(models.Model):
 
     These methods are independent of the types of the foreign keys they act upon,
     and so can be reused in all provenance classes.
+
+    **Using any of these routines directly will break provenance.** Instead, they are
+    called from the specific "provenance" classes when needed.
     """
 
     class Meta:
         abstract = True
 
-    # TODO: it's unclear whether this even works. The methods are in subclasses.
     def __str__(self):
-        """print name for debugging"""
-        return 'grantee=' + str(self.grantee) + \
-               ', entity=' + str(self.entity) + \
-               ', privilege=' + PrivilegeCodes.NAMES[self.privilege] + \
-               ' (' + str(self.privilege) + ')' + \
-               ', grantor=' + str(self.grantor) + \
-               ', start=' + str(self.start) + \
-               ', state=' + ProvenanceCodes.NAMES[self.state] + \
-               ' (' + str(self.state) + ')' + \
-               ', undone=' + str(self.undone)
-
-    def __unicode__(self):
         """print name for debugging"""
         return 'grantee=' + str(self.grantee) + \
                ', entity=' + str(self.entity) + \
@@ -496,7 +692,16 @@ class ProvenanceBase(models.Model):
 
     @classmethod
     def __get_current_start(cls, **kwargs):
-        """ Get the last start time for a given pair """
+        """
+        Get the last start time (that is not undone) for a given pair of keys.
+
+        This is the timestamp of the record that represents current state.
+
+        Usage:
+            UserResourceProvenance.__get_current_start(resource={X}, user={Y})
+            UserGroupProvenance.__get_current_start(group={X}, user={Y})
+            GroupResourceProvenance.__get_current_start(resource={X}, group={Y})
+        """
         result = cls.objects\
             .filter(undone=False, **kwargs)\
             .aggregate(Max('start'))
@@ -505,14 +710,21 @@ class ProvenanceBase(models.Model):
 
     @classmethod
     def get_current_record(cls, **kwargs):
-        """ get the record in effect for a given pair """
-        # First, compute the latest start time for the privilege.
-        # This is the start of the effective record.
+        """
+        Get the current provenance record for a given pair of keys.
+
+        There is always an exact match between this record and the record in the
+        matching Privilege model.
+
+        Usage:
+            UserResourceProvenance.get_current_record(resource={X}, user={Y})
+            UserGroupProvenance.get_current_record(group={X}, user={Y})
+            GroupResourceProvenance.get_current_record(resource={X}, group={Y})
+        """
         if __debug__:
             assert len(kwargs) == 2
-        # print("inside get_current_record:")
-        # for k in kwargs:
-        #     print (str.format("  {}={}", k, kwargs[k]))
+        # First, compute the latest start time for the privilege.
+        # This is the start of the effective record.
         start = cls.__get_current_start(**kwargs)
         # Then, fetch that unique record.
         if start is not None:
@@ -523,7 +735,17 @@ class ProvenanceBase(models.Model):
 
     @classmethod
     def get_privilege(cls, **kwargs):
-        """ Get the privilege implied by provenance state """
+        """
+        Get the privilege implied by provenance state.
+
+        There is always an exact match between get_privilege for Provenance
+        and Privilege models.
+
+        Usage:
+            UserResourceProvenance.get_privilege(resource={X}, user={Y})
+            UserGroupProvenance.get_privilege(group={X}, user={Y})
+            GroupResourceProvenance.get_privilege(resource={X}, group={Y})
+        """
         if __debug__:
             assert len(kwargs) == 2
         result = cls.get_current_record(**kwargs)
@@ -534,15 +756,37 @@ class ProvenanceBase(models.Model):
 
     @classmethod
     def update(cls, **kwargs):
-        """ Update a provenance record """
+        """
+        Update a provenance record.
+
+        The Provenance models are append-only tables, in the sense that no
+        record is ever deleted, but records are marked as `undone` when no
+        longer used. At any point in time the last record entered for a pair is binding.
+        Records are automatically timestamped to enforce this.
+
+        Usage:
+            UserResourceProvenance.update(resource={X}, user={Y}, privilege={Z}, ...)
+            UserGroupProvenance.update(group={X}, user={Y}, privilege={Z}, ...)
+            GroupResourceProvenance.update(resource={X}, group={Y}, privilege={Z}, ...)
+        """
         if kwargs['state'] is None:
             kwargs['state'] = ProvenanceCodes.REQUESTED
-        # This is an append-only create; no records are ever deleted
         cls.objects.create(**kwargs)
 
     @classmethod
     def __get_undo_share_start(cls, **kwargs):
-        """ Get the previous start time for undo """
+        """
+        Get the previous start time for undo
+
+        An undo consists of backing up one time step from the current record to
+        find the previous one. This is then reinstated as the current record by
+        creating a copy.
+
+        Usage:
+            UserResourceProvenance.__get_undo_share_start(resource={X}, user={Y})
+            UserGroupProvenance.__get_undo_share_start(group={X}, user={Y})
+            GroupResourceProvenance.__get_undo_share_start(resource={X}, group={Y})
+        """
         if __debug__:
             assert len(kwargs) == 2
         last = cls.__get_current_start(**kwargs)
@@ -558,7 +802,16 @@ class ProvenanceBase(models.Model):
 
     @classmethod
     def __get_undo_share_record(cls, **kwargs):
-        """ get the previous records for a given pair """
+        """
+        Get the previous privilege record for a given pair.
+
+        This is the record that will be copied to reinstate its privilege after an undo.
+
+        Usage:
+            UserResourceProvenance.__get_undo_share_record(resource={X}, user={Y})
+            UserGroupProvenance.__get_undo_share_record(group={X}, user={Y})
+            GroupResourceProvenance.__get_undo_share_record(resource={X}, group={Y})
+        """
         if __debug__:
             assert len(kwargs) == 2
         # First, compute the latest start time for the privilege.
@@ -579,7 +832,7 @@ class ProvenanceBase(models.Model):
         To undo a change, one must find the last record and step back one time step.
         One must also prevent backstep records from themselves being backstepped.
         Thus, one marks both the record being undone as "undone" and the action that undoes
-        it as "reused" so that neither record will be used for another "undo".
+        it as "undone" so that neither record will be used for another "undo".
 
         Usage:
         ------
@@ -594,8 +847,8 @@ class ProvenanceBase(models.Model):
 
         is one such combination.
 
-        Note that this does not modify the *Privilege class accordingly.
-        That must be done separately.
+        Note that this does not modify the *Privilege class accordingly. That must be done
+        separately.
 
         **This is never used directly in normal programming.** Use the routines in UserAccess.
         """
@@ -613,18 +866,16 @@ class ProvenanceBase(models.Model):
             raise PermissionDenied("Current user is not grantor")
 
         previous = cls.__get_undo_share_record(**kwargs)
-        print("inside undo share, previous is ", str(previous))
         if previous is not None:
 
-            # create a rollback record that itself cannot be backstepped over.
+            # create a rollback record that reinstates the previous privilege.
             cls.update(privilege=previous.privilege,
                        grantor=previous.grantor,
                        state=ProvenanceCodes.RESTORED,
                        **kwargs)
-            # this marks the reinstated record as reused and inactive.
+            # mark the reinstated record as reused and inactive.
             previous.undone = True
             previous.save()
-            print("inside undo share, previous becomes ", str(previous))
         else:
             # put in a record revoking all privilege -- cannot be undone
             cls.update(privilege=PrivilegeCodes.NONE,
@@ -632,10 +883,9 @@ class ProvenanceBase(models.Model):
                        state=ProvenanceCodes.INITIAL,
                        **kwargs)
 
-        # this marks the current record as overridden
+        # mark the current record as overridden so it won't be reinstated again.
         current.undone = True
         current.save()
-        print("inside undo share, current becomes ", str(current))
 
     @classmethod
     def share(cls, **kwargs):
@@ -763,15 +1013,25 @@ class UserGroupProvenance(ProvenanceBase):
 
     @property
     def grantee(self):
+        """ make printing of privilege records work properly in superclass"""
         return self.user
 
     @property
     def entity(self):
+        """ make printing of privilege records work properly in superclass"""
         return self.group
 
     @classmethod
     def get_undo_users(cls, group, grantor):
-        """ get the users for which a specific grantee can roll back privilege """
+        """
+        get the users for which a specific grantee can undo privilege
+
+        :param group: group to check.
+        :param grantor: user that would initiate the rollback.
+
+        Note: undo is somewhat independent of access control. A user need not hold
+        a privilege to undo a privilege that was previously granted.
+        """
 
         if __debug__:
             assert isinstance(grantor, User)
@@ -790,7 +1050,19 @@ class UserGroupProvenance(ProvenanceBase):
 
     @classmethod
     def update(cls, group, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
-        """ Update a provenance record """
+        """
+        Update a provenance record
+
+        This is just a wrapper around ProvenanceBase.update that makes parameters explicit.
+        """
+
+        if __debug__:
+            assert isinstance(group, Group)
+            assert isinstance(user, User)
+            assert isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
+
         super(UserGroupProvenance, cls).update(group=group,
                                                user=user,
                                                privilege=privilege,
@@ -885,7 +1157,21 @@ class UserResourceProvenance(ProvenanceBase):
 
     @classmethod
     def update(cls, resource, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
-        """ Update a provenance record """
+        """
+        Update a provenance record.
+
+        This is just a wrapper around ProvenanceBase.update with type checking.
+
+        The Provenance models are append-only tables, in the sense that no old records
+        are ever deleted; new records are added and timestamped as current.
+        """
+        if __debug__:
+            assert isinstance(resource, BaseResource)
+            assert isinstance(user, User)
+            assert isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
+
         super(UserResourceProvenance, cls).update(resource=resource,
                                                   user=user,
                                                   privilege=privilege,
@@ -987,7 +1273,17 @@ class GroupResourceProvenance(ProvenanceBase):
 
     @classmethod
     def update(cls, resource, group, privilege, grantor, state=ProvenanceCodes.REQUESTED):
-        """ Update a provenance record """
+        """
+        Update a provenance record.
+
+        This is just a wrapper around ProvenanceBase.update with argument type checking.
+        """
+        if __debug__:
+            assert isinstance(resource, BaseResource)
+            assert isinstance(group, Group)
+            assert isinstance(grantor, User)
+            assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
+            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
         super(GroupResourceProvenance, cls).update(resource=resource,
                                                    group=group,
                                                    privilege=privilege,
@@ -2839,7 +3135,8 @@ class UserAccess(models.Model):
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """ undo a share with a group that was granted by self """
-        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group, grantor=self.user)
+        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group,
+                                          grantor=self.user)
 
     #######################
     # polymorphic functions understand variable arguments for main functions
@@ -2855,16 +3152,16 @@ class UserAccess(models.Model):
             assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
             assert 'user' not in kwargs or isinstance(kwargs['user'], User)
         if 'resource' in kwargs and 'user' in kwargs:
-            return self.share_resource_with_user(kwargs['resource'], kwargs['user'], 
+            return self.share_resource_with_user(kwargs['resource'], kwargs['user'],
                                                  kwargs['privilege'])
         elif 'resource' in kwargs and 'group' in kwargs:
-            return self.share_resource_with_group(kwargs['resource'], kwargs['group'], 
+            return self.share_resource_with_group(kwargs['resource'], kwargs['group'],
                                                   kwargs['privilege'])
         elif 'group' in kwargs and 'user' in kwargs:
-            return self.share_group_with_user(kwargs['group'], kwargs['user'], 
+            return self.share_group_with_user(kwargs['group'], kwargs['user'],
                                               kwargs['privilege'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def unshare(self, **kwargs):
         if __debug__:
@@ -2879,7 +3176,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.unshare_group_with_user(kwargs['group'], kwargs['user'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def can_unshare(self, **kwargs):
         if __debug__:
@@ -2894,7 +3191,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.can_unshare_group_with_user(kwargs['group'], kwargs['user'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def undo_share(self, **kwargs):
         if __debug__:
@@ -2909,7 +3206,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.undo_share_group_with_user(kwargs['group'], kwargs['user'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def can_undo_share(self, **kwargs):
         if __debug__:
@@ -2925,7 +3222,7 @@ class UserAccess(models.Model):
         elif 'group' in kwargs and 'user' in kwargs:
             return self.can_undo_share_group_with_user(kwargs['group'], kwargs['user'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def get_undo_users(self, **kwargs):
         if __debug__:
@@ -2933,17 +3230,17 @@ class UserAccess(models.Model):
             assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
             assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
         if 'resource' in kwargs:
-            return get_resource_undo_users(kwargs['resource'])
+            return self.get_resource_undo_users(kwargs['resource'])
         elif 'group' in kwargs:
-            return get_group_undo_users(kwargs['group'])
+            return self.get_group_undo_users(kwargs['group'])
         else:
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
+            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def get_undo_groups(self, **kwargs):
         if __debug__:
             assert len(kwargs) == 1
             assert 'resource' in kwargs and isinstance(kwargs['resource'], BaseResource)
-        return get_resource_undo_groups(kwargs['resource'])
+        return self.get_resource_undo_groups(kwargs['resource'])
 
 
 class GroupMembershipRequest(models.Model):
