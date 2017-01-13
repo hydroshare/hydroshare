@@ -55,6 +55,9 @@ from hs_core.models import BaseResource
 # TODO: setting published flag prohibits user from changing resource flags???
 # TODO: setting published flag allows administrator to change resource flags???
 
+class PolymorphismError(Exception):
+    """ A function is called with an inappropriate combination of arguments """
+    pass
 
 class PrivilegeCodes(object):
     """
@@ -188,13 +191,13 @@ class UserGroupPrivilege(PrivilegeBase):
     @classmethod
     def share(cls, **kwargs):
         """ share a group and update provenance """
-        if __debug__: 
+        if __debug__:
             assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group) 
-            assert 'user' in kwargs 
-            assert isinstance(kwargs['user'], User) 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['group'], Group)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
             assert 'privilege' in kwargs
             assert kwargs['privilege'] >= PrivilegeCodes.OWNER and \
                    kwargs['privilege'] <= PrivilegeCodes.NONE
@@ -205,13 +208,13 @@ class UserGroupPrivilege(PrivilegeBase):
     @classmethod
     def unshare(cls, **kwargs):
         """ unshare a group and update provenance """
-        if __debug__: 
+        if __debug__:
             assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group) 
-            assert 'user' in kwargs 
-            assert isinstance(kwargs['user'], User) 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['group'], Group)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 3
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserGroupProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -219,21 +222,21 @@ class UserGroupPrivilege(PrivilegeBase):
     @classmethod
     def undo_share(cls, **kwargs):
         """ undo a share of a group and update provenance """
-        if __debug__: 
+        if __debug__:
             assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group) 
-            assert 'user' in kwargs 
-            assert isinstance(kwargs['user'], User) 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['group'], Group)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 3
         grantor = kwargs['grantor']
         del kwargs['grantor']
         r = UserGroupProvenance.get_current_record(**kwargs)
-        print("old current record is " + str(r)) 
+        print("old current record is " + str(r))
         UserGroupProvenance.undo_share(grantor=grantor, **kwargs)
         r = UserGroupProvenance.get_current_record(**kwargs)
-        print("new current record is " + str(r)) 
+        print("new current record is " + str(r))
         cls.update(user=r.user, group=r.group, privilege=r.privilege, grantor=r.grantor)
 
     @classmethod
@@ -243,14 +246,14 @@ class UserGroupPrivilege(PrivilegeBase):
         :param group: group to check
         :param grantor: user that will undo privilege
 
-        This should not be called directly by developers! 
-        Use UserAccess.get_resource_undo_users instead. 
+        This should not be called directly by developers!
+        Use UserAccess.get_resource_undo_users instead.
         """
-        if __debug__: 
+        if __debug__:
             assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group) 
+            assert isinstance(kwargs['group'], Group)
             assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 2
         return UserGroupProvenance.get_undo_users(**kwargs)
 
@@ -313,15 +316,15 @@ class UserResourcePrivilege(PrivilegeBase):
 
     @classmethod
     def undo_share(cls, **kwargs):
-        if __debug__: 
+        if __debug__:
             assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource) 
-            assert 'user' in kwargs 
-            assert isinstance(kwargs['user'], User) 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
         UserResourceProvenance.undo_share(**kwargs)
-        del kwargs['grantor'] 
+        del kwargs['grantor']
         r = UserResourceProvenance.get_current_record(**kwargs)
         cls.update(user=r.user, resource=r.resource, privilege=r.privilege, grantor=r.grantor)
 
@@ -332,11 +335,11 @@ class UserResourcePrivilege(PrivilegeBase):
         :param resource: resource to check
         :param grantor: user that will undo privilege
         """
-        if __debug__: 
+        if __debug__:
             assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource) 
+            assert isinstance(kwargs['resource'], BaseResource)
             assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 2
         return UserResourceProvenance.get_undo_users(**kwargs)
 
@@ -401,13 +404,13 @@ class GroupResourcePrivilege(PrivilegeBase):
     @classmethod
     def undo_share(cls, **kwargs):
         """ undo a share of a resource with a group and update provenance """
-        if __debug__: 
+        if __debug__:
             assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' in kwargs 
-            assert isinstance(kwargs['group'], Group) 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
         GroupResourceProvenance.undo_share(**kwargs)
         del kwargs['grantor']
         r = GroupResourceProvenance.get_current_record(**kwargs)
@@ -420,11 +423,11 @@ class GroupResourcePrivilege(PrivilegeBase):
         :param resource: resource to check
         :param grantor: user that will undo privilege
         """
-        if __debug__: 
+        if __debug__:
             assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource) 
+            assert isinstance(kwargs['resource'], BaseResource)
             assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User) 
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 2
         return GroupResourceProvenance.get_undo_groups(**kwargs)
 
@@ -449,7 +452,7 @@ class ProvenanceCodes(object):
     RESTORED = 2
     INITIAL = 3
     CHOICES = (
-        (REQUESTED, 'Requested'),  # an explicit share or unshare 
+        (REQUESTED, 'Requested'),  # an explicit share or unshare
         (RESTORED,  'Restored'),   # result of an undo operation
         (INITIAL,   'Initial'),    # initial state: cannot be undone
     )
@@ -477,7 +480,7 @@ class ProvenanceBase(models.Model):
                ', start=' + str(self.start) + \
                ', state=' + ProvenanceCodes.NAMES[self.state] + \
                ' (' + str(self.state) + ')' + \
-               ', undone=' + str(self.undone) 
+               ', undone=' + str(self.undone)
 
     def __unicode__(self):
         """print name for debugging"""
@@ -489,7 +492,7 @@ class ProvenanceBase(models.Model):
                ', start=' + str(self.start) + \
                ', state=' + ProvenanceCodes.NAMES[self.state] + \
                ' (' + str(self.state) + ')' + \
-               ', undone=' + str(self.undone) 
+               ', undone=' + str(self.undone)
 
     @classmethod
     def __get_current_start(cls, **kwargs):
@@ -505,10 +508,10 @@ class ProvenanceBase(models.Model):
         """ get the record in effect for a given pair """
         # First, compute the latest start time for the privilege.
         # This is the start of the effective record.
-        if __debug__: 
-            assert len(kwargs) == 2 
-        # print("inside get_current_record:") 
-        # for k in kwargs: 
+        if __debug__:
+            assert len(kwargs) == 2
+        # print("inside get_current_record:")
+        # for k in kwargs:
         #     print (str.format("  {}={}", k, kwargs[k]))
         start = cls.__get_current_start(**kwargs)
         # Then, fetch that unique record.
@@ -521,7 +524,7 @@ class ProvenanceBase(models.Model):
     @classmethod
     def get_privilege(cls, **kwargs):
         """ Get the privilege implied by provenance state """
-        if __debug__: 
+        if __debug__:
             assert len(kwargs) == 2
         result = cls.get_current_record(**kwargs)
         if result is not None:
@@ -540,13 +543,13 @@ class ProvenanceBase(models.Model):
     @classmethod
     def __get_undo_share_start(cls, **kwargs):
         """ Get the previous start time for undo """
-        if __debug__: 
+        if __debug__:
             assert len(kwargs) == 2
         last = cls.__get_current_start(**kwargs)
         if last is not None:
             result = cls.objects\
                 .filter(start__lt=last,
-                        undone=False, 
+                        undone=False,
                         **kwargs) \
                 .aggregate(Max('start'))
             return result['start__max']
@@ -556,7 +559,7 @@ class ProvenanceBase(models.Model):
     @classmethod
     def __get_undo_share_record(cls, **kwargs):
         """ get the previous records for a given pair """
-        if __debug__: 
+        if __debug__:
             assert len(kwargs) == 2
         # First, compute the latest start time for the privilege.
         # This is the start of the effective record.
@@ -596,18 +599,18 @@ class ProvenanceBase(models.Model):
 
         **This is never used directly in normal programming.** Use the routines in UserAccess.
         """
-        if __debug__: 
-            assert 'grantor' in kwargs 
-            assert isinstance(kwargs['grantor'], User) 
+        if __debug__:
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 3
-        grantor = kwargs['grantor'] 
-        del kwargs['grantor'] 
+        grantor = kwargs['grantor']
+        del kwargs['grantor']
         current = cls.get_current_record(**kwargs)
         print("inside undo share, current is ", str(current))
         if current is None or current.state == ProvenanceCodes.INITIAL:
             raise PermissionDenied("No privilege to undo")
-        if current.grantor != grantor: 
-            raise PermissionDenied("Current user is not grantor") 
+        if current.grantor != grantor:
+            raise PermissionDenied("Current user is not grantor")
 
         previous = cls.__get_undo_share_record(**kwargs)
         print("inside undo share, previous is ", str(previous))
@@ -744,7 +747,7 @@ class UserGroupProvenance(ProvenanceBase):
                               help_text='group to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone 
+                                null=True,  # NULL grantor cannot be undone
                                 editable=False,
                                 related_name='x2ugq',
                                 help_text='grantor of privilege')
@@ -753,7 +756,7 @@ class UserGroupProvenance(ProvenanceBase):
                                 editable=False,
                                 default=ProvenanceCodes.REQUESTED)
 
-    undone = models.BooleanField(editable=False, default=False) 
+    undone = models.BooleanField(editable=False, default=False)
 
     class Meta:
         unique_together = ('user', 'group', 'start')
@@ -766,7 +769,7 @@ class UserGroupProvenance(ProvenanceBase):
     def entity(self):
         return self.group
 
-    @classmethod 
+    @classmethod
     def get_undo_users(cls, group, grantor):
         """ get the users for which a specific grantee can roll back privilege """
 
@@ -839,7 +842,7 @@ class UserResourceProvenance(ProvenanceBase):
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone 
+                                null=True,  # NULL grantor cannot be undone
                                 editable=False,
                                 related_name='x2urq',
                                 help_text='grantor of privilege')
@@ -848,7 +851,7 @@ class UserResourceProvenance(ProvenanceBase):
                                 editable=False,
                                 default=ProvenanceCodes.REQUESTED)
 
-    undone = models.BooleanField(editable=False, default=False) 
+    undone = models.BooleanField(editable=False, default=False)
 
     class Meta:
         unique_together = ('user', 'resource', 'start')
@@ -861,7 +864,7 @@ class UserResourceProvenance(ProvenanceBase):
     def entity(self):
         return self.resource
 
-    @classmethod 
+    @classmethod
     def get_undo_users(cls, resource, grantor):
         """ get the users for which a specific user can roll back privilege """
 
@@ -938,7 +941,7 @@ class GroupResourceProvenance(ProvenanceBase):
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone 
+                                null=True,  # NULL grantor cannot be undone
                                 editable=False,
                                 related_name='x2grq',
                                 help_text='grantor of privilege')
@@ -947,7 +950,7 @@ class GroupResourceProvenance(ProvenanceBase):
                                 editable=False,
                                 default=ProvenanceCodes.REQUESTED)
 
-    undone = models.BooleanField(editable=False, default=False) 
+    undone = models.BooleanField(editable=False, default=False)
 
     class Meta:
         unique_together = ('group', 'resource', 'start')
@@ -960,7 +963,7 @@ class GroupResourceProvenance(ProvenanceBase):
     def entity(self):
         return self.resource
 
-    @classmethod 
+    @classmethod
     def get_undo_groups(cls, resource, grantor):
         """ get the groups for which a specific user can roll back privilege """
 
@@ -1958,7 +1961,8 @@ class UserAccess(models.Model):
 
         * Setting both via_user and via_group to False is not an error, and
           always returns an empty QuerySet.
-        * via_group is meaningless for OWNER privilege and is ignored.
+        * Via_group is meaningless for OWNER privilege and is ignored.
+        * Exclusion clauses are meaningless for via_user as a user can have only one privilege.
         * The default is via_user=True, via_group=False, which is the original
           behavior of the routine before this revision.
         * Immutable resources are listed as VIEW even if the user or group has CHANGE
@@ -1993,90 +1997,114 @@ class UserAccess(models.Model):
             if via_user:
                 return BaseResource.objects\
                     .filter(r2urp__privilege=this_privilege,
-                            r2urp__user=self.user)\
-                    .exclude(pk__in=BaseResource.objects
-                             .filter(r2urp__user=self.user,
-                                     r2urp__privilege__lt=this_privilege))
+                            r2urp__user=self.user)
             else:
                 # groups can't own resources
                 return BaseResource.objects.none()
 
+        # CHANGE does not include immutable resources
         elif this_privilege == PrivilegeCodes.CHANGE:
-            # CHANGE does not include immutable resources
-            uquery = Q(raccess__immutable=False,
-                       r2urp__privilege=this_privilege,
-                       r2urp__user=self.user)
-            uexcl = Q(raccess__immutable=False,
-                      r2urp__privilege__lt=this_privilege,
-                      r2urp__user=self.user)
-
-            gquery = Q(raccess__immutable=False,
-                       r2grp__privilege=this_privilege,
-                       r2grp__group__g2ugp__user=self.user)
-            gexcl = Q(raccess__immutable=False,
-                      r2grp__privilege__lt=this_privilege,
-                      r2grp__group__g2ugp__user=self.user)
-
             if via_user and via_group:
-                query = uquery | gquery
-                excl = uexcl | gexcl
+                uquery = Q(raccess__immutable=False,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
+
+                gquery = Q(raccess__immutable=False,
+                           r2grp__privilege=PrivilegeCodes.CHANGE,
+                           r2grp__group__g2ugp__user=self.user)
+
+                # exclude owners; immutability doesn't matter for them
+                uexcl = Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                          r2urp__user=self.user)
+
+                return BaseResource.objects\
+                    .filter(uquery | gquery)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(uexcl)).distinct()
+
             elif via_user:
-                query = uquery
-                excl = uexcl
+                query = Q(raccess__immutable=False,
+                          r2urp__privilege=PrivilegeCodes.CHANGE,
+                          r2urp__user=self.user)
+                return BaseResource.objects\
+                    .filter(query).distinct()
+
             elif via_group:
-                query = gquery
-                excl = gexcl
+                query = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2ugp__user=self.user)
+                return BaseResource.objects\
+                    .filter(query).distinct()
+
             else:
                 # nothing matches
                 return BaseResource.objects.none()
 
-            return BaseResource.objects\
-                .filter(query)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(excl)).distinct()
-
-        else:  # this_privilege == PrivilegeCodes.ViEW
+        else:  # this_privilege == PrivilegeCodes.VIEW
             # VIEW includes CHANGE+immutable as well as explicit VIEW
-            # TODO: make this query more efficient, if possible!
             # CHANGE does not include immutable resources
-            uquery = Q(r2urp__privilege=this_privilege,
-                       r2urp__user=self.user)
-            uexcl = Q(r2urp__privilege__lt=this_privilege,
-                      r2urp__user=self.user)
-
-            gquery = Q(r2grp__privilege=this_privilege,
-                       r2grp__group__g2ugp__user=self.user)
-            gexcl = Q(r2grp__privilege__lt=this_privilege,
-                      r2grp__group__g2ugp__user=self.user)
 
             if via_user and via_group:
-                query = uquery | gquery
-                excl = uexcl | gexcl
+
+                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                           r2urp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
+
+                gquery = \
+                    Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                      r2grp__group__g2ugp__user=self.user,
+                      r2grp__group__gaccess__active=True) | \
+                    Q(raccess__immutable=True,
+                      r2grp__privilege=PrivilegeCodes.CHANGE,
+                      r2grp__group__g2ugp__user=self.user,
+                      r2grp__group__gaccess__active=True)
+
+                # pick up change and owner, use to override VIEW for groups
+                uexcl = \
+                    Q(raccess__immutable=False,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user) | \
+                    Q(r2urp__privilege=PrivilegeCodes.OWNER,
+                      r2urp__user=self.user)
+
+                # pick up non-immutable CHANGE, use to override VIEW for groups
+                gexcl = Q(raccess__immutable=False,
+                          r2grp__privilege=PrivilegeCodes.CHANGE,
+                          r2grp__group__g2ugp__user=self.user,
+                          r2grp__group__gaccess__active=True)
+
+                return BaseResource.objects\
+                    .filter(uquery | gquery)\
+                    .exclude(pk__in=BaseResource.objects
+                             .filter(uexcl | gexcl)).distinct()
+
             elif via_user:
-                query = uquery
-                excl = uexcl
+
+                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                           r2urp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2urp__privilege=PrivilegeCodes.CHANGE,
+                           r2urp__user=self.user)
+
+                return BaseResource.objects\
+                    .filter(uquery).distinct()
+
             elif via_group:
-                query = gquery
-                excl = gexcl
+
+                gquery = Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                           r2grp__group__g2ugp__user=self.user) | \
+                         Q(raccess__immutable=True,
+                           r2grp__privilege=PrivilegeCodes.CHANGE,
+                           r2grp__group__g2ugp__user=self.user)
+
+                return BaseResource.objects\
+                    .filter(gquery).distinct()
+
             else:
                 # nothing matches
                 return BaseResource.objects.none()
-
-            view = BaseResource.objects\
-                .filter(query)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(excl))
-
-            immutable = BaseResource.objects\
-                .filter(raccess__immutable=True,
-                        r2urp__privilege=PrivilegeCodes.CHANGE,
-                        r2urp__user=self.user)\
-                .exclude(pk__in=BaseResource.objects
-                         .filter(raccess__immutable=True,
-                                 r2urp__user=self.user,
-                                 r2urp__privilege__lt=PrivilegeCodes.CHANGE))
-
-            return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
 
     #############################################
     # Check access permissions for self (user)
@@ -2781,9 +2809,9 @@ class UserAccess(models.Model):
         """ get a list of users that can be removed from group privilege by self """
         return UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
 
-    def can_undo_share_group_with_user(self, this_group, this_user): 
+    def can_undo_share_group_with_user(self, this_group, this_user):
         """ Check that a group share can be undone """
-        return this_user in self.get_group_undo_users(this_group) 
+        return this_user in self.get_group_undo_users(this_group)
 
     def undo_share_group_with_user(self, this_group, this_user):
         """ undo a share with a user that was granted by self """
@@ -2793,9 +2821,9 @@ class UserAccess(models.Model):
         """ get a list of users that can be removed from resource privilege by self """
         return UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
 
-    def can_undo_share_resource_with_user(self, this_resource, this_user): 
+    def can_undo_share_resource_with_user(self, this_resource, this_user):
         """ Check that a resource share can be undone """
-        return this_user in self.get_resource_undo_users(this_resource) 
+        return this_user in self.get_resource_undo_users(this_resource)
 
     def undo_share_resource_with_user(self, this_resource, this_user):
         """ undo a share with a user that was granted by self """
@@ -2805,117 +2833,118 @@ class UserAccess(models.Model):
         """ get a list of groups that can be removed from resource privilege by self """
         return GroupResourcePrivilege.get_undo_groups(resource=this_resource, grantor=self.user)
 
-    def can_undo_share_resource_with_group(self, this_resource, this_group): 
+    def can_undo_share_resource_with_group(self, this_resource, this_group):
         """ Check that a resource share can be undone """
-        return this_group in self.get_resource_undo_groups(this_resource) 
+        return this_group in self.get_resource_undo_groups(this_resource)
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """ undo a share with a group that was granted by self """
         GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group, grantor=self.user)
 
     #######################
-    # polymorphic functions understand variable arguments for main functions 
+    # polymorphic functions understand variable arguments for main functions
     #######################
-    class PolymorphismError(Exception): 
-        """ A function is called with an inappropriate combination of arguments """
-        pass 
 
-    def share(self, **kwargs): 
-        if __debug__: 
+    def share(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 3
             assert 'privilege' in kwargs and \
                 kwargs['privilege'] >= PrivilegeCodes.OWNER and \
                 kwargs['privilege'] <= PrivilegeCodes.NONE
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User) 
-        if 'resource' in kwargs and 'user' in kwargs: 
-            return self.share_resource_with_user(**kwargs) 
-        elif 'resource' in kwargs and 'group' in kwargs: 
-            return self.share_resource_with_group(**kwargs) 
-        elif 'group' in kwargs and 'user' in kwargs: 
-            return self.share_group_with_user(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
+        if 'resource' in kwargs and 'user' in kwargs:
+            return self.share_resource_with_user(kwargs['resource'], kwargs['user'], 
+                                                 kwargs['privilege'])
+        elif 'resource' in kwargs and 'group' in kwargs:
+            return self.share_resource_with_group(kwargs['resource'], kwargs['group'], 
+                                                  kwargs['privilege'])
+        elif 'group' in kwargs and 'user' in kwargs:
+            return self.share_group_with_user(kwargs['group'], kwargs['user'], 
+                                              kwargs['privilege'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def unshare(self, **kwargs): 
-        if __debug__: 
+    def unshare(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User) 
-        if 'resource' in kwargs and 'user' in kwargs: 
-            return self.unshare_resource_with_user(**kwargs) 
-        elif 'resource' in kwargs and 'group' in kwargs: 
-            return self.unshare_resource_with_group(**kwargs) 
-        elif 'group' in kwargs and 'user' in kwargs: 
-            return self.unshare_group_with_user(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
+        if 'resource' in kwargs and 'user' in kwargs:
+            return self.unshare_resource_with_user(kwargs['resource'], kwargs['user'])
+        elif 'resource' in kwargs and 'group' in kwargs:
+            return self.unshare_resource_with_group(kwargs['resource'], kwargs['group'])
+        elif 'group' in kwargs and 'user' in kwargs:
+            return self.unshare_group_with_user(kwargs['group'], kwargs['user'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def can_unshare(self, **kwargs): 
-        if __debug__: 
+    def can_unshare(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User) 
-        if 'resource' in kwargs and 'user' in kwargs: 
-            return self.can_unshare_resource_with_user(**kwargs) 
-        elif 'resource' in kwargs and 'group' in kwargs: 
-            return self.can_unshare_resource_with_group(**kwargs) 
-        elif 'group' in kwargs and 'user' in kwargs: 
-            return self.can_unshare_group_with_user(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
+        if 'resource' in kwargs and 'user' in kwargs:
+            return self.can_unshare_resource_with_user(kwargs['resource'], kwargs['user'])
+        elif 'resource' in kwargs and 'group' in kwargs:
+            return self.can_unshare_resource_with_group(kwargs['resource'], kwargs['group'])
+        elif 'group' in kwargs and 'user' in kwargs:
+            return self.can_unshare_group_with_user(kwargs['group'], kwargs['user'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def undo_share(self, **kwargs): 
-        if __debug__: 
+    def undo_share(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User) 
-        if 'resource' in kwargs and 'user' in kwargs: 
-            return self.undo_share_resource_with_user(**kwargs) 
-        elif 'resource' in kwargs and 'group' in kwargs: 
-            return self.undo_share_resource_with_group(**kwargs) 
-        elif 'group' in kwargs and 'user' in kwargs: 
-            return self.undo_share_group_with_user(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
+        if 'resource' in kwargs and 'user' in kwargs:
+            return self.undo_share_resource_with_user(kwargs['resource'], kwargs['user'])
+        elif 'resource' in kwargs and 'group' in kwargs:
+            return self.undo_share_resource_with_group(kwargs['resource'], kwargs['group'])
+        elif 'group' in kwargs and 'user' in kwargs:
+            return self.undo_share_group_with_user(kwargs['group'], kwargs['user'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def can_undo_share(self, **kwargs): 
-        if __debug__: 
+    def can_undo_share(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 2
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-            assert 'user' not in kwargs or isinstance(kwargs['user'], User) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+            assert 'user' not in kwargs or isinstance(kwargs['user'], User)
 
-        if 'resource' in kwargs and 'user' in kwargs: 
-            return self.can_undo_share_resource_with_user(**kwargs) 
-        elif 'resource' in kwargs and 'group' in kwargs: 
-            return self.can_undo_share_resource_with_group(**kwargs) 
-        elif 'group' in kwargs and 'user' in kwargs: 
-            return self.can_undo_share_group_with_user(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+        if 'resource' in kwargs and 'user' in kwargs:
+            return self.can_undo_share_resource_with_user(kwargs['resource'], kwargs['user'])
+        elif 'resource' in kwargs and 'group' in kwargs:
+            return self.can_undo_share_resource_with_group(kwargs['resource'], kwargs['group'])
+        elif 'group' in kwargs and 'user' in kwargs:
+            return self.can_undo_share_group_with_user(kwargs['group'], kwargs['user'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def get_undo_users(self, **kwargs): 
-        if __debug__: 
+    def get_undo_users(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 1
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource) 
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group) 
-        if 'resource' in kwargs: 
-            return get_resource_undo_users(**kwargs) 
-        elif 'group' in kwargs: 
-            return get_resource_undo_groups(**kwargs) 
-        else: 
-            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs))) 
+            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
+            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
+        if 'resource' in kwargs:
+            return get_resource_undo_users(kwargs['resource'])
+        elif 'group' in kwargs:
+            return get_group_undo_users(kwargs['group'])
+        else:
+            raise PolymorphismError(str.format("No action for arguments {}",str(kwargs)))
 
-    def get_undo_groups(self, **kwargs): 
-        if __debug__: 
+    def get_undo_groups(self, **kwargs):
+        if __debug__:
             assert len(kwargs) == 1
-            assert 'resource' in kwargs and isinstance(kwargs['resource'], BaseResource) 
-        return get_resource_undo_groups(**kwargs) 
+            assert 'resource' in kwargs and isinstance(kwargs['resource'], BaseResource)
+        return get_resource_undo_groups(kwargs['resource'])
+
 
 class GroupMembershipRequest(models.Model):
     request_from = models.ForeignKey(User, related_name='ru2gmrequest')
