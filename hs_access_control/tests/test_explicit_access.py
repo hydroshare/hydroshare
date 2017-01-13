@@ -361,10 +361,6 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
                                                               via_user=False,
                                                               via_group=True)
 
-        for r in GroupResourcePrivilege.objects.filter(resource=r1_resource): 
-            print(str(r))
-            print("members of " + str(r.group) + ":" + str(r.group.gaccess.members))
-        print("g is " + str(g) + " expect [r1_resource]") 
         self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
 
         # owner squashes CHANGE + immutable

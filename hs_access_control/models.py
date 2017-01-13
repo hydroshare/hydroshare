@@ -437,7 +437,7 @@ class ProvenanceCodes(object):
     Provenance states describe whether a privilege can be undone
     State is a numeric code 1-3:
 
-        * 1 or ProvenanceCodes.SET:
+        * 1 or ProvenanceCodes.REQUESTED:
             Active; can be undone. This is the resulting state after any share or unshare.
 
         * 2 or ProvenanceCodes.RESTORED:
