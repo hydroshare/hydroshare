@@ -264,7 +264,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         # file name without the extension
         file_name = file_name.split(".")[0]
 
-        metadata = []
         if res_file is not None and res_file.has_generic_logical_file:
             # get the file from irods to temp dir
             temp_file = utils.get_file_from_irods(res_file)
@@ -299,33 +298,29 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         # to the end
                         istorage = resource.get_irods_storage()
                         counter = 0
+                        new_file_name = file_name
                         while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
                             new_file_name = file_name + "_{}".format(counter)
                             new_folder_path = 'data/contents/{}'.format(new_file_name)
                             counter += 1
 
+                        fed_file_full_path = ''
+                        if resource.resource_federation_path:
+                            fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
+
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
 
                         # add all new files to the resource
-                        resource_files = []
                         for f in files_to_add_to_resource:
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
-                            new_res_file = utils.add_file_to_resource(resource, uploaded_file)
+                            new_res_file = utils.add_file_to_resource(
+                                resource, uploaded_file, folder=new_file_name,
+                                fed_res_file_name_or_path=fed_file_full_path
+                                )
                             # make each resource file we added as part of the logical file
                             logical_file.add_resource_file(new_res_file)
-
-                            resource_files.append(new_res_file)
-                            new_res_file_base_name = utils.get_resource_file_name_and_extension(
-                                new_res_file)[1]
-
-                            # rename/move the file to the new folder - keep the original file name
-                            src_path = 'data/contents/{}'.format(new_res_file_base_name)
-                            tgt_path = os.path.join(new_folder_path, os.path.basename(f))
-                            move_or_rename_file_or_folder(user, resource.short_id, src_path,
-                                                          tgt_path,
-                                                          validate_move_rename=False)
 
                         log.info("Geo raster file type - new files were added to the resource.")
                     except Exception as ex:
