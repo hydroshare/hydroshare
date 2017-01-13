@@ -7,9 +7,6 @@ import unittest
 from unittest import TestCase
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
-from hs_core.models import GenericResource
-from django.contrib.auth.models import User
-import datetime as dt
 
 
 class TestSetAccessRules(TestCase):
