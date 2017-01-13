@@ -929,16 +929,106 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.NONE)
 
     def test_get_resource_undo_groups(self):
-        # george = self.george
-        # george.uaccess.get_resource_undo_groups(this_resource)
-        pass
+        george = self.george
+        bikes = self.bikes
+        bikers = self.bikers
+        alva = self.alva
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(
+                resource=bikes,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(
+                resource=bikes,
+                group=bikers),
+            PrivilegeCodes.CHANGE)
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes),
+                                           [bikers]))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.VIEW)
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes),
+                                           [bikers]))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(
+                resource=bikes,
+                group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
 
-    def test_can_undo_resource_group_share(self):
-        # george = self.george
-        # george.uaccess.can_undo_resource_group_share(this_resource, this_group)
-        pass
+    def test_can_undo_share_resource_with_group(self):
+        george = self.george
+        bikes = self.bikes
+        bikers = self.bikers
+        alva = self.alva
+        self.assertFalse(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.CHANGE)
+        self.assertTrue(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertFalse(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.VIEW)
+        self.assertTrue(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        self.assertFalse(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
 
     def test_undo_share_resource_with_group(self):
         # george = self.george
         # george.uaccess.undo_share_resource_with_group(this_resource, this_group)
         pass
+        george = self.george
+        bikes = self.bikes
+        bikers = self.bikers
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.CHANGE)
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.VIEW)
+        george.uaccess.undo_share_resource_with_group(bikes, bikers)
+        self.assertEqual(
+            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
+            PrivilegeCodes.NONE)

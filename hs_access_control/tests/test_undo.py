@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
+from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import UserResourceProvenance, UserResourcePrivilege, \
     GroupResourceProvenance, GroupResourcePrivilege, \
@@ -1611,3 +1612,27 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.grantor, None)
 
         check_provenance_synchronization(self)
+
+    def test_exceptions(self): 
+        """ exceptions are raised when undo is not appropriate """
+        george = self.george
+        alva = self.alva
+        bikers = self.bikers
+        bikes = self.bikes
+        harps = self.harps
+        harpers = self.harpers
+
+        with self.assertRaises(PermissionDenied): 
+            george.uaccess.undo_share_resource_with_user(bikes, alva) 
+
+        with self.assertRaises(PermissionDenied): 
+            george.uaccess.undo_share_resource_with_group(bikes, bikers) 
+
+        with self.assertRaises(PermissionDenied): 
+            george.uaccess.undo_share_group_with_user(bikers, alva) 
+
+        with self.assertRaises(PermissionDenied): 
+            george.uaccess.undo_share_resource_with_user(bikes, george) 
+
+        with self.assertRaises(PermissionDenied): 
+            george.uaccess.undo_share_group_with_user(bikers, george) 

@@ -1059,15 +1059,33 @@ class UserGroupProvenance(ProvenanceBase):
         if __debug__:
             assert isinstance(group, Group)
             assert isinstance(user, User)
-            assert isinstance(grantor, User)
+            assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
+            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
 
         super(UserGroupProvenance, cls).update(group=group,
                                                user=user,
                                                privilege=privilege,
                                                grantor=grantor,
                                                state=state)
+
+    @classmethod 
+    def undo_share(cls, **kwargs): 
+        """ 
+        Prohibit undo of privileges granted to self. 
+        
+        This avoids loss of last owner through undo.
+        """ 
+        if __debug__: 
+            assert 'group' in kwargs
+            assert isinstance(kwargs['group'], Group)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+        if kwargs['user'] == kwargs['grantor']: 
+            raise PermissionDenied("Cannot undo privileges for self")
+        super(UserGroupProvenance, cls).undo_share(**kwargs) 
 
 
 class UserResourceProvenance(ProvenanceBase):
@@ -1168,9 +1186,9 @@ class UserResourceProvenance(ProvenanceBase):
         if __debug__:
             assert isinstance(resource, BaseResource)
             assert isinstance(user, User)
-            assert isinstance(grantor, User)
+            assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
+            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
 
         super(UserResourceProvenance, cls).update(resource=resource,
                                                   user=user,
@@ -1178,6 +1196,23 @@ class UserResourceProvenance(ProvenanceBase):
                                                   grantor=grantor,
                                                   state=state)
 
+    @classmethod 
+    def undo_share(cls, **kwargs): 
+        """ 
+        Prohibit undo of privileges granted to self. 
+        
+        This avoids loss of last owner through undo. 
+        """ 
+        if __debug__: 
+            assert 'resource' in kwargs
+            assert isinstance(kwargs['resource'], BaseResource)
+            assert 'user' in kwargs
+            assert isinstance(kwargs['user'], User)
+            assert 'grantor' in kwargs
+            assert isinstance(kwargs['grantor'], User)
+        if kwargs['user'] == kwargs['grantor']: 
+            raise PermissionDenied("Cannot undo privileges for self")
+        super(UserResourceProvenance, cls).undo_share(**kwargs) 
 
 class GroupResourceProvenance(ProvenanceBase):
     """
@@ -1281,9 +1316,9 @@ class GroupResourceProvenance(ProvenanceBase):
         if __debug__:
             assert isinstance(resource, BaseResource)
             assert isinstance(group, Group)
-            assert isinstance(grantor, User)
+            assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and privilege <= ProvenanceCodes.INITIAL
+            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
         super(GroupResourceProvenance, cls).update(resource=resource,
                                                    group=group,
                                                    privilege=privilege,
