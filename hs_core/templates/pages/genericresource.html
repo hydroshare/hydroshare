@@ -30,10 +30,10 @@
                               <strong>Validation Error: {{ validation_error }}</strong>
                          </div>
                     {%  endif %}
-                    {% if new_version_resource_creation_error %}
+                    {% if resource_creation_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <strong>Failed to create a new version of this resource: {{ new_version_resource_creation_error }}</strong>
+                            <strong>{{ resource_creation_error }}</strong>
                         </div>
                     {% endif %}
                 {% endblock %}
@@ -1730,6 +1730,13 @@
                     $('#publish-btn').removeAttr('disabled');
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
+            });
+            $("#agree-chk-copy").on('click', function(e) {
+                e.stopImmediatePropagation();
+                if (e.currentTarget.checked)
+                    $('#copy-btn').removeAttr('disabled');
+                else
+                    $('#copy-btn').attr('disabled', 'disabled');
             });
             // add input element to each of the comment/rating forms to track resource mode (edit or view)
             var resourceMode = $("#resource-mode").val().toLowerCase();
