@@ -94,4 +94,3 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
 
         # test extracted raster file type metadata
         assert_raster_file_type_metadata(self)
-
