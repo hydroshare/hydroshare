@@ -1,126 +1,18 @@
-__author__ = 'Alva'
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourceProvenance, UserResourcePrivilege, \
+from hs_access_control.models import UserResourceProvenance, UserResourcePrivilege, \
     GroupResourceProvenance, GroupResourcePrivilege, \
     UserGroupProvenance, UserGroupPrivilege, \
     PrivilegeCodes, ProvenanceCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, \
+    is_equal_to_as_set, check_provenance_synchronization
 
-
-def check_provenance_synchronization(self):
-    for u in User.objects.all():
-        for r in BaseResource.objects.all():
-            prov = UserResourceProvenance.get_privilege(resource=r, user=u)
-            priv = UserResourcePrivilege.get_privilege(resource=r, user=u)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, resource={}, user={}", prov, priv, r, u))
-    for u in User.objects.all():
-        for g in Group.objects.all():
-            prov = UserGroupProvenance.get_privilege(group=g, user=u)
-            priv = UserGroupPrivilege.get_privilege(group=g, user=u)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, group={}, user={}", prov, priv, g, u))
-    for g in Group.objects.all():
-        for r in BaseResource.objects.all():
-            prov = GroupResourceProvenance.get_privilege(resource=r, group=g)
-            priv = GroupResourcePrivilege.get_privilege(resource=r, group=g)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, group={}, resource={}", prov, priv, g, r))
-
-
-def printGroupResourceState():
-    print "==================================="
-    print "GroupResourcePrivilege"
-    priv = GroupResourcePrivilege.objects.all().order_by('group__id', 'resource__id')
-    o = None
-    for p in priv:
-        if o is not None and (p.group != o.group or p.resource != o.resource):
-            print "------------------------------"
-        print(p)
-        o = p
-    print "==================================="
-    print "GroupResourceProvenance"
-    prov = GroupResourceProvenance.objects.all().order_by(
-        'group__id', 'resource__id', 'start')
-    o = None
-    for p in prov:
-        if o is not None and (p.group != o.group or p.resource != o.resource):
-            print "------------------------------"
-        current = GroupResourceProvenance.get_current_record(
-            resource=p.resource, group=p.group)
-        star = ''
-        if current == p:
-            star = 'CURRENT'
-        print(p, star)
-        o = p
-
-
-def printUserResourceState():
-    print "==================================="
-    print "UserResourcePrivilege"
-    priv = UserResourcePrivilege.objects.all().order_by('user__id', 'resource__id')
-    o = None
-    for p in priv:
-        if o is not None and (p.user != o.user or p.resource != o.resource):
-            print "------------------------------"
-        print(p)
-        o = p
-    print "==================================="
-    print "UserResourceProvenance"
-    prov = UserResourceProvenance.objects.all().order_by(
-        'user__id', 'resource__id', 'start')
-    o = None
-    for p in prov:
-        if o is not None and (p.user != o.user or p.resource != o.resource):
-            print "------------------------------"
-        current = UserResourceProvenance.get_current_record(
-            resource=p.resource, user=p.user)
-        star = ''
-        if current == p:
-            star = 'CURRENT'
-        print(p, star)
-        o = p
-
-
-def printUserGroupState():
-    print "==================================="
-    print "UserGroupPrivilege"
-    priv = UserGroupPrivilege.objects.all().order_by('user__id', 'group__id')
-    o = None
-    for p in priv:
-        if o is not None and (p.user != o.user or p.group != o.group):
-            print "------------------------------"
-        pprint(p)
-        o = p
-    print "==================================="
-    print "UserGroupProvenance"
-    prov = UserGroupProvenance.objects.all().order_by(
-        'user__id', 'group__id', 'start')
-    o = None
-    for p in prov:
-        if o is not None and (p.user != o.user or p.group != o.group):
-            print "------------------------------"
-        current = UserGroupProvenance.get_current_record(
-            group=p.group, user=p.user)
-        star = ''
-        if current == p:
-            star = 'CURRENT'
-        print(p, star)
-        o = p
+__author__ = 'Alva'
 
 
 class UnitTests(MockIRODSTestCaseMixin, TestCase):
@@ -224,7 +116,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # George grants Alva privilege
@@ -255,7 +147,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
@@ -292,7 +184,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
@@ -328,7 +220,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants Alva privilege over harps
@@ -359,7 +251,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # check new privileges: should be independent.
@@ -384,12 +276,8 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, harps)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
-
-        prov = UserResourceProvenance.objects.all().order_by('start')
-        for p in prov:
-            pprint(p)
 
         check_provenance_synchronization(self)
 
@@ -429,7 +317,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # George grants Alva privilege
@@ -460,7 +348,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
@@ -497,7 +385,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
@@ -533,7 +421,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants Alva privilege over harpers
@@ -564,7 +452,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # check new privileges: should be independent of old privileges
@@ -589,7 +477,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         check_provenance_synchronization(self)
@@ -631,7 +519,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # George grants Harpers change privilege
@@ -661,7 +549,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Alva downgrades Harpers privilege
@@ -698,7 +586,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on  Harpers privilege
@@ -734,7 +622,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Crosstalk test: George grants bikers privilege over harps
@@ -765,7 +653,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # check new privileges: should be independent.
@@ -790,7 +678,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, harps)
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         check_provenance_synchronization(self)
@@ -852,7 +740,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Roll back alva's privilege
@@ -880,7 +768,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.NONE)
-        self.assertEqual(record.state, ProvenanceCodes.INITIAL) 
+        self.assertEqual(record.state, ProvenanceCodes.INITIAL)
         self.assertEqual(record.grantor, None)
 
         # George grants Alva privilege
@@ -911,7 +799,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
@@ -948,7 +836,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
@@ -984,15 +872,11 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # George changes mind and rolls back change
-        print("BEFORE UNDO(bikes, john, george)") 
-        printUserResourceState() 
         UserResourcePrivilege.undo_share(resource=bikes, user=john, grantor=george)
-        print("AFTER UNDO(bikes, john, george)") 
-        printUserResourceState() 
 
         # privilege has been rolled back
         self.assertEqual(
@@ -1022,7 +906,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.RESTORED) 
+        self.assertEqual(record.state, ProvenanceCodes.RESTORED)
         self.assertEqual(record.grantor, alva)
 
         # Crosstalk test: George grants Alva privilege over harps
@@ -1054,7 +938,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, bikes)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.RESTORED) 
+        self.assertEqual(record.state, ProvenanceCodes.RESTORED)
         self.assertEqual(record.grantor, alva)
 
         # check new privileges: should be independent.
@@ -1079,7 +963,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, harps)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # now roll back privilege over harps
@@ -1106,7 +990,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.resource, harps)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.NONE)
-        self.assertEqual(record.state, ProvenanceCodes.INITIAL) 
+        self.assertEqual(record.state, ProvenanceCodes.INITIAL)
         self.assertEqual(record.grantor, None)
 
         check_provenance_synchronization(self)
@@ -1168,7 +1052,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Roll back alva's privilege
@@ -1196,7 +1080,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.NONE)
-        self.assertEqual(record.state, ProvenanceCodes.INITIAL) 
+        self.assertEqual(record.state, ProvenanceCodes.INITIAL)
         self.assertEqual(record.grantor, None)
 
         # George grants Alva privilege
@@ -1227,7 +1111,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # Alva grants John privilege
@@ -1264,7 +1148,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, alva)
 
         # now George overrides Alva on John's privilege
@@ -1299,16 +1183,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # George changes mind and rolls back change
         UserGroupPrivilege.undo_share(group=bikers, user=john, grantor=george)
 
         # privilege has been rolled back
-        # prov = UserGroupProvenance.objects.all().order_by('start')
-        # for p in prov:
-        #     pprint(p)
         self.assertEqual(
             UserGroupProvenance.get_privilege(
                 group=bikers,
@@ -1336,7 +1217,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.RESTORED) 
+        self.assertEqual(record.state, ProvenanceCodes.RESTORED)
         self.assertEqual(record.grantor, alva)
 
         # Crosstalk test: George grants Alva privilege over harpers
@@ -1368,7 +1249,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, bikers)
         self.assertEqual(record.user, john)
         self.assertEqual(record.privilege, PrivilegeCodes.CHANGE)
-        self.assertEqual(record.state, ProvenanceCodes.RESTORED) 
+        self.assertEqual(record.state, ProvenanceCodes.RESTORED)
         self.assertEqual(record.grantor, alva)
 
         # check new privileges: should be independent.
@@ -1393,7 +1274,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.VIEW)
-        self.assertEqual(record.state, ProvenanceCodes.REQUESTED) 
+        self.assertEqual(record.state, ProvenanceCodes.REQUESTED)
         self.assertEqual(record.grantor, george)
 
         # now roll back privilege over harpers
@@ -1420,7 +1301,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(record.group, harpers)
         self.assertEqual(record.user, alva)
         self.assertEqual(record.privilege, PrivilegeCodes.NONE)
-        self.assertEqual(record.state, ProvenanceCodes.INITIAL) 
+        self.assertEqual(record.state, ProvenanceCodes.INITIAL)
         self.assertEqual(record.grantor, None)
 
         check_provenance_synchronization(self)

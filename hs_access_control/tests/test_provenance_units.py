@@ -1,24 +1,19 @@
-__author__ = 'Alva'
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from pprint import pprint
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
+from hs_access_control.models import \
     UserResourceProvenance, UserResourcePrivilege, \
     GroupResourceProvenance, GroupResourcePrivilege, \
     UserGroupProvenance, UserGroupPrivilege, \
     PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
+
+__author__ = 'Alva'
 
 
 class UnitTests(MockIRODSTestCaseMixin, TestCase):
@@ -934,13 +929,16 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             PrivilegeCodes.NONE)
 
     def test_get_resource_undo_groups(self):
-        george = self.george
+        # george = self.george
         # george.uaccess.get_resource_undo_groups(this_resource)
+        pass
 
     def test_can_undo_resource_group_share(self):
-        george = self.george
+        # george = self.george
         # george.uaccess.can_undo_resource_group_share(this_resource, this_group)
+        pass
 
     def test_undo_share_resource_with_group(self):
-        george = self.george
+        # george = self.george
         # george.uaccess.undo_share_resource_with_group(this_resource, this_group)
+        pass
