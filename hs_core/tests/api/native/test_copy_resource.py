@@ -91,18 +91,16 @@ class TestCopyResource(TestCase):
         shutil.copy(raster_file, temp_raster_file)
         self.raster_obj = open(temp_raster_file, 'r')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
-                                                              resource_title='Test Raster Resource',
-                                                              page_redirect_url_key=None,
-                                                              files=files,
-                                                              metadata=None,)
         self.res_raster = hydroshare.create_resource(
             resource_type='RasterResource',
             owner=self.owner,
             title='Test Raster Resource',
             files=files,
-            metadata=metadata
+            metadata=[]
         )
+        # call the post creation process here for the metadata to be
+        # extracted
+        utils.resource_post_create_actions(resource=self.res_raster, user=self.owner, metadata=[])
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
@@ -252,8 +250,8 @@ class TestCopyResource(TestCase):
 
         self.assertTrue(BandInformation.objects.filter(
             object_id=new_res_raster.metadata.id).exists())
-        newband = new_res_raster.metadata.bandInformation.first()
-        oldband = self.res_raster.metadata.bandInformation.first()
+        newband = new_res_raster.metadata.bandInformations.first()
+        oldband = self.res_raster.metadata.bandInformations.first()
         self.assertEqual(newband.name, oldband.name,
                          msg="Band name of new copied resource is not equal to that of "
                              "the original resource")
