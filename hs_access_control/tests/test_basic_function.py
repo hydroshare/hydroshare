@@ -1,21 +1,17 @@
-
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, \
+    assertResourceUserState, assertUserResourceState, \
+    assertUserGroupState, assertGroupUserState, \
+    assertGroupResourceState, assertResourceGroupState
+
 
 class BasicFunction(MockIRODSTestCaseMixin, TestCase):
     """ test basic functions """
@@ -62,16 +58,20 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         )
 
         # george creates a resource 'bikes'
-        self.bikes = hydroshare.create_resource(resource_type='GenericResource',
-                                                owner=self.george,
-                                                title='Bikes',
-                                                metadata=[],)
+        self.bikes = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.george,
+            title='Bikes',
+            metadata=[],
+        )
 
         # george creates a group 'bikers'
-        self.bikers = self.george.uaccess.create_group(title='Bikers', description="We are the bikers")
+        self.bikers = self.george.uaccess\
+            .create_group(title='Bikers', description="We are the bikers")
 
         # george creates a group 'harpers'
-        self.harpers = self.george.uaccess.create_group(title='Harpers', description="We are the harpers")
+        self.harpers = self.george.uaccess\
+            .create_group(title='Harpers', description="We are the harpers")
 
     def test_matrix_testing(self):
         """ Test that matrix testing routines function as believed """
@@ -90,14 +90,16 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         assertUserGroupState(self, alva, [], [], [])
         assertUserGroupState(self, john, [], [], [])
 
-        george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.CHANGE)
+        george.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.CHANGE)
 
         assertResourceUserState(self, bikes, [george], [alva], [])
         assertUserResourceState(self, george, [bikes], [], [])
         assertUserResourceState(self, alva, [], [bikes], [])
         assertUserResourceState(self, john, [], [], [])
 
-        george.uaccess.share_resource_with_user(bikes, john, PrivilegeCodes.VIEW)
+        george.uaccess.share_resource_with_user(
+            bikes, john, PrivilegeCodes.VIEW)
 
         assertResourceUserState(self, bikes, [george], [alva], [john])
         assertUserResourceState(self, george, [bikes], [], [])
@@ -107,9 +109,12 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         bikes.raccess.immutable = True
         bikes.raccess.save()
 
-        assertResourceUserState(self, bikes, [george], [], [alva, john])  # immutable squashes CHANGE
+        assertResourceUserState(
+            self, bikes, [george], [], [
+                alva, john])  # squashes CHANGE
         assertUserResourceState(self, george, [bikes], [], [])
-        assertUserResourceState(self, alva, [], [], [bikes])  # immutable squashes CHANGE
+        # immutable squashes CHANGE
+        assertUserResourceState(self, alva, [], [], [bikes])
         assertUserResourceState(self, john, [], [], [bikes])
 
         assertGroupUserState(self, bikers, [george], [], [])
@@ -118,7 +123,8 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         assertUserGroupState(self, alva, [], [], [])
         assertUserGroupState(self, john, [], [], [])
 
-        george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.CHANGE)
+        george.uaccess.share_group_with_user(
+            bikers, alva, PrivilegeCodes.CHANGE)
 
         assertGroupUserState(self, bikers, [george], [alva], [])
         assertGroupUserState(self, harpers, [george], [], [])
@@ -137,21 +143,26 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         assertResourceGroupState(self, bikes, [], [])
         assertGroupResourceState(self, bikers, [], [])
 
-        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
+        george.uaccess.share_resource_with_group(
+            bikes, bikers, PrivilegeCodes.CHANGE)
 
-        assertResourceGroupState(self, bikes, [], [bikers])  # immutable squashes state
-        assertGroupResourceState(self, bikers, [], [bikes])  # immutable squashes state
+        # immutable squashes state
+        assertResourceGroupState(self, bikes, [], [bikers])
+        # immutable squashes state
+        assertGroupResourceState(self, bikers, [], [bikes])
 
         bikes.raccess.immutable = False
         bikes.raccess.save()
 
-        assertResourceGroupState(self, bikes, [bikers], [])  # without immutable, CHANGE returns
-        assertGroupResourceState(self, bikers, [bikes], [])  # without immutable, CHANGE returns
+        # without immutable, CHANGE returns
+        assertResourceGroupState(self, bikes, [bikers], [])
+        # without immutable, CHANGE returns
+        assertGroupResourceState(self, bikers, [bikes], [])
 
     def test_share(self):
         bikes = self.bikes
-        harpers = self.harpers 
-        bikers = self.bikers 
+        harpers = self.harpers
+        bikers = self.bikers
         george = self.george
         alva = self.alva
         admin = self.admin
@@ -161,14 +172,17 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         assertUserResourceState(self, george, [bikes], [], [])
         assertUserResourceState(self, alva, [], [], [])
 
-        george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.OWNER)
+        george.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.OWNER)
 
         assertResourceUserState(self, bikes, [george, alva], [], [])
         assertUserResourceState(self, george, [bikes], [], [])
         assertUserResourceState(self, alva, [bikes], [], [])
 
-        # test a user can downgrade (e.g., from OWNER to CHANGE) his/her access privilege
-        alva.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.CHANGE)
+        # test a user can downgrade (e.g., from OWNER to CHANGE) his/her access
+        # privilege
+        alva.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.CHANGE)
 
         assertResourceUserState(self, bikes, [george], [alva], [])
         assertUserResourceState(self, george, [bikes], [], [])
@@ -183,49 +197,61 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
 
         assertGroupResourceState(self, bikers, [], [])
 
-        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
+        george.uaccess.share_resource_with_group(
+            bikes, bikers, PrivilegeCodes.VIEW)
 
         assertGroupResourceState(self, bikers, [], [bikes])
 
-        george.uaccess.share_resource_with_group(bikes, harpers, PrivilegeCodes.CHANGE)
+        george.uaccess.share_resource_with_group(
+            bikes, harpers, PrivilegeCodes.CHANGE)
 
         assertGroupResourceState(self, harpers, [bikes], [])
 
-        george.uaccess.share_group_with_user(harpers, alva, PrivilegeCodes.CHANGE)
+        george.uaccess.share_group_with_user(
+            harpers, alva, PrivilegeCodes.CHANGE)
 
         assertUserGroupState(self, alva, [], [harpers], [])
-        assertUserResourceState(self, alva, [], [], [])  # isolated from group privilege CHANGE
+        # isolated from group privilege CHANGE
+        assertUserResourceState(self, alva, [], [], [])
         assertGroupResourceState(self, harpers, [bikes], [])
 
         george.uaccess.unshare_group_with_user(harpers, alva)
 
-        assertUserResourceState(self, alva, [], [], [])  # isolated from group privilege CHANGE
+        # isolated from group privilege CHANGE
+        assertUserResourceState(self, alva, [], [], [])
 
         george.uaccess.unshare_resource_with_group(bikes, harpers)
 
         assertGroupResourceState(self, harpers, [], [])
 
-        ## test upgrade privilege by non owners
+        # test upgrade privilege by non owners
         # let george (owner) grant change privilege to alva (non owner)
-        george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.CHANGE)
+        george.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.CHANGE)
 
         assertUserResourceState(self, alva, [], [bikes], [])
 
         # let alva (non owner) grant view privilege to john (non owner)
-        alva.uaccess.share_resource_with_user(bikes, self.john, PrivilegeCodes.VIEW)
+        alva.uaccess.share_resource_with_user(
+            bikes, self.john, PrivilegeCodes.VIEW)
 
         assertUserResourceState(self, john, [], [], [bikes])
         assertResourceUserState(self, bikes, [george], [alva], [john])
 
-        # let alva (non owner) grant change privilege (upgrade) to john (non owner)
-        alva.uaccess.share_resource_with_user(bikes, self.john, PrivilegeCodes.CHANGE)
+        # let alva (non owner) grant change privilege (upgrade) to john (non
+        # owner)
+        alva.uaccess.share_resource_with_user(
+            bikes, self.john, PrivilegeCodes.CHANGE)
 
         assertUserResourceState(self, john, [], [bikes], [])
         assertResourceUserState(self, bikes, [george], [alva, john], [])
 
-        # test django admin has ownership permission over any resource even when not owning a resource
+        # test django admin has ownership permission over any resource when not
+        # owning a resource
         self.assertFalse(admin.uaccess.owns_resource(bikes))
-        self.assertEqual(bikes.raccess.get_effective_privilege(admin), PrivilegeCodes.OWNER)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(admin),
+            PrivilegeCodes.OWNER)
 
         # test django admin can always view/change or delete any resource
         self.assertTrue(admin.uaccess.can_view_resource(bikes))
@@ -235,21 +261,31 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         # test django admin can change resource flags
         self.assertTrue(admin.uaccess.can_change_resource_flags(bikes))
 
-        # test django admin can share any resource with all possible permission types
-        self.assertTrue(admin.uaccess.can_share_resource(bikes, PrivilegeCodes.OWNER))
-        self.assertTrue(admin.uaccess.can_share_resource(bikes, PrivilegeCodes.CHANGE))
-        self.assertTrue(admin.uaccess.can_share_resource(bikes, PrivilegeCodes.VIEW))
+        # test django admin can share any resource with all possible permission
+        # types
+        self.assertTrue(
+            admin.uaccess.can_share_resource(
+                bikes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            admin.uaccess.can_share_resource(
+                bikes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            admin.uaccess.can_share_resource(
+                bikes, PrivilegeCodes.VIEW))
 
         # test django admin can share a resource with a specific user
-        admin.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.OWNER)
+        admin.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.OWNER)
 
         assertResourceUserState(self, bikes, [george, alva], [john], [])
 
-        admin.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.CHANGE)
+        admin.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.CHANGE)
 
         assertResourceUserState(self, bikes, [george], [john, alva], [])
 
-        admin.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
+        admin.uaccess.share_resource_with_user(
+            bikes, alva, PrivilegeCodes.VIEW)
 
         assertResourceUserState(self, bikes, [george], [john], [alva])
 
@@ -266,17 +302,27 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(bikers.gaccess.members.count(), 2)
 
         # test django admin can share resource with a group
-        self.assertFalse(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.OWNER))
-        self.assertTrue(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.CHANGE))
-        admin.uaccess.share_resource_with_group(bikes, harpers, PrivilegeCodes.CHANGE)
+        self.assertFalse(
+            admin.uaccess .can_share_resource_with_group(
+                bikes, harpers, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            admin.uaccess .can_share_resource_with_group(
+                bikes, harpers, PrivilegeCodes.CHANGE))
+        admin.uaccess.share_resource_with_group(
+            bikes, harpers, PrivilegeCodes.CHANGE)
         self.assertTrue(bikes in harpers.gaccess.edit_resources)
 
-        self.assertTrue(admin.uaccess.can_share_resource_with_group(bikes, harpers, PrivilegeCodes.VIEW))
-        admin.uaccess.share_resource_with_group(bikes, harpers, PrivilegeCodes.VIEW)
+        self.assertTrue(
+            admin.uaccess .can_share_resource_with_group(
+                bikes, harpers, PrivilegeCodes.VIEW))
+        admin.uaccess.share_resource_with_group(
+            bikes, harpers, PrivilegeCodes.VIEW)
         self.assertTrue(bikes in harpers.gaccess.view_resources)
 
         # test django admin can unshare a user with a group
-        self.assertTrue(admin.uaccess.can_unshare_group_with_user(bikers, alva))
+        self.assertTrue(
+            admin.uaccess.can_unshare_group_with_user(
+                bikers, alva))
         admin.uaccess.unshare_group_with_user(bikers, alva)
         self.assertTrue(bikers.gaccess.members.count(), 1)
         self.assertEqual(alva.uaccess.owned_groups.count(), 0)
@@ -291,7 +337,9 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         john = self.john
         bikes = self.bikes
 
-        self.assertEqual(bikes.raccess.get_effective_privilege(alva), PrivilegeCodes.NONE)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(alva),
+            PrivilegeCodes.NONE)
 
         # inactive users can't be granted access
         # set john to an inactive user
@@ -299,19 +347,24 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
         john.save()
 
         with self.assertRaises(PermissionDenied):
-            george.uaccess.share_resource_with_user(bikes, john, PrivilegeCodes.CHANGE)
+            george.uaccess.share_resource_with_user(
+                bikes, john, PrivilegeCodes.CHANGE)
 
         john.is_active = True
         john.save()
 
-        ## inactive grantor can't grant access
+        # inactive grantor can't grant access
         # let's first grant John access privilege
-        george.uaccess.share_resource_with_user(bikes, john, PrivilegeCodes.CHANGE)
+        george.uaccess.share_resource_with_user(
+            bikes, john, PrivilegeCodes.CHANGE)
 
-        self.assertEqual(bikes.raccess.get_effective_privilege(john), PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            bikes.raccess.get_effective_privilege(john),
+            PrivilegeCodes.CHANGE)
 
         john.is_active = False
         john.save()
 
         with self.assertRaises(PermissionDenied):
-            john.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
+            john.uaccess.share_resource_with_user(
+                bikes, alva, PrivilegeCodes.VIEW)

@@ -31,8 +31,10 @@ class AbstractFileMetaData(models.Model):
         self.save()
 
     def get_html(self):
-        # subclass must override
-        # returns a string representing html code for display of metadata in view mode
+        """Generates html for displaying all metadata elements associated with this logical file.
+        Subclass must override to include additional html for additional metadata it supports.
+        """
+
         dataset_name_div = div()
         if self.logical_file.dataset_name:
             with dataset_name_div:
@@ -62,6 +64,11 @@ class AbstractFileMetaData(models.Model):
             return dataset_name_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
+        """generates html forms for all the metadata elements associated with this logical file
+        type
+        :param datatset_name_form If True then a form for editing dataset_name (title) attribute is
+        included
+        """
         root_div = div()
 
         def get_add_keyvalue_button():
@@ -76,7 +83,6 @@ class AbstractFileMetaData(models.Model):
         with root_div:
             if datatset_name_form:
                 self._get_dataset_name_form()
-            # root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
             if self.extra_metadata:
                 root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
                 with root_div_extra:
@@ -140,6 +146,10 @@ class AbstractFileMetaData(models.Model):
         return self.coverages.filter(type='period').first()
 
     def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all the metadata elements associated with this
+        logical file type instance. Subclass must override this if it has additional metadata
+        elements."""
+
         NAMESPACES = CoreMetaData.NAMESPACES
         dataset_container = etree.SubElement(
             container, '{%s}Dataset' % NAMESPACES['hsterms'])
@@ -174,6 +184,9 @@ class AbstractFileMetaData(models.Model):
         return rdf_Description
 
     def add_extra_metadata_to_xml_container(self, container):
+        """Generates xml+rdf representation of the all the key/value metadata associated
+        with an instance of the logical file type"""
+
         for key, value in self.extra_metadata.iteritems():
             hsterms_key_value = etree.SubElement(
                 container, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
@@ -242,6 +255,8 @@ class AbstractFileMetaData(models.Model):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
+        """Subclass must implement this function to validate data for for the
+        specified metadata element (element_name)"""
         raise NotImplementedError
 
     def _get_dataset_name_form(self):
@@ -256,8 +271,6 @@ class AbstractFileMetaData(models.Model):
                 with div(cls="form-group"):
                     with div(cls="control-group"):
                         legend('Title')
-                        # label("Title", cls="control-label requiredField",
-                        #       fr="file_dataset_name")
                         with div(cls="controls"):
                             input(value=dataset_name,
                                   cls="form-control input-sm textinput textInput",
@@ -474,21 +487,61 @@ class AbstractLogicalFile(models.Model):
         return self.files.all().first().resource
 
     @property
-    def allow_resource_file_move(self):
+    def supports_resource_file_move(self):
+        """allows a resource file that is part of this logical file type to be moved"""
         return True
 
     @property
-    def allow_resource_file_rename(self):
+    def supports_resource_file_rename(self):
+        """allows a resource file that is part of this logical file type to be renamed"""
         return True
 
+    @property
+    def supports_zip(self):
+        """allows a folder containing resource file(s) that are part of this logical file type
+        to be zipped"""
+        return True
+
+    @property
+    def supports_delete_folder_on_zip(self):
+        """allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
+    @property
+    def supports_unzip(self):
+        """allows a zip file that is part of this logical file type to get unzipped"""
+        return True
+
+    def add_resource_file(self, res_file):
+        """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
+        is already associated with any other logical file object, this function does not do
+        anything to that logical object. The caller needs to take necessary action for the
+        previously associated logical file object. If res_file is already part of this
+        logical file, it raise ValidationError.
+
+        :param res_file an instance of ResourceFile
+        """
+
+        if res_file in self.files.all():
+            raise ValidationError("Resource file is already part of this logical file.")
+
+        res_file.logical_file_content_object = self
+        res_file.save()
+
     def logical_delete(self, user, delete_res_files=True):
-        # deletes the logical file as well as all resource files associated with this logical file
-        # mostly this will be used by the system to delete logical file object and associated
-        # metadata as part of deleting a resource file object. However, if custom logic requires
-        # deleting logical file object (lfo) then instead of using lfo.delete(), you must use
-        # lfo.logical_delete()
+        """
+        Deletes the logical file as well as all resource files associated with this logical file.
+        This function is primarily used by the system to delete logical file object and associated
+        metadata as part of deleting a resource file object. Any time a request is made to
+        deleted a specific resource file object, if the the requested file is part of a
+        logical file then all files in the same logical file group will be deleted. if custom logic
+        requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
+        use LFO.logical_delete()
+        :param delete_res_files If True all resource files that are part of this logical file will
+        be deleted
+        """
+
         from hs_core.hydroshare.resource import delete_resource_file
-        self.delete_metadata()
         # delete all resource files associated with this instance of logical file
         if delete_res_files:
             for f in self.files.all():
@@ -496,11 +549,11 @@ class AbstractLogicalFile(models.Model):
                                      delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
-        metadata = self.metadata
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
+        metadata = self.metadata if self.has_metadata else None
         super(AbstractLogicalFile, self).delete()
-        metadata.delete()
-
-    def delete_metadata(self):
-        # delete all metadata associated with this file type
-        if self.has_metadata:
-            self.metadata.delete_all_elements()
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()

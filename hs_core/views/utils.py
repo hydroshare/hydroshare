@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
 
@@ -37,8 +38,10 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'EDIT_RESOURCE, '
                                'SET_RESOURCE_FLAG, '
                                'DELETE_RESOURCE, '
-                               'CREATE_RESOURCE_VERSION')
-ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5)
+                               'CREATE_RESOURCE_VERSION, '
+                               'VIEW_RESOURCE_ACCESS, '
+                               'EDIT_RESOURCE_ACCESS')
+ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
 
 
 # Since an SessionException will be raised for all irods-related operations from django_irods
@@ -118,6 +121,27 @@ def run_script_to_update_hyrax_input_files(shortkey):
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
+def can_user_copy_resource(res, user):
+    """
+    Check whether resource copy is permitted or not
+    :param res: resource object to check for whether copy is allowed
+    :param user: the requesting user to check for whether copy is allowed
+    :return: return True if the resource can be copied; otherwise, return False
+    """
+    if not user.is_authenticated():
+        return False
+
+    if not user.uaccess.owns_resource(res) and \
+            (res.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoDerivs CC BY-ND." or
+             res.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoCommercial-NoDerivs "
+                                              "CC BY-NC-ND."):
+        return False
+
+    return True
+
+
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
               raises_exception=True):
     """
@@ -174,6 +198,10 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
             authorized = user.uaccess.can_change_resource_flags(res)
         elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
             authorized = user.uaccess.owns_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE_ACCESS:
+            authorized = user.uaccess.can_view_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE_ACCESS:
+            authorized = user.uaccess.can_share_resource(res, 2)
     elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public
 
@@ -407,10 +435,13 @@ def show_relations_section(res_obj):
 
 
 def link_irods_file_to_django(resource, filename, size=0):
-    # link the newly created zip file to Django resource model
+    # link the newly created file (**filename**) to Django resource model
     b_add_file = False
     if resource:
         if resource.resource_federation_path:
+            if resource.resource_federation_path in filename:
+                start_idx = len(resource.resource_federation_path) + len(resource.short_id) + 2
+                filename = filename[start_idx:]
             if not ResourceFile.objects.filter(object_id=resource.id,
                                                fed_resource_file_name_or_path=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
@@ -429,6 +460,9 @@ def link_irods_file_to_django(resource, filename, size=0):
             file_format_type = get_file_mime_type(filename)
             if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
                 resource.metadata.create_element('format', value=file_format_type)
+            # this should assign a logical file object to this new file
+            # if this resource supports logical file
+            resource.set_default_logical_file()
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
@@ -469,10 +503,11 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                    fed_resource_file_name_or_path=src_name)
         if res_file_obj.exists():
             # src_name and tgt_name are file names - replace src_name with tgt_name
-            res_file_obj[0].fed_resource_file_name_or_path = tgt_name
-            res_file_obj[0].mime_type = get_file_mime_type(
-                res_file_obj[0].fed_resource_file_name_or_path)
-            res_file_obj[0].save()
+            # have to delete the original one and create the new one;
+            # direct replacement does not work
+            res_file_obj[0].delete()
+            ResourceFile.objects.create(content_object=resource,
+                                        fed_resource_file_name_or_path=tgt_name)
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
@@ -481,9 +516,9 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             for fobj in res_file_objs:
                 old_str = fobj.fed_resource_file_name_or_path
                 new_str = old_str.replace(src_name, tgt_name)
-                fobj.fed_resource_file_name_or_path = new_str
-                fobj.mime_type = get_file_mime_type(fobj.fed_resource_file_name_or_path)
-                fobj.save()
+                fobj.delete()
+                ResourceFile.objects.create(content_object=resource,
+                                            fed_resource_file_name_or_path=new_str)
     else:
         res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                    resource_file=src_name)
@@ -492,15 +527,17 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # since resource_file is a FileField which cannot be directly renamed,
             # this old ResourceFile object has to be deleted followed by creation of
             # a new ResourceFile with new file associated that replace the old one
+
+            # check if the resource file is part of a logical file
             logical_file = res_file_obj[0].logical_file if res_file_obj[0].has_logical_file \
                 else None
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
-            res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
+            # if the file we deleted was part a logical file then we have to make the
+            # recreated resource file part of the logical file object
             if logical_file is not None:
-                res_file.logical_file_content_object = logical_file
-            res_file.save()
+                logical_file.add_resource_file(res_file)
 
         else:
             # src_name and tgt_name are folder names
@@ -510,14 +547,16 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             for fobj in res_file_objs:
                 old_str = fobj.resource_file.name
                 new_str = old_str.replace(src_name, tgt_name)
+                # get the logical file object associated with the resource file
+                # so that we cam make the recreated resource file part of the same
+                # logical file object
                 logical_file = fobj.logical_file if fobj.has_logical_file else None
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
-                res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
+                # make the recreated resource file part of the logical file
                 if logical_file is not None:
-                    res_file.logical_file_content_object = logical_file
-                res_file.save()
+                    logical_file.add_resource_file(res_file)
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername, user):
@@ -533,16 +572,21 @@ def remove_irods_folder_in_django(resource, istorage, foldername, user):
         if not foldername.endswith('/'):
             foldername += '/'
         if resource.resource_federation_path:
+            if resource.resource_federation_path in foldername:
+                start_idx = len(resource.resource_federation_path) + len(resource.short_id) + 2
+                foldername = foldername[start_idx:]
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
         else:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, resource_file__icontains=foldername)
 
-        # delete all uniqie logicalfiles associated with all resource files to be deleted
+        # delete all unique logical file objects associated with any resource files to be deleted
         # from django as they need to be deleted differently
         logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
         for lf in logical_files:
+            # this should delete the logical file and any associated metadata
+            # but does not delete the resource files that are part of the logical file
             lf.logical_delete(user, delete_res_files=False)
 
         # delete resource file objects
@@ -570,10 +614,17 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        res_coll_input = os.path.join(resource.resource_federation_path, res_id, input_coll_path)
-    else:
-        res_coll_input = os.path.join(res_id, input_coll_path)
+    res_coll_input = os.path.join(resource.root_path, input_coll_path)
+
+    # check resource supports zipping of a folder
+    if not resource.supports_zip(res_coll_input):
+        raise ValidationError("Folder zipping is not supported.")
+
+    # check if resource supports deleting the original folder after zipping
+    if bool_remove_original:
+        if not resource.supports_delete_folder_on_zip(input_coll_path):
+            raise ValidationError("Deleting of original folder is not allowed after "
+                                  "zipping of a folder.")
 
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
@@ -586,6 +637,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         for f in ResourceFile.objects.filter(object_id=resource.id):
             full_path_name, basename, _ = \
                 hydroshare.utils.get_resource_file_name_and_extension(f)
+            if resource.resource_federation_path:
+                full_path_name = os.path.join(resource.root_path, full_path_name)
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, basename, user)
 
@@ -610,11 +663,10 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        zip_with_full_path = os.path.join(resource.resource_federation_path, res_id,
-                                          zip_with_rel_path)
-    else:
-        zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
+    zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
+
+    if not resource.supports_unzip(zip_with_rel_path):
+        raise ValidationError("Unzipping of this file is not supported.")
 
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
@@ -638,12 +690,10 @@ def create_folder(res_id, folder_path):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        coll_path = os.path.join(res_id, folder_path)
+    coll_path = os.path.join(resource.root_path, folder_path)
 
-    resource.check_folder_creation(coll_path)
+    if not resource.supports_folder_creation(coll_path):
+        raise ValidationError("Folder creation is not allowed here.")
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -659,10 +709,7 @@ def remove_folder(user, res_id, folder_path):
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        coll_path = os.path.join(res_id, folder_path)
+    coll_path = os.path.join(resource.root_path, folder_path)
 
     # TODO: Pabitra - resource should check here if folder can be removed
     istorage.delete(coll_path)
@@ -678,6 +725,22 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
+def list_folder(res_id, folder_path):
+    """
+    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param folder_path: the relative path for the folder to be listed under res_id collection.
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    coll_path = os.path.join(resource.root_path, folder_path)
+
+    return istorage.listdir(coll_path)
+
+
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
@@ -688,18 +751,14 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     :param tgt_path: the relative paths for the target file or folder under res_id collection
     :param validate_move_rename: if True, then only ask resource type to check if this action is
             allowed. Sometimes resource types internally want to take this action but disallow
-            this action by a user. In that case resource types set this parameter to True to allow
+            this action by a user. In that case resource types set this parameter to False to allow
             this action.
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
-        tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
-    else:
-        src_full_path = os.path.join(res_id, src_path)
-        tgt_full_path = os.path.join(res_id, tgt_path)
+    src_full_path = os.path.join(resource.root_path, src_path)
+    tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
     tgt_file_name = os.path.basename(tgt_full_path)
     tgt_file_dir = os.path.dirname(tgt_full_path)
@@ -707,15 +766,30 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     src_file_dir = os.path.dirname(src_full_path)
 
     # ensure the target_full_path contains the file name to be moved or renamed to
+    # if we are moving directories, put the filename into the request.
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
-        resource.check_move_or_rename_file_or_folder(src_full_path, tgt_full_path)
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
 
     istorage.moveFile(src_full_path, tgt_full_path)
 
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_federation_path:
+        rename_irods_file_or_folder_in_django(resource, src_path, tgt_path)
+    else:
+        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+def irods_path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if '/../' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")

@@ -9,40 +9,50 @@ from django.template import Template, Context
 
 from rest_framework import status
 
+from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from hs_core.hydroshare.utils import resource_modified
-from .utils import set_file_to_geo_raster_file_type
+
 from .models import GeoRasterLogicalFile
 
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
-    """This view function must be called using ajax call"""
+    """This view function must be called using ajax call.
+    Note: Response status code is always 200 (OK). Client needs check the
+    the response 'status' key for success or failure.
+    """
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-
+    response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
-        return JsonResponse({'message': err_msg}, status=status.HTTP_401_UNAUTHORIZED)
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     if res.resource_type != "CompositeResource":
         err_msg = "File type can be set only for files in composite resource."
-        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     if hs_file_type != "GeoRaster":
-        err_msg = "Currently a file can be set to Geo Raster file type."
-        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+        err_msg = "Currently a file can be set to Geo Raster file type only."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     try:
-        set_file_to_geo_raster_file_type(resource=res, file_id=file_id, user=request.user)
+        GeoRasterLogicalFile.set_file_type(resource=res, file_id=file_id, user=request.user)
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to Geo Raster file type. " \
               "Raster metadata extraction was successful."
-        return JsonResponse({'message': msg}, status=status.HTTP_200_OK)
+        response_data['message'] = msg
+        response_data['status'] = 'success'
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     except ValidationError as ex:
-        return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        response_data['message'] = ex.message
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @login_required
@@ -115,8 +125,13 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         err_msg = err_msg.format(element_name, validation_response['errors'])
 
     if is_update_success:
+        if resource.can_be_public_or_discoverable:
+            metadata_status = METADATA_STATUS_SUFFICIENT
+        else:
+            metadata_status = METADATA_STATUS_INSUFFICIENT
+
         ajax_response_data = {'status': 'success', 'element_name': element_name,
-                              'metadata_status': "Update was successful"}
+                              'metadata_status': metadata_status}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -166,9 +181,14 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         form_action = form_action.format(logical_file.type_name(), logical_file.id, element_name,
                                          element.id)
 
+        if resource.can_be_public_or_discoverable:
+            metadata_status = METADATA_STATUS_SUFFICIENT
+        else:
+            metadata_status = METADATA_STATUS_INSUFFICIENT
+
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'element_name': element_name, 'form_action': form_action,
-                              'element_id': element.id, 'metadata_status': "Update was successful"}
+                              'element_id': element.id, 'metadata_status': metadata_status}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}

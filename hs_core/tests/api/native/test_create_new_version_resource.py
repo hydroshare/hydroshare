@@ -4,7 +4,7 @@ import shutil
 
 from django.contrib.auth.models import Group
 from django.test import TestCase
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
@@ -87,25 +87,25 @@ class TestNewVersionResource(TestCase):
 
     def test_new_version_generic_resource(self):
         # test to make sure only owners can version a resource
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner,
                                                     PrivilegeCodes.VIEW)
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_generic.short_id, self.nonowner)
 
         # add key/value metadata to original resource
         self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
         self.res_generic.save()
 
-        new_res_generic = hydroshare.create_new_version_empty_resource(self.res_generic.short_id,
-                                                                       self.owner)
+        new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
+                                                           self.owner)
         # test to make sure the new versioned empty resource has no content files
         self.assertEqual(new_res_generic.files.all().count(), 0)
 
@@ -186,21 +186,21 @@ class TestNewVersionResource(TestCase):
 
     def test_new_version_raster_resource(self):
         # test to make sure only owners can version a resource
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.CHANGE)
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner,
                                                     PrivilegeCodes.VIEW)
-        with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
+        with self.assertRaises(PermissionDenied):
+            hydroshare.create_empty_resource(self.res_raster.short_id, self.nonowner)
 
-        new_res_raster = hydroshare.create_new_version_empty_resource(self.res_raster.short_id,
-                                                                      self.owner)
+        new_res_raster = hydroshare.create_empty_resource(self.res_raster.short_id,
+                                                          self.owner)
         new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster,
                                                                 self.owner)
 
@@ -214,43 +214,40 @@ class TestNewVersionResource(TestCase):
 
         # test extended metadata elements are copied from the original resource to the new
         # versioned resource
-        if OriginalCoverage.objects.filter(object_id=self.res_raster.metadata.id).exists():
-            self.assertTrue(OriginalCoverage.objects.filter(
-                object_id=new_res_raster.metadata.id).exists())
-            self.assertEqual(new_res_raster.metadata.originalCoverage.value,
-                             self.res_raster.metadata.originalCoverage.value,
-                             msg="OriginalCoverage of new versioned resource is not equal to "
-                                 "that of the original resource")
+        self.assertTrue(OriginalCoverage.objects.filter(
+            object_id=new_res_raster.metadata.id).exists())
+        self.assertEqual(new_res_raster.metadata.originalCoverage.value,
+                         self.res_raster.metadata.originalCoverage.value,
+                         msg="OriginalCoverage of new versioned resource is not equal to "
+                             "that of the original resource")
 
-        if CellInformation.objects.filter(object_id=self.res_raster.metadata.id).exists():
-            self.assertTrue(CellInformation.objects.filter(
-                object_id=new_res_raster.metadata.id).exists())
-            newcell = new_res_raster.metadata.cellInformation
-            oldcell = self.res_raster.metadata.cellInformation
-            self.assertEqual(newcell.rows, oldcell.rows,
-                             msg="Rows of new versioned resource is not equal to that of "
-                                 "the original resource")
-            self.assertEqual(newcell.columns, oldcell.columns,
-                             msg="Columns of new versioned resource is not equal to that of the "
-                                 "original resource")
-            self.assertEqual(newcell.cellSizeXValue, oldcell.cellSizeXValue,
-                             msg="CellSizeXValue of new versioned resource is not equal to "
-                                 "that of the original resource")
-            self.assertEqual(newcell.cellSizeYValue, oldcell.cellSizeYValue,
-                             msg="CellSizeYValue of new versioned resource is not equal to "
-                                 "that of the original resource")
-            self.assertEqual(newcell.cellDataType, oldcell.cellDataType,
-                             msg="CellDataType of new versioned resource is not equal to "
-                                 "that of the original resource")
+        self.assertTrue(CellInformation.objects.filter(
+            object_id=new_res_raster.metadata.id).exists())
+        newcell = new_res_raster.metadata.cellInformation
+        oldcell = self.res_raster.metadata.cellInformation
+        self.assertEqual(newcell.rows, oldcell.rows,
+                         msg="Rows of new versioned resource is not equal to that of "
+                             "the original resource")
+        self.assertEqual(newcell.columns, oldcell.columns,
+                         msg="Columns of new versioned resource is not equal to that of the "
+                             "original resource")
+        self.assertEqual(newcell.cellSizeXValue, oldcell.cellSizeXValue,
+                         msg="CellSizeXValue of new versioned resource is not equal to "
+                             "that of the original resource")
+        self.assertEqual(newcell.cellSizeYValue, oldcell.cellSizeYValue,
+                         msg="CellSizeYValue of new versioned resource is not equal to "
+                             "that of the original resource")
+        self.assertEqual(newcell.cellDataType, oldcell.cellDataType,
+                         msg="CellDataType of new versioned resource is not equal to "
+                             "that of the original resource")
 
-        if BandInformation.objects.filter(object_id=self.res_raster.metadata.id).exists():
-            self.assertTrue(BandInformation.objects.filter(
-                object_id=new_res_raster.metadata.id).exists())
-            newband = new_res_raster.metadata.bandInformation.first()
-            oldband = self.res_raster.metadata.bandInformation.first()
-            self.assertEqual(newband.name, oldband.name,
-                             msg="Band name of new versioned resource is not equal to that of "
-                                 "the original resource")
+        self.assertTrue(BandInformation.objects.filter(
+            object_id=new_res_raster.metadata.id).exists())
+        newband = new_res_raster.metadata.bandInformation.first()
+        oldband = self.res_raster.metadata.bandInformation.first()
+        self.assertEqual(newband.name, oldband.name,
+                         msg="Band name of new versioned resource is not equal to that of "
+                             "the original resource")
 
         # test to make sure a new unique identifier has been created for the new versioned resource
         self.assertIsNotNone(new_res_raster.short_id, msg='Unique identifier has not been '

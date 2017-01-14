@@ -7,6 +7,7 @@ import tempfile
 import logging
 import shutil
 import string
+import copy
 from uuid import uuid4
 import errno
 
@@ -360,7 +361,7 @@ def get_resource_files_by_extension(resource, file_extension):
 
 def get_resource_file_by_name(resource, file_name):
     for res_file in resource.files.all():
-        fl_name, _ = get_resource_file_name_and_extension(res_file)
+        _, fl_name, _ = get_resource_file_name_and_extension(res_file)
         if fl_name == file_name:
             return res_file
     return None
@@ -457,15 +458,25 @@ def serialize_system_metadata(res):
 
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
+    """
+    Copy resource files and AVUs from source resource to target resource including both
+    on iRODS storage and on Django database
+    :param src_res_id: source resource uuid
+    :param dest_res_id: target resource uuid
+    :param set_to_private: set target resource to private if True. The default is False.
+    :return:
+    """
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
+    tgt_res = get_resource_by_shortkey(dest_res_id)
     istorage = src_res.get_irods_storage()
+    src_coll = os.path.join(src_res.root_path, 'data')
     if src_res.resource_federation_path:
-        src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id, '/')
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+        dest_coll += '/'
     else:
-        src_coll = src_res_id + '/data'
         dest_coll = dest_res_id + '/'
+
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
@@ -474,6 +485,77 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 istorage.setAVU(dest_coll, avu_name, 'False')
             else:
                 istorage.setAVU(dest_coll, avu_name, value)
+
+    # link copied resource files to Django resource model
+    res_id_len = len(src_res.short_id)
+    files = src_res.files.all()
+    for n, f in enumerate(files):
+        if f.fed_resource_file_name_or_path:
+            ResourceFile.objects.create(
+                content_object=tgt_res,
+                resource_file=None,
+                fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
+                fed_resource_file_size=f.fed_resource_file_size)
+        elif f.fed_resource_file:
+            ori_file_path = f.fed_resource_file.name
+            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            # find idx2 to start right after resource id
+            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
+            if idx1 > 0:
+                new_file_path = ori_file_path[0:idx1] + \
+                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
+                                '/' + tgt_res.short_id + ori_file_path[idx2:]
+                ResourceFile.objects.create(content_object=tgt_res,
+                                            fed_resource_file=new_file_path)
+        elif f.resource_file:
+            ori_file_path = f.resource_file.name
+            new_file_path = tgt_res.short_id + ori_file_path[res_id_len:]
+            ResourceFile.objects.create(content_object=tgt_res, resource_file=new_file_path)
+
+        if src_res.resource_type.lower() == "collectionresource":
+            # clone contained_res list of original collection and add to new collection
+            # note that new collection resource will not contain "deleted resources"
+            tgt_res.resources = src_res.resources.all()
+
+
+def copy_and_create_metadata(src_res, dest_res):
+    """
+    Copy metadata from source resource to target resource except identifier, publisher, and date
+    which need to be created for the target resource as appropriate. This method is used for
+    resource copying and versioning.
+    :param src_res: source resource
+    :param dest_res: target resource
+    :return:
+    """
+    # copy metadata from source resource to target resource except three elements
+    exclude_elements = ['identifier', 'publisher', 'date']
+    dest_res.metadata.copy_all_elements_from(src_res.metadata, exclude_elements)
+
+    # create Identifier element that is specific to the new resource
+    dest_res.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                     url='{0}/resource/{1}'.format(current_site_url(),
+                                                                   dest_res.short_id))
+
+    # create date element that is specific to the new resource
+    dest_res.metadata.create_element('date', type='created', start_date=dest_res.created)
+    dest_res.metadata.create_element('date', type='modified', start_date=dest_res.updated)
+
+    # copy date element to the new resource if exists
+    src_res_valid_date_filter = src_res.metadata.dates.all().filter(type='valid')
+    if src_res_valid_date_filter:
+        res_valid_date = src_res_valid_date_filter[0]
+        dest_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date,
+                                         end_date=res_valid_date.end_date)
+
+    src_res_avail_date_filter = src_res.metadata.dates.all().filter(type='available')
+    if src_res_avail_date_filter:
+        res_avail_date = src_res_avail_date_filter[0]
+        dest_res.metadata.create_element('date', type='available',
+                                         start_date=res_avail_date.start_date,
+                                         end_date=res_avail_date.end_date)
+    # create the key/value metadata
+    dest_res.extra_metadata = copy.deepcopy(src_res.extra_metadata)
+    dest_res.save()
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
@@ -502,7 +584,7 @@ def set_dirty_bag_flag(resource):
     # resource so that xml metadata files need to be generated on-demand
 
     istorage = resource.get_irods_storage()
-    res_coll = resource.get_irods_collection_path()
+    res_coll = resource.root_path
     istorage.setAVU(res_coll, "bag_modified", "true")
     istorage.setAVU(res_coll, "metadata_dirty", "true")
 
@@ -766,8 +848,10 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 def resource_file_add_process(resource, files, user, extract_metadata=False,
                               fed_res_file_names='', **kwargs):
+
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files,
+    folder = kwargs.pop('folder', None)
+    resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                fed_res_file_names=fed_res_file_names,
                                                fed_zone_home_path=resource.resource_federation_path)
 
@@ -799,7 +883,8 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):
+def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
+                         fed_copy_or_move=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -827,12 +912,13 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
         file_format_type = get_file_mime_type(f.name)
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              resource_file=None, mime_type=file_format_type,
+                                              file_folder=folder,
+                                              resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              mime_type=file_format_type,
+                                              file_folder=folder,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
@@ -841,7 +927,6 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
-                                          mime_type=file_format_type,
                                           fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path,
                                           fed_resource_file_size=size)
@@ -850,20 +935,28 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
             filename = from_fname.rsplit('/')[-1]
 
             if resource.resource_federation_path:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'
-                to_fname = to_fname.format(base_path=resource.resource_federation_path,
-                                           res_id=resource.short_id, file_name=filename)
                 istorage = IrodsStorage('federated')
+                if folder:
+                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
+                                            'data', 'contents', folder, filename)
+                else:
+                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
+                                            'data', 'contents', filename)
             else:
-                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id,
-                                                                       file_name=filename)
                 istorage = IrodsStorage()
+                if folder:
+                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
+                                            folder, filename)
+                else:
+                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
+                                            filename)
+
             if fed_copy_or_move == 'copy':
                 istorage.copyFiles(from_fname, to_fname)
             else:
                 istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare proxy
-            # account space
+            # update file path now that file has been copied or moved to HydroShare
+            # proxy account space
             ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(
                 file_name=filename)
             ret.save()
@@ -894,15 +987,19 @@ def add_metadata_element_to_xml(root, md_element, md_fields):
     element object is used for naming the root xml element for this metadata element.
     If the root xml element needs to be named differently, then this needs to be a tuple
     with first element being the metadata element object and the second being the name
-    for the root element. Example: md_element=self.Creat or    # the term attribute of the
-    Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
+    for the root element.
+    Example:
+    md_element=self.Creator    # the term attribute of the Creator object will be used
+    md_element=(self.Creator, 'Author') # 'Author' will be used
 
     :param md_fields: a list of attribute names of the metadata element (if the name to be used
      in generating the xml element name is same as the attribute name then include the
      attribute name as a list item. if xml element name needs to be different from the
      attribute name then the list item must be a tuple with first element of the tuple being
      the attribute name and the second element being what will be used in naming the xml
-     element) Example: [('first_name', 'firstName'), 'phone', 'email']
+     element)
+     Example:
+     [('first_name', 'firstName'), 'phone', 'email']
      # xml sub-elements names: firstName, phone, email
     """
     from lxml import etree

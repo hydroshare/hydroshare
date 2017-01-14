@@ -83,25 +83,27 @@ def get_original_coverage_info(raster_dataset):
         spatial_ref = osr.SpatialReference()
         spatial_ref.ImportFromWkt(proj_wkt)
 
+        # get projection string, datum
+        projection_string = proj_wkt
+        datum = spatial_ref.GetAttrValue("DATUM", 0) \
+            if spatial_ref.GetAttrValue("DATUM", 0) else None
+
         # get unit info and check spelling
         unit = spatial_ref.GetAttrValue("UNIT", 0)
         if re.match('metre', unit, re.I):
             unit = 'meter'
 
         # get projection info
-        if spatial_ref.GetAttrValue('PROJCS'):
-            proj = spatial_ref.GetAttrValue("PROJECTION", 0) \
-                if spatial_ref.GetAttrValue("PROJECTION", 0) else ''
-            projection = spatial_ref.GetAttrValue("PROJCS", 0) + ' ' + proj
+        if spatial_ref.IsProjected():
+            projection = spatial_ref.GetAttrValue('projcs', 0)
         else:
-            datum = spatial_ref.GetAttrValue("GEOGCS", 0) \
-                if spatial_ref.GetAttrValue("DATUM", 0) else ''
-            proj = spatial_ref.GetAttrValue("PROJECTION", 0) \
-                if spatial_ref.GetAttrValue("PROJECTION", 0) else ''
-            projection = datum + ' '+proj
+            projection = spatial_ref.GetAttrValue('geogcs', 0)
+
     else:
         unit = None
         projection = None
+        projection_string = None
+        datum = None
 
     # get the bounding box
     try:
@@ -145,7 +147,9 @@ def get_original_coverage_info(raster_dataset):
         ('eastlimit', eastlimit),
         ('westlimit', westlimit),
         ('projection', projection),
-        ('units', unit)
+        ('units', unit),
+        ('projection_string', projection_string),
+        ('datum', datum)
     ])
 
     return spatial_coverage_info

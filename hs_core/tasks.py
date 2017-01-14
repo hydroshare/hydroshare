@@ -24,7 +24,7 @@ from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from django_irods.storage import IrodsStorage
+
 from django_irods.icommands import SessionException
 
 
@@ -80,12 +80,12 @@ def check_doi_activation():
                                                    TYPE='result'))
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
-            success_cnt_elem = root.find('.//success_count')
+            failure_cnt_elem = root.find('.//failure_count')
             success = False
-            if rec_cnt_elem is not None and success_cnt_elem is not None:
-                rec_cnt = rec_cnt_elem.text
-                success_cnt = success_cnt_elem.text
-                if rec_cnt == success_cnt:
+            if rec_cnt_elem is not None and failure_cnt_elem is not None:
+                rec_cnt = int(rec_cnt_elem.text)
+                failure_cnt = int(failure_cnt_elem.text)
+                if rec_cnt > 0 and failure_cnt == 0:
                     res.doi = act_doi
                     res.save()
                     success = True
@@ -167,23 +167,21 @@ def create_bag_by_irods(resource_id, istorage=None):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
 
     res = get_resource_by_shortkey(resource_id)
-    try:
-        # we will create xml metadata files every time prior to creating the bag
-        # the assumption here is that bag is being created due to the resource
-        # modified (AVU)
-        create_bag_files(res, fed_zone_home_path=res.resource_federation_path)
-    except Exception as ex:
-        logger.error('Failed to create bag files. Error:{}'.format(ex.message))
-        return False
+    if istorage is None:
+        istorage = res.get_irods_storage()
 
-    is_exist = False
-    is_bagit_readme_exist = False
+    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    # if metadata has been changed, then regenerate metadata xml files
+    if metadata_dirty == "true":
+        try:
+            create_bag_files(res, fed_zone_home_path=res.resource_federation_path)
+        except Exception as ex:
+            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+            return False
 
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
     if res.resource_federation_path:
-        if not istorage:
-            istorage = IrodsStorage('federated')
-        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
+        irods_bagit_input_path = res.root_path
         is_exist = istorage.exists(irods_bagit_input_path)
         # check to see if bagit readme.txt file exists or not
         bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
@@ -205,8 +203,6 @@ def create_bag_by_irods(resource_id, istorage=None):
                                                       res_id=resource_id)
         ]
     else:
-        if not istorage:
-            istorage = IrodsStorage()
         is_exist = istorage.exists(resource_id)
         # check to see if bagit readme.txt file exists or not
         bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)

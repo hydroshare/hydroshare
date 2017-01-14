@@ -266,6 +266,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <fieldset>
+                            {% if author.name %}
                             <div id="div_id_name" class="control-group">
                                 <label class="control-label requiredField">Name<span
                                         class="asteriskField">*</span></label>
@@ -275,6 +276,17 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
+                            {% else %}
+                            <div id="div_id_name" class="control-group" style="display:none">
+                                <label class="control-label requiredField">Name<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                        type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
+                            </div>
+                            {% endif %}
                             {% if author.description %}
                                 <div id="div_id_description" class="control-group">
                                     <label class="control-label">HydroShare User Identifier (URL)</label>
@@ -287,6 +299,8 @@
                                             readonly></div>
                                 </div>
                             {% endif %}
+                            <!--If you don't have an author name you need an organization-->
+                            {% if author.name %}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -295,6 +309,17 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
                                         name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
+                            {% else %}
+                            <div id="div_id_organization" class="control-group requiredField">
+                                <label class="control-label">Organization<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
+                                        required="required" name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                            </div>
+                            {% endif %}
                             <div id="div_id_email" class="control-group">
                                 <label class="control-label">Email</label>
 
@@ -423,8 +448,36 @@
                 <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2" disabled>Publish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit-for-publication-dialog-2" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="submit-for-publication-title">Are you sure you want to formally publish this resource?</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Are you sure you want to formally publish this resource?</strong> You will <strong>NOT</strong>
+                    be able to edit your resource or its metadata if you proceed. This is a permanent step and should only
+                    be done when you are finished modifying your resource and you are ready to formally publish it.
+                </p>
+                <p>
+                    If you want to make your resource public or share with specific HydroShare users without formally
+                    publishing it, click <strong>"Cancel"</strong> and use the manage access panel or toggle your resource
+                    to be public instead.
+                </p>
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
+                <a type="button" id="publish-btn-2" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
             </div>
         </div>
     </div>
@@ -439,14 +492,41 @@
             </div>
             <div class="modal-body">
                 Creating a new version will obsolete this resource. This resource will be still available in HydroShare,
-                but only the newer version will be discoverable via the HydroShare search interface. A link to this
-                resource will be created on the landing page of the new version. Only one newer version
-                is allowed for each resource.
+                but only the newer version will be discoverable via the HydroShare search interface. The new version is
+                a complete new resource with new identifier. It will contain a link back to the previous version and the
+                previous version will have a link to the next version. This can be repeated resulting in a sequence of
+                multiple versions each linked to next and previous versions. Only the most recent version can be edited
+                or deleted. If you delete the most recent version, the previous version becomes the most recent and editable.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <a type="button" class="btn btn-danger"
                    href="/hsapi/_internal/{{ cm.short_id }}/create-new-version-resource/">Create New Version</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="copy-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="copy-resource-title">Copy This Resource</h4>
+            </div>
+            <div class="modal-body">
+                {{ rights.statement }}
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
+                <p>
+                In copying this resource you are ethically bound to respect the terms of this license.
+                Please confirm that you accept the terms of this license below before you can copy this resource.
+                </p>
+                <input type="checkbox" id="agree-chk-copy"><label for="agree-chk-copy" class="checkbox-label">I accept the terms of this license.</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger" id="copy-btn"
+                   href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
             </div>
         </div>
     </div>
@@ -590,6 +670,23 @@
     </div>
 {%  endblock %}
 
+{%  block delete-self-access-to-resource %}
+    <div id="dialog-confirm-delete-self-access" title="Warning! Loss of access" style="display:none">
+        <p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 50px 0;"></span>
+            This action will remove your access to this resource and you will no longer be able to
+            access it without someone else sharing it with you again. This is not reversible,
+            so <strong>Remove</strong> with caution.
+        </p>
+    </div>
+{%  endblock %}
+
+{%  block wait-for-process-to-complete %}
+    <div id="wait-to-complete" title="Processing ...">
+    <p><span style="float:left; margin:12px 12px 50px 0;"></span>
+        Please wait for the process to complete.
+    </p>
+</div>
+{%  endblock %}
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
      aria-hidden="true">
@@ -631,8 +728,8 @@
                     <div class="col-sm-5 text-center">
                         <div class="radio-inline center-radio-inline text-center">
                             <label>
-                                <div>Existing HydroShare User</div>
-                                <input type="radio" checked name="add_author_user_type" value="hs_user">
+                                <div>Person</div>
+                                <input type="radio" checked name="add_author_user_type" value="person">
                             </label>
                         </div>
                     </div>
@@ -644,8 +741,8 @@
                     <div class="col-sm-5 text-center">
                         <div class="radio-inline center-radio-inline text-center">
                             <label>
-                                <div>Other</div>
-                                <input type="radio" name="add_author_user_type" value="other">
+                                <div>Organization</div>
+                                <input type="radio" name="add_author_user_type" value="organization">
                             </label>
                         </div>
                     </div>
@@ -658,153 +755,365 @@
                 </div>
             </div>
 
-            {#  Existing HydroShare User  #}
-            <div data-hs-user-type="hs_user">
+            {# Person #}
+            <div data-hs-user-type="person">
                 <div class="modal-body">
-                    {{ add_view_user_form.user }}
-                </div>
+                    <div class="row">
+                        <div class="col-sm-5 text-center">
+                            <div class="radio-inline center-radio-inline text-center">
+                                <label>
+                                    <div>Existing HydroShare User</div>
+                                    <input type="radio" checked name="add_author_person" value="hs_user">
+                                </label>
+                            </div>
+                        </div>
 
-                <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                      enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-                    <div class="modal-body" style="display:none;">
-                        <div class="form-group">
-                            <fieldset>
-                                <div id="div_id_name" class="control-group">
-                                    <label for="id_name" class="control-label requiredField">Name<span
-                                            class="asteriskField">*</span></label>
+                        <div class="col-sm-2 text-center or-separator">
+                            <span class="text-muted">- Or -</span>
+                        </div>
 
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_name" maxlength="100" name="name"
-                                                                 required="required" type="text"></div>
-                                </div>
-
-                                <div id="div_id_description" class="control-group">
-                                    <label for="id_description" class="control-label">HydroShare User Identifier
-                                        (URL)</label>
-                                    <div class="controls"><input class="form-control input-sm urlinput"
-                                                                 id="id_description" maxlength="200"
-                                                                 name="description" type="url"></div>
-                                </div>
-
-                                <div id="div_id_organization" class="control-group">
-                                    <label for="id_organization" class="control-label">Organization</label>
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_organization" maxlength="200"
-                                                                 name="organization" type="text"></div>
-                                </div>
-
-                                <div id="div_id_email" class="control-group">
-                                    <label for="id_email" class="control-label">Email</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm emailinput"
-                                               id="id_email" maxlength="75" name="email"
-                                               type="email">
-                                    </div>
-                                </div>
-
-                                <div id="div_id_address" class="control-group">
-                                    <label for="id_address" class="control-label">Address</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_address" maxlength="250" name="address"
-                                               type="text">
-                                    </div>
-                                </div>
-
-                                <div id="div_id_phone" class="control-group">
-                                    <label for="id_phone" class="control-label">Phone</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_phone" maxlength="25" name="phone"
-                                               type="text">
-                                    </div>
-                                </div>
-
-                                <div id="div_id_homepage" class="control-group">
-                                    <label for="id_homepage" class="control-label">Homepage</label>
-                                    <div class="controls"><input class="form-control input-sm urlinput"
-                                                                 id="id_homepage" maxlength="200" name="homepage"
-                                                                 type="url"></div>
-                                </div>
-                            </fieldset>
+                        <div class="col-sm-5 text-center">
+                            <div class="radio-inline center-radio-inline text-center">
+                                <label>
+                                    <div>Other</div>
+                                    <input type="radio" name="add_author_person" value="other_person">
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary"
-                           onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-data/', this)">Save Changes</button>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <hr>
+                        </div>
                     </div>
-                </form>
+                </div>
+                {#  Existing HydroShare User  #}
+                <div data-hs-person-type="hs_user">
+                    <div class="modal-body">
+                        {{ add_view_user_form.user }}
+                    </div>
+
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+                        <div class="modal-body" style="display:none;">
+                            <div class="form-group">
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group">
+                                        <label for="id_name" class="control-label requiredField">Name<span
+                                                class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_name" maxlength="100" name="name"
+                                                                     type="text"></div>
+                                    </div>
+
+                                    <div id="div_id_description" class="control-group">
+                                        <label for="id_description" class="control-label">HydroShare User Identifier
+                                            (URL)</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_description" maxlength="200"
+                                                                     name="description" type="url"></div>
+                                    </div>
+
+                                    <div id="div_id_organization" class="control-group">
+                                        <label for="id_organization" class="control-label">Organization</label>
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_organization" maxlength="200"
+                                                                     name="organization" type="text"></div>
+                                    </div>
+
+                                    <div id="div_id_email" class="control-group">
+                                        <label for="id_email" class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_email" maxlength="75" name="email"
+                                                   type="email">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_address" class="control-group">
+                                        <label for="id_address" class="control-label">Address</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_address" maxlength="250" name="address"
+                                                   type="text">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_phone" class="control-group">
+                                        <label for="id_phone" class="control-label">Phone</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_phone" maxlength="25" name="phone"
+                                                   type="text">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label for="id_homepage" class="control-label">Homepage</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_homepage" maxlength="200" name="homepage"
+                                                                     type="url"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary"
+                                    onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+                {# Other Person #}
+                <div data-hs-person-type="other_person", style="display:none;">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {% csrf_token %}
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group">
+                                        <label for="id_name" class="control-label requiredField" >Name<span
+                                                class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_name" maxlength="100" name="name"
+                                                                     required="required" type="text" placeholder="e.g. 'Smith, John Arnold'">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_organization" class="control-group">
+                                        <label for="id_organization" class="control-label">Organization</label>
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_organization" maxlength="200"
+                                                                     name="organization" type="text"></div>
+                                    </div>
+                                    <div id="div_id_email" class="control-group">
+                                        <label for="id_email" class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_email" maxlength="75" name="email"
+                                                   type="email">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_address" class="control-group">
+                                        <label for="id_address" class="control-label">Address</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_address" maxlength="250" name="address"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_phone" class="control-group">
+                                        <label for="id_phone" class="control-label">Phone</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_phone" maxlength="25" name="phone"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label for="id_homepage" class="control-label">Homepage</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_homepage" maxlength="200" name="homepage"
+                                                                     type="url"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            {#  Other  #}
-            <div data-hs-user-type="other" style="display:none">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
-                      enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input name="resource-mode" type="hidden" value="edit">
-                    <div class="modal-body">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            {% csrf_token %}
-                            <fieldset>
-                                <div id="div_id_name" class="control-group">
-                                    <label for="id_name" class="control-label requiredField">Name<span
-                                            class="asteriskField">*</span></label>
+            {#  Organization  #}
+            <div data-hs-user-type="organization" style="display:none">
+                {# This code block should be uncommented after the auto complete for Existing HS Groups is working #}
+                <!--<div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-5 text-center">
+                            <div class="radio-inline center-radio-inline text-center">
+                                <label>
+                                    <div>Existing HS Group</div>
+                                    <input type="radio" checked name="choose_org_type" value="hs_group">
+                                </label>
+                            </div>
+                        </div>
 
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_name" maxlength="100" name="name"
-                                                                 required="required" type="text"></div>
-                                </div>
+                        <div class="col-sm-2 text-center or-separator">
+                            <span class="text-muted">- Or -</span>
+                        </div>
 
-                                <div id="div_id_organization" class="control-group">
-                                    <label for="id_organization" class="control-label">Organization</label>
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="id_organization" maxlength="200"
-                                                                 name="organization" type="text"></div>
-                                </div>
-                                <div id="div_id_email" class="control-group">
-                                    <label for="id_email" class="control-label">Email</label>
-
-                                    <div class="controls">
-                                        <input class="form-control input-sm emailinput"
-                                               id="id_email" maxlength="75" name="email"
-                                               type="email">
-                                    </div>
-                                </div>
-                                <div id="div_id_address" class="control-group">
-                                    <label for="id_address" class="control-label">Address</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_address" maxlength="250" name="address"
-                                               type="text">
-                                    </div>
-                                </div>
-                                <div id="div_id_phone" class="control-group">
-                                    <label for="id_phone" class="control-label">Phone</label>
-                                    <div class="controls">
-                                        <input class="form-control input-sm textinput textInput"
-                                               id="id_phone" maxlength="25" name="phone"
-                                               type="text">
-                                    </div>
-                                </div>
-                                <div id="div_id_homepage" class="control-group">
-                                    <label for="id_homepage" class="control-label">Homepage</label>
-                                    <div class="controls"><input class="form-control input-sm urlinput"
-                                                                 id="id_homepage" maxlength="200" name="homepage"
-                                                                 type="url"></div>
-                                </div>
-                            </fieldset>
+                        <div class="col-sm-5 text-center">
+                            <div class="radio-inline center-radio-inline text-center">
+                                <label>
+                                    <div>Other</div>
+                                    <input type="radio" name="choose_org_type" value="other_organization">
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+                {# Existing HS Group#}
+                <div data-hs-org-type="hs_group">
+                    <div class="modal-body">
+                        {{ add_view_group_form.group }}
                     </div>
-                </form>
+
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+                        <div class="modal-body" style="display:none;">
+                            <div class="form-group">
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group">
+                                        <label for="id_name" class="control-label requiredField">Name<span
+                                                class="asteriskField">*</span></label>
+
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_name" maxlength="100" name="name"
+                                                                     required="required" type="text"></div>
+                                    </div>
+
+                                    <div id="div_id_description" class="control-group">
+                                        <label for="id_description" class="control-label">HydroShare User Identifier
+                                            (URL)</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_description" maxlength="200"
+                                                                     name="description" type="url"></div>
+                                    </div>
+
+                                    <div id="div_id_organization" class="control-group">
+                                        <label for="id_organization" class="control-label">Organization</label>
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_organization" maxlength="200"
+                                                                     name="organization" type="text"></div>
+                                    </div>
+
+                                    <div id="div_id_email" class="control-group">
+                                        <label for="id_email" class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_email" maxlength="75" name="email"
+                                                   type="email">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_address" class="control-group">
+                                        <label for="id_address" class="control-label">Address</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_address" maxlength="250" name="address"
+                                                   type="text">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_phone" class="control-group">
+                                        <label for="id_phone" class="control-label">Phone</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_phone" maxlength="25" name="phone"
+                                                   type="text">
+                                        </div>
+                                    </div>
+
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label for="id_homepage" class="control-label">Homepage</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_homepage" maxlength="200" name="homepage"
+                                                                     type="url"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary"
+                                    onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)">Save Changes</button>
+                        </div>
+                    </form>
+                </div> -->
+                {#  Other Organization  #}
+                <div data-hs-org-type="other_organization">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input name="resource-mode" type="hidden" value="edit">
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {% csrf_token %}
+                                <fieldset>
+                                    <div id="div_id_name" class="control-group" style="display:none">
+                                        <label for="id_name" class="control-label">Name</label>
+
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_name" maxlength="100" name="name"
+                                                                      type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_organization" class="control-group">
+                                        <label for="id_organization" class="control-label requiredField">Organization Name<span
+                                                class="asteriskField">*</span></label>
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_organization" maxlength="200"
+                                                                     name="organization" type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'"
+                                                                     required="required"></div>
+                                    </div>
+                                    <div id="div_id_email" class="control-group">
+                                        <label for="id_email" class="control-label">Email</label>
+
+                                        <div class="controls">
+                                            <input class="form-control input-sm emailinput"
+                                                   id="id_email" maxlength="75" name="email"
+                                                   type="email">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_address" class="control-group">
+                                        <label for="id_address" class="control-label">Address</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_address" maxlength="250" name="address"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_phone" class="control-group">
+                                        <label for="id_phone" class="control-label">Phone</label>
+                                        <div class="controls">
+                                            <input class="form-control input-sm textinput textInput"
+                                                   id="id_phone" maxlength="25" name="phone"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div id="div_id_homepage" class="control-group">
+                                        <label for="id_homepage" class="control-label">Homepage</label>
+                                        <div class="controls"><input class="form-control input-sm urlinput"
+                                                                     id="id_homepage" maxlength="200" name="homepage"
+                                                                     type="url"></div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -929,7 +1238,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary"
-                           onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-data/', this)">Save Changes</button>
+                           onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -1521,33 +1830,51 @@
                                   method="POST">
                                 {% csrf_token %}
 
-                                <div class="add-view-user-form">
-                                    {{ add_view_user_form.user }}
+                                <div class="row">
+                                    <div class="add-view-user-form col-xs-12 col-sm-6">
+                                        {{ add_view_user_form.user }}
+                                    </div>
+
+                                    <div class="add-view-group-form col-xs-12 col-sm-6">
+                                        {{ add_view_group_form.group }}
+                                    </div>
+
+                                    <div class="col-xs-12 col-sm-6">
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <div class="dropdown custom-dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="roles_list" data-toggle="dropdown"
+                                                            aria-haspopup="true">
+                                                        <span id="selected_role" data-role="view">Can view</span>
+                                                        <span class="caret"></span>
+                                                    </button>
+
+                                                    <ul id="list-roles" class="dropdown-menu"
+                                                        aria-labelledby="roles_list">
+                                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="view">Can view</a></li>
+                                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>
+                                                            <a data-role="edit">Can edit</a></li>
+                                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a
+                                                                data-role="owner">Is owner</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="col-xs-6">
+                                                <a id="btn-invite"
+                                                   onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                   class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
+                                                        class="button-label">&nbspAdd</span></a>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
                                 </div>
 
-                                <div class="add-view-group-form">
-                                    {{ add_view_group_form.group }}
-                                </div>
-
-                                <div class="dropdown custom-dropdown">
-                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                            id="roles_list" data-toggle="dropdown"
-                                            aria-haspopup="true">
-                                        <span id="selected_role" data-role="view">Can view</span>
-                                        <span class="caret"></span>
-                                    </button>
-
-                                    <ul id="list-roles" class="dropdown-menu"
-                                        aria-labelledby="roles_list">
-                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
-                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
-                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
-                                    </ul>
-                                </div>
-
-                                <a id="btn-invite" onclick="share_resource_ajax_submit('add-access-form'); return false;"
-                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">&nbspAdd</span></a>
                             </form>
                         </div>
                     </div>
@@ -1801,6 +2128,35 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade in" id="get-file-url-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="rename" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Get file URL</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <fieldset class="col-sm-12">
+                        <div class="input-group">
+                            <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
+                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 {% block extra_js %}
     <script type="text/javascript">

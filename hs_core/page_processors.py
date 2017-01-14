@@ -1,11 +1,11 @@
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, AbstractResource, GenericResource
+from hs_core.models import AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
-from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section, \
+    can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -95,7 +95,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         if is_authorized:
                             tool_url = tool_res_obj.metadata.url_bases.first().value \
                                 if tool_res_obj.metadata.url_bases.first() else None
-                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().value \
                                 if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                             hs_term_dict_user = {}
                             hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
@@ -107,7 +107,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                 relevant_tools.append(tl)
 
     just_created = False
-    new_version_create_resource_error = None
+    just_copied = False
+    create_resource_error = None
     just_published = False
     if request:
         validation_error = check_for_validation(request)
@@ -116,9 +117,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_created' in request.session:
             del request.session['just_created']
 
-        new_version_create_resource_error = request.session.get('new_version_resource_creation_error', None)
-        if 'new_version_resource_creation_error' in request.session:
-            del request.session['new_version_resource_creation_error']
+        just_copied = request.session.get('just_copied', False)
+        if 'just_copied' in request.session:
+            del request.session['just_copied']
+
+        create_resource_error = request.session.get('resource_creation_error', None)
+        if 'resource_creation_error' in request.session:
+            del request.session['resource_creation_error']
 
         just_published = request.session.get('just_published', False)
         if 'just_published' in request.session:
@@ -132,6 +137,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         # if anonymous user getting access to a private resource (since resource is discoverable),
         # then don't show content files
         show_content_files = content_model.raccess.public
+
+    allow_copy = can_user_copy_resource(content_model, user)
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -195,16 +202,18 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'validation_error': validation_error if validation_error else None,
-                   'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
+                   'resource_creation_error': create_resource_error,
                    'relevant_tools': relevant_tools,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
+                   'just_copied': just_copied,
                    'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
+                   'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
                    'belongs_to_collections': belongs_to_collections
         }

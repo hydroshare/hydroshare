@@ -116,6 +116,7 @@
                               method="POST">
                             {% csrf_token %}
                             <input name="t" type="hidden" value="make_public"/>
+                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                     id="btn-public" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded by anyone.' type="submit"
@@ -135,6 +136,7 @@
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_discoverable"/>
+                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             {% csrf_token %}
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                     id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
@@ -155,6 +157,7 @@
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_private"/>
+                            <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             {% csrf_token %}
                             <button id="btn-private" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded only by designated users or research groups.' type="submit"

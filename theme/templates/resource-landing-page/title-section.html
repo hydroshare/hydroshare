@@ -24,19 +24,36 @@
     </div>
 {% endif %}
 
+{# ======= Resource copy just created notification =======#}
+{% if just_created and just_copied %}
+    <div class="col-sm-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your new copy of the resource has been created. A <i>Derived From</i> Source metadata element has been added to this resource in
+                the <i>Related Resources</i> tab below that links to the original resource. Please respect the terms of the license of the original resource
+                and recognize the original authors as authors or contributors as appropriate in this derived resource.
+                Note that this new copy is created as a private resource by default. If you want the new
+                resource to be discoverable, you need to make it public or discoverable or publish it. </span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
-            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
                 {% if missing_metadata_elements %}
                     {% if just_created %}
                         <strong>Congratulations! </strong>
-                        <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
+                        <span>Now that your resource has been created the following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish it or {% endif %}make it public or discoverable:</span>
                     {% else %}
-                        <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
+                        <span>The following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
                     {% endif %}
                     <ul>
                         {% for element in missing_metadata_elements %}
@@ -91,7 +108,7 @@
         <h2 id="resource-title">{{ title }}</h2>
         {% if tool_homepage_url %}
             <span id="apps-dropdown"/>
-            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open WebApp</a>
+            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
         {% if relevant_tools %}

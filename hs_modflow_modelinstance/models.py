@@ -33,7 +33,7 @@ def validate_choice(value, choices):
     choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
     if 'Choose' in value:
         return ''
-    if value not in choices:
+    if value and value not in choices:
         raise ValidationError('Invalid parameter: {} not in {}'.format(value, ", ".join(choices)))
     else:
         return value
@@ -537,6 +537,7 @@ class GeneralElements(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
+        # raise Exception(kwargs)
         for key, val in kwargs.iteritems():
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)

@@ -12,9 +12,7 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 class GenericFileMetaData(AbstractFileMetaData):
     def get_html(self):
-        # in the template we can insert necessary html code for displaying all
-        # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html |safe }}
+        """overrides the base class function"""
 
         html_string = super(GenericFileMetaData, self).get_html()
         if not self.has_metadata:
@@ -34,11 +32,8 @@ class GenericFileMetaData(AbstractFileMetaData):
         return template.render(context)
 
     def get_html_forms(self, datatset_name_form=True):
-        # in the template we can insert necessary html code for displaying all
-        # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html |safe }}
+        """overrides the base class function"""
 
-        # TODO: Refactor
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GenericFileMetaData, self).get_html_forms()
@@ -103,6 +98,8 @@ class GenericFileMetaData(AbstractFileMetaData):
         rendered_html = template.render(context)
         # file level form field ids need to changed so that they are different from
         # the ids used at the resource level for the same type of metadata elements
+        # Note: These string replacement operations need to be done in this particular
+        # order otherwise same element id will be replaced multiple times
         rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
         rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
         rendered_html = rendered_html.replace("id_start", "id_start_filetype")
@@ -126,7 +123,7 @@ class GenericFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def validate_element_data(cls, request, element_name):
-        # overidding the base class method
+        """overriding the base class method"""
 
         if element_name.lower() not in [el_name.lower() for el_name
                                         in cls.get_supported_element_names()]:
@@ -152,7 +149,8 @@ class GenericFileMetaData(AbstractFileMetaData):
 
 
 class GenericLogicalFile(AbstractLogicalFile):
-    # each resource file is assigned this logical file type on upload to Composite Resource
+    """ Each resource file is assigned an instance of this logical file type on upload to
+    Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
     data_type = "Generic data"
 

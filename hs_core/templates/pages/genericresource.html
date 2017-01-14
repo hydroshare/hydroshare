@@ -19,6 +19,7 @@
         <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
         <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
         <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
+        <input type="hidden" id="current-user-id" value="{{ request.user.id }}" >
 
         <div class="container" onload="loadScroll()" onunload="saveScroll()">
             <div class="row">
@@ -29,10 +30,10 @@
                               <strong>Validation Error: {{ validation_error }}</strong>
                          </div>
                     {%  endif %}
-                    {% if new_version_resource_creation_error %}
+                    {% if resource_creation_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <strong>Failed to create a new version of this resource: {{ new_version_resource_creation_error }}</strong>
+                            <strong>{{ resource_creation_error }}</strong>
                         </div>
                     {% endif %}
                 {% endblock %}
@@ -60,7 +61,11 @@
                 {% include "resource-landing-page/abstract.html" %}
 
                 {# ======= Citation ======= #}
-                {% include "resource-landing-page/citation.html" %}
+                {% if metadata_form %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+                {% else %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+                {% endif %}
 
                 {# ======= Subject ======= #}
                 {% include "resource-landing-page/subject.html" %}
@@ -127,6 +132,11 @@
                         <li id="btn-download" data-menu-name="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
+                        </li>
+
+                        <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
+                            <span class="fa fa-link icon-blue"></span>
+                            <span>Get file URL</span>
                         </li>
                         {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                             <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
@@ -223,7 +233,7 @@
                                  data-supported-files="{{ cm.get_supported_upload_file_types }}"
                                  data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                                  data-initial-file-count="{{ cm.files.all.count }}"
-                                 {% if cm|resource_type != "Generic" %}data-refresh-on-upload="true"{% endif %}
+                                 {% if cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
                                  class="file-browser"
                             >
 
@@ -310,8 +320,8 @@
                                             <div class="row">
                                                 <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                     {% if page.perms.change and metadata_form %}
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite"  %}
-                                                            <button id="fb-create-folder" class="fb-space-right"
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
+                                                            <button id="fb-create-folder" class="fb-space-right disabled"
                                                                     data-toggle="modal"
                                                                     data-target="#create-folder-dialog"
                                                                 title="Create new folder">
@@ -341,7 +351,7 @@
                                                             </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                             <button id="fb-zip"
                                                                     class="disabled"
                                                                     title="Zip Folder" data-toggle="modal"
@@ -373,6 +383,11 @@
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
                                                     </button>
 
+                                                    <button id="fb-get-link" data-toggle="modal"
+                                                            class="disabled" data-target="#get-file-url-dialog"
+                                                            title="Get file URL">
+                                                        <span class="fa fa-link icon-blue"></span>
+                                                    </button>
                                                     {% if page.perms.change and resource_edit_mode %}
                                                         <button id="fb-set-geo-file-type"
                                                                 class="disabled"
@@ -1507,10 +1522,10 @@
                 }
 
                 // If does not exist, add it
-                if (!exists && keyword[i] != "") {
+                if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
                     var li = $("<li class='tag'><span></span></li>");
                     li.find('span').text(keyword[i]);
-                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
                     $("#lst-tags").append(li);
 
                     $(".icon-remove").click(onRemoveKeyword);
@@ -1730,7 +1745,6 @@
             });
         }
 
-
         $(document).ready(function () {
             var task_id = $('#task_id').val();
             var download_path = $('#download_path').val();
@@ -1745,6 +1759,23 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+            $("#agree-chk-copy").on('click', function(e) {
+                e.stopImmediatePropagation();
+                if (e.currentTarget.checked)
+                    $('#copy-btn').removeAttr('disabled');
+                else
+                    $('#copy-btn').attr('disabled', 'disabled');
+            });
+            // add input element to each of the comment/rating forms to track resource mode (edit or view)
+            var resourceMode = $("#resource-mode").val().toLowerCase();
+            var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
+            inputElementToAdd = inputElementToAdd.replace('mode_to_replace', resourceMode);
+            $("[id^=comment-]").find('form').each(function () {
+                $(this).append(inputElementToAdd);
+            });
+            // new comment form
+            $("#comment").append(inputElementToAdd);
+
             // On manage access interface, prevent form submission when pressing the enter key on the search box.
             $('#id_user-autocomplete').keypress(function (e) {
                 e = e || event;
@@ -1760,6 +1791,22 @@
             }
             $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
             $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
+
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onOrgTypeChange() {
+                var type = $(this).val();
+                $("div[data-hs-org-type]").hide();
+                $("div[data-hs-org-type='" + type + "']").show();
+            }
+            $("input[name='choose_org_type']").click(onOrgTypeChange);
+
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onPersonTypeChange() {
+                var type = $(this).val();
+                $("div[data-hs-person-type]").hide();
+                $("div[data-hs-person-type='" + type + "']").show();
+            }
+            $("input[name='add_author_person']").click(onPersonTypeChange);
 
 
             $("#citation-text").on("click", function (e) {
@@ -1796,9 +1843,9 @@
                         var resourceType = $("#resource-type").val();
                         var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
-                        if (shapeType || resourceType === "Time Series" || resourceType === "Composite") {
+                        if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
                             deleteAllShapes();
-                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite" && spatialCoverageType === "point")) {
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite Resource" && spatialCoverageType === "point")) {
                                 var myLatLng;
                                 if (shapeType == "point") {
                                     // resource view mode
@@ -1835,7 +1882,7 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite" && spatialCoverageType === "box")) {
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite Resource" && spatialCoverageType === "box")) {
                                 var bounds;
                                 if (shapeType == "box") {
                                     //resource view mode

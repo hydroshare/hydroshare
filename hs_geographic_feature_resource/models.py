@@ -108,6 +108,7 @@ class GeographicFeatureResource(BaseResource):
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True
 
+
 processor_for(GeographicFeatureResource)(resource_processor)
 
 
