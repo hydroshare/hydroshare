@@ -2561,7 +2561,11 @@ h4.title {
 }
 
 #badge-generic .badge {
-    background-color:#1f77b4;
+    background-color: #1f77b4;
+}
+
+#badge-composite .badge {
+    background-color: #9eab31;
 }
 
 #badge-geographic .badge {

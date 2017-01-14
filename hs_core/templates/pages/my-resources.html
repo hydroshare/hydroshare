@@ -89,6 +89,7 @@
                                                 <select id="input-resource-type" class="form-control pull-left">
                                                     <option value="" selected>All</option>
                                                     <option value="collection resource">Collection</option>
+                                                    <option value="composite">Composite</option>
                                                     <option value="generic">Generic</option>
                                                     <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                     <option value="geographic raster">Geographic Raster</option>
@@ -240,6 +241,10 @@
                                          class="table-res-type-icon"/>
                                 {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                         class="table-res-type-icon"/>
+                                {% elif res|resource_type == "Composite" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% endif %}
