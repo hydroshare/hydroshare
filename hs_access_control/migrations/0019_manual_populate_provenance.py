@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import migrations
+from hs_access_control.models import ProvenanceCodes
 
 
 def populate_provenance(apps, schema_editor):
@@ -17,7 +18,6 @@ def populate_provenance(apps, schema_editor):
     UserResourceProvenance = apps.get_model("hs_access_control", "UserResourceProvenance")
     UserGroupProvenance = apps.get_model("hs_access_control", "UserGroupProvenance")
     GroupResourceProvenance = apps.get_model("hs_access_control", "GroupResourceProvenance")
-    ProvenanceCodes = apps.get_model("hs_access_control", "ProvenanceCodes")
 
     # brute force addition of provenance records
     for r in GroupResourcePrivilege.objects.all():
