@@ -34,7 +34,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -248,7 +248,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
@@ -324,7 +324,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_INSUFFICIENT
             if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
@@ -1252,23 +1252,6 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
 
     return JsonResponse(user_data)
 
-
-def _get_spatial_coverage_data(resource):
-    spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
-    spatial_coverage_dict = {}
-    if spatial_coverage:
-        spatial_coverage_dict['type'] = spatial_coverage.type
-        if spatial_coverage.type == 'point':
-            spatial_coverage_dict['east'] = spatial_coverage.value['east']
-            spatial_coverage_dict['north'] = spatial_coverage.value['north']
-        else:
-            # type is box
-            spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-            spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
-            spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
-            spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
-
-    return spatial_coverage_dict
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """

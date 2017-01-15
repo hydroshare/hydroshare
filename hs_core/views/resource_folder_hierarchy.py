@@ -12,7 +12,7 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
     get_resource_file_url
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder
+    create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
@@ -89,6 +89,11 @@ def data_store_structure(request):
                      'folders': store[0],
                      'can_be_public': resource.can_be_public_or_discoverable}
 
+    if resource.resource_type == "CompositeResource":
+        spatial_coverage_dict = get_coverage_data_dict(resource)
+        temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
+        return_object['spatial_coverage'] = spatial_coverage_dict
+        return_object['temporal_coverage'] = temporal_coverage_dict
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"

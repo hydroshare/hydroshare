@@ -793,3 +793,34 @@ def irods_path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/../'")
     if '/./' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
+
+
+def get_coverage_data_dict(resource, coverage_type='spatial'):
+    """Get coverage data as a dict for the specified resource
+    :param  resource: An instance of BaseResource for which coverage data is needed
+    :param  coverage_type: Type of coverage data needed. Default is spatial otherwise temporal
+    :return A dict of coverage data
+    """
+    if coverage_type.lower() == 'spatial':
+        spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+        spatial_coverage_dict = {}
+        if spatial_coverage:
+            spatial_coverage_dict['type'] = spatial_coverage.type
+            if spatial_coverage.type == 'point':
+                spatial_coverage_dict['east'] = spatial_coverage.value['east']
+                spatial_coverage_dict['north'] = spatial_coverage.value['north']
+            else:
+                # type is box
+                spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+                spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
+                spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
+                spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
+        return spatial_coverage_dict
+    else:
+        temporal_coverage = resource.metadata.coverages.filter(type='period').first()
+        temporal_coverage_dict = {}
+        if temporal_coverage:
+            temporal_coverage_dict['type'] = temporal_coverage.type
+            temporal_coverage_dict['start'] = temporal_coverage.value['start']
+            temporal_coverage_dict['end'] = temporal_coverage.value['end']
+        return temporal_coverage_dict

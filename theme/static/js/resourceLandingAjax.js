@@ -418,40 +418,16 @@ function metadata_update_ajax_submit(form_id){
                     $("#sql-file-update").show();
                 }
 
-                // dynamically update resource coverage when timeseries 'site' element gets updated
-                if (json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series'){
+                // dynamically update resource coverage when timeseries 'site' element gets updated or
+                // file type 'coverage' element gets updated for composite resource
+                if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
+                    (json_response.element_name.toLowerCase() === 'coverage' && resourceType === 'Composite Resource')){
+                    if (json_response.hasOwnProperty('temporal_coverage') && resourceType === 'Composite Resource'){
+                        var temporalCoverage = json_response.temporal_coverage;
+                        updateResourceTemporalCoverage(temporalCoverage);
+                    }
                     var spatialCoverage = json_response.spatial_coverage;
-                    $("#spatial-coverage-type").val(spatialCoverage.type);
-                    if (spatialCoverage.type === 'point'){
-                        $("#id_type_2").attr('checked', 'checked');
-                        $("#id_north").val(spatialCoverage.north);
-                        $("#id_east").val(spatialCoverage.east);
-                        $("#div_id_north").show();
-                        $("#div_id_east").show();
-                        $("#div_id_elevation").show();
-                        $("#div_id_northlimit").hide();
-                        $("#div_id_eastlimit").hide();
-                        $("#div_id_southlimit").hide();
-                        $("#div_id_westlimit").hide();
-                        $("#div_id_uplimit").hide();
-                        $("#div_id_downlimit").hide();
-                    }
-                    else { //coverage type is 'box'
-                        $("#id_type_1").attr('checked', 'checked');
-                        $("#id_eastlimit").val(spatialCoverage.eastlimit);
-                        $("#id_northlimit").val(spatialCoverage.northlimit);
-                        $("#id_westlimit").val(spatialCoverage.westlimit);
-                        $("#id_southlimit").val(spatialCoverage.southlimit);
-                        $("#div_id_north").hide();
-                        $("#div_id_east").hide();
-                        $("#div_id_elevation").hide();
-                        $("#div_id_northlimit").show();
-                        $("#div_id_eastlimit").show();
-                        $("#div_id_southlimit").show();
-                        $("#div_id_westlimit").show();
-                        $("#div_id_uplimit").show();
-                        $("#div_id_downlimit").show();
-                    }
+                    updateResourceSpatialCoverage(spatialCoverage);
                 }
                 if (($form.attr("id") == "id-site")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
@@ -575,6 +551,8 @@ function set_file_type_ajax_submit(url) {
             waitDialog.dialog("close");
             var json_response = JSON.parse(result);
             if (json_response.status === 'success'){
+                var spatialCoverage = json_response.spatial_coverage;
+                updateResourceSpatialCoverage(spatialCoverage);
                 $alert_success = $alert_success.replace("File type was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
                 $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
@@ -744,6 +722,14 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
+            if (result.hasOwnProperty('spatial_coverage')){
+                var spatialCoverage = result.spatial_coverage;
+                updateResourceSpatialCoverage(spatialCoverage);
+            }
+            if (result.hasOwnProperty('temporal_coverage')){
+                var temporalCoverage = result.temporal_coverage;
+                updateResourceTemporalCoverage(temporalCoverage);
+            }
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
@@ -1003,8 +989,6 @@ function setFileTypeSpatialCoverageFormFields(){
             $("#div_id_westlimit_filetype").hide();
             $("#div_id_uplimit_filetype").hide();
             $("#div_id_downlimit_filetype").hide();
-            //drawMarkerOnTextChange();
-            //drawingManager.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
         }
         else {
             $("#div_id_north_filetype").hide();
@@ -1016,10 +1000,50 @@ function setFileTypeSpatialCoverageFormFields(){
             $("#div_id_westlimit_filetype").show();
             $("#div_id_uplimit_filetype").show();
             $("#div_id_downlimit_filetype").show();
-            // drawRectangleOnTextChange();
-            // drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
         }
         // Show save changes button
         $("#id-coverage-spatial-filetype").find(".btn-primary").show();
     });
+}
+
+// updates the UI spatial coverage elements
+function updateResourceSpatialCoverage(spatialCoverage){
+    $("#spatial-coverage-type").val(spatialCoverage.type);
+        if (spatialCoverage.type === 'point'){
+            $("#id_type_2").attr('checked', 'checked');
+            $("#id_north").val(spatialCoverage.north);
+            $("#id_east").val(spatialCoverage.east);
+            $("#div_id_north").show();
+            $("#div_id_east").show();
+            $("#div_id_elevation").show();
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
+        }
+        else { //coverage type is 'box'
+            $("#id_type_1").attr('checked', 'checked');
+            $("#id_eastlimit").val(spatialCoverage.eastlimit);
+            $("#id_northlimit").val(spatialCoverage.northlimit);
+            $("#id_westlimit").val(spatialCoverage.westlimit);
+            $("#id_southlimit").val(spatialCoverage.southlimit);
+            $("#div_id_north").hide();
+            $("#div_id_east").hide();
+            $("#div_id_elevation").hide();
+            $("#div_id_northlimit").show();
+            $("#div_id_eastlimit").show();
+            $("#div_id_southlimit").show();
+            $("#div_id_westlimit").show();
+            $("#div_id_uplimit").show();
+            $("#div_id_downlimit").show();
+        }
+}
+
+// updates the UI temporal coverage elements
+function updateResourceTemporalCoverage(temporalCoverage) {
+    $("#id_start").val(temporalCoverage.start);
+    $("#id_end").val(temporalCoverage.end);
+    $("#id-coverage-temporal").find("button.btn-primary").hide();
 }

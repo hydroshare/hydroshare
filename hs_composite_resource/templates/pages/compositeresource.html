@@ -16,6 +16,8 @@
             $("#coverage-spatial :input").prop('readonly', true);
             // make the temporal coverage readonly
             $("#coverage-temporal :input").prop('disabled', true);
+            // hide the submit button for resource level temporal coverage
+            $("#id-coverage-temporal").find("button.btn-primary").hide();
         })
     </script>
 {% endblock %}

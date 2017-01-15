@@ -1,4 +1,3 @@
-# coding=utf-8
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,7 +9,7 @@ from django.template import Template, Context
 from rest_framework import status
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
-from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
+from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
 
 from .models import GeoRasterLogicalFile
@@ -48,6 +47,8 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
               "Raster metadata extraction was successful."
         response_data['message'] = msg
         response_data['status'] = 'success'
+        spatial_coverage_dict = get_coverage_data_dict(res)
+        response_data['spatial_coverage'] = spatial_coverage_dict
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     except ValidationError as ex:
@@ -132,6 +133,13 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
 
         ajax_response_data = {'status': 'success', 'element_name': element_name,
                               'metadata_status': metadata_status}
+
+        if element_name.lower() == 'coverage':
+            spatial_coverage_dict = get_coverage_data_dict(resource)
+            temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
+            ajax_response_data['spatial_coverage'] = spatial_coverage_dict
+            ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -186,9 +194,18 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         else:
             metadata_status = METADATA_STATUS_INSUFFICIENT
 
-        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+        ajax_response_data = {'status': 'success',
+                              'logical_file_type': logical_file.type_name(),
                               'element_name': element_name, 'form_action': form_action,
-                              'element_id': element.id, 'metadata_status': metadata_status}
+                              'element_id': element.id,
+                              'metadata_status': metadata_status}
+
+        if element_name.lower() == 'coverage':
+            spatial_coverage_dict = get_coverage_data_dict(resource)
+            temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
+            ajax_response_data['spatial_coverage'] = spatial_coverage_dict
+            ajax_response_data['temporal_coverage'] = temporal_coverage_dict
+
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}
