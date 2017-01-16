@@ -15,6 +15,7 @@ from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, Cell
     BandInformation
 from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile
 
+
 class TestCopyResource(TestCase):
     def setUp(self):
         super(TestCopyResource, self).setUp()
