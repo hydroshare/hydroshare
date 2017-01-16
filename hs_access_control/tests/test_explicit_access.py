@@ -1,7 +1,7 @@
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import PrivilegeCodes, GroupResourcePrivilege
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin

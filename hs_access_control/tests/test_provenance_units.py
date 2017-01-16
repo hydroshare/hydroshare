@@ -1,6 +1,5 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
-from pprint import pprint
 
 from hs_access_control.models import \
     UserResourceProvenance, UserResourcePrivilege, \
@@ -245,8 +244,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers,
                 user=alva),
             PrivilegeCodes.CHANGE)
-        # print("STATE OF UserGroupProvenance:")
-        # for p in UserGroupProvenance.objects.all().order_by('start'): print(p)
 
     def test_usergroupresult_get_privilege(self):
         george = self.george
@@ -312,10 +309,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             user=alva,
             privilege=PrivilegeCodes.CHANGE,
             grantor=george)
-        pprint(
-            UserResourceProvenance.get_undo_users(
-                resource=bikes,
-                grantor=george))
         self.assertTrue(
             is_equal_to_as_set(
                 UserResourceProvenance.get_undo_users(
@@ -778,7 +771,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(george.uaccess.can_undo_share_group_with_user(bikers, george))
         self.assertFalse(alva.uaccess.can_undo_share_group_with_user(bikers, george))
         george.uaccess.undo_share_group_with_user(bikers, alva)
-        print("privilege is " + str(UserGroupPrivilege.get_privilege(group=bikers, user=alva)))
 
         self.assertEqual(
             UserGroupPrivilege.get_privilege(group=bikers, user=alva),

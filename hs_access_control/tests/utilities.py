@@ -15,7 +15,7 @@ from pprint import pprint
 
 from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
     UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes, \
-    UserResourceProvenance, GroupResourceProvenance, UserGroupProvenance, ProvenanceCodes 
+    UserResourceProvenance, GroupResourceProvenance, UserGroupProvenance
 
 
 # from hs_core import hydroshare
@@ -890,23 +890,26 @@ def check_provenance_synchronization(self):
         for r in BaseResource.objects.all():
             prov = UserResourceProvenance.get_privilege(resource=r, user=u)
             priv = UserResourcePrivilege.get_privilege(resource=r, user=u)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, resource={}, user={}", prov, priv, r, u))
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, resource={}, user={}",
+                                        prov, priv, r, u))
     for u in User.objects.all():
         for g in Group.objects.all():
             prov = UserGroupProvenance.get_privilege(group=g, user=u)
             priv = UserGroupPrivilege.get_privilege(group=g, user=u)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, group={}, user={}", prov, priv, g, u))
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, group={}, user={}",
+                                        prov, priv, g, u))
     for g in Group.objects.all():
         for r in BaseResource.objects.all():
             prov = GroupResourceProvenance.get_privilege(resource=r, group=g)
             priv = GroupResourcePrivilege.get_privilege(resource=r, group=g)
-            self.assertEqual(prov, priv, 
-                             str.format("prov={}, priv={}, group={}, resource={}", prov, priv, g, r))
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, group={}, resource={}",
+                                        prov, priv, g, r))
 
 
-def printGroupResourceState():
+def printGroupResourceProvenance():
     print "==================================="
     print "GroupResourcePrivilege"
     priv = GroupResourcePrivilege.objects.all().order_by('group__id', 'resource__id')
@@ -933,7 +936,7 @@ def printGroupResourceState():
         o = p
 
 
-def printUserResourceState():
+def printUserResourceProvenance():
     print "==================================="
     print "UserResourcePrivilege"
     priv = UserResourcePrivilege.objects.all().order_by('user__id', 'resource__id')
@@ -960,7 +963,7 @@ def printUserResourceState():
         o = p
 
 
-def printUserGroupState():
+def printUserGroupProvenance():
     print "==================================="
     print "UserGroupPrivilege"
     priv = UserGroupPrivilege.objects.all().order_by('user__id', 'group__id')
