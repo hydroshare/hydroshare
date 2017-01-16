@@ -464,7 +464,7 @@ def create_resource(
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
-        # use the built-in share routine to set initial provenance. 
+        # use the built-in share routine to set initial provenance.
         UserResourcePrivilege.share(resource=resource, grantor=owner, user=owner,
                                     privilege=PrivilegeCodes.OWNER)
 
