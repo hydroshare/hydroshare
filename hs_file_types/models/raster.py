@@ -37,6 +37,12 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
 
+    def get_metadata_elements(self):
+        elements = super(GeoRasterFileMetaData, self).get_metadata_elements()
+        elements += [self.cellInformation, self.originalCoverage]
+        elements += list(self.bandInformations.all())
+        return elements
+
     def get_html(self):
         """overrides the base class function"""
 

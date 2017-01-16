@@ -466,7 +466,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     :param set_to_private: set target resource to private if True. The default is False.
     :return:
     """
-    avu_list = ['bag_modified', 'isPublic', 'resourceType']
+    avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
     istorage = src_res.get_irods_storage()
@@ -489,9 +489,18 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     # link copied resource files to Django resource model
     res_id_len = len(src_res.short_id)
     files = src_res.files.all()
+
+    # if resource files are part of logical files, then logical files also need
+    # copying
+    src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
+    map_logical_files = {}
+    for src_logical_file in src_logical_files:
+        map_logical_files[src_logical_file] = src_logical_file.get_copy()
+
     for n, f in enumerate(files):
+        new_resource_file = None
         if f.fed_resource_file_name_or_path:
-            ResourceFile.objects.create(
+            new_resource_file = ResourceFile.objects.create(
                 content_object=tgt_res,
                 resource_file=None,
                 fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
@@ -505,17 +514,23 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 new_file_path = ori_file_path[0:idx1] + \
                                 settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
                                 '/' + tgt_res.short_id + ori_file_path[idx2:]
-                ResourceFile.objects.create(content_object=tgt_res,
-                                            fed_resource_file=new_file_path)
+                new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
+                                                                fed_resource_file=new_file_path)
         elif f.resource_file:
             ori_file_path = f.resource_file.name
             new_file_path = tgt_res.short_id + ori_file_path[res_id_len:]
-            ResourceFile.objects.create(content_object=tgt_res, resource_file=new_file_path)
+            new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
+                                                            resource_file=new_file_path)
+        # if the original file is part of a logical file, then
+        # add the corresponding new resource file to the copy of that logical file
+        if f.has_logical_file:
+            trg_logical_file = map_logical_files[f.logical_file]
+            trg_logical_file.add_resource_file(new_resource_file)
 
-        if src_res.resource_type.lower() == "collectionresource":
-            # clone contained_res list of original collection and add to new collection
-            # note that new collection resource will not contain "deleted resources"
-            tgt_res.resources = src_res.resources.all()
+    if src_res.resource_type.lower() == "collectionresource":
+        # clone contained_res list of original collection and add to new collection
+        # note that new collection resource will not contain "deleted resources"
+        tgt_res.resources = src_res.resources.all()
 
 
 def copy_and_create_metadata(src_res, dest_res):

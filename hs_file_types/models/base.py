@@ -1,7 +1,10 @@
+import copy
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.forms.models import model_to_dict
 
 from django.contrib.postgres.fields import HStoreField
 
@@ -24,6 +27,12 @@ class AbstractFileMetaData(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_metadata_elements(self):
+        """returns a list of all metadata elements (instances of AbstractMetaDataElement)
+         associated with this file type metadata object.
+        """
+        return list(self.coverages.all())
 
     def delete_all_elements(self):
         self.coverages.all().delete()
@@ -207,7 +216,11 @@ class AbstractFileMetaData(models.Model):
         element = model_type.model_class().create(**kwargs)
         if element_model_name.lower() == "coverage":
             resource = element.metadata.logical_file.resource
-            update_resource_coverage_element(resource)
+            # resource will be None in case of coverage element being
+            # created as part of copying a resource that supports logical file
+            # types
+            if resource is not None:
+                update_resource_coverage_element(resource)
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
@@ -484,7 +497,11 @@ class AbstractLogicalFile(models.Model):
 
     @property
     def resource(self):
-        return self.files.all().first().resource
+        res_file = self.files.all().first()
+        if res_file is not None:
+            return res_file.resource
+        else:
+            return None
 
     @property
     def supports_resource_file_move(self):
@@ -527,6 +544,27 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+
+    def get_copy(self):
+        """creates a copy of this logical file object with associated metadata needed to support
+        resource copy.
+        Note: This copied logical file however does not have any association with resource files
+        """
+        copy_of_logical_file = type(self).create()
+        copy_of_logical_file.dataset_name = self.dataset_name
+        copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.save()
+        # copy the metadata elements
+        elements_to_copy = self.metadata.get_metadata_elements()
+        for element in elements_to_copy:
+            element_args = model_to_dict(element)
+            element_args.pop('content_type')
+            element_args.pop('id')
+            element_args.pop('object_id')
+            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+
+        return copy_of_logical_file
 
     def logical_delete(self, user, delete_res_files=True):
         """
