@@ -36,33 +36,33 @@
                                 {% if spatial_coverage.type == 'point' %}
                                     {% if spatial_coverage.east %}
                                         <li class="list-group-item"><strong>Longitude</strong>
-                                            <div id="cov_east">{{ spatial_coverage.east }}°</div>
+                                            <div id="cov_east">{{ spatial_coverage.east|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                     {% if spatial_coverage.north %}
                                         <li class="list-group-item"><strong>Latitude</strong>
-                                            <div id="cov_north">{{ spatial_coverage.north }}°</div>
+                                            <div id="cov_north">{{ spatial_coverage.north|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                 {% else %}
                                     {% if spatial_coverage.northlimit %}
                                         <li class="list-group-item"><strong>North Latitude</strong>
-                                            <div id="cov_northlimit">{{ spatial_coverage.northlimit }}°</div>
+                                            <div id="cov_northlimit">{{ spatial_coverage.northlimit|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                     {% if spatial_coverage.eastlimit %}
                                         <li class="list-group-item"><strong>East Longitude</strong>
-                                            <div id="cov_eastlimit">{{ spatial_coverage.eastlimit }}°</div>
+                                            <div id="cov_eastlimit">{{ spatial_coverage.eastlimit|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                     {% if spatial_coverage.southlimit %}
                                         <li class="list-group-item"><strong>South Latitude</strong>
-                                            <div id="cov_southlimit">{{ spatial_coverage.southlimit }}°</div>
+                                            <div id="cov_southlimit">{{ spatial_coverage.southlimit|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                     {% if spatial_coverage.westlimit %}
                                         <li class="list-group-item"><strong>West Longitude</strong>
-                                            <div id="cov_westlimit">{{ spatial_coverage.westlimit }}°</div>
+                                            <div id="cov_westlimit">{{ spatial_coverage.westlimit|floatformat:"4" }}°</div>
                                         </li>
                                     {% endif %}
                                 {% endif %}
@@ -191,7 +191,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-90 to 90"
                                                    id="id_north" name="north"
-                                                   value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>
@@ -205,7 +205,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-180 to 180"
                                                    id="id_east" name="east"
-                                                   value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>
@@ -219,7 +219,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-90 to 90"
                                                    id="id_northlimit" name="northlimit"
-                                                   value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>
@@ -233,7 +233,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-180 to 180"
                                                    id="id_eastlimit" name="eastlimit"
-                                                   value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>
@@ -247,7 +247,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-90 to 90"
                                                    id="id_southlimit" name="southlimit"
-                                                   value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>
@@ -261,7 +261,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" placeholder="-180 to 180"
                                                    id="id_westlimit" name="westlimit"
-                                                   value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                   value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit|floatformat:"4" }}{% endif %}">
                                             <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
                                                   class="input-group-addon">°</span>
                                         </div>

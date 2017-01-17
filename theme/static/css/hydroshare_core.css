@@ -2268,6 +2268,9 @@ button.loading {
 	height: 220px;
 }
 
+#coverage-spatial {
+	margin-top: 5px;
+}
 .coordinates-list-container {
     position: absolute;
     bottom: 0;
@@ -2277,8 +2280,16 @@ button.loading {
     text-align: center;
 }
 
+#id-coverage-spatial .control-group input {
+	text-align: right;
+}
+
 .coordinates-list-container .list-group-item {
 	padding: 5px;
+}
+
+.coordinates-list-container .list-group-item > div {
+	text-align: right;
 }
 
 .coordinates-list-container .list-group {

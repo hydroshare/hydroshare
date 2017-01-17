@@ -395,10 +395,10 @@ function processDrawing (coordinates, shape) {
             west: parseFloat(coordinates.getSouthWest().lng())
         };
         // Update fields
-        $("#id_northlimit").val(bounds.north);
-        $("#id_eastlimit").val(bounds.east);
-        $("#id_southlimit").val(bounds.south);
-        $("#id_westlimit").val(bounds.west);
+        $("#id_northlimit").val(bounds.north.toFixed(4));
+        $("#id_eastlimit").val(bounds.east.toFixed(4));
+        $("#id_southlimit").val(bounds.south.toFixed(4));
+        $("#id_westlimit").val(bounds.west.toFixed(4));
         // Remove red borders
         $("#id_northlimit").removeClass("invalid-input");
         $("#id_eastlimit").removeClass("invalid-input");
@@ -419,8 +419,8 @@ function processDrawing (coordinates, shape) {
         $("#div_id_westlimit").hide();
         $("#div_id_uplimit").hide();
         $("#div_id_downlimit").hide();
-        $("#id_east").val(coordinates.lng());
-        $("#id_north").val(coordinates.lat());
+        $("#id_east").val(coordinates.lng().toFixed(4));
+        $("#id_north").val(coordinates.lat().toFixed(4));
         // Remove red borders
         $("#id_east").removeClass("invalid-input");
         $("#id_north").removeClass("invalid-input");
