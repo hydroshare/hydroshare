@@ -66,6 +66,23 @@
                         {% endif %}
                     </form>
                 {% endif %}
+                {% if user.is_authenticated and rights.statement %}
+                    {% if cm.raccess.public or is_view_user or is_edit_user or is_owner_user %}
+                        {% if not allow_resource_copy %}
+                            <a disabled>
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="You cannot copy because the license for this resource does not permit copying"
+                                      class="glyphicon glyphicon-import icon-button text-muted"></span>
+                            </a>
+                        {% else %}
+                            <a id="copy-resource" data-toggle="modal" data-target="#copy-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="Copy this resource"
+                                      class="glyphicon glyphicon-import icon-button icon-blue"></span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
             {% endif %}
         {% else %}
             <a href="{{ cm.get_absolute_url }}">

@@ -185,12 +185,12 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, pk):
         # Update science metadata
-        resource, authorized, user = view_utils.authorize(
+        view_utils.authorize(
             request, pk,
             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         metadata = []
-        put_data = request.data
+        put_data = request.data.copy()
         keys_to_update = put_data.keys()
 
         try:
