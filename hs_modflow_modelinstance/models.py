@@ -283,28 +283,47 @@ class BoundaryCondition(AbstractMetaDataElement):
                           self.head_dependent_flux_boundary_packages.all()])
 
     def _add_specified_head_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_head_boundary_packages.add(qs[0])
             else:
-                self.specified_head_boundary_packages.create(description=package)
+                if isinstance(package, unicode):
+                    self.specified_head_boundary_packages.create(description=package)
 
     def _add_specified_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_flux_boundary_packages.add(qs[0])
             else:
-                self.specified_flux_boundary_packages.create(description=package)
+                if isinstance(package, unicode):
+                    self.specified_flux_boundary_packages.create(description=package)
 
     def _add_head_dependent_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.\
+                    filter(description__exact=package)
             if qs.exists():
                 self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                self.head_dependent_flux_boundary_packages.create(description=package)
+                if isinstance(package, unicode):
+                    self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
     @classmethod
@@ -388,13 +407,13 @@ class BoundaryCondition(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if key == 'specified_head_boundary_packages':
+            if key == 'specified_head_boundary_packages' and isinstance(val, unicode):
                 kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
                                for package in kwargs[key]]
-            elif key == 'specified_flux_boundary_packages':
+            elif key == 'specified_flux_boundary_packages' and isinstance(val, unicode):
                 kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
                                for package in kwargs[key]]
-            elif key == 'head_dependent_flux_boundary_packages':
+            elif key == 'head_dependent_flux_boundary_packages' and isinstance(val, unicode):
                 kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
                                for package in kwargs[key]]
         return kwargs
@@ -491,12 +510,18 @@ class GeneralElements(AbstractMetaDataElement):
         return ', '.join([packages.description for packages in self.output_control_package.all()])
 
     def _add_output_control_package(self, choices):
+        """ there are two possibilities for type_choices values: list of string (during normal
+         create or update) or integer (during creating new version of the resource)"""
         for type_choices in choices:
-            qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
+            if isinstance(type_choices, int):
+                qs = OutputControlPackageChoices.objects.filter(id=type_choices)
+            else:
+                qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
             if qs.exists():
                 self.output_control_package.add(qs[0])
             else:
-                self.output_control_package.create(description=type_choices)
+                if isinstance(type_choices, unicode):
+                    self.output_control_package.create(description=type_choices)
 
     @classmethod
     def create(cls, **kwargs):
@@ -541,7 +566,7 @@ class GeneralElements(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
-            elif key == 'output_control_package':
+            elif key == 'output_control_package' and isinstance(val, unicode):
                 kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
                                in kwargs[key]]
             elif key == 'subsidencePackage':
