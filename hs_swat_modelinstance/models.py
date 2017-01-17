@@ -99,10 +99,10 @@ class ModelObjective(AbstractMetaDataElement):
     def _validate_swat_model_objectives(cls, objectives):
         for swat_objective in objectives:
             if isinstance(swat_objective, unicode) and swat_objective not in ['Hydrology',
-                                                                          'Water quality',
-                                                                          'BMPs',
-                                                                          'Climate / '
-                                                                          'Landuse Change']:
+                                                                              'Water quality',
+                                                                              'BMPs',
+                                                                              'Climate / '
+                                                                              'Landuse Change']:
                 raise ValidationError('Invalid swat_model_objectives:%s' % objectives)
 
 
@@ -248,12 +248,14 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if isinstance(swat_parameters, unicode) and swat_parameters not in ['Crop rotation',
-                                                                                'Tile drainage',
-                                                                                'Point source',
-                                                                                'Fertilizer',
-                                                                                'Tillage operation',
-                                       'Inlet of draining watershed', 'Irrigation operation']:
+            if isinstance(swat_parameters, unicode) and \
+                            swat_parameters not in ['Crop rotation',
+                                                    'Tile drainage',
+                                                    'Point source',
+                                                    'Fertilizer',
+                                                    'Tillage operation',
+                                                    'Inlet of draining watershed',
+                                                    'Irrigation operation']:
                 raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
 
 
