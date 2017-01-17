@@ -46,12 +46,18 @@ class ModelObjective(AbstractMetaDataElement):
 
     @classmethod
     def _add_swat_objective(cls, model_objective, objectives):
+        """ there are two possibilities for swat_objective values: list of string (during normal
+         create or update) or integer (during creating new version of the resource)"""
         for swat_objective in objectives:
-            qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
+            if isinstance(swat_objective, int):
+                qs = ModelObjectiveChoices.objects.filter(id=swat_objective)
+            else:
+                qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
             if qs.exists():
                 model_objective.swat_model_objectives.add(qs[0])
             else:
-                model_objective.swat_model_objectives.create(description=swat_objective)
+                if isinstance(swat_objective, unicode):
+                    model_objective.swat_model_objectives.create(description=swat_objective)
 
     @classmethod
     def create(cls, **kwargs):
@@ -92,8 +98,11 @@ class ModelObjective(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_objectives(cls, objectives):
         for swat_objective in objectives:
-            if swat_objective not in ['Hydrology', 'Water quality', 'BMPs',
-                                      'Climate / Landuse Change']:
+            if isinstance(swat_objective, unicode) and swat_objective not in ['Hydrology',
+                                                                          'Water quality',
+                                                                          'BMPs',
+                                                                          'Climate / '
+                                                                          'Landuse Change']:
                 raise ValidationError('Invalid swat_model_objectives:%s' % objectives)
 
 
@@ -186,12 +195,18 @@ class ModelParameter(AbstractMetaDataElement):
 
     @classmethod
     def _add_swat_parameters(cls, swat_model_parameters, parameters):
+        """ there are two possibilities for swat_parameter values: list of string (during normal
+         create or update) or integer (during creating new version of the resource)"""
         for swat_parameter in parameters:
-            qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
+            if isinstance(swat_parameter, int):
+                qs = ModelParametersChoices.objects.filter(id=swat_parameter)
+            else:
+                qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
             if qs.exists():
                 swat_model_parameters.model_parameters.add(qs[0])
             else:
-                swat_model_parameters.model_parameters.create(description=swat_parameter)
+                if isinstance(swat_parameter, unicode):
+                    swat_model_parameters.model_parameters.create(description=swat_parameter)
 
     @classmethod
     def create(cls, **kwargs):
@@ -233,8 +248,11 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source',
-                                       'Fertilizer', 'Tillage operation',
+            if isinstance(swat_parameters, unicode) and swat_parameters not in ['Crop rotation',
+                                                                                'Tile drainage',
+                                                                                'Point source',
+                                                                                'Fertilizer',
+                                                                                'Tillage operation',
                                        'Inlet of draining watershed', 'Irrigation operation']:
                 raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
 
