@@ -408,17 +408,14 @@ class BoundaryCondition(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'specified_head_boundary_packages':
-                if isinstance(val, basestring):
-                    kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
-                                   for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
+                               for package in kwargs[key] if isinstance(package, basestring)]
             elif key == 'specified_flux_boundary_packages':
-                if isinstance(val, basestring):
-                    kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
-                                   for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
+                               for package in kwargs[key] if isinstance(package, basestring)]
             elif key == 'head_dependent_flux_boundary_packages':
-                if isinstance(val, basestring):
-                    kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
-                                   for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
+                               for package in kwargs[key] if isinstance(package, basestring)]
         return kwargs
 
 
@@ -570,9 +567,8 @@ class GeneralElements(AbstractMetaDataElement):
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
             elif key == 'output_control_package':
-                if isinstance(val, basestring):
-                    kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
-                                   in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
+                               in kwargs[key] if isinstance(package, basestring)]
             elif key == 'subsidencePackage':
                 kwargs[key] = validate_choice(val, cls.subsidencePackageChoices)
         return kwargs
