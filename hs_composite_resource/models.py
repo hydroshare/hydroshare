@@ -63,7 +63,11 @@ class CompositeResource(BaseResource):
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
 
-        path_to_check = folder_full_path[:folder_full_path.rfind("/")]
+        if "/" in folder_full_path:
+            path_to_check = folder_full_path[:folder_full_path.rfind("/")]
+        else:
+            path_to_check = folder_full_path
+
         if not path_to_check.endswith("/data/contents"):
             res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
                              res_file_obj.dir_path == path_to_check]

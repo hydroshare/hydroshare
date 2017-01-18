@@ -524,8 +524,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
         # if the original file is part of a logical file, then
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
-            trg_logical_file = map_logical_files[f.logical_file]
-            trg_logical_file.add_resource_file(new_resource_file)
+            tgt_logical_file = map_logical_files[f.logical_file]
+            tgt_logical_file.add_resource_file(new_resource_file)
 
     if src_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
