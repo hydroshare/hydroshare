@@ -414,7 +414,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     def get_xml(self, pretty_print=True):
 
         # get the xml string representation of the core metadata elements
-        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -466,7 +466,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                 ]
             self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(SWATModelInstanceMetaData, self).delete_all_elements()

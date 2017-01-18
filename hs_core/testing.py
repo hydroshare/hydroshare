@@ -332,8 +332,8 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
         # testing extended metadata element: band information
-        self.assertEqual(self.resRaster.metadata.bandInformation.count(), 1)
-        band_info = self.resRaster.metadata.bandInformation.first()
+        self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
+        band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '3031.44311523')
         self.assertEqual(band_info.minimumValue, '1358.33459473')

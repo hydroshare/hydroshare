@@ -556,6 +556,14 @@
                                             <td><span>All</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
+                                        <tr id="badge-collection" data-type="type-Collection Resource">
+                                            <td><span>Collection</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-composite" data-type="type-Composite Resource">
+                                            <td><span>Composite Resource</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
                                         <tr id="badge-generic" data-type="type-Generic">
                                             <td><span>Generic</span></td>
                                             <td><span class="badge">0</span></td>
@@ -602,10 +610,6 @@
                                         </tr>
                                         <tr id="badge-web-app" data-type="type-Web App Resource">
                                             <td><span>Web App</span></td>
-                                            <td><span class="badge">0</span></td>
-                                        </tr>
-                                        <tr id="badge-collection" data-type="type-Collection Resource">
-                                            <td><span>Collection</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
                                     </tbody>
@@ -668,6 +672,10 @@
                                                      title="{{ res|resource_type }}"/>
                                             {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
                                                 <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Composite Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                                      alt="{{ res|resource_type }}"
                                                      title="{{ res|resource_type }}"/>
                                             {% endif %}

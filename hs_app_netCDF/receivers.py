@@ -177,7 +177,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
 
     # update resource modification info
     user = nc_res.creator
-    utils.resource_modified(nc_res, user)
+    utils.resource_modified(nc_res, user, overwrite_bag=False)
 
     # delete the netcdf header file or .nc file
     file_ext = {'.nc': 'application/x-netcdf',
@@ -236,7 +236,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             # update resource modification info
             user = kwargs['user']
-            utils.resource_modified(nc_res, user)
+            utils.resource_modified(nc_res, user, overwrite_bag=False)
 
             # extract metadata
             try:
