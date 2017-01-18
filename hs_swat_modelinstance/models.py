@@ -56,7 +56,7 @@ class ModelObjective(AbstractMetaDataElement):
             if qs.exists():
                 model_objective.swat_model_objectives.add(qs[0])
             else:
-                if isinstance(swat_objective, unicode) or isinstance(swat_objective, str):
+                if isinstance(swat_objective, basestring):
                     model_objective.swat_model_objectives.create(description=swat_objective)
 
     @classmethod
@@ -98,10 +98,12 @@ class ModelObjective(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_objectives(cls, objectives):
         for swat_objective in objectives:
-            if swat_objective not in ['Hydrology',
-                                      'Water quality',
-                                      'BMPs',
-                                      'Climate / Landuse Change']:
+            if isinstance(swat_objective, basestring) and swat_objective not in [
+                'Hydrology',
+                'Water quality',
+                'BMPs',
+                'Climate / Landuse Change'
+            ]:
                 raise ValidationError('Invalid swat_model_objectives:%s' % objectives)
 
 
@@ -204,7 +206,7 @@ class ModelParameter(AbstractMetaDataElement):
             if qs.exists():
                 swat_model_parameters.model_parameters.add(qs[0])
             else:
-                if isinstance(swat_parameter, unicode) or isinstance(swat_parameter, str):
+                if isinstance(swat_parameter, basestring):
                     swat_model_parameters.model_parameters.create(description=swat_parameter)
 
     @classmethod
@@ -247,13 +249,15 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if swat_parameters not in ['Crop rotation',
-                                       'Tile drainage',
-                                       'Point source',
-                                       'Fertilizer',
-                                       'Tillage operation',
-                                       'Inlet of draining watershed',
-                                       'Irrigation operation']:
+            if isinstance(swat_parameters, basestring) and swat_parameters not in [
+                'Crop rotation',
+                'Tile drainage',
+                'Point source',
+                'Fertilizer',
+                'Tillage operation',
+                'Inlet of draining watershed',
+                'Irrigation operation'
+            ]:
                 raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
 
 
