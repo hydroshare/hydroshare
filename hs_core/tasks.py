@@ -181,7 +181,7 @@ def create_bag_by_irods(resource_id, istorage=None):
 
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
     if res.resource_federation_path:
-        irods_bagit_input_path = res.root_path
+        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
         is_exist = istorage.exists(irods_bagit_input_path)
         # check to see if bagit readme.txt file exists or not
         bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
