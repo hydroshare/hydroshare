@@ -293,7 +293,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.specified_head_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, unicode):
+                if isinstance(package, unicode) or isinstance(package, str):
                     self.specified_head_boundary_packages.create(description=package)
 
     def _add_specified_flux_boundary_packages(self, packages):
@@ -307,7 +307,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.specified_flux_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, unicode):
+                if isinstance(package, unicode) or isinstance(package, str):
                     self.specified_flux_boundary_packages.create(description=package)
 
     def _add_head_dependent_flux_boundary_packages(self, packages):
@@ -322,7 +322,7 @@ class BoundaryCondition(AbstractMetaDataElement):
             if qs.exists():
                 self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                if isinstance(package, unicode):
+                if isinstance(package, unicode) or isinstance(package, str):
                     self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
@@ -407,13 +407,13 @@ class BoundaryCondition(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if key == 'specified_head_boundary_packages' and isinstance(val, unicode):
+            if key == 'specified_head_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
                                for package in kwargs[key]]
-            elif key == 'specified_flux_boundary_packages' and isinstance(val, unicode):
+            elif key == 'specified_flux_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
                                for package in kwargs[key]]
-            elif key == 'head_dependent_flux_boundary_packages' and isinstance(val, unicode):
+            elif key == 'head_dependent_flux_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
                                for package in kwargs[key]]
         return kwargs
@@ -520,7 +520,7 @@ class GeneralElements(AbstractMetaDataElement):
             if qs.exists():
                 self.output_control_package.add(qs[0])
             else:
-                if isinstance(type_choices, unicode):
+                if isinstance(type_choices, unicode) or isinstance(type_choices, str):
                     self.output_control_package.create(description=type_choices)
 
     @classmethod
@@ -566,7 +566,8 @@ class GeneralElements(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
-            elif key == 'output_control_package' and isinstance(val, unicode):
+            elif key == 'output_control_package' and isinstance(val, unicode)\
+                    or isinstance(val, str):
                 kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
                                in kwargs[key]]
             elif key == 'subsidencePackage':
