@@ -18,51 +18,69 @@
 {{ object.editors_count }}
 {{ object.comments_count }}
 {% for creator in object.metadata.creators.all %}
-    {% if creator.name is not None %}
+    {% if creator.name %}
         {{ creator.name }}
     {% endif %} 
 {% endfor %}
 {% for contributor in object.metadata.contributors.all %}
-    {% if contributor.name is not None %}
+    {% if contributor.name %}
         {{ contributor.name }}
     {% endif %} 
 {% endfor %}
 {% for subject in object.metadata.subjects.all %}
-    {% if subject is not None %}
+    {% if subject %}
         {{ subject }}
     {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {% if creator.organization is not None %}
+    {% if creator.organization %}
         {{ creator.organization }}
     {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.email }}
+    {% if creator.email %}
+        {{ creator.email }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value }}
+    {% if coverage.value %}
+        {{ coverage.value }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.type }}
+    {% if coverage.type %}
+        {{ coverage.type }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.east }}
+    {% if coverage.value.east %}
+        {{ coverage.value.east }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.north }}
+    {% if coverage.value.north %}
+        {{ coverage.value.north }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.eastlimit }}
+    {% if coverage.value.eastlimit %}
+        {{ coverage.value.eastlimit }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.northlimit }}
+    {% if coverage.value.northlimit %}
+        {{ coverage.value.northlimit }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.southlimit }}
+    {% if coverage.value.southlimit %}
+        {{ coverage.value.southlimit }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.westlimit }}
+    {% if coverage.value.westlimit %}
+        {{ coverage.value.westlimit }}
+    {% endif %} 
 {% endfor %}
 {% for format in object.metadata.formats.all %}
     {{ format.value }}
