@@ -73,10 +73,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_author(self, obj):
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None: 
+            if first_creator.name is not None:
                 return first_creator.name
-            else: 
-                return 'none' 
+            else:
+                return 'none'
         else:
             return 'none'
 
