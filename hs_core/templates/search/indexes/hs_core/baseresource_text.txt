@@ -1,15 +1,21 @@
 {{ object.short_id }}
 {{ object.doi }}
 {{ object.metadata.title.value }}
-{{ object.first_creator }}
-{{ object.metadata.description }}
+{% if object.first_creator %}
+    {{ object.first_creator.name }}
+{% endif %}
+{% if object.metadata.description %}
+    {{ object.metadata.description }}
+{% endif %}
 {{ object.public }}
 {{ object.discoverable }}
 {{ object.published }}
 {{ object.created }}
 {{ object.modified }}
 {{ object.rating_sum }}
-{{ object.metadata.publisher.name }}
+{% if object.metadata.publisher.name %}
+    {{ object.metadata.publisher.name }}
+{% endif %}
 {{ object.metadata.language.code }}
 {{ object.resource_type }}
 {{ object.verbose_name }}
@@ -18,75 +24,123 @@
 {{ object.editors_count }}
 {{ object.comments_count }}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.name }}
+    {% if creator.name %}
+        {{ creator.name }}
+    {% endif %}
 {% endfor %}
 {% for contributor in object.metadata.contributors.all %}
-    {{ contributor.name }}
+    {% if contributor.name %}
+        {{ contributor.name }}
+    {% endif %}
 {% endfor %}
 {% for subject in object.metadata.subjects.all %}
-    {{ subject }}
+    {% if subject %}
+        {{ subject }}
+    {% endif %}
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.organization }}
+    {% if creator.organization %}
+        {{ creator.organization }}
+    {% endif %}
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.email }}
+    {% if creator.email %}
+        {{ creator.email }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value }}
+    {% if coverage.value %}
+        {{ coverage.value }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.type }}
+    {% if coverage.type %}
+        {{ coverage.type }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.east }}
+    {% if coverage.value.east %}
+        {{ coverage.value.east }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.north }}
+    {% if coverage.value.north %}
+        {{ coverage.value.north }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.eastlimit }}
+    {% if coverage.value.eastlimit %}
+        {{ coverage.value.eastlimit }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.northlimit }}
+    {% if coverage.value.northlimit %}
+        {{ coverage.value.northlimit }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.southlimit }}
+    {% if coverage.value.southlimit %}
+        {{ coverage.value.southlimit }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.westlimit }}
+    {% if coverage.value.westlimit %}
+        {{ coverage.value.westlimit }}
+    {% endif %}
 {% endfor %}
 {% for format in object.metadata.formats.all %}
-    {{ format.value }}
+    {% if format.value %}
+        {{ format.value }}
+    {% endif %}
 {% endfor %}
 {% for identifier in object.metadata.identifiers.all %}
-    {{ identifier.name }}
+    {% if identifier.name %}
+        {{ identifier.name }}
+    {% endif %}
 {% endfor %}
 {% for source in object.metadata.sources.all %}
-    {{ source.derived_from }}
+    {% if source.derived_from %}
+        {{ source.derived_from }}
+    {% endif %}
 {% endfor %}
 {% for relation in object.metadata.relations.all %}
-    {{ relation.value }}
+    {% if relation.value %}
+        {{ relation.value }}
+    {% endif %}
 {% endfor %}
 {% for owner in object.raccess.owners.all %}
-    {{ owner.username }}
+    {% if owner.username %}
+        {{ owner.username }}
+    {% endif %}
 {% endfor %}
 {% for owner in object.raccess.owners.all %}
-    {{ owner.first_name }} {{owner.last_name}}
+    {% if owner.first_name and owner.last_name %}
+        {{ owner.first_name }} {{owner.last_name}}
+    {% endif %}
 {% endfor %}
 {% for viewer in object.raccess.view_users.all %}
-    {{ viewer.first_name }} {{viewer.last_name}}
+    {% if viewer.first_name and viewer.last_name %}
+        {{ viewer.first_name }} {{viewer.last_name}}
+    {% endif %}
 {% endfor %}
 {% for viewer in object.raccess.view_users.all %}
-    {{ viewr.username }}
+    {% if viewer.username %}
+        {{ viewr.username }}
+    {% endif %}
 {% endfor %}
 {% for editor in object.raccess.edit_users.all %}
-    {{ editor.username }}
+    {% if editor.username %}
+        {{ editor.username }}
+    {% endif %}
 {% endfor %}
 {% for editor in object.raccess.edit_users.all %}
-    {{ editor.first_name }} {{editor.last_name}}
+    {% if editor.first_name and editor.last_name %}
+        {{ editor.first_name }} {{editor.last_name}}
+    {% endif %}
 {% endfor %}
 {% for comment in object.comments.all %}
-    {{ comment }}
+    {% if comment %}
+        {{ comment }}
+    {% endif %}
 {% endfor %}
 {{ object.body }}
