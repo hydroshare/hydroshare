@@ -1377,7 +1377,7 @@ class AbstractResource(ResourcePermissionsMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True
+                                        null=True,
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -1385,16 +1385,16 @@ class AbstractResource(ResourcePermissionsMixin):
                             for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
-                                          blank=True, null=True,
+                                          null=True, blank=True,
                                           choices=(('Pending', 'Pending'), ('Running', 'Running'),
                                                    ('Done', 'Done'), ('Error', 'Error'))
                                           )
-    file_unpack_message = models.TextField(blank=True, null=True)
+    file_unpack_message = models.TextField(null=True, blank=True)
 
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
+    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1768,7 +1768,7 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
     # This is used to direct uploads to a subfolder of the root folder. See get_path above.
-    file_folder = models.CharField(max_length=4096, null=True)
+    file_folder = models.CharField(max_length=4096, null=True, blank=True)
     resource_file = models.FileField(upload_to=get_path, max_length=500,
                                      null=True, blank=True,
                                      storage=IrodsStorage())
@@ -1782,13 +1782,16 @@ class ResourceFile(models.Model):
     fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
                                          null=True, blank=True,
                                          storage=IrodsStorage('federated'))
-    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    fed_resource_file_name_or_path = models.CharField(max_length=255,
+                                                      null=True, blank=True)
+    fed_resource_file_size = models.CharField(max_length=15,
+                                              null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
-    logical_file_content_type = models.ForeignKey(ContentType, null=True, blank=True,
+    logical_file_content_type = models.ForeignKey(ContentType,
+                                                  null=True, blank=True,
                                                   related_name="files")
 
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
