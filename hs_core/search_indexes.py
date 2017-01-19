@@ -8,9 +8,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(model_attr='first_creator', default='none', faceted=True)
+    author = indexes.CharField(faceted=True)
     title = indexes.CharField(faceted=True)
-    abstract = indexes.CharField(model_attr='description')
+    abstract = indexes.CharField()
     creators = indexes.MultiValueField(faceted=True)
     contributors = indexes.MultiValueField()
     subjects = indexes.MultiValueField(faceted=True)
@@ -22,7 +22,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     organizations = indexes.MultiValueField(faceted=True)
     author_emails = indexes.MultiValueField()
     publisher = indexes.CharField(faceted=True)
-    rating = indexes.IntegerField(model_attr='rating_sum')
+    # rating = indexes.IntegerField(model_attr='rating_sum')
     coverages = indexes.MultiValueField()
     coverage_types = indexes.MultiValueField()
     coverage_east = indexes.FloatField()
@@ -59,8 +59,24 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                                                Q(raccess__public=True))
 
     def prepare_title(self, obj):
-        if hasattr(obj, 'metadata'):
+        if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
             return obj.metadata.title.value
+        else:
+            return 'none'
+
+    def prepare_abstract(self, obj):
+        if hasattr(obj, 'metadata') and obj.metadata.description.abstract is not None:
+            return obj.metadata.description.abstract
+        else:
+            return 'none'
+
+    def prepare_author(self, obj):
+        if hasattr(obj, 'metadata'):
+            first_creator = obj.metadata.creators.filter(order=1).first()
+            if first_creator.name is not None: 
+                return first_creator.name
+            else: 
+                return 'none' 
         else:
             return 'none'
 
