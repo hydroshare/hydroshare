@@ -18,16 +18,24 @@
 {{ object.editors_count }}
 {{ object.comments_count }}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.name }}
+    {% if creator.name is not None %}
+        {{ creator.name }}
+    {% endif %} 
 {% endfor %}
 {% for contributor in object.metadata.contributors.all %}
-    {{ contributor.name }}
+    {% if contributor.name is not None %}
+        {{ contributor.name }}
+    {% endif %} 
 {% endfor %}
 {% for subject in object.metadata.subjects.all %}
-    {{ subject }}
+    {% if subject is not None %}
+        {{ subject }}
+    {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.organization }}
+    {% if creator.organization is not None %}
+        {{ creator.organization }}
+    {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
     {{ creator.email }}
