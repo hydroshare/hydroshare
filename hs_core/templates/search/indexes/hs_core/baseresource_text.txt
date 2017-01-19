@@ -1,7 +1,9 @@
 {{ object.short_id }}
 {{ object.doi }}
 {{ object.metadata.title.value }}
-{{ object.first_creator }}
+{% if object.first_creator %} 
+    {{ object.first_creator }}
+{% endif %}
 {{ object.metadata.description }}
 {{ object.public }}
 {{ object.discoverable }}
