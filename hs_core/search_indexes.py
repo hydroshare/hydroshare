@@ -22,7 +22,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     organizations = indexes.MultiValueField(faceted=True)
     author_emails = indexes.MultiValueField()
     publisher = indexes.CharField(faceted=True)
-    # rating = indexes.IntegerField(model_attr='rating_sum')
+    rating = indexes.IntegerField(model_attr='rating_sum')
     coverages = indexes.MultiValueField()
     coverage_types = indexes.MultiValueField()
     coverage_east = indexes.FloatField()

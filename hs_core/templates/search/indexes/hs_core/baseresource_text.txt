@@ -1,24 +1,47 @@
-{{ object.short_id }}
-{{ object.doi }}
-{{ object.metadata.title.value }}
-{% if object.first_creator %} 
-    {{ object.first_creator }}
-{% endif %}
-{{ object.metadata.description }}
+{% if object.short_id %} 
+    {{ object.short_id }}
+{% endif %} 
+{% if object.doi %} 
+    {{ object.doi }}
+{% endif %} 
+{% if object.metadata.title.value %}
+    {{ object.metadata.title.value }}
+{% endif %} 
+{% if object.metadata.description %} 
+    {{ object.metadata.description }}
+{% endif %} 
 {{ object.public }}
 {{ object.discoverable }}
 {{ object.published }}
 {{ object.created }}
 {{ object.modified }}
-{{ object.rating_sum }}
-{{ object.metadata.publisher.name }}
-{{ object.metadata.language.code }}
-{{ object.resource_type }}
-{{ object.verbose_name }}
-{{ object.owners_count }}
-{{ object.viewers_count }}
-{{ object.editors_count }}
-{{ object.comments_count }}
+{% if object.rating_sum %} 
+    {{ object.rating_sum }}
+{% endif %} 
+{% if object.metadata.publisher.name %} 
+    {{ object.metadata.publisher.name }}
+{% endif %} 
+{% if object.metadata.language.code %} 
+    {{ object.metadata.language.code }}
+{% endif %} 
+{% if object.resource_type %}
+    {{ object.resource_type }}
+{% endif %} 
+{% if object.verbose_name %} 
+    {{ object.verbose_name }}
+{% endif %} 
+{% if object.owners_count %}
+    {{ object.owners_count }}
+{% endif %} 
+{% if object.viewers_count %} 
+    {{ object.viewers_count }}
+{% endif %} 
+{% if object.editors_count %}
+    {{ object.editors_count }}
+{% endif %} 
+{% if object.comments_count %}
+    {{ object.comments_count }}
+{% endif %} 
 {% for creator in object.metadata.creators.all %}
     {% if creator.name %}
         {{ creator.name }}
@@ -115,6 +138,10 @@
     {{ editor.first_name }} {{editor.last_name}}
 {% endfor %}
 {% for comment in object.comments.all %}
-    {{ comment }}
+    {% if comment %} 
+        {{ comment }}
+    {% endif %} 
 {% endfor %}
-{{ object.body }}
+{% if object.body %} 
+    {{ object.body }}
+{% endif %} 
