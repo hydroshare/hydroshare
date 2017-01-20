@@ -195,45 +195,63 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-    sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
-                                                        request=request)
     is_add_success = False
     err_msg = "Failed to create metadata element '{}'. {}."
-    for receiver, response in handler_response:
-        if 'is_valid' in response:
-            if response['is_valid']:
-                element_data_dict = response['element_data_dict']
-                if element_name == 'subject':
-                    # using set() to remove any duplicate keywords
-                    keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
-                    res.metadata.subjects.all().delete()
-                    keyword_maxlength = Subject._meta.get_field('value').max_length
-                    for kw in keywords:
-                        if len(kw) > keyword_maxlength:
-                            kw = kw[:keyword_maxlength]
-                        res.metadata.create_element(element_name, value=kw)
-                    is_add_success = True
-                else:
-                    try:
-                        element = res.metadata.create_element(element_name, **element_data_dict)
-                        is_add_success = True
-                    except ValidationError as exp:
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
-                    except Error as exp:
-                        # some database error occurred
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
-                    except Exception as exp:
-                        # some other error occurred
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
+    element = None
+    sender_resource = _get_resource_sender(element_name, res)
+    if element_name.lower() == 'subject' and len(request.POST['value']) == 0:
+        # seems the user wants to delete all keywords - no need for pre-check in signal handler
+        res.metadata.subjects.all().delete()
+        is_add_success = True
+        if res.raccess.public and not res.can_be_public_or_discoverable:
+            res.raccess.public = False
+            res.raccess.save()
+        resource_modified(res, request.user, overwrite_bag=False)
+    else:
+        handler_response = pre_metadata_element_create.send(sender=sender_resource,
+                                                            element_name=element_name,
+                                                            request=request)
+        for receiver, response in handler_response:
+            if 'is_valid' in response:
+                if response['is_valid']:
+                    element_data_dict = response['element_data_dict']
+                    if element_name == 'subject':
+                        # using set() to remove any duplicate keywords
+                        keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
+                        keyword_maxlength = Subject._meta.get_field('value').max_length
+                        keywords_to_add = []
+                        for kw in keywords:
+                            if len(kw) > keyword_maxlength:
+                                kw = kw[:keyword_maxlength]
 
-                if is_add_success:
-                    resource_modified(res, request.user, overwrite_bag=False)
-            elif "errors" in response:
-                err_msg = err_msg.format(element_name, response['errors'])
+                            if kw not in keywords_to_add and kw.lower() not in keywords_to_add:
+                                keywords_to_add.append(kw)
+
+                        if len(keywords_to_add) > 0:
+                            res.metadata.subjects.all().delete()
+                            for kw in keywords_to_add:
+                                res.metadata.create_element(element_name, value=kw)
+                        is_add_success = True
+                    else:
+                        try:
+                            element = res.metadata.create_element(element_name, **element_data_dict)
+                            is_add_success = True
+                        except ValidationError as exp:
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+                        except Error as exp:
+                            # some database error occurred
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+                        except Exception as exp:
+                            # some other error occurred
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+
+                    if is_add_success:
+                        resource_modified(res, request.user, overwrite_bag=False)
+                elif "errors" in response:
+                    err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_add_success:
@@ -249,19 +267,22 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
-                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status
                                       }
+                if element is not None:
+                    ajax_response_data['element_id'] = element.id
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status
                                       }
-
+                if element is not None:
+                    ajax_response_data['element_id'] = element.id
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -318,6 +339,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     if request.is_ajax():
         if is_update_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
+            res_discoverable_status = 'discoverable' if res.raccess.discoverable \
+                else 'not discoverable'
             if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
@@ -330,12 +353,14 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
 
             return JsonResponse(ajax_response_data)
@@ -827,6 +852,11 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+    import sys
+    sys.path.append("/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.120.75', port=21000, suspend=False)
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     

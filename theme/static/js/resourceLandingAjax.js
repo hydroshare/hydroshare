@@ -491,10 +491,27 @@ function metadata_update_ajax_submit(form_id){
                                     customAlert(promptMessage, 3000);
                                 }
                             }
-
-                            $("#btn-public").prop("disabled", false);
+                            if (!$("#btn-public").hasClass('active')){
+                                $("#btn-public").prop("disabled", false);
+                            }
                             $("#btn-discoverable").prop("disabled", false);
                             $("#missing-metadata-or-file").fadeOut();
+                        }
+                        else {
+                            $("#btn-public").prop("disabled", true);
+                            //if ($("#btn-public").hasClass('active')){
+                            //    $("#btn-discoverable").addClass('active');
+                            //    $("#btn-discoverable").prop("disabled", true);
+                            //}
+                            $("#btn-public").removeClass('active');
+                            $("#btn-discoverable").removeClass('active');
+                            $("#btn-discoverable").prop("disabled", true);
+                            $("#btn-private").addClass('active');
+                            $("#btn-private").prop("disabled", true);
+                            //if (!$("#btn-discoverable").hasClass('active')){
+                            //    $("#btn-private").addClass('active');
+                            //    $("#btn-private").prop("disabled", true);
+                            //}
                         }
                     }
                 }
