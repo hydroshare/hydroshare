@@ -298,6 +298,12 @@ class UserGroupPrivilege(PrivilegeBase):
 
         Usage:
             UserGroupPrivilege.unshare(group={X}, user={Y}, grantor={W})
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.unshare_group_with_user instead. That routine avoids single-owner
+        deletion.
         """
         if __debug__:
             assert 'group' in kwargs
@@ -330,6 +336,12 @@ class UserGroupPrivilege(PrivilegeBase):
         Suppose -- for example -- that a user holds CHANGE, grants that to another user,
         and then loses CHANGE. The undo of the other user is still possible, even though the
         original user no longer has the privilege.
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.undo_share_group_with_user instead. That routine avoids single-owner
+        deletion.
         """
         if __debug__:
             assert 'group' in kwargs
@@ -354,8 +366,10 @@ class UserGroupPrivilege(PrivilegeBase):
         :param group: group to check
         :param grantor: user that will undo privilege
 
+        Important: this does not guard against removing a single owner.
+
         **This is a system routine** that should not be called directly by developers!
-        Use UserAccess.get_group_undo_users instead.
+        Use UserAccess.get_group_undo_users instead. That routine avoids single-owner deletion.
         """
         if __debug__:
             assert 'group' in kwargs
@@ -426,6 +440,8 @@ class UserResourcePrivilege(PrivilegeBase):
 
         Usage:
             UserResourcePrivilege.share(resource={X}, user={Y}, privilege={Z}, grantor={W})
+
+        This routine links UserResourcePrivilege and UserResourceProvenance.
         """
         cls.update(**kwargs)
         UserResourceProvenance.update(**kwargs)
@@ -443,6 +459,14 @@ class UserResourcePrivilege(PrivilegeBase):
 
         Usage:
             UserResourcePrivilege.unshare(resource={X}, user={Y}, grantor={W})
+
+        This routine links UserResourcePrivilege and UserResourceProvenance.
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.unshare_resource_with user instead. That routine avoids
+        single-owner deletion.
         """
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         UserResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -467,6 +491,14 @@ class UserResourcePrivilege(PrivilegeBase):
         Suppose -- for example -- that a user holds CHANGE, grants that to another user,
         and then loses CHANGE. The undo of the other user is still possible, even though the
         original user no longer has the privilege.
+
+        This routine links UserResourcePrivilege and UserResourceProvenance.
+
+        Important: this does not guard against removing a single owner.
+
+        **This is a system routine** that should not be called directly by developers!
+        Use UserAccess.undo_share_resource_with user instead. That routine avoids
+        single-owner deletion.
         """
         if __debug__:
             assert 'resource' in kwargs
@@ -490,8 +522,11 @@ class UserResourcePrivilege(PrivilegeBase):
         :param resource: resource to check
         :param grantor: user that will undo privilege
 
+        Important: this does not guard against removing a single owner.
+
         **This is a system routine** that should not be called directly by developers!
-        Use UserAccess.get_resource_undo_users instead.
+        Use UserAccess.get_resource_undo_users instead. That routine avoids single-owner
+        deletion.
         """
         if __debug__:
             assert 'resource' in kwargs
@@ -563,6 +598,8 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         Usage:
             GroupResourcePrivilege.share(resource={X}, group={Y}, privilege={Z}, grantor={W})
+
+        This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
         cls.update(**kwargs)
         GroupResourceProvenance.update(**kwargs)
@@ -580,6 +617,8 @@ class GroupResourcePrivilege(PrivilegeBase):
 
         Usage:
             GroupResourcePrivilege.unshare(resource={X}, group={Y}, grantor={W})
+
+        This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
         cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
         GroupResourceProvenance.update(privilege=PrivilegeCodes.NONE, **kwargs)
@@ -604,8 +643,9 @@ class GroupResourcePrivilege(PrivilegeBase):
         Suppose -- for example -- that a user holds CHANGE, grants that to another user,
         and then loses CHANGE. The undo of the other user is still possible, even though the
         original user no longer has the privilege.
+
+        This routine links GroupResourceProvenance and GroupResourcePrivilege.
         """
-        """ undo a share of a resource with a group and update provenance """
         if __debug__:
             assert 'resource' in kwargs
             assert isinstance(kwargs['resource'], BaseResource)
@@ -851,6 +891,9 @@ class ProvenanceBase(models.Model):
         separately.
 
         **This is never used directly in normal programming.** Use the routines in UserAccess.
+
+        Important: this does not protect against removing the last owner.
+        Supplementary logic is necessary
         """
         if __debug__:
             assert 'grantor' in kwargs
@@ -1069,24 +1112,6 @@ class UserGroupProvenance(ProvenanceBase):
                                                grantor=grantor,
                                                state=state)
 
-    @classmethod
-    def undo_share(cls, **kwargs):
-        """
-        Prohibit undo of privileges granted to self.
-
-        This avoids loss of last owner through undo.
-        """
-        if __debug__:
-            assert 'group' in kwargs
-            assert isinstance(kwargs['group'], Group)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-        if kwargs['user'] == kwargs['grantor']:
-            raise PermissionDenied("Cannot undo privileges for self")
-        super(UserGroupProvenance, cls).undo_share(**kwargs)
-
 
 class UserResourceProvenance(ProvenanceBase):
     """
@@ -1195,24 +1220,6 @@ class UserResourceProvenance(ProvenanceBase):
                                                   privilege=privilege,
                                                   grantor=grantor,
                                                   state=state)
-
-    @classmethod
-    def undo_share(cls, **kwargs):
-        """
-        Prohibit undo of privileges granted to self.
-
-        This avoids loss of last owner through undo.
-        """
-        if __debug__:
-            assert 'resource' in kwargs
-            assert isinstance(kwargs['resource'], BaseResource)
-            assert 'user' in kwargs
-            assert isinstance(kwargs['user'], User)
-            assert 'grantor' in kwargs
-            assert isinstance(kwargs['grantor'], User)
-        if kwargs['user'] == kwargs['grantor']:
-            raise PermissionDenied("Cannot undo privileges for self")
-        super(UserResourceProvenance, cls).undo_share(**kwargs)
 
 
 class GroupResourceProvenance(ProvenanceBase):
@@ -3138,41 +3145,296 @@ class UserAccess(models.Model):
     #######################
 
     def get_group_undo_users(self, this_group):
-        """ get a list of users that can be removed from group privilege by self """
-        return UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+        """
+        Get a list of users whose privilege was granted by self and can be undone.
+
+        :param this_group: group to check.
+        :returns: QuerySet of users
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, one can undo a share that one no longer has the privilege to grant.
+
+        This excludes single owners from the list of undo users to avoid removing last owner.
+
+        Usage:
+        ------
+
+            g = some_group
+            u = some_user
+            undo_users = request_user.get_group_undo_users(g)
+            if u in undo_users:
+                request_user.undo_share_group_with_user(g,u)
+
+        """
+        if __debug__:
+            assert isinstance(this_group, Group)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        candidates = UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+        # figure out if group has a single owner
+        if this_group.gaccess.owners.count() == 1:
+            # get list of owners to exclude from main list
+            users_to_exclude = User.objects.filter(is_active=True,
+                                                   u2ugp__group=this_group,
+                                                   u2ugp__privilege=PrivilegeCodes.OWNER)
+            return candidates.exclude(pk__in=users_to_exclude)
+        else:
+            return candidates
 
     def can_undo_share_group_with_user(self, this_group, this_user):
         """ Check that a group share can be undone """
+        if __debug__:
+            assert isinstance(this_group, Group)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("User is not active")
+
         return this_user in self.get_group_undo_users(this_group)
 
     def undo_share_group_with_user(self, this_group, this_user):
-        """ undo a share with a user that was granted by self """
-        UserGroupPrivilege.undo_share(group=this_group, user=this_user, grantor=self.user)
+        """
+        Undo a share with a user that was granted by self
+
+        :param this_group: group for which to remove privilege.
+        :param this_user: user to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a group can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            g = some_group
+            u = some_user
+            undo_users = request_user.get_group_undo_users(g)
+            if u in undo_users:
+                request_user.undo_share_group_with_user(g, u)
+        """
+
+        if __debug__:
+            assert isinstance(this_group, Group)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("User is not active")
+
+        qual_undo = self.get_group_undo_users(this_group)
+        if this_user in qual_undo:
+            UserGroupPrivilege.undo_share(group=this_group, user=this_user, grantor=self.user)
+        else:
+            # determine which exception to raise.
+            raw_undo = UserGroupPrivilege.get_undo_users(group=this_group, grantor=self.user)
+            if this_user in raw_undo:
+                raise PermissionDenied("Cannot remove last owner of group")
+            else:
+                raise PermissionDenied("User did not grant last privilege")
 
     def get_resource_undo_users(self, this_resource):
-        """ get a list of users that can be removed from resource privilege by self """
-        return UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
+        """
+        Get a list of users whose privilege was granted by self and can be undone.
+
+        :param this_resource: resource to check.
+        :returns: QuerySet of users
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        This excludes single owners from the list of undo users to avoid removing last owner.
+
+        Usage:
+        ------
+
+            g = some_resource
+            u = some_user
+            undo_users = request_user.get_resource_undo_users(g)
+            if u in undo_users:
+                request_user.undo_share_resource_with_user(g,u)
+
+        """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
+        candidates = UserResourcePrivilege.get_undo_users(resource=this_resource, grantor=self.user)
+        # figure out if group has a single owner
+        if this_resource.raccess.owners.count() == 1:
+            # get list of owners to exclude from main list
+            users_to_exclude = User.objects.filter(is_active=True,
+                                                   u2urp__resource=this_resource,
+                                                   u2urp__privilege=PrivilegeCodes.OWNER)
+            return candidates.exclude(pk__in=users_to_exclude)
+        else:
+            return candidates
 
     def can_undo_share_resource_with_user(self, this_resource, this_user):
         """ Check that a resource share can be undone """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("User is not active")
+
         return this_user in self.get_resource_undo_users(this_resource)
 
     def undo_share_resource_with_user(self, this_resource, this_user):
-        """ undo a share with a user that was granted by self """
-        UserResourcePrivilege.undo_share(resource=this_resource, user=this_user, grantor=self.user)
+        """
+        Undo a share with a user that was granted by self.
+
+        :param this_resource: resource for which to remove privilege.
+        :param this_user: user to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a resource can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            r = some_resource
+            u = some_user
+            undo_users = request_user.get_resource_undo_users(r)
+            if u in undo_users:
+                request_user.undo_share_resource_with_user(r, u)
+        """
+
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_user, User)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_user.is_active:
+            raise PermissionDenied("User is not active")
+
+        qual_undo = self.get_resource_undo_users(this_resource)
+        if this_user in qual_undo:
+            UserResourcePrivilege.undo_share(resource=this_resource,
+                                             user=this_user,
+                                             grantor=self.user)
+        else:
+            # determine which exception to raise.
+            raw_undo = UserResourcePrivilege.get_undo_users(resource=this_resource,
+                                                            grantor=self.user)
+            if this_user in raw_undo:
+                raise PermissionDenied("Cannot remove last owner of resource")
+            else:
+                raise PermissionDenied("User did not grant last privilege")
 
     def get_resource_undo_groups(self, this_resource):
         """ get a list of groups that can be removed from resource privilege by self """
+        """
+        Get a list of users whose privilege was granted by self and can be undone.
+
+        :param this_resource: resource to check.
+        :returns: QuerySet of users
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        This excludes single owners from the list of undo users to avoid removing last owner.
+
+        Usage:
+        ------
+
+            r = some_resource
+            g = some_group
+            undo_groups = request_user.get_resource_undo_groups(r)
+            if u in undo_groups:
+                request_user.undo_share_resource_with_group(r,g)
+
+        """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+
         return GroupResourcePrivilege.get_undo_groups(resource=this_resource, grantor=self.user)
 
     def can_undo_share_resource_with_group(self, this_resource, this_group):
         """ Check that a resource share can be undone """
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_group, Group)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
         return this_group in self.get_resource_undo_groups(this_resource)
 
     def undo_share_resource_with_group(self, this_resource, this_group):
-        """ undo a share with a group that was granted by self """
-        GroupResourcePrivilege.undo_share(resource=this_resource, group=this_group,
-                                          grantor=self.user)
+        """
+        Undo a share with a group that was granted by self.
+
+        :param this_resource: resource for which to remove privilege.
+        :param this_group: group to remove from privilege.
+
+        This routine undoes a privilege previously granted by self.  Only the last granted
+        privilege for a resource can be undone.  If some other user has granted a new (greater)
+        privilege, then the new privilege cannot be undone by the original user.
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus, **one can undo a share that one no longer has the privilege to grant.**
+
+        Usage:
+        ------
+
+            r = some_resource
+            g = some_group
+            undo_groups = request_group.get_resource_undo_groups(r)
+            if g in undo_groups:
+                request_user.undo_share_resource_with_group(r, g)
+        """
+
+        if __debug__:
+            assert isinstance(this_resource, BaseResource)
+            assert isinstance(this_group, Group)
+
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
+        qual_undo = self.get_resource_undo_groups(this_resource)
+        if this_group in qual_undo:
+            GroupResourcePrivilege.undo_share(resource=this_resource,
+                                              group=this_group,
+                                              grantor=self.user)
+        else:
+            raise PermissionDenied("User did not grant last privilege")
 
     #######################
     # polymorphic functions understand variable arguments for main functions
@@ -3261,6 +3523,7 @@ class UserAccess(models.Model):
             raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def get_undo_users(self, **kwargs):
+        """ this simple polymorphic routine simplifies getting various kinds of undo users """
         if __debug__:
             assert len(kwargs) == 1
             assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
@@ -3273,6 +3536,7 @@ class UserAccess(models.Model):
             raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
 
     def get_undo_groups(self, **kwargs):
+        """ this simple polymorphic routine simplifies getting various kinds of undo groups """
         if __debug__:
             assert len(kwargs) == 1
             assert 'resource' in kwargs and isinstance(kwargs['resource'], BaseResource)
