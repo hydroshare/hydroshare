@@ -65,7 +65,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
     def prepare_abstract(self, obj):
-        if hasattr(obj, 'metadata') and obj.metadata.description.abstract is not None:
+        if hasattr(obj, 'metadata') and obj.metadata.description is not None and \
+                        obj.metadata.description.abstract is not None:
             return obj.metadata.description.abstract
         else:
             return 'none'
