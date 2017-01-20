@@ -193,6 +193,10 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    """This function is normally for adding/creating new resource level metadata elements.
+    However, for the metadata element 'subject' (keyword) this function allows for creating,
+    updating and deleting metadata elements.
+    """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     is_add_success = False
@@ -203,9 +207,14 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
         res.metadata.subjects.all().delete()
         is_add_success = True
-        if res.raccess.public and not res.can_be_public_or_discoverable:
+        if not res.can_be_public_or_discoverable:
             res.raccess.public = False
+            res.raccess.discoverable = False
             res.raccess.save()
+        elif not res.raccess.discoverable:
+            res.raccess.discoverable = True
+            res.raccess.save()
+
         resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
@@ -224,6 +233,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                             if len(kw) > keyword_maxlength:
                                 kw = kw[:keyword_maxlength]
 
+                            # skip any duplicate keywords (case insensitive)
                             if kw not in keywords_to_add and kw.lower() not in keywords_to_add:
                                 keywords_to_add.append(kw)
 
@@ -256,6 +266,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     if request.is_ajax():
         if is_add_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
+            res_discoverable_status = 'discoverable' if res.raccess.discoverable \
+                else 'not discoverable'
             if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
@@ -263,7 +275,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
@@ -271,7 +285,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
@@ -279,7 +294,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
@@ -852,11 +868,6 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    import sys
-    sys.path.append("/pycharm-debug")
-    import pydevd
-    pydevd.settrace('129.123.120.75', port=21000, suspend=False)
-
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
