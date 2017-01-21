@@ -57,21 +57,21 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
             zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
             fname=self.raster_tif_file_name)
         res_upload_files = []
-        _, _, metadata, fed_res_path = utils.resource_pre_create_actions(
-            resource_type='RasterResource',
-            resource_title='My Test Raster Resource',
-            page_redirect_url_key=None,
-            files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path])
+        fed_res_path = hydroshare.utils.get_federated_zone_home_path(fed_test_file_full_path)
+
         self.resRaster = hydroshare.create_resource(
             'RasterResource',
             self.user,
             'My Test Raster Resource',
             files=res_upload_files,
             fed_res_file_names=[fed_test_file_full_path],
-            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
+            fed_res_path=fed_res_path,
             fed_copy_or_move='copy',
-            metadata=metadata)
+            metadata=[])
+
+        # raster file validation and metadata extraction in post resource creation signal handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user,
+                                           metadata=[])
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
         # test metadata is deleted after content file is deleted in user zone space
@@ -113,17 +113,15 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # there should be no subject element
         self.assertEqual(self.resRaster.metadata.subjects.all().count(), 0)
 
-        # testing extended metadata elements
+        # testing extended metadata elements - there should be no extended metadata elements
+        # at this point
         self.assertEqual(self.resRaster.metadata.originalCoverage, None)
-        self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEqual(self.resRaster.metadata.bandInformations.count, 0)
+        self.assertEqual(self.resRaster.metadata.cellInformation, None)
+        self.assertEqual(self.resRaster.metadata.bandInformations.count(), 0)
 
         # test metadata extraction with a valid tif file being added coming from user zone space
         res_add_files = []
-        utils.resource_file_add_pre_process(resource=self.resRaster,
-                                            files=res_add_files,
-                                            user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path])
+        # file validation and metadata extraction happen during post file add signal handler
         utils.resource_file_add_process(resource=self.resRaster,
                                         files=res_add_files,
                                         user=self.user,
