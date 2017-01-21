@@ -1,60 +1,111 @@
-{{ object.short_id }}
-{{ object.doi }}
-{{ object.metadata.title.value }}
-{{ object.first_creator }}
-{{ object.metadata.description }}
+{% if object.short_id %} 
+    {{ object.short_id }}
+{% endif %} 
+{% if object.doi %} 
+    {{ object.doi }}
+{% endif %} 
+{% if object.metadata.title.value %}
+    {{ object.metadata.title.value }}
+{% endif %} 
+{% if object.metadata.description %} 
+    {{ object.metadata.description }}
+{% endif %} 
 {{ object.public }}
 {{ object.discoverable }}
 {{ object.published }}
 {{ object.created }}
 {{ object.modified }}
-{{ object.rating_sum }}
-{{ object.metadata.publisher.name }}
-{{ object.metadata.language.code }}
-{{ object.resource_type }}
-{{ object.verbose_name }}
-{{ object.owners_count }}
-{{ object.viewers_count }}
-{{ object.editors_count }}
-{{ object.comments_count }}
+{% if object.rating_sum %} 
+    {{ object.rating_sum }}
+{% endif %} 
+{% if object.metadata.publisher.name %} 
+    {{ object.metadata.publisher.name }}
+{% endif %} 
+{% if object.metadata.language.code %} 
+    {{ object.metadata.language.code }}
+{% endif %} 
+{% if object.resource_type %}
+    {{ object.resource_type }}
+{% endif %} 
+{% if object.verbose_name %} 
+    {{ object.verbose_name }}
+{% endif %} 
+{% if object.owners_count %}
+    {{ object.owners_count }}
+{% endif %} 
+{% if object.viewers_count %} 
+    {{ object.viewers_count }}
+{% endif %} 
+{% if object.editors_count %}
+    {{ object.editors_count }}
+{% endif %} 
+{% if object.comments_count %}
+    {{ object.comments_count }}
+{% endif %} 
 {% for creator in object.metadata.creators.all %}
-    {{ creator.name }}
+    {% if creator.name %}
+        {{ creator.name }}
+    {% endif %} 
 {% endfor %}
 {% for contributor in object.metadata.contributors.all %}
-    {{ contributor.name }}
+    {% if contributor.name %}
+        {{ contributor.name }}
+    {% endif %} 
 {% endfor %}
 {% for subject in object.metadata.subjects.all %}
-    {{ subject }}
+    {% if subject %}
+        {{ subject }}
+    {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.organization }}
+    {% if creator.organization %}
+        {{ creator.organization }}
+    {% endif %} 
 {% endfor %}
 {% for creator in object.metadata.creators.all %}
-    {{ creator.email }}
+    {% if creator.email %}
+        {{ creator.email }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value }}
+    {% if coverage.value %}
+        {{ coverage.value }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.type }}
+    {% if coverage.type %}
+        {{ coverage.type }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.east }}
+    {% if coverage.value.east %}
+        {{ coverage.value.east }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.north }}
+    {% if coverage.value.north %}
+        {{ coverage.value.north }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.eastlimit }}
+    {% if coverage.value.eastlimit %}
+        {{ coverage.value.eastlimit }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.northlimit }}
+    {% if coverage.value.northlimit %}
+        {{ coverage.value.northlimit }}
+    {% endif %}
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.southlimit }}
+    {% if coverage.value.southlimit %}
+        {{ coverage.value.southlimit }}
+    {% endif %} 
 {% endfor %}
 {% for coverage in object.metadata.coverages.all %}
-    {{ coverage.value.westlimit }}
+    {% if coverage.value.westlimit %}
+        {{ coverage.value.westlimit }}
+    {% endif %} 
 {% endfor %}
 {% for format in object.metadata.formats.all %}
     {{ format.value }}
@@ -87,6 +138,10 @@
     {{ editor.first_name }} {{editor.last_name}}
 {% endfor %}
 {% for comment in object.comments.all %}
-    {{ comment }}
+    {% if comment %} 
+        {{ comment }}
+    {% endif %} 
 {% endfor %}
-{{ object.body }}
+{% if object.body %} 
+    {{ object.body }}
+{% endif %} 
