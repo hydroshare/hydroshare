@@ -142,7 +142,7 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             update_collection_list_csv(collection_res_obj)
 
-            resource_modified(collection_res_obj, user)
+            resource_modified(collection_res_obj, user, overwrite_bag=False)
 
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
@@ -196,7 +196,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
             update_collection_list_csv(collection_res)
 
-            resource_modified(collection_res, user)
+            resource_modified(collection_res, user, overwrite_bag=False)
 
     except Exception as ex:
         logger.error("Failed to update collection for "

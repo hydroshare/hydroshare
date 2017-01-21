@@ -24,7 +24,8 @@ class TestResourceTypes(APITestCase):
                                'GeographicFeatureResource',
                                'ScriptResource',
                                'CollectionResource',
-                               'MODFLOWModelInstanceResource'}
+                               'MODFLOWModelInstanceResource',
+                               'CompositeResource'}
 
     def test_DEPRECATED_resource_typelist(self):
         response = self.client.get('/hsapi/resourceTypes/', format='json')

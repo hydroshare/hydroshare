@@ -934,7 +934,6 @@ class FundingAgencyValidationForm(forms.Form):
     agency_url = forms.URLField(required=False)
 
 
-
 # Non repeatable element related forms
 class BaseFormHelper(FormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, element_layout=None,  *args, **kwargs):
@@ -988,16 +987,20 @@ class BaseFormHelper(FormHelper):
                             ),
                           )
 
-class TitleFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+class TitleFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order
+        # these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('value', css_class=field_width),
                  )
 
-        super(TitleFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(TitleFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
+                                              layout,  *args, **kwargs)
 
 
 class TitleForm(ModelForm):
@@ -1020,7 +1023,8 @@ class TitleValidationForm(forms.Form):
 
 
 # This form handles multiple subject elements - this was not implemented as formset
-# since we are providing one input field to enter multiple keywords (subjects) as comma separated values
+# since we are providing one input field to enter multiple keywords (subjects) as comma
+# separated values
 class SubjectsFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
@@ -1170,14 +1174,14 @@ class CoverageTemporalFormHelper(BaseFormHelper):
 
         super(CoverageTemporalFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
+
 class CoverageTemporalForm(forms.Form):
-    #name = forms.CharField(max_length=200, required=False, label='Name', help_text='e.g., Period of record.')
     start = forms.DateField(label='Start Date')
     end = forms.DateField(label='End Date')
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageTemporalForm, self).__init__(*args, **kwargs)
-        self.helper = CoverageTemporalFormHelper(allow_edit, res_short_id, element_id, element_name='coverage')
+        self.helper = CoverageTemporalFormHelper(allow_edit, res_short_id, element_id, element_name='Temporal Coverage')
         self.number = 0
         self.delete_modal_form = None
         if res_short_id:
@@ -1228,9 +1232,11 @@ class CoverageTemporalForm(forms.Form):
 
 
 class CoverageSpatialFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('type'),
@@ -1258,47 +1264,53 @@ class CoverageSpatialForm(forms.Form):
         ('box', 'Box'),
         ('point', 'Point')
     )
-    #type = forms.CharField(max_length=20, widget=Select(choices=TYPE_CHOICES, attrs={'class': 'select'}))
-    type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
-    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
 
-    east = forms.DecimalField(label='Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    north = forms.DecimalField(label='Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    type = forms.ChoiceField(choices=TYPE_CHOICES,
+                             widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
+    name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
+    projection = forms.CharField(max_length=100, required=False,
+                                 label='Coordinate System/Geographic Projection')
+
+    east = forms.DecimalField(label='Longitude', widget=forms.TextInput())
+    north = forms.DecimalField(label='Latitude', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units')
     #elevation = forms.DecimalField(required=False, widget=forms.TextInput())
     #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
-    northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
     #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
     #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
-        self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id, element_name='coverage')
+        self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id,
+                                                element_name='Spatial Coverage')
         self.number = 0
         self.delete_modal_form = None
-        self.errors.clear()
+        if self.errors:
+            self.errors.clear()
         if res_short_id:
             self.action = "/hsapi/_internal/%s/coverage/add-metadata/" % res_short_id
         else:
             self.action = ""
 
-        if len(self.initial) == 1:
+        if len(self.initial) > 0:
             self.initial['projection'] = 'WGS 84 EPSG:4326'
             self.initial['units'] = 'Decimal degrees'
+
+        else:
+            self.fields['type'].widget.attrs['checked'] = 'checked'
+            self.fields['projection'].widget.attrs['value'] = 'WGS 84 EPSG:4326'
+            self.fields['units'].widget.attrs['value'] = 'Decimal degrees'
 
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
-            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
             self.fields['units'].widget.attrs['readonly'] = True
-            self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         # modify the form's cleaned_data dictionary
@@ -1306,6 +1318,8 @@ class CoverageSpatialForm(forms.Form):
         temp_cleaned_data = copy.deepcopy(self.cleaned_data)
         spatial_coverage_type = temp_cleaned_data['type']
         is_form_errors = False
+        if self.errors:
+            self.errors.clear()
         if spatial_coverage_type == 'point':
             north = temp_cleaned_data.get('north', None)
             east = temp_cleaned_data.get('east', None)
@@ -1493,3 +1507,10 @@ class ValidDateValidationForm(forms.Form):
             self.cleaned_data['type'] = 'valid'
 
         return self.cleaned_data
+
+
+def get_crispy_form_fields(field_names):
+    crispy_fields = []
+    for field_name in field_names:
+        crispy_fields.append(Field(field_name, css_class='form-control input-sm'))
+    return crispy_fields

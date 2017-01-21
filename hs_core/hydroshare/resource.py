@@ -650,7 +650,7 @@ def create_new_version_resource(ori_res, new_res, user):
 
     # since an isReplaceBy relation element is added to original resource, needs to call
     # resource_modified() for original resource
-    utils.resource_modified(ori_res, user)
+    utils.resource_modified(ori_res, user, overwrite_bag=False)
     # if everything goes well up to this point, set original resource to be immutable so that
     # obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
@@ -1024,7 +1024,7 @@ def filter_condition(filename_or_id, fed_path, fl):
             return os.path.basename(fl.resource_file.name) == filename_or_id
 
 
-def delete_resource_file(pk, filename_or_id, user):
+def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist,
     the Exceptions.NotFound exception is raised.
@@ -1035,6 +1035,9 @@ def delete_resource_file(pk, filename_or_id, user):
     pk - The unique HydroShare identifier for the resource from which the file will be deleted
     filename - Name of the file to be deleted from the resource
     user - requesting user
+    delete_logical_file - If True then the ResourceFile object to be deleted if it is part of a
+    LogicalFile object then the LogicalFile object will be deleted which deletes all associated
+    ResourceFile objects and file type metadata objects.
 
     Returns:    The pid of the resource from which the file was deleted
 
@@ -1065,6 +1068,12 @@ def delete_resource_file(pk, filename_or_id, user):
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(filename_or_id, fed_path, f):
+            if delete_logical_file:
+                if f.logical_file is not None:
+                    # logical_delete() calls this function (delete_resource_file())
+                    # to delete each of its contained ResourceFile objects
+                    f.logical_file.logical_delete(user)
+                    return filename_or_id
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource,
                                                        user=user)
@@ -1081,8 +1090,9 @@ def delete_resource_file(pk, filename_or_id, user):
             resource.raccess.discoverable = False
             resource.raccess.save()
 
+    signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
     # generate bag
-    utils.resource_modified(resource, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return filename_or_id
 
@@ -1213,7 +1223,7 @@ def publish_resource(user, pk):
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
 
-    utils.resource_modified(resource, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return pk
 

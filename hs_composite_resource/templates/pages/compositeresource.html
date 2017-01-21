@@ -1,0 +1,23 @@
+{# This template is used as the landing page for Composite Resource #}
+
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags hydroshare_tags crispy_forms_tags %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {# resource specific js can go here #}
+    <script>
+        $(document).ready(function(){
+            // Don't allow the user to change the coverage type
+            $("#div_id_type").css('pointer-events', 'none');
+            $("#id_type_1").attr('onclick', 'return false');
+            $("#id_type_2").attr('onclick', 'return false');
+            // make the spatial coverage readonly
+            $("#coverage-spatial :input").prop('readonly', true);
+            // make the temporal coverage readonly
+            $("#coverage-temporal :input").prop('disabled', true);
+            // hide the submit button for resource level temporal coverage
+            $("#id-coverage-temporal").find("button.btn-primary").hide();
+        })
+    </script>
+{% endblock %}
