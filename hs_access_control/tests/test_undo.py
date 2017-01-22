@@ -1634,3 +1634,43 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         with self.assertRaises(PermissionDenied):
             george.uaccess.undo_share_group_with_user(bikers, george)
+
+    def test_group_single_owner_preserve(self):
+        george = self.george
+        alva = self.alva
+        bikers = self.bikers
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_undo_users(group=bikers), []))
+        with self.assertRaises(PermissionDenied):
+            george.uaccess.undo_share(group=bikers, user=george)
+
+        # set up a subtle single-owner botch.
+        george.uaccess.share(group=bikers, user=alva, privilege=PrivilegeCodes.OWNER)
+        george.uaccess.unshare(group=bikers, user=george)
+        alva.uaccess.share(group=bikers, user=george, privilege=PrivilegeCodes.OWNER)
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_undo_users(group=bikers), [george]))
+        alva.uaccess.unshare(group=bikers, user=alva)
+        # now alva is grantor for george, but george is single owner
+
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_undo_users(group=bikers), []))
+        with self.assertRaises(PermissionDenied):
+            alva.uaccess.undo_share(group=bikers, user=george)
+
+    def test_resource_single_owner_preserve(self):
+        george = self.george
+        alva = self.alva
+        bikes = self.bikes
+        self.assertTrue(is_equal_to_as_set(george.uaccess.get_undo_users(resource=bikes), []))
+        with self.assertRaises(PermissionDenied):
+            george.uaccess.undo_share(resource=bikes, user=george)
+
+        # set up a subtle single-owner botch.
+        george.uaccess.share(resource=bikes, user=alva, privilege=PrivilegeCodes.OWNER)
+        george.uaccess.unshare(resource=bikes, user=george)
+        alva.uaccess.share(resource=bikes, user=george, privilege=PrivilegeCodes.OWNER)
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_undo_users(resource=bikes), [george]))
+        alva.uaccess.unshare(resource=bikes, user=alva)
+        # now alva is grantor for george, but george is single owner
+
+        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_undo_users(resource=bikes), []))
+        with self.assertRaises(PermissionDenied):
+            alva.uaccess.undo_share(resource=bikes, user=george)
