@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y nodejs
 RUN npm install -g phantomjs-prebuilt
 ### End - HydroShare Development Image Additions ###
 
+RUN pip install django-rest-swagger
+
 USER root
 WORKDIR /hydroshare
 

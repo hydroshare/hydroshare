@@ -281,6 +281,7 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
+    "rest_framework_swagger",
     "ga_ows",
     "ga_resources",
     "hs_core",
@@ -304,7 +305,7 @@ INSTALLED_APPS = (
     "hs_sitemap",
     "hs_collection_resource",
     "hs_modflow_modelinstance",
-    "hs_tracking",
+    "hs_tracking"
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
