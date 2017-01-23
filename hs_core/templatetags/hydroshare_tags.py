@@ -113,3 +113,8 @@ def res_uuid_from_res_path(path):
         return path[sidx:sidx+32]
     else:
         return path
+
+
+@register.filter
+def remove_last_char(statement):
+    return statement[:len(statement)-1]
