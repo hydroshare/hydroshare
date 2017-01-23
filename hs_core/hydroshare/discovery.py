@@ -1,6 +1,7 @@
 # Resource discovery
 
 
+# Pabitra: Can I delete all these methods and this file?
 def list_resources(name):
     """
     NOT IN API DOC
