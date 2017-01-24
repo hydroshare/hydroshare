@@ -144,9 +144,10 @@ class PrivilegeBase(models.Model):
         Note also that using this routine directly breaks provenance and disables undo.
         """
         grantor = kwargs['grantor']
-        privilege = kwargs['privilege']
+        privilege = kwargs.get('privilege', None)
         if privilege is not None and privilege < PrivilegeCodes.NONE:
-            del kwargs['privilege']
+            if privilege in kwargs:
+                del kwargs['privilege']
             del kwargs['grantor']
             with transaction.atomic():
                 record, create = cls.objects.get_or_create(defaults={'privilege': privilege,
@@ -157,7 +158,8 @@ class PrivilegeBase(models.Model):
                     record.grantor = grantor
                     record.save()
         else:
-            del kwargs['privilege']
+            if privilege in kwargs:
+                del kwargs['privilege']
             del kwargs['grantor']
             cls.objects.filter(**kwargs) \
                .delete()
@@ -809,7 +811,7 @@ class ProvenanceBase(models.Model):
             UserGroupProvenance.update(group={X}, user={Y}, privilege={Z}, ...)
             GroupResourceProvenance.update(resource={X}, group={Y}, privilege={Z}, ...)
         """
-        if kwargs['state'] is None:
+        if 'state' not in kwargs or kwargs['state'] is None:
             kwargs['state'] = ProvenanceCodes.REQUESTED
         cls.objects.create(**kwargs)
 
