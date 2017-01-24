@@ -146,7 +146,7 @@ class PrivilegeBase(models.Model):
         grantor = kwargs['grantor']
         privilege = kwargs.get('privilege', None)
         if privilege is not None and privilege < PrivilegeCodes.NONE:
-            if privilege in kwargs:
+            if 'privilege' in kwargs:
                 del kwargs['privilege']
             del kwargs['grantor']
             with transaction.atomic():
@@ -158,7 +158,7 @@ class PrivilegeBase(models.Model):
                     record.grantor = grantor
                     record.save()
         else:
-            if privilege in kwargs:
+            if 'privilege' in kwargs:
                 del kwargs['privilege']
             del kwargs['grantor']
             cls.objects.filter(**kwargs) \
