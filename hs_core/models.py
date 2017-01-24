@@ -1294,6 +1294,16 @@ class Subject(AbstractMetaDataElement):
         return self.value
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata_obj = kwargs['content_object']
+        value = kwargs.get('value', None)
+        if value is not None:
+            if metadata_obj.subjects.filter(value__iexact=value).exists():
+                raise ValidationError("Subject element already exists.")
+
+        return super(Subject, cls).create(**kwargs)
+
+    @classmethod
     def remove(cls, element_id):
 
         sub = Subject.objects.get(id=element_id)

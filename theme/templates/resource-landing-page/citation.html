@@ -105,34 +105,25 @@
             <div class="col-sm-12">
                 <div class="btn-group" role="group">
                     {# -------- PUBLIC -------- #}
-                    {% if cm.raccess.public %}
-                        <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded by anyone.' type="button"
-                                class="btn btn-default active">Public
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
+                    <form class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
                             <input name="t" type="hidden" value="make_public"/>
                             <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
-                            <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                            <button {% if not cm.can_be_public_or_discoverable or cm.raccess.public %} disabled {% endif %}
                                     id="btn-public" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded by anyone.' type="submit"
-                                    class="btn btn-default">Public
+                                    {% if cm.raccess.public %}
+                                        class="btn btn-default active"
+                                    {% else %}
+                                        class="btn btn-default"
+                                    {% endif %}
+                                    >Public
                             </button>
-                        </form>
-                    {% endif %}
-
+                    </form>
                     {# -------- DISCOVERABLE -------- #}
-                    {% if not cm.raccess.public and discoverable %}
-                        <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                title='Metadata is public but data is protected.' type="button"
-                                class="btn btn-default active">Discoverable
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
+                    <form class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_discoverable"/>
@@ -141,30 +132,32 @@
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
                                     id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
                                     title='Metadata is public but data is protected.' type="submit"
-                                    class="btn btn-default">Discoverable
+                                    {% if cm.raccess.discoverable and not cm.raccess.public %}
+                                        class="btn btn-default active"
+                                    {% else %}
+                                        class="btn btn-default"
+                                    {% endif %}
+                                    >Discoverable
                             </button>
                         </form>
-                    {% endif %}
-
                     {# -------- PRIVATE -------- #}
-                    {% if not cm.raccess.public and not discoverable %}
-                        <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded only by designated users or research groups.'
-                                type="button" class="btn btn-default active">Private
-                        </button>
-                    {% else %}
-                        <form class="pull-left"
+                    <form class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_private"/>
                             <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             {% csrf_token %}
-                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                            <button {% if not cm.raccess.public and not cm.raccess.discoverable %} disabled {% endif %}
+                                    id="btn-private" data-toggle="tooltip" data-placement="auto"
                                     title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                    class="btn btn-default">Private
+                                    {% if not cm.raccess.public and not cm.raccess.discoverable %}
+                                        class="btn btn-default active"
+                                    {% else %}
+                                        class="btn btn-default"
+                                    {% endif %}
+                                    >Private
                             </button>
-                        </form>
-                    {% endif %}
+                    </form>
                 </div>
             </div>
 
