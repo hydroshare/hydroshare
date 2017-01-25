@@ -90,7 +90,10 @@ class SupportedResTypes(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj)
             for res_type_str in kwargs['supported_res_types']:
-                qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                if isinstance(res_type_str, int):
+                    qs = SupportedResTypeChoices.objects.filter(id=res_type_str)
+                else:
+                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
                 if qs.exists():
                     new_meta_instance.supported_res_types.add(qs[0])
                 else:
@@ -140,8 +143,12 @@ class SupportedSharingStatus(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedSharingStatus.objects.create(content_object=metadata_obj)
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.\
-                    objects.filter(description__iexact=sharing_status)
+                if isinstance(sharing_status, int):
+                     qs = SupportedSharingStatusChoices.\
+                        objects.filter(id=sharing_status)
+                else:
+                    qs = SupportedSharingStatusChoices.\
+                        objects.filter(description__iexact=sharing_status)
                 if qs.exists():
                     new_meta_instance.sharing_status.add(qs[0])
                 else:
