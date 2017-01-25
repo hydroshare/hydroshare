@@ -21,9 +21,10 @@ from celery import shared_task
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from django_irods.storage import IrodsStorage
+
 from django_irods.icommands import SessionException
 
 
@@ -166,13 +167,20 @@ def create_bag_by_irods(resource_id, istorage=None):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
 
     res = get_resource_by_shortkey(resource_id)
-    is_exist = False
-    is_bagit_readme_exist = False
+    if istorage is None:
+        istorage = res.get_irods_storage()
+
+    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    # if metadata has been changed, then regenerate metadata xml files
+    if metadata_dirty == "true":
+        try:
+            create_bag_files(res, fed_zone_home_path=res.resource_federation_path)
+        except Exception as ex:
+            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+            return False
 
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
     if res.resource_federation_path:
-        if not istorage:
-            istorage = IrodsStorage('federated')
         irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
         is_exist = istorage.exists(irods_bagit_input_path)
         # check to see if bagit readme.txt file exists or not
@@ -195,8 +203,6 @@ def create_bag_by_irods(resource_id, istorage=None):
                                                       res_id=resource_id)
         ]
     else:
-        if not istorage:
-            istorage = IrodsStorage()
         is_exist = istorage.exists(resource_id)
         # check to see if bagit readme.txt file exists or not
         bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)

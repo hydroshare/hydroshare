@@ -305,7 +305,9 @@ INSTALLED_APPS = (
     "hs_sitemap",
     "hs_collection_resource",
     "hs_modflow_modelinstance",
-    "hs_tracking"
+    "hs_tracking",
+    "hs_file_types",
+    "hs_composite_resource",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner

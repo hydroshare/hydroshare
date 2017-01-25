@@ -8,9 +8,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(model_attr='first_creator', default='none', faceted=True)
+    author = indexes.CharField(faceted=True)
     title = indexes.CharField(faceted=True)
-    abstract = indexes.CharField(model_attr='description')
+    abstract = indexes.CharField()
     creators = indexes.MultiValueField(faceted=True)
     contributors = indexes.MultiValueField()
     subjects = indexes.MultiValueField(faceted=True)
@@ -51,49 +51,72 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     editors_names = indexes.MultiValueField(faceted=True)
     editors_count = indexes.IntegerField(faceted=True)
 
-
     def get_model(self):
         return BaseResource
 
     def index_queryset(self, using=None):
-        return self.get_model().objects.filter(Q(raccess__discoverable=True) | Q(raccess__public=True))
+        return self.get_model().objects.filter(Q(raccess__discoverable=True) |
+                                               Q(raccess__public=True))
 
     def prepare_title(self, obj):
-        if hasattr(obj, 'metadata'):
+        if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
             return obj.metadata.title.value
         else:
             return 'none'
 
+    def prepare_abstract(self, obj):
+        if hasattr(obj, 'metadata') and obj.metadata.description is not None and \
+                        obj.metadata.description.abstract is not None:
+            return obj.metadata.description.abstract
+        else:
+            return 'none'
+
+    def prepare_author(self, obj):
+        if hasattr(obj, 'metadata'):
+            first_creator = obj.metadata.creators.filter(order=1).first()
+            if first_creator.name is not None:
+                return first_creator.name
+            else:
+                return 'none'
+        else:
+            return 'none'
+
     def prepare_creators(self, obj):
-        if hasattr(obj, 'metadata'): 
-            return [creator.name for creator in obj.metadata.creators.all()]
+        if hasattr(obj, 'metadata'):
+            return [creator.name for creator in obj.metadata.creators.all()
+                    .exclude(name__isnull=True)]
         else:
             return []
 
     def prepare_contributors(self, obj):
-        if hasattr(obj, 'metadata'): 
-            return [contributor.name for contributor in obj.metadata.contributors.all()]
+        if hasattr(obj, 'metadata'):
+            return [contributor.name for contributor in obj.metadata.contributors.all()
+                    .exclude(name__isnull=True)]
         else:
             return []
 
     def prepare_subjects(self, obj):
-        if hasattr(obj, 'metadata'): 
-            return [subject.value for subject in obj.metadata.subjects.all()]
+        if hasattr(obj, 'metadata'):
+            return [subject.value for subject in obj.metadata.subjects.all()
+                    .exclude(value__isnull=True)]
         else:
             return []
 
     def prepare_organizations(self, obj):
         organizations = []
-        if hasattr(obj, 'metadata'): 
+        none = False  # only enter one value "none"
+        if hasattr(obj, 'metadata'):
             for creator in obj.metadata.creators.all():
                 if(creator.organization is not None):
                     organizations.append(creator.organization)
                 else:
-                    organizations.append('none')
+                    if not none:
+                        none = True
+                        organizations.append('none')
         return organizations
 
     def prepare_publisher(self, obj):
-        if hasattr(obj, 'metadata'): 
+        if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
                 return publisher
@@ -103,8 +126,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
     def prepare_author_emails(self, obj):
-        if hasattr(obj, 'metadata'): 
-            return [creator.email for creator in obj.metadata.creators.all()]
+        if hasattr(obj, 'metadata'):
+            return [creator.email for creator in obj.metadata.creators.all()
+                    .exclude(email__isnull=True)]
         else:
             return []
 
@@ -112,7 +136,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'raccess'):
             if obj.raccess.public or obj.raccess.discoverable:
                 return True
-            else: 
+            else:
                 return False
         else:
             return False
@@ -126,7 +150,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return False
 
-
     def prepare_published(self, obj):
         if hasattr(obj, 'raccess'):
             if obj.raccess.published:
@@ -137,7 +160,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return False
 
     def prepare_coverages(self, obj):
-        if hasattr(obj, 'metadata'): 
+        # TODO: reject empty coverages
+        if hasattr(obj, 'metadata'):
             return [coverage._value for coverage in obj.metadata.coverages.all()]
         else:
             return []
@@ -154,7 +178,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 if coverage.type == 'point':
                     return float(coverage.value["east"])
                 elif coverage.type == 'box':
-                    return (float(coverage.value["eastlimit"]) + float(coverage.value["westlimit"])) / 2
+                    return (float(coverage.value["eastlimit"]) +
+                            float(coverage.value["westlimit"])) / 2
         else:
             return 'none'
 
@@ -164,7 +189,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 if coverage.type == 'point':
                     return float(coverage.value["north"])
                 elif coverage.type == 'box':
-                    return (float(coverage.value["northlimit"]) + float(coverage.value["southlimit"])) / 2
+                    return (float(coverage.value["northlimit"]) +
+                            float(coverage.value["southlimit"])) / 2
         else:
             return 'none'
 
@@ -219,7 +245,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_end_date(self, obj):
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'period':
+                if coverage.type == 'period' and 'end' in coverage.value:
                     clean_date = coverage.value["end"][:10]
                     if "/" in clean_date:
                         parsed_date = clean_date.split("/")
@@ -233,31 +259,31 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
     def prepare_formats(self, obj):
-        if hasattr(obj, 'metadata'): 
+        if hasattr(obj, 'metadata'):
             return [format.value for format in obj.metadata.formats.all()]
         else:
             return []
 
     def prepare_identifiers(self, obj):
-        if hasattr(obj, 'metadata'): 
+        if hasattr(obj, 'metadata'):
             return [identifier.name for identifier in obj.metadata.identifiers.all()]
         else:
             return []
 
     def prepare_language(self, obj):
-        if hasattr(obj.metadata.language, 'code'):
+        if hasattr(obj, 'metadata'):
             return obj.metadata.language.code
         else:
             return 'none'
 
     def prepare_sources(self, obj):
-        if hasattr(obj, 'metadata'): 
+        if hasattr(obj, 'metadata'):
             return [source.derived_from for source in obj.metadata.sources.all()]
         else:
             return []
 
     def prepare_relations(self, obj):
-        if hasattr(obj, 'metadata'): 
+        if hasattr(obj, 'metadata'):
             return [relation.value for relation in obj.metadata.relations.all()]
         else:
             return []
@@ -272,61 +298,61 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.comments_count
 
     def prepare_owners_logins(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return [owner.username for owner in obj.raccess.owners.all()]
         else:
             return []
 
     def prepare_owners_names(self, obj):
         names = []
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
                 name = owner.first_name + ' ' + owner.last_name
                 names.append(name)
         return names
 
     def prepare_owners_count(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return obj.raccess.owners.all().count()
         else:
             return 0
 
     def prepare_viewers_logins(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return [viewer.username for viewer in obj.raccess.view_users.all()]
         else:
             return []
 
     def prepare_viewers_names(self, obj):
         names = []
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             for viewer in obj.raccess.view_users.all():
                 name = viewer.first_name + ' ' + viewer.last_name
                 names.append(name)
         return names
 
     def prepare_viewers_count(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return obj.raccess.view_users.all().count()
         else:
             return 0
 
     def prepare_editors_logins(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return [editor.username for editor in obj.raccess.edit_users.all()]
         else:
             return 0
 
     def prepare_editors_names(self, obj):
         names = []
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             for editor in obj.raccess.edit_users.all():
                 name = editor.first_name + ' ' + editor.last_name
                 names.append(name)
         return names
 
     def prepare_editors_count(self, obj):
-        if hasattr(obj, 'raccess'): 
+        if hasattr(obj, 'raccess'):
             return obj.raccess.edit_users.all().count()
         else:
             return 0
