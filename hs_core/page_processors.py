@@ -4,8 +4,11 @@ from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
 
+from hs_core.models import AbstractResource, GenericResource, Relation
 from hs_core import languages_iso
-from forms import *
+from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
+    SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
+    MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section, \
     can_user_copy_resource
@@ -34,7 +37,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
-                - split into two functions: get_readonly_page_context(...) and get_editable_page_context(...)
+                - split into two functions: get_readonly_page_context(...) and
+                get_editable_page_context(...)
     """
     file_type_error = ''
     if request:
@@ -93,17 +97,20 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         sharing_status_supported = True
 
                     if sharing_status_supported:
-                        is_authorized = authorize(request, tool_res_obj.short_id,
-                                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                                                  raises_exception=False)[1]
+                        is_authorized = authorize(
+                            request, tool_res_obj.short_id,
+                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                            raises_exception=False)[1]
                         if is_authorized:
                             tool_url = tool_res_obj.metadata.url_bases.first().value \
                                 if tool_res_obj.metadata.url_bases.first() else None
                             tool_icon_url = tool_res_obj.metadata.tool_icon.first().value \
                                 if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                             hs_term_dict_user = {}
-                            hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
-                            tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                            hs_term_dict_user["HS_USR_NAME"] = request.user.username if \
+                                request.user.is_authenticated() else "anonymous"
+                            tool_url_new = parse_app_url_template(
+                                tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
                             if tool_url_new is not None:
                                 tl = {'title': str(tool_res_obj.metadata.title.value),
                                       'icon_url': tool_icon_url,
@@ -164,28 +171,34 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             spatial_coverage_data_dict['name'] = spatial_coverage.value.get('name', None)
             spatial_coverage_data_dict['units'] = spatial_coverage.value['units']
             spatial_coverage_data_dict['zunits'] = spatial_coverage.value.get('zunits', None)
-            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection', None)
+            spatial_coverage_data_dict['projection'] = spatial_coverage.value.get('projection',
+                                                                                  None)
             spatial_coverage_data_dict['type'] = spatial_coverage.type
             if spatial_coverage.type == 'point':
                 spatial_coverage_data_dict['east'] = spatial_coverage.value['east']
                 spatial_coverage_data_dict['north'] = spatial_coverage.value['north']
-                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation', None)
+                spatial_coverage_data_dict['elevation'] = spatial_coverage.value.get('elevation',
+                                                                                     None)
             else:
                 spatial_coverage_data_dict['northlimit'] = spatial_coverage.value['northlimit']
                 spatial_coverage_data_dict['eastlimit'] = spatial_coverage.value['eastlimit']
                 spatial_coverage_data_dict['southlimit'] = spatial_coverage.value['southlimit']
                 spatial_coverage_data_dict['westlimit'] = spatial_coverage.value['westlimit']
                 spatial_coverage_data_dict['uplimit'] = spatial_coverage.value.get('uplimit', None)
-                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit', None)
+                spatial_coverage_data_dict['downlimit'] = spatial_coverage.value.get('downlimit',
+                                                                                     None)
         else:
             spatial_coverage_data_dict = None
 
         keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
         languages_dict = dict(languages_iso.languages)
-        language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
+        language = languages_dict[content_model.metadata.language.code] if \
+            content_model.metadata.language else None
         title = content_model.metadata.title.value if content_model.metadata.title else None
-        abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
+        abstract = content_model.metadata.description.abstract if \
+            content_model.metadata.description else None
 
+        missing_metadata_elements = content_model.metadata.get_required_missing_elements()
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
@@ -204,7 +217,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
-                   'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
+                   'missing_metadata_elements': missing_metadata_elements,
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
                    'relevant_tools': relevant_tools,
@@ -242,60 +255,82 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     can_change = content_model.can_change(request)
 
     add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_contributor_modal_form = ContributorForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_relation_modal_form = RelationForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_contributor_modal_form = ContributorForm(allow_edit=can_change,
+                                                 res_short_id=content_model.short_id)
+    add_relation_modal_form = RelationForm(allow_edit=can_change,
+                                           res_short_id=content_model.short_id)
     add_source_modal_form = SourceForm(allow_edit=can_change, res_short_id=content_model.short_id)
-    add_fundingagency_modal_form = FundingAgencyForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_fundingagency_modal_form = FundingAgencyForm(allow_edit=can_change,
+                                                     res_short_id=content_model.short_id)
 
     keywords = ",".join([sub.value for sub in content_model.metadata.subjects.all()])
-    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change, res_short_id=content_model.short_id,
-                             element_id=None)
+    subjects_form = SubjectsForm(initial={'value': keywords}, allow_edit=can_change,
+                                 res_short_id=content_model.short_id, element_id=None)
 
-    abstract_form = AbstractForm(instance=content_model.metadata.description, allow_edit=can_change, res_short_id=content_model.short_id,
-                             element_id=content_model.metadata.description.id if content_model.metadata.description else None)
+    abstract_form = AbstractForm(instance=content_model.metadata.description,
+                                 allow_edit=can_change, res_short_id=content_model.short_id,
+                                 element_id=content_model.metadata.description.id if
+                                 content_model.metadata.description else None)
 
-    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm, allow_edit=can_change)), formset=BaseCreatorFormSet, extra=0)
+    CreatorFormSetEdit = formset_factory(wraps(CreatorForm)(partial(CreatorForm,
+                                                                    allow_edit=can_change)),
+                                         formset=BaseCreatorFormSet, extra=0)
 
-    creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(), prefix='creator')
+    creator_formset = CreatorFormSetEdit(initial=content_model.metadata.creators.all().values(),
+                                         prefix='creator')
     index = 0
 
     # TODO: dont track index manually. use enumerate, or zip
 
     for creator_form in creator_formset.forms:
-        creator_form.action = "/hsapi/_internal/%s/creator/%s/update-metadata/" % (content_model.short_id, creator_form.initial['id'])
+        creator_form.action = "/hsapi/_internal/%s/creator/%s/update-metadata/" % \
+                              (content_model.short_id, creator_form.initial['id'])
         creator_form.number = creator_form.initial['id']
         index += 1
 
-    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm, allow_edit=can_change)), formset=BaseContributorFormSet, extra=0)
-    contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().values(), prefix='contributor')
+    ContributorFormSetEdit = formset_factory(wraps(ContributorForm)(partial(ContributorForm,
+                                                                            allow_edit=can_change)),
+                                             formset=BaseContributorFormSet, extra=0)
+    contributor_formset = ContributorFormSetEdit(initial=content_model.metadata.contributors.all().
+                                                 values(), prefix='contributor')
 
     index = 0
     # TODO: dont track index manually. use enumerate, or zip
     for contributor_form in contributor_formset.forms:
-        contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % (content_model.short_id, contributor_form.initial['id'])
+        contributor_form.action = "/hsapi/_internal/%s/contributor/%s/update-metadata/" % \
+                                  (content_model.short_id, contributor_form.initial['id'])
         contributor_form.number = contributor_form.initial['id']
         index += 1
 
-    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
-    relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(), prefix='relation')
+    RelationFormSetEdit = formset_factory(wraps(RelationForm)(partial(RelationForm,
+                                                                      allow_edit=can_change)),
+                                          formset=BaseFormSet, extra=0)
+    relation_formset = RelationFormSetEdit(initial=content_model.metadata.relations.all().values(),
+                                           prefix='relation')
 
     for relation_form in relation_formset.forms:
-        relation_form.action = "/hsapi/_internal/%s/relation/%s/update-metadata/" % (content_model.short_id, relation_form.initial['id'])
+        relation_form.action = "/hsapi/_internal/%s/relation/%s/update-metadata/" % \
+                               (content_model.short_id, relation_form.initial['id'])
         relation_form.number = relation_form.initial['id']
 
-    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
-    source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(), prefix='source')
+    SourceFormSetEdit = formset_factory(wraps(SourceForm)(partial(SourceForm,
+                                                                  allow_edit=can_change)),
+                                        formset=BaseFormSet, extra=0)
+    source_formset = SourceFormSetEdit(initial=content_model.metadata.sources.all().values(),
+                                       prefix='source')
 
     for source_form in source_formset.forms:
-        source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % (content_model.short_id, source_form.initial['id'])
-        source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'source', source_form.initial['id'])
+        source_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % \
+                             (content_model.short_id, source_form.initial['id'])
+        source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id,
+                                                                  'source',
+                                                                  source_form.initial['id'])
         source_form.number = source_form.initial['id']
 
-    FundingAgencyFormSetEdit = formset_factory(wraps(FundingAgencyForm)(partial(FundingAgencyForm,
-                                                                                allow_edit=can_change)),
-                                               formset=BaseFormSet, extra=0)
-    fundingagency_formset = FundingAgencyFormSetEdit(initial=content_model.metadata.funding_agencies.all().values(),
-                                                     prefix='fundingagency')
+    FundingAgencyFormSetEdit = formset_factory(wraps(FundingAgencyForm)(partial(
+        FundingAgencyForm, allow_edit=can_change)), formset=BaseFormSet, extra=0)
+    fundingagency_formset = FundingAgencyFormSetEdit(
+        initial=content_model.metadata.funding_agencies.all().values(), prefix='fundingagency')
 
     for fundingagency_form in fundingagency_formset.forms:
         action = "/hsapi/_internal/{}/fundingagnecy/{}/update-metadata/"
@@ -314,10 +349,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     else:
         temporal_coverage = None
 
-    coverage_temporal_form = CoverageTemporalForm(initial= temporal_coverage_data_dict,
+    coverage_temporal_form = CoverageTemporalForm(initial=temporal_coverage_data_dict,
                                                   allow_edit=can_change,
                                                   res_short_id=content_model.short_id,
-                                                  element_id=temporal_coverage.id if temporal_coverage else None)
+                                                  element_id=temporal_coverage.id if
+                                                  temporal_coverage else None)
 
     spatial_coverages = content_model.metadata.coverages.all().exclude(type='period')
     spatial_coverage_data_dict = {'type': 'point'}
@@ -346,10 +382,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     coverage_spatial_form = CoverageSpatialForm(initial=spatial_coverage_data_dict,
                                                 allow_edit=can_change,
                                                 res_short_id=content_model.short_id,
-                                                element_id=spatial_coverage.id if spatial_coverage else None)
+                                                element_id=spatial_coverage.id if
+                                                spatial_coverage else None)
 
     metadata_form = ExtendedMetadataForm(resource_mode='edit' if can_change else 'view',
-                                 extended_metadata_layout=extended_metadata_layout)
+                                         extended_metadata_layout=extended_metadata_layout)
 
     context = {
                'resource_edit_mode': resource_edit,
@@ -376,16 +413,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
-               'current_user': user,               
+               'current_user': user,
                'show_content_files': show_content_files,
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy'
-                                              and type_value != 'isVersionOf'
-                                              and type_value != 'hasPart'),
+                                              if type_value != 'isReplacedBy' and
+                                              type_value != 'isVersionOf' and
+                                              type_value != 'hasPart'),
                'is_resource_specific_tab_active': False,
                'belongs_to_collections': belongs_to_collections
     }
@@ -395,7 +432,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 def check_resource_mode(request):
     """
-    Determines whether the `request` represents an attempt to edit a resource. A request is considered an attempt
+    Determines whether the `request` represents an attempt to edit a resource.
+    A request is considered an attempt
     to edit if any of the following conditions are met:
         1. the HTTP verb is not "GET"
         2. the HTTP verb is "GET" and the 'resource-mode' property is set to 'edit'
