@@ -173,6 +173,9 @@ STATICFILES_FINDERS = (
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 
+# Alternative tmp folder
+FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+
 #############
 # DATABASES #
 #############
