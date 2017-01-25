@@ -85,19 +85,28 @@ class SupportedResTypes(AbstractMetaDataElement):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
 
     @classmethod
+    def _add_supported_res_type(cls, meta_instance, res_type):
+        if isinstance(res_type, int):
+            # "copy res" or "create a new version"
+            qs = SupportedResTypeChoices.objects.filter(id=res_type)
+            if not qs.exists():
+                raise
+            meta_instance.supported_res_types.add(qs[0])
+        else:
+            # create or update res
+            qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type)
+            if qs.exists():
+                meta_instance.supported_res_types.add(qs[0])
+            else:
+                meta_instance.supported_res_types.create(description=res_type)
+
+    @classmethod
     def create(cls, **kwargs):
         if 'supported_res_types' in kwargs:
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedResTypes.objects.create(content_object=metadata_obj)
             for res_type_str in kwargs['supported_res_types']:
-                if isinstance(res_type_str, int):
-                    qs = SupportedResTypeChoices.objects.filter(id=res_type_str)
-                else:
-                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
-                if qs.exists():
-                    new_meta_instance.supported_res_types.add(qs[0])
-                else:
-                    new_meta_instance.supported_res_types.create(description=res_type_str)
+                cls._add_supported_res_type(new_meta_instance, res_type_str)
             return new_meta_instance
         else:
             raise ValidationError("No supported_res_types parameter was found in the **kwargs list")
@@ -109,11 +118,7 @@ class SupportedResTypes(AbstractMetaDataElement):
         if 'supported_res_types' in kwargs:
             meta_instance.supported_res_types.clear()
             for res_type_str in kwargs['supported_res_types']:
-                qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
-                if qs.exists():
-                    meta_instance.supported_res_types.add(qs[0])
-                else:
-                    meta_instance.supported_res_types.create(description=res_type_str)
+                cls._add_supported_res_type(meta_instance, res_type_str)
             meta_instance.save()
         else:
             raise ValidationError("No supported_res_types parameter was found in the **kwargs list")
@@ -138,21 +143,28 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])
 
     @classmethod
+    def _add_sharing_status(cls, meta_instance, sharing_status):
+        if isinstance(sharing_status, int):
+            # "copy res" or "create a new version"
+            qs = SupportedSharingStatusChoices.objects.filter(id=sharing_status)
+            if not qs.exists():
+                raise
+            meta_instance.sharing_status.add(qs[0])
+        else:
+            # create or update res
+            qs = SupportedSharingStatusChoices.objects.filter(description__iexact=sharing_status)
+            if qs.exists():
+                meta_instance.sharing_status.add(qs[0])
+            else:
+                meta_instance.sharing_status.create(description=sharing_status)
+
+    @classmethod
     def create(cls, **kwargs):
         if 'sharing_status' in kwargs:
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedSharingStatus.objects.create(content_object=metadata_obj)
             for sharing_status in kwargs['sharing_status']:
-                if isinstance(sharing_status, int):
-                     qs = SupportedSharingStatusChoices.\
-                        objects.filter(id=sharing_status)
-                else:
-                    qs = SupportedSharingStatusChoices.\
-                        objects.filter(description__iexact=sharing_status)
-                if qs.exists():
-                    new_meta_instance.sharing_status.add(qs[0])
-                else:
-                    new_meta_instance.sharing_status.create(description=sharing_status)
+                cls._add_sharing_status(new_meta_instance, sharing_status)
             return new_meta_instance
         else:
             raise ValidationError("No sharing_status parameter was found in the **kwargs list")
@@ -163,12 +175,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         if 'sharing_status' in kwargs:
             meta_instance.sharing_status.clear()
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.\
-                    objects.filter(description__iexact=sharing_status)
-                if qs.exists():
-                    meta_instance.sharing_status.add(qs[0])
-                else:
-                    meta_instance.sharing_status.create(description=sharing_status)
+                cls._add_sharing_status(meta_instance, sharing_status)
             meta_instance.save()
         else:
             raise ValidationError("No sharing_status parameter "
