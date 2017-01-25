@@ -50,7 +50,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             title='Model Program Resource 2'
         )
 
-        self.temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkstemp()
         self.file_name = "MIR.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')

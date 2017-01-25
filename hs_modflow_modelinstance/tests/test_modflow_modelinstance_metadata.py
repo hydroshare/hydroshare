@@ -51,7 +51,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             title='Model Program Resource 2'
         )
 
-        self.temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkstemp()
 
         d = 'hs_modflow_modelinstance/tests/modflow_example/'
         self.file_list = []

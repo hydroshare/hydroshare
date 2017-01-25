@@ -290,7 +290,7 @@ def read_bag(bag_path):
                 msg = "Expected bag to have MIME type application/zip, " \
                       "but it has {0} instead.".format(mtype[0])
                 raise HsBagitException(msg)
-            tmpdir = tempfile.mkdtemp()
+            tmpdir = tempfile.mkstemp()
             zfile = zipfile.ZipFile(bag_path)
             zroot = zfile.namelist()[0].split(os.sep)[0]
             zfile.extractall(tmpdir)
