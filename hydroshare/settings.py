@@ -489,7 +489,7 @@ PASSWORD_RESET_TIMEOUT_DAYS = 1
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
-TEMP_FILE_DIR = '/tmp'
+TEMP_FILE_DIR = '/hs_tmp'
 
 ####################
 # OAUTH TOKEN SETTINGS #
