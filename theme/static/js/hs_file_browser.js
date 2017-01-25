@@ -144,6 +144,8 @@ function updateSelectionMenuContext() {
         if(logicalFileType === "GeoRasterLogicalFile"){
             flagDisableDelete = true;
             flagDisableRename = true;
+            flagDisableCut = true;
+            flagDisablePaste = true;
         }
     }
 

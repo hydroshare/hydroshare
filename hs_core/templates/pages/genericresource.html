@@ -85,7 +85,7 @@
                         {% endif %}
 
                         {% if page.perms.change and metadata_form %}
-                            {% if cm|resource_type == "Generic" %}
+                            {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
                                 <li id="btn-cut" data-menu-name="cut">
                                     <span class="fa fa-scissors icon-blue"></span>
                                     <span>Cut</span>
@@ -329,7 +329,7 @@
                                                         </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
                                                             <button id="fb-cut"
                                                                     class="disabled"
                                                                     title="Cut">
