@@ -150,7 +150,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
         # populate CV metadata django models from the blank sqlite file
 
         # copy the blank sqlite file to a temp directory
-        temp_dir = tempfile.mkstemp()
+        _, temp_dir = tempfile.mkstemp()
         odm2_sqlite_file_name = 'ODM2.sqlite'
         odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
         target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)

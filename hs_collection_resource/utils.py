@@ -98,7 +98,7 @@ def update_collection_list_csv(collection_obj):
                 csv_content_list.append(csv_data_row)
 
             # create a new csv on django server
-            tmp_dir = tempfile.mkstemp()
+            _, tmp_dir = tempfile.mkstemp()
             csv_full_path = os.path.join(tmp_dir, csv_full_name)
             with open(csv_full_path, 'w') as csv_file_handle:
                 w = csv.writer(csv_file_handle)

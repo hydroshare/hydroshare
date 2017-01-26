@@ -42,7 +42,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         self.factory = RequestFactory()
 
-        self.temp_dir = tempfile.mkstemp()
+        _, self.temp_dir = tempfile.mkstemp()
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_file_types/tests/{}'.format(self.raster_file_name)
         target_temp_raster_file = os.path.join(self.temp_dir, self.raster_file_name)

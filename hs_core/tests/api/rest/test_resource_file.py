@@ -16,7 +16,7 @@ class TestResourceFile(HSRESTTestCase):
     def setUp(self):
         super(TestResourceFile, self).setUp()
 
-        self.tmp_dir = tempfile.mkstemp()
+        _, self.tmp_dir = tempfile.mkstemp()
 
         # Make a text file
         self.txt_file_name = 'text.txt'

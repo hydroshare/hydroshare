@@ -26,7 +26,7 @@ for res in RasterResource.objects.all():
     temp_dir = ''
     res_file_tmp_path = ''
     try:
-        temp_dir = tempfile.mkstemp()
+        _, temp_dir = tempfile.mkstemp()
         for res_file in res.files.all():
             res_file_tmp_path = get_file_from_irods(res_file)
             shutil.copy(res_file_tmp_path,

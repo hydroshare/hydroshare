@@ -113,7 +113,7 @@ def time_series_from_service(request):
             variable_name = ts['variable_name']
             noDataValue = ts['noDataValue']
 
-            tempdir = tempfile.mkstemp()
+            _, tempdir = tempfile.mkstemp()
             ts_utils.create_vis_2(path=tempdir, data=data, xlabel='Date',
                                 variable_name=variable_name, units=units, noDataValue=noDataValue,
                                 predefined_name=PREVIEW_NAME)
@@ -224,7 +224,7 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
         path = "bags/" + str(shortkey) + ".zip"
         response_irods = download_bag_from_irods(request, path, use_async=False)
 
-        tempdir = tempfile.mkstemp()
+        _, tempdir = tempfile.mkstemp()
         response = assemble_refts_bag(shortkey, response_irods.streaming_content,
                                       temp_dir=tempdir)
 
@@ -253,7 +253,7 @@ def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
         if not response_irods.streaming:
             raise Exception("Failed to stream RefTS bag")
         else:
-            tempdir = tempfile.mkstemp()
+            _, tempdir = tempfile.mkstemp()
             response = assemble_refts_bag(shortkey, response_irods.streaming_content,
                                           temp_dir=tempdir)
             return response
@@ -278,7 +278,7 @@ def assemble_refts_bag(res_id, empty_bag_stream, temp_dir=None):
     :return: FileResponse obj
     """
     if temp_dir is None:
-        temp_dir = tempfile.mkstemp()
+        _, temp_dir = tempfile.mkstemp()
     bag_save_to_path = temp_dir + "/" + str(res_id) + ".zip"
 
     with open(bag_save_to_path, 'wb+') as f:
