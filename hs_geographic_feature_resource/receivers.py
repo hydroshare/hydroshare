@@ -93,7 +93,7 @@ def check_uploaded_files_type(file_info_list):
         uploaded_file_type = "shp"
         files_type_dict["uploaded_file_type"] = uploaded_file_type
         # create a temp folder and copy shapefiles
-        _, tmp_dir = tempfile.mkstemp()
+        tmp_dir = tempfile.mkdtemp()
         files_type_dict["tmp_dir"] = tmp_dir
         baseFilename = None
         for f_info in file_info_list:
@@ -125,7 +125,7 @@ def check_uploaded_files_type(file_info_list):
     elif is_zipped_shapefiles(file_info_list):
         uploaded_file_type = "zipped_shp"
         files_type_dict["uploaded_file_type"] = uploaded_file_type
-        _, tmp_dir = tempfile.mkstemp()
+        tmp_dir = tempfile.mkdtemp()
         files_type_dict["tmp_dir"] = tmp_dir
         zipfile_path = file_info_list[0][1]
         zf = zipfile.ZipFile(zipfile_path, 'r')
@@ -662,7 +662,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
         if found_prj and (not found_shp):
             res_file_list = resource.files.all()
             if res_file_list:
-                _, tmp_dir = tempfile.mkstemp()
+                tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
                     if res_f.resource_file:
                         # file is stored on hs irods

@@ -1065,7 +1065,7 @@ class ZipContents(object):
         return file_name == '.DS_Store'
 
     def get_files(self):
-        _, temp_dir = tempfile.mkstemp()
+        temp_dir = tempfile.mkdtemp()
         try:
             file_path = None
             for name_path in self.zip_file.namelist():

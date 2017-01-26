@@ -684,7 +684,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
             raise ValidationError(detail=error_msg)
 
         # Temp directory to store resourcemetadata.xml
-        _, tmp_dir = tempfile.mkstemp()
+        tmp_dir = tempfile.mkdtemp()
         try:
             # Fake the bag structure so that GenericResourceMeta.read_metadata_from_resource_bag
             # can read and validate the system and science metadata for us.

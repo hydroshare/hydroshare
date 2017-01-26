@@ -35,7 +35,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test Generic File Metadata'
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.generic_file_name = 'generic_file.txt'
         self.raster_zip_file_name = 'logan_vrt_small.zip'
         self.generic_file = 'hs_file_types/tests/{}'.format(self.generic_file_name)

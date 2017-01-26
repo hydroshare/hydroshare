@@ -34,7 +34,7 @@ class TestUpdateSQLiteFile(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.odm2_sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
         target_temp_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_file_name)

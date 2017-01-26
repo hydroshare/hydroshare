@@ -46,7 +46,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             metadata=metadata
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.raster_tif_file_name = 'raster_tif_valid.tif'
         self.raster_tif_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_tif_file_name)
         target_temp_raster_tif_file = os.path.join(self.temp_dir, self.raster_tif_file_name)

@@ -35,14 +35,14 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             title='Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010'
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.netcdf_file_name_crs = 'netcdf_valid_crs.nc'
         self.netcdf_file_crs = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name_crs)
         target_temp_netcdf_file_crs = os.path.join(self.temp_dir, self.netcdf_file_name_crs)

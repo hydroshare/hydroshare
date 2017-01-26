@@ -22,7 +22,7 @@ class TestResourceMap(ResMapTestCase):
 
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
-        _, self.tmp_dir = tempfile.mkstemp()
+        self.tmp_dir = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)

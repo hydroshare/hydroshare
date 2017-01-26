@@ -29,7 +29,7 @@ class TestScienceMetadata(SciMetaTestCase):
     def test_put_scimeta_generic(self):
         # Update science metadata XML
         abstract_text = "This is an abstract"
-        _, tmp_dir = tempfile.mkstemp()
+        tmp_dir = tempfile.mkdtemp()
 
         try:
             # Get science metadata

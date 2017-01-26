@@ -87,7 +87,7 @@ class TestCopyResource(TestCase):
 
         # create a raster resource that represents a specific resource type
         raster_file = 'hs_core/tests/data/cea.tif'
-        _, temp_dir = tempfile.mkstemp()
+        temp_dir = tempfile.mkdtemp()
         self.temp_raster_file = os.path.join(temp_dir, 'cea.tif')
         shutil.copy(raster_file, self.temp_raster_file)
         self.raster_obj = open(self.temp_raster_file, 'r')

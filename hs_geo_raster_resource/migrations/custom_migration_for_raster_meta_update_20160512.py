@@ -31,7 +31,7 @@ def migrate_tif_file(apps, schema_editor):
         if res.files.all():
             # copy all the resource files to temp dir
             try:
-                _, temp_dir = tempfile.mkstemp()
+                temp_dir = tempfile.mkdtemp()
                 for res_file in res.files.all():
                     shutil.copy(res_file.resource_file.file.name,
                                 os.path.join(temp_dir, os.path.basename(res_file.resource_file.name)))

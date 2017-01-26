@@ -34,7 +34,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test Model Program Resource'
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.file_name = "MP.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')

@@ -21,7 +21,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestCreateResource, self).setUp()
 
-        _, self.tmp_dir = tempfile.mkstemp()
+        self.tmp_dir = tempfile.mkdtemp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(

@@ -28,7 +28,7 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
         model_prog_name_2 = self.title_prog
         model_prog_id_1 = 'None'
         model_prog_id_2 = self.pid_prog
-        _, tmp_dir = tempfile.mkstemp()
+        tmp_dir = tempfile.mkdtemp()
 
         res = resource.create_resource('SWATModelInstanceResource',
                                        self.user,

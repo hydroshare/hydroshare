@@ -29,7 +29,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
-        _, self.temp_dir = tempfile.mkstemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.raster_file_name = 'small_logan.tif'
         self.raster_file = 'hs_composite_resource/tests/data/{}'.format(self.raster_file_name)
         self.generic_file_name = 'generic_file.txt'
