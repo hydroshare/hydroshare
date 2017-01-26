@@ -249,7 +249,10 @@ def get_file_from_irods(res_file):
     :return: location of the copied file
     """
     res = res_file.resource
-    istorage = res.get_irods_storage()
+    if res_file.fed_resource_file or res_file.fed_resource_file_name_or_path:
+        istorage = IrodsStorage('federated')
+    else:
+        istorage = IrodsStorage()
     if res_file.resource_file:
         res_file_path = res_file.resource_file.name
         file_name = os.path.basename(res_file.resource_file.name)
@@ -289,10 +292,11 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
 
     ori_res = original_resource_file.resource
-    istorage = ori_res.get_irods_storage()
     if original_resource_file.resource_file:
+        istorage = IrodsStorage()
         destination_file = original_resource_file.resource_file.name
     else:
+        istorage = IrodsStorage('federated')
         if original_resource_file.fed_resource_file:
             destination_file = original_resource_file.fed_resource_file.name
         else:

@@ -249,7 +249,7 @@ class BaseCreatorFormSet(BaseFormSet):
         creators_data = []
         for form in self.forms:
             creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
-            if len(creator_data) > 0:
+            if creator_data:
                 creators_data.append({'creator': creator_data})
 
         return creators_data
@@ -318,7 +318,7 @@ class BaseContributorFormSet(BaseFormSet):
         contributors_data = []
         for form in self.forms:
             contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
-            if len(contributor_data) > 0:
+            if contributor_data:
                 contributors_data.append({'contributor': contributor_data})
 
         return contributors_data

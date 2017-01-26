@@ -179,42 +179,6 @@ def list_users(query=None, status=None, start=None, count=None):
     return qs
 
 
-# Pabitra: This one seems to be not used anywhere. Can I delete it?
-def list_groups(query=None, start=None, count=None):
-    """
-    List the groups that match search criteria.
-
-    REST URL:  GET /groups?query={query}[&status={status}&start={start}&count={count}]
-
-    Parameters:
-    query - a string specifying the query to perform
-    start=0 - (optional) the zero-based index of the first value, relative to the first record of the resultset that
-        matches the parameters
-    count=100 - (optional) the maximum number of results that should be returned in the response
-
-    Returns: An object containing a list of groupIDs that match the query. If none match, an empty list is returned.
-
-    Return Type: groupList
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exception.ServiceFailure - The service is unable to process the request
-
-    implementation notes: status parameter is unused.  unsure of group status.
-
-    """
-    query = json.loads(query) if isinstance(query, basestring) else query
-    qs = Group.objects.filter(**query)
-    if start and count:
-        qs = qs[start:start+count]
-    elif start:
-        qs = qs[start:]
-    elif count:
-        qs = qs[:count]
-
-    return qs
-
-
 def set_group_active_status(user, group_id, status):
     """
     This sets the group active status to True or False
