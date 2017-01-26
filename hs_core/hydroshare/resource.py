@@ -1186,7 +1186,7 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
-    if not resource.can_be_published():
+    if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
                               "metadata or content files or this resource type is not allowed "
                               "for publication.")
