@@ -151,7 +151,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                 raise
             meta_instance.sharing_status.add(qs[0])
         else:
-            # create or update res 
+            # create or update res
             qs = SupportedSharingStatusChoices.objects.filter(description__iexact=sharing_status)
             if qs.exists():
                 meta_instance.sharing_status.add(qs[0])
