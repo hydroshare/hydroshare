@@ -63,6 +63,17 @@ class BaseMetaDataElement(models.Model):
         element.data = kwargs['data']
         element.save()
 
+
+class Coverage(BaseMetaDataElement):
+    objects = MetaDataManager("Coverage")
+
+    class Meta:
+        verbose_name = "Coverage"
+        proxy = True
+
+    # TODO: Implement rest of this class similar to OriginalCoverage (below) and based on
+    # the 'Coverage' element in hs_core
+
 class OriginalCoverage(BaseMetaDataElement):
     objects = MetaDataManager("OriginalCoverage")
 
@@ -224,22 +235,28 @@ class Variable(BaseMetaDataElement):
 
 
 class NetCDFFileMetaData(AbstractFileMetaData):
-    __metadata_element_classes ={'originalcoverage': OriginalCoverage, 'variable': Variable}
 
     def create_element(self, element_name, **kwargs):
-        if element_name not in self.get_supported_element_names():
-            raise ValidationError("'{}' is not a supported metadata element.".format(element_name))
+        if element_name.lower() not in self.get_supported_element_names():
+            raise ValidationError("{} is not a supported metadata element.".format(element_name))
 
         kwargs['element_type'] = element_name
         kwargs['metadata'] = self
-        return self.__metadata_element_classes[element_name.lower()].create(**kwargs)
+        return self.get_metadata_element_classes()[element_name.lower()].create(**kwargs)
 
     def update_element(self, element_id, **kwargs):
         element = BaseMetaDataElement.objects.get(id=element_id)
         kwargs['element_type'] = element.element_type
         kwargs['metadata'] = self
-        return self.__metadata_element_classes[element.element_type.lower()].update(element_id,
-                                                                                    **kwargs)
+        return self.get_metadata_element_classes()[element.element_type.lower()].update(
+            element_id, **kwargs)
+
+    @classmethod
+    def get_metadata_element_classes(cls):
+        classes = {}
+        classes['originalcoverage'] = OriginalCoverage
+        classes['variable'] = Variable
+        return classes
 
     @property
     def original_coverage(self):
@@ -251,7 +268,7 @@ class NetCDFFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def get_supported_element_names(cls):
-        return ['OriginalCoverage', 'Variable']
+        return ['originalcoverage', 'variable', 'coverage']
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -360,16 +377,17 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                              'value': res_dublin_core_meta['references']}}
                     resource_metadata.append(relation)
 
+                # TODO: Need to first implment a Coverage element based on HStore field
                 # add coverage - period
-                if res_dublin_core_meta.get('period'):
-                    period = {
-                        'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-                    file_type_metadata.append(period)
+                # if res_dublin_core_meta.get('period'):
+                #     period = {
+                #         'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
+                #     file_type_metadata.append(period)
 
                 # add coverage - box
-                if res_dublin_core_meta.get('box'):
-                    box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-                    file_type_metadata.append(box)
+                # if res_dublin_core_meta.get('box'):
+                #     box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
+                #     file_type_metadata.append(box)
 
                 # add rights
                 # TODO: Should we be overriding the resource level rights metadata each time a
@@ -388,7 +406,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     for element, value in var_meta.items():
                         if value != '':
                             meta_info[element] = value
-                    file_type_metadata.append({'variable': meta_info})
+                    file_type_metadata.append({'variable': {'data': meta_info}})
 
                 # Save extended meta to original spatial coverage
                 if res_dublin_core_meta.get('original-box'):
@@ -396,7 +414,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     if res_dublin_core_meta.get('projection-info'):
                         coverage_data['projection_string_type'] = res_dublin_core_meta[
                             'projection-info']['type']
-                        # CONTINUE HERE >>>>
                         coverage_data['projection_string_text'] = res_dublin_core_meta[
                             'projection-info']['text']
                         coverage_data['datum'] = res_dublin_core_meta['projection-info']['datum']

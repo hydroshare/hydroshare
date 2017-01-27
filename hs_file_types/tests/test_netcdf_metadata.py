@@ -43,7 +43,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.temp_dir = tempfile.mkdtemp()
-        self.netcdf_file_name = 'test_netcdf_file.nc'
+        self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_file_types/tests/{}'.format(self.netcdf_file_name)
 
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
@@ -54,6 +54,28 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         super(NetCDFFileTypeMetaDataTest, self).tearDown()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
+
+    def test_set_file_type_to_netcdf(self):
+        # here we are using a valid raster tif file for setting it
+        # to Geo Raster file type which includes metadata extraction
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that there is one GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # set the tif file to GeoRasterFile type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # There should be now 2 files
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # TODO: test extracted netcdf file type metadata
 
     def test_netcdf_metadata_CRUD(self):
         # here we are using a valid raster tif file for setting it
@@ -125,3 +147,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test NetCDF File Type Metadata',
             files=(uploaded_file,)
         )
+
+        # set the logical file
+        resource_post_create_actions(resource=self.composite_resource, user=self.user,
+                                     metadata=self.composite_resource.metadata)
