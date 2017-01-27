@@ -16,8 +16,6 @@ from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 
-from django_irods.storage import IrodsStorage
-
 
 class HsBagitException(Exception):
     pass
@@ -33,14 +31,12 @@ def delete_bag(resource):
     """
     res_id = resource.short_id
 
-    res_path = res_id
+    res_path = resource.root_path
     bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_path = '{}/{}'.format(resource.resource_federation_path, res_path)
         bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
-    else:
-        istorage = IrodsStorage()
+
     # delete resource directory first to remove all generated bag-related files for the resource
     istorage.delete(res_path)
 
