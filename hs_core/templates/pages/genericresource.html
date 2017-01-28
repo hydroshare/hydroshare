@@ -1505,22 +1505,28 @@
             $(event.target).closest(".tag").remove();
             updateKeywords();
             metadata_update_ajax_submit('id-subject');
+            $("#id-keywords-msg").hide();
         }
 
         function onAddKeyword(event) {
             var keyword = $("#txt-keyword").val();
             keyword = keyword.split(",");
-
+            var existsNewKeywords = false;
             for (var i = 0; i < keyword.length; i++) {
                 keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
                 var exists = false;
                 // Check if the keyword already exists
                 for (var x = 0; x < $("#lst-tags").find(".tag > span").length; x++) {
-                    if ($($("#lst-tags").find(".tag > span")[x]).text() == keyword[i]) {
+                    if ($($("#lst-tags").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
                         exists = true;
                     }
                 }
-
+                if (exists){
+                    $("#id-keywords-msg").show();
+                }
+                else {
+                    $("#id-keywords-msg").hide();
+                }
                 // If does not exist, add it
                 if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
                     var li = $("<li class='tag'><span></span></li>");
@@ -1530,11 +1536,14 @@
 
                     $(".icon-remove").click(onRemoveKeyword);
                     updateKeywords();
+                    existsNewKeywords = true;
                 }
             }
 
             $("#txt-keyword").val("");  // Clear text input
-            metadata_update_ajax_submit('id-subject');
+            if(existsNewKeywords){
+                metadata_update_ajax_submit('id-subject');
+            }
         }
 
         function updateKeywords() {
