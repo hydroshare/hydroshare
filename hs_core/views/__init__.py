@@ -896,7 +896,7 @@ def create_resource(request, *args, **kwargs):
             source_names=source_names,
             # TODO: need better name for this
             fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
-            fed_copy_or_move=fed_copy_or_move,
+            move=(fed_copy_or_move == 'move'), 
             content=res_title
     )
     # except Exception as ex:

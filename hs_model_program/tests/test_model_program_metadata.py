@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.hydroshare import utils
+from hs_core.hydroshare import utils, resource
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -35,14 +35,23 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.temp_dir = tempfile.mkdtemp()
+
         self.file_name = "MP.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Program resource files")
         self.text_file_obj = open(temp_text_file, 'r')
 
+        self.file_name_2 = "MQ.txt"
+        temp_text_file = os.path.join(self.temp_dir, self.file_name_2)
+        text_file = open(temp_text_file, 'w')
+        text_file.write("Model Program resource files")
+        self.text_file_obj_2 = open(temp_text_file, 'r')
+
     def tearDown(self):
         super(TestModelProgramMetaData, self).tearDown()
+        # for f in self.resModelProgram.files.all(): 
+        #     resource.delete_resource_file(self.resModelProgram.short_id, f.short_path, self.user) 
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -53,7 +62,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should not be any content file
         self.assertEquals(self.resModelProgram.files.all().count(), 0)
 
-        # Upload any file type should pass both the file pre add check post add check
+        # Upload any file type should pass both the file pre add check and post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
@@ -67,8 +76,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that there are no extended metadata elements at this point
         self.assertEquals(self.resModelProgram.metadata.program, None)
 
-        # Upload any other file type should pass both the file pre add check post add check
-        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        # Uploading any other file type should pass both the file pre add check post add check
+        files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=True)
 

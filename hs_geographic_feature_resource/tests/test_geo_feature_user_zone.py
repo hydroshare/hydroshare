@@ -100,7 +100,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
             files=res_upload_files,
             source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-            fed_copy_or_move='copy',
+            move=False,
             metadata=metadata)
 
         # test metadata is deleted after content file is deleted in user zone space

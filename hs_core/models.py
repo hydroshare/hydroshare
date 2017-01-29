@@ -1567,8 +1567,9 @@ def get_resource_path(resource, filename, folder=None):
     to do this.
 
     """
-    # strip qualifications off of folder if necessary
+    # folder can be absolute pathname; strip qualifications off of folder if necessary
     if folder is not None and folder.startswith(resource.root_path): 
+        # TODO: does this now start with /? 
         folder = folder[len(resource.root_path):] 
     if folder == '': 
         folder = None
@@ -1656,13 +1657,13 @@ class ResourceFile(models.Model):
 
         * uploading a file from a form or REST call:
 
-                ResourceFile.create(resource=r, file=File(...something...), folder=d)
+                ResourceFile.create(r, File(...something...), folder=d)
 
         * copying a file internally from iRODS:
 
-                ResourceFile.create(resource=r, file=name, folder=d, source=s, move=True)
+                ResourceFile.create(r, file_name, folder=d, source=s, move=True)
           or
-                ResourceFile.create(resource=r, file=name, folder=d, source=s, move=False)
+                ResourceFile.create(r, file_name, folder=d, source=s, move=False)
 
         In this case, source is a full iRODS pathname of the place from which to copy or move
         the file. The default is to copy the file and leave a copy in place.
@@ -1671,7 +1672,7 @@ class ResourceFile(models.Model):
 
         * pointing to an existing file:
 
-                ResourceFile.create(resource=r, file=name, folder=d)
+                ResourceFile.create(r, file_name, folder=d)
 
         """
         # bind to appropriate resource
@@ -1718,16 +1719,21 @@ class ResourceFile(models.Model):
     # # Semantics are cascade delete.
     # # However, there is no delete for the directory in which the
     # # resource files are stored. This must be handled at the resource level.
-    # def delete(self):
-    #     """ Delete a resource file record and the file contents """
-    #     if __debug__:
-    #         assert self.exists
-    #     super(ResourceFile, self).delete()
+    def delete(self):
+        """ Delete a resource file record and the file contents """
+        if __debug__:
+            assert self.exists
+        if self.fed_resource_file: 
+            self.fed_resource_file.delete()
+        if self.resource_file: 
+            self.resource_file.delete() 
+        super(ResourceFile, self).delete()
 
     @property
     def resource(self):
         return self.content_object
 
+    # TODO: write unit test
     @property
     def size(self):
         if self.resource.resource_federation_path:
@@ -1741,18 +1747,20 @@ class ResourceFile(models.Model):
                        self.fed_resource_file.name == ''
             return self.resource_file.size()
 
+    # TODO: write unit test
     @property
     def exists(self):
+        istorage = self.resource.get_irods_storage()
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
                        self.resource_file.name == ''
-            return self.fed_resource_file.exists()
+            return istorage.exists(self.fed_resource_file.name)
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                        self.fed_resource_file.name == ''
-            return self.resource_file.exists()
+            return istorage.exists(self.resource_file.name)
 
     @property
     def storage_path(self):

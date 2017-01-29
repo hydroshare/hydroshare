@@ -63,7 +63,7 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='My Test TimeSeries Resource',
             source_names=[fed_test_file_full_path],
-            fed_copy_or_move='copy'
+            move=False
         )
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 

@@ -354,7 +354,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names=[], fed_res_path='', fed_copy_or_move=None,
+        files=(), source_names=[], fed_res_path='', move=False, 
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
@@ -401,14 +401,15 @@ def create_resource(
     :param extra_metadata: one dict containing keys and corresponding values { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param source_names: the file names separated by comma from a federated zone to be
-                               used to create the resource in the federated zone, default is empty string
+         used to create the resource in the federated zone, default is empty string
     :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
-                         indicate where the resource is stored, default is empty string
-    :param fed_copy_or_move: a string value of 'copy' or 'move' indicating whether the content files
-                             should be copied or moved to localHydroProxy space. default is None
-    :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
+         indicate where the resource is stored, default is empty string
+    :param move: a value of False or True indicating whether the content files
+         should be erased from the source directory. default is False.
+    :param create_bag: whether to create a bag for the newly created resource or not. 
+        By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
-                        the unpacked contents of the zip file will be added to the resource instead of the zip file.
+        the unpacked contents of the zip file will be added to the resource instead of the zip file.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -465,7 +466,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, source_names=source_names,
-                               fed_copy_or_move=fed_copy_or_move)
+                               move=move)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -568,7 +569,7 @@ def create_new_version_resource(ori_res, new_res, user):
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
         folder, base = f.parse()
-        ResourceFile.create(resource=new_res, folder=folder, file=base) 
+        ResourceFile.create(new_res, base, folder=folder) 
 
     # copy metadata from source resource to target new-versioned resource except three elements
     exclude_elements = ['identifier', 'publisher', 'date']
@@ -614,7 +615,7 @@ def create_new_version_resource(ori_res, new_res, user):
     new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
 
     # create bag for the new resource
-    hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
+    hs_bagit.create_bag(new_res)
 
     # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
     utils.resource_modified(ori_res, user)
@@ -670,8 +671,8 @@ def update_resource(
         ResourceFile.objects.filter(object_id=resource.id).delete()
         for file in files:
             ResourceFile.create(
-                resource=resource,
-                file=File(file) if not isinstance(file, UploadedFile) else file
+                resource,
+                File(file) if not isinstance(file, UploadedFile) else file
             )
 
     if 'owner' in kwargs:
@@ -748,7 +749,7 @@ def add_resource_files(pk, *files, **kwargs):
     source_names=kwargs.pop('source_names', [])
     # for adding files to existing resources, the default action is copy
     # TODO: rename: this can be used for federated or unfederated files. 
-    fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+    move = kwargs.pop('move', False)
     folder = kwargs.pop('folder', None) 
 
     if __debug__:  # assure that there are no spurious kwargs left. 
@@ -766,7 +767,6 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             return ret
         for ifname in ifnames:
-	    move = (fed_copy_or_move == 'move') 
             ret.append(utils.add_file_to_resource(resource, None, 
 						  folder=folder, 
                                                   source_name=ifname,
@@ -879,7 +879,7 @@ def get_resource_file_name(f):
     return f.storage_path 
 
 
-# TODO: this is overly complex. Use logical file abstraction
+# TODO: this is overly complex and brittle. Use logical file abstraction
 def delete_resource_file_only(resource, f):
     '''
     Delete the single resource file f from the resource without sending signals and
@@ -893,11 +893,12 @@ def delete_resource_file_only(resource, f):
     Returns: unqualified relative path to file that has been deleted
     '''
     short_path = f.short_path
+    print("deleting file {} ({})".format(f.short_path, f.storage_path))
     f.delete()
     return short_path
 
 
-# TODO: this is overly complex. Use recursive delete. 
+# TODO: this is overly complex and brittle. Use recursive delete. 
 def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
@@ -918,7 +919,8 @@ def delete_format_metadata_after_delete_file(resource, file_name):
             resource.metadata.delete_element(format_element.term, format_element.id)
 
 
-# TODO: remove option for file id. Require file short paths to be unique
+# TODO: Remove option for file id to disamiguate between duplicates. 
+# TODO: Require file short paths to be unique, instead. 
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -926,14 +928,14 @@ def delete_resource_file(pk, filename_or_id, user):
 
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
-    Parameters:
-    pk - The unique HydroShare identifier for the resource from which the file will be deleted
-    filename - Name of the file to be deleted from the resource
-    user - requesting user
+    :param pk: The unique HydroShare identifier for the resource from which the file will be deleted
+    :param filename: Name of the file to be deleted from the resource, 
+        as a short path without resource file root. 
+    :param user: requesting user
 
-    Returns:    The pid of the resource from which the file was deleted
+    :returns: The pid of the resource from which the file was deleted
 
-    Return Type:    pid
+    Return Type:  string.
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized

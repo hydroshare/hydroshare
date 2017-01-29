@@ -786,27 +786,24 @@ def create_empty_contents_directory(resource):
 
 
 def add_file_to_resource(resource, f, folder=None, source_name='',
-                         fed_copy_or_move=None):
+                         move=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
     :param source_name: the logical file name of the resource content file for
-                                      federated iRODS resource or the federated zone name;
-                                      By default, it is empty. A non-empty value indicates
-                                      the file needs to be added into the federated zone, either
-                                      from local disk where f holds the uploaded file from local
-                                      disk, or from the federated zone directly where f is empty
-                                      but source_name has the whole data object
-                                      iRODS path in the federated zone
-    :param fed_copy_or_move: indicate whether the file should be copied or moved from private user
-                             account to proxy user account in federated zone; A value of 'copy'
-                             indicates copy is needed, a value of 'move' indicates no copy, but
-                             the file will be moved from private user account to proxy user account.
-                             The default value is None, which indicates N/A, or not applicable,
-                             since the files do not come from a federated zone, and this copy or
-                             move operation is not applicable, but any value other
-                             than 'copy' or 'move' is regarded as N/A.
+                        federated iRODS resource or the federated zone name;
+                        By default, it is empty. A non-empty value indicates
+                        the file needs to be added into the federated zone, either
+                        from local disk where f holds the uploaded file from local
+                        disk, or from the federated zone directly where f is empty
+                        but source_name has the whole data object
+                        iRODS path in the federated zone
+    :param move: indicate whether the file should be copied or moved from private user
+                 account to proxy user account in federated zone; A value of False
+                 indicates copy is needed, a value of True indicates no copy, but
+                 the file will be moved from private user account to proxy user account.
+                 The default value is False.
 
     :return: The identifier of the ResourceFile added.
     """
@@ -816,18 +813,16 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         else: 
             fname = os.path.basename(f.name)
         
-        ret = ResourceFile.create(resource=resource, folder=folder, file=File(f)
-                                  if not isinstance(f, UploadedFile) else f)
+        openfile = File(f) if not isinstance(f, UploadedFile) else f
+        ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
 
-    elif source_name and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
-        move = (fed_copy_or_move == 'move')
+    elif source_name: 
         try:
             # create from existing iRODS file
-            ret = ResourceFile.create(resource=resource, folder=folder,
-                                      source=source_name, move=move)
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
         except SessionException as ex:
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)

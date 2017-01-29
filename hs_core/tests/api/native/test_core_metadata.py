@@ -12,6 +12,7 @@ from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, 
     Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
+from pprint import pprint 
 
 
 class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
@@ -846,6 +847,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
 
+        istorage = res.get_irods_storage()
+        pprint(istorage.listdir(res.root_path))
+
         # there should be not be any format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
 
@@ -858,9 +862,9 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         file_obj_1 = open(res_file_1, "r")
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
 
+        # the two files have the same format
         self.assertEquals(res.files.all().count(), 2) 
 
-        # TODO: why is this; this should not be....
         # there should be one format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()

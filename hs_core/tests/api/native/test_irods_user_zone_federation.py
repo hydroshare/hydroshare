@@ -98,7 +98,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='My Test Generic Resource in User Zone',
             source_names=[fed_test_file_full_path],
-            fed_copy_or_move='move'
+            move=True
         )
 
         self.assertEqual(res.files.all().count(), 1,
@@ -108,7 +108,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         user_path = '/{zone}/home/testuser/'.format(zone=settings.HS_USER_IRODS_ZONE)
         self.assertEqual(res.resource_federation_path, fed_path)
         # test original file in user test zone is removed after resource creation
-        # since 'move' is used for fed_copy_or_move when creating the resource
+        # since True is used for move when creating the resource
         self.assertFalse(self.irods_storage.exists(user_path + self.file_to_be_deleted))
 
         # test resource file deletion
@@ -124,7 +124,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         hydroshare.add_resource_files(
             res.short_id,
             source_names=[fed_test_file1_full_path, fed_test_file2_full_path],
-            fed_copy_or_move='copy',
+            move=False, 
             fed_zone_home_path=res.resource_federation_path)
         # test resource has two files
         self.assertEqual(res.files.all().count(), 2,
@@ -138,7 +138,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(self.file_two in file_list,
                         msg='file 2 has not been added in the resource in user zone')
         # test original two files in user test zone still exist after adding them to the resource
-        # since 'copy' is used for fed_copy_or_move when creating the resource
+        # since False  is used for move when creating the resource
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
         self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
 
@@ -155,7 +155,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='My Original Generic Resource in User Zone',
             source_names=[fed_test_file1_full_path],
-            fed_copy_or_move='copy'
+            move=False
         )
         # make sure ori_res is created in federated user zone
         fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
@@ -187,7 +187,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='My Original Generic Resource in User Zone',
             source_names=[fed_file1_full_path, fed_file2_full_path, fed_file3_full_path],
-            fed_copy_or_move='copy'
+            move=False
         )
         # make sure self.res is created in federated user zone
         fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,

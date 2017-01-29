@@ -385,7 +385,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .shp file (all files will be removed)
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
         # add files first
         files = []
@@ -410,7 +410,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .prj file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
 
@@ -442,7 +442,8 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .xml file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
+            # TODO: raises DoesNotExist because the above delete deleted it. 
             f.delete()
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
 
@@ -470,7 +471,7 @@ class TestGeoFeature(TransactionTestCase):
     def test_post_add_files_to_resource(self):
         # test: add all files
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
 
         # add files first
