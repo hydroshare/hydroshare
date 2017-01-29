@@ -6,30 +6,68 @@ import netCDF4
 
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import HStoreField, ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 
-from base import AbstractFileMetaData, AbstractLogicalFile
+from base import AbstractLogicalFile
 from hs_file_types.nc_functions import nc_utils, nc_meta, nc_dump
+from hs_file_types.forms import VariableValidationForm
 
 
 class MetaDataManager(models.Manager):
-
-    def __init__(self, element_type=None, *args, **kwargs):
-        self.element_type = element_type
+    def __init__(self, file_metadata_type=None, *args, **kwargs):
+        self.file_metadata_type = file_metadata_type
         super(MetaDataManager, self).__init__(*args, **kwargs)
 
     def create(self, *args, **kwargs):
-        if self.element_type is None:
-            kwargs.pop('element_type', None)
+        if self.file_metadata_type is None:
+            kwargs.pop('file_metadata_type', None)
         return super(MetaDataManager, self).create(*args, **kwargs)
 
     def get_queryset(self):
         qs = super(MetaDataManager, self).get_queryset()
+        if self.file_metadata_type:
+            qs = qs.filter(file_metadata_type=self.file_metadata_type)
+        return qs
+
+
+class BaseFileMetaData(models.Model):
+    file_metadata_type = models.CharField(max_length=100, default="Generic")
+    # kye/value metadata
+    extra_metadata = HStoreField(default={})
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+
+    def delete_all_elements(self):
+        self.extra_metadata = {}
+        self.keywords = []
+        self.save()
+
+    @classmethod
+    def get_metadata_element_classes(cls):
+        return {'coverage': Coverage}
+
+    @classmethod
+    def get_supported_element_names(cls):
+        return ['coverage']
+
+
+class MetaDataElementManager(models.Manager):
+
+    def __init__(self, element_type=None, *args, **kwargs):
+        self.element_type = element_type
+        super(MetaDataElementManager, self).__init__(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.element_type is None:
+            kwargs.pop('element_type', None)
+        return super(MetaDataElementManager, self).create(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(MetaDataElementManager, self).get_queryset()
         if self.element_type:
             qs = qs.filter(element_type=self.element_type)
         return qs
@@ -38,7 +76,7 @@ class MetaDataManager(models.Manager):
 class BaseMetaDataElement(models.Model):
     element_type = models.CharField(max_length=100, default="Generic")
     data = HStoreField(default={})
-    metadata = models.ForeignKey('NetCDFFileMetaData')
+    metadata = models.ForeignKey(BaseFileMetaData)
 
     @classmethod
     def validate(cls, update_or_create='create', **kwargs):
@@ -50,7 +88,7 @@ class BaseMetaDataElement(models.Model):
         if not isinstance(data, dict):
             raise ValidationError("Value for data attribute must be a dict")
         metadata = kwargs.get('metadata', None)
-        if metadata is None or not isinstance(metadata, AbstractFileMetaData):
+        if metadata is None or not isinstance(metadata, BaseFileMetaData):
             raise ValidationError("Value for metadata attribute is missing")
 
     @classmethod
@@ -65,7 +103,7 @@ class BaseMetaDataElement(models.Model):
 
 
 class Coverage(BaseMetaDataElement):
-    objects = MetaDataManager("Coverage")
+    objects = MetaDataElementManager("Coverage")
 
     class Meta:
         verbose_name = "Coverage"
@@ -74,8 +112,9 @@ class Coverage(BaseMetaDataElement):
     # TODO: Implement rest of this class similar to OriginalCoverage (below) and based on
     # the 'Coverage' element in hs_core
 
+
 class OriginalCoverage(BaseMetaDataElement):
-    objects = MetaDataManager("OriginalCoverage")
+    objects = MetaDataElementManager("OriginalCoverage")
 
     class Meta:
         verbose_name = "Original Coverage"
@@ -96,47 +135,27 @@ class OriginalCoverage(BaseMetaDataElement):
 
         data = kwargs['data']
         # TODO: need to validate the value for each of the limits are within correct range
-        if 'northlimit' not in data:
-            raise ValidationError("Value for 'northlimit' is missing.")
-        else:
-            try:
-                float(data['northlimit'])
-            except ValueError:
-                raise ValidationError("Value for 'northlimit' must be numeric.")
-
-        if 'southlimit' not in data:
-            raise ValidationError("Value for 'southlimit' is missing.")
-        else:
-            try:
-                float(data['southlimit'])
-            except ValueError:
-                raise ValidationError("Value for 'southlimit' must be numeric.")
-
-        if 'eastlimit' not in data:
-            raise ValidationError("Value for 'eastlimit' is missing.")
-        else:
-            try:
-                float(data['eastlimit'])
-            except ValueError:
-                raise ValidationError("Value for 'eastlimit' must be numeric.")
-
-        if 'westlimit' not in data:
-            raise ValidationError("value for 'westlimit' is missing.")
-        else:
-            try:
-                float(data['westlimit'])
-            except ValueError:
-                raise ValidationError("Value for 'westlimit' must be numeric.")
+        # TODO: Do all these validation using form validation (see VariableFormValidation
+        # implemented for the Variable element
+        for key in ('northlimit', 'southlimit', 'eastlimit', 'westlimit'):
+            if key not in data:
+                raise ValidationError("Value for '{key}' is missing.".format(key=key))
+            else:
+                try:
+                    float(data[key])
+                except ValueError:
+                    raise ValidationError("Value for '{key}' must be numeric.".format(key=key))
 
         if 'units' not in data:
             raise ValidationError("Value for 'units' is missing.")
         if not data['units'].strip():
             raise ValidationError("Value for 'units' is missing.")
 
-        for key in ('projection', 'projection_string_type', 'projection_string_text', 'dataum'):
+        for key in ('projection', 'projection_string_type', 'projection_string_text', 'datum'):
             if key in data:
                 if not data[key].strip():
-                    raise ValidationError("Value for '{key}' is missing.".format(key=key))
+                    if key != 'datum':
+                        raise ValidationError("Value for '{key}' is missing.".format(key=key))
                 if key == 'projection_string_type':
                     if data[key] not in ('WKT String', 'Proj4 String'):
                         raise ValidationError("Invalid value found for 'projection_string_type' "
@@ -158,7 +177,7 @@ class OriginalCoverage(BaseMetaDataElement):
 
 
 class Variable(BaseMetaDataElement):
-    objects = MetaDataManager("Variable")
+    objects = MetaDataElementManager("Variable")
 
     class Meta:
         verbose_name = "Variable"
@@ -170,30 +189,9 @@ class Variable(BaseMetaDataElement):
         # creating and updating
         super(Variable, cls).validate(**kwargs)
         data = kwargs['data']
-        for key in data:
-            if key not in ('name', 'unit', 'type', 'shape', 'descriptive_name', 'method',
-                           'missing_value'):
-                raise ValidationError("{key} is not a supported attribute of Variable element")
-
-        for key in ('name', 'unit', 'type', 'shape'):
-            if key not in data:
-                raise ValidationError("Value for '{key}' attribute is missing.".format(key=key))
-            value = data[key]
-            if not value.strip():
-                raise ValidationError("Value for '{key}' attribute is missing.".format(key=key))
-
-            if key == 'type':
-                if data[key] not in ('Char', 'Byte', 'Short', 'Int', 'Float', 'Double', 'Int64',
-                                     'Unsigned Byte', 'Unsigned Short', 'Unsigned Int',
-                                     'Unsigned Int64', 'String', 'User Defined Type', 'Unknown'):
-                    raise ValidationError("Value for '{key}' attribute is of wrong "
-                                          "type.".format(key=key))
-
-        for key in ('descriptive_name', 'method', 'missing_value'):
-            if key in data:
-                value = data[key]
-                if not value.strip():
-                    raise ValidationError("Value for '{key}' attribute is missing.".format(key=key))
+        variable_form = VariableValidationForm(data=data)
+        if not variable_form.is_valid():
+            raise ValidationError(variable_form.errors)
 
     @classmethod
     def create(cls, **kwargs):
@@ -234,7 +232,11 @@ class Variable(BaseMetaDataElement):
         return self.data.get('missing_value', None)
 
 
-class NetCDFFileMetaData(AbstractFileMetaData):
+class NetCDFFileMetaData(BaseFileMetaData):
+    objects = MetaDataManager('NetCDFFileMetaData')
+
+    class Meta:
+        proxy = True
 
     def create_element(self, element_name, **kwargs):
         if element_name.lower() not in self.get_supported_element_names():
@@ -253,7 +255,7 @@ class NetCDFFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def get_metadata_element_classes(cls):
-        classes = {}
+        classes = super(NetCDFFileMetaData, cls).get_metadata_element_classes()
         classes['originalcoverage'] = OriginalCoverage
         classes['variable'] = Variable
         return classes
@@ -268,7 +270,10 @@ class NetCDFFileMetaData(AbstractFileMetaData):
 
     @classmethod
     def get_supported_element_names(cls):
-        return ['originalcoverage', 'variable', 'coverage']
+        element_names = super(NetCDFFileMetaData, cls).get_supported_element_names()
+        element_names.append('originalcoverage')
+        element_names.append('variable')
+        return element_names
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -288,7 +293,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
-        netcdf_metadata = NetCDFFileMetaData.objects.create()
+        netcdf_metadata = NetCDFFileMetaData.objects.create(file_metadata_type='NetCDFFileMetaData')
         return cls.objects.create(metadata=netcdf_metadata)
 
     @classmethod
