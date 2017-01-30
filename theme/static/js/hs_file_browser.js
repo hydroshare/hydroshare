@@ -22,36 +22,44 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
     var extIcon = "fa-file-o";
 
+    var iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>";
+
     if (fileName.lastIndexOf(".")) {
         if (fileTypeExt.toUpperCase() == "PDF") {
-            extIcon = "fa-file-pdf-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
-            extIcon = "fa-file-excel-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
-            extIcon = "fa-file-zip-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-zip-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
-            extIcon = "fa-file-word-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-word-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
-            extIcon = "fa-file-audio-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-audio-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
-            extIcon = "fa-file-movie-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-movie-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
-            extIcon = "fa-file-image-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-image-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "TXT") {
-            extIcon = "fa-file-text-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-text-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
-            extIcon = "fa-file-powerpoint-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-powerpoint-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
-            extIcon = "fa-file-code-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
+        }
+        else if (fileTypeExt.toUpperCase() == "SQLITE") {
+            iconTemplate = "<span class='fa-stack fb-stack fb-stack-database'>" +
+                "<i class='fa fa-file-o fa-stack-2x '></i>" +
+                "<i class='fa fa-database fa-stack-1x'></i>" +
+                "</span>";
         }
     }
 
@@ -62,7 +70,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
     }
     return "<li data-pk='" + pk + "' data-url='" + url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
-        "<span class='fb-file-icon fa " + extIcon + "'></span>" +
+        iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type=" + logical_type + ">" + logical_type + "</span>" +
