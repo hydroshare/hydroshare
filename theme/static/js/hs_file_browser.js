@@ -10,11 +10,11 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
-        "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
-        "<span class='fb-file-name'>" + folderName + "</span>" +
-        "<span class='fb-file-type'>File Folder</span>" +
-        "<span class='fb-file-size'></span>" +
-        "</li>"
+                "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
+                "<span class='fb-file-name'>" + folderName + "</span>" +
+                "<span class='fb-file-type'>File Folder</span>" +
+                "<span class='fb-file-size'></span>" +
+            "</li>"
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
@@ -22,7 +22,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
     var extIcon = "fa-file-o";
 
-    var iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>";
+    var iconTemplate;
 
     if (fileName.lastIndexOf(".")) {
         if (fileTypeExt.toUpperCase() == "PDF") {
@@ -61,6 +61,14 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
                 "<i class='fa fa-database fa-stack-1x'></i>" +
                 "</span>";
         }
+        else {
+            // Default file icon for other file types
+            iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
+        }
+    }
+    else {
+        // Default file icon in case of no file types
+        iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
     }
 
     if (logical_type.length > 0){
