@@ -284,8 +284,6 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
-    "ga_ows",
-    "ga_resources",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -315,8 +313,6 @@ INSTALLED_APPS = (
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'ga_ows',
-    'ga_resources',
     'jquery_ui',
     'rest_framework',
     'django_docker_processes',
