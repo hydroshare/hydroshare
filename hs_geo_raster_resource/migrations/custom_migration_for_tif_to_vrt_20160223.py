@@ -11,7 +11,7 @@ from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
 from hs_geo_raster_resource.models import RasterResource
-from hs_geo_raster_resource.receivers import create_vrt_file
+from hs_file_types.models.raster import create_vrt_file
 
 
 def migrate_tif_file(apps, schema_editor):
@@ -22,9 +22,10 @@ def migrate_tif_file(apps, schema_editor):
         try:
             if len(res.files.all()) == 1:
                 res_file = res.files.all().first()
-                vrt_file_path, temp_dir = create_vrt_file(res_file.resource_file)
+                vrt_file_path = create_vrt_file(res_file.resource_file)
                 if os.path.isfile(vrt_file_path):
-                    files = (UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path)))
+                    files = (UploadedFile(file=open(vrt_file_path, 'r'),
+                                          name=os.path.basename(vrt_file_path)))
                     hydroshare.add_resource_files(res.short_id, files)
 
                     bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
@@ -40,8 +41,10 @@ def migrate_tif_file(apps, schema_editor):
                 else:
                     log.error('Tif file conversion to VRT unsuccessful for resource:ID:{} '
                               'Title:{}'.format(res.short_id, res.metadata.title.value))
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
+
+                if os.path.exists(vrt_file_path):
+                    shutil.rmtree(os.path.dirname(vrt_file_path))
+
         except:
             pass
 

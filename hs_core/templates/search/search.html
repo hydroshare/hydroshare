@@ -243,6 +243,11 @@
                                                  alt="{{ result.object|resource_type }}"
                                                  title="{{ result.object|resource_type }}"
                                                  class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Composite Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                                 alt="{{ result.object|resource_type }}"
+                                                 title="{{ result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
                                         {% endif %}
 
                                         {#  Sharing Status icons #}

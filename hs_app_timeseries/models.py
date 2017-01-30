@@ -639,7 +639,7 @@ class TimeSeriesResource(BaseResource):
             log.info("Blank SQLite file was added.")
 
             # need to do this so that the bag will be regenerated prior to download of the bag
-            utils.resource_modified(self, by_user=user)
+            utils.resource_modified(self, by_user=user, overwrite_bag=False)
         except Exception as ex:
             log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
             raise ex
@@ -792,7 +792,7 @@ class TimeSeriesMetaData(CoreMetaData):
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -925,7 +925,7 @@ class TimeSeriesMetaData(CoreMetaData):
                                                  (processing_level, 'processingLevel'),
                                                  element_fields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(TimeSeriesMetaData, self).delete_all_elements()

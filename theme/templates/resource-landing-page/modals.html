@@ -515,7 +515,7 @@
                 <h4 class="modal-title" id="copy-resource-title">Copy This Resource</h4>
             </div>
             <div class="modal-body">
-                {{ rights.statement }}
+                {{ rights.statement|remove_last_char }} License.
                 <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
                 <p>
                 In copying this resource you are ethically bound to respect the terms of this license.
@@ -678,6 +678,14 @@
             so <strong>Remove</strong> with caution.
         </p>
     </div>
+{%  endblock %}
+
+{%  block wait-for-process-to-complete %}
+    <div id="wait-to-complete" title="Processing ...">
+    <p><span style="float:left; margin:12px 12px 50px 0;"></span>
+        Please wait for the process to complete.
+    </p>
+</div>
 {%  endblock %}
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"

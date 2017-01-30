@@ -36,6 +36,7 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
     SOLR_HOST: solr
+    TMP: /hs_tmp
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"

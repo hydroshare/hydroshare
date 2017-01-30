@@ -15,7 +15,6 @@ import bagit
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
-from django_irods.storage import IrodsStorage
 
 
 class HsBagitException(Exception):
@@ -32,14 +31,12 @@ def delete_bag(resource):
     """
     res_id = resource.short_id
 
-    res_path = res_id
+    res_path = resource.root_path
     bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_path = '{}/{}'.format(resource.resource_federation_path, res_path)
         bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
-    else:
-        istorage = IrodsStorage()
+
     # delete resource directory first to remove all generated bag-related files for the resource
     istorage.delete(res_path)
 
@@ -68,10 +65,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
 
-    if fed_zone_home_path:
-        istorage = IrodsStorage('federated')
-    else:
-        istorage = IrodsStorage()
+    istorage = resource.get_irods_storage()
 
     # has to make bagit_path unique even for the same resource with same update time
     # to accommodate asynchronous multiple file move operations for the same resource
@@ -97,8 +91,10 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # create resourcemetadata.xml and upload it to iRODS
     from_file_name = '{path}/resourcemetadata.xml'.format(path=bagit_path)
     with open(from_file_name, 'w') as out:
-        out.write(resource.metadata.get_xml())
-
+        # resources that don't support file types this would write only resource level metadata
+        # resource types that support file types this would write resource level metadata
+        # as well as file type metadata
+        out.write(resource.get_metadata_xml())
     to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
     if fed_zone_home_path:
         to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
@@ -217,7 +213,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
             rel_path=to_file_name)
 
     istorage.saveFile(from_file_name, to_file_name, False)
-
+    res_coll = resource.root_path
+    istorage.setAVU(res_coll, 'metadata_dirty', "false")
     shutil.rmtree(bagit_path)
     return istorage
 
