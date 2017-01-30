@@ -365,7 +365,6 @@ MIDDLEWARE_CLASSES = (
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
-    "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
 )
 
