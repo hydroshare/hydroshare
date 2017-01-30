@@ -133,7 +133,6 @@ function updateSelectionMenuContext() {
         var fileName = $(selected[i]).children(".fb-file-name").text();
         var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
         var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
-        console.log(logicalFileType);
         if (fileExt.toUpperCase() != "ZIP") {
             flagDisableUnzip = true;
         }
