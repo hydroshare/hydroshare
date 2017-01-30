@@ -276,7 +276,10 @@ class NetCDFFileMetaData(BaseFileMetaData):
         return element_names
 
 
+# TODO: Make this class a proxy of BaseLogicalFile (which yet to be defined)
+# TODO: ResourceFile class should have a FK relation to BaseLogicalFile
 class NetCDFLogicalFile(AbstractLogicalFile):
+    # TODO: This relationship needs to be moved to BaseLogicalFile
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
     data_type = "NetCDF data"
 
@@ -362,7 +365,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # add description
                 if resource.metadata.description is None:
                     if res_dublin_core_meta.get('description'):
-                        description = {'description': {'abstract': res_dublin_core_meta['description']}}
+                        description = {'description': {'abstract':
+                                                           res_dublin_core_meta['description']}}
                         resource_metadata.append(description)
 
                 # add keywords
@@ -382,7 +386,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                              'value': res_dublin_core_meta['references']}}
                     resource_metadata.append(relation)
 
-                # TODO: Need to first implment a Coverage element based on HStore field
+                # TODO: Need to first implement a Coverage element based on HStore field
                 # add coverage - period
                 # if res_dublin_core_meta.get('period'):
                 #     period = {
@@ -444,19 +448,13 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             dump_file_obj.write(dump_str)
 
                         files_to_add_to_resource.append(dump_file)
-                        # # write dump_str to temporary file
-                        # io = StringIO.StringIO()
-                        # io.write(dump_str)
-                        # dump_file_name = nc_file_name + '_header_info.txt'
-                        # dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len,
-                        #                                  None)
-                        # files.append(dump_file)
 
                     with transaction.atomic():
                         # first delete the raster file that we retrieved from irods
                         # for setting it to raster file type
                         delete_resource_file(resource.short_id, res_file.id, user)
-                        # create a geo raster logical file object to be associated with resource files
+                        # create a netcdf logical file object to be associated with
+                        # resource files
                         logical_file = cls.create()
                         # by default set the dataset_name attribute of the logical file to the
                         # name of the file selected to set file type
@@ -464,8 +462,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         logical_file.save()
 
                         try:
-                            # create a folder for the raster file type using the base file name as the
-                            # name for the new folder
+                            # create a folder for the raster file type using the base file
+                            # name as the name for the new folder
                             new_folder_path = 'data/contents/{}'.format(file_name)
                             # To avoid folder creation failure when there is already matching
                             # directory path, first check that the folder does not exist

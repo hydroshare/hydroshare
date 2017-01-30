@@ -56,8 +56,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
             shutil.rmtree(self.temp_dir)
 
     def test_set_file_type_to_netcdf(self):
-        # here we are using a valid raster tif file for setting it
-        # to Geo Raster file type which includes metadata extraction
+        # here we are using a valid nc file for setting it
+        # to NetCDF file type which includes metadata extraction
         self.netcdf_file_obj = open(self.netcdf_file, 'r')
         self._create_composite_resource()
 
@@ -70,7 +70,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
-        # set the tif file to GeoRasterFile type
+        # set the tif file to NetCDF file type
         NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         # There should be now 2 files
@@ -116,6 +116,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
                          'westlimit': '40.789', 'units': 'meters'}
         with self.assertRaises(ValidationError):
             netcdf_logical_file.metadata.update_element(orig_coverage.id, data=coverage_data)
+
         # create Variable element
         self.assertEqual(netcdf_logical_file.metadata.variables.count(), 0)
         variable_data = {'name': 'variable_name', 'type': 'Int', 'unit': 'deg F',
