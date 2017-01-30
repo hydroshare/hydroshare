@@ -20,7 +20,6 @@ function getFolderTemplateInstance(folderName) {
 // Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_id, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-    var extIcon = "fa-file-o";
 
     var iconTemplate;
 
