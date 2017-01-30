@@ -1636,10 +1636,6 @@ body > .main-container {
     overflow: hidden;
 }
 
-div#sharing-status {
-	margin-top: 20px;
-}
-
 div#sharing-status .col-sm-12{
 	margin-bottom: 20px;
 }
@@ -2252,7 +2248,7 @@ button.loading {
     top: 2px;
 }
 
-/*  =============== Coverage Tab - Google map css ================ */
+/*  =============== Coverage - Google map css ================ */
 
 .sharing-status-container > div {
 	margin-bottom: 20px;
@@ -2260,6 +2256,10 @@ button.loading {
 
 #img-badge {
 	margin-bottom: 10px;
+}
+
+#btn-calc-coverage {
+	margin: 10px 0;
 }
 
 
