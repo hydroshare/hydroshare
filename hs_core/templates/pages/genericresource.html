@@ -88,12 +88,12 @@
                     <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
 
-                    {% if page.perms.change and metadata_form %}
-                        {% if cm|resource_type == "Generic" %}
-                            <li id="btn-cut" data-menu-name="cut">
-                                <span class="fa fa-scissors icon-blue"></span>
-                                <span>Cut</span>
-                            </li>
+                        {% if page.perms.change and metadata_form %}
+                            {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
+                                <li id="btn-cut" data-menu-name="cut">
+                                    <span class="fa fa-scissors icon-blue"></span>
+                                    <span>Cut</span>
+                                </li>
 
                             <li data-menu-name="paste">
                                 <span class="fa fa-clipboard icon-blue"></span>
@@ -333,18 +333,18 @@
                                                     </button>
                                                     {% endif %}
 
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
-                                                        <button id="fb-cut"
-                                                                class="disabled"
-                                                                title="Cut">
-                                                            <span class="fa fa-scissors icon-blue"></span>
-                                                        </button>
-                                                        <button id="fb-paste"
-                                                                class="disabled fb-space-right"
-                                                                title="Paste">
-                                                            <span class="fa fa-clipboard icon-blue"></span>
-                                                        </button>
-                                                    {% endif %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
+                                                            <button id="fb-cut"
+                                                                    class="disabled"
+                                                                    title="Cut">
+                                                                <span class="fa fa-scissors icon-blue"></span>
+                                                            </button>
+                                                            <button id="fb-paste"
+                                                                    class="disabled fb-space-right"
+                                                                    title="Paste">
+                                                                <span class="fa fa-clipboard icon-blue"></span>
+                                                            </button>
+                                                        {% endif %}
 
                                                     {% if cm|resource_type != "Web App Resource" and cm|resource_type != "Geographic Raster"  and cm|resource_type != "HIS Referenced Time Series"  and cm|resource_type != "Geographic Feature (ESRI Shapefiles)" %}
                                                         <button id="fb-rename"
