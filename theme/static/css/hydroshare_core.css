@@ -4055,7 +4055,6 @@ form#covereage-search-fields {
 	height: 32px;
 }
 
-
 .fb-view-list .fb-stack {
 	width: 18px;
 	height: 18px;
@@ -4077,7 +4076,7 @@ form#covereage-search-fields {
 	top: -4px;
 }
 
-.fb-stack .fa-file-o {
+.fb-view-grid .fb-stack .fa-file-o {
 	font-size: 32px;
 }
 
