@@ -26,7 +26,7 @@ from ga_resources.utils import get_user
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-                           ResourceFile, get_resource_path
+                           ResourceFile
 from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
@@ -414,13 +414,13 @@ def link_irods_file_to_django(resource, filepath, size=0):
     Link a newly created irods file to Django resource model
 
     :param filepath: full path to file
-    :size: deprecated; size of file; not needed 
+    :size: deprecated; size of file; not needed
     """
     b_add_file = False
     # TODO: folder is an abstract concept... utilize short_path for whole API
     if resource:
-        folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath, 
-                                                                test_exists=False) 
+        folder, base = ResourceFile.resource_path_is_acceptable(resource, filepath,
+                                                                test_exists=False)
         try:
             ResourceFile.get(resource=resource, file=base, folder=folder)
         except ObjectDoesNotExist:
@@ -441,11 +441,12 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
 
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: REDUNDANT: IrodsStorage object
-    :param foldername: the folder name, as a fully qualified path 
-    :param exclude: UNUSED: a tuple that includes file names to be excluded from linking under the folder;
+    :param foldername: the folder name, as a fully qualified path
+    :param exclude: UNUSED: a tuple that includes file names to be excluded from
+        linking under the folder;
     :return:
     """
-    if __debug__: 
+    if __debug__:
         assert(isinstance(resource, BaseResource))
     istorage = resource.get_irods_storage()
 
@@ -456,7 +457,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 size = istorage.size(file_path)
-                # This assumes that file_path is a full path 
+                # This assumes that file_path is a full path
                 link_irods_file_to_django(resource, file_path, size)
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
@@ -482,7 +483,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                  test_exists=True)
         res_file_obj.set_storage_path(tgt_name)
 
-    except ObjectDoesNotExist: 
+    except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
         res_file_objs = ResourceFile.list(resource, src_name)
 
@@ -497,25 +498,32 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     :param resource: the BaseResource object representing a HydroShare resource
-    :param istorage: IrodsStorage object
+    :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
     :param foldername: the folder name that has been removed from iRODS
     :return:
     """
     # TODO: Istorage parameter is redundant
-    # TODO: clarify foldername contents. Qualified or not? 
+    # TODO: clarify foldername contents. Qualified or not?
     if resource and istorage and foldername:
         if not foldername.endswith('/'):
             foldername += '/'
         res_file_set = ResourceFile.objects.filter(object_id=resource.id)
-        folderpath = os.path.join(resource.root_path, foldername) 
+        print("in remove_irods_folder, root path is {}", resource.root_path)
+        print("in remove_irods_folder, foldername is {}", foldername)
+        folderpath = os.path.join(resource.root_path, foldername)
+        print("in remove_irods_folder, folder path is {}".format(folderpath))
         for f in res_file_set:
-            filename = f.storage_path 
-            if filename.startswith(folderpath): 
+            filename = f.storage_path
+            print("  storage path is {}".format(filename))
+            if filename.startswith(folderpath):
                 f.delete()
+                print("     deleted")
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+            else:
+                print("     skipped")
 
 
-# TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible. 
+# TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible.
 def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
     """
     Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for HydroShare
@@ -529,7 +537,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     after zipping.
     :return: output_zip_fname and output_zip_size pair
     """
-    if __debug__: 
+    if __debug__:
         assert(input_coll_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -538,7 +546,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     content_dir = os.path.dirname(res_coll_input)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
-    
+
     output_zip_size = istorage.size(output_zip_full_path)
 
     link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
@@ -568,7 +576,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     after unzipping.
     :return:
     """
-    if __debug__: 
+    if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -595,7 +603,7 @@ def create_folder(res_id, folder_path):
     res_id collection/directory
     :return:
     """
-    if __debug__: 
+    if __debug__:
         assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -613,7 +621,7 @@ def remove_folder(user, res_id, folder_path):
     :param folder_path: the relative path for the folder to be removed under res_id collection.
     :return:
     """
-    if __debug__: 
+    if __debug__:
         assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -621,7 +629,8 @@ def remove_folder(user, res_id, folder_path):
 
     istorage.delete(coll_path)
 
-    remove_irods_folder_in_django(resource, istorage, coll_path)
+    qualified_path = os.path.join("data/contents", folder_path)
+    remove_irods_folder_in_django(resource, istorage, qualified_path)
 
     if resource.raccess.public or resource.raccess.discoverable:
         if not resource.can_be_public_or_discoverable:
@@ -641,7 +650,7 @@ def list_folder(res_id, folder_path):
     :param folder_path: the relative path for the folder to be listed under res_id collection.
     :return:
     """
-    if __debug__: 
+    if __debug__:
         assert(folder_path.startswith("data/contents/"))
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -666,7 +675,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
 
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
-    if __debug__: 
+    if __debug__:
         assert(src_path.startswith("data/contents/"))
         assert(tgt_path.startswith("data/contents/"))
 

@@ -51,11 +51,18 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         )
 
         self.temp_dir = tempfile.mkdtemp()
+
         self.file_name = "MIR.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model SWAT Instance resource files")
         self.text_file_obj = open(temp_text_file, 'r')
+
+        self.file_name_2 = "MJR.txt"
+        temp_text_file = os.path.join(self.temp_dir, self.file_name_2
+        text_file = open(temp_text_file, 'w')
+        text_file.write("Model SWAT Instance resource files")
+        self.text_file_obj_2 = open(temp_text_file, 'r')
 
     def tearDown(self):
         super(TestSWATModelInstanceMetaData, self).tearDown()
@@ -85,7 +92,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
 
         # Upload any other file type should pass both the file pre add check post add check
-        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files,
                                             user=self.user, extract_metadata=True)
 
