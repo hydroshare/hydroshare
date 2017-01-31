@@ -56,7 +56,7 @@ IPYTHON_HOST='127.0.0.1'
 # docker daemons.  we also need a special queue for direct messages to all
 # docker daemons.
 BROKER_URL='amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST, RABBITMQ_PORT=RABBITMQ_PORT)
-CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
+CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_DEFAULT_QUEUE = 'default'
 DOCKER_EXCHANGE=Exchange('docker', type='direct')
 DEFAULT_EXCHANGE=Exchange('default', type='topic')
