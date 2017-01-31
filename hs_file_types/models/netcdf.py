@@ -1,19 +1,15 @@
 import os
-import re
 import shutil
 import logging
 import netCDF4
 
 from django.core.files.uploadedfile import UploadedFile
-from django.db import models
-from django.contrib.postgres.fields import HStoreField, ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
 
-from base import AbstractLogicalFile
+from base import BaseMetaDataElement, BaseLogicalFile, LogicalFileTypeManager, BaseFileMetaData
 from hs_file_types.nc_functions import nc_utils, nc_meta, nc_dump
 from hs_file_types.forms import VariableValidationForm
 
@@ -35,26 +31,6 @@ class MetaDataManager(models.Manager):
         return qs
 
 
-class BaseFileMetaData(models.Model):
-    file_metadata_type = models.CharField(max_length=100, default="Generic")
-    # kye/value metadata
-    extra_metadata = HStoreField(default={})
-    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
-
-    def delete_all_elements(self):
-        self.extra_metadata = {}
-        self.keywords = []
-        self.save()
-
-    @classmethod
-    def get_metadata_element_classes(cls):
-        return {'coverage': Coverage}
-
-    @classmethod
-    def get_supported_element_names(cls):
-        return ['coverage']
-
-
 class MetaDataElementManager(models.Manager):
 
     def __init__(self, element_type=None, *args, **kwargs):
@@ -71,35 +47,6 @@ class MetaDataElementManager(models.Manager):
         if self.element_type:
             qs = qs.filter(element_type=self.element_type)
         return qs
-
-
-class BaseMetaDataElement(models.Model):
-    element_type = models.CharField(max_length=100, default="Generic")
-    data = HStoreField(default={})
-    metadata = models.ForeignKey(BaseFileMetaData)
-
-    @classmethod
-    def validate(cls, update_or_create='create', **kwargs):
-        # here need to validate the dict. This needs to be used for
-        # creating and updating
-        data = kwargs.get('data', None)
-        if data is None:
-            raise ValidationError("Value for data attribute is missing")
-        if not isinstance(data, dict):
-            raise ValidationError("Value for data attribute must be a dict")
-        metadata = kwargs.get('metadata', None)
-        if metadata is None or not isinstance(metadata, BaseFileMetaData):
-            raise ValidationError("Value for metadata attribute is missing")
-
-    @classmethod
-    def create(cls, **kwargs):
-        return cls.objects.create(**kwargs)
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        element = BaseMetaDataElement.objects.get(id=element_id)
-        element.data = kwargs['data']
-        element.save()
 
 
 class Coverage(BaseMetaDataElement):
@@ -122,8 +69,8 @@ class OriginalCoverage(BaseMetaDataElement):
 
     @classmethod
     def validate(cls, update_or_create='create',  **kwargs):
-        # here need to validate the dict. This needs to be used for
-        # creating and updating
+        # here need to validate the dict. This needs to be called from
+        # create() and update()
         super(OriginalCoverage, cls).validate(**kwargs)
         metadata = kwargs['metadata']
         element_type = kwargs['element_type']
@@ -276,12 +223,12 @@ class NetCDFFileMetaData(BaseFileMetaData):
         return element_names
 
 
-# TODO: Make this class a proxy of BaseLogicalFile (which yet to be defined)
-# TODO: ResourceFile class should have a FK relation to BaseLogicalFile
-class NetCDFLogicalFile(AbstractLogicalFile):
-    # TODO: This relationship needs to be moved to BaseLogicalFile
-    metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
+class NetCDFLogicalFile(BaseLogicalFile):
+    objects = LogicalFileTypeManager('NetCDFLogicalFile')
     data_type = "NetCDF data"
+
+    class Meta:
+        proxy = True
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
@@ -297,7 +244,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
         netcdf_metadata = NetCDFFileMetaData.objects.create(file_metadata_type='NetCDFFileMetaData')
-        return cls.objects.create(metadata=netcdf_metadata)
+        return cls.objects.create(metadata=netcdf_metadata, logical_file_type='NetCDFLogicalFile')
 
     @classmethod
     def set_file_type(cls, resource, file_id, user):
@@ -450,9 +397,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         files_to_add_to_resource.append(dump_file)
 
                     with transaction.atomic():
-                        # first delete the raster file that we retrieved from irods
-                        # for setting it to raster file type
-                        delete_resource_file(resource.short_id, res_file.id, user)
+                        # first delete the netcdf file that we retrieved from irods
+                        # for setting it to netcdf file type
+                        res_file.logical_file_new.delete()
+                        # delete_resource_file(resource.short_id, res_file.id, user)
                         # create a netcdf logical file object to be associated with
                         # resource files
                         logical_file = cls.create()
@@ -494,7 +442,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                     fed_res_file_name_or_path=fed_file_full_path
                                 )
                                 # make each resource file we added as part of the logical file
-                                logical_file.add_resource_file(new_res_file)
+                                # logical_file.add_resource_file(new_res_file)
+                                new_res_file.logical_file_new = logical_file
+                                new_res_file.save()
 
                             log.info("NetCDF file type - new files were added to the resource.")
                         except Exception as ex:

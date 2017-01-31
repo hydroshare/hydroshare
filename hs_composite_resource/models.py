@@ -4,7 +4,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor
 
-from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models import GenericLogicalFile, BaseLogicalFile
 
 
 class CompositeResource(BaseResource):
@@ -32,9 +32,16 @@ class CompositeResource(BaseResource):
         of the resource that is not already associated with a logical file. """
 
         for res_file in self.files.all():
+            # TODO: This following if block will not be needed once we migrate
+            # raster file type to HStore
             if not res_file.has_logical_file:
                 logical_file = GenericLogicalFile.create()
                 res_file.logical_file_content_object = logical_file
+                res_file.save()
+
+            if res_file.logical_file_new is None:
+                logical_file = BaseLogicalFile.create()
+                res_file.logical_file_new = logical_file
                 res_file.save()
 
     @property

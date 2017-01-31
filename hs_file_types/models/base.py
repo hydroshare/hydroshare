@@ -6,7 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import HStoreField, ArrayField
 
 from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
     textarea, h4, input
@@ -14,9 +14,58 @@ from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, 
 from lxml import etree
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
+from hs_core.models import AbstractMetaDataElement, Coverage, CoreMetaData
 
 
+class BaseFileMetaData(models.Model):
+    file_metadata_type = models.CharField(max_length=100, default="Generic")
+    # key/value metadata
+    extra_metadata = HStoreField(default={})
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+
+    def delete_all_elements(self):
+        self.extra_metadata = {}
+        self.keywords = []
+        self.save()
+
+    @classmethod
+    def get_metadata_element_classes(cls):
+        return {'coverage': Coverage}
+
+    @classmethod
+    def get_supported_element_names(cls):
+        return ['coverage']
+
+
+class BaseMetaDataElement(models.Model):
+    element_type = models.CharField(max_length=100, default="Generic")
+    data = HStoreField(default={})
+    metadata = models.ForeignKey(BaseFileMetaData)
+
+    @classmethod
+    def validate(cls, update_or_create='create', **kwargs):
+        # here need to validate the dict. This needs to be used for
+        # creating and updating
+        data = kwargs.get('data', None)
+        if data is None:
+            raise ValidationError("Value for data attribute is missing")
+        if not isinstance(data, dict):
+            raise ValidationError("Value for data attribute must be a dict")
+        metadata = kwargs.get('metadata', None)
+        if metadata is None or not isinstance(metadata, BaseFileMetaData):
+            raise ValidationError("Value for metadata attribute is missing")
+
+    @classmethod
+    def create(cls, **kwargs):
+        return cls.objects.create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = BaseMetaDataElement.objects.get(id=element_id)
+        element.data = kwargs['data']
+        element.save()
+
+# TODO: This class will not be needed once we migrate raster file metadata to HStore
 class AbstractFileMetaData(models.Model):
     """ base class for HydroShare file type metadata """
 
@@ -456,12 +505,12 @@ class AbstractFileMetaData(models.Model):
                                                    "return true;".format(form_id))
         return root_div
 
-
+# TODO: This class will not be needed once we migrate the raster file metadata to HStore
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
     # files associated with this logical file group
-    files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
+    files = GenericRelation("hs_core.ResourceFile", content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
@@ -595,3 +644,165 @@ class AbstractLogicalFile(models.Model):
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
             metadata.delete()
+
+
+class BaseLogicalFile(models.Model):
+    """ base class for HydroShare file types """
+
+    logical_file_type = models.CharField(max_length=100, default="GenericLogicalFile")
+
+    # the dataset name will allow us to identify a logical file group on user interface
+    dataset_name = models.CharField(max_length=255, null=True, blank=True)
+
+    # this will be used for hsterms:dataType in resourcemetadata.xml
+    # each specific logical type needs to rest this field
+    data_type = "Generic data"
+
+    metadata = models.OneToOneField(BaseFileMetaData, related_name="logical_file")
+
+    @classmethod
+    def create(cls):
+        """this custom method MUST be used to create an instance of this class"""
+        generic_metadata = BaseFileMetaData.objects.create(file_metadata_type='Generic')
+        return cls.objects.create(metadata=generic_metadata)
+
+    @classmethod
+    def get_allowed_uploaded_file_types(cls):
+        # any file can be part of this logical file group - subclass needs to override this
+        return [".*"]
+
+    @classmethod
+    def get_allowed_storage_file_types(cls):
+        # can store any file types in this logical file group - subclass needs to override this
+        return [".*"]
+
+    @classmethod
+    def type_name(cls):
+        return cls.__name__
+
+    @property
+    def has_metadata(self):
+        return hasattr(self, 'metadata')
+
+    @property
+    def size(self):
+        # get total size (in bytes) of all files in this file type
+        return sum([f.size for f in self.files.all()])
+
+    @property
+    def resource(self):
+        res_file = self.files.all().first()
+        if res_file is not None:
+            return res_file.resource
+        else:
+            return None
+
+    @property
+    def supports_resource_file_move(self):
+        """allows a resource file that is part of this logical file type to be moved"""
+        return True
+
+    @property
+    def supports_resource_file_rename(self):
+        """allows a resource file that is part of this logical file type to be renamed"""
+        return True
+
+    @property
+    def supports_zip(self):
+        """allows a folder containing resource file(s) that are part of this logical file type
+        to be zipped"""
+        return True
+
+    @property
+    def supports_delete_folder_on_zip(self):
+        """allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
+    @property
+    def supports_unzip(self):
+        """allows a zip file that is part of this logical file type to get unzipped"""
+        return True
+
+    def add_resource_file(self, res_file):
+        """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
+        is already associated with any other logical file object, this function does not do
+        anything to that logical object. The caller needs to take necessary action for the
+        previously associated logical file object. If res_file is already part of this
+        logical file, it raise ValidationError.
+
+        :param res_file an instance of ResourceFile
+        """
+
+        if res_file in self.files.all():
+            raise ValidationError("Resource file is already part of this logical file.")
+
+        res_file.logical_file_new = self
+        res_file.save()
+
+    def get_copy(self):
+        """creates a copy of this logical file object with associated metadata needed to support
+        resource copy.
+        Note: This copied logical file however does not have any association with resource files
+        """
+        copy_of_logical_file = type(self).create()
+        copy_of_logical_file.dataset_name = self.dataset_name
+        copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.save()
+        # copy the metadata elements
+        elements_to_copy = self.metadata.get_metadata_elements()
+        for element in elements_to_copy:
+            element_args = model_to_dict(element)
+            element_args.pop('content_type')
+            element_args.pop('id')
+            element_args.pop('object_id')
+            copy_of_logical_file.metadata.create_element(element.term, **element_args)
+
+        return copy_of_logical_file
+
+    def logical_delete(self, user, delete_res_files=True):
+        """
+        Deletes the logical file as well as all resource files associated with this logical file.
+        This function is primarily used by the system to delete logical file object and associated
+        metadata as part of deleting a resource file object. Any time a request is made to
+        deleted a specific resource file object, if the the requested file is part of a
+        logical file then all files in the same logical file group will be deleted. if custom logic
+        requires deleting logical file object (LFO) then instead of using LFO.delete(), you must
+        use LFO.logical_delete()
+        :param delete_res_files If True all resource files that are part of this logical file will
+        be deleted
+        """
+
+        from hs_core.hydroshare.resource import delete_resource_file
+        # delete all resource files associated with this instance of logical file
+        if delete_res_files:
+            for f in self.files.all():
+                delete_resource_file(f.resource.short_id, f.id, user,
+                                     delete_logical_file=False)
+
+        # delete logical file first then delete the associated metadata file object
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
+        metadata = self.metadata if self.has_metadata else None
+        super(BaseLogicalFile, self).delete()
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()
+
+
+class LogicalFileTypeManager(models.Manager):
+    def __init__(self, logical_file_type=None, *args, **kwargs):
+        self.logical_file_type = logical_file_type
+        super(LogicalFileTypeManager, self).__init__(*args, **kwargs)
+
+    def create(self, *args, **kwargs):
+        if self.logical_file_type is None:
+            kwargs.pop('logical_file_type', None)
+        return super(LogicalFileTypeManager, self).create(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = super(LogicalFileTypeManager, self).get_queryset()
+        if self.logical_file_type:
+            qs = qs.filter(logical_file_type=self.logical_file_type)
+        return qs

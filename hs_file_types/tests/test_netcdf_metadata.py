@@ -3,24 +3,15 @@ import tempfile
 import shutil
 
 from django.test import TransactionTestCase
-from django.db import IntegrityError
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
-from rest_framework.exceptions import ValidationError as DRF_ValidationError
-
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-from hs_core.models import Coverage
-from hs_core.hydroshare.utils import resource_post_create_actions, \
-    get_resource_file_name_and_extension
-from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
+from hs_core.hydroshare.utils import resource_post_create_actions
 
-from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, GenericLogicalFile, \
-    OriginalCoverage
-# from utils import assert_raster_file_type_metadata
-# from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
+from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, BaseLogicalFile
 
 
 class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -64,22 +55,45 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is associated with BaseLogicalFile
+        logical_file = res_file.logical_file_new
+        self.assertNotEqual(logical_file, None)
+        self.assertEqual(logical_file.logical_file_type, "GenericLogicalFile")
+        self.assertEqual(BaseLogicalFile.objects.filter(
+            logical_file_type='GenericLogicalFile').count(), 1)
 
-        # set the tif file to NetCDF file type
+        # check that there is one BaseLogicalFile object
+        self.assertEqual(BaseLogicalFile.objects.count(), 1)
+        self.assertTrue(isinstance(logical_file, BaseLogicalFile))
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+
+        # set the nc file to NetCDF file type
         NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
-
+        # check that there is one BaseLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(BaseLogicalFile.objects.count(), 1)
+        self.assertEqual(BaseLogicalFile.objects.filter(
+            logical_file_type='NetCDFLogicalFile').count(), 1)
+        self.assertEqual(BaseLogicalFile.objects.filter(
+            logical_file_type='GenericLogicalFile').count(), 0)
         # There should be now 2 files
         self.assertEqual(self.composite_resource.files.count(), 2)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file_new
+        # logical file should be associated with 2 files
+        self.assertEqual(logical_file.files.all().count(), 2)
+
         # TODO: test extracted netcdf file type metadata
 
+        # test deleting the logical file should delete all associated resource files
+        logical_file.delete()
+        self.assertEqual(BaseLogicalFile.objects.count(), 0)
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        self.assertEqual(self.composite_resource.files.count(), 0)
+
     def test_netcdf_metadata_CRUD(self):
-        # here we are using a valid raster tif file for setting it
-        # to Geo Raster file type which includes metadata extraction
+        # here we are using a valid nc file for setting it
+        # to NetCDF file type which includes metadata extraction
         self.netcdf_file_obj = open(self.netcdf_file, 'r')
         self._create_composite_resource()
 
@@ -88,8 +102,11 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
         netcdf_logical_file = NetCDFLogicalFile.create()
         self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
-        netcdf_logical_file.add_resource_file(res_file)
-        self.assertEqual(res_file.logical_file_type_name, 'NetCDFLogicalFile')
+        # netcdf_logical_file.add_resource_file(res_file)
+        res_file.logical_file_new = netcdf_logical_file
+        res_file.save()
+        # self.assertEqual(res_file.logical_file_type_name, 'NetCDFLogicalFile')
+        self.assertEqual(netcdf_logical_file.logical_file_type, 'NetCDFLogicalFile')
         self.assertEqual(netcdf_logical_file.files.count(), 1)
 
         # create OriginalCoverage element
