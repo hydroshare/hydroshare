@@ -818,8 +818,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                                              modelCalibrationFields)
 
         if self.model_inputs:
+            modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
             for model_input in self.model_inputs:
-                modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
                 self.add_metadata_element_to_xml(container, model_input, modelInputFields)
 
         if self.general_elements:
