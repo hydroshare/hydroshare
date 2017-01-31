@@ -1,0 +1,30 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../mp-list.html">
+<link rel="import" href="../hs-api.html">
+
+<dom-module id="icon-toggle-demo">
+  <template>
+    <style>
+      :host {
+        font-family: sans-serif;
+      };
+    </style>
+
+      <hs-api base-url="//192.168.56.101:8000"></hs-api>
+      <file-checkbox-selector resource-id="c830a787456f4b2891b079d53a47324c"></file-checkbox-selector>
+
+  </template>
+  
+  <script>
+    Polymer({
+      is: "icon-toggle-demo",
+      message: function(fav) {
+        if (fav) {
+          return "You really like me!";
+        } else {
+          return "Do you like me?";
+        }
+      }
+    });
+  </script>
+</dom-module>
