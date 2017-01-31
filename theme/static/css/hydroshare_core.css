@@ -1493,7 +1493,7 @@ body > .main-container {
 	height: 34px;
 	border-radius: 0;
 	width: 100%;
-	padding-top: 7px;
+	margin-top: 7px;
 }
 
 #invite-to-group .btn-add-access {
