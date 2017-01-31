@@ -268,7 +268,6 @@ class Party(AbstractMetaDataElement):
                 raise ValidationError(
                     "Either an organization or name is required for a creator element")
 
-
             if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
                     if 'organization' in kwargs and kwargs['organization'] is not None:
