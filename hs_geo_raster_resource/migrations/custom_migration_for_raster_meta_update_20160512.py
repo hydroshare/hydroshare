@@ -14,8 +14,7 @@ from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
 from hs_geo_raster_resource.models import RasterResource
-from hs_geo_raster_resource import raster_meta_extract
-
+from hs_file_types import raster_meta_extract
 
 def migrate_tif_file(apps, schema_editor):
     log = logging.getLogger()

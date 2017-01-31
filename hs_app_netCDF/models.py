@@ -1,23 +1,21 @@
 import json
 
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 
-from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 
+
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
         ('', '---------'),
-        ('EPSG Code', 'EPSG Code'),
-        ('OGC WKT Projection', 'OGC WKT Projection'),
+        ('WKT String', 'WKT String'),
         ('Proj4 String', 'Proj4 String')
     )
 
@@ -34,6 +32,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     _value = models.CharField(max_length=1024, null=True)
     projection_string_type = models.CharField(max_length=20, choices=PRO_STR_TYPES, null=True)
     projection_string_text = models.TextField(null=True, blank=True)
+    datum = models.CharField(max_length=300, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -46,8 +45,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """
-        The '_value' subelement needs special processing. (Check if the 'value' includes the required information and
-        convert 'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required information and convert 'value' dict as Json string to be the '_value'
+        subelement value.) The base class create() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
                        the '_value' in kwargs is a serialized json string
@@ -61,11 +61,13 @@ class OriginalCoverage(AbstractMetaDataElement):
         if value_arg_dict:
             # check that all the required sub-elements exist and create new original coverage meta
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in value_arg_dict:
-                    raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For original coverage meta, one or more bounding "
+                                          "box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
+                                   'westlimit', 'projection')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
@@ -78,8 +80,8 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         """
-        The '_value' subelement needs special processing. (Convert 'value' dict as Json string to be the '_value'
-        subelement value) and the base class update() can't do it.
+        The '_value' subelement needs special processing. (Convert 'value' dict as Json string
+        to be the '_value' subelement value) and the base class update() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
@@ -88,7 +90,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_dict = ori_cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit',
+                              'westlimit', 'projection'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
@@ -125,7 +128,8 @@ class Variable(AbstractMetaDataElement):
     type = models.CharField(max_length=1000, choices=VARIABLE_TYPES)
     shape = models.CharField(max_length=1000)
     # optional variable attributes
-    descriptive_name = models.CharField(max_length=1000, null=True, blank=True, verbose_name='long name')
+    descriptive_name = models.CharField(max_length=1000, null=True, blank=True,
+                                        verbose_name='long name')
     method = models.TextField(null=True, blank=True, verbose_name='comment')
     missing_value = models.CharField(max_length=1000, null=True, blank=True)
 
@@ -204,23 +208,25 @@ class NetcdfMetaData(CoreMetaData):
             return False
         if not self.variables.all():
             return False
-        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+        if not (self.coverages.all().filter(type='box').first() or
+                self.coverages.all().filter(type='point').first()):
             return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+        if not (self.coverages.all().filter(type='box').first() or
+                self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
 
         return missing_required_elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -243,43 +249,49 @@ class NetcdfMetaData(CoreMetaData):
             self.add_metadata_element_to_xml(container, variable, md_fields)
 
         if self.ori_coverage.all().first():
-            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
             ori_cov_obj = self.ori_coverage.all().first()
+            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' %
+                                               self.NAMESPACES['hsterms'])
+            cov_term = '{%s}' + 'box'
+            hsterms_coverage_terms = etree.SubElement(hsterms_ori_cov, cov_term %
+                                                      self.NAMESPACES['hsterms'])
+
+            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_coverage_terms, '{%s}value' %
+                                                               self.NAMESPACES['rdf'])
+            cov_box = ''
 
             # add extent info
             if ori_cov_obj.value:
                 cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; unit=%s' \
-                        %(ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
-                          ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'], ori_cov_obj.value['units'])
+                        % (ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
+                           ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'],
+                           ori_cov_obj.value['units'])
 
-                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}extent' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_box.text = cov_box
-
-            # add crs info
             if ori_cov_obj.value.get('projection'):
-                hsterms_ori_cov_projection_name = etree.SubElement(hsterms_ori_cov_rdf_Description,
-                                                                   '{%s}crsName' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_name.text = ori_cov_obj.value['projection']
+                cov_box += '; projection_name={}'.format(ori_cov_obj.value['projection'])
 
             if ori_cov_obj.projection_string_text:
-                hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
-                if ori_cov_obj.projection_string_type:
-                    hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationType' % self.NAMESPACES['hsterms'])
-                    hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
+                cov_box += '; projection_string={}'.format(ori_cov_obj.projection_string_text)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+            if ori_cov_obj.datum:
+                cov_box += '; datum={}'.format(ori_cov_obj.datum)
+
+            hsterms_ori_cov_rdf_Description.text = cov_box
+
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         from lxml import etree
-        element_name = md_fields.get('md_element') if md_fields.get('md_element') else md_element.term
+        element_name = md_fields.get('md_element') if md_fields.get('md_element') \
+            else md_element.term
 
-        hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'],
-                                                                          new_element=element_name))
-        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
-                                                    "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        hsterms_newElem = etree.SubElement(
+            root,
+            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=element_name))
+
+        hsterms_newElem_rdf_Desc = etree.SubElement(
+            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+
         for md_field in md_fields.keys():
             if hasattr(md_element, md_field):
                 attr = getattr(md_element, md_field)
@@ -293,5 +305,3 @@ class NetcdfMetaData(CoreMetaData):
         super(NetcdfMetaData, self).delete_all_elements()
         self.ori_coverage.all().delete()
         self.variables.all().delete()
-
-import receivers  # never delete this otherwise non of the receiver function will work

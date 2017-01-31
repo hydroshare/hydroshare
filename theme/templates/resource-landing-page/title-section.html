@@ -24,6 +24,21 @@
     </div>
 {% endif %}
 
+{# ======= Resource copy just created notification =======#}
+{% if just_created and just_copied %}
+    <div class="col-sm-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your new copy of the resource has been created. A <i>Derived From</i> Source metadata element has been added to this resource in
+                the <i>Related Resources</i> tab below that links to the original resource. Please respect the terms of the license of the original resource
+                and recognize the original authors as authors or contributors as appropriate in this derived resource.
+                Note that this new copy is created as a private resource by default. If you want the new
+                resource to be discoverable, you need to make it public or discoverable or publish it. </span>
+        </div>
+    </div>
+{% endif %}
+
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}

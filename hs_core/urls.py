@@ -21,9 +21,6 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
-        name='update_access_rules'),
-
     # DEPRECATED: use form above instead 
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='DEPRECATED_update_access_rules'),
@@ -51,17 +48,22 @@ urlpatterns = patterns('',
 
     # Unused. See ResourceFileListCreate. This is now implemented there.
     # Older version based upon polymorphism of ResourceFileCRUD. 
-    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
+    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', 
+    #     views.resource_rest_api.ResourceFileCRUD.as_view(),
     #     name='add_resource_file'),
 
-    # TODO: (Couch) This pattern is much too permissive. Consider limiting it. 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
+    # Patterns are now checked in the view class.
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
         name='get_update_delete_resource_file'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', 
         views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$', 
+        views.resource_folder_rest_api.ResourceFolders.as_view(),
+        name='list_manipulate_folders'),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$', 
@@ -74,6 +76,11 @@ urlpatterns = patterns('',
 
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
+    # Resource Access
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
+        views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
+        name='get_update_delete_resource_access'),
 
     # internal API
 
@@ -90,6 +97,7 @@ urlpatterns = patterns('',
         views.delete_multiple_files),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource/$', views.delete_resource),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/create-new-version-resource/$', views.create_new_version_resource),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/copy-resource/$', views.copy_resource),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/rep-res-bag-to-irods-user-zone/$', views.rep_res_bag_to_irods_user_zone),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/set-resource-flag/$', views.set_resource_flag),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/share-resource-with-user/(?P<privilege>[a-z]+)/(?P<user_id>[0-9]+)/$',

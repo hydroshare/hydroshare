@@ -20,7 +20,6 @@ from django.utils.timezone import now
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
-from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
@@ -30,6 +29,8 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
+
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 
 class GroupOwnership(models.Model):
@@ -921,7 +922,6 @@ class Coverage(AbstractMetaDataElement):
         to dictionaries.
         """
 
-        # TODO: validate coordinate values
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
             metadata_obj = kwargs['content_object']
@@ -1034,6 +1034,56 @@ class Coverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        NAMESPACES = CoreMetaData.NAMESPACES
+        dc_coverage = etree.SubElement(container, '{%s}coverage' % NAMESPACES['dc'])
+        cov_dcterm = '{%s}' + self.type
+        dc_coverage_dcterms = etree.SubElement(dc_coverage,
+                                               cov_dcterm % NAMESPACES['dcterms'])
+        rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        if self.type == 'period':
+            start_date = parser.parse(self.value['start'])
+            end_date = parser.parse(self.value['end'])
+            cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
+                                                              end_date.isoformat())
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+
+        elif self.type == 'point':
+            cov_value = 'east=%s; north=%s; units=%s' % (self.value['east'],
+                                                         self.value['north'],
+                                                         self.value['units'])
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'elevation' in self.value:
+                cov_value += '; elevation=%s' % self.value['elevation']
+                if 'zunits' in self.value:
+                    cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        else:
+            # this is box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        % (self.value['northlimit'], self.value['eastlimit'],
+                           self.value['southlimit'], self.value['westlimit'],
+                           self.value['units'])
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'uplimit' in self.value:
+                cov_value += '; uplimit=%s' % self.value['uplimit']
+            if 'downlimit' in self.value:
+                cov_value += '; downlimit=%s' % self.value['downlimit']
+            if 'uplimit' in self.value or 'downlimit' in self.value:
+                cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        rdf_coverage_value.text = cov_value
+
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         if coverage_type == 'period':
@@ -1099,6 +1149,101 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
 
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        # this function should be used for displaying one spatial coverage element
+        # or one temporal coverage element
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            if self.type == 'box' or self.type == 'point':
+                legend('Original Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Coordinate Reference System')
+                            td(self.value['projection'])
+                        with tr():
+                            get_th('Coordinate Reference System Unit')
+                            td(self.value['units'])
+
+                h4('Extent')
+                with table(cls='custom-table'):
+                    if self.type == 'box':
+                        with tbody():
+                            with tr():
+                                get_th('North')
+                                td(self.value['northlimit'])
+                            with tr():
+                                get_th('West')
+                                td(self.value['westlimit'])
+                            with tr():
+                                get_th('South')
+                                td(self.value['southlimit'])
+                            with tr():
+                                get_th('East')
+                                td(self.value['eastlimit'])
+                    else:
+                        with tr():
+                            get_th('North')
+                            td(self.value['north'])
+                        with tr():
+                            get_th('Eest')
+                            td(self.value['east'])
+            else:
+                legend('Temporal Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Start Date')
+                            td(self.value['start'])
+                        with tr():
+                            get_th('End Date')
+                            td(self.value['end'])
+
+        return root_div.render(pretty=pretty)
+
+    @classmethod
+    def get_temporal_html_form(cls, resource, element=None):
+        from .forms import CoverageTemporalForm
+        coverage_data_dict = dict()
+        if element is not None:
+            coverage_data_dict['start'] = element.value['start']
+            coverage_data_dict['end'] = element.value['end']
+
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+                                             res_short_id=resource.short_id if resource else None,
+                                             element_id=element.id if element else None)
+        return coverage_form
+
+    @classmethod
+    def get_spatial_html_form(cls, resource, element=None, allow_edit=True):
+        from .forms import CoverageSpatialForm
+        coverage_data_dict = dict()
+        # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
+        # coverage_data_dict['units'] = 'Decimal degrees'
+        if element is not None:
+            coverage_data_dict['type'] = element.type
+            coverage_data_dict['name'] = element.value.get('name', "")
+            if element.type == 'box':
+                coverage_data_dict['northlimit'] = element.value['northlimit']
+                coverage_data_dict['eastlimit'] = element.value['eastlimit']
+                coverage_data_dict['southlimit'] = element.value['southlimit']
+                coverage_data_dict['westlimit'] = element.value['westlimit']
+            else:
+                coverage_data_dict['east'] = element.value['east']
+                coverage_data_dict['north'] = element.value['north']
+                coverage_data_dict['elevation'] = element.value.get('elevation', None)
+
+        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=allow_edit,
+                                            res_short_id=resource.short_id if resource else None,
+                                            element_id=element.id if element else None)
+        return coverage_form
+
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
@@ -1147,6 +1292,16 @@ class Subject(AbstractMetaDataElement):
 
     def __unicode__(self):
         return self.value
+
+    @classmethod
+    def create(cls, **kwargs):
+        metadata_obj = kwargs['content_object']
+        value = kwargs.get('value', None)
+        if value is not None:
+            if metadata_obj.subjects.filter(value__iexact=value).exists():
+                raise ValidationError("Subject element already exists.")
+
+        return super(Subject, cls).create(**kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -1232,29 +1387,24 @@ class AbstractResource(ResourcePermissionsMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True
+                                        null=True,
                                         )
-
-    # dublin_metadata = GenericRelation(
-    #     'dublincore.QualifiedDublinCoreElement',
-    #     help_text='The dublin core metadata of the resource'
-    # )
 
     files = GenericRelation('hs_core.ResourceFile',
                             help_text='The files associated with this resource',
                             for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
-                                          blank=True, null=True,
+                                          null=True, blank=True,
                                           choices=(('Pending', 'Pending'), ('Running', 'Running'),
                                                    ('Done', 'Done'), ('Error', 'Error'))
                                           )
-    file_unpack_message = models.TextField(blank=True, null=True)
+    file_unpack_message = models.TextField(null=True, blank=True)
 
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
+    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1271,6 +1421,12 @@ class AbstractResource(ResourcePermissionsMixin):
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
+
+    # definition of resource logic
+    @property
+    def supports_folders(self):
+        """ returns whether folder operations are supported. Computed for polymorphic types"""
+        return False
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1316,9 +1472,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.resource_file.delete()
             elif fl.fed_resource_file:
                 fl.fed_resource_file.delete()
+
+            if fl.logical_file is not None:
+                # delete of metadata file deletes the logical file (one-to-one relation)
+                # so no need for fl.logical_file.delete() and deleting of metadata file
+                # object deletes (cascade delete) all the contained GenericRelated metadata
+                # elements
+                fl.logical_file.metadata.delete()
+
             fl.delete()
         hs_bagit.delete_bag(self)
 
+        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
 
@@ -1335,6 +1500,12 @@ class AbstractResource(ResourcePermissionsMixin):
     def first_creator(self):
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
+
+    def get_metadata_xml(self, pretty_print=True):
+        # Resource types that support file types
+        # must override this method. See Composite Resource
+        # type as an example
+        return self.metadata.get_xml(pretty_print=pretty_print)
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)
@@ -1503,29 +1674,114 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return True
 
+    @property
+    def logical_files(self):
+        logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is not None:
+                if res_file.logical_file not in logical_files_list:
+                    logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
+    @property
+    def non_logical_files(self):
+        non_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is None:
+                if res_file.logical_file not in non_logical_files_list:
+                    non_logical_files_list.append(res_file)
+        return non_logical_files_list
+
+    @property
+    def generic_logical_files(self):
+        generic_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.has_generic_logical_file:
+                if res_file.logical_file not in generic_logical_files_list:
+                    generic_logical_files_list.append(res_file.logical_file)
+        return generic_logical_files_list
+
+    def get_logical_files(self, logical_file_class_name):
+        logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is not None:
+                if res_file.logical_file_type_name == logical_file_class_name:
+                    if res_file.logical_file not in logical_files_list:
+                        logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
+    @property
+    def supports_logical_file(self):
+        """If this resource allows associating resource file objects with logical file"""
+        return False
+
+    def set_default_logical_file(self):
+        """Sets an instance of default logical file type to any resource file objects of
+        this instance of the resource that is not already associated with a logical file.
+        Each specific resource type needs to override this function in order to to support logical
+        file types"""
+        pass
+
+    def supports_folder_creation(self, folder_full_path):
+        """If resource supports creation of folder at the specified path"""
+        return True
+
+    def supports_rename_path(self, src_full_path, tgt_full_path):
+        """If file/folder rename/move is allowed by this resource"""
+        return True
+
+    def supports_zip(self, folder_to_zip):
+        """if resource supports the specified folder to be zipped"""
+        return True
+
+    def supports_unzip(self, file_to_unzip):
+        """if resource supports the unzipping of the specified file"""
+        return True
+
+    def supports_delete_folder_on_zip(self, original_folder):
+        """if resource allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
 
 
 def get_path(instance, filename):
+    """
+    Dynamically determine storage path for a FileField based upon whether resource is federated
+
+    :param instance: instance of ResourceFile containing the FileField;
+    :param filename: the filename to be used; derived from upload data
+
+    The instance points to the Resource record, which contains the federation path.
+    """
+    # retrieve federation path -- if any -- from Resource object containing FileField
     if instance.content_object.resource_federation_path:
-        return os.path.join(instance.content_object.resource_federation_path,
-                            instance.content_object.short_id, 'data',
-                            'contents', filename)
+        # federated iRODS storage
+        prefix = os.path.join(instance.content_object.resource_federation_path,
+                              instance.content_object.short_id, 'data', 'contents')
     else:
-        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+        # local iRODS storage
+        prefix = os.path.join(instance.content_object.short_id, 'data', 'contents')
+
+    if instance.file_folder is not None:
+        # use subfolder
+        return os.path.join(prefix, instance.file_folder, filename)
+    else:
+        # use root folder
+        return os.path.join(prefix, filename)
 
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
-
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                     storage=IrodsStorage()
-                                     if getattr(settings, 'USE_IRODS', False)
-                                     else DefaultStorage())
+    # This is used to direct uploads to a subfolder of the root folder. See get_path above.
+    file_folder = models.CharField(max_length=4096, null=True, blank=True)
+    resource_file = models.FileField(upload_to=get_path, max_length=500,
+                                     null=True, blank=True,
+                                     storage=IrodsStorage())
     # the following optional fields are added for use by federated iRODS resources where
     # resources are created in the local federated zone rather than hydroshare zone, in
     # which case resource_file is empty, and we record iRODS logical resource file name
@@ -1533,15 +1789,101 @@ class ResourceFile(models.Model):
     # operations fed_resource_file in particular is a counterpart of resource_file, but
     # handles files uploaded from local disk and store the files to federated zone rather
     # than hydroshare zone.
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                         storage=IrodsStorage('federated') if getattr(
-                                             settings, 'USE_IRODS', False) else DefaultStorage())
-    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
+                                         null=True, blank=True,
+                                         storage=IrodsStorage('federated'))
+    fed_resource_file_name_or_path = models.CharField(max_length=255,
+                                                      null=True, blank=True)
+    fed_resource_file_size = models.CharField(max_length=15,
+                                              null=True, blank=True)
+
+    # we are using GenericForeignKey to allow resource file to be associated with any
+    # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
+    logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
+    logical_file_content_type = models.ForeignKey(ContentType,
+                                                  null=True, blank=True,
+                                                  related_name="files")
+
+    logical_file_content_object = GenericForeignKey('logical_file_content_type',
+                                                    'logical_file_object_id')
 
     @property
     def resource(self):
         return self.content_object
+
+    @property
+    def has_logical_file(self):
+        return self.logical_file is not None
+
+    @property
+    def logical_file(self):
+        return self.logical_file_content_object
+
+    @property
+    def logical_file_type_name(self):
+        return self.logical_file_content_object.__class__.__name__
+
+    @property
+    def has_generic_logical_file(self):
+        return self.logical_file_type_name == "GenericLogicalFile"
+
+    @property
+    def metadata(self):
+        if self.logical_file is not None:
+            return self.logical_file.metadata
+        return None
+
+    @property
+    def mime_type(self):
+        from .hydroshare.utils import get_file_mime_type
+        return get_file_mime_type(self.file_name)
+
+    @property
+    def extension(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[2]
+
+    @property
+    def dir_path(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return os.path.dirname(get_resource_file_name_and_extension(self)[0])
+
+    @property
+    def full_path(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[0]
+
+    @property
+    def file_name(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[1]
+
+    @property
+    def can_set_file_type(self):
+        # currently user can set file type only for files with extension
+        # tif or zip.
+        return self.extension in ('.tif', '.zip') and (self.logical_file is None or
+                                                       self.logical_file_type_name ==
+                                                       "GenericLogicalFile")
+
+    @property
+    def size(self):
+        # get file size (in bytes)
+        if self.resource_file:
+            return self.resource_file.size
+        elif self.fed_resource_file:
+            return self.fed_resource_file.size
+        else:
+            return self.fed_resource_file_size
+
+    @property
+    def url(self):
+        if self.resource_file:
+            return self.resource_file.url
+        elif self.fed_resource_file:
+            return self.fed_resource_file.url
+        else:
+            return self.fed_resource_file_name_or_path
 
 
 class Bags(models.Model):
@@ -1612,6 +1954,17 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
+    @property
+    def root_path(self):
+        """
+        Return the root folder of the iRODS structure containing
+        resource files.
+        """
+        if self.resource_federation_path:
+            return os.path.join(self.resource_federation_path, self.short_id)
+        else:
+            return self.short_id
+
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
@@ -1669,17 +2022,25 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def size(self):
-        f_sizes = [f.resource_file.size
-                   if f.resource_file else 0
-                   for f in self.files.all()]
-        total_file_size = sum(f_sizes)
+
+        total_file_size = 0
+
         try:
+            # compute the total file size for the resource
+            f_sizes = [f.resource_file.size
+                       if f.resource_file else 0
+                       for f in self.files.all()]
+            total_file_size = sum(f_sizes)
+
+            # compute the total file size for federated resource
             f_sizes = [int(f.fed_resource_file_size)
                        if f.fed_resource_file_size else 0
                        for f in self.files.all()]
             total_file_size += sum(f_sizes)
+
         except SessionException:
             pass
+
         return total_file_size
 
     @property
@@ -1728,6 +2089,10 @@ class BaseResource(Page, AbstractResource):
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
+
+    @property
+    def supports_folders(self):
+        return True
 
     class Meta:
         verbose_name = 'Generic'
@@ -2029,53 +2394,7 @@ class CoreMetaData(models.Model):
             self._create_person_element(etree, rdf_Description, contributor)
 
         for coverage in self.coverages.all():
-            dc_coverage = etree.SubElement(rdf_Description, '{%s}coverage' % self.NAMESPACES['dc'])
-            cov_dcterm = '{%s}' + coverage.type
-            dc_coverage_dcterms = etree.SubElement(dc_coverage,
-                                                   cov_dcterm % self.NAMESPACES['dcterms'])
-            rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
-                                                  '{%s}value' % self.NAMESPACES['rdf'])
-            if coverage.type == 'period':
-                start_date = parser.parse(coverage.value['start'])
-                end_date = parser.parse(coverage.value['end'])
-                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
-                                                                  end_date.isoformat())
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-
-            elif coverage.type == 'point':
-                cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'],
-                                                             coverage.value['north'],
-                                                             coverage.value['units'])
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'elevation' in coverage.value:
-                    cov_value = cov_value + '; elevation=%s' % coverage.value['elevation']
-                    if 'zunits' in coverage.value:
-                        cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            else:
-                # this is box type
-                cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                            % (coverage.value['northlimit'], coverage.value['eastlimit'],
-                               coverage.value['southlimit'], coverage.value['westlimit'],
-                               coverage.value['units'])
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'uplimit' in coverage.value:
-                    cov_value = cov_value + '; uplimit=%s' % coverage.value['uplimit']
-                if 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; downlimit=%s' % coverage.value['downlimit']
-                if 'uplimit' in coverage.value or 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            rdf_coverage_value.text = cov_value
+            coverage.add_to_xml_container(rdf_Description)
 
         for dt in self.dates.all():
             dc_date = etree.SubElement(rdf_Description, '{%s}date' % self.NAMESPACES['dc'])
@@ -2197,6 +2516,8 @@ class CoreMetaData(models.Model):
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
+    # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
+    # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         """
         helper function to generate xml elements for a given metadata element that belongs to
