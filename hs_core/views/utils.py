@@ -494,7 +494,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             fobj.set_storage_path(new_path)
 
 
-def remove_irods_folder_in_django(resource, istorage, foldername):
+def remove_irods_folder_in_django(resource, istorage, folderpath):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     :param resource: the BaseResource object representing a HydroShare resource
@@ -504,13 +504,11 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     """
     # TODO: Istorage parameter is redundant
     # TODO: clarify foldername contents. Qualified or not?
-    if resource and istorage and foldername:
-        if not foldername.endswith('/'):
-            foldername += '/'
+    if resource and istorage and folderpath:
+        if not folderpath.endswith('/'):
+            folderpath += '/'
         res_file_set = ResourceFile.objects.filter(object_id=resource.id)
         print("in remove_irods_folder, root path is {}", resource.root_path)
-        print("in remove_irods_folder, foldername is {}", foldername)
-        folderpath = os.path.join(resource.root_path, foldername)
         print("in remove_irods_folder, folder path is {}".format(folderpath))
         for f in res_file_set:
             filename = f.storage_path
@@ -629,8 +627,7 @@ def remove_folder(user, res_id, folder_path):
 
     istorage.delete(coll_path)
 
-    qualified_path = os.path.join("data/contents", folder_path)
-    remove_irods_folder_in_django(resource, istorage, qualified_path)
+    remove_irods_folder_in_django(resource, istorage, coll_path)
 
     if resource.raccess.public or resource.raccess.discoverable:
         if not resource.can_be_public_or_discoverable:

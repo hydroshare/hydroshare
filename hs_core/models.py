@@ -1715,18 +1715,14 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
-    # # This is no longer needed.
-    # # Semantics are cascade delete.
-    # # However, there is no delete for the directory in which the
-    # # resource files are stored. This must be handled at the resource level.
+    # delete a resource record; This does not cascade and files must be explicitly deleted.
     def delete(self):
         """ Delete a resource file record and the file contents """
-        if __debug__:
-            assert self.exists
-        if self.fed_resource_file: 
-            self.fed_resource_file.delete()
-        if self.resource_file: 
-            self.resource_file.delete() 
+        if self.exists: 
+            if self.fed_resource_file: 
+                self.fed_resource_file.delete()
+            if self.resource_file: 
+                self.resource_file.delete() 
         super(ResourceFile, self).delete()
 
     @property

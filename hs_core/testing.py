@@ -214,6 +214,9 @@ class TestCaseCommonUtilities(object):
         
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()
+        print("all files are:") 
+        for f in res.files.all(): 
+            print("    filename = {}".format(f.storage_path)) 
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
