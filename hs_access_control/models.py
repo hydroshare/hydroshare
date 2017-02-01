@@ -45,7 +45,6 @@ from django.db import models
 from django.db.models import Q, F, Max
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
-# from pprint import pprint
 
 from hs_core.models import BaseResource
 
@@ -799,7 +798,7 @@ class ProvenanceBase(models.Model):
     @classmethod
     def update(cls, **kwargs):
         """
-        Update a provenance record.
+        Add a provenance record to the provenance chain.
 
         The Provenance models are append-only tables, in the sense that no
         record is ever deleted, but records are marked as `undone` when no
@@ -904,7 +903,6 @@ class ProvenanceBase(models.Model):
         grantor = kwargs['grantor']
         del kwargs['grantor']
         current = cls.get_current_record(**kwargs)
-        print("inside undo share, current is ", str(current))
         if current is None or current.state == ProvenanceCodes.INITIAL:
             raise PermissionDenied("No privilege to undo")
         if current.grantor != grantor:
@@ -1096,7 +1094,7 @@ class UserGroupProvenance(ProvenanceBase):
     @classmethod
     def update(cls, group, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
         """
-        Update a provenance record
+        Add a provenance record to the provenance chain.
 
         This is just a wrapper around ProvenanceBase.update that makes parameters explicit.
         """
@@ -1117,7 +1115,7 @@ class UserGroupProvenance(ProvenanceBase):
 
 class UserResourceProvenance(ProvenanceBase):
     """
-    Provenance of privileges of a user over a group.
+    Provenance of privileges of a user over a resource.
 
     This is an append-only ledger of group privilege that serves as complete provenance
     of access changes.  At any one time, one privilege applies to each user and group.
@@ -1203,7 +1201,7 @@ class UserResourceProvenance(ProvenanceBase):
     @classmethod
     def update(cls, resource, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
         """
-        Update a provenance record.
+        Add a provenance record to the provenance chain.
 
         This is just a wrapper around ProvenanceBase.update with type checking.
 
@@ -1319,7 +1317,7 @@ class GroupResourceProvenance(ProvenanceBase):
     @classmethod
     def update(cls, resource, group, privilege, grantor, state=ProvenanceCodes.REQUESTED):
         """
-        Update a provenance record.
+        Add a provenance record to the provenance chain.
 
         This is just a wrapper around ProvenanceBase.update with argument type checking.
         """
