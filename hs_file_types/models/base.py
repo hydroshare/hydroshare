@@ -65,6 +65,7 @@ class BaseMetaDataElement(models.Model):
         element.data = kwargs['data']
         element.save()
 
+
 # TODO: This class will not be needed once we migrate raster file metadata to HStore
 class AbstractFileMetaData(models.Model):
     """ base class for HydroShare file type metadata """
@@ -504,6 +505,7 @@ class AbstractFileMetaData(models.Model):
                                            onclick="deleteFileTypeExtraMetadata('{}'); "
                                                    "return true;".format(form_id))
         return root_div
+
 
 # TODO: This class will not be needed once we migrate the raster file metadata to HStore
 class AbstractLogicalFile(models.Model):

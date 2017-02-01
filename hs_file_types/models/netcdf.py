@@ -313,7 +313,7 @@ class NetCDFLogicalFile(BaseLogicalFile):
                 if resource.metadata.description is None:
                     if res_dublin_core_meta.get('description'):
                         description = {'description': {'abstract':
-                                                           res_dublin_core_meta['description']}}
+                                                       res_dublin_core_meta['description']}}
                         resource_metadata.append(description)
 
                 # add keywords
