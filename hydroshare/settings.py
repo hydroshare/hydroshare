@@ -289,8 +289,6 @@ INSTALLED_APPS = (
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
-    #"hs_rhessys_inst_resource",
-    "django_docker_processes",
     "hs_geo_raster_resource",
     "ref_ts",
     "hs_app_timeseries",
@@ -315,7 +313,6 @@ INSTALLED_APPS = (
 APPS_TO_NOT_RUN = (
     'jquery_ui',
     'rest_framework',
-    'django_docker_processes',
     'django_nose',
     'inplaceeditform',
     'grappelli_safe',
