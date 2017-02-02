@@ -16,8 +16,6 @@ from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
 
-from django_irods.storage import IrodsStorage
-
 
 class HsBagitException(Exception):
     pass
@@ -33,14 +31,12 @@ def delete_bag(resource):
     """
     res_id = resource.short_id
 
-    res_path = res_id
+    res_path = resource.root_path
     bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_path = '{}/{}'.format(resource.resource_federation_path, res_path)
         bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
-    else:
-        istorage = IrodsStorage()
+
     # delete resource directory first to remove all generated bag-related files for the resource
     istorage.delete(res_path)
 
@@ -204,7 +200,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # delete this extra element
     # <ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
     xml_string = xml_string.replace(
-        '<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
+        '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')

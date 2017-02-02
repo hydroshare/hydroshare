@@ -1,160 +1,29 @@
 import json
 
-from django.core.exceptions import MultipleObjectsReturned, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
-from django.core import signing
 from django.db.models import Q
 
-from hs_core.models import GroupOwnership, BaseResource, Party, Contributor, Creator, Subject, Description, Title
-from .utils import get_resource_by_shortkey, user_from_id, group_from_id, get_resource_types, get_profile
-
-
-# TODO: Only used in a skipped unit test - if needs to be used than Alva's new access control logic needs to be used
-def set_resource_owner(pk, user):
-    """
-    Changes ownership of the specified resource to the user specified by a userID.
-
-    REST URL:  PUT /resource/owner/{pid}?user={userID}
-
-    Parameters:
-    pid - Unique HydroShare identifier for the resource to be modified
-    userID - ID for the user to be set as an owner of the resource identified by pid
-
-    Returns: The pid of the resource that was modified
-
-    Return Type: pid
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The resource identified by pid does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    Note:  This can only be done by the resource owner or a HydroShare administrator.
-
-    """
-
-    res = get_resource_by_shortkey(pk)
-    # TODO: Use Alva's new access logic here
-    # res.owners = [user]
-    # res.save()
-    return pk
-
+from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title
+from .utils import user_from_id, group_from_id, get_profile
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
 
-# TODO: this method is not used except in broken tests - if need to be used then new access control rules need to apply
-def set_access_rules(pk, user=None, group=None, access=None, allow=False):
-    """
-    Set the access permissions for an object identified by pid. Triggers a change in the system metadata. Successful
-    completion of this operation in indicated by a HTTP response of 200. Unsuccessful completion of this operation must
-    be indicated by returning an appropriate exception such as NotAuthorized.
-
-    REST URL:  PUT /resource/accessRules/{pid}/?principaltype=({userID}|{groupID})&principleID={id}&access=
-        (edit|view|donotdistribute)&allow=(true|false)
-
-    Parameters:
-    pid - Unique HydroShare identifier for the resource to be modified
-    principalType - The type of principal (user or group)
-    principalID - Identifier for the user or group to be granted access
-    access - Permission to be assigned to the resource for the principal
-    allow - True for granting the permission, False to revoke
-
-    Returns: The pid of the resource that was modified
-
-    Return Type: pid
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The resource identified by pid does not exist
-    Exceptions.NotFound - The principal identified by principalID does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  Do not distribute is an attribute of the resource that is set by a user with Full permissions and only
-    applies to users with Edit and View privileges. There is no share privilege in HydroShare. Share permission is
-    implicit unless prohibited by the Do not distribute attribute. The only permissions in HydroShare are View, Edit and
-    Full.
-
-    As-built notes:  TypeError was used as it's a built-in exception Django knows about.  it will result in a
-    ServiceFailure if used over the web.
-
-    Also, authorization is not handled in the server-side API.  Server-side API functions run "as root"
-
-    access=public, allow=true will cause the resource to become publicly viewable.
-
-    pid can be a resource instance instead of an identifier (for efficiency)
-    """
-    access = access.lower()
-    if isinstance(pk, basestring):
-        res = get_resource_by_shortkey(pk, or_404=False)
-    else:
-        res = pk  # user passed in the resource instance instead of hte primary key
-
-    if access == DO_NOT_DISTRIBUTE:
-        res.raccess.shareable = allow
-        res.raccess.save()
-    elif access == PUBLIC:
-        res.raccess.public = allow
-        res.raccess.save()
-
-    # TODO: Alva's new access control logic need to be used here
-    # elif access == EDIT:
-    #     if user:
-    #         if allow:
-    #             if not res.edit_users.filter(pk=user.pk).exists():
-    #                 res.edit_users.add(user)
-    #         else:
-    #             if res.edit_users.filter(pk=user.pk).exists():
-    #                 res.edit_users.filter(pk=user.pk).delete()
-    #     elif group:
-    #         if allow:
-    #             if not res.edit_groups.filter(pk=group.pk).exists():
-    #                 res.edit_groups.add(group)
-    #         else:
-    #             if res.edit_groups.filter(pk=group.pk).exists():
-    #                 res.edit_groups.filter(pk=group.pk).delete()
-    #     else:
-    #         raise TypeError('Tried to edit access permissions without specifying a user or group')
-    # elif access == VIEW:
-    #     if user:
-    #         if allow:
-    #             if not res.view_users.filter(pk=user.pk).exists():
-    #                 res.view_users.add(user)
-    #         else:
-    #             if res.view_users.filter(pk=user.pk).exists():
-    #                 res.view_users.filter(pk=user.pk).delete()
-    #     elif group:
-    #         if allow:
-    #             if not res.view_groups.filter(pk=group.pk).exists():
-    #                 res.view_groups.add(group)
-    #         else:
-    #             if res.view_groups.filter(pk=group.pk).exists():
-    #                 res.view_groups.filter(pk=group.pk).delete()
-    #     else:
-    #         raise TypeError('Tried to view access permissions without specifying a user or group')
-    # else:
-    #     raise TypeError('access was none of {donotdistribute, public, edit, view}  ')
-
-    return res
-
 
 def create_account(
-        email, username=None, first_name=None, last_name=None, superuser=None, groups=None, password=None, active=True
+        email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
+        password=None, active=True
 ):
     """
     Create a new user within the HydroShare system.
 
     Returns: The user that was created
-
-    Raises:
-        Exceptions.NotAuthorized - The user is not authorized
-        Exceptions.InvalidContent - The content of the user object is invalid
-        Exception.ServiceFailure - The service is unable to process the request
 
     """
 
@@ -202,8 +71,8 @@ def create_account(
 
 def update_account(user, **kwargs):
     """
-    Update an existing user within the HydroShare system. The user calling this method must have write access to the
-    account details.
+    Update an existing user within the HydroShare system. The user calling this method must have
+    write access to the account details.
 
     REST URL:  PUT /accounts/{userID}
 
@@ -272,7 +141,7 @@ def update_account(user, **kwargs):
     user.groups = groups
     return user.username
 
-
+# Pabitra: This one seems to be not used anywhere. Can I delete it?
 def list_users(query=None, status=None, start=None, count=None):
     """
     List the users that match search criteria.
@@ -308,212 +177,6 @@ def list_users(query=None, status=None, start=None, count=None):
         qs = qs[:count]
 
     return qs
-
-
-def list_groups(query=None, start=None, count=None):
-    """
-    List the groups that match search criteria.
-
-    REST URL:  GET /groups?query={query}[&status={status}&start={start}&count={count}]
-
-    Parameters:
-    query - a string specifying the query to perform
-    start=0 - (optional) the zero-based index of the first value, relative to the first record of the resultset that
-        matches the parameters
-    count=100 - (optional) the maximum number of results that should be returned in the response
-
-    Returns: An object containing a list of groupIDs that match the query. If none match, an empty list is returned.
-
-    Return Type: groupList
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exception.ServiceFailure - The service is unable to process the request
-
-    implementation notes: status parameter is unused.  unsure of group status.
-
-    """
-    query = json.loads(query) if isinstance(query, basestring) else query
-    qs = Group.objects.filter(**query)
-    if start and count:
-        qs = qs[start:start+count]
-    elif start:
-        qs = qs[start:]
-    elif count:
-        qs = qs[:count]
-
-    return qs
-
-
-# TODO: This should utilize group access control.
-def create_group(name, members=None, owners=None):
-    """
-    Create a group within HydroShare. Groups are lists of users that allow all members of the group to be referenced by
-    listing solely the name of the group. Group names must be unique within HydroShare. Groups can only be modified by
-    users listed as group owners.
-
-    REST URL:  POST /groups
-
-    Parameters: group - An object containing the attributes of the group to be created
-
-    Returns: The groupID of the group that was created
-    Return Type: groupID
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.InvalidContent - The content of the group object is invalid
-    Exceptions.GroupNameNotUnique - The name of the group already exists in HydroShare
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  This would be done via a JSON object (group) that is in the POST request. May want to add an email
-    verification step to avoid automated creation of fake groups. The creating user would automatically be set as the
-    owner of the created group.
-    """
-
-    g = Group.objects.create(name=name)
-
-    if owners:
-        owners = [user_from_id(owner) for owner in owners]
-
-        GroupOwnership.objects.bulk_create([
-            GroupOwnership(group=g, owner=owner) for owner in owners
-        ])
-
-    if members:
-        members = [user_from_id(member) for member in members]
-
-        for member in members:
-            try:
-                member.groups.add(g)
-            except MultipleObjectsReturned:
-                pass
-
-    return g
-
-# TODO: This should utilize group access control.
-def update_group(group, members=None, owners=None):
-    """
-    Modify details of group identified by groupID or add or remove members to/from the group. Group members can be
-    modified only by an owner of the group, otherwise a NotAuthorized exception is thrown. Group members are provided as
-    a list of users that replace the group membership.
-
-    REST URL:  PUT /groups/{groupID}
-
-    Parameters:
-    groupID - groupID of the existing group to be modified
-    group - An object containing the modified attributes of the group to be modified and the modified list of userIDs in
-    the group membership
-
-    Returns: The groupID of the group that was modified
-
-    Return Type: groupID
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The group identified by groupID does not exist
-    Exceptions.InvalidContent - The content of the group object is invalid
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  This would be done via a JSON object (group) that is in the PUT request.
-    """
-
-    if owners:
-        GroupOwnership.objects.filter(group=group).delete()
-        owners = [user_from_id(owner) for owner in owners]
-
-        GroupOwnership.objects.bulk_create([
-            GroupOwnership(group=group, owner=owner) for owner in owners
-        ])
-
-    if members:
-        for u in User.objects.filter(groups=group):
-            u.groups.remove(group)
-
-        members = [user_from_id(member) for member in members]
-
-        for member in members:
-            try:
-                member.groups.add(group)
-            except MultipleObjectsReturned:
-                pass
-
-
-# TODO: This should utilize group access control.
-def list_group_members(name):
-    """
-    Get the information about a group identified by groupID. For a group this would be its description and membership
-    list.
-
-    REST URL:  GET /group/{groupID}
-
-    Parameters: groupID - ID of the existing user to be modified
-
-    Returns: An object containing the details for the group
-
-    Return Type: group
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The group identified by groupID does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    """
-
-    return User.objects.filter(groups=group_from_id(name))
-
-
-# TODO: This should utilize group access control.
-def set_group_owner(group, user):
-    """
-    Adds ownership of the group identified by groupID to the user specified by userID. This can only be done by a group
-    owner or HydroShare administrator.
-
-    REST URL:  PUT /groups/{groupID}/owner/?user={userID}
-
-    Parameters: groupID - groupID of the existing group to be modified
-
-    userID - userID of the existing user to be set as the owner of the group
-
-    Returns: The groupID of the group that was modified
-
-    Return Type: groupID
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The group identified by groupID does not exist
-    Exceptions.NotFound - The user identified by userID does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    """
-    if not GroupOwnership.objects.filter(group=group, owner=user).exists():
-        GroupOwnership.objects.create(group=group, owner=user)
-
-
-# TODO: This should utilize group access control.
-def delete_group_owner(group, user):
-    """
-    Removes a group owner identified by a userID from a group specified by groupID. This can only be done by a group
-    owner or HydroShare administrator.
-
-    REST URL:  DELETE /groups/{groupID}/owner/?user={userID}
-
-    Parameters: groupID - groupID of the existing group to be modified
-
-    userID - userID of the existing user to be removed as the owner of the group
-
-    Returns: The groupID of the group that was modified
-
-    Return Type: groupID
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The group identified by groupID does not exist
-    Exceptions.NotFound - The user identified by userID does not exist
-    Exceptions.InvalidRequest - The request would result in removal of the last remaining owner of the group
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Note:  A group must have at least one owner.
-    """
-    # TODO: this does not check whether this act removes the last owner! 
-    GroupOwnership.objects.filter(group=group, owner=user).delete()
 
 
 def set_group_active_status(user, group_id, status):
@@ -628,13 +291,6 @@ def get_resource_list(creator=None,
     if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
-    #resource_types = get_resource_types()
-
-    # filtering based on resource type.
-    # if type:
-    #     queries = dict((rtype, []) for rtype in resource_types if rtype.__name__ in type)
-    # else:
-    #     queries = dict((el, []) for el in resource_types)
     q = []
 
     if type:
@@ -648,26 +304,16 @@ def get_resource_list(creator=None,
 
     if author:
         author_parties = (
-            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
             (Creator.objects.filter(email__in=author) | Creator.objects.filter(name__in=author))
         )
-        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-        # assert False, author_parties.values_list('id', flat=True)
-        # if t is GenericResource:
-        #     assert False,objects.all().values_list('object_id', flat=True)
+
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
 
     if contributor:
         contributor_parties = (
-            #Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)) &
             (Contributor.objects.filter(email__in=contributor) | Contributor.objects.filter(name__in=contributor))
         )
-        # if Creator.objects.filter(content_type=ContentType.objects.get_for_model(t)).exists():
-        # assert author_parties, Creator.objects.all().values_list('name', flat=True)
-        # assert False, author_parties.values_list('id', flat=True)
-        # if t is GenericResource:
-        #     assert False, BaseResource.objects.all().values_list('object_id', flat=True)
+
         q.append(Q(object_id__in=contributor_parties.values_list('object_id', flat=True)))
 
     if edit_permission:
@@ -699,7 +345,6 @@ def get_resource_list(creator=None,
         subjects = Subject.objects.filter(value__in=subject)
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
-
     flt = BaseResource.objects.all()
     for q in q:
         flt = flt.filter(q)
@@ -719,7 +364,7 @@ def get_resource_list(creator=None,
 
     qcnt = 0
     if flt:
-        qcnt = len(flt);
+        qcnt = len(flt)
 
     if start is not None and count is not None:
         if qcnt > start:

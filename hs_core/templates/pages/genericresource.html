@@ -85,7 +85,7 @@
                         {% endif %}
 
                         {% if page.perms.change and metadata_form %}
-                            {% if cm|resource_type == "Generic" %}
+                            {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
                                 <li id="btn-cut" data-menu-name="cut">
                                     <span class="fa fa-scissors icon-blue"></span>
                                     <span>Cut</span>
@@ -329,7 +329,7 @@
                                                         </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
                                                             <button id="fb-cut"
                                                                     class="disabled"
                                                                     title="Cut">
@@ -1191,19 +1191,21 @@
                                                             <tr>
                                                                 <th scope="row" class="dataset-label">{{ relation.type }}:</th>
                                                                 <td class="dataset-details">{{ relation.value }}</td>
-                                                                <td>
-                                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                       class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                       data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                       style="top: -5px; "></a>
-                                                                </td>
-                                                                <td>
-                                                                    <a data-toggle="modal" data-placement="auto"
-                                                                       title="Remove"
-                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                       style="top: -5px; right:20px;"></a>
-                                                                </td>
+                                                                {% if relation.type|lower != "isversionof" %}
+                                                                    <td>
+                                                                        <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                                           data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                                           style="top: -5px; "></a>
+                                                                    </td>
+                                                                    <td>
+                                                                        <a data-toggle="modal" data-placement="auto"
+                                                                           title="Remove"
+                                                                           class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                                           data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                                           style="top: -5px; right:20px;"></a>
+                                                                    </td>
+                                                                {% endif %}
                                                             </tr>
                                                         {% endif %}
                                                     {% endfor %}
