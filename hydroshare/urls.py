@@ -85,6 +85,11 @@ urlpatterns += patterns('',
     url('^hsapi/', include('hs_file_types.urls')),
 )
 
+# robots.txt URLs for django-robots
+urlpatterns += patterns('',
+    (r'^robots\.txt$', include('robots.urls')),
+)
+
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
   url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
