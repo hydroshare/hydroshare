@@ -308,7 +308,7 @@ INSTALLED_APPS = (
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",
-    "csp"
+    "security",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -369,63 +369,12 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
-    'csp.middleware.CSPMiddleware',
+    'security.middleware.XssProtectMiddleware',
+    'security.middleware.ContentSecurityPolicyMiddleware',
+    'security.middleware.ContentNoSniff',
 )
 
-# Content Security Policy
-# See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
-# sha256-* strings are hashes of inline scripts and styles
-CSP_DEFAULT_SRC = ("'none'",)
-CSP_SCRIPT_SRC = (
-    "'self'",
-    "'unsafe-inline'",
-    # "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
-    # "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
-    # "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
-    # "'sha256-EeeHsgrKQ0j+QXY9+NqkhS9pB8fZ4iPEiytjK3sVD/k='",
-    # "'sha256-JB94IjPO9ws/1kVTgg5lq3sUp/3Yt/1gm4wx82JRCVE='",
-    # "'sha256-5ps1OUcNv+F/rpDQlMFLOuF67quHYXVbFf9yOJNjqaw='",
-    # "'sha256-ptl8NJjRX6En62nAGX95mPmBq5Zq1p7JIsTIzhM+s3Q='",
-    # "'sha256-ukGEpm76ZWGDlDStysCDbVRJgILWSgR1XiInXHpnqeo='",
-    # "'sha256-1pdWRQ5pLai42G3EWfkHyJXR4TFGVlzxJHpNF89iLTQ='",
-    # "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
-    # "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
-    # "'sha256-/dNLhMcPPsv9gDusbsJ+xgTBKgl67iqN75nRsJwY1y8='",
-    # "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
-    # "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
-    # "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
-    # "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
-    "https://maps.googleapis.com",
-    "https://cdn.rawgit.com",
-    "https://cdnjs.cloudflare.com",
-    "http://cdn.datatables.net"
-)
-CSP_STYLE_SRC = (
-    "'self'",
-    "'unsafe-inline'",
-    "https://fonts.googleapis.com",
-    "http://netdna.bootstrapcdn.com",
-    "http://cdn.datatables.net",
-    "https://cdnjs.cloudflare.com/"
-)
-CSP_FONT_SRC = (
-    "'self'",
-    "https://fonts.gstatic.com",
-    "http://netdna.bootstrapcdn.com",
-)
-CSP_IMG_SRC = (
-    "'self'",
-    "http://cdn.datatables.net",
-    "https://csi.gstatic.com"
-)
-CSP_FRAME_SRC = (
-    "https://www.hydroshare.org",
-)
-CSP_CHILD_SRC = CSP_FRAME_SRC
-CSP_CONNECT_SRC = (
-    "'self'",
-    "https://api.github.com"
-)
+
 
 # Store these package names here as they may change in the future since
 # at the moment we are using custom forks of them.
@@ -624,3 +573,69 @@ TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Content Security Policy
+# See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
+# sha256-* strings are hashes of inline scripts and styles
+
+CSP_DICT = {
+    "default-src" : ["none",],
+    "script-src" : [
+        "self",
+        "unsafe-inline",
+        "https://maps.googleapis.com",
+        "https://cdn.rawgit.com",
+        "https://cdnjs.cloudflare.com",
+        "http://cdn.datatables.net"
+    ],
+    "style-src" : [
+        "self",
+        "unsafe-inline",
+        "https://fonts.googleapis.com",
+        "http://netdna.bootstrapcdn.com",
+        "http://cdn.datatables.net",
+        "https://cdnjs.cloudflare.com/"
+    ],
+    "img-src" : [
+        "self",
+        "http://cdn.datatables.net",
+        "https://csi.gstatic.com"
+    ],
+    "connect-src" : [
+        "self",
+        "https://api.github.com"
+    ],
+    "font-src" : [
+        "self",
+        "https://fonts.gstatic.com",
+        "http://netdna.bootstrapcdn.com"
+    ],
+    "frame-src" : [
+        "self",
+        "https://www.hydroshare.org"
+    ]
+}
+
+# "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
+# "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
+# "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
+# "'sha256-EeeHsgrKQ0j+QXY9+NqkhS9pB8fZ4iPEiytjK3sVD/k='",
+# "'sha256-JB94IjPO9ws/1kVTgg5lq3sUp/3Yt/1gm4wx82JRCVE='",
+# "'sha256-5ps1OUcNv+F/rpDQlMFLOuF67quHYXVbFf9yOJNjqaw='",
+# "'sha256-ptl8NJjRX6En62nAGX95mPmBq5Zq1p7JIsTIzhM+s3Q='",
+# "'sha256-ukGEpm76ZWGDlDStysCDbVRJgILWSgR1XiInXHpnqeo='",
+# "'sha256-1pdWRQ5pLai42G3EWfkHyJXR4TFGVlzxJHpNF89iLTQ='",
+# "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
+# "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
+# "'sha256-/dNLhMcPPsv9gDusbsJ+xgTBKgl67iqN75nRsJwY1y8='",
+# "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
+# "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
+# "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
+# "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
+
+
+# Secure Cookies
+if os.environ.get('USE_SSL'):
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
