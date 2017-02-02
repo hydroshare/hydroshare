@@ -172,9 +172,13 @@ STATICFILES_FINDERS = (
 # a mode you'd pass directly to os.chmod.
 FILE_UPLOAD_PERMISSIONS = 0o644
 
-
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+
+# Sitemap for robots
+ROBOTS_SITEMAP_URLS = [
+    'http://localhost:8000/sitemap/',
+]
 
 #############
 # DATABASES #
@@ -284,6 +288,7 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
+    "robots",
     "ga_ows",
     "ga_resources",
     "hs_core",
