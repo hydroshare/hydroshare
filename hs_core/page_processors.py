@@ -1,5 +1,6 @@
 from functools import partial, wraps
 
+from django.core.exceptions import PermissionDenied
 from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
@@ -253,6 +254,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     # whether the user has permission to change the model
     can_change = content_model.can_change(request)
+    if not can_change:
+        raise PermissionDenied()
 
     add_creator_modal_form = CreatorForm(allow_edit=can_change, res_short_id=content_model.short_id)
     add_contributor_modal_form = ContributorForm(allow_edit=can_change,
