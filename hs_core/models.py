@@ -1250,6 +1250,7 @@ class AbstractResource(ResourcePermissionsMixin):
                                           )
     file_unpack_message = models.TextField(blank=True, null=True)
 
+    # TODO: why are old versions saved? 
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
