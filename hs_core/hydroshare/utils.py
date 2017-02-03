@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import mimetypes
 import os
-import json
 import tempfile
 import logging
 import shutil
@@ -17,7 +16,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
-from django.core.serializers import get_serializer
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
@@ -394,13 +392,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     """
     # do on-demand bag creation
     res = get_resource_by_shortkey(res_id)
-    res_coll = res_id
-    if res.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_coll = os.path.join(res.resource_federation_path, res_coll)
-    else:
-        istorage = IrodsStorage()
-
+    res_coll = res.root_path
+    istorage = res.get_irods_storage()
     bag_modified = "false"
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when
@@ -421,40 +414,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
         userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
-
-
-# TODO: Tastypie left over. This needs to be deleted
-def serialize_science_metadata(res):
-    js = get_serializer('json')()
-    resd = json.loads(js.serialize([res]))[0]['fields']
-    resd.update(json.loads(js.serialize([res.page_ptr]))[0]['fields'])
-
-    resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
-    resd['resource_uri'] = resd['short_id']
-    resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    # TODO: serialize metadata from the res.metadata object
-    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
-    # res.dublin_metadata.all()))]
-    resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
-    resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
-    return json.dumps(resd)
-
-
-# TODO: Tastypie left over. This needs to be deleted
-def serialize_system_metadata(res):
-    js = get_serializer('json')()
-    resd = json.loads(js.serialize([res]))[0]['fields']
-    resd.update(json.loads(js.serialize([res.page_ptr]))[0]['fields'])
-
-    resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
-    resd['resource_uri'] = resd['short_id']
-    resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    # TODO: serialize metadata from the res.metadata object
-    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
-    # res.dublin_metadata.all()))]
-    resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
-    resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
-    return json.dumps(resd)
 
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
@@ -904,6 +863,7 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
+    :param folder: name of the folder path to which the file needs be uploaded
     :param fed_res_file_name_or_path: the logical file name of the resource content file for
                                       federated iRODS resource or the federated zone name;
                                       By default, it is empty. A non-empty value indicates
@@ -948,9 +908,8 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
         try:
             from_fname = fed_res_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
-
+            istorage = resource.get_irods_storage()
             if resource.resource_federation_path:
-                istorage = IrodsStorage('federated')
                 if folder:
                     to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
                                             'data', 'contents', folder, filename)
@@ -958,7 +917,6 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
                     to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
                                             'data', 'contents', filename)
             else:
-                istorage = IrodsStorage()
                 if folder:
                     to_fname = os.path.join(resource.short_id, 'data', 'contents',
                                             folder, filename)

@@ -31,6 +31,8 @@ def uncouple(choices):
 
 def validate_choice(value, choices):
     choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
+    if isinstance(value, int):
+        return value
     if 'Choose' in value:
         return ''
     if value and value not in choices:
@@ -409,13 +411,13 @@ class BoundaryCondition(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if key == 'specified_head_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
-                               for package in kwargs[key] if isinstance(package, basestring)]
+                               for package in kwargs[key]]
             elif key == 'specified_flux_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
-                               for package in kwargs[key] if isinstance(package, basestring)]
+                               for package in kwargs[key]]
             elif key == 'head_dependent_flux_boundary_packages':
                 kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
-                               for package in kwargs[key] if isinstance(package, basestring)]
+                               for package in kwargs[key]]
         return kwargs
 
 
@@ -568,7 +570,7 @@ class GeneralElements(AbstractMetaDataElement):
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
             elif key == 'output_control_package':
                 kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
-                               in kwargs[key] if isinstance(package, basestring)]
+                               in kwargs[key]]
             elif key == 'subsidencePackage':
                 kwargs[key] = validate_choice(val, cls.subsidencePackageChoices)
         return kwargs
@@ -819,7 +821,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
-            self.add_metadata_element_to_xml(container, self.model_inputs.first(), modelInputFields)
+            for model_input in self.model_inputs:
+                self.add_metadata_element_to_xml(container, model_input, modelInputFields)
 
         if self.general_elements:
 
