@@ -753,6 +753,8 @@ def add_resource_files(pk, *files, **kwargs):
     folder = kwargs.pop('folder', None) 
 
     if __debug__:  # assure that there are no spurious kwargs left. 
+        for k in kwargs: 
+            print("kwargs[{}]".format(k))
         assert len(kwargs) == 0 
 
     for f in files: 
