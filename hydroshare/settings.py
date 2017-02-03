@@ -377,7 +377,8 @@ MIDDLEWARE_CLASSES = (
     'security.middleware.XssProtectMiddleware',
     'security.middleware.ContentSecurityPolicyMiddleware',
     'security.middleware.ContentNoSniff',
-    'security.middleware.XFrameOptionsMiddleware'
+    'security.middleware.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware'
 )
 
 # Store these package names here as they may change in the future since
@@ -588,36 +589,36 @@ CSP_DICT = {
     "script-src" : [
         "self",
         "unsafe-inline",
-        "https://maps.googleapis.com",
-        "https://cdn.rawgit.com",
-        "https://cdnjs.cloudflare.com",
-        "http://cdn.datatables.net"
+        "*.googleapis.com",
+        "*.rawgit.com",
+        "*.cloudflare.com",
+        "*.datatables.net"
     ],
     "style-src" : [
         "self",
         "unsafe-inline",
-        "https://fonts.googleapis.com",
-        "http://netdna.bootstrapcdn.com",
-        "http://cdn.datatables.net",
-        "https://cdnjs.cloudflare.com/"
+        "*.googleapis.com",
+        "*.bootstrapcdn.com",
+        "*.datatables.net",
+        "*.cloudflare.com/"
     ],
     "img-src" : [
         "self",
-        "http://cdn.datatables.net",
-        "https://csi.gstatic.com"
+        "*.datatables.net",
+        "*.gstatic.com"
     ],
     "connect-src" : [
         "self",
-        "https://api.github.com"
+        "*.github.com"
     ],
     "font-src" : [
         "self",
-        "https://fonts.gstatic.com",
-        "http://netdna.bootstrapcdn.com"
+        "*.gstatic.com",
+        "*.bootstrapcdn.com"
     ],
     "frame-src" : [
         "self",
-        "https://www.hydroshare.org"
+        "*.hydroshare.org"
     ]
 }
 
@@ -640,7 +641,6 @@ CSP_DICT = {
 
 X_FRAME_OPTIONS = "deny"
 
-# Secure Cookies
-if os.environ.get('USE_SSL'):
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
