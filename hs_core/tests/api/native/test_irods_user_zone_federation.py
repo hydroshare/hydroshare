@@ -263,3 +263,5 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         resource.delete_resource(res.short_id)
         self.assertEquals(BaseResource.objects.all().count(), 0,
                           msg='Number of resources not equal to 0')
+        # test to make sure original file still exist after resource deletion
+        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
