@@ -1287,8 +1287,8 @@ class AbstractResource(ResourcePermissionsMixin):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
-        # type resolution is not relevant; grab base class instance. 
-        res = BaseResource.objects.get(short_id=resource_id) 
+        # type resolution is not relevant; grab base class instance.
+        res = BaseResource.objects.get(short_id=resource_id)
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
 
@@ -1568,10 +1568,10 @@ def get_resource_path(resource, filename, folder=None):
 
     """
     # folder can be absolute pathname; strip qualifications off of folder if necessary
-    if folder is not None and folder.startswith(resource.root_path): 
-        # TODO: does this now start with /? 
-        folder = folder[len(resource.root_path):] 
-    if folder == '': 
+    if folder is not None and folder.startswith(resource.root_path):
+        # TODO: does this now start with /?
+        folder = folder[len(resource.root_path):]
+    if folder == '':
         folder = None
 
     # retrieve federation path -- if any -- from Resource object containing the file
@@ -1634,11 +1634,11 @@ class ResourceFile(models.Model):
     # DEPRECATED: use native size() routine
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
-    def __str__(self): 
-        if self.resource.resource_federation_path: 
+    def __str__(self):
+        if self.resource.resource_federation_path:
             return self.fed_resource_file.name
-        else: 
-            return self.resource_file.name 
+        else:
+            return self.resource_file.name
 
     @classmethod
     def create(cls, resource, file, folder=None, source=None, move=False):
@@ -1718,11 +1718,11 @@ class ResourceFile(models.Model):
     # delete a resource record; This does not cascade and files must be explicitly deleted.
     def delete(self):
         """ Delete a resource file record and the file contents """
-        if self.exists: 
-            if self.fed_resource_file: 
+        if self.exists:
+            if self.fed_resource_file:
                 self.fed_resource_file.delete()
-            if self.resource_file: 
-                self.resource_file.delete() 
+            if self.resource_file:
+                self.resource_file.delete()
         super(ResourceFile, self).delete()
 
     @property
@@ -1832,9 +1832,9 @@ class ResourceFile(models.Model):
 
         * This path is invariant of where the object is stored.
 
-        * Thus, it does not change if the resource is moved. 
+        * Thus, it does not change if the resource is moved.
 
-        This is the path that should be used as a key to index things such as file type. 
+        This is the path that should be used as a key to index things such as file type.
         """
         if self.resource.resource_federation_path:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
@@ -1864,6 +1864,10 @@ class ResourceFile(models.Model):
             self.resource_file = get_path(self, base)
             self.fed_resource_file = None
         self.save()
+
+    def parse(self): 
+        """ parse a path into folder and basename """
+        return self.path_is_acceptable(self.storage_path, test_exists=False) 
 
     def path_is_acceptable(self, path, test_exists=True):
         """
@@ -1966,10 +1970,10 @@ class ResourceFile(models.Model):
         """
         List a given folder
 
-        :param resource: resource for which to list the folder 
-        :param folder: folder listed as either short_path or fully qualified path 
+        :param resource: resource for which to list the folder
+        :param folder: folder listed as either short_path or fully qualified path
         """
-        if folder is None: 
+        if folder is None:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
@@ -2095,7 +2099,7 @@ class BaseResource(Page, AbstractResource):
     def file_path(self):
         """
         Return the file path of the resource. This is the root path plus "data/contents".
-        
+
         This is the root of the folder structure for resource files.
         """
         return os.path.join(self.root_path, "data", "contents")
@@ -2127,7 +2131,7 @@ class BaseResource(Page, AbstractResource):
     # these are independent of federation strategy
     # TODO: utilize "reverse" abstraction to tie this to urls.py for robustness
 
-    # add these one by one to avoid errors. 
+    # add these one by one to avoid errors.
 
     # @property
     # def root_uri(self):

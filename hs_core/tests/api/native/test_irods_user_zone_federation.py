@@ -124,8 +124,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         hydroshare.add_resource_files(
             res.short_id,
             source_names=[fed_test_file1_full_path, fed_test_file2_full_path],
-            move=False, 
-            fed_zone_home_path=res.resource_federation_path)
+            move=False)
         # test resource has two files
         self.assertEqual(res.files.all().count(), 2,
                          msg="Number of content files is not equal to 2")

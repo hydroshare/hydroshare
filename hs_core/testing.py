@@ -174,9 +174,8 @@ class TestCaseCommonUtilities(object):
                 zone=settings.HS_USER_IRODS_ZONE, uname=user.username, fname=file_name_list[0])
             # TODO: why isn't this a method of resource? 
             # TODO: Why do we repeat the resource_federation_path?
-            add_resource_files(res.short_id, fed_res_file_names=[fed_test_file1_full_path],
-                               move=False,
-                               fed_zone_home_path=res.resource_federation_path)
+            add_resource_files(res.short_id, source_names=[fed_test_file1_full_path],
+                               move=False)
 
         else:
             # TODO: Why isn't this a method of resource? 
