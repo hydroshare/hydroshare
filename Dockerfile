@@ -5,7 +5,8 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 RUN pip install --upgrade pip && pip install \
   xmltodict==0.10.2 \
   selenium \
-  dominate
+  dominate \
+  django-robots
 RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
 RUN apt-get update && apt-get install -y nodejs
 RUN npm install -g phantomjs-prebuilt
