@@ -584,23 +584,40 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
 # sha256-* strings are hashes of inline scripts and styles
 
+CSP_MODE='report-only'
 CSP_DICT = {
     "default-src" : ["none",],
     "script-src" : [
         "self",
-        "unsafe-inline",
         "*.googleapis.com",
         "*.rawgit.com",
         "*.cloudflare.com",
-        "*.datatables.net"
+        "*.datatables.net ",
+        "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
+        "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
+        "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
+        "'sha256-EeeHsgrKQ0j+QXY9+NqkhS9pB8fZ4iPEiytjK3sVD/k='",
+        "'sha256-JB94IjPO9ws/1kVTgg5lq3sUp/3Yt/1gm4wx82JRCVE='",
+        "'sha256-5ps1OUcNv+F/rpDQlMFLOuF67quHYXVbFf9yOJNjqaw='",
+        "'sha256-ptl8NJjRX6En62nAGX95mPmBq5Zq1p7JIsTIzhM+s3Q='",
+        "'sha256-ukGEpm76ZWGDlDStysCDbVRJgILWSgR1XiInXHpnqeo='",
+        "'sha256-1pdWRQ5pLai42G3EWfkHyJXR4TFGVlzxJHpNF89iLTQ='",
+        "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
+        "'sha256-/dNLhMcPPsv9gDusbsJ+xgTBKgl67iqN75nRsJwY1y8='",
+        "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
+        "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
+        "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
+        "'sha256-DC3munJ0pghuoA4hX8dh32935FOMe4Ek0lEToguPh04='"
     ],
     "style-src" : [
         "self",
-        "unsafe-inline",
-        "*.googleapis.com",
+        "https://fonts.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
-        "*.cloudflare.com/"
+        "*.cloudflare.com "
+        "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
+        "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
+        "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='"
     ],
     "img-src" : [
         "self",
@@ -622,22 +639,7 @@ CSP_DICT = {
     ]
 }
 
-# "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
-# "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
-# "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
-# "'sha256-EeeHsgrKQ0j+QXY9+NqkhS9pB8fZ4iPEiytjK3sVD/k='",
-# "'sha256-JB94IjPO9ws/1kVTgg5lq3sUp/3Yt/1gm4wx82JRCVE='",
-# "'sha256-5ps1OUcNv+F/rpDQlMFLOuF67quHYXVbFf9yOJNjqaw='",
-# "'sha256-ptl8NJjRX6En62nAGX95mPmBq5Zq1p7JIsTIzhM+s3Q='",
-# "'sha256-ukGEpm76ZWGDlDStysCDbVRJgILWSgR1XiInXHpnqeo='",
-# "'sha256-1pdWRQ5pLai42G3EWfkHyJXR4TFGVlzxJHpNF89iLTQ='",
-# "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
-# "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
-# "'sha256-/dNLhMcPPsv9gDusbsJ+xgTBKgl67iqN75nRsJwY1y8='",
-# "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
-# "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
-# "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
-# "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
+
 
 X_FRAME_OPTIONS = "deny"
 
