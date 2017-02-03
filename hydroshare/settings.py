@@ -377,9 +377,8 @@ MIDDLEWARE_CLASSES = (
     'security.middleware.XssProtectMiddleware',
     'security.middleware.ContentSecurityPolicyMiddleware',
     'security.middleware.ContentNoSniff',
+    'security.middleware.XFrameOptionsMiddleware'
 )
-
-
 
 # Store these package names here as they may change in the future since
 # at the moment we are using custom forks of them.
@@ -639,6 +638,7 @@ CSP_DICT = {
 # "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
 # "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
 
+X_FRAME_OPTIONS = "deny"
 
 # Secure Cookies
 if os.environ.get('USE_SSL'):
