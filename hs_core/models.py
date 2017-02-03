@@ -1465,10 +1465,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
                     istorage.delete('{}/{}'.format(self.resource_federation_path,
                                                    fl.fed_resource_file_name_or_path))
-                else:
+                elif self.resource_federation_path:
                     istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
                                                       self.short_id,
                                                       fl.fed_resource_file_name_or_path))
+                else:
+                    # this scenario happens when adding a file from a federated zone into
+                    # a resource that is already created in the default hydroshare zone, in
+                    # which case resource_federation_path on the resource is empty, but
+                    # fede_resource_file_name_or_path stores the relative path without federated
+                    # zone on the path since the file ends up being stored in hydroshare zone
+                    istorage.delete('{}/{}'.format(self.short_id,
+                                                   fl.fed_resource_file_name_or_path))
             elif fl.resource_file:
                 fl.resource_file.delete()
             elif fl.fed_resource_file:
