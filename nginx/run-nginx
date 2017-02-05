@@ -7,8 +7,6 @@
 NGINX_CONFIG_DIRECTORY='./config-files'
 NGINX_DOCKER_IMG='hydroshare_nginx'
 NGINX_DOCKER_CNTR='nginx'
-#AUTH_BASIC='auth_basic "Restricted Content"'
-#AUTH_BASIC_USER_FILE='auth_basic_user_file /etc/nginx/.htpasswd'
 
 display_usage() {
 	echo "*** run-nginx control script ***"
