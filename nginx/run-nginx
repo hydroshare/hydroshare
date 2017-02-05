@@ -7,6 +7,8 @@
 NGINX_CONFIG_DIRECTORY='./config-files'
 NGINX_DOCKER_IMG='hydroshare_nginx'
 NGINX_DOCKER_CNTR='nginx'
+#AUTH_BASIC='auth_basic "Restricted Content"'
+#AUTH_BASIC_USER_FILE='auth_basic_user_file /etc/nginx/.htpasswd'
 
 display_usage() {
 	echo "*** run-nginx control script ***"
@@ -27,6 +29,19 @@ preflight_nginx() {
     else
         yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-nginx.conf ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf;
+    fi
+    # Configure access based on USE_HTTP_AUTH
+    if [ "${USE_HTTP_AUTH,,}" = true ]; then
+        # check for existence of .htpasswd file
+        if [[ ! -f ${HS_PATH}/nginx/.htpasswd ]]; then
+            echo "ERROR: requires ${HS_PATH}/nginx/.htpasswd, run ${HS_PATH}/nginx/generate_htpasswd.exp first."
+            exit 1;
+        fi
+        sed -i 's!\<AUTH_BASIC\>!auth_basic "Restricted Content"!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+        sed -i 's!\<AUTH_BASIC_USER_FILE\>!auth_basic_user_file /etc/nginx/.htpasswd!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+    else
+        sed -i 's!\<AUTH_BASIC\>!# auth_basic "Restricted Content"!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
+        sed -i 's!\<AUTH_BASIC_USER_FILE\>!# auth_basic_user_file /etc/nginx/.htpasswd!g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
     fi
 }
 
