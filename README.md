@@ -6,6 +6,9 @@
 
 Build generate by [Jenkins CI](http://ci.hydroshare.org:8080)
 
+### requires.io
+[![Requirements Status](https://requires.io/github/hydroshare/hs_docker_base/requirements.svg?branch=develop)](https://requires.io/github/hydroshare/hs_docker_base/requirements/?branch=master)
+
 Hydroshare
 ============
 
