@@ -140,15 +140,10 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # test adding file from user zone to existing empty resource in hydroshare zone
         # even there is no file uploaded to resource initially, there are default extended
         # automatically metadata created
-        _, _, metadata, _ = utils.resource_pre_create_actions(
-            resource_type='RasterResource',
-            resource_title='My Test Raster Resource',
-            page_redirect_url_key=None, metadata=None, )
         self.resRaster = hydroshare.create_resource(
             resource_type='RasterResource',
             owner=self.user,
-            title='My Test Raster Resource',
-            metadata=metadata
+            title='My Test Raster Resource'
         )
         # test metadata extraction with a valid tif file being added coming from user zone space
         # file validation and metadata extraction happen during post file add signal handler
