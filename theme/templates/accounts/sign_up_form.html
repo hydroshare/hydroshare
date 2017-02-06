@@ -55,6 +55,24 @@
          }
     });
 
+    // Only letters, numbers, dashes, dot, underscore, or @ are viewed as valid characters
+    // to conform to the same user name validation rules in Django with + removed from set of
+    // valid characters since although + is supported as a valid character in username field,
+    // it is not supported as a valid character in corresponding iRODS username
+    function validateUserName() {
+        var regex = /^[a-zA-Z0-9-_.@]+$/;
+        var username = $("#id_username");
+
+        if (!username.val()) {
+            return false;
+        }
+
+        if (!regex.test(username.val())) {
+            return false;
+        }
+        return true;
+    }
+
     $(function() {
         function cb() {
             $("#recaptcha_privacy").attr('style', "display:none");
@@ -90,8 +108,20 @@
                     missingFieldCount++;
                 }
            }
-           if(empty) {
-               $("#missing-data-div").html('<p class="alert alert-danger">' + missingFields +'</p>');
+           // validate username to make sure username not only passes django username validation
+           // but also passed iRODS username validation
+           var username_valid = validateUserName();
+           if(empty || !username_valid) {
+               var warning_str = '';
+               if(empty)
+                   warning_str += missingFields;
+               if(!username_valid) {
+                   if (empty)
+                       warning_str += "<br>";
+                   warning_str += "username is not valid - make sure username only contains " +
+                       "letters, numbers, dashes, dot, underscore, or @";
+               }
+               $("#missing-data-div").html('<p class="alert alert-danger">' + warning_str +'</p>');
                return;
            }
             function onSuccess() {
