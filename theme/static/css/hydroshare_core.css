@@ -1320,10 +1320,6 @@ table.table-plain td{
     box-shadow: inset 0 1px 0 #ffffff;
 }
 
-#coverageTab {
-    overflow-x:hidden;
-}
-
 .tab-elements > .tabs-body {
     min-height: 150px;
     border: 1px solid #ddd;
@@ -2233,7 +2229,6 @@ button.loading {
     text-align: center;
 }
 
-
 #div-invite-people .label-danger {
 	font-size: 12px;
 }
@@ -2248,6 +2243,11 @@ button.loading {
 }
 
 /*  =============== Coverage - Google map css ================ */
+
+div#coverage-spatial .coordinates-label-addon {
+	width: 127px;
+	text-align: left;
+}
 
 .sharing-status-container > div {
 	margin-bottom: 20px;
@@ -2264,19 +2264,19 @@ button.loading {
 
 #coverageMap[data-mode="view"] {
 	width:100%;
-	height: 220px;
+	height: 370px;
 }
 
 #coverage-spatial {
 	margin-top: 5px;
 }
-.coordinates-list-container {
-    position: absolute;
-    bottom: 0;
-    margin-bottom: 95px;
-    margin-left: 25px;
-    font-size: 12px;
-    text-align: center;
+
+#coverage-spatial .info-table td {
+	padding-left: 0;
+}
+
+.coordinates-list-container > div {
+	margin-bottom: 10px;
 }
 
 #id-coverage-spatial .control-group input {
@@ -2323,9 +2323,10 @@ button.loading {
     box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
     background-color: #FFF;
     float: right;
-    right: 11px;
-    top: -120px;
+    right: 26px;
+    top: 255px;
     color: #666;
+    position: absolute;
 }
 
 #resetZoomBtn:hover {

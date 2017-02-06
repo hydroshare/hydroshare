@@ -64,6 +64,9 @@
             {# ======= Abstract ======= #}
             {% include "resource-landing-page/abstract.html" %}
 
+            {# ======= Subject ======= #}
+            {% include "resource-landing-page/subject.html" %}
+
             {# ======= Citation ======= #}
             {% if metadata_form %}
                 {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
@@ -71,8 +74,6 @@
                 {% include "resource-landing-page/citation.html" with resource_mode="view" %}
             {% endif %}
 
-            {# ======= Subject ======= #}
-            {% include "resource-landing-page/subject.html" %}
 
             {% block content_block %}
             {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
