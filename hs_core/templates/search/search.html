@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
 <div class="container" id="discover-main">
@@ -240,6 +240,11 @@
                                                  class="table-res-type-icon"/>
                                         {% elif  result.object|resource_type == "Collection Resource" %}
                                             <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                 alt="{{ result.object|resource_type }}"
+                                                 title="{{ result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Composite Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                                  alt="{{ result.object|resource_type }}"
                                                  title="{{ result.object|resource_type }}"
                                                  class="table-res-type-icon"/>

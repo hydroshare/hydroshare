@@ -164,12 +164,40 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(ori_res.files.all().count(), 1,
                          msg="Number of content files is not equal to 1")
 
-        new_res = hydroshare.create_new_version_empty_resource(ori_res.short_id, self.user)
+        new_res = hydroshare.create_empty_resource(ori_res.short_id, self.user)
         new_res = hydroshare.create_new_version_resource(ori_res, new_res, self.user)
         # only need to test file-related attributes
         # ensure new versioned resource is created in the same federation zone as original resource
         self.assertEqual(ori_res.resource_federation_path, new_res.resource_federation_path)
         # ensure new versioned resource has the same number of content files as original resource
+        self.assertEqual(ori_res.files.all().count(), new_res.files.all().count())
+        # delete resources to clean up
+        resource.delete_resource(new_res.short_id)
+        resource.delete_resource(ori_res.short_id)
+
+        # test copy resource in user zone
+        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
+            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
+        ori_res = resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Original Generic Resource in User Zone',
+            fed_res_file_names=[fed_test_file1_full_path],
+            fed_copy_or_move='copy'
+        )
+        # make sure ori_res is created in federated user zone
+        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
+                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        self.assertEqual(ori_res.resource_federation_path, fed_path)
+        self.assertEqual(ori_res.files.all().count(), 1,
+                         msg="Number of content files is not equal to 1")
+
+        new_res = hydroshare.create_empty_resource(ori_res.short_id, self.user, action='copy')
+        new_res = hydroshare.copy_resource(ori_res, new_res)
+        # only need to test file-related attributes
+        # ensure new copied resource is created in the same federation zone as original resource
+        self.assertEqual(ori_res.resource_federation_path, new_res.resource_federation_path)
+        # ensure new copied resource has the same number of content files as original resource
         self.assertEqual(ori_res.files.all().count(), new_res.files.all().count())
         # delete resources to clean up
         resource.delete_resource(new_res.short_id)
@@ -202,3 +230,38 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         # delete resources to clean up
         resource.delete_resource(self.res.short_id)
+
+        # test adding files from federated user zone to an empty resource
+        # created in hydroshare zone
+        res = resource.create_resource(
+            resource_type='GenericResource',
+            owner=self.user,
+            title='My Test Generic Resource in HydroShare Zone'
+        )
+        self.assertEqual(res.files.all().count(), 0,
+                         msg="Number of content files is not equal to 0")
+        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
+            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
+        hydroshare.add_resource_files(
+            res.short_id,
+            fed_res_file_names=[fed_test_file1_full_path],
+            fed_copy_or_move='copy')
+        # test resource has one file
+        self.assertEqual(res.files.all().count(), 1,
+                         msg="Number of content files is not equal to 1")
+
+        file_list = []
+        for f in res.files.all():
+            file_list.append(f.fed_resource_file_name_or_path.split('/')[-1])
+        self.assertTrue(self.file_one in file_list,
+                        msg='file 1 has not been added in the resource in hydroshare zone')
+        # test original file in user test zone still exist after adding it to the resource
+        # since 'copy' is used for fed_copy_or_move when adding the file to the resource
+        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
+
+        # test resource deletion
+        resource.delete_resource(res.short_id)
+        self.assertEquals(BaseResource.objects.all().count(), 0,
+                          msg='Number of resources not equal to 0')
+        # test to make sure original file still exist after resource deletion
+        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))

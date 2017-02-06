@@ -19,7 +19,7 @@ def landing_page(request, page):
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)
     extended_metadata_exists = False
-    if content_model.metadata.cellInformation or content_model.metadata.bandInformation:
+    if content_model.metadata.cellInformation or content_model.metadata.bandInformations:
         extended_metadata_exists = True
 
     context['extended_metadata_exists'] = extended_metadata_exists
@@ -44,7 +44,7 @@ def landing_page(request, page):
                 value.get('datum', None)
             context['originalCoverage'] = ori_coverage_data_dict
         context['cellInformation'] = content_model.metadata.cellInformation
-        context['bandInformation'] = content_model.metadata.bandInformation
+        context['bandInformation'] = content_model.metadata.bandInformations
     else:
         # cellinfo_form
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation,
@@ -61,7 +61,7 @@ def landing_page(request, page):
                                               (partial(BandInfoForm, allow_edit=edit_resource)),
                                               formset=BaseBandInfoFormSet, extra=0)
         bandinfo_formset = BandInfoFormSetEdit(
-            initial=content_model.metadata.bandInformation.values(),
+            initial=content_model.metadata.bandInformations.values(),
             prefix='BandInformation')
 
         for form in bandinfo_formset.forms:

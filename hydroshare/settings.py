@@ -172,6 +172,13 @@ STATICFILES_FINDERS = (
 # a mode you'd pass directly to os.chmod.
 FILE_UPLOAD_PERMISSIONS = 0o644
 
+# Alternative tmp folder
+FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+
+# Sitemap for robots
+ROBOTS_SITEMAP_URLS = [
+    'http://localhost:8000/sitemap/',
+]
 
 #############
 # DATABASES #
@@ -281,15 +288,12 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
-    "ga_ows",
-    "ga_resources",
+    "robots",
     "hs_core",
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
-    #"hs_rhessys_inst_resource",
-    "django_docker_processes",
     "hs_geo_raster_resource",
     "ref_ts",
     "hs_app_timeseries",
@@ -305,16 +309,15 @@ INSTALLED_APPS = (
     "hs_collection_resource",
     "hs_modflow_modelinstance",
     "hs_tracking",
+    "hs_file_types",
+    "hs_composite_resource",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'ga_ows',
-    'ga_resources',
     'jquery_ui',
     'rest_framework',
-    'django_docker_processes',
     'django_nose',
     'inplaceeditform',
     'grappelli_safe',
@@ -364,7 +367,6 @@ MIDDLEWARE_CLASSES = (
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
-    "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
 )
 
@@ -484,7 +486,7 @@ PASSWORD_RESET_TIMEOUT_DAYS = 1
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
-TEMP_FILE_DIR = '/tmp'
+TEMP_FILE_DIR = '/hs_tmp'
 
 ####################
 # OAUTH TOKEN SETTINGS #

@@ -6,58 +6,81 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
+var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
 
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
-        "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
-        "<span class='fb-file-name'>" + folderName + "</span>" +
-        "<span class='fb-file-type'>File Folder</span>" +
-        "<span class='fb-file-size'></span>" +
-        "</li>"
+                "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
+                "<span class='fb-file-name'>" + folderName + "</span>" +
+                "<span class='fb-file-type'>File Folder</span>" +
+                "<span class='fb-file-size'></span>" +
+            "</li>"
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_id, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-    var extIcon = "fa-file-o";
+
+    var iconTemplate;
 
     if (fileName.lastIndexOf(".")) {
         if (fileTypeExt.toUpperCase() == "PDF") {
-            extIcon = "fa-file-pdf-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
-            extIcon = "fa-file-excel-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
-            extIcon = "fa-file-zip-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-zip-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
-            extIcon = "fa-file-word-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-word-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
-            extIcon = "fa-file-audio-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-audio-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
-            extIcon = "fa-file-movie-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-movie-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
-            extIcon = "fa-file-image-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-image-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "TXT") {
-            extIcon = "fa-file-text-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-text-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
-            extIcon = "fa-file-powerpoint-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-powerpoint-o" + "'></span>";
         }
         else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
-            extIcon = "fa-file-code-o";
+            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
+        }
+        else if (fileTypeExt.toUpperCase() == "SQLITE") {
+            iconTemplate = "<span class='fa-stack fb-stack fb-stack-database'>" +
+                "<i class='fa fa-file-o fa-stack-2x '></i>" +
+                "<i class='fa fa-database fa-stack-1x'></i>" +
+                "</span>";
+        }
+        else {
+            // Default file icon for other file types
+            iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
         }
     }
+    else {
+        // Default file icon in case of no file types
+        iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
+    }
 
-    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
-        "<span class='fb-file-icon fa " + extIcon + "'></span>" +
+    if (logical_type.length > 0){
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Logical Type: " + logical_type;
+    }
+    else {
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
+    }
+    return "<li data-pk='" + pk + "' data-url='" + url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
+        iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type=" + logical_type + ">" + logical_type + "</span>" +
         "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
 
@@ -80,13 +103,16 @@ function updateSelectionMenuContext() {
     var flagDisableUnzip = false;
     var flagDisableCut = false;
     var flagDisableDelete = false;
+    var flagDisableSetGeoRasterFileType = false;
     var flagDisableGetLink = false;
+    var flagDisableCreateFolder = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+        flagDisableSetGeoRasterFileType = true;
         flagDisableGetLink = true;
     }
     else if (selected.length == 1) {    // Unused for now
@@ -121,11 +147,29 @@ function updateSelectionMenuContext() {
     for (var i = 0; i < selected.length; i++) {
         var fileName = $(selected[i]).children(".fb-file-name").text();
         var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+        var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
         if (fileExt.toUpperCase() != "ZIP") {
             flagDisableUnzip = true;
         }
+        if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetGeoRasterFileType = true;
+        }
+
+        if(logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableDelete = true;
+            flagDisableRename = true;
+            flagDisableCut = true;
+            flagDisablePaste = true;
+        }
     }
-    
+
+    var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    if (logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableCreateFolder = true;
+        }
+    // Show Create folder toolbar option
+    $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
+
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
 
@@ -143,6 +187,10 @@ function updateSelectionMenuContext() {
     // Get file URL
     menu.children("li[data-menu-name='get-link']").toggleClass("disabled", flagDisableGetLink);
     $("#fb-get-link").toggleClass("disabled", flagDisableGetLink);
+
+    // set Geo Raster file type
+    menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+    $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -247,6 +295,13 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
+            if ($(this).hasClass("fb-file")){
+                showFileTypeMetadata();
+            }
+            else{
+                $("#fileTypeMetaDataTab").html(file_metadata_alert);
+            }
+
             if (!isDragging && e.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
@@ -358,6 +413,47 @@ function bindFileBrowserItemEvents() {
     });
 }
 
+function showFileTypeMetadata(){
+     var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+     if (logical_file_id.length == 0){
+         return;
+     }
+     var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+     var resource_mode = $("#resource-mode").val();
+     resource_mode = resource_mode.toLowerCase();
+     var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+     var calls = [];
+     calls.push(get_file_type_metadata_ajax_submit(url));
+     // Wait for the asynchronous calls to finish to get new folder structure
+     $.when.apply($, calls).done(function (result) {
+         var json_response = JSON.parse(result);
+         $("#fileTypeMetaDataTab").html(json_response.metadata);
+         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+         showMetadataFormSaveChangesButton();
+         initializeDatePickers();
+         setFileTypeSpatialCoverageFormFields();
+         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
+         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         if (logical_type === "GeoRasterLogicalFile"){
+             $spatial_type_radio_button_1.prop("checked", true);
+             $("#div_id_type_filetype input:radio").trigger("change");
+             $spatial_type_radio_button_1.attr('onclick', 'return false');
+             $spatial_type_radio_button_2.attr('onclick', 'return false');
+         }
+         else {
+             if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
+                 $spatial_type_radio_button_1.prop("checked", true);
+             }
+             else {
+                 $spatial_type_radio_button_2.prop("checked", true);
+             }
+         }
+
+        $("#div_id_type_filetype input:radio").trigger("change");
+    });
+}
+
 function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
@@ -395,6 +491,7 @@ function setBreadCrumbs(path) {
         pathLog.push(path);
         pathLogIndex = pathLog.length - 1;
         get_irods_folder_struct_ajax_submit(resID, path);
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 }
 
@@ -477,6 +574,7 @@ function onOpenFolder() {
     var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
     var targetPath = currentPath + "/" + folderName;
 
+    var flagDisableCreateFolder = false;
     // Remove further paths from the log
     var range = pathLog.length - pathLogIndex;
     pathLog.splice(pathLogIndex + 1, range);
@@ -488,6 +586,12 @@ function onOpenFolder() {
 
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
+        var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+        if (logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableCreateFolder = true;
+        }
+        // Set Create folder toolbar option
+        $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
     });
 
     $.when.apply($, calls).fail(function () {
@@ -517,6 +621,7 @@ function refreshFileBrowser() {
         $(".selection-menu").hide();
         sourcePaths = [];
         updateSelectionMenuContext();
+        $("#fileTypeMetaDataTab").html(file_metadata_alert);
     });
 
     $.when.apply($, calls).fail(function () {
@@ -1052,6 +1157,44 @@ $(document).ready(function () {
         $("#txtFileURL").val(basePath + URL);
     });
 
+    // set geo raster file type method
+     $("#btn-set-geo-file-type").click(function () {
+         var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+         var resID = $("#hs-file-browser").attr("data-res-id");
+         var url = "/hsapi/_internal/" + resID + "/" + file_id + "/GeoRaster/set-file-type/";
+         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+         var calls = [];
+         calls.push(set_file_type_ajax_submit(url));
+         // Wait for the asynchronous calls to finish to get new folder structure
+         $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+            $("#fileTypeMetaDataTab").html(file_metadata_alert);
+         });
+      });
+
+    // show file type metadata
+    $("#btn-show-file-metadata").click(function () {
+         var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+         var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+         var resource_mode = $("#resource-mode").val();
+         resource_mode = resource_mode.toLowerCase();
+         var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+         var calls = [];
+         calls.push(get_file_type_metadata_ajax_submit(url));
+         // Wait for the asynchronous calls to finish to get new folder structure
+         $.when.apply($, calls).done(function (result) {
+             var json_response = JSON.parse(result);
+             $("#fileTypeMetaDataTab").html(json_response.metadata);
+             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+             showMetadataFormSaveChangesButton();
+             initializeDatePickers();
+
+             $("html, body").animate({
+                 scrollTop: $("#fileTypeMetaDataTab").offset().top + 500
+             }, 1000);
+         });
+      });
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {

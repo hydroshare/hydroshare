@@ -5,8 +5,8 @@ from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import create_resource, create_account, \
-     create_new_version_empty_resource, create_new_version_resource, \
-     update_science_metadata
+     create_empty_resource, create_new_version_resource, \
+     update_science_metadata, copy_resource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare.resource import ResourceFile
@@ -680,7 +680,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 3)
 
         # make a new version of collection
-        new_collection = create_new_version_empty_resource(self.resCollection.short_id, self.user1)
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1)
 
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
@@ -693,6 +693,35 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             self.assertIn(contained_res, self.resCollection.resources.all())
 
         # changes to old version collection should not affect new version collection
+        self.resCollection.resources.clear()
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        self.assertEqual(new_collection.resources.count(), 3)
+
+    def test_copy(self):
+        # no contained resource
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # add 3 resources to collection
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resCollection_with_missing_metadata)
+        self.assertEqual(self.resCollection.resources.count(), 3)
+
+        # make a new copy of collection
+        new_collection = create_empty_resource(self.resCollection.short_id, self.user1,
+                                               action='copy')
+
+        new_collection = copy_resource(self.resCollection, new_collection)
+
+        # test the new copy is a collection
+        self.assertTrue(isinstance(new_collection, CollectionResource))
+
+        # new copy collection should have same contained res as its original does
+        self.assertEqual(new_collection.resources.count(), self.resCollection.resources.count())
+        for contained_res in new_collection.resources.all():
+            self.assertIn(contained_res, self.resCollection.resources.all())
+
+        # changes to old collection should not affect new copied collection
         self.resCollection.resources.clear()
         self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertEqual(new_collection.resources.count(), 3)

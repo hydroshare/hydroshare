@@ -15,11 +15,12 @@ from django.shortcuts import render_to_response
 from rest_framework.decorators import api_view
 
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from ga_resources.utils import json_or_jsonp
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, json_or_jsonp
+
 from django_irods.views import download as download_bag_from_irods
 from . import ts_utils
-from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, VerifyRestUrlForm, CreateRefTimeSeriesForm
+from .forms import ReferencedSitesForm, ReferencedVariablesForm, GetTSValuesForm, \
+    VerifyRestUrlForm, CreateRefTimeSeriesForm
 
 
 PREVIEW_NAME = "preview.png"

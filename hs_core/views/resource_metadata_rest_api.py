@@ -185,12 +185,12 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     def put(self, request, pk):
         # Update science metadata
-        resource, authorized, user = view_utils.authorize(
+        view_utils.authorize(
             request, pk,
             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         metadata = []
-        put_data = request.data
+        put_data = request.data.copy()
         keys_to_update = put_data.keys()
 
         try:
@@ -234,7 +234,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"
-                            % ex.__class__ % ex.message
+                            % (ex.__class__, ex.message)
             }
             raise ValidationError(detail=error_msg)
 

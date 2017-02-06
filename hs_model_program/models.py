@@ -116,11 +116,11 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
 
 
         # get the xml string for Model Program
-        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create  etree element
         RDF_ROOT = etree.fromstring(xml_string)
@@ -153,8 +153,7 @@ class ModelProgramMetaData(CoreMetaData):
             model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
             model_code_repository.text = self.program.modelCodeRepository
 
-
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
+        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
         return xml_string
 

@@ -1,21 +1,9 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 
-from ga_resources.utils import get_user, json_or_jsonp
-from hs_core.models import BaseResource, Party, Contributor, Creator, Subject
-from hs_core.hydroshare import get_resource_list
+from hs_core.models import Contributor, Creator, Subject
 from hs_core.hydroshare.utils import get_resource_types
+from hs_core.views.utils import json_or_jsonp
 
-# def get_resource_list(
-#         group=None, user=None, owner=None,
-#         from_date=None, to_date=None,
-#         start=None, count=None,
-#         keywords=None, dc=None,
-#         full_text_search=None,
-#         published=False,
-#         edit_permission=False,
-#         public=False,
-#         types=None
-# ):
 
 def autocomplete(request):
     term = request.GET.get('term')
@@ -83,10 +71,6 @@ def autocomplete(request):
                 'id': subject.value,
                 'value': subject.value,
             })
-
-    # resources = get_resource_list(
-    #     full_text_search=term,
-    # )
 
     # todo: users
     # todo: groups
