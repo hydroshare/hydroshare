@@ -762,17 +762,15 @@ def delete_resource_file_only(resource, f):
         f: the ResourceFile object to be deleted
     Returns: file name that has been deleted
     """
-    fed_path = resource.resource_federation_path
-    if fed_path:
-        if f.fed_resource_file:
+
+    root_path = resource.root_path
+    if f.fed_resource_file_name_or_path:
+        file_name = os.path.join(root_path, f.fed_resource_file_name_or_path)
+        utils.delete_fed_zone_file(file_name)
+    elif f.fed_resource_file:
             # file was originally from local disk, but is currently stored in federated irods zone
             file_name = f.fed_resource_file.name
             f.fed_resource_file.delete()
-        elif f.fed_resource_file_name_or_path:
-            # file was originally from federated irods zone, and is currently stored in the
-            # same federated irods zone
-            file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path)
-            utils.delete_fed_zone_file(file_name)
     else:
         # file was originally from local disk, and is currently stored in main irods hydroshare zone
         file_name = f.resource_file.name

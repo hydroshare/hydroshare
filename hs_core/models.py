@@ -263,13 +263,14 @@ class Party(AbstractMetaDataElement):
             if party:
                 creator_order = party.order + 1
 
-            if 'name' not in kwargs and 'organization' not in kwargs:
+            if ('name' not in kwargs or kwargs['name'] is None) and \
+                    ('organization' not in kwargs or kwargs['organization'] is None):
                 raise ValidationError(
                     "Either an organization or name is required for a creator element")
 
-            if 'name' in kwargs:
+            if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
-                    if 'organization' in kwargs:
+                    if 'organization' in kwargs and kwargs['organization'] is not None:
                         if len(kwargs['organization'].strip()) == 0:
                             raise ValidationError(
                                 "Either the name or organization must not be blank for the creator "
@@ -1461,13 +1462,15 @@ class AbstractResource(ResourcePermissionsMixin):
         for fl in self.files.all():
             if fl.fed_resource_file_name_or_path:
                 istorage = IrodsStorage('federated')
-                if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
-                    istorage.delete('{}/{}'.format(self.resource_federation_path,
-                                                   fl.fed_resource_file_name_or_path))
-                else:
-                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
-                                                      self.short_id,
-                                                      fl.fed_resource_file_name_or_path))
+                # ensure fed_res_file_path holds relative path in the format of data/contents/...
+                # so that a uniform path can be formed by concatenating with self.root_path for
+                # file deletion by irods storage
+                fed_res_file_path = fl.fed_resource_file_name_or_path
+                idx = fed_res_file_path.find(self.short_id)
+                if idx >= 0:
+                    s_idx = idx + len(self.short_id) + 1
+                    fed_res_file_path = fed_res_file_path[s_idx:]
+                istorage.delete(os.path.join(self.root_path, fed_res_file_path))
             elif fl.resource_file:
                 fl.resource_file.delete()
             elif fl.fed_resource_file:

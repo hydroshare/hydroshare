@@ -172,6 +172,13 @@ STATICFILES_FINDERS = (
 # a mode you'd pass directly to os.chmod.
 FILE_UPLOAD_PERMISSIONS = 0o644
 
+# Alternative tmp folder
+FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+
+# Sitemap for robots
+ROBOTS_SITEMAP_URLS = [
+    'http://localhost:8000/sitemap/',
+]
 
 # Alternative tmp folder
 FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
@@ -287,13 +294,12 @@ INSTALLED_APPS = (
     "rest_framework_swagger",
     "ga_ows",
     "ga_resources",
+    "robots",
     "hs_core",
     "hs_access_control",
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
-    #"hs_rhessys_inst_resource",
-    "django_docker_processes",
     "hs_geo_raster_resource",
     "ref_ts",
     "hs_app_timeseries",
@@ -316,11 +322,8 @@ INSTALLED_APPS = (
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'ga_ows',
-    'ga_resources',
     'jquery_ui',
     'rest_framework',
-    'django_docker_processes',
     'django_nose',
     'inplaceeditform',
     'grappelli_safe',
@@ -370,7 +373,6 @@ MIDDLEWARE_CLASSES = (
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
-    "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
 )
 

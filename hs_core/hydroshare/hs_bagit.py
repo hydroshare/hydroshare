@@ -200,7 +200,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # delete this extra element
     # <ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
     xml_string = xml_string.replace(
-        '<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
+        '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
