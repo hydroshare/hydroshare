@@ -2261,7 +2261,6 @@ div#coverage-spatial .coordinates-label-addon {
 	margin: 10px 0;
 }
 
-
 #coverageMap[data-mode="view"] {
 	width:100%;
 	height: 370px;
@@ -2273,6 +2272,7 @@ div#coverage-spatial .coordinates-label-addon {
 
 #coverage-spatial .info-table td {
 	padding-left: 0;
+	padding-bottom: 10px;
 }
 
 .coordinates-list-container > div {
