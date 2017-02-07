@@ -1,0 +1,91 @@
+<link rel="import" href="./bower_components/polymer/polymer.html">
+<link rel="import" href="./bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="./bower_components/paper-item/paper-item.html">
+<link rel="import" href="./bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="./bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="./bower_components/iron-selector/iron-selection.html">
+
+<!--
+1. Install poylmer paper-listbox:
+   $ cd [hydroshare]/polymer
+   $ bower install --save polymerelements/paper-listbox
+   $ bower install --save polymerelements/paper-item
+   $ bower install --save polymerelements/paper-dropdown-menu
+-->
+
+<dom-module id="file-checkbox-selector">
+
+    <template>
+        <style>
+
+            :host {
+                display: inline-block;
+            }
+            paper-dropdown-menu {
+                width: 300px;
+            }
+        </style>
+
+        <paper-dropdown-menu class='test' id="dropdownMenu">
+      <iron-selector id="selector" class="dropdown-content" multi>
+        <template is="dom-repeat" items="{{ items }}">
+            <paper-item>
+              <paper-checkbox checked="{{ _isChecked(item) }}">{{ item }}</paper-checkbox>
+            </paper-item>
+        </template>
+      </iron-selector>
+    </paper-dropdown-menu>
+
+    </template>
+
+    <script>
+        Polymer({
+            properties: {
+                items: [0,1,2,3,4],
+                resourceId: 'c830a787456f4b2891b079d53a47324c',
+            },
+            is: 'file-checkbox-selector',
+
+            _isChecked: function(item) {
+                return true;
+            },
+
+            ready: function() {
+                this.items = [0,1,2,3];
+                this.$.dropdownMenu.label = 'Select Something';
+                this.$.dropdownMenu.$.menuButton.ignoreSelect = true;
+
+                document.body.dispatchEvent(new CustomEvent('get-resource-files', { detail: {
+                    id: this.resourceId
+                }}));
+
+                document.body.addEventListener('resource-files', (function(e) {
+                    alert(e.detail.detail);
+                }).bind(this))
+            },
+            listeners: {
+               'change':'onSelect'
+            },
+            onSelect: function() {
+
+                var menu = this.$.dropdownMenu;
+
+                // calculate selected items
+                var items = this.querySelectorAll('paper-checkbox');
+                var checked = Array.prototype.filter.call(items, function(node){ return node.checked;});
+
+                // Change the label of the dropdown menu based on selected items
+                if (checked.length == 1){
+                    menu.label = checked[0].innerText;
+                }
+                else if (checked.length == 0) {
+                    menu.label = 'Select Something';
+                }
+                else {
+                    menu.label = checked.length + ' items selected';
+                }
+            },
+
+        })
+    </script>
+</dom-module>
