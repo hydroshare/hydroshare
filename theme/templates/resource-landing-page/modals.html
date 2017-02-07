@@ -2144,14 +2144,17 @@
                     <fieldset class="col-sm-12">
                         <div class="input-group">
                             <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
-                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default clipboard-copy" data-target="txtFileURL"
+                                        type="button">Copy</button>
+                            </span>
                         </div>
                     </fieldset>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
