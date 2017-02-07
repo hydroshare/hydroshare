@@ -16,30 +16,23 @@
                             {% if spatial_coverage.projection %}
                                 <tr>
                                     <td>
-                                        <small>
                                         <i class="fa fa-globe" aria-hidden="true"></i>
-                                        <span>&nbsp;Coordinate System/Geographic Projection:&nbsp;</span>
-                                        </small>
+                                        <strong>&nbsp;Coordinate System/Geographic Projection:&nbsp;</strong>
                                     </td>
                                     <td>
-                                        <small>
-                                            <strong>{{ spatial_coverage.projection }}</strong>
-                                        </small>
+                                        <span>{{ spatial_coverage.projection }}</span>
                                     </td>
                                 </tr>
                             {% endif %}
                             {% if spatial_coverage.units %}
                                 <tr>
                                     <td>
-                                        <small>
-                                            <i class="fa fa-tachometer" aria-hidden="true"></i>
-                                            <span>&nbsp;Coordinate Units:&nbsp;</span>
-                                        </small>
+                                        <i class="fa fa-tachometer" aria-hidden="true"></i>
+                                        <strong>&nbsp;Coordinate Units:&nbsp;</strong>
                                     </td>
                                     <td>
-                                        <small>
-                                            <strong>{{ spatial_coverage.units }}</strong>
-                                        </small>
+                                        <span>{{ spatial_coverage.units }}</span>
+                                    </td>
                                 </tr>
                             {% endif %}
                             </tbody>
@@ -47,8 +40,8 @@
                         <div>
                             {% if spatial_coverage.name %}
                                 <div>
-                                    <span >Place/Area Name: </span>
-                                    <strong>{{ spatial_coverage.name }}</strong>
+                                    <strong>Place/Area Name: </strong>
+                                    <span>{{ spatial_coverage.name }}</span>
                                 </div>
                                 <br>
                             {% endif %}
@@ -98,15 +91,15 @@
                             <table class="info-table">
                                 <tbody>
                                 <tr>
-                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;Start Date:</td>
-                                    <td><strong class="format-date"
-                                                data-date="{{ temporal_coverage.start_date }}"></strong>
+                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>Start Date:<strong></td>
+                                    <td><span class="format-date"
+                                                data-date="{{ temporal_coverage.start_date }}"></span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;End Date:</td>
-                                    <td><strong class="format-date"
-                                                data-date="{{ temporal_coverage.end_date }}"></strong></td>
+                                    <td><i class="fa fa-calendar" aria-hidden="true"></i>&nbsp;<strong>End Date:<strong></td>
+                                    <td><span class="format-date"
+                                                data-date="{{ temporal_coverage.end_date }}"></span></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -179,7 +172,6 @@
                                     </small>
                                     <br>
                                 {% endif %}
-
 
                                 <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
                                     <div class="input-group">
