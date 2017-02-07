@@ -6,12 +6,14 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="input-group" style="margin-bottom: 30px">
-                <span id="citation-text">{{ citation }}</span>
-                <span class="input-group-addon"><span class="glyphicon glyphicon-book"
-                        data-toggle="tooltip" data-placement="bottom" title="Click on the text to select."></span></span>
+                <input class="form-control" readonly id="citation-text" value="{{ citation }}"/>
+                <span class="input-group-btn">
+                    <button class="btn btn-default clipboard-copy" data-target="citation-text"
+                            type="button">Copy</button>
+                  </span>
             </div>
 
-    {#        ======= Sharing =======#}
+            {#        ======= Sharing =======#}
     {% if not metadata_form %}
         {% if rights.statement or rights.url %}
             <div id="rights">
@@ -260,6 +262,5 @@
                     {% endif %}
                 </div>
             </div>
-
     </div>
 </div>
