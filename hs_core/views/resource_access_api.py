@@ -64,7 +64,7 @@ class ResourceAccessUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = UserResourcePrivilegeSerializer
 
-    allowed_methods = ('GET', 'PUT', 'DELETE')
+    allowed_methods = ('GET', 'PUT', 'DELETE',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk,
