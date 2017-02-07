@@ -491,7 +491,7 @@ function metadata_update_ajax_submit(form_id){
                                     customAlert(promptMessage, 3000);
                                 }
                             }
-                            $("#missing-metadata-or-file").fadeOut();
+                            $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                         }
                     }
                 }
@@ -721,7 +721,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
             }
             if (can_be_public) {
-                $("#missing-metadata-or-file").fadeOut();
+                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
             onSort();
 

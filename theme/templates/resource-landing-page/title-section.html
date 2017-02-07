@@ -87,7 +87,7 @@
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
     <div class="col-sm-12">
-        <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+        <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                     aria-hidden="false">&times;</span></button>
             {% if cm.check_content_files %}
@@ -106,10 +106,9 @@
                                {% endfor %}
                             </ul></span>
                 {% endif %}
+            {% endif %}
         </div>
     </div>
-
-            {% endif %}
 {% endif %}
 
 {# ======= Title ======= #}
