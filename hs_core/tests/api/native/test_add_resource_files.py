@@ -3,6 +3,7 @@ import unittest
 
 from django.contrib.auth.models import User, Group
 
+from hs_core.hydroshare import delete_resource
 from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import GenericResource
@@ -81,3 +82,4 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertTrue(self.n1 in file_list, "file 1 has not been added")
         self.assertTrue(self.n2 in file_list, "file 2 has not been added")
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
+        delete_resource(res.short_id)
