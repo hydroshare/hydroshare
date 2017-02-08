@@ -1,4 +1,4 @@
-FROM mjstealey/hs_docker_base:1.9.5
+FROM mjstealey/hs_docker_base:irods-4.2.0
 MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
