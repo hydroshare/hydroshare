@@ -955,6 +955,7 @@ class TimeSeriesMetaData(CoreMetaData):
         self.value_counts = src_md.value_counts
         self.save()
         # create CV terms
+
         def copy_cv_terms(cv_class, cv_terms_to_copy):
             for cv_term in cv_terms_to_copy:
                 cv_class.objects.create(metadata=self, name=cv_term.name,
