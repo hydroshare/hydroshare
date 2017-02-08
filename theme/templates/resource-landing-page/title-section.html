@@ -86,29 +86,31 @@
 
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-    <div class="col-sm-12">
-        <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                    aria-hidden="false">&times;</span></button>
-            {% if cm.check_content_files %}
-                {% if cm.check_content_files == 'multiple_nam' %}
-                    <br>
-                    <span>The following condition(s) is(are) recommended to have a complete resource before making the resource public or discoverable:<br>
-                            <ul>
+    {% if cm.check_content_files %}
+        <div class="col-sm-12">
+            <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="false">&times;</span></button>
+
+                    {% if cm.check_content_files == 'multiple_nam' %}
+                        <br>
+                        <span>The following condition(s) is(are) recommended to have a complete resource before making the resource public or discoverable:<br>
+                                <ul>
                                    <li>Only one .nam or .mfn is allowed</li>
-                            </ul></span>
-                {% else %}
-                    <br>
-                    <span>The following file(s) is(are) recommended to have a complete resource before making the resource public or discoverable:<br>
-                            <ul>
-                               {% for f in cm.check_content_files %}
-                                   <li>{{ f }} </li>
-                               {% endfor %}
-                            </ul></span>
-                {% endif %}
-            {% endif %}
+                                </ul></span>
+                    {% else %}
+                        <br>
+                        <span>The following file(s) is(are) recommended to have a complete resource before making the resource public or discoverable:<br>
+                                <ul>
+                                {% for f in cm.check_content_files %}
+                                    <li>{{ f }} </li>
+                                {% endfor %}
+                                </ul></span>
+                    {% endif %}
+
+            </div>
         </div>
-    </div>
+    {% endif %}
 {% endif %}
 
 {# ======= Title ======= #}
