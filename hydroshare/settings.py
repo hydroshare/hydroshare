@@ -611,6 +611,7 @@ CSP_DICT = {
     ],
     "style-src" : [
         "self",
+        "unsafe-inline",
         "https://fonts.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
@@ -644,5 +645,7 @@ CSP_DICT = {
 X_FRAME_OPTIONS = "deny"
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+
+# Cookie Stuff
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
