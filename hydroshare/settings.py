@@ -584,7 +584,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
 # sha256-* strings are hashes of inline scripts and styles
 
-CSP_MODE='report-only'
 CSP_DICT = {
     "default-src" : ["none",],
     "script-src" : [
