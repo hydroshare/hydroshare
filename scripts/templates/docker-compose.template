@@ -23,9 +23,6 @@ hydroshare:
   container_name: hydroshare
   cap_add:
     - SYS_ADMIN
-  devices:
-    - "/dev/fuse"
-  privileged: true
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
@@ -78,3 +75,11 @@ defaultworker:
     - redis:redis
     - rabbitmq:rabbitmq
   command: /bin/bash init-defaultworker
+irodsvolume:
+  build: ./irodsvolume
+  container_name: irodsvolume
+  devices:
+    - "/dev/fuse"
+  privileged: true
+  volumes:
+    - /irodsmnt/

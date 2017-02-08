@@ -66,6 +66,7 @@ start_nginx() {
             --volume ${HOST_SSL_DIR}:/hs-certs \
             --volume ${HS_LOG_FILES}:/var/log/nginx \
             --volumes-from ${HYDROSHARE_CID} \
+            --volumes-from irodsvolume \
             -ti ${NGINX_DOCKER_IMG};
     else
         CHECK_NGINX_CID=`docker ps | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
