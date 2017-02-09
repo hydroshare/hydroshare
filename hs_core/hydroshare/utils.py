@@ -66,7 +66,7 @@ def get_resource_by_shortkey(shortkey, or_404=True):
         if or_404:
             raise Http404(shortkey)
         else:
-            raise
+            return None
     content = res.get_content_model()
     assert content, (res, res.content_model)
     return content

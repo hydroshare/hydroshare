@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from hs_core.hydroshare import utils
+from hs_core.hydroshare import utils, delete_resource
 from hs_access_control.models import PrivilegeCodes
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
     BandInformation
@@ -105,6 +105,10 @@ class TestCopyResource(TestCase):
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
+        delete_resource(self.res_generic.short_id)
+        delete_resource(self.res_raster.short_id)
+        delete_resource(self.res_generic_lic_nd.short_id)
+        delete_resource(self.res_generic_lic_nc_nd.short_id)
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
@@ -196,6 +200,8 @@ class TestCopyResource(TestCase):
                       [src.derived_from for src in new_res_generic.metadata.sources.all()],
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
+        # make sure to clean up resource so that irods storage can be cleaned up
+        delete_resource(new_res_generic.short_id)
 
     def test_copy_raster_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
@@ -288,6 +294,8 @@ class TestCopyResource(TestCase):
                       [src.derived_from for src in new_res_raster.metadata.sources.all()],
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
+        # make sure to clean up resource so that irods storage can be cleaned up
+        delete_resource(new_res_raster.short_id)
 
     def test_copy_composite_resource(self):
         """Test that logical file type objects gets copied along with the metadata that each
@@ -430,3 +438,7 @@ class TestCopyResource(TestCase):
         self.assertEqual(orig_band_info.noDataValue, copy_band_info.noDataValue)
         self.assertEqual(orig_band_info.maximumValue, copy_band_info.maximumValue)
         self.assertEqual(orig_band_info.minimumValue, copy_band_info.minimumValue)
+
+        # make sure to clean up all created resources to clean up iRODS storage
+        delete_resource(self.composite_resource.short_id)
+        delete_resource(new_composite_resource.short_id)
