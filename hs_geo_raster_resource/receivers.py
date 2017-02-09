@@ -21,7 +21,11 @@ def raster_post_create_resource_trigger(sender, **kwargs):
     resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
     _process_uploaded_file(resource, validate_files_dict)
-
+    # since we are extracting metadata after resource creation
+    # metadata xml files need to be regenerated - so need to set the
+    # dirty bag flags
+    if resource.files.all().count() > 0:
+        utils.set_dirty_bag_flag(resource)
 
 @receiver(post_add_files_to_resource, sender=RasterResource)
 def raster_post_add_files_to_resource_trigger(sender, **kwargs):
