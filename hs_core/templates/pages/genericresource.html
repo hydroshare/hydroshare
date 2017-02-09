@@ -56,11 +56,6 @@
             {# ======= Title and header content ======= #}
             {% include "resource-landing-page/resource-header.html" %}
 
-            {# ======= Coverage ======= #}
-            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
-                {% include "resource-landing-page/coverage.html" %}
-            {% endif %}
-
             {# ======= Abstract ======= #}
             {% include "resource-landing-page/abstract.html" %}
 
@@ -74,6 +69,10 @@
                 {% include "resource-landing-page/citation.html" with resource_mode="view" %}
             {% endif %}
 
+            {# ======= Coverage ======= #}
+            {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+                {% include "resource-landing-page/coverage.html" %}
+            {% endif %}
 
             {% block content_block %}
             {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
