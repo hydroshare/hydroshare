@@ -73,7 +73,6 @@ $(document).ready(function () {
         $("#txtLabelName").focus();
     });
 
-
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
@@ -147,6 +146,25 @@ $(document).ready(function () {
         }
     });
 
+    $("#btn-delete-resources").click(function() {
+        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
+
+        var indexes = [];
+        for (var i = 0; i < selectedRows.length; i++) {
+            var index = parseInt($(selectedRows[i]).attr("data-tr-index"));
+            var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
+            if (permission != "Owned") {
+                return; // No permission to delete non owned resources.
+            }
+
+            indexes[i] = index;
+        }
+
+        delete_resources_ajax_submit(indexes);
+        // Submit a delete request for each index
+
+    });
+
     $("#item-selectors td").click(function(e){
         if (e.target.tagName != "TD") {
             return;
@@ -166,8 +184,30 @@ $(document).ready(function () {
 
     updateLabelLists();
     updateLabelCount();
-
 });
+
+function delete_resources_ajax_submit(indexes) {
+    var rows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
+
+    var forms = rows.find("form[data-form-type='delete-resource']");
+    for (var i = 0; i < forms.length; i++) {
+        var datastring = $(forms[i]).serialize();
+        var url = $(forms[i]).attr("action");
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            datastring: datastring,
+            dataType: "html",
+            success: function (result) {
+                console.log("deleted");
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+            }
+        })
+    }
+}
 
 function label_ajax_submit() {
     var el = $(this);
