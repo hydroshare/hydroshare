@@ -27,6 +27,7 @@ def raster_post_create_resource_trigger(sender, **kwargs):
     if resource.files.all().count() > 0:
         utils.set_dirty_bag_flag(resource)
 
+
 @receiver(post_add_files_to_resource, sender=RasterResource)
 def raster_post_add_files_to_resource_trigger(sender, **kwargs):
     resource = kwargs['resource']
