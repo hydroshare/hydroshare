@@ -368,7 +368,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_tracking.middleware.Tracking",
-    "hs_core.security.CrawlerBlocker",
+    "hs_core.robots.CrawlerBlocker",
 )
 
 # Store these package names here as they may change in the future since
