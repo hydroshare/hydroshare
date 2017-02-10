@@ -1313,7 +1313,10 @@
                                                         {% endblock %}
 
                                                     {% else %}
-                                                        {% crispy metadata_form %}
+                                                        {% block extended_metadata_edit %}
+                                                            {% crispy metadata_form %}
+                                                        {% endblock %}
+
                                                     {% endif %}
                                                     {% block extra_section %} {# add extra section for resource landing page #}
                                                     {% endblock %}

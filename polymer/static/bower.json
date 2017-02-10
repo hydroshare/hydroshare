@@ -1,0 +1,29 @@
+{
+  "name": "mp-list",
+  "homepage": "https://github.com/hydroshare/hydroshare",
+  "authors": [
+    "Castronova <castronova.anthony@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "paper-checkbox": "^1.4.2",
+    "paper-dropdown-menu": "^1.5.0",
+    "paper-item": "^1.2.1",
+    "paper-listbox": "^1.1.2",
+    "iron-selector": "^1.5.2",
+    "paper-date-picker-item": "^1.2.1",
+    "paper-button": "^1.0.14",
+    "paper-date-picker": "polymer-paper-date-picker#^1.2.0",
+    "paper-input-datepicker": "Zecat/paper-input-datepicker#^3.0.0",
+    "paper-input-date-picker": "^0.22.0"
+  }
+}

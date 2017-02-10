@@ -45,4 +45,9 @@ def landing_page(request, page):
 
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
+
+    # todo: This should be a default attribute that is returned to every resource!
+    # adding resourceid (derived from bag_url).
+    context['resourceid'] = '.'.join(context['bag_url'].split('/')[-1].split('.')[:-1])
+
     return context

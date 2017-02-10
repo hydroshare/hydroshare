@@ -870,7 +870,11 @@ class GroupUpdateForm(GroupForm):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
+    import sys
+    sys.path.append('/pycharm-debug')
+    import pydevd
+    pydevd.settrace('192.168.1.159', port=21000, suspend=False)
     return context
 
 

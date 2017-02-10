@@ -282,6 +282,15 @@
         </div>
     </footer>
 
+    <script>
+      hydroshare_globals = {
+        crsf_token: "{{ csrf_token }}",
+        user: {
+{#          id: {{ user.id }},#}
+          is_anonymous: {{ user.is_anonymous | lower }}
+        }
+      }
+    </script>
 
 </body>
 </html>
