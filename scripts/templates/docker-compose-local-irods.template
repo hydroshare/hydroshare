@@ -36,6 +36,7 @@ hydroshare:
     POSTGIS_USER: postgres
     PGPASSWORD: postgres
     SOLR_HOST: solr
+    TMP: /hs_tmp
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
@@ -83,27 +84,3 @@ defaultworker:
     - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
     - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-defaultworker
-dockerworker:
-  build: .
-  container_name: dockerworker
-  environment:
-    POSTGIS_HOST: postgis
-    POSTGIS_PORT: 5432
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
-    POSTGIS_PASSWORD: postgres
-    POSTGIS_DB: postgres
-    PGPASSWORD: postgres
-    C_FORCE_ROOT: 1
-  volumes_from:
-    - hydroshare
-  volumes:
-    - "/var/run/docker.sock:/docker.sock"
-  links:
-    - postgis:postgis
-    - redis:redis
-    - rabbitmq:rabbitmq
-  extra_hosts:
-    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
-    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
-  command: /bin/bash init-dockerworker

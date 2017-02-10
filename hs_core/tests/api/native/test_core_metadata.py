@@ -1328,9 +1328,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('sub-2', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
 
-        # add another subject element with duplicate value- should raise exception
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id, 'subject',
+        # add another subject element with duplicate value (note values are case insensitive for
+        # determining duplicates)
+        # - should raise exception
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'subject',
                                                                               value='sub-2'))
+        self.assertRaises(Exception,
+                          lambda: resource.create_metadata_element(self.res.short_id, 'subject',
+                                                                   value='Sub-2'))
 
         # test sub-element update
         sub_1 = self.res.metadata.subjects.all().filter(value='sub-1').first()

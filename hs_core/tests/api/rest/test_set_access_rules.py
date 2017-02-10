@@ -5,7 +5,7 @@ from rest_framework import status
 from hs_core.hydroshare import resource
 from hs_access_control.models import PrivilegeCodes
 from .base import HSRESTTestCase
-from hs_core.hydroshare import users, create_group
+from hs_core.hydroshare import users
 
 
 class TestSetAccessRules(HSRESTTestCase):
@@ -21,6 +21,11 @@ class TestSetAccessRules(HSRESTTestCase):
         self.testGroup = self.user.uaccess.create_group(
             title="Test Group",
             description="Group for testing")
+
+    def tearDown(self):
+        super(TestSetAccessRules, self).tearDown()
+        self.secondUser.delete()
+        self.testGroup.delete()
 
     def test_DEPRECATED_set_access_rules(self):
         rtype = 'GenericResource'
@@ -217,8 +222,5 @@ class TestSetAccessRules(HSRESTTestCase):
             "Request cannot contain both a 'user_id' and a 'group_id' parameter.",
             put_response.data['error'])
 
-    def tearDown(self):
-        super(TestSetAccessRules, self).tearDown()
-        self.secondUser.delete()
-        self.testGroup.delete()
+
 

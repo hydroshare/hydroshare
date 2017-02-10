@@ -1,7 +1,6 @@
 [run]
 omit =
    /*/python2.7/*
-   django_docker_processes/*
    django_irods/*
    dublincore/*
    ga_ows/*

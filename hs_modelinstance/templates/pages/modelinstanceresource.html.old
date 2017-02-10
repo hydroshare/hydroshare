@@ -1,6 +1,6 @@
 {% extends 'pages/page.html' %}
 
-{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
+{% load pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags %}
 
 {% block main %}
 
