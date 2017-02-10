@@ -23,6 +23,7 @@ def capture_logout(sender, **kwargs):
 @receiver(pre_download_file)
 def capture_download(**kwargs):
 
+
     # exit early if the request is not passed in as a kwarg
     if 'request' not in kwargs.keys():
         return

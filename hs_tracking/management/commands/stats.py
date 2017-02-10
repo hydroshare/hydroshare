@@ -14,6 +14,11 @@ from theme.models import UserProfile
 
 from ... import models as hs_tracking
 
+# import sys
+# sys.path.append('/pycharm-debug')
+# import pydevd
+# pydevd.settrace('10.20.1.7', port=21000, suspend=False)
+
 # Add logger for stderr messages.
 err = logging.getLogger('stats-command')
 err.setLevel(logging.ERROR)
@@ -145,7 +150,9 @@ class Command(BaseCommand):
             'title',
             'resource type',
             'size',
-            'publication status'
+            'publication status',
+            'user type',
+            'user id'
         ]
         w.writerow(fields)
 
@@ -156,17 +163,19 @@ class Command(BaseCommand):
                 r.resource_type,
                 r.size,
                 r.raccess.sharing_status,
+                r.user.userprofile.user_type,
+                r.user_id
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
     def yesterdays_variables(self):
 
-        today_start = timezone.datetime.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
+        today_start = timezone.datetime.now()#.replace(
+            # hour=0,
+            # minute=0,
+            # second=0,
+            # microsecond=0
+        # )
 
         yesterday_start = today_start - datetime.timedelta(days=1)
         variables = hs_tracking.Variable.objects.filter(
