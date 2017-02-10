@@ -293,9 +293,11 @@ class UserAccess(models.Model):
             else:
                 membership_request = GroupMembershipRequest.objects.create(request_from=self.user,
                                                                            group_to_join=this_group)
+                # if group allows auto approval of membership request then approve the
+                # request immediately
                 if this_group.gaccess.auto_approve:
-                    # let one of the group owners be the grantor for this membership request
-                    group_owner = this_group.gaccess.owners.first()
+                    # let first group owner be the grantor for this membership request
+                    group_owner = this_group.gaccess.first_owner
                     group_owner.uaccess.act_on_group_membership_request(membership_request)
                     membership_request = None
                 return membership_request
@@ -387,7 +389,7 @@ class UserAccess(models.Model):
                                                      Q(invitation_to=self.user))\
                                      .filter(group_to_join__gaccess__active=True)
 
-    def create_group(self, title, description, purpose=None):
+    def create_group(self, title, description, auto_approve=False, purpose=None):
         """
         Create a group.
 
@@ -412,7 +414,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_group = Group.objects.create(name=title)
-        GroupAccess.objects.create(group=raw_group, description=description, purpose=purpose)
+        GroupAccess.objects.create(group=raw_group, description=description,
+                                   auto_approve=auto_approve, purpose=purpose)
         raw_user = self.user
 
         # Must bootstrap access control system initially
@@ -2168,6 +2171,13 @@ class GroupAccess(models.Model):
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
                                    u2ugp__privilege=PrivilegeCodes.OWNER)
+
+    @property
+    def first_owner(self):
+        return User.objects.filter(is_active=True,
+                                   u2ugp__group=self.group,
+                                   u2ugp__privilege=PrivilegeCodes.OWNER).order_by(
+            'u2ugp__start').first()
 
     @property
     def edit_users(self):
