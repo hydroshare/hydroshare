@@ -1143,13 +1143,20 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
             # request. no need send email notification to group owners for membership approval
             if membership_request is not None:
                 message = 'Group membership request was successful'
-                # send mail to all owners of the group
+                # send mail to all owners of the group for approval of the request
                 for grp_owner in group_to_join.gaccess.owners:
                     send_action_to_take_email(request, user=requesting_user,
                                               action_type='group_membership',
                                               group=group_to_join, group_owner=grp_owner,
                                               membership_request=membership_request)
-
+            else:
+                # send mail to all owners of the group to let them know that someone has
+                # joined this group
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_auto_membership',
+                                              group=group_to_join,
+                                              group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, ex.message)
