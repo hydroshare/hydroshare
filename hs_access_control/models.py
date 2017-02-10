@@ -291,8 +291,14 @@ class UserAccess(models.Model):
                                                      group_to_join=this_group).exists():
                 raise PermissionDenied("You already have a pending request to join this group")
             else:
-                return GroupMembershipRequest.objects.create(request_from=self.user,
-                                                             group_to_join=this_group)
+                membership_request = GroupMembershipRequest.objects.create(request_from=self.user,
+                                                                           group_to_join=this_group)
+                if this_group.gaccess.auto_approve:
+                    # let one of the group owners be the grantor for this membership request
+                    group_owner = this_group.gaccess.owners.first()
+                    group_owner.uaccess.act_on_group_membership_request(membership_request)
+                    membership_request = None
+                return membership_request
         else:
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
@@ -2135,6 +2141,10 @@ class GroupAccess(models.Model):
     shareable = models.BooleanField(default=True,
                                     editable=False,
                                     help_text='whether group can be shared by non-owners')
+
+    auto_approve = models.BooleanField(default=False,
+                                       editable=False,
+                                       help_text='whether group membership can be auto approved')
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)

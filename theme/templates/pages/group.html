@@ -909,6 +909,13 @@
                                 </fieldset>
 
                                 <br>
+                                {# auto approve #}
+                                <fieldset class="col-sm-12">
+                                   <input id="auto-approve" type="checkbox"  name="auto_approve"
+                                          {% if group.gaccess.auto_approve %}checked{% endif %}>
+                                   <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                </fieldset>
+
 
                                 {# Picture #}
                                 <div class="col-sm-12">
