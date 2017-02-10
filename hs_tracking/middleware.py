@@ -23,14 +23,10 @@ class Tracking(object):
         if response.status_code != 200:
             return response
 
-        # get the django session
+        # get user info that will be recorded in the visit log
         session = Session.objects.for_request(request)
-
-        # get the user info
         usertype = utils.get_user_type(session)
         emaildomain = utils.get_user_email_domain(session)
-
-        # get the user's IP address
         ip = utils.get_client_ip(request)
 
         # build the message string (key:value pairs)
