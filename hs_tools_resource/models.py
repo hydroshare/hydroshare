@@ -165,7 +165,6 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 
     @classmethod
     def _add_sharing_status(cls, meta_instance, sharing_status_list):
-
         for sharing_status in sharing_status_list:
             # there are two possibilities for res_type_str values:
             # list of string (during normal create or update) or
@@ -177,7 +176,6 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                     raise
                 meta_instance.sharing_status.add(qs[0])
             elif isinstance(sharing_status, basestring):
-                # create or update res
                 # create or update res
                 qs = SupportedSharingStatusChoices.objects.\
                     filter(description__iexact=sharing_status)
@@ -217,8 +215,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
             cls._validate_sharing_status(kwargs["sharing_status"])
 
             meta_instance.sharing_status.clear()
-            for sharing_status in kwargs['sharing_status']:
-                cls._add_sharing_status(meta_instance, sharing_status)
+
+            cls._add_sharing_status(meta_instance, kwargs['sharing_status'])
             meta_instance.save()
         else:
             raise ValidationError("No sharing_status parameter "
