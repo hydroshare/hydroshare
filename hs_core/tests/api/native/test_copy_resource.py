@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource
-from hs_core.hydroshare import utils, delete_resource
+from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
     BandInformation
@@ -105,10 +105,14 @@ class TestCopyResource(TestCase):
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
-        delete_resource(self.res_generic.short_id)
-        delete_resource(self.res_raster.short_id)
-        delete_resource(self.res_generic_lic_nd.short_id)
-        delete_resource(self.res_generic_lic_nc_nd.short_id)
+        if self.res_generic:
+           self.res_generic.delete()
+        if self.res_raster:
+            self.res_raster.delete()
+        if self.res_generic_lic_nd:
+            self.res_generic_lic_nd.delete()
+        if self.res_generic_lic_nc_nd:
+            self.res_generic_lic_nc_nd.delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
@@ -201,7 +205,8 @@ class TestCopyResource(TestCase):
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
         # make sure to clean up resource so that irods storage can be cleaned up
-        delete_resource(new_res_generic.short_id)
+        if new_res_generic:
+            new_res_generic.delete()
 
     def test_copy_raster_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
@@ -295,7 +300,8 @@ class TestCopyResource(TestCase):
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
         # make sure to clean up resource so that irods storage can be cleaned up
-        delete_resource(new_res_raster.short_id)
+        if new_res_raster:
+            new_res_raster.delete()
 
     def test_copy_composite_resource(self):
         """Test that logical file type objects gets copied along with the metadata that each
@@ -440,5 +446,7 @@ class TestCopyResource(TestCase):
         self.assertEqual(orig_band_info.minimumValue, copy_band_info.minimumValue)
 
         # make sure to clean up all created resources to clean up iRODS storage
-        delete_resource(self.composite_resource.short_id)
-        delete_resource(new_composite_resource.short_id)
+        if self.composite_resource:
+            self.composite_resource.delete()
+        if new_composite_resource:
+            new_composite_resource.delete()

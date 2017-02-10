@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group, User
 from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.hydroshare import hs_bagit, delete_resource
+from hs_core.hydroshare import hs_bagit
 from hs_core.tasks import create_bag_by_irods
 from hs_core.models import GenericResource
 from django_irods.storage import IrodsStorage
@@ -30,7 +30,8 @@ class TestBagIt(TestCase):
 
     def tearDown(self):
         super(TestBagIt, self).tearDown()
-        delete_resource(self.test_res.short_id)
+        if self.test_res:
+            self.test_res.delete()
         GenericResource.objects.all().delete()
 
     def test_create_bag(self):

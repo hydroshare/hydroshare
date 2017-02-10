@@ -701,10 +701,7 @@ def delete_resource(pk):
     Note:  Only HydroShare administrators will be able to delete formally published resour
     """
 
-    res = utils.get_resource_by_shortkey(pk, False)
-    if not res:
-        # resource does not exist, so no need for deletion, just simply return
-        return pk
+    res = utils.get_resource_by_shortkey(pk)
 
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
         raise ValidationError('An obsoleted resource in the middle of the obsolescence chain '

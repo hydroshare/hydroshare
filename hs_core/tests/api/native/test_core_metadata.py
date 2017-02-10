@@ -5,7 +5,8 @@ from unittest import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, User
-from hs_core.hydroshare import resource, delete_resource
+from django.db import Error
+from hs_core.hydroshare import resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
     Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
@@ -37,7 +38,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
     # and not uninttest TestCase
     def tearDown(self):
         super(TestCoreMetadata, self).tearDown()
-        delete_resource(self.res.short_id)
         User.objects.all().delete()
         Group.objects.all().delete()
         GenericResource.objects.all().delete()
@@ -777,8 +777,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
-        # make sure to clean up resource after its use is no longer needed
-        delete_resource(res.short_id)
 
         # test adding more files of same mime type creates only one format element
         res_file_2 = "file_two.txt"
@@ -796,8 +794,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
-        # make sure to clean up resource after its use is no longer needed
-        delete_resource(res.short_id)
 
         # test adding files of different mime types creates one format element for each mime type
         res_file_3 = "file_three.tif"
@@ -818,8 +814,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         format_tif = "image/tiff"
         fmt_element = res.metadata.formats.all().filter(value__iexact=format_tif).first()
         self.assertEqual(fmt_element.value, format_tif)
-        # make sure to clean up resource after its use is no longer needed
-        delete_resource(res.short_id)
 
     def test_format_element_auto_deletion(self):
         # deleting resource content files deletes format elements
@@ -873,8 +867,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # there should be not be any format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
-        # make sure to clean up resource after its use is no longer needed
-        delete_resource(res.short_id)
 
     def test_identifier(self):
         # when a resource is created there should be one identifier element
@@ -1044,8 +1036,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # trying to delete the publisher should raise exception
         with self.assertRaises(Exception):
             resource.delete_metadata_element(res_with_files.short_id, 'publisher', self.res.metadata.publisher.id)
-        # make sure to clean up resource after its use is no longer needed
-        delete_resource(res_with_files.short_id)
 
     def test_relation(self):
         # at this point there should not be any relation elements
