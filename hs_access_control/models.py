@@ -297,7 +297,7 @@ class UserAccess(models.Model):
                 # request immediately
                 if this_group.gaccess.auto_approve:
                     # let first group owner be the grantor for this membership request
-                    group_owner = this_group.gaccess.first_owner
+                    group_owner = this_group.gaccess.owners.order_by('u2ugp__start').first()
                     group_owner.uaccess.act_on_group_membership_request(membership_request)
                     membership_request = None
                 return membership_request
@@ -2171,13 +2171,6 @@ class GroupAccess(models.Model):
         return User.objects.filter(is_active=True,
                                    u2ugp__group=self.group,
                                    u2ugp__privilege=PrivilegeCodes.OWNER)
-
-    @property
-    def first_owner(self):
-        return User.objects.filter(is_active=True,
-                                   u2ugp__group=self.group,
-                                   u2ugp__privilege=PrivilegeCodes.OWNER).order_by(
-            'u2ugp__start').first()
 
     @property
     def edit_users(self):
