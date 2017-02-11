@@ -106,7 +106,7 @@ class TestCopyResource(TestCase):
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
         if self.res_generic:
-           self.res_generic.delete()
+            self.res_generic.delete()
         if self.res_raster:
             self.res_raster.delete()
         if self.res_generic_lic_nd:
