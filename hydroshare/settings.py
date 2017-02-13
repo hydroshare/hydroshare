@@ -568,3 +568,22 @@ TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Whitelist of bots that we let crawl our site.
+#
+# If BOT_WHITELIST is provided, hs_code/robots/CrawlerBlocker will operate in "whitelist" mode an only all traffic
+# from the specified bots.
+#
+# If BOT_WHITELIST is commented out, the hs_core/robots/CrawerBlocker will operate in "open" mode allowing all traffic
+BOT_WHITELIST = [
+    '.*Googlebot.*',                        # Google
+    '.*bingbot.*',                          # Bing
+    '.*Yahoo! Slurp.*',                     # Yahoo
+    'DuckDuckBot.*',                        # DuckDuckGo
+    '.*Baiduspider.*',                      # Baidu (China)
+    '.*YandexBot.*',                        # Yandex (Russia)
+    '.*Sogou.*[sS]pider.*',                 # Sogou (China)
+    '.*Exabot.*',                           # Exalead (France)
+    '^([fF]acebo)(t|okexternalhit.*)$',     # Facebook
+    'ia_archiver.*alexa.*'                  # Alexa
+]
