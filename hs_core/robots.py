@@ -5,6 +5,7 @@ from django.http import HttpResponseForbidden
 # this might need to go in the Dockerfile
 # todo:  (wget http://www.robotstxt.org/db/all.txt, python robot_detection.py all.txt)
 
+
 class CrawlerBlocker:
     def process_request(self, request):
 
@@ -14,7 +15,8 @@ class CrawlerBlocker:
 
         # return 403 if no user agent is provided
         if not user_agent:
-            return HttpResponseForbidden('Request could not be processed, user agent could not be resolved.')
+            return HttpResponseForbidden('Request could not be processed, '
+                                         'user agent could not be resolved.')
 
         # if user agent is a bot, tag it as a crawler (checks against robotstxt.org master list)
         if robot_detection.is_robot(user_agent):
@@ -24,4 +26,3 @@ class CrawlerBlocker:
         # only return the view if the request is NOT identified as a crawler
         if request.is_crawler:
             return HttpResponseForbidden('Request could not be processed, see robots.txt')
-
