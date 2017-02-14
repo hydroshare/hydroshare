@@ -1,21 +1,12 @@
-import robot_detection
-from django.http import HttpResponseForbidden
-import logging
-import logging.handlers
-from django.conf import settings
 import re
 
-# todo: robot_detection needs to be updated periodically
-# this might need to go in the Dockerfile
-# todo:  (wget http://www.robotstxt.org/db/all.txt, python robot_detection.py all.txt)
+import robot_detection
+from django.conf import settings
+from django.http import HttpResponseForbidden
 
-# Set up a specific logger with our desired output level
-LOG_FILENAME = '/hydroshare/log/robots.log'
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.handlers.RotatingFileHandler(
-              LOG_FILENAME, maxBytes=10*1024*1024, backupCount=5)
-logger.addHandler(handler)
+
+# note: robot_detection needs to be updated periodically (possible inside the Dockerfile)
+# (wget http://www.robotstxt.org/db/all.txt, python robot_detection.py all.txt)
 
 class CrawlerBlocker:
     def __init__(self):
@@ -23,21 +14,23 @@ class CrawlerBlocker:
 
     def process_request(self, request):
 
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        user_agent = request.META.get('HTTP_USER_AGENT', None)
         request.is_crawler = 0
         request.is_whitelisted = 1
 
-        # they are identified as a bot to exclude them from the use tracking
-        if user_agent is '':
+        if user_agent is None:
             # calls without a user agent generally reflect internal calls (e.g. testing).
-            # whitelist these calls since they are not very common
+            # whitelist these calls since they are not very common and not doing so will
+            # break unittests
             request.is_crawler = True
             request.is_whitelisted = 1
         else:
-            # if user agent is a bot, tag it as a crawler (checks against robotstxt.org master list)
-            # the webcrawler is also checjed against the whitelist defined in settings.py
+            # if user agent is a bot, tag it as a crawler (checks against
+            # robotstxt.org master list). Webcrawlers are also checked against
+            # the whitelist defined in settings.py to determine if
+            # site access will be granted
             request.is_crawler = robot_detection.is_robot(user_agent)
-            if self.whitelist != -1:
+            if self.whitelist != -1 and request.is_crawler:
                 if not re.match("(" + ")|(".join(self.whitelist) + ")", user_agent):
                     request.is_whitelisted = 0
 
@@ -46,6 +39,7 @@ class CrawlerBlocker:
             return HttpResponseForbidden('Request could not be processed, see robots.txt')
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        # only return the view if the request is NOT identified as a crawler
-       if not request.is_whitelisted:
+
+        # only return the view if the request is NOT identified as a whitelisted crawler or human
+        if not request.is_whitelisted:
             return HttpResponseForbidden('Request could not be processed, see robots.txt')
