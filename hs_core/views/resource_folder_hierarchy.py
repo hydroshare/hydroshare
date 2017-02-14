@@ -231,13 +231,14 @@ def data_store_folder_unzip_public(request, pk, pathname):
     Public version of data_store_folder_unzip, incorporating path variables
 
     :param request:
+    :param pk:
+    :param pathname:
     :return HttpResponse:
     """
     request.POST = request.POST.copy()
     request.POST['res_id'] = pk
     request.POST['zip_with_rel_path'] = pathname
 
-    assert False, (request.POST, pk, pathname)
     return data_store_folder_unzip(request)
 
 
