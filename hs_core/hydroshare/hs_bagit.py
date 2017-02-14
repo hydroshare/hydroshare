@@ -38,7 +38,8 @@ def delete_bag(resource):
         bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
 
     # delete resource directory first to remove all generated bag-related files for the resource
-    istorage.delete(res_path)
+    if istorage.exists(res_path):
+        istorage.delete(res_path)
 
     # the resource bag may not exist due to on-demand bagging
     if istorage.exists(bagname):
