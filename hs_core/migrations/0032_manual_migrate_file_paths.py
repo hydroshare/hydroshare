@@ -258,9 +258,9 @@ def set_short_path(rtype, rfile, path):
     resource = get_resource_from_rfile(rtype, rfile)
     if is_federated(resource):
         rfile.resource_file = None
-        rfile.fed_resource_file = get_path(rfile, base)
+        rfile.fed_resource_file = get_path(rtype, rfile, base)
     else:
-        rfile.resource_file = get_path(rfile, base)
+        rfile.resource_file = get_path(rtype, rfile, base)
         rfile.fed_resource_file = None
     rfile.save()
 
@@ -389,11 +389,21 @@ def migrate_file_paths(apps, schema_editor):
             if not is_federated(resource):
                 print("ERROR: federated file declared for unfederated resource {}: {}"
                       .format(resource.short_id, file.resource_file.name))
+                if file.resource_file is None or file.resource_file.name == "":  # not found so far
+                    print("Switching that file to be unfederated so open will work") 
+                    file.resource_file.name = file.fed_resource_file.name 
+                    file.fed_resource_file = None
+                 elif file.resource_file.name == file.fed_resource_file.name: 
+                    print("clearing redundant fed_resource_file value") 
+                    file.fed_resource_file = None
+                 else: 
+                    print("ERROR: conflicting filenames {} and {} for same file"
+                          .format(file.resource_file.name, file.fed_resource_file.name))
                 found = False
             else:
                 count = count + 1
                 path = file.fed_resource_file.name
-                if path.startswith(file_path(BaseResource, resource)):
+                if path.startswith(file_path(resource)):
                     pass  # path is already compliant
                     # set_storage_path(BaseResource, file, path)
                     # print("found fully qualified federated name '{}'".format(path))
