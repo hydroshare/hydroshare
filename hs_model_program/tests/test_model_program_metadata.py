@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.hydroshare import utils, resource
+from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
@@ -50,8 +50,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def tearDown(self):
         super(TestModelProgramMetaData, self).tearDown()
-        # for f in self.resModelProgram.files.all(): 
-        #     resource.delete_resource_file(self.resModelProgram.short_id, f.short_path, self.user) 
+        # for f in self.resModelProgram.files.all():
+        #     resource.delete_resource_file(self.resModelProgram.short_id, f.short_path, self.user)
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -67,7 +67,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, 
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
                                         user=self.user, extract_metadata=False)
 
         # there should one content file
@@ -81,7 +81,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=True)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, 
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
                                         user=self.user, extract_metadata=True)
 
         # there should two content files
@@ -204,7 +204,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, 
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
                                         user=self.user, extract_metadata=False)
 
         self.assertFalse(self.resModelProgram.can_be_public_or_discoverable)
@@ -261,7 +261,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, 
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
                                         user=self.user, extract_metadata=False)
 
         self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
@@ -285,10 +285,10 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be one format element
         self.assertEquals(self.resModelProgram.metadata.formats.all().count(), 1)
 
-        # the short path should just consist of the file name. 
-        self.assertEquals(self.resModelProgram.files.all()[0].short_path, self.file_name) 
+        # the short path should just consist of the file name.
+        self.assertEquals(self.resModelProgram.files.all()[0].short_path, self.file_name)
 
-        # delete content file that we added above; note that file name is a short_path 
+        # delete content file that we added above; note that file name is a short_path
         hydroshare.delete_resource_file(self.resModelProgram.short_id, self.file_name, self.user)
 
         # there should no content file
@@ -311,7 +311,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, 
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
                                         user=self.user, extract_metadata=False)
 
         self.resModelProgram.metadata.create_element('Description', abstract="test abstract")

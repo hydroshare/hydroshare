@@ -6,7 +6,6 @@ from rest_framework import status
 from rdflib import Graph, term
 
 from hs_core.hydroshare import resource
-from hs_core.models import ResourceFile 
 from .base import ResMapTestCase
 
 

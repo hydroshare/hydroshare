@@ -114,7 +114,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # trying to add good .tif file should pass the file check
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resRaster, files=files, 
+        utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
                                             user=self.user, extract_metadata=False)
         utils.resource_file_add_process(resource=self.resRaster, files=files, user=self.user,
                                         extract_metadata=False)
@@ -133,9 +133,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # trying to add good .zip file should pass the file check
         files = [UploadedFile(file=self.raster_zip_file_obj, name=self.raster_zip_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resRaster, files=files, 
+        utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
                                             user=self.user, extract_metadata=False)
-        utils.resource_file_add_process(resource=self.resRaster, files=files, 
+        utils.resource_file_add_process(resource=self.resRaster, files=files,
                                         user=self.user, extract_metadata=False)
 
         # there should be 10 content file:

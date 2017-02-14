@@ -1,9 +1,8 @@
-import os
 from dateutil import parser
 
 from django.conf import settings
 
-from hs_core.models import ResourceFile, BaseResource
+from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
@@ -137,9 +136,8 @@ class TestCaseCommonUtilities(object):
                                       'data/contents/sub_test_dir/' + file_name_list[1])
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
-            updated_res_file_names.append(rf.short_path) 
+            updated_res_file_names.append(rf.short_path)
 
-        path_prefix = res.file_path
         self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg="resource does not contain the updated file new_" + file_name_list[2])
         self.assertNotIn(file_name_list[2], updated_res_file_names,
@@ -172,13 +170,13 @@ class TestCaseCommonUtilities(object):
         if res.resource_federation_path:
             fed_test_file1_full_path = '/{zone}/home/{uname}/{fname}'.format(
                 zone=settings.HS_USER_IRODS_ZONE, uname=user.username, fname=file_name_list[0])
-            # TODO: why isn't this a method of resource? 
+            # TODO: why isn't this a method of resource?
             # TODO: Why do we repeat the resource_federation_path?
             add_resource_files(res.short_id, source_names=[fed_test_file1_full_path],
                                move=False)
 
         else:
-            # TODO: Why isn't this a method of resource? 
+            # TODO: Why isn't this a method of resource?
             add_resource_files(res.short_id, self.test_file_1)
 
         # TODO: use ResourceFile.create_folder, which doesn't require data/contents prefix
@@ -198,24 +196,24 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 3")
 
-        # test unzipping the file succeeds now after deleting the existing folder 
-        # TODO: this causes a multiple delete because the paths are valid now. 
+        # test unzipping the file succeeds now after deleting the existing folder
+        # TODO: this causes a multiple delete because the paths are valid now.
         istorage = res.get_irods_storage()
-        print("before remove folder") 
-        pprint(istorage.listdir(os.path.join(res.short_id, 'data/contents')))
+        print("before remove folder")
+        pprint(istorage.listdir(res.file_path))
         print("res.short_id is {}".format(res.short_id))
         print("res.root_path is {}".format(res.root_path))
         print("res.file_path is {}".format(res.file_path))
 
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
-        print("after remove folder") 
-        pprint(istorage.listdir(os.path.join(res.short_id, 'data/contents')))
-        
+        print("after remove folder")
+        pprint(istorage.listdir(res.file_path))
+
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()
-        print("all files are:") 
-        for f in res.files.all(): 
-            print("    filename = {}".format(f.storage_path)) 
+        print("all files are:")
+        for f in res.files.all():
+            print("    filename = {}".format(f.storage_path))
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
@@ -254,15 +252,15 @@ class TestCaseCommonUtilities(object):
                           ' in the new folder after renaming')
 
         # remove a folder
-        # TODO: utilize ResourceFile.remove_folder instead. Takes a short path. 
+        # TODO: utilize ResourceFile.remove_folder instead. Takes a short path.
         remove_folder(user, res.short_id, 'data/contents/sub_dir')
         # Now resource only contains one file
         self.assertEqual(res.files.all().count(), 1, msg="resource file count didn't match")
         updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=res.id): 
+        for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
 
-        self.assertEqual(len(updated_res_file_names), 1) 
+        self.assertEqual(len(updated_res_file_names), 1)
         self.assertEqual(updated_res_file_names[0], 'new_' + file_name_list[2])
 
     def raster_metadata_extraction(self):

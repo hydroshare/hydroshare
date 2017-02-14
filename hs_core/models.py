@@ -1250,7 +1250,7 @@ class AbstractResource(ResourcePermissionsMixin):
                                           )
     file_unpack_message = models.TextField(blank=True, null=True)
 
-    # TODO: why are old versions saved? 
+    # TODO: why are old versions saved?
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
@@ -1866,9 +1866,9 @@ class ResourceFile(models.Model):
             self.fed_resource_file = None
         self.save()
 
-    def parse(self): 
+    def parse(self):
         """ parse a path into folder and basename """
-        return self.path_is_acceptable(self.storage_path, test_exists=False) 
+        return self.path_is_acceptable(self.storage_path, test_exists=False)
 
     def path_is_acceptable(self, path, test_exists=True):
         """

@@ -25,7 +25,7 @@ from mezzanine.conf import settings
 
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
-from hs_core.models import AbstractResource, BaseResource, ResourceFile, get_resource_path
+from hs_core.models import AbstractResource, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
@@ -259,9 +259,9 @@ def get_file_from_irods(res_file):
     :return: location of the copied file
     """
     res = res_file.resource
-    istorage = res.get_irods_storage() 
+    istorage = res.get_irods_storage()
     res_file_path = res_file.storage_path
-    file_name  = os.path.basename(res_file_path) 
+    file_name = os.path.basename(res_file_path)
 
     tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
     tmpfile = os.path.join(tmpdir, file_name)
@@ -291,10 +291,10 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     :return:
     """
     ori_res = original_resource_file.resource
-    istorage = ori_res.get_irods_storage() 
-    ori_storage_path = original_resource_file.storage_path 
+    istorage = ori_res.get_irods_storage()
+    ori_storage_path = original_resource_file.storage_path
 
-    # Note: this doesn't update metadata at all. 
+    # Note: this doesn't update metadata at all.
     istorage.saveFile(new_file, ori_storage_path, True)
 
     # do this so that the bag will be regenerated prior to download of the bag
@@ -310,7 +310,7 @@ def get_resource_file_name_and_extension(res_file):
     :return: (full filename with path, full file base name, file extension)
              ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")
     """
-    f_fullname = res_file.storage_path 
+    f_fullname = res_file.storage_path
     f_basename = os.path.basename(f_fullname)
     _, file_ext = os.path.splitext(f_fullname)
 
@@ -324,12 +324,12 @@ def get_resource_file_url(res_file):
     :param res_file: an instance of ResourceFile for which download url is to be retrieved
     :return: download url for the resource file
     """
-    
+
     if res_file.resource_file:
         f_url = res_file.resource_file.url
     elif res_file.fed_resource_file:
         f_url = res_file.fed_resource_file.url
-    else: 
+    else:
         f_url = ''
     return f_url
 
@@ -808,18 +808,19 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     :return: The identifier of the ResourceFile added.
     """
     if f:
-        if isinstance(f, basestring): 
-            fname = os.path.basename(f)
-        else: 
-            fname = os.path.basename(f.name)
-        
+        # does not seem to be needed
+        # if isinstance(f, basestring):
+        #     fname = os.path.basename(f)
+        # else:
+        #     fname = os.path.basename(f.name)
+
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
 
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
 
-    elif source_name: 
+    elif source_name:
         try:
             # create from existing iRODS file
             ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
@@ -834,7 +835,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')
 
-    # TODO: generate this from data in ResourceFile 
+    # TODO: generate this from data in ResourceFile
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

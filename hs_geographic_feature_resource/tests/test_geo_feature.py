@@ -442,8 +442,6 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .xml file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            # f.resource_file.delete()
-            # TODO: raises DoesNotExist because the above delete deleted it. 
             f.delete()
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
 
