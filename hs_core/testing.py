@@ -11,8 +11,6 @@ from theme.models import UserProfile
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
-from pprint import pprint
-
 
 class MockIRODSTestCaseMixin(object):
     def setUp(self):
@@ -199,21 +197,11 @@ class TestCaseCommonUtilities(object):
         # test unzipping the file succeeds now after deleting the existing folder
         # TODO: this causes a multiple delete because the paths are valid now.
         istorage = res.get_irods_storage()
-        print("before remove folder")
-        pprint(istorage.listdir(res.file_path))
-        print("res.short_id is {}".format(res.short_id))
-        print("res.root_path is {}".format(res.root_path))
-        print("res.file_path is {}".format(res.file_path))
 
         remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
-        print("after remove folder")
-        pprint(istorage.listdir(res.file_path))
 
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()
-        print("all files are:")
-        for f in res.files.all():
-            print("    filename = {}".format(f.storage_path))
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 2")
         unzip_file(user, res.short_id, 'data/contents/sub_test_dir.zip', True)
