@@ -1904,12 +1904,12 @@ class ResourceFile(models.Model):
             if test_exists and not storage.exists(path):
                 raise ValidationError("Federated path does not exist in irods")
             plen = len(fedpath + '/')
-            relpath = relpath[plen:]  # omit /
+            relpath = relpath[plen:]  # omit fed path 
 
             # strip resource id from path
             if relpath.startswith(locpath):
                 plen = len(locpath)
-                relpath = relpath[plen:]  # omit /
+                relpath = relpath[plen:]  # omit local path 
             else:
                 raise ValidationError("Malformed federated resource path")
         elif path.startswith(locpath):
