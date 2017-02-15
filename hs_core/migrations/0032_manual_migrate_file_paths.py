@@ -406,9 +406,9 @@ def migrate_file_paths(apps, schema_editor):
                                       resource.resource_type))
                         found = False
 
-                    # set_storage_path(BaseResource, file, path)  # NOT NEEDED ANYMORE
+                    # set_storage_path(BaseResource, file, path)  # NOT NEEDED
                     # print("found fully qualified unfederated name '{}'".format(path))
-                    pass
+                    # pass
                 elif path.startswith("data/contents/"):
                     print("WARNING: path {} starts with extra data header for {} ({}) ...REPAIRING"
                           .format(path, resource.short_id, resource.resource_type))
@@ -418,7 +418,9 @@ def migrate_file_paths(apps, schema_editor):
                     if file.file_folder is None:
                         set_short_path(BaseResource, file, path)
                         # print("found unqualified federated path '{}' qualified to '{}'"
-                        #       .format(path, storage_path(BaseResource, file)))
+                        #       + " for {} ({})"
+                        #       .format(path, storage_path(BaseResource, file),
+                        #               resource.short_path, resource.resource_type))
                     else:
                         set_short_path(BaseResource, file, os.path.join(file.file_folder, path))
                         # print("found unqualified federated name '{}'" +
@@ -441,8 +443,8 @@ def migrate_file_paths(apps, schema_editor):
                             #       .format(path, storage_path(BaseResource, file)))
                         else:
                             set_short_path(BaseResource, file, os.path.join(file.file_folder, path))
-                            # print("found unqualified unfederated name '{}' with folder" +
-                            #       " qualified to '{}'"
+                            # print("found unqualified unfederated name '{}' with folder"
+                            #       + " qualified to '{}'"
                             #       .format(path, storage_path(BaseResource, file)))
 
         if file.fed_resource_file.name is not None:
@@ -451,11 +453,11 @@ def migrate_file_paths(apps, schema_editor):
                 print("ERROR: federated file declared for unfederated resource {} ({}): {}"
                       .format(resource.short_id, resource.resource_type, file.resource_file.name))
                 if file.resource_file.name is None:  # not found so far
-                    print("Switching that file to be unfederated so open will work")
+                    print("WARNING: Switching that file to be unfederated so open will work")
                     file.resource_file.name = file.fed_resource_file.name
                     file.fed_resource_file.name = None
                 elif file.resource_file.name == file.fed_resource_file.name:
-                    print("clearing redundant fed_resource_file value")
+                    print("WARNING: clearing redundant fed_resource_file value")
                     file.fed_resource_file = None
                 else:
                     print("ERROR: conflicting filenames {} and {} for same file ({})"
@@ -480,7 +482,7 @@ def migrate_file_paths(apps, schema_editor):
                               .format(path, resource.short_id,
                                       resource.resource_type))
                         found = False
-                    # set_storage_path(BaseResource, file, path) NOT NECESSARY
+                    # set_storage_path(BaseResource, file, path)  # NOT NEEDED
                     # print("found fully qualified federated name '{}'".format(path))
                 elif path.startswith(resource.short_id):
                     print("ERROR: unfederated path {} used for federated resource for {} ({})"
@@ -503,29 +505,34 @@ def migrate_file_paths(apps, schema_editor):
                         #       .format(path, storage_path(BaseResource, file)))
                     else:
                         set_short_path(BaseResource, file, os.path.join(file.file_folder, path))
-                        # print("found unqualified federated name '{}'" +
-                        #       " with folder '{}' qualified to '{}'"
-                        #       .format(path, file.file_folder,
-                        #               storage_path(BaseResource, file)))
+                        print("found unqualified federated name '{}'" +
+                              " with folder '{}' qualified to '{}'"
+                              .format(path, file.file_folder,
+                                      storage_path(BaseResource, file)))
 
         if file.fed_resource_file_name_or_path is not None:
             count = count + 1
             path = file.fed_resource_file_name_or_path
+            if path.startswith('data/contents/'):
+                plen = len('data/contents/')
+                path = path[plen:]
+                print("WARNING: header path stripped from fed name or path: {} for {} ({})"
+                      .format(path, resource.short_id, resource.resource_type))
             if not is_federated(resource):
-                print("ERROR: federated file name or path" +
-                      "declared for unfederated resource {} ({}): {}"
-                      .format(resource.short_id, resource.resource_type,
-                              path))
-                found = False
-                # mediation only required if instances pop up during testing.
+                print("WARNING: federated file name or path" +
+                      " declared for unfederated resource {} ({}): {} ...REPAIRING"
+                      .format(resource.short_id, resource.resource_type, path))
+                if path.startswith(file_path(resource)):
+                    set_storage_path(BaseResource, file, path, test_exists=False)
+                else:
+                    set_short_path(BaseResource, file, path)
             elif file.fed_resource_file.name is not None:
                 print("ERROR: federated file for resource {} has two paths: {} and {}"
-                      .format(resource.short_id, file.fed_resource_file.name,
-                              path))
+                      .format(resource.short_id, file.fed_resource_file.name, path))
                 # mediation only required if instances pop up during testing.
                 found = False
             else:
-                print("text path is '{}' (len is {})".format(path, str(len(path))))
+                # print("text path is '{}' (len is {})".format(path, str(len(path))))
                 if path.startswith(file_path(resource)):
                     set_storage_path(BaseResource, file, path, test_exists=False)
                     # print("found fully qualified federated text '{}'".format(path))
