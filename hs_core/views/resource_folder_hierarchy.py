@@ -241,7 +241,8 @@ def data_store_folder_unzip_public(request, pk, pathname):
     import pydevd
     pydevd.settrace('10.20.1.51', port=21000, suspend=False)
 
-    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=pathname)
+    sys_pathname = 'data/contents/%s' % pathname
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
 
 
 def data_store_create_folder(request):
