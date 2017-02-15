@@ -48,6 +48,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
+    # whether the user has permission to view this resource
+    can_view = content_model.can_view(request)
+    if not can_view:
+        raise PermissionDenied()
+
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False

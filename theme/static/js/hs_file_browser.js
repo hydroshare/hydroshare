@@ -636,6 +636,23 @@ $(document).ready(function () {
     if (!$("#hs-file-browser").length) {
         return;
     }
+
+    if (localStorage.getItem('file-browser-view')) {
+        var view = localStorage.getItem('file-browser-view');
+        // ------- switch to table view -------
+        $("#fb-files-container").removeClass("fb-view-grid fb-view-list");
+        $("#fb-files-container").addClass(view);
+
+        $("#btn-group-view button").removeClass("active");
+
+        if (view == "fb-view-list") {
+            $("#btn-group-view button[data-view='list']").addClass("active");
+        }
+        else {
+            $("#btn-group-view button[data-view='grid']").addClass("active");
+        }
+    }
+
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
@@ -778,11 +795,13 @@ $(document).ready(function () {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
+            localStorage.setItem('file-browser-view', 'fb-view-list');
         }
         else {
             // ------- Switch to grid view -------
             $("#fb-files-container").removeClass("fb-view-list");
             $("#fb-files-container").addClass("fb-view-grid");
+            localStorage.setItem('file-browser-view', 'fb-view-grid');
         }
     });
 
