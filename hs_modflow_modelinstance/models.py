@@ -630,8 +630,8 @@ class MODFLOWModelInstanceResource(BaseResource):
         existing_files = []
         reqd_files = []
         for res_file in self.files.all():
-                ext = os.path.splitext(res_file.resource_file.name)[-1]
-                existing_files.append(res_file.resource_file.name.split("/")[-1])
+                ext = res_file.extension
+                existing_files.append(res_file.file_name)
                 if ext == '.nam' or ext == '.mfn':
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
