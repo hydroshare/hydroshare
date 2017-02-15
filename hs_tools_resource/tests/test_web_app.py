@@ -104,17 +104,17 @@ class TestWebAppFeature(TransactionTestCase):
 
         # create 2 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetCDF Resource'])
+                                         supported_res_types=['NetcdfResource'])
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetCDF Resource'])
+                                         supported_res_types=['NetcdfResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 2)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
                                          element_id=SupportedResTypes.objects.first().id,
-                                         supported_res_types=['Time Series Resource'])
+                                         supported_res_types=['TimeSeriesResource'])
         self.assertEqual(SupportedResTypes.objects.first().supported_res_types.all()[0].description,
-                         'Time Series Resource')
+                         'TimeSeriesResource')
 
         # try to delete 1st SupportedResTypes obj
         with self.assertRaises(Exception):

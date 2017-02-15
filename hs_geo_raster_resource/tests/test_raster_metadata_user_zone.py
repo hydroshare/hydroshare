@@ -136,3 +136,26 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
 
         # resource core metadata is deleted after resource deletion
         self.assertEqual(CoreMetaData.objects.all().count(), 0)
+
+        # test adding file from user zone to existing empty resource in hydroshare zone
+        # even there is no file uploaded to resource initially, there are default extended
+        # automatically metadata created
+        self.resRaster = hydroshare.create_resource(
+            resource_type='RasterResource',
+            owner=self.user,
+            title='My Test Raster Resource'
+        )
+        # test metadata extraction with a valid tif file being added coming from user zone space
+        # file validation and metadata extraction happen during post file add signal handler
+        utils.resource_file_add_process(resource=self.resRaster,
+                                        files=[],
+                                        user=self.user,
+                                        fed_res_file_names=[fed_test_file_full_path])
+        super(TestRasterMetaData, self).raster_metadata_extraction()
+
+        # there should be 2 content file: tif file and vrt file at this point
+        self.assertEqual(self.resRaster.files.all().count(), 2)
+        # delete resource
+        hydroshare.delete_resource(self.resRaster.short_id)
+        # resource core metadata is deleted after resource deletion
+        self.assertEqual(CoreMetaData.objects.all().count(), 0)

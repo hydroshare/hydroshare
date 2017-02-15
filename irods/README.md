@@ -51,7 +51,6 @@ If all deploys as it should you will see this reflected in the `docker ps` outpu
 ```
 $ docker ps
 CONTAINER ID        IMAGE                               COMMAND                  CREATED             STATUS              PORTS                                                                                 NAMES
-13892b4e5487        hydroshare_dockerworker             "/bin/bash init-docke"   17 minutes ago      Up 9 minutes                                                                                              dockerworker
 5af966576bff        hydroshare_defaultworker            "/bin/bash init-defau"   17 minutes ago      Up 9 minutes                                                                                              defaultworker
 7047505e0374        hydroshare_hydroshare               "/bin/bash init-hydro"   17 minutes ago      Up 9 minutes        0.0.0.0:8000->8000/tcp, 0.0.0.0:1338->2022/tcp                                        hydroshare
 3132355d9d4b        redis:2.8                           "docker-entrypoint.sh"   17 minutes ago      Up 17 minutes       6379/tcp                                                                              redis

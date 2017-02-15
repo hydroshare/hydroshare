@@ -275,7 +275,7 @@ class SignupForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email']
+        fields = ['first_name', 'last_name', 'email']
 
     def clean_first_name(self):
         data = self.cleaned_data['first_name']
@@ -293,12 +293,6 @@ class UserForm(forms.ModelForm):
         data = self.cleaned_data['email']
         if len(data.strip()) == 0:
             raise forms.ValidationError("Email is a required field.")
-        return data
-
-    def clean_username(self):
-        data = self.cleaned_data['username']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Username is a required field.")
         return data
 
 

@@ -33,17 +33,10 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             groups=[self.group]
         )
 
-        # even there is no file uploaded to resource, there are default extended automatically
-        # metadata created
-        _, _, metadata, _ = utils.resource_pre_create_actions(
-            resource_type='RasterResource',
-            resource_title='My Test Raster Resource',
-            page_redirect_url_key=None, metadata=None,)
         self.resRaster = hydroshare.create_resource(
             resource_type='RasterResource',
             owner=self.user,
-            title='My Test Raster Resource',
-            metadata=metadata
+            title='My Test Raster Resource'
         )
 
         self.temp_dir = tempfile.mkdtemp()
