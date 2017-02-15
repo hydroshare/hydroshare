@@ -129,9 +129,9 @@ class TrackingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         reader = csv.reader(StringIO(response.content))
         rows = list(reader)
-
+        print rows
         count = Variable.objects.all().count()
-        self.assertEqual(len(rows), count - 1)  # -1 to account for the session fetching report
+        self.assertEqual(len(rows), count + 1)  # +1 to account for the session header
 
     def test_history_variables(self):
         self.user.is_staff = True

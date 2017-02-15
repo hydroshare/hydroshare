@@ -1,15 +1,8 @@
 
-import requests
-
-from django.test import TestCase
+from django.test import Client, TestCase
 
 
 class TestRobots(TestCase):
-
-    def setUp(self):
-
-        self.url = 'http://localhost:8000'
-        self.headers = requests.utils.default_headers()
 
     def test_whitelisted_agents(self):
 
@@ -29,8 +22,8 @@ class TestRobots(TestCase):
         ]
 
         for agent in agents:
-            self.headers.update({'User-Agent': agent})
-            response = requests.get(self.url, headers=self.headers)
+            client = Client(HTTP_USER_AGENT=agent)
+            response = client.get('/')
             self.assertTrue(response.status_code != 403,
                             msg='User-Agent:%s --> %d == 403' % (agent, response.status_code))
 
@@ -45,7 +38,7 @@ class TestRobots(TestCase):
                   ]
 
         for agent in agents:
-            self.headers.update({'User-Agent': agent})
-            response = requests.get(self.url, headers=self.headers)
+            client = Client(HTTP_USER_AGENT=agent)
+            response = client.get('/')
             self.assertTrue(response.status_code == 403,
                             msg='User-Agent:%s --> %d != 403' % (agent, response.status_code))
