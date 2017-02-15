@@ -14,11 +14,6 @@ from theme.models import UserProfile
 
 from ... import models as hs_tracking
 
-# import sys
-# sys.path.append('/pycharm-debug')
-# import pydevd
-# pydevd.settrace('10.20.1.7', port=21000, suspend=False)
-
 # Add logger for stderr messages.
 err = logging.getLogger('stats-command')
 err.setLevel(logging.ERROR)
