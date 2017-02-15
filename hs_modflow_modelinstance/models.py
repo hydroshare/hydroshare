@@ -6,8 +6,6 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
 
-import os
-
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     AbstractMetaDataElement
 
