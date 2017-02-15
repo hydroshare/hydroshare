@@ -66,7 +66,7 @@ urlpatterns = patterns('',
         name='list_manipulate_folders'),
 
     # public unzip endpoint
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
         views.resource_folder_hierarchy.data_store_folder_unzip_public),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity
