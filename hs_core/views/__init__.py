@@ -874,7 +874,7 @@ def my_resources(request, page):
     import sys
     sys.path.append('/pycharm-debug')
     import pydevd
-    pydevd.settrace('10.20.1.28', port=21000, suspend=False)
+    pydevd.settrace('10.20.1.40', port=21000, suspend=False)
 
     return context
 
