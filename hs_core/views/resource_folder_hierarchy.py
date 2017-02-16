@@ -236,10 +236,6 @@ def data_store_folder_unzip_public(request, pk, pathname):
     :param pathname:
     :return HttpResponse:
     """
-    import sys
-    sys.path.append('/pycharm-debug')
-    import pydevd
-    pydevd.settrace('10.20.1.51', port=21000, suspend=False)
 
     sys_pathname = 'data/contents/%s' % pathname
     return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
