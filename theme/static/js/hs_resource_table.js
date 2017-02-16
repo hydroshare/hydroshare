@@ -178,7 +178,7 @@ $(document).ready(function () {
         }
     });
 
-    $("#btn-delete-resources").click(function () {
+    $("#btn-confirm-delete-resources").click(function () {
         var indexes = [];   // List of selected resources allowed for deletion
         var notOwned = [];
         var published = [];
@@ -226,7 +226,7 @@ $(document).ready(function () {
         }
 
         if((published.length || notOwned.length) && indexes.length) {
-            messageBody.append("<br><div class='text-center'><strong>Continue with the rest?</strong></div><br>")
+            messageBody.append("<hr><h4>Continue with the rest?</h4>")
         }
 
         if (indexes.length > 0) {
