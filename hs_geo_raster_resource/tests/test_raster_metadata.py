@@ -62,14 +62,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         shutil.copy(self.raster_honduras_tif_file, target_temp_raster_honduras_tif_file)
         self.raster_honduras_tif_file_obj = open(target_temp_raster_honduras_tif_file, 'r')
 
-        self.raster_loagn_tif_file_name = 'Logan.tif'
-        self.raster_logan_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
-            self.raster_loagn_tif_file_name)
-        target_temp_raster_logan_tif_file = os.path.join(self.temp_dir,
-                                                         self.raster_loagn_tif_file_name)
-        shutil.copy(self.raster_logan_tif_file, target_temp_raster_logan_tif_file)
-        self.raster_logan_tif_file_obj = open(target_temp_raster_logan_tif_file, 'r')
-
         self.raster_mawhefel_tif_file_name = 'mawhefel.tif'
         self.raster_mawhefel_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
             self.raster_mawhefel_tif_file_name)
@@ -278,30 +270,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.files.all().count(), 2)
         # there should not be any coverage extracted in the case of Honduras
         self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
-
-        self.resRaster.delete()
-
-        # test for Logan.tif
-        files = [UploadedFile(file=self.raster_logan_tif_file_obj,
-                              name=self.raster_loagn_tif_file_name)]
-
-        self.resRaster = hydroshare.create_resource(
-            'RasterResource',
-            self.user,
-            'My Test Raster Resource Coverage',
-            files=files,
-            metadata=[]
-        )
-        # uploaded file validation and metadata extraction happens in post resource
-        # creation handler
-        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
-        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.11279392528344)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.45692217016766)
-        self.assertEqual(box_coverage.value['southlimit'], 41.662217644192246)
-        self.assertEqual(box_coverage.value['westlimit'], -111.81766334510883)
 
         self.resRaster.delete()
 
