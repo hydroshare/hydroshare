@@ -98,9 +98,9 @@ class RefTSMetadata(CoreMetaData):
         elements.append('DataSource')
         return elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
-        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=False)
+        xml_string = super(RefTSMetadata, self).get_xml(pretty_print=pretty_print)
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
 
@@ -143,7 +143,7 @@ class RefTSMetadata(CoreMetaData):
                                              self.datasources.all().first(),
                                              datasources_fields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(RefTSMetadata, self).delete_all_elements()
