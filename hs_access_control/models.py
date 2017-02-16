@@ -291,8 +291,16 @@ class UserAccess(models.Model):
                                                      group_to_join=this_group).exists():
                 raise PermissionDenied("You already have a pending request to join this group")
             else:
-                return GroupMembershipRequest.objects.create(request_from=self.user,
-                                                             group_to_join=this_group)
+                membership_request = GroupMembershipRequest.objects.create(request_from=self.user,
+                                                                           group_to_join=this_group)
+                # if group allows auto approval of membership request then approve the
+                # request immediately
+                if this_group.gaccess.auto_approve:
+                    # let first group owner be the grantor for this membership request
+                    group_owner = this_group.gaccess.owners.order_by('u2ugp__start').first()
+                    group_owner.uaccess.act_on_group_membership_request(membership_request)
+                    membership_request = None
+                return membership_request
         else:
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
@@ -381,7 +389,7 @@ class UserAccess(models.Model):
                                                      Q(invitation_to=self.user))\
                                      .filter(group_to_join__gaccess__active=True)
 
-    def create_group(self, title, description, purpose=None):
+    def create_group(self, title, description, auto_approve=False, purpose=None):
         """
         Create a group.
 
@@ -406,7 +414,8 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         raw_group = Group.objects.create(name=title)
-        GroupAccess.objects.create(group=raw_group, description=description, purpose=purpose)
+        GroupAccess.objects.create(group=raw_group, description=description,
+                                   auto_approve=auto_approve, purpose=purpose)
         raw_user = self.user
 
         # Must bootstrap access control system initially
@@ -2135,6 +2144,10 @@ class GroupAccess(models.Model):
     shareable = models.BooleanField(default=True,
                                     editable=False,
                                     help_text='whether group can be shared by non-owners')
+
+    auto_approve = models.BooleanField(default=False,
+                                       editable=False,
+                                       help_text='whether group membership can be auto approved')
 
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)

@@ -374,6 +374,48 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(
             self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
+    def test_user_sending_request_auto_approval(self):
+        # here we are testing auto approval of group membership request
+
+        # test that the modeling group is not set for auto membership approval
+        self.assertEqual(self.modeling_group.gaccess.auto_approve, False)
+
+        # user lisa should have no pending request to join group
+        self.assertEquals(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+
+        # modeling group should have no pending membership requests
+        self.assertEquals(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # there should be 4 members in the group
+        self.assertEquals(self.modeling_group.gaccess.members.count(), 4)
+
+        # lisa should should not be one of the members
+        self.assertNotIn(
+            self.lisa_group_member,
+            self.modeling_group.gaccess.members)
+
+        # set the modeling group for auto membership approval
+        self.modeling_group.gaccess.auto_approve = True
+        self.modeling_group.gaccess.save()
+
+        # let lisa send a membership request to join modeling group - which is an auto
+        # membership approval group
+        self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
+
+        # user lisa should have no pending request to join group
+        self.assertEquals(
+            self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
+        # modeling group should have no pending membership requests
+        self.assertEquals(
+            self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # lisa should be a member of the modeling group
+        self.assertIn(
+            self.lisa_group_member,
+            self.modeling_group.gaccess.members)
+
     def test_user_sending_request_multiple_groups(self):
         # test that a specific user can send request to join multiple groups
 
