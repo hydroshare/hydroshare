@@ -185,26 +185,16 @@ class NetcdfResource(BaseResource):
 processor_for(NetcdfResource)(resource_processor)
 
 
-# define the netcdf metadata
-class NetcdfMetaData(CoreMetaData):
+class NetCDFMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
     variables = GenericRelation(Variable)
     ori_coverage = GenericRelation(OriginalCoverage)
 
-    @classmethod
-    def get_supported_element_names(cls):
-        # get the names of all core metadata elements
-        elements = super(NetcdfMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('Variable')
-        elements.append('OriginalCoverage')
-        return elements
-
-    @property
-    def resource(self):
-        return NetcdfResource.objects.filter(object_id=self.id).first()
+    class Meta:
+        abstract = True
 
     def has_all_required_elements(self):
-        if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
+        if not super(NetCDFMetaDataMixin, self).has_all_required_elements():  # check required meta
             return False
         if not self.variables.all():
             return False
@@ -214,7 +204,7 @@ class NetcdfMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
-        missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
+        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
@@ -222,6 +212,59 @@ class NetcdfMetaData(CoreMetaData):
             missing_required_elements.append('Variable')
 
         return missing_required_elements
+
+    def delete_all_elements(self):
+        super(NetCDFMetaDataMixin, self).delete_all_elements()
+        self.ori_coverage.all().delete()
+        self.variables.all().delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(NetCDFMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('Variable')
+        elements.append('OriginalCoverage')
+        return elements
+
+
+# define the netcdf metadata
+class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
+    # variables = GenericRelation(Variable)
+    # ori_coverage = GenericRelation(OriginalCoverage)
+
+    # @classmethod
+    # def get_supported_element_names(cls):
+    #     # get the names of all core metadata elements
+    #     elements = super(NetcdfMetaData, cls).get_supported_element_names()
+    #     # add the name of any additional element to the list
+    #     elements.append('Variable')
+    #     elements.append('OriginalCoverage')
+    #     return elements
+
+    @property
+    def resource(self):
+        return NetcdfResource.objects.filter(object_id=self.id).first()
+
+    # def has_all_required_elements(self):
+    #     if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
+    #         return False
+    #     if not self.variables.all():
+    #         return False
+    #     if not (self.coverages.all().filter(type='box').first() or
+    #             self.coverages.all().filter(type='point').first()):
+    #         return False
+    #     return True
+
+    # def get_required_missing_elements(self):  # show missing required meta
+    #     missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
+    #     if not (self.coverages.all().filter(type='box').first() or
+    #             self.coverages.all().filter(type='point').first()):
+    #         missing_required_elements.append('Spatial Coverage')
+    #     if not self.variables.all().first():
+    #         missing_required_elements.append('Variable')
+    #
+    #     return missing_required_elements
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
@@ -301,7 +344,7 @@ class NetcdfMetaData(CoreMetaData):
                                                                       field=md_fields[md_field]))
                     field.text = str(attr)
 
-    def delete_all_elements(self):
-        super(NetcdfMetaData, self).delete_all_elements()
-        self.ori_coverage.all().delete()
-        self.variables.all().delete()
+    # def delete_all_elements(self):
+    #     super(NetcdfMetaData, self).delete_all_elements()
+    #     self.ori_coverage.all().delete()
+    #     self.variables.all().delete()

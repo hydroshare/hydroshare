@@ -6,7 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import HStoreField, ArrayField
 
 from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
     textarea, h4, input
@@ -24,9 +24,15 @@ class AbstractFileMetaData(models.Model):
     coverages = GenericRelation(Coverage)
     # kye/value metadata
     extra_metadata = HStoreField(default={})
+    # keywords
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def get_metadata_model_classes(self):
+        return {'coverage': Coverage}
 
     def get_metadata_elements(self):
         """returns a list of all metadata elements (instances of AbstractMetaDataElement)
@@ -37,6 +43,7 @@ class AbstractFileMetaData(models.Model):
     def delete_all_elements(self):
         self.coverages.all().delete()
         self.extra_metadata = {}
+        self.keywords = []
         self.save()
 
     def get_html(self):
@@ -252,10 +259,14 @@ class AbstractFileMetaData(models.Model):
                                                  model=element_model_name)
         except ObjectDoesNotExist:
             try:
-                model_type = ContentType.objects.get(app_label='hs_core',
+                model_type = ContentType.objects.get(app_label='hs_app_netCDF',
                                                      model=element_model_name)
             except ObjectDoesNotExist:
-                raise ValidationError(unsupported_element_error)
+                try:
+                    model_type = ContentType.objects.get(app_label='hs_core',
+                                                         model=element_model_name)
+                except ObjectDoesNotExist:
+                    raise ValidationError(unsupported_element_error)
 
         if not issubclass(model_type.model_class(), AbstractMetaDataElement):
             raise ValidationError(unsupported_element_error)
