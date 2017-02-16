@@ -15,7 +15,7 @@ import bagit
 from mezzanine.conf import settings
 
 from hs_core.models import Bags, ResourceFile
-from django_irods.storage import IrodsStorage
+# from django_irods.storage import IrodsStorage
 
 
 class HsBagitException(Exception):
@@ -91,10 +91,6 @@ def create_bag_files(resource):
         # as well as file type metadata
         out.write(resource.metadata.get_xml())
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-                            fed_zone_home_path=fed_zone_home_path,
-                            rel_path=to_file_name)
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map

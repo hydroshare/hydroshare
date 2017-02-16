@@ -436,14 +436,14 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filename, size=0):
+def link_irods_file_to_django(resource, filepath, size=0):
     """
     Link a newly created irods file to Django resource model
 
     :param filepath: full path to file
     :size: deprecated; size of file; not needed
     """
-    # link the newly created file (**filename**) to Django resource model
+    # link the newly created file (**filepath**) to Django resource model
     b_add_file = False
     # TODO: folder is an abstract concept... utilize short_path for whole API
     if resource:
@@ -503,10 +503,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     :param src_name: the file or folder full path name to be renamed
     :param tgt_name: the file or folder full path name to be renamed to
     :return:
-    
+
     Note: the need to copy and recreate the file object was made unnecessary
-    by the ResourceFile.set_storage_path routine, which always sets that 
-    correctly. Thus it is possible to move without copying. 
+    by the ResourceFile.set_storage_path routine, which always sets that
+    correctly. Thus it is possible to move without copying.
     """
     # checks src_name as a side effect.
     folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
@@ -528,7 +528,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             new_path = src_path.replace(src_name, tgt_name, 1)
             fobj.set_storage_path(new_path)
 
-def remove_irods_folder_in_django(resource, istorage, foldername, user):
+
+def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     :param resource: the BaseResource object representing a HydroShare resource
@@ -558,7 +559,6 @@ def remove_irods_folder_in_django(resource, istorage, foldername, user):
             if filename.startswith(folderpath):
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
-            else:
 
         # send the post-delete signal
         post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)

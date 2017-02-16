@@ -569,7 +569,7 @@ def migrate_file_paths(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0031_resourcefile_attributes'),
+        ('hs_core', '0033_resourcefile_attributes'),
     ]
 
     operations = [

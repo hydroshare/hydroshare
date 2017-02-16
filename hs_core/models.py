@@ -17,7 +17,7 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
-# from django_irods.icommands import SessionException
+from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
@@ -1468,7 +1468,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 # object deletes (cascade delete) all the contained GenericRelated metadata
                 # elements
                 fl.logical_file.metadata.delete()
-            # COUCH: delete of file objects now cascades. 
+            # COUCH: delete of file objects now cascades.
             fl.delete()
         hs_bagit.delete_bag(self)
         # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
@@ -1866,6 +1866,7 @@ class ResourceFile(models.Model):
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
     def __str__(self):
         if self.resource.resource_federation_path:
             return self.fed_resource_file.name
@@ -1947,16 +1948,21 @@ class ResourceFile(models.Model):
         # otherwise, the copy must precede this step.
         return ResourceFile.objects.create(**kwargs)
 
-    # delete a resource record; This does not cascade to iRODS  and files must be explicitly deleted.
+    # TODO: automagically handle orphaned logical files
     def delete(self):
-        """ Delete a resource file record and the file contents """
+        """
+        Delete a resource file record and the file contents
+
+        model.delete does not cascade to delete files themselves,
+        and these must be explicitly deleted.
+
+        """
         if self.exists:
             if self.fed_resource_file:
                 self.fed_resource_file.delete()
             if self.resource_file:
                 self.resource_file.delete()
         super(ResourceFile, self).delete()
-
 
     @property
     def resource(self):
@@ -2136,12 +2142,12 @@ class ResourceFile(models.Model):
             if test_exists and not storage.exists(path):
                 raise ValidationError("Federated path does not exist in irods")
             plen = len(fedpath + '/')
-            relpath = relpath[plen:]  # omit fed path 
+            relpath = relpath[plen:]  # omit fed path
 
             # strip resource id from path
             if relpath.startswith(locpath):
                 plen = len(locpath)
-                relpath = relpath[plen:]  # omit local path 
+                relpath = relpath[plen:]  # omit local path
             else:
                 raise ValidationError("Malformed federated resource path")
         elif path.startswith(locpath):
@@ -2236,7 +2242,7 @@ class ResourceFile(models.Model):
         _path_is_allowed(folder)
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
-=======
+
     @property
     def has_logical_file(self):
         return self.logical_file is not None
@@ -2293,16 +2299,6 @@ class ResourceFile(models.Model):
                                                        "GenericLogicalFile")
 
     @property
-    def size(self):
-        # get file size (in bytes)
-        if self.resource_file:
-            return self.resource_file.size
-        elif self.fed_resource_file:
-            return self.fed_resource_file.size
-        else:
-            return 0
-
-    @property
     def url(self):
         if self.resource_file:
             return self.resource_file.url
@@ -2310,6 +2306,7 @@ class ResourceFile(models.Model):
             return self.fed_resource_file.url
         else:
             return self.fed_resource_file_name_or_path
+
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
@@ -2519,12 +2516,10 @@ class BaseResource(Page, AbstractResource):
         resourcemetadata.xml, systemmetadata.xml are not included in this
         size estimate.
         """
-        total_file_size = 0
-
         try:
             # compute the total file size for the resource
-            f_sizes = [f.size for f in self.files.all()] 
-            return sum(f_sizes) 
+            f_sizes = [f.size for f in self.files.all()]
+            return sum(f_sizes)
 
         except SessionException:
             return -1

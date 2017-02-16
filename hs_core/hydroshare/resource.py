@@ -208,15 +208,15 @@ def update_resource_file(pk, filename, f):
     does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
-    # TODO: does not update metadata; does not check resource state 
+    # TODO: does not update metadata; does not check resource state
     resource = utils.get_resource_by_shortkey(pk)
     for rf in ResourceFile.objects.filter(object_id=resource.id):
         if rf.short_path == filename:
-            if rf.resource_file: 
+            if rf.resource_file:
                 rf.resource_file.delete()
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
-            if rf.fed_resource_file: 
+            if rf.fed_resource_file:
                 rf.fed_resource_file.delete()
                 rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
@@ -364,7 +364,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, extra_metadata=None,
-        files=(), source_names=[], fed_res_path='', move=False, 
+        files=(), source_names=[], fed_res_path='', move=False,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
     """
@@ -411,15 +411,16 @@ def create_resource(
     :param metadata: list of dicts containing keys (element names) and corresponding values as
     dicts { 'creator': {'name':'John Smith'}}.
     :param extra_metadata: one dict containing keys and corresponding values
-    { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
+         { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param source_names: the file names separated by comma from a federated zone to be
          used to create the resource in the federated zone, default is empty string
-    :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
-         indicate where the resource is stored, default is empty string
+    :param fed_res_path: the federated zone path in the format of
+         /federation_zone/home/localHydroProxy that indicate where the resource
+         is stored, default is empty string
     :param move: a value of False or True indicating whether the content files
          should be erased from the source directory. default is False.
-    :param create_bag: whether to create a bag for the newly created resource or not. 
+    :param create_bag: whether to create a bag for the newly created resource or not.
         By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
         the unpacked contents of the zip file will be added to the resource instead of the zip file.
@@ -626,11 +627,10 @@ def create_new_version_resource(ori_res, new_res, user):
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
     # link copied resource files to Django resource model
-    res_id_len = len(ori_res.short_id)
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
         folder, base = f.parse()
-        ResourceFile.create(new_res, base, folder=folder) 
+        ResourceFile.create(new_res, base, folder=folder)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     utils.copy_and_create_metadata(ori_res, new_res)
@@ -788,21 +788,21 @@ def add_resource_files(pk, *files, **kwargs):
     Exception.ServiceFailure - The service is unable to process the request
 
     Notes:
-    This does **not** handle mutability; changes to immutable resources should be denied elsewhere. 
+    This does **not** handle mutability; changes to immutable resources should be denied elsewhere.
 
     """
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
-    source_names=kwargs.pop('source_names', [])
+    source_names = kwargs.pop('source_names', [])
     move = kwargs.pop('move', False)
-    folder = kwargs.pop('folder', None) 
+    folder = kwargs.pop('folder', None)
 
-    if __debug__:  # assure that there are no spurious kwargs left. 
-        for k in kwargs: 
+    if __debug__:  # assure that there are no spurious kwargs left.
+        for k in kwargs:
             print("kwargs[{}]".format(k))
-        assert len(kwargs) == 0 
+        assert len(kwargs) == 0
 
-    for f in files: 
+    for f in files:
         ret.append(utils.add_file_to_resource(resource, f, folder=folder))
 
     if len(source_names) > 0:
@@ -814,8 +814,8 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             return ret
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, 
-						  folder=folder, 
+            ret.append(utils.add_file_to_resource(resource, None,
+                                                  folder=folder,
                                                   source_name=ifname,
                                                   move=move))
     if not ret:
@@ -923,9 +923,9 @@ def delete_resource(pk):
     return pk
 
 
-# TODO: should be ResourceFile.name.  
-# TODO: should standardize what name is. I think this is not a long name. 
-# I think it should be unqualified. 
+# TODO: should be ResourceFile.name.
+# TODO: should standardize what name is. I think this is not a long name.
+# I think it should be unqualified.
 def get_resource_file_name(f):
     '''
     get the file name of a specific ResourceFile object f
@@ -934,7 +934,7 @@ def get_resource_file_name(f):
     Returns:
         the file name of the ResourceFile object f
     '''
-    return f.storage_path 
+    return f.storage_path
 
 
 # TODO: this is overly complex and brittle. Use logical file abstraction
@@ -955,7 +955,7 @@ def delete_resource_file_only(resource, f):
     return short_path
 
 
-# TODO: this is overly complex and brittle. Use recursive delete. 
+# TODO: this is overly complex and brittle. Use recursive delete.
 def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
@@ -998,8 +998,8 @@ def filter_condition(filename_or_id, fed_path, fl):
             return os.path.basename(fl.resource_file.name) == filename_or_id
 
 
-# TODO: Remove option for file id to disamiguate between duplicates. 
-# TODO: Require file short paths to be unique, instead. 
+# TODO: Remove option for file id to disamiguate between duplicates.
+# TODO: Require file short paths to be unique, instead.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist,
@@ -1008,11 +1008,11 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
     :param pk: The unique HydroShare identifier for the resource from which the file will be deleted
-    :param filename: Name of the file to be deleted from the resource, 
-        as a short path without resource file root. 
+    :param filename: Name of the file to be deleted from the resource,
+        as a short path without resource file root.
     :param user: requesting user
     :param delete_logical_file: whether to delete the logical file containing this physical file.
-    (this deletes all ResourceFiles associated with the logical file as well) 
+    (this deletes all ResourceFiles associated with the logical file as well)
 
     :returns: The pid of the resource from which the file was deleted
 
@@ -1050,12 +1050,12 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
                     f.logical_file.logical_delete(user)
                     return filename_or_id
 
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, 
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
             file_name = delete_resource_file_only(resource, f)
 
-            # This presumes that the file is no longer in django 
+            # This presumes that the file is no longer in django
             delete_format_metadata_after_delete_file(resource, file_name)
 
             if resource.raccess.public or resource.raccess.discoverable:
@@ -1070,8 +1070,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
             return filename_or_id
 
-    # if execution gets here, file was not found 
-    raise ObjectDoesNotExist(str.format("resource {}, file {} not found", 
+    # if execution gets here, file was not found
+    raise ObjectDoesNotExist(str.format("resource {}, file {} not found",
                                         resource.short_id, filename_or_id))
 
 

@@ -9,7 +9,7 @@ import hs_core.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0030_resourcefile_file_folder'),
+        ('hs_core', '0032_auto_20170120_1445'),
     ]
 
     operations = [
