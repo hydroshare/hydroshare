@@ -128,7 +128,7 @@
 
                         <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
 
-                        <span id="btn-delete-resources" class="glyphicon glyphicon-trash btn-remove" data-toggle="tooltip" data-placement="bottom" title="Delete"></span>
+                        <span class="glyphicon glyphicon-trash btn-remove" data-toggle="modal" data-target="#delete-multiple-resources-dialog" title="Delete"></span>
 
                         <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
                             <div class="panel-body" role="form">
@@ -455,7 +455,7 @@
 </div>
 
 <!-- Delete Resource Modal -->
-<div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+<div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
      aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -475,8 +475,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-danger"
-                   href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                <button id="btn-delete-multiple-resources" class="btn btn-danger" data-dismiss="modal">Confirm</button>
             </div>
         </div>
     </div>

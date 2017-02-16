@@ -146,23 +146,30 @@ $(document).ready(function () {
         }
     });
 
-    $("#btn-delete-resources").click(function() {
+    $("#btn-delete-multiple-resources").click(function() {
         var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
 
         var indexes = [];
+        var notOwned = [];
+        var published = [];
+
         for (var i = 0; i < selectedRows.length; i++) {
             var index = parseInt($(selectedRows[i]).attr("data-tr-index"));
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
+            var status = resourceTable.cell(index, SHARING_STATUS_COL).data();
             if (permission != "Owned") {
-                return; // No permission to delete non owned resources.
+                notOwned.push(index);
+                // No permission to delete non owned resources.
             }
-
-            indexes[i] = index;
+            else if(status == "published") {
+                published.push(index);
+            }
+            else {
+                indexes.push(index);
+            }
         }
 
-        delete_resources_ajax_submit(indexes);
-        // Submit a delete request for each index
-
+        delete_multiple_resources_ajax_submit(indexes); // Submit a delete request for each index
     });
 
     $("#item-selectors td").click(function(e){
@@ -186,27 +193,40 @@ $(document).ready(function () {
     updateLabelCount();
 });
 
-function delete_resources_ajax_submit(indexes) {
-    var rows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
+function delete_multiple_resources_ajax_submit(indexes) {
+    var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
 
-    var forms = rows.find("form[data-form-type='delete-resource']");
+    var forms = selectedRows.find("form[data-form-type='delete-resource']");
+
+    var calls = [];
+
     for (var i = 0; i < forms.length; i++) {
+        var index = parseInt($(selectedRows[i]).attr("data-tr-index")); // Current index
         var datastring = $(forms[i]).serialize();
         var url = $(forms[i]).attr("action");
+        $("html").css("cursor", "progress");
 
-        $.ajax({
-            type: "POST",
-            url: url,
-            datastring: datastring,
-            dataType: "html",
-            success: function (result) {
-                console.log("deleted");
-            },
-            error: function (XMLHttpRequest, textStatus, errorThrown) {
+        if (indexes.indexOf(index) != -1) { // Check if current index is one of the resources allowed for deletion
+            calls.push(
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    datastring: datastring,
+                    dataType: "html",
+                    success: function (result) {
+                        resourceTable.row(':eq(' + index + ')').remove();  // Delete row from the table
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
 
-            }
-        })
+                    }
+                }));
+        }
     }
+
+    $.when.apply($, calls).done(function () {
+        resourceTable.draw();
+        $("html").css("cursor", "initial");
+    });
 }
 
 function label_ajax_submit() {
@@ -244,16 +264,15 @@ function label_ajax_submit() {
 
                     el.toggleClass("isfavorite");
                     var rowIndex = parseInt(form.closest("tr").attr("data-tr-index"));
-                    var favoriteColIndex = 9;   // Index of the favorite column in the table
 
                     if (json_response.action == "DELETE") { // Got unchecked
                         action.val("CREATE");
-                        resourceTable.cell(rowIndex,favoriteColIndex).data("").draw();
+                        resourceTable.cell(rowIndex, FAVORITE_COL).data("").draw();
                     }
                     else {                          // Got checked
                         action.val("DELETE");
 
-                        resourceTable.cell(rowIndex,favoriteColIndex).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
+                        resourceTable.cell(rowIndex, FAVORITE_COL).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
                     }
                 }
                 else if (formType = "toggle-label") {
@@ -261,7 +280,7 @@ function label_ajax_submit() {
                     var label = el[0].value;
 
                     var rowIndex = parseInt(tableRow.attr("data-tr-index"));
-                    var currentCell = resourceTable.cell(rowIndex,LABELS_COL);
+                    var currentCell = resourceTable.cell(rowIndex, LABELS_COL);
 
                     var dataColLabels = currentCell.data().replace(/\s+/g,' ').split(","); // List of labels already applied to the resource;
 
