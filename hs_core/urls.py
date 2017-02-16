@@ -21,9 +21,6 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
-        name='update_access_rules'),
-
     # DEPRECATED: use form above instead 
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='DEPRECATED_update_access_rules'),
@@ -80,6 +77,11 @@ urlpatterns = patterns('',
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
+    # Resource Access
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
+        views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
+        name='get_update_delete_resource_access'),
+
     # internal API
 
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$', views.add_files_to_resource),
@@ -95,6 +97,7 @@ urlpatterns = patterns('',
         views.delete_multiple_files),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/delete-resource/$', views.delete_resource),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/create-new-version-resource/$', views.create_new_version_resource),
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/copy-resource/$', views.copy_resource),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/rep-res-bag-to-irods-user-zone/$', views.rep_res_bag_to_irods_user_zone),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/set-resource-flag/$', views.set_resource_flag),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/share-resource-with-user/(?P<privilege>[a-z]+)/(?P<user_id>[0-9]+)/$',

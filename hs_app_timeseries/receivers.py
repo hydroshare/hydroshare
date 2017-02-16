@@ -247,7 +247,7 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                 TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
                 # delete the csv file if it exists
                 _delete_resource_file(resource, ".csv")
-                utils.resource_modified(resource, user)
+                utils.resource_modified(resource, user, overwrite_bag=False)
 
         else:   # file validation failed
             # delete the invalid file just uploaded

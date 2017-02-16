@@ -40,7 +40,7 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
                 filter(type=relation_type, value=relation_value).all().delete()
 
     if set_res_modified:
-        resource_modified(target_res_obj, last_change_user)
+        resource_modified(target_res_obj, last_change_user, overwrite_bag=False)
 
 
 def update_collection_list_csv(collection_obj):

@@ -30,10 +30,10 @@
                               <strong>Validation Error: {{ validation_error }}</strong>
                          </div>
                     {%  endif %}
-                    {% if new_version_resource_creation_error %}
+                    {% if resource_creation_error %}
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                            <strong>Failed to create a new version of this resource: {{ new_version_resource_creation_error }}</strong>
+                            <strong>{{ resource_creation_error }}</strong>
                         </div>
                     {% endif %}
                 {% endblock %}
@@ -138,6 +138,12 @@
                             <span class="fa fa-link icon-blue"></span>
                             <span>Get file URL</span>
                         </li>
+                        {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                            <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
+                                <span class="glyphicon glyphicon-check icon-blue"></span>
+                                <span>Set Geo Raster File Type</span>
+                            </li>
+                        {%  endif %}
                     </ul>
 
                     {# POPUP MENU - Right clicking empty space in file browser #}
@@ -227,7 +233,7 @@
                                  data-supported-files="{{ cm.get_supported_upload_file_types }}"
                                  data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
                                  data-initial-file-count="{{ cm.files.all.count }}"
-                                 {% if cm|resource_type != "Generic" %}data-refresh-on-upload="true"{% endif %}
+                                 {% if cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}data-refresh-on-upload="true"{% endif %}
                                  class="file-browser"
                             >
 
@@ -314,8 +320,8 @@
                                             <div class="row">
                                                 <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                     {% if page.perms.change and metadata_form %}
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
-                                                            <button id="fb-create-folder" class="fb-space-right"
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
+                                                            <button id="fb-create-folder" class="fb-space-right disabled"
                                                                     data-toggle="modal"
                                                                     data-target="#create-folder-dialog"
                                                                 title="Create new folder">
@@ -345,7 +351,7 @@
                                                             </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                             <button id="fb-zip"
                                                                     class="disabled"
                                                                     title="Zip Folder" data-toggle="modal"
@@ -382,6 +388,13 @@
                                                             title="Get file URL">
                                                         <span class="fa fa-link icon-blue"></span>
                                                     </button>
+                                                    {% if page.perms.change and resource_edit_mode %}
+                                                        <button id="fb-set-geo-file-type"
+                                                                class="disabled"
+                                                                title="Set Geo Raster File Type">
+                                                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                        </button>
+                                                     {% endif %}
 
                                                     {% if page.perms.change and metadata_form %}
                                                         <button id="fb-delete"
@@ -547,7 +560,7 @@
                                 {% if extended_metadata_exists or metadata_form %}
                                     {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                        {% if  cm|resource_type != "Generic" %}
+                                        {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource"%}
                                             {% if  cm|resource_type|lower != "collection resource" %}
                                                 {% if is_resource_specific_tab_active %}
                                                     <li class="active col-xs-2 col-md-2">
@@ -584,6 +597,14 @@
                                         <a href="#connectionsTab" data-toggle="tab" title="Connections">
                                             <span class="glyphicon glyphicon-fullscreen"> </span>
                                             &nbspConnections
+                                        </a>
+                                     </li>
+                                {% endif %}
+                                {% if cm.resource_type == "CompositeResource" %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
+                                            <span class="glyphicon glyphicon-list-alt"> </span>
+                                            &nbspFile Metadata
                                         </a>
                                      </li>
                                 {% endif %}
@@ -1276,7 +1297,7 @@
                                 {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
                                     {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                        {% if  cm|resource_type != "Generic" %}
+                                        {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
                                             {% if  cm|resource_type|lower != "collection resource" %}
                                                 {% if not is_resource_specific_tab_active %}
                                                     <div class="tab-pane" id="resourceSpecificTab">
@@ -1366,7 +1387,14 @@
 
                                 </div>
                                 {% endif %}
-
+                                {# ===========   File Type Metadata Tab ================== #}
+                                {% if cm.resource_type == "CompositeResource" %}
+                                    <div class="tab-pane" id="fileTypeMetaDataTab">
+                                        <div class="alert alert-warning alert-dismissible" role="alert">
+                                            <h4>Select a file to see file type metadata.</h4>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -1494,10 +1522,10 @@
                 }
 
                 // If does not exist, add it
-                if (!exists && keyword[i] != "") {
+                if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
                     var li = $("<li class='tag'><span></span></li>");
                     li.find('span').text(keyword[i]);
-                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
                     $("#lst-tags").append(li);
 
                     $(".icon-remove").click(onRemoveKeyword);
@@ -1731,6 +1759,13 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+            $("#agree-chk-copy").on('click', function(e) {
+                e.stopImmediatePropagation();
+                if (e.currentTarget.checked)
+                    $('#copy-btn').removeAttr('disabled');
+                else
+                    $('#copy-btn').attr('disabled', 'disabled');
+            });
             // add input element to each of the comment/rating forms to track resource mode (edit or view)
             var resourceMode = $("#resource-mode").val().toLowerCase();
             var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
@@ -1808,9 +1843,9 @@
                         var resourceType = $("#resource-type").val();
                         var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
-                        if (shapeType || resourceType === "Time Series") {
+                        if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
                             deleteAllShapes();
-                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite Resource" && spatialCoverageType === "point")) {
                                 var myLatLng;
                                 if (shapeType == "point") {
                                     // resource view mode
@@ -1820,13 +1855,15 @@
                                     };
                                 }
                                 else {
-                                    // time series resource in edit mode
+                                    // time series resource/composite resource in edit mode
                                     myLatLng = {
                                         lat: parseFloat($("#id_north").val()),
                                         lng: parseFloat($("#id_east").val())
                                     };
-                                    if ($('#id_north').val()) {
-                                        $("#id_name").prop('readonly', false);
+                                    if (resourceType === "Time Series"){
+                                        if ($('#id_north').val()) {
+                                            $("#id_name").prop('readonly', false);
+                                        }
                                     }
                                 }
 
@@ -1845,7 +1882,7 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite Resource" && spatialCoverageType === "box")) {
                                 var bounds;
                                 if (shapeType == "box") {
                                     //resource view mode
@@ -1857,16 +1894,19 @@
                                     };
                                 }
                                 else {
-                                    // time series resource edit mode
+                                    // time series resource/composite resource edit mode
                                     bounds = {
                                         north: parseFloat($("#id_northlimit").val()),
                                         south: parseFloat($("#id_southlimit").val()),
                                         east: parseFloat($("#id_eastlimit").val()),
                                         west: parseFloat($("#id_westlimit").val())
                                     };
-                                    if ($('#id_northlimit').val()) {
-                                        $("#id_name").prop('readonly', false);
+                                    if (resourceType === "Time Series"){
+                                        if ($('#id_northlimit').val()) {
+                                            $("#id_name").prop('readonly', false);
+                                        }
                                     }
+
                                 }
 
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
@@ -1933,7 +1973,7 @@
             }
 
             // Apply theme to comment's submit button
-            $("#comment input[type='submit']").removeClass()
+            $("#comment input[type='submit']").removeClass();
             $("#comment input[type='submit']").addClass("btn btn-default");
 
             $(".list-separator").parent().hover(function(){
@@ -2092,29 +2132,10 @@
             }
 
             // show "Save changes" button when form editing starts
-            $(".form-control").each(function () {
-                $(this).on('input', function (e) {
-                    //$(this).css('border-color', 'gray');
-                    $(this).closest("form").find("button").show();
-                });
-                $(this).on('change', function (e) {
-                    //$(this).css('border-color', 'gray');
-                    $(this).closest("form").find("button").show();
-                });
-            });
+            showMetadataFormSaveChangesButton();
 
             // Initialize date pickers
-            $(".dateinput").each(function () {
-                $(this).datepicker({
-                    format: 'mm-dd-yyyy',
-                    yearRange: "-1000:+1000",
-                    changeMonth: true,
-                    changeYear: true
-                });
-                $(this).on('change', function () {
-                    $(this).closest("form").find("button").show();
-                });
-            });
+            initializeDatePickers();
 
             // init ExtraMetadata Table
             extraMetaTable = $("#extraMetaTable").DataTable({

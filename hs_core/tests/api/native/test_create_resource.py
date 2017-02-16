@@ -78,7 +78,6 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(res, GenericResource))
         self.assertTrue(res.metadata.title.value == 'My Test Resource')
-        self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
@@ -93,12 +92,18 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             )
 
         # test resource has one file
-        self.assertEquals(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+        self.assertEqual(new_res.files.all().count(), 1)
+
+        # test the mime_type of the content file
+        res_file = new_res.files.all().first()
+        self.assertEqual(res_file.mime_type, "text/plain")
+
+        # test the extension of the content file
+        self.assertEqual(res_file.extension, ".txt")
 
         self.assertEqual(new_res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(new_res, GenericResource), type(new_res))
         self.assertTrue(new_res.metadata.title.value == 'My Test Resource')
-        self.assertTrue(new_res.created.strftime('%m/%d/%Y %H:%M') == new_res.updated.strftime('%m/%d/%Y %H:%M') )
         self.assertTrue(new_res.created.strftime('%m/%d/%Y') == dtime.datetime.today().strftime('%m/%d/%Y'))
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')

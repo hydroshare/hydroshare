@@ -116,7 +116,7 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # testing extended metadata elements
         self.assertEqual(self.resRaster.metadata.originalCoverage, None)
         self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEqual(self.resRaster.metadata.bandInformation.count, 0)
+        self.assertNotEqual(self.resRaster.metadata.bandInformations.count, 0)
 
         # test metadata extraction with a valid tif file being added coming from user zone space
         res_add_files = []

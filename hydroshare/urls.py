@@ -83,6 +83,7 @@ urlpatterns += patterns('',
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),
+    url('^hsapi/', include('hs_file_types.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically

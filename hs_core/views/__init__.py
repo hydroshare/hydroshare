@@ -32,16 +32,18 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
-    get_my_resources_list, send_action_to_take_email
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
+    get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
 from . import resource_metadata_rest_api
 from . import user_rest_api
 from . import resource_folder_hierarchy
+
+from . import resource_access_api
 from . import resource_folder_rest_api
 
 from hs_core.hydroshare import utils
@@ -170,7 +172,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         err_message = ex.message
 
     if is_update_success:
-        resource_modified(res, request.user)
+        resource_modified(res, request.user, overwrite_bag=False)
 
     if request.is_ajax():
         if is_update_success:
@@ -203,10 +205,13 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
                 if element_name == 'subject':
-                    keywords = [k.strip() for k in element_data_dict['value'].split(',')]
-                    if res.metadata.subjects.all().count() > 0:
-                        res.metadata.subjects.all().delete()
+                    # using set() to remove any duplicate keywords
+                    keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
+                    res.metadata.subjects.all().delete()
+                    keyword_maxlength = Subject._meta.get_field('value').max_length
                     for kw in keywords:
+                        if len(kw) > keyword_maxlength:
+                            kw = kw[:keyword_maxlength]
                         res.metadata.create_element(element_name, value=kw)
                     is_add_success = True
                 else:
@@ -226,7 +231,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         request.session['validation_error'] = err_msg
 
                 if is_add_success:
-                    resource_modified(res, request.user)
+                    resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -243,7 +248,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
@@ -306,7 +311,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                             res.raccess.save()
 
                 if is_update_success:
-                    resource_modified(res, request.user)
+                    resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -319,7 +324,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_INSUFFICIENT
             if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
@@ -358,7 +363,7 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
-    resource_modified(res, request.user)
+    resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -459,8 +464,28 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         content_type="application/json"
         )
 
+def copy_resource(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    new_resource = None
+    try:
+        new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
+        new_resource = hydroshare.copy_resource(res, new_resource)
+    except Exception as ex:
+        if new_resource:
+            new_resource.delete()
+        request.session['resource_creation_error'] = 'Failed to copy this resource: ' + ex.message
+        return HttpResponseRedirect(res.get_absolute_url())
+
+    # go to resource landing page
+    request.session['just_created'] = True
+    request.session['just_copied'] = True
+    return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
 def create_new_version_resource(request, shortkey, *args, **kwargs):
-    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
     if res.locked_time:
         elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
@@ -470,9 +495,10 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.save()
         else:
             # cannot create new version for this resource since the resource is locked by another user
-            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for ' \
-                                                                     'this resource since another user is creating a ' \
-                                                                     'new version for this resource synchronously.'
+            request.session['resource_creation_error'] = 'Failed to create a new version for ' \
+                                                         'this resource since another user is ' \
+                                                         'creating a new version for this ' \
+                                                         'resource synchronously.'
             return HttpResponseRedirect(res.get_absolute_url())
 
     new_resource = None
@@ -481,7 +507,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         # obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
-        new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
+        new_resource = hydroshare.create_empty_resource(shortkey, user)
         new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
     except Exception as ex:
         if new_resource:
@@ -489,7 +515,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         # release the lock if new version of the resource failed to create
         res.locked_time = None
         res.save()
-        request.session['new_version_resource_creation_error'] = ex.message
+        request.session['resource_creation_error'] = 'Failed to create a new version of ' \
+                                                     'this resource: ' + ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
     # release the lock if new version of the resource is created successfully
@@ -800,7 +827,6 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
@@ -1167,7 +1193,7 @@ def get_file(request, *args, **kwargs):
     from django_irods.icommands import RodsSession
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
-    session.runCmd("iinit");
+    session.runCmd("iinit")
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
@@ -1228,23 +1254,6 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
 
     return JsonResponse(user_data)
 
-
-def _get_spatial_coverage_data(resource):
-    spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
-    spatial_coverage_dict = {}
-    if spatial_coverage:
-        spatial_coverage_dict['type'] = spatial_coverage.type
-        if spatial_coverage.type == 'point':
-            spatial_coverage_dict['east'] = spatial_coverage.value['east']
-            spatial_coverage_dict['north'] = spatial_coverage.value['north']
-        else:
-            # type is box
-            spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-            spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
-            spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
-            spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
-
-    return spatial_coverage_dict
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """

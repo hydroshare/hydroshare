@@ -127,7 +127,7 @@ class RHESSysModelInstanceMetaData(ModelInstanceMetaData):
         if self.model_input:
             self.add_metadata_element_to_xml(container, self.model_input, MODEL_INPUT_FIELDS)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(RHESSysModelInstanceMetaData, self).delete_all_elements()
