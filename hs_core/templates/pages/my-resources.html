@@ -128,7 +128,7 @@
 
                         <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
 
-                        <span class="glyphicon glyphicon-trash btn-remove" data-toggle="modal" data-target="#delete-multiple-resources-dialog" title="Delete"></span>
+                        <span id="btn-delete-resources" class="glyphicon glyphicon-trash btn-remove" data-toggle="modal" data-target="#delete-multiple-resources-dialog" title="Delete"></span>
 
                         <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
                             <div class="panel-body" role="form">
@@ -461,17 +461,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
+                <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
             </div>
             <div class="modal-body">
-                <strong>THIS IS A PERMANENT ACTION. </strong>
-                <ul>
-                    <li>This will delete the resource file.</li>
-                    <li>A copy of your resource file will not be retained by Hydroshare.</li>
-                    <li>We highly recommend that you download the latest copy of your resource file before
-                        confirming this action.
-                    </li>
-                </ul>
+                <div>Select resources to delete</div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -564,10 +557,10 @@
             }
         ];
         // TODO: fix the following references
-{#        $(document).ready(function () {#}
+        $(document).ready(function () {
 {#            start_resource_table();#}
 {#            $.fn.dataTable.ext.search.push(hs_resource_table_custom_search);#}
-{#        });#}
+        });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}

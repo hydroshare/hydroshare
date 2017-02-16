@@ -146,30 +146,109 @@ $(document).ready(function () {
         }
     });
 
-    $("#btn-delete-multiple-resources").click(function() {
+    function inspectResources(indexes, notOwned, published) {
         var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
-
-        var indexes = [];
-        var notOwned = [];
-        var published = [];
-
         for (var i = 0; i < selectedRows.length; i++) {
-            var index = parseInt($(selectedRows[i]).attr("data-tr-index"));
+            var index = resourceTable.row($(selectedRows[i])).index();
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
             var status = resourceTable.cell(index, SHARING_STATUS_COL).data();
             if (permission != "Owned") {
-                notOwned.push(index);
+                notOwned.push($(selectedRows[i]));
                 // No permission to delete non owned resources.
             }
-            else if(status == "published") {
-                published.push(index);
+            else if (status == "published") {
+                published.push($(selectedRows[i]));
             }
             else {
-                indexes.push(index);
+                indexes.push($(selectedRows[i]));
             }
         }
+    }
 
-        delete_multiple_resources_ajax_submit(indexes); // Submit a delete request for each index
+    //
+    $("#btn-delete-multiple-resources").click(function() {
+        var indexes = [];   // List of selected resources allowed for deletion
+        var notOwned = [];
+        var published = [];
+
+        inspectResources(indexes, notOwned, published);
+
+        if (indexes.length > 0) {
+            delete_multiple_resources_ajax_submit(indexes); // Submit a delete request for each index
+        }
+    });
+
+    $("#btn-delete-resources").click(function () {
+        var indexes = [];   // List of selected resources allowed for deletion
+        var notOwned = [];
+        var published = [];
+
+        inspectResources(indexes, notOwned, published);
+
+        var messageBody = $("#delete-multiple-resources-dialog .modal-body");
+
+        messageBody.empty();
+
+        // Resources that cannot be deleted becausse the current user does not own them
+        if (notOwned.length > 0) {
+            var notOwnedTemplate = "";
+            for (var i = 0; i < notOwned.length; i++) {
+                var index = resourceTable.row($(notOwned[i])).index();
+                var resourceTitle = resourceTable.cell(index, TITLE_COL).data();
+                notOwnedTemplate += "<li>" + resourceTitle + "</li>";
+            }
+            messageBody.append(
+                '<div class="alert alert-warning">' +
+                    '<strong>You do not have permission to delete the following resources:</strong>' +
+                    '<ul>' +
+                        notOwnedTemplate +
+                    '</ul>' +
+                '</div>'
+            );
+        }
+
+        // Resources that cannot be deleted because they have been published
+        if (published.length > 0) {
+            var publishedTemplate = "";
+            for (var i = 0; i < published.length; i++) {
+                var index = resourceTable.row($(published[i])).index();
+                var resourceTitle = resourceTable.cell(index, TITLE_COL).data();
+                publishedTemplate += "<li>" + resourceTitle + "</li>";
+            }
+            messageBody.append(
+                '<div class="alert alert-warning">' +
+                    '<strong>The following resources have been published and cannot be deleted:</strong>' +
+                    '<ul>' +
+                        publishedTemplate +
+                    '</ul>' +
+                '</div>'
+            );
+        }
+
+        if((published.length || notOwned.length) && indexes.length) {
+            messageBody.append("<br><div class='text-center'><strong>Continue with the rest?</strong></div><br>")
+        }
+
+        if (indexes.length > 0) {
+            var actionWarningTemplate =
+            '<div class="alert alert-danger">' +
+                '<strong>THIS IS A PERMANENT ACTION</strong>' +
+                '<ul>' +
+                    '<li>This will delete the resource file.</li>' +
+                    '<li>A copy of your resource file will not be retained by Hydroshare.</li>' +
+                    '<li>We highly recommend that you download the latest copy of your resource file before</li>' +
+                '</ul>' +
+            '</div>';
+
+            messageBody.append(actionWarningTemplate);
+            $("#btn-delete-multiple-resources").attr("disabled", false);
+        }
+        else {
+            messageBody.append('<div>Select resources to delete.</div><br>');
+            $("#btn-delete-multiple-resources").attr("disabled", true);
+        }
+
+        messageBody.find("a").attr("target", "_blank"); // Make listed resources open in new tab
     });
 
     $("#item-selectors td").click(function(e){
@@ -194,37 +273,35 @@ $(document).ready(function () {
 });
 
 function delete_multiple_resources_ajax_submit(indexes) {
-    var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
-
-    var forms = selectedRows.find("form[data-form-type='delete-resource']");
-
     var calls = [];
 
-    for (var i = 0; i < forms.length; i++) {
-        var index = parseInt($(selectedRows[i]).attr("data-tr-index")); // Current index
-        var datastring = $(forms[i]).serialize();
-        var url = $(forms[i]).attr("action");
+    for (var i = 0; i < indexes.length; i++) {
+        var form = $(indexes[i]).find("form[data-form-type='delete-resource']");
+        const row = $(indexes[i]);
+        var datastring = $(form).serialize();
+        var url = $(form).attr("action");
+
         $("html").css("cursor", "progress");
 
-        if (indexes.indexOf(index) != -1) { // Check if current index is one of the resources allowed for deletion
-            calls.push(
-                $.ajax({
-                    type: "POST",
-                    url: url,
-                    datastring: datastring,
-                    dataType: "html",
-                    success: function (result) {
-                        resourceTable.row(':eq(' + index + ')').remove();  // Delete row from the table
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-
-                    }
-                }));
-        }
+        calls.push(
+            $.ajax({
+                type: "POST",
+                url: url,
+                datastring: datastring,
+                dataType: "html",
+                success: function () {
+                    resourceTable.row(row).remove();  // Delete row from the table
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                }
+            })
+        );
     }
 
     $.when.apply($, calls).done(function () {
         resourceTable.draw();
+        updateLabelCount();
         $("html").css("cursor", "initial");
     });
 }
