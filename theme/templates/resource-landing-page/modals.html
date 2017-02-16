@@ -515,7 +515,7 @@
                 <h4 class="modal-title" id="copy-resource-title">Copy This Resource</h4>
             </div>
             <div class="modal-body">
-                {{ rights.statement }}
+                {{ rights.statement|remove_last_char }} License.
                 <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
                 <p>
                 In copying this resource you are ethically bound to respect the terms of this license.
@@ -681,11 +681,11 @@
 {%  endblock %}
 
 {%  block wait-for-process-to-complete %}
-    <div id="wait-to-complete" title="Processing ...">
-    <p><span style="float:left; margin:12px 12px 50px 0;"></span>
-        Please wait for the process to complete.
-    </p>
-</div>
+    <div id="wait-to-complete" title="Processing ..." style="display: none;">
+        <p><span style="float:left; margin:12px 12px 50px 0;"></span>
+            Please wait for the process to complete.
+        </p>
+    </div>
 {%  endblock %}
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
@@ -2144,14 +2144,17 @@
                     <fieldset class="col-sm-12">
                         <div class="input-group">
                             <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
-                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default clipboard-copy" data-target="txtFileURL"
+                                        type="button">Copy</button>
+                            </span>
                         </div>
                     </fieldset>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

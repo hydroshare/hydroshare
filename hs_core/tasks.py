@@ -152,14 +152,13 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def create_bag_by_irods(resource_id, istorage=None):
+def create_bag_by_irods(resource_id):
     """
     create a resource bag on iRODS side by running the bagit rule followed by ibun zipping
     operation. This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
-    istorage: IrodsStorage object used to call irods bagit rule and zipping up operation
 
     :return: True if bag creation operation succeeds;
              False if there is an exception raised or resource does not exist.
@@ -167,8 +166,7 @@ def create_bag_by_irods(resource_id, istorage=None):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
 
     res = get_resource_by_shortkey(resource_id)
-    if istorage is None:
-        istorage = res.get_irods_storage()
+    istorage = res.get_irods_storage()
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files

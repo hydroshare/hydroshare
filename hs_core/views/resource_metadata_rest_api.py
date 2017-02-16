@@ -234,7 +234,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"
-                            % ex.__class__ % ex.message
+                            % (ex.__class__, ex.message)
             }
             raise ValidationError(detail=error_msg)
 
