@@ -31,7 +31,7 @@ class AbstractFileMetaData(models.Model):
         abstract = True
 
     @classmethod
-    def get_metadata_model_classes(self):
+    def get_metadata_model_classes(cls):
         return {'coverage': Coverage}
 
     def get_metadata_elements(self):
@@ -249,24 +249,20 @@ class AbstractFileMetaData(models.Model):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
-                                  "supported metadata elements."
-                                  % element_model_name)
+                                  "supported metadata elements for %s."
+                                  % element_model_name, type(self))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
         try:
-            model_type = ContentType.objects.get(app_label='hs_geo_raster_resource',
+            model_type = ContentType.objects.get(app_label=self.model_app_label,
                                                  model=element_model_name)
         except ObjectDoesNotExist:
             try:
-                model_type = ContentType.objects.get(app_label='hs_app_netCDF',
+                model_type = ContentType.objects.get(app_label='hs_core',
                                                      model=element_model_name)
             except ObjectDoesNotExist:
-                try:
-                    model_type = ContentType.objects.get(app_label='hs_core',
-                                                         model=element_model_name)
-                except ObjectDoesNotExist:
-                    raise ValidationError(unsupported_element_error)
+                raise ValidationError(unsupported_element_error)
 
         if not issubclass(model_type.model_class(), AbstractMetaDataElement):
             raise ValidationError(unsupported_element_error)

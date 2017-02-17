@@ -22,6 +22,8 @@ import hs_file_types.nc_functions.nc_meta as nc_meta
 
 
 class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
+    # the metadata element models are from the netcdf resource type app
+    model_app_label = 'hs_app_netCDF'
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()

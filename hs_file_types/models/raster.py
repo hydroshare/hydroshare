@@ -37,6 +37,17 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
 
+    # the above models are from the raster resource type app
+    model_app_label = 'hs_geo_raster_resource'
+
+    @classmethod
+    def get_metadata_model_classes(cls):
+        metadata_model_classes = super(GeoRasterFileMetaData, cls).get_metadata_model_classes()
+        metadata_model_classes['originalcoverage'] = OriginalCoverage
+        metadata_model_classes['bandinformation'] = BandInformation
+        metadata_model_classes['cellinformation'] = CellInformation
+        return metadata_model_classes
+
     def get_metadata_elements(self):
         elements = super(GeoRasterFileMetaData, self).get_metadata_elements()
         elements += [self.cellInformation, self.originalCoverage]
