@@ -14,9 +14,9 @@ from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
 from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
 from hs_app_netCDF.models import NetcdfResource
-import nc_functions.nc_utils as nc_utils
-import nc_functions.nc_dump as nc_dump
-import nc_functions.nc_meta as nc_meta
+import hs_file_types.nc_functions.nc_utils as nc_utils
+import hs_file_types.nc_functions.nc_dump as nc_dump
+import hs_file_types.nc_functions.nc_meta as nc_meta
 
 
 # receiver used to extract metadata after user click on "create resource"
