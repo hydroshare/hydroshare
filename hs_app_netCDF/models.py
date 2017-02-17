@@ -193,6 +193,10 @@ class NetCDFMetaDataMixin(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def originalCoverage(self):
+        return self.ori_coverage.all().first()
+
     def has_all_required_elements(self):
         if not super(NetCDFMetaDataMixin, self).has_all_required_elements():  # check required meta
             return False
