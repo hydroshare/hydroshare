@@ -6,11 +6,15 @@ from dateutil import parser
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
+from django.core.exceptions import ValidationError
+
+from rest_framework.exceptions import ValidationError as DRF_ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions
+from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, GenericLogicalFile
@@ -42,6 +46,12 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
+
+        self.netcdf_invalid_file_name = 'netcdf_invalid.nc'
+        self.netcdf_invalid_file = 'hs_file_types/tests/{}'.format(self.netcdf_invalid_file_name)
+
+        target_temp_netcdf_invalid_file = os.path.join(self.temp_dir, self.netcdf_invalid_file_name)
+        shutil.copy(self.netcdf_invalid_file, target_temp_netcdf_invalid_file)
 
     def tearDown(self):
         super(NetCDFFileTypeMetaDataTest, self).tearDown()
@@ -75,6 +85,14 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # There should be now 2 files
         self.assertEqual(self.composite_resource.files.count(), 2)
+        # check that we put the 2 files in a new folder (netcdf_valid)
+        for res_file in self.composite_resource.files.all():
+            file_path, base_file_name = res_file.full_path, res_file.file_name
+            expected_file_path = u"{}/data/contents/netcdf_valid/{}"
+            expected_file_path = expected_file_path.format(self.composite_resource.root_path,
+                                                           base_file_name)
+            self.assertEqual(file_path, expected_file_path)
+
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
 
@@ -87,6 +105,14 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test extracted netcdf file type metadata
         self._test_netcdf_metadata_extraction()
 
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_necdf_invalid_file(self):
+        # here we are using an invalid netcdf file for setting it
+        # to netCDF file type which should fail
+        self.netcdf_file_obj = open(self.netcdf_invalid_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
         self.composite_resource.delete()
 
     def test_netcdf_metadata_CRUD(self):
@@ -171,6 +197,47 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_file_metadata_on_logical_file_delete(self):
+        # test that when the NetCDFLogicalFile instance is deleted
+        # all metadata associated with it also get deleted
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type NetCDFLogicalFile as a result
+        # of metadata extraction
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # test that we have the metadata elements
+        # there should be 4 Coverage objects - 2 at the resource level and
+        # the other 2 at the file type level
+        self.assertEqual(Coverage.objects.count(), 4)
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 2)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
+        self.assertEqual(Variable.objects.count(), 5)
+        self.assertEqual(logical_file.metadata.variables.all().count(), 5)
+
+        # delete the logical file
+        logical_file.logical_delete(self.user)
+        # test that we have no logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(Variable.objects.count(), 0)
+
+        self.composite_resource.delete()
+
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
         # all metadata associated with NetCDFFileType is deleted
@@ -217,6 +284,86 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test with deleting of 'txt' file
         self._test_file_metadata_on_file_delete(ext='.txt')
 
+    def test_raster_file_type_folder_delete(self):
+        # when  a file is set to NetCDFLogicalFile type
+        # system automatically creates folder using the name of the file
+        # that was used to set the file type
+        # Here we need to test that when that folder gets deleted, all files
+        # in that folder gets deleted, the logicalfile object gets deleted and
+        # the associated metadata objects get deleted
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type NetCDFLogicalFile as a result
+        # of metadata extraction
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        # should have one NetCDFFileMetadata object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+
+        # there should be 2 content files
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # test that there are metadata associated with the logical file
+        self.assertEqual(Coverage.objects.count(), 4)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(Variable.objects.count(), 5)
+
+        # delete the folder for the logical file
+        folder_path = "data/contents/netcdf_valid"
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        # there should no content files
+        self.assertEqual(self.composite_resource.files.count(), 0)
+
+        # there should not be any netCDF logical file or metadata file
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+
+        # test that all metadata associated with the logical file got deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(Variable.objects.count(), 0)
+
+        self.composite_resource.delete()
+
+    def test_file_rename_or_move(self):
+        # test that file can't be moved or renamed for any resource file
+        # that's part of the NetCDF logical file object (LFO)
+
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # test renaming of files that are associated with raster LFO - which should raise exception
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        src_path = 'data/contents/netcdf_valid/netcdf_valid.nc'
+        tgt_path = "data/contents/netcdf_valid/netcdf_valid_1.nc"
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/netcdf_valid/netcdf_valid_header_info.txt'
+        tgt_path = 'data/contents/netcdf_valid/netcdf_valid_header_info_1.txt'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        # test moving the files associated with netcdf LFO
+        src_path = 'data/contents/netcdf_valid/netcdf_valid.nc'
+        tgt_path = 'data/contents/netcdf_valid_1/netcdf_valid.nc'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/netcdf_valid/netcdf_valid_header_info.txt'
+        tgt_path = 'data/contents/netcdf_valid_1/netcdf_valid_header_info.txt'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+
+        self.composite_resource.delete()
+
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.netcdf_file_obj,
                                      name=os.path.basename(self.netcdf_file_obj.name))
@@ -230,6 +377,26 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # set the generic logical file as part of resource post create signal
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
                                      metadata=self.composite_resource.metadata)
+
+    def _test_invalid_file(self):
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with the generic logical file
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
+        # trying to set this invalid tif file to geo raster file type should raise
+        # ValidationError
+        with self.assertRaises(ValidationError):
+            NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that the invalid file did not get deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+
+        # check that the resource file is not associated with generic logical file
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
 
     def _test_netcdf_metadata_extraction(self):
 

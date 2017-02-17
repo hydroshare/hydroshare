@@ -251,16 +251,16 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         try:
                             # create a folder for the raster file type using the base file
                             # name as the name for the new folder
-                            new_folder_path = 'data/contents/{}'.format(file_name)
+                            new_folder_path = 'data/contents/{}'.format(nc_file_name)
                             # To avoid folder creation failure when there is already matching
                             # directory path, first check that the folder does not exist
                             # If folder path exists then change the folder name by adding a number
                             # to the end
                             istorage = resource.get_irods_storage()
                             counter = 0
-                            new_file_name = file_name
+                            new_file_name = nc_file_name
                             while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-                                new_file_name = file_name + "_{}".format(counter)
+                                new_file_name = nc_file_name + "_{}".format(counter)
                                 new_folder_path = 'data/contents/{}'.format(new_file_name)
                                 counter += 1
 
