@@ -33,11 +33,8 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
-    _cell_information = GenericRelation(CellInformation)
-    _band_information = GenericRelation(BandInformation)
-    _ori_coverage = GenericRelation(OriginalCoverage)
 
-    # the above models are from the raster resource type app
+    # the metadata element models used for this file type are from the raster resource type app
     model_app_label = 'hs_geo_raster_resource'
 
     @classmethod
