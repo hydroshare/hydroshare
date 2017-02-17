@@ -158,8 +158,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # add keywords
                 if res_dublin_core_meta.get('subject'):
                     keywords = res_dublin_core_meta['subject'].split(',')
-                    for keyword in keywords:
-                        resource_metadata.append({'subject': {'value': keyword}})
+                    file_type_metadata.append({'subject': keywords})
 
                 # add source
                 if res_dublin_core_meta.get('source'):
@@ -172,28 +171,20 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                              'value': res_dublin_core_meta['references']}}
                     resource_metadata.append(relation)
 
-                # TODO: Need to first implement a Coverage element based on HStore field
                 # add coverage - period
-                # if res_dublin_core_meta.get('period'):
-                #     period = {
-                #         'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-                #     file_type_metadata.append(period)
+                if res_dublin_core_meta.get('period'):
+                    period = {
+                        'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
+                    file_type_metadata.append(period)
 
                 # add coverage - box
-                # if res_dublin_core_meta.get('box'):
-                #     box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-                #     file_type_metadata.append(box)
+                if res_dublin_core_meta.get('box'):
+                    box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
+                    file_type_metadata.append(box)
 
                 # add rights
-                # TODO: Should we be overriding the resource level rights metadata each time a
-                # .nc file set to NetCDF file type?
-                # if res_dublin_core_meta.get('rights'):
-                #     raw_info = res_dublin_core_meta.get('rights')
-                #     b = re.search("(?P<url>https?://[^\s]+)", raw_info)
-                #     url = b.group('url') if b else ''
-                #     statement = raw_info.replace(url, '') if url else raw_info
-                #     rights = {'rights': {'statement': statement, 'url': url}}
-                #     resource_metadata.append(rights)
+                # After discussion with dtarb decided not to override the resource level
+                # rights metadata with netcdf extracted rights metadata
 
                 # Save extended meta to metadata variable
                 for var_name, var_meta in res_type_specific_meta.items():
@@ -206,14 +197,23 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # Save extended meta to original spatial coverage
                 if res_dublin_core_meta.get('original-box'):
                     coverage_data = res_dublin_core_meta['original-box']
+                    projection_string_type = ""
+                    projection_string_text = ""
+                    datum = ""
                     if res_dublin_core_meta.get('projection-info'):
-                        coverage_data['projection_string_type'] = res_dublin_core_meta[
+                        projection_string_type = res_dublin_core_meta[
                             'projection-info']['type']
-                        coverage_data['projection_string_text'] = res_dublin_core_meta[
+                        projection_string_text = res_dublin_core_meta[
                             'projection-info']['text']
-                        coverage_data['datum'] = res_dublin_core_meta['projection-info']['datum']
+                        datum = res_dublin_core_meta['projection-info']['datum']
 
-                    ori_cov = {'originalcoverage': {'value': coverage_data}}
+                    ori_cov = {'originalcoverage':
+                               {'value': coverage_data,
+                                'projection_string_type': projection_string_type,
+                                'projection_string_text': projection_string_text,
+                                'datum': datum
+                                }
+                               }
                     file_type_metadata.append(ori_cov)
 
                     # create the ncdump text file
@@ -310,7 +310,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             # here k is the name of the element
                             # v is a dict of all element attributes/field names and field values
                             k, v = element.items()[0]
-                            logical_file.metadata.create_element(k, **v)
+                            if k == 'subject':
+                                logical_file.metadata.keywords = v
+                                logical_file.metadata.save()
+                            else:
+                                logical_file.metadata.create_element(k, **v)
                         log.info("NetCDF file type - metadata was saved to DB")
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
