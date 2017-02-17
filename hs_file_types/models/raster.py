@@ -310,10 +310,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             new_folder_path = 'data/contents/{}'.format(new_file_name)
                             counter += 1
 
-                        fed_file_full_path = ''
-                        if resource.resource_federation_path:
-                            fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
-
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
 
@@ -322,9 +318,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=new_file_name,
-                                fed_res_file_name_or_path=fed_file_full_path
-                                )
+                                resource, uploaded_file, folder=new_file_name)
                             # make each resource file we added as part of the logical file
                             logical_file.add_resource_file(new_res_file)
 
