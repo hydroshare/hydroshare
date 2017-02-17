@@ -9,8 +9,10 @@ from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
+from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions
 
+from hs_app_netCDF.models import OriginalCoverage, Variable
 from hs_file_types.models import NetCDFLogicalFile, NetCDFFileMetaData, GenericLogicalFile
 
 
@@ -169,6 +171,52 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_file_metadata_on_resource_delete(self):
+        # test that when the composite resource is deleted
+        # all metadata associated with NetCDFFileType is deleted
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type NetCDFLogicalFile as a result
+        # of metadata extraction
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+
+        # test that we have the metadata elements
+
+        # there should be 4 Coverage objects - 2 at the resource level and
+        # the other 2 at the file type level
+        self.assertEqual(Coverage.objects.count(), 4)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(Variable.objects.count(), 5)
+
+        # delete resource
+        hydroshare.delete_resource(self.composite_resource.short_id)
+
+        # test that we have no logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(Variable.objects.count(), 0)
+
+    def test_file_metadata_on_file_delete(self):
+        # test that when any file in NetCDFLogicalFile is deleted
+        # all metadata associated with NetCDFLogicalFile is deleted
+        # test for both .nc and .txt delete
+
+        # test with deleting of 'nc' file
+        self._test_file_metadata_on_file_delete(ext='.nc')
+
+        # test with deleting of 'txt' file
+        self._test_file_metadata_on_file_delete(ext='.txt')
+
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.netcdf_file_obj,
                                      name=os.path.basename(self.netcdf_file_obj.name))
@@ -310,3 +358,50 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(var_grid.unit, 'Unknown')
         self.assertEqual(var_grid.type, 'Unknown')
         self.assertEqual(var_grid.shape, 'Not defined')
+
+    def _test_file_metadata_on_file_delete(self, ext):
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # there should be 2 coverage elements - one spatial and the other one temporal
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 2)
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        self.assertNotEqual(logical_file.metadata.temporal_coverage, None)
+
+        # there should be one original coverage
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
+        # testing extended metadata element: variables
+        self.assertEqual(logical_file.metadata.variables.all().count(), 5)
+
+        # there should be 4 coverage objects - 2 at the resource level
+        # and the other 2 at the file type level
+        self.assertEqual(Coverage.objects.count(), 4)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(Variable.objects.count(), 5)
+
+        # delete content file specified by extension (ext parameter)
+        res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, ext)[0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id,
+                                        res_file.id,
+                                        self.user)
+        # test that we don't have logical file of type NetCDFLogicalFile Type
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(Variable.objects.count(), 0)
+
+        self.composite_resource.delete()
