@@ -105,6 +105,14 @@ class TestCopyResource(TestCase):
 
     def tearDown(self):
         super(TestCopyResource, self).tearDown()
+        if self.res_generic:
+            self.res_generic.delete()
+        if self.res_raster:
+            self.res_raster.delete()
+        if self.res_generic_lic_nd:
+            self.res_generic_lic_nd.delete()
+        if self.res_generic_lic_nc_nd:
+            self.res_generic_lic_nc_nd.delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
@@ -196,6 +204,9 @@ class TestCopyResource(TestCase):
                       [src.derived_from for src in new_res_generic.metadata.sources.all()],
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
+        # make sure to clean up resource so that irods storage can be cleaned up
+        if new_res_generic:
+            new_res_generic.delete()
 
     def test_copy_raster_resource(self):
         # ensure a nonowner who does not have permission to view a resource cannot copy it
@@ -288,6 +299,9 @@ class TestCopyResource(TestCase):
                       [src.derived_from for src in new_res_raster.metadata.sources.all()],
                       msg="The original resource identifier is not set in isDerivedFrom Source "
                           "metadata element of the new copied resource")
+        # make sure to clean up resource so that irods storage can be cleaned up
+        if new_res_raster:
+            new_res_raster.delete()
 
     def test_copy_composite_resource(self):
         """Test that logical file type objects gets copied along with the metadata that each
@@ -430,3 +444,9 @@ class TestCopyResource(TestCase):
         self.assertEqual(orig_band_info.noDataValue, copy_band_info.noDataValue)
         self.assertEqual(orig_band_info.maximumValue, copy_band_info.maximumValue)
         self.assertEqual(orig_band_info.minimumValue, copy_band_info.minimumValue)
+
+        # make sure to clean up all created resources to clean up iRODS storage
+        if self.composite_resource:
+            self.composite_resource.delete()
+        if new_composite_resource:
+            new_composite_resource.delete()

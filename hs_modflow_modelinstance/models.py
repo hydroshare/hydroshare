@@ -31,6 +31,8 @@ def uncouple(choices):
 
 def validate_choice(value, choices):
     choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
+    if isinstance(value, int):
+        return value
     if 'Choose' in value:
         return ''
     if value and value not in choices:
@@ -283,28 +285,47 @@ class BoundaryCondition(AbstractMetaDataElement):
                           self.head_dependent_flux_boundary_packages.all()])
 
     def _add_specified_head_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_head_boundary_packages.add(qs[0])
             else:
-                self.specified_head_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.specified_head_boundary_packages.create(description=package)
 
     def _add_specified_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_flux_boundary_packages.add(qs[0])
             else:
-                self.specified_flux_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.specified_flux_boundary_packages.create(description=package)
 
     def _add_head_dependent_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.\
+                    filter(description__exact=package)
             if qs.exists():
                 self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                self.head_dependent_flux_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
     @classmethod
@@ -491,12 +512,18 @@ class GeneralElements(AbstractMetaDataElement):
         return ', '.join([packages.description for packages in self.output_control_package.all()])
 
     def _add_output_control_package(self, choices):
+        """ there are two possibilities for type_choices values: list of string (during normal
+         create or update) or integer (during creating new version of the resource)"""
         for type_choices in choices:
-            qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
+            if isinstance(type_choices, int):
+                qs = OutputControlPackageChoices.objects.filter(id=type_choices)
+            else:
+                qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
             if qs.exists():
                 self.output_control_package.add(qs[0])
             else:
-                self.output_control_package.create(description=type_choices)
+                if isinstance(type_choices, basestring):
+                    self.output_control_package.create(description=type_choices)
 
     @classmethod
     def create(cls, **kwargs):
@@ -794,7 +821,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
-            self.add_metadata_element_to_xml(container, self.model_inputs.first(), modelInputFields)
+            for model_input in self.model_inputs:
+                self.add_metadata_element_to_xml(container, model_input, modelInputFields)
 
         if self.general_elements:
 

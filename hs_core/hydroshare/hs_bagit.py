@@ -11,11 +11,8 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
-
 from mezzanine.conf import settings
-
 from hs_core.models import Bags, ResourceFile
-# from django_irods.storage import IrodsStorage
 
 
 class HsBagitException(Exception):
@@ -32,9 +29,8 @@ def delete_bag(resource):
     """
     istorage = resource.get_irods_storage()
 
-    # delete resource directory first to remove all generated bag-related
-    # files for the resource
-    # TODO: this will cause a potential cascade delete problem with the resource.
+    # delete resource directory first to remove all generated bag-related files for the resource
+    # TODO: Is this correct? Is it really necessary? It seems this deletes all content!
     if istorage.exists(resource.root_path):
         istorage.delete(resource.root_path)
 
@@ -176,7 +172,7 @@ def create_bag_files(resource):
     # delete this extra element
     # <ore:aggregates rdf:resource="[hydroshare domain]/terms/[Resource class name]"/>
     xml_string = xml_string.replace(
-        '<ore:aggregates rdf:resource="%s"/>\n' % resource.metadata.type.url, '')
+        '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
     # create resourcemap.xml and upload it to iRODS
     from_file_name = os.path.join(temp_bagit_path, 'resourcemap.xml')

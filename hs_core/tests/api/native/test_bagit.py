@@ -4,7 +4,7 @@ from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
 from hs_core.tasks import create_bag_by_irods
-
+from hs_core.models import GenericResource
 from django_irods.storage import IrodsStorage
 
 
@@ -27,6 +27,12 @@ class TestBagIt(TestCase):
             self.user,
             'My Test Resource'
             )
+
+    def tearDown(self):
+        super(TestBagIt, self).tearDown()
+        if self.test_res:
+            self.test_res.delete()
+        GenericResource.objects.all().delete()
 
     def test_create_bag(self):
         # the resource should have only one bags object

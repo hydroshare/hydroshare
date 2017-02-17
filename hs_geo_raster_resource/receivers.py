@@ -126,7 +126,9 @@ def _process_uploaded_file(resource, validate_files_dict):
             for f in files_to_add_to_resource:
                 uploaded_file = UploadedFile(file=open(f, 'rb'),
                                              name=os.path.basename(f))
-                utils.add_file_to_resource(resource, uploaded_file)
+                utils.add_file_to_resource(
+                    resource, uploaded_file,
+                    fed_res_file_name_or_path=resource.resource_federation_path)
 
             # use the extracted metadata to populate resource metadata
             for element in metadata:

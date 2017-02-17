@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import mimetypes
 import os
-import json
 import tempfile
 import logging
 import shutil
@@ -17,7 +16,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
-from django.core.serializers import get_serializer
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
@@ -381,9 +379,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     """
     # do on-demand bag creation
     res = get_resource_by_shortkey(res_id)
-    istorage = res.get_irods_storage()
     res_coll = res.root_path
-
+    istorage = res.get_irods_storage()
     bag_modified = "false"
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when
@@ -407,40 +404,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     istorage.copyFiles(src_file, tgt_file)
 
 
-# TODO: Tastypie left over. This needs to be deleted
-def serialize_science_metadata(res):
-    js = get_serializer('json')()
-    resd = json.loads(js.serialize([res]))[0]['fields']
-    resd.update(json.loads(js.serialize([res.page_ptr]))[0]['fields'])
-
-    resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
-    resd['resource_uri'] = resd['short_id']
-    resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    # TODO: serialize metadata from the res.metadata object
-    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
-    # res.dublin_metadata.all()))]
-    resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
-    resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
-    return json.dumps(resd)
-
-
-# TODO: Tastypie left over. This needs to be deleted
-def serialize_system_metadata(res):
-    js = get_serializer('json')()
-    resd = json.loads(js.serialize([res]))[0]['fields']
-    resd.update(json.loads(js.serialize([res.page_ptr]))[0]['fields'])
-
-    resd['user'] = json.loads(js.serialize([res.user]))[0]['fields']
-    resd['resource_uri'] = resd['short_id']
-    resd['user']['resource_uri'] = '/u/' + resd['user']['username']
-    # TODO: serialize metadata from the res.metadata object
-    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
-    # res.dublin_metadata.all()))]
-    resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
-    resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
-    return json.dumps(resd)
-
-
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     """
     Copy resource files and AVUs from source resource to target resource including both
@@ -454,8 +417,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
 
-    # This makes the assumption that the destination is in the same exact zone. 
-    # Also, bags and similar attached files are not copied. 
+    # This makes the assumption that the destination is in the same exact zone.
+    # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
     src_coll = os.path.join(src_res.root_path, 'data')
     dest_coll = os.path.join(tgt_res.root_path, 'data')
@@ -464,7 +427,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
-        # TODO: what do these AVU flags do? 
+        # TODO: what do these AVU flags do?
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
@@ -472,7 +435,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 istorage.setAVU(dest_coll, avu_name, value)
 
     # link copied resource files to Django resource model
-    res_id_len = len(src_res.short_id)
     files = src_res.files.all()
 
     # if resource files are part of logical files, then logical files also need copying
@@ -482,9 +444,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
         map_logical_files[src_logical_file] = src_logical_file.get_copy()
 
     for n, f in enumerate(files):
-        folder, base = os.split(f.short_path)  # strips object information. 
+        folder, base = os.split(f.short_path)  # strips object information.
         # this form of ResourceFile.create creates a reference to an existing file in iRODS
-        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder) 
+        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
 
         # if the original file is part of a logical file, then
         # add the corresponding new resource file to the copy of that logical file
@@ -927,7 +889,7 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')
 
-    # TODO: generate this from data in ResourceFile
+    # TODO: generate this from data in ResourceFile rather than extension
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

@@ -11,9 +11,8 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import transaction
-from rest_framework import status
 
-from mezzanine.generic.models import Keyword, AssignedKeyword
+from rest_framework import status
 
 from hs_core.hydroshare import hs_bagit
 from hs_core.models import ResourceFile
@@ -33,49 +32,23 @@ logger = logging.getLogger(__name__)
 
 def get_resource(pk):
     """
-    Retrieve a resource identified by the pid from HydroShare. The response must contain the bytes
-    of the indicated resource, and the checksum of the bytes retrieved should match the checksum
-    recorded in the system metadata for that resource. The bytes of the resource will be encoded as
-    a zipped BagIt archive; this archive will contain resource contents as well as science metadata.
-    If the resource does not exist in HydroShare, then Exceptions.NotFound must be raised. Resources
-    can be any unit of content within HydroShare that has been assigned a pid.
+    Retrieve an instance of type Bags associated with the resource identified by **pk**
 
     Parameters:    pk - Unique HydroShare identifier for the resource to be retrieved.
 
-    Returns:    Bytes of the specified resource.
-
-    Return Type:    OctetStream
+    Returns:    An instance of type Bags.
 
     Raises:
-    Exceptions.NotAuthorized - The user is not authorized
     Exceptions.NotFound - The resource identified by pid does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Notes:
-    All resources and resource versions will have a unique internal HydroShare identifier (pid). A
-    DOI will be assigned to all formally published versions of a resource. For this method, passing
-    in a pid (which is a HydroShare internal identifer) would return a specific resource version
-    corresponding to the pid. A DOI would have to be resolved using HydroShare.resolveDOI() to get
-    the pid for the resource, which could then be used with this method. The obsoletion chain will
-    be contained within the system metadata for resources and so it can be traversed by
-    calling HydroShare.getSystemMetadata().
     """
 
-    # 1. Look up the resource by ID
-    # 2. Check to see if a bagit file exists on IRODS for that resource
-    # 3.T.1. Return the bagit file
-    # 3.T.1. Return the bagit file
-    # 3.F.1. look up the resource serialization (tastypie) class in the resource type map
-    # 3.F.2. Serialize the resource to disk using TastyPie.
-    # 3.F.3. Create a bagit file from the serialized resource.
-    # 3.F.4. Return the bagit file
     return utils.get_resource_by_shortkey(pk).baseresource.bags.first()
 
 
 def get_science_metadata(pk):
     """
     Describes the resource identified by the pid by returning the associated science metadata
-    object. If the resource does not exist, Exceptions.NotFound must be raised.
+    object (xml+rdf string). If the resource does not exist, Exceptions.NotFound must be raised.
 
     REST URL:  GET /scimeta/{pid}
 
@@ -84,7 +57,7 @@ def get_science_metadata(pk):
 
     Returns:    Science metadata document describing the resource.
 
-    Return Type:    ScienceMetadata
+    Return Type:    xml+rdf string
 
     Raises:    Exceptions.NotAuthorized -  The user is not authorized
     Exceptions.NotFound  - The resource identified by pid does not exist
@@ -92,52 +65,6 @@ def get_science_metadata(pk):
     """
     res = utils.get_resource_by_shortkey(pk)
     return res.metadata.get_xml()
-
-
-# TODO: Incorrect implementation. Needs fixing if we ever need this api
-def get_system_metadata(pk):
-    """
-    Describes the resource identified by the pid by returning the associated system metadata object.
-    If the resource does not exist, Exceptions.NotFound must be raised.
-
-    REST URL:  GET /sysmeta/{pid}
-
-    Parameters:    pk - Unique HydroShare identifier for the resource whose system metadata is to be
-    retrieved.
-
-    Returns:    System metadata document describing the resource.
-
-    Return Type:    SystemMetadata
-
-    Raises:
-        Exceptions.NotAuthorized - The user is not authorized
-        Exceptions.NotFound - The resource identified by pid does not exist
-        Exception.ServiceFailure - The service is unable to process the request
-    """
-    return utils.get_resource_by_shortkey(pk)
-
-
-# TODO: Incorrect implementation. Needs fixing if we ever need this api
-def get_resource_map(pk):
-    """
-    Describes the resource identified by the pid by returning the associated resource map document.
-    If the resource does not exist, Exceptions.NotFound must be raised.
-
-    REST URL:  GET /resourcemap/{pid}
-
-    Parameters:    pid - Unique HydroShare identifier for the resource whose resource map is to be
-    retrieved.
-
-    Returns:    Resource map document describing the resource.
-
-    Return Type:    ResourceMap
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The resource identified by pid does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-    """
-    return utils.get_resource_by_shortkey(pk)
 
 
 def get_capabilities(pk):
@@ -222,30 +149,6 @@ def update_resource_file(pk, filename, f):
                 rf.save()
             return rf
     raise ObjectDoesNotExist(filename)
-
-
-# TODO: incorrect implementation. Needs fixing if we ever need this api
-def get_revisions(pk):
-    """
-    Returns a list of pids for resources that are revisions of the resource identified by the
-    specified pid.
-
-    REST URL:  GET /revisions/{pid}
-
-    Parameters:    pid - Unique HydroShare identifier for the resource whose revisions are to be
-    retrieved.
-
-    Returns: List of pids for resources that are revisions of the specified resource.
-
-    Return Type: List of pids
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.NotFound - The Resource identified by pid does not exist
-    Exception.ServiceFailure - The service is unable to process the request
-
-    """
-    return utils.get_resource_by_shortkey(pk).bags.all()
 
 
 def get_related(pk):
@@ -379,11 +282,6 @@ def create_resource(
     Returns:    The newly created resource
 
     Return Type:    BaseResource resource object
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized to write to HydroShare
-    Exceptions.InvalidContent - The content of the resource is incomplete
-    Exception.ServiceFailure - The service is unable to process the request
 
     Note:  The calling user will automatically be set as the owner of the created resource.
 
@@ -667,109 +565,9 @@ def create_new_version_resource(ori_res, new_res, user):
     return new_res
 
 
-# TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access
-# rules need to apply
-def update_resource(
-        pk,
-        edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None,
-        *files, **kwargs):
-    """
-    Called by clients to update a resource in HydroShare.
-
-    REST URL:  PUT /resource/{pid}
-
-    Parameters:
-    pid - Unique HydroShare identifier for the resource that is to be updated.
-
-    resource - data bytes of the resource that will update the existing resource identified by pid
-
-    Returns:   The pid assigned to the updated resource
-
-    Return Type:    pid
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.InvalidContent - The content of the resource is incomplete
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Notes:
-    For mutable resources (resources that have not been formally published), the update overwrites
-    existing data and metadata using the resource that is passed to this method. If a user wants to
-    create a copy or modified version of a mutable resource this should be done using
-    HydroShare.createResource().
-
-    For immutable resources (formally published resources), this method creates a new resource that
-    is a new version of
-    formally published resource. HydroShare will record the update by storing the
-    SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the respective resources in
-    their system metadata.HydroShare MUST check or set the values of SystemMetadata.obsoletes and
-    SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new
-    and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified
-    system metadata entries must then be available in HydroShare.listObjects() to ensure that any
-    cataloging systems pick up the changes when filtering on SystmeMetadata.dateSysMetadataModified.
-    A formally published resource can only be obsoleted by one newer version. Once a resource is
-    obsoleted, no other resources can obsolete it.
-    """
-    resource = utils.get_resource_by_shortkey(pk)
-
-    # TODO: this loses track of folders!
-    if files:
-        ResourceFile.objects.filter(object_id=resource.id).delete()
-        for file in files:
-            ResourceFile.create(
-                resource,
-                File(file) if not isinstance(file, UploadedFile) else file
-            )
-
-    if 'owner' in kwargs:
-        owner = utils.user_from_id(kwargs['owner'])
-        resource.owners.add(owner)
-
-    if edit_users:
-        resource.edit_users.clear()
-        for user in edit_users:
-            user = utils.user_from_id(user)
-            resource.edit_users.add(user)
-            resource.view_users.add(user)
-
-    if view_users:
-        resource.view_users.clear()
-        for user in view_users:
-            user = utils.user_from_id(user)
-            resource.view_users.add(user)
-
-    if edit_groups:
-        resource.edit_groups.clear()
-        for group in edit_groups:
-            group = utils.group_from_id(group)
-            resource.edit_groups.add(group)
-            resource.view_groups.add(group)
-
-    if view_groups:
-        resource.edit_groups.clear()
-        for group in view_groups:
-            group = utils.group_from_id(group)
-            resource.view_groups.add(group)
-
-    if keywords:
-        AssignedKeyword.objects.filter(object_pk=resource.id).delete()
-        ks = [Keyword.objects.get_or_create(title=k) for k in keywords]
-        ks = zip(*ks)[0]  # ignore whether something was created or not.  zip is its own inverse
-
-        for k in ks:
-            AssignedKeyword.objects.create(content_object=resource, keyword=k)
-
-    # for creating metadata elements based on the new metadata implementation
-    if metadata:
-        resource.metadata.update(metadata)
-
-    return resource
-
-
 def add_resource_files(pk, *files, **kwargs):
     """
-    Called by clients to update a resource in HydroShare by adding a single file.
+    Called by clients to update a resource in HydroShare by adding one or more files.
 
     REST URL:  PUT /resource/{pid}/files/{file}
 
@@ -778,9 +576,9 @@ def add_resource_files(pk, *files, **kwargs):
     files - A list of file-like objects representing files that will be added
     to the existing resource identified by pid
 
-    Returns:    A list of files added to the resource
+    Returns:    A list of ResourceFile objects added to the resource
 
-    Return Type:    pid
+    Return Type:    list
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized
@@ -894,7 +692,7 @@ def delete_resource(pk):
 
     Note:  Only HydroShare administrators will be able to delete formally published resour
     """
-    # utils.get_resource_by_shortkey(pk).delete()
+
     res = utils.get_resource_by_shortkey(pk)
 
     if res.metadata.relations.all().filter(type='isReplacedBy').exists():
@@ -923,23 +721,19 @@ def delete_resource(pk):
     return pk
 
 
-# TODO: should be ResourceFile.name.
-# TODO: should standardize what name is. I think this is not a long name.
-# I think it should be unqualified.
 def get_resource_file_name(f):
-    '''
+    """
     get the file name of a specific ResourceFile object f
     Args:
         f: the ResourceFile object to return name for
     Returns:
         the file name of the ResourceFile object f
-    '''
+    """
     return f.storage_path
 
 
-# TODO: this is overly complex and brittle. Use logical file abstraction
 def delete_resource_file_only(resource, f):
-    '''
+    """
     Delete the single resource file f from the resource without sending signals and
     without deleting related metadata element. This function is called by delete_resource_file()
     function as well as from pre-delete signal handler for specific resource types
@@ -949,13 +743,12 @@ def delete_resource_file_only(resource, f):
         resource: the resource from which the file f is to be deleted
         f: the ResourceFile object to be deleted
     Returns: unqualified relative path to file that has been deleted
-    '''
+    """
     short_path = f.short_path
     f.delete()
     return short_path
 
 
-# TODO: this is overly complex and brittle. Use recursive delete.
 def delete_format_metadata_after_delete_file(resource, file_name):
     """
     delete format metadata as appropriate after a file is deleted.
@@ -1001,16 +794,17 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
+    Parameters:
     :param pk: The unique HydroShare identifier for the resource from which the file will be deleted
-    :param filename: Name of the file to be deleted from the resource,
-        as a short path without resource file root.
+    :param filename_or_id: Name of the file or id of the file to be deleted from the resource
     :param user: requesting user
-    :param delete_logical_file: whether to delete the logical file containing this physical file.
-    (this deletes all ResourceFiles associated with the logical file as well)
+    :param delete_logical_file: If True then if the ResourceFile object to be deleted is part of a
+    LogicalFile object then the LogicalFile object will be deleted which deletes all associated
+    ResourceFile objects and file type metadata objects.
 
-    :returns: The pid of the resource from which the file was deleted
+    :returns:    The name or id of the file which was deleted
 
-    Return Type:  string.
+    Return Type:    string or integer
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized
@@ -1018,18 +812,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     file does not exist
     Exception.ServiceFailure - The service is unable to process the request
 
-    Note:  For mutable resources (resources that have not been formally published), this method
-    modifies the resource by deleting the file. For immutable resources (formally published
-    resources), this method creates a new resource that is a new version of the formally published
-    resource. HydroShare will record the update by storing the SystemMetadata.obsoletes and
-    SystemMetadata.obsoletedBy fields for the respective resources in their system metadata
-    HydroShare MUST check or set the values of SystemMetadata.obsoletes and
-    SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new
-    and old objects. HydroShare MUST also set SystemMetadata.dateSysMetadataModified.
-    The modified system metadata entries must then be available in HydroShare.listObjects() to
-    ensure that any cataloging systems pick up the changes when filtering on
-    SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by
-    one newer version. Once a resource is obsoleted, no other resources can obsolete it.
+    Note:  This does not handle immutability as previously intended.
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
@@ -1137,15 +920,15 @@ def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource,
     and triggers the exposure of the resource to the HydroShare DataONE Member Node. The user must
-    be an owner of a resource or an adminstrator to perform this action.
+    be an owner of a resource or an administrator to perform this action.
 
     Parameters:
         user - requesting user to publish the resource who must be one of the owners of the resource
-        pid - Unique HydroShare identifier for the resource to be formally published.
+        pk - Unique HydroShare identifier for the resource to be formally published.
 
-    Returns:    The pid of the resource that was published
+    Returns:    The id of the resource that was published
 
-    Return Type:    pid
+    Return Type:    string
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized
@@ -1157,7 +940,7 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
-    if not resource.can_be_published():
+    if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
                               "metadata or content files or this resource type is not allowed "
                               "for publication.")
@@ -1264,14 +1047,3 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
     """
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.delete_element(element_model_name, element_id)
-
-
-def get_science_metadata_xml(resource_short_id):
-    """
-    Gets science metadata as an xml string for a specified resource
-
-    :param resource_short_id: id of the resource
-    :return: science metadata as an xml string
-    """
-    res = utils.get_resource_by_shortkey(resource_short_id)
-    return res.metadata.get_xml()

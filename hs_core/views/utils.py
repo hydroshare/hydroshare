@@ -14,6 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
+from django.http import HttpResponse
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
@@ -21,12 +22,10 @@ from mezzanine.utils.email import subject_template, default_token_generator, sen
 from mezzanine.utils.urls import next_url
 from mezzanine.conf import settings
 
-from ga_resources.utils import get_user
-
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-                           ResourceFile
+                           ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
@@ -43,6 +42,20 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_RESOURCE_ACCESS, '
                                'EDIT_RESOURCE_ACCESS')
 ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5, 6, 7)
+
+
+def json_or_jsonp(r, i, code=200):
+    if not isinstance(i, basestring):
+        i = json.dumps(i)
+
+    if 'callback' in r.REQUEST:
+        return HttpResponse('{c}({i})'.format(c=r.REQUEST['callback'], i=i),
+                            content_type='text/javascript')
+    elif 'jsonp' in r.REQUEST:
+        return HttpResponse('{c}({i})'.format(c=r.REQUEST['jsonp'], i=i),
+                            content_type='text/javascript')
+    else:
+        return HttpResponse(i, content_type='application/json', status=code)
 
 
 # Since an SessionException will be raised for all irods-related operations from django_irods
@@ -404,6 +417,9 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         }) + "?next=" + (next_url(request) or "/")
 
         context['group'] = kwargs.pop('group')
+    elif action_type == 'group_auto_membership':
+        context['group'] = kwargs.pop('group')
+        action_url = ''
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),

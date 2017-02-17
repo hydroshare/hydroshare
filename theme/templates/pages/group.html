@@ -1,5 +1,5 @@
 {% extends "pages/page.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block main %}
     <div class="collaborate-header">
@@ -908,7 +908,12 @@
                                               name="description">{{ group.gaccess.description }}</textarea>
                                 </fieldset>
 
-                                <br>
+                                {# auto approve #}
+                                <fieldset class="col-sm-12">
+                                   <input id="auto-approve" type="checkbox"  name="auto_approve"
+                                          {% if group.gaccess.auto_approve %}checked{% endif %}>
+                                   <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                </fieldset>
 
                                 {# Picture #}
                                 <div class="col-sm-12">

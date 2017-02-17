@@ -24,16 +24,32 @@ class SiteFormHelper(BaseFormHelper):
         common_layout = Layout(
                             Field('selected_series_id', css_class=field_width, type="hidden"),
                             Field('available_sites', css_class=field_width, type="hidden"),
-                            Field('site_code', css_class=field_width),
-                            Field('site_name', css_class=field_width),
+                            Field('site_code', css_class=field_width,
+                                  title="A brief and unique code that identifies the site at "
+                                        "which the data were collected (e.g., 'USU-LBR-Mendon' "
+                                        "or '10109000')."),
+                            Field('site_name', css_class=field_width,
+                                  title="A brief but descriptive name for the site (e.g., "
+                                        "'Little Bear River at Mendon Road near Mendon, Utah')."),
                             Field('organization', css_class=field_width),
-                            Field('elevation_m', css_class=field_width),
+                            Field('elevation_m', css_class=field_width,
+                                  title="The elevation of the site in meters (e.g., 1345)."),
+
                             Field('elevation_datum', css_class=field_width,
-                                  title="Select 'Other...' to specify a new elevation datum term"),
+                                  title="The datum to which the site elevation is referenced "
+                                        "(e.g., 'NGVD29').\n"
+                                        "Select 'Other...' to specify a new elevation datum term."),
+
                             Field('site_type', css_class=field_width,
-                                  title="Select 'Other...' to specify a new site type term"),
-                            Field('latitude', css_class=field_width),
-                            Field('longitude', css_class=field_width),
+                                  title="A controlled vocabulary term that describes the type of "
+                                        "data collection site (e.g., 'Stream').\n"
+                                        "Select 'Other...' to specify a new site type term."),
+                            Field('latitude', css_class=field_width,
+                                  title="The latitude coordinate of the site location using the "
+                                        "WGS84 datum (e.g., 43.1111)."),
+                            Field('longitude', css_class=field_width,
+                                  title="The longitude coordinate of the site location using the "
+                                        "WGS84 datum (e.g., -111.2334)."),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=show_site_code_selection,
@@ -94,7 +110,8 @@ class SiteForm(ModelForm):
         widgets = {'elevation_m': forms.TextInput(), 'latitude': forms.TextInput(),
                    'longitude': forms.TextInput()}
         labels = {'latitude': 'WGS84 Latitude*',
-                  'longitude': 'WGS84 Longitude*'}
+                  'longitude': 'WGS84 Longitude*'
+                  }
 
 
 class SiteValidationForm(forms.Form):
@@ -149,15 +166,29 @@ class VariableFormHelper(BaseFormHelper):
         common_layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('available_variables', css_class=field_width, type="hidden"),
-                     Field('variable_code', css_class=field_width),
+                     Field('variable_code', css_class=field_width,
+                           title="A brief and unique code that identifies the measured "
+                                 "variable (e.g., 'Temp')."),
                      Field('variable_name', css_class=field_width,
-                           title="Select 'Other...' to specify a new variable name term"),
+                           title="A brief but descriptive name of the variable that was measured "
+                                 "selected from a controlled vocabulary of variable names "
+                                 "(e.g., 'Temperature').\n"
+                                 "Select 'Other...' to specify a new variable name term."),
                      Field('variable_type', css_class=field_width,
-                           title="Select 'Other...' to specify a new variable type term"),
-                     Field('no_data_value', css_class=field_width),
-                     Field('variable_definition', css_class=field_width),
+                           title="A term selected from a controlled vocabulary that describes the "
+                                 "type of variable that was measured (e.g., 'Water quality').\n"
+                                 "Select 'Other...' to specify a new variable type term."),
+                     Field('no_data_value', css_class=field_width,
+                           title="A numeric value that is used to represent 'NoData' values "
+                                 "in the time series (e.g., -9999)."),
+                     Field('variable_definition', css_class=field_width,
+                           title="An optional, longer text description of the variable "
+                                 "(e.g., 'Water temperature')."),
                      Field('speciation', css_class=field_width,
-                           title="Select 'Other...' to specify a new speciation term"),
+                           title="A term describing the chemical speciation of the resulting data "
+                                 "values. For most continuous time series from environmental "
+                                 "sensors, this will be 'Not Applicable'.\n"
+                                 "Select 'Other...' to specify a new speciation term."),
                 )
 
         layout = _set_form_helper_layout(
@@ -261,12 +292,25 @@ class MethodFormHelper(BaseFormHelper):
         common_layout = Layout(
                          Field('selected_series_id', css_class=field_width, type="hidden"),
                          Field('available_methods', css_class=field_width, type="hidden"),
-                         Field('method_code', css_class=field_width),
-                         Field('method_name', css_class=field_width),
+                         Field('method_code', css_class=field_width,
+                               title="A brief and unique code that identifies the method used to "
+                                     "create the observations (e.g., 'Hydrolab')."),
+                         Field('method_name', css_class=field_width,
+                               title="A brief but descriptive name for the method used to create "
+                                     "the observations (e.g., 'Hydrolab MiniSonde 5')."),
                          Field('method_type', css_class=field_width,
-                               title="Select 'Other...' to specify a new method type term"),
-                         Field('method_description', css_class=field_width),
-                         Field('method_link', css_class=field_width),
+                               title="A term selected from a controlled vocabulary to describe the "
+                                     "type of method used to create the observations. For "
+                                     "sensor measurements use 'Instrument deployment'.\n"
+                                     "Select 'Other...' to specify a new method type term."),
+                         Field('method_description', css_class=field_width,
+                               title="A longer text description of the method "
+                                     "(e.g., 'Water temperature measured using a "
+                                     "Hydrolab Multiparameter Sonde')."),
+                         Field('method_link', css_class=field_width,
+                               title="A URL link to a website that contains more information "
+                                     "about or a detailed description of the method "
+                                     "(e.g., 'http://www.hydrolab.com')."),
                          )
 
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="method",
@@ -350,9 +394,16 @@ class ProcessingLevelFormHelper(BaseFormHelper):
         common_layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('available_processinglevels', css_class=field_width, type="hidden"),
-                     Field('processing_level_code', css_class=field_width),
-                     Field('definition', css_class=field_width),
-                     Field('explanation', css_class=field_width),
+                     Field('processing_level_code', css_class=field_width,
+                           title="A brief and unique code that identifies the processing level "
+                                 "of the observations (e.g., 'QC1')."),
+                     Field('definition', css_class=field_width,
+                           title="A brief description of the processing level "
+                                 "(e.g., 'Quality Controlled Data')."),
+                     Field('explanation', css_class=field_width,
+                           title="A longer text description of the processing level that provides "
+                                 "more detail about how the processing was done "
+                                 "(e.g., 'Data that have passed quality control processing')."),
                      )
 
         layout = _set_form_helper_layout(
@@ -426,16 +477,33 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
         layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('units_type', css_class=field_width,
-                           title="Select 'Other...' to specify a new units type term"),
-                     Field('units_name', css_class=field_width),
-                     Field('units_abbreviation', css_class=field_width),
+                           title="A term selected from a controlled vocabulary that describes the "
+                                 "type of units used for the Time Series result values "
+                                 "(e.g., 'Temperature').\n"
+                                 "Select 'Other...' to specify a new units type term."),
+                     Field('units_name', css_class=field_width,
+                           title="A brief, but descriptive name of the units used for the "
+                                 "Time Series result values (e.g., 'Degrees Celsius')."),
+                     Field('units_abbreviation', css_class=field_width,
+                           title="A text abbreviation for the units (e.g., 'Deg. C')."),
                      Field('status', css_class=field_width,
-                           title="Select 'Other...' to specify a new status term"),
+                           title="A term selected from a controlled vocabulary to describe the "
+                                 "status of the time series. Completed datasets use 'Complete'. "
+                                 "Where data collection is ongoing, use 'Ongoing'.\n"
+                                 "Select 'Other...' to specify a new status term."),
                      Field('sample_medium', css_class=field_width,
-                           title="Select 'Other...' to specify a new sample medium term"),
-                     Field('value_count', css_class=field_width),
+                           title="A term selected from a controlled vocabulary to specify the "
+                                 "environmental medium in which the observation was made "
+                                 "(e.g., 'Liquid aqueous').\n"
+                                 "Select 'Other...' to specify a new sample medium term."),
+                     Field('value_count', css_class=field_width,
+                           title="The total number of data values in the Time Series "
+                                 "(e.g., 24205)."),
                      Field('aggregation_statistics', css_class=field_width,
-                           title="Select 'Other...' to specify a new aggregation statistics term"),
+                           title="An indication of whether the values are 'Continuous' or "
+                                 "represent recorded values of some statistic aggregated over a "
+                                 "time interval (e.g., 'Average').\n"
+                                 "Select 'Other...' to specify a new aggregation statistics term."),
                      Field('series_label', css_class=field_width, type="hidden"),
                      )
         kwargs['element_name_label'] = 'Time Series Result'
@@ -535,7 +603,9 @@ class UTCOffSetFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
             Field('selected_series_id', css_class=field_width, type="hidden"),
-            Field('value', css_class=field_width),
+            Field('value', css_class=field_width,
+                  title="The value of the UTCOffset for timestamp values accompanying your "
+                        "time series data."),
         )
         kwargs['element_name_label'] = 'UTC Offset'
         super(UTCOffSetFormHelper, self).__init__(allow_edit, res_short_id, element_id,

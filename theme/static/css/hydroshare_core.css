@@ -240,7 +240,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 
-
 /* ===== Profiles ===== */
 
 /* Avatar */
@@ -1042,6 +1041,10 @@ table.info-table td{
     padding-left:15px;
 }
 
+table.info-table {
+	margin-bottom: 20px;
+}
+
 #resourceSpecificTab{
     overflow-x:hidden;
 }
@@ -1317,13 +1320,6 @@ table.table-plain td{
     box-shadow: inset 0 1px 0 #ffffff;
 }
 
-#coverageTab{
-    overflow-x:hidden;
-}
-
-#coverageTab{
-    overflow-x:hidden;
-}
 .tab-elements > .tabs-body {
     min-height: 150px;
     border: 1px solid #ddd;
@@ -1493,7 +1489,6 @@ body > .main-container {
 	height: 34px;
 	border-radius: 0;
 	width: 100%;
-	padding-top: 7px;
 }
 
 #invite-to-group .btn-add-access {
@@ -1573,7 +1568,6 @@ body > .main-container {
 
 .content-block {
 	display: table;
-	width: 100%;
 }
 
 #comment, .comment-reply-form {
@@ -1634,10 +1628,6 @@ body > .main-container {
     text-overflow: ellipsis;
     max-width: 100%;
     overflow: hidden;
-}
-
-div#sharing-status {
-	margin-top: 20px;
 }
 
 div#sharing-status .col-sm-12{
@@ -2238,7 +2228,6 @@ button.loading {
     text-align: center;
 }
 
-
 #div-invite-people .label-danger {
 	font-size: 12px;
 }
@@ -2252,14 +2241,66 @@ button.loading {
     top: 2px;
 }
 
-/*  =============== Coverage Tab - Google map css ================ */
+/*  =============== Coverage - Google map css ================ */
+
+div#coverage-spatial .coordinates-label-addon {
+	width: 127px;
+	text-align: left;
+}
+
+.sharing-status-container > div {
+	margin-bottom: 20px;
+}
+
+#img-badge {
+	margin-bottom: 10px;
+}
+
+#btn-calc-coverage {
+	margin: 10px 0;
+}
+
+#coverageMap[data-mode="view"] {
+	width:100%;
+	height: 370px;
+}
+
+#coverage-spatial {
+	margin-top: 5px;
+}
+
+#coverage-spatial .info-table td {
+	padding-left: 0;
+	padding-bottom: 10px;
+}
+
+.coordinates-list-container > div {
+	margin-bottom: 10px;
+}
+
+#id-coverage-spatial .control-group input {
+	text-align: right;
+}
+
+.coordinates-list-container .list-group-item {
+	padding: 5px;
+}
+
+.coordinates-list-container .list-group-item > div {
+	text-align: right;
+}
+
+.coordinates-list-container .list-group {
+	margin-bottom: 0;
+}
+
 #coverageMap {
 	height:350px;
 	border:1px solid #DDD;
 }
 
 .coverage-container {
-    margin-top: -20px; margin-bottom:20px;
+	margin-bottom:20px;
 }
 
 .invalid-input {
@@ -2281,9 +2322,10 @@ button.loading {
     box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
     background-color: #FFF;
     float: right;
-    right: 11px;
-    top: -120px;
+    right: 26px;
+    top: 255px;
     color: #666;
+    position: absolute;
 }
 
 #resetZoomBtn:hover {
@@ -2463,11 +2505,8 @@ div.affiliation {
     float: left;
 }
 
-.abstract-block {
-    color: #757575;
-    border-left: 3px solid #CCC;
-    padding-left: 5px;
-      margin-top: 10px;
+#div_id_abstract textarea, #id_statement {
+    resize: vertical;
 }
 
 form.act-on-request button {
@@ -4047,6 +4086,39 @@ form#covereage-search-fields {
     color: rgb(102, 170, 0);
 }
 
+.fb-stack-database {
+	color: rgb(0, 170, 163);
+}
+
+.fb-view-grid .fb-stack {
+	height: 32px;
+}
+
+.fb-view-list .fb-stack {
+	width: 18px;
+	height: 18px;
+	margin-right: 10px;
+	margin-left: 10px;
+}
+
+.fb-view-list .fb-stack .fa-file-o {
+	font-size: 18px;
+}
+
+.fb-view-grid .fb-stack-database .fa-database {
+	top: 5px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-database .fa-database {
+	font-size: 10px;
+	top: -4px;
+}
+
+.fb-view-grid .fb-stack .fa-file-o {
+	font-size: 32px;
+}
+
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
 }
@@ -4055,7 +4127,7 @@ ul#fb-files-container {
     min-height: 100%;
 }
 
-.fb-file span.fb-file-icon::before {
+.fb-file span.fb-file-icon::before, .fb-stack .fa-file-o {
     background-color: #FFF;
     border-top-right-radius: 50%;
 }

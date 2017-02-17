@@ -193,51 +193,81 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
+    """This function is normally for adding/creating new resource level metadata elements.
+    However, for the metadata element 'subject' (keyword) this function allows for creating,
+    updating and deleting metadata elements.
+    """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-    sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
-                                                        request=request)
     is_add_success = False
     err_msg = "Failed to create metadata element '{}'. {}."
-    for receiver, response in handler_response:
-        if 'is_valid' in response:
-            if response['is_valid']:
-                element_data_dict = response['element_data_dict']
-                if element_name == 'subject':
-                    # using set() to remove any duplicate keywords
-                    keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
-                    res.metadata.subjects.all().delete()
-                    keyword_maxlength = Subject._meta.get_field('value').max_length
-                    for kw in keywords:
-                        if len(kw) > keyword_maxlength:
-                            kw = kw[:keyword_maxlength]
-                        res.metadata.create_element(element_name, value=kw)
-                    is_add_success = True
-                else:
-                    try:
-                        element = res.metadata.create_element(element_name, **element_data_dict)
-                        is_add_success = True
-                    except ValidationError as exp:
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
-                    except Error as exp:
-                        # some database error occurred
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
-                    except Exception as exp:
-                        # some other error occurred
-                        err_msg = err_msg.format(element_name, exp.message)
-                        request.session['validation_error'] = err_msg
+    element = None
+    sender_resource = _get_resource_sender(element_name, res)
+    if element_name.lower() == 'subject' and len(request.POST['value']) == 0:
+        # seems the user wants to delete all keywords - no need for pre-check in signal handler
+        res.metadata.subjects.all().delete()
+        is_add_success = True
+        if not res.can_be_public_or_discoverable:
+            res.raccess.public = False
+            res.raccess.discoverable = False
+            res.raccess.save()
+        elif not res.raccess.discoverable:
+            res.raccess.discoverable = True
+            res.raccess.save()
 
-                if is_add_success:
-                    resource_modified(res, request.user, overwrite_bag=False)
-            elif "errors" in response:
-                err_msg = err_msg.format(element_name, response['errors'])
+        resource_modified(res, request.user, overwrite_bag=False)
+    else:
+        handler_response = pre_metadata_element_create.send(sender=sender_resource,
+                                                            element_name=element_name,
+                                                            request=request)
+        for receiver, response in handler_response:
+            if 'is_valid' in response:
+                if response['is_valid']:
+                    element_data_dict = response['element_data_dict']
+                    if element_name == 'subject':
+                        # using set() to remove any duplicate keywords
+                        keywords = set([k.strip() for k in element_data_dict['value'].split(',')])
+                        keyword_maxlength = Subject._meta.get_field('value').max_length
+                        keywords_to_add = []
+                        for kw in keywords:
+                            if len(kw) > keyword_maxlength:
+                                kw = kw[:keyword_maxlength]
+
+                            # skip any duplicate keywords (case insensitive)
+                            if kw not in keywords_to_add and kw.lower() not in keywords_to_add:
+                                keywords_to_add.append(kw)
+
+                        if len(keywords_to_add) > 0:
+                            res.metadata.subjects.all().delete()
+                            for kw in keywords_to_add:
+                                res.metadata.create_element(element_name, value=kw)
+                        is_add_success = True
+                    else:
+                        try:
+                            element = res.metadata.create_element(element_name, **element_data_dict)
+                            is_add_success = True
+                        except ValidationError as exp:
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+                        except Error as exp:
+                            # some database error occurred
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+                        except Exception as exp:
+                            # some other error occurred
+                            err_msg = err_msg.format(element_name, exp.message)
+                            request.session['validation_error'] = err_msg
+
+                    if is_add_success:
+                        resource_modified(res, request.user, overwrite_bag=False)
+                elif "errors" in response:
+                    err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_add_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
+            res_discoverable_status = 'discoverable' if res.raccess.discoverable \
+                else 'not discoverable'
             if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
@@ -245,23 +275,30 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
-                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status
                                       }
+                if element is not None:
+                    ajax_response_data['element_id'] = element.id
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
-                                      'res_public_status': res_public_status
+                                      'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status
                                       }
-
+                if element is not None:
+                    ajax_response_data['element_id'] = element.id
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -318,6 +355,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     if request.is_ajax():
         if is_update_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
+            res_discoverable_status = 'discoverable' if res.raccess.discoverable \
+                else 'not discoverable'
             if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
@@ -330,12 +369,14 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
                                       'res_public_status': res_public_status,
+                                      'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
 
             return JsonResponse(ajax_response_data)
@@ -775,6 +816,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
+    auto_approve = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -799,9 +841,11 @@ class GroupForm(forms.Form):
 class GroupCreateForm(GroupForm):
     def save(self, request):
         frm_data = self.cleaned_data
+
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
-                                                      purpose=frm_data['purpose'])
+                                                      purpose=frm_data['purpose'],
+                                                      auto_approve=frm_data['auto_approve'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -818,6 +862,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1087,20 +1132,33 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
-        membership_request = requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        membership_request = requesting_user.uaccess.create_group_membership_request(
+            group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request)
         else:
-            message = 'Group membership request was successful'
-            # send mail to all owners of the group
-            for grp_owner in group_to_join.gaccess.owners:
-                send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                          group=group_to_join, group_owner=grp_owner,
-                                          membership_request=membership_request)
-
+            message = 'You are now a member of this group'
+            # membership_request is None in case where group allows auto approval of membership
+            # request. no need send email notification to group owners for membership approval
+            if membership_request is not None:
+                message = 'Group membership request was successful'
+                # send mail to all owners of the group for approval of the request
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_membership',
+                                              group=group_to_join, group_owner=grp_owner,
+                                              membership_request=membership_request)
+            else:
+                # send mail to all owners of the group to let them know that someone has
+                # joined this group
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_auto_membership',
+                                              group=group_to_join,
+                                              group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, ex.message)

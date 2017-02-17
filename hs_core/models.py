@@ -264,13 +264,14 @@ class Party(AbstractMetaDataElement):
             if party:
                 creator_order = party.order + 1
 
-            if 'name' not in kwargs and 'organization' not in kwargs:
+            if ('name' not in kwargs or kwargs['name'] is None) and \
+                    ('organization' not in kwargs or kwargs['organization'] is None):
                 raise ValidationError(
                     "Either an organization or name is required for a creator element")
 
-            if 'name' in kwargs:
+            if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
-                    if 'organization' in kwargs:
+                    if 'organization' in kwargs and kwargs['organization'] is not None:
                         if len(kwargs['organization'].strip()) == 0:
                             raise ValidationError(
                                 "Either the name or organization must not be blank for the creator "
@@ -1295,6 +1296,16 @@ class Subject(AbstractMetaDataElement):
         return self.value
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata_obj = kwargs['content_object']
+        value = kwargs.get('value', None)
+        if value is not None:
+            if metadata_obj.subjects.filter(value__iexact=value).exists():
+                raise ValidationError("Subject element already exists.")
+
+        return super(Subject, cls).create(**kwargs)
+
+    @classmethod
     def remove(cls, element_id):
 
         sub = Subject.objects.get(id=element_id)
@@ -1378,7 +1389,7 @@ class AbstractResource(ResourcePermissionsMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True
+                                        null=True,
                                         )
 
     files = GenericRelation('hs_core.ResourceFile',
@@ -1386,17 +1397,17 @@ class AbstractResource(ResourcePermissionsMixin):
                             for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
-                                          blank=True, null=True,
+                                          null=True, blank=True,
                                           choices=(('Pending', 'Pending'), ('Running', 'Running'),
                                                    ('Done', 'Done'), ('Error', 'Error'))
                                           )
-    file_unpack_message = models.TextField(blank=True, null=True)
+    file_unpack_message = models.TextField(null=True, blank=True)
 
     # TODO: why are old versions saved?
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
+    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1461,7 +1472,6 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            # These deletes should now cascade properly.
             if fl.logical_file is not None:
                 # delete of metadata file deletes the logical file (one-to-one relation)
                 # so no need for fl.logical_file.delete() and deleting of metadata file
@@ -1862,7 +1872,8 @@ class ResourceFile(models.Model):
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
-    logical_file_content_type = models.ForeignKey(ContentType, null=True, blank=True,
+    logical_file_content_type = models.ForeignKey(ContentType,
+                                                  null=True, blank=True,
                                                   related_name="files")
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
