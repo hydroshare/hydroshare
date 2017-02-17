@@ -115,6 +115,7 @@ function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permissi
             else {
                 $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
                 $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                $form.parent().closest("tr").removeClass("loading");
                 setPointerEvents(true);
             }
         },

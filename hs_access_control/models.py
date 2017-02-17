@@ -1042,7 +1042,7 @@ class UserAccess(models.Model):
         if not self.user.is_superuser \
                 and not self.owns_group(this_group) \
                 and not this_user == self.user:
-            raise PermissionDenied("User has insufficient privilege to unshare")
+            raise PermissionDenied("You do not have permission to remove this sharing setting")
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
         if not UserGroupPrivilege.objects.filter(group=this_group,
@@ -1877,7 +1877,7 @@ class UserAccess(models.Model):
         if not self.user.is_superuser \
                 and not self.owns_resource(this_resource) \
                 and not this_user == self.user:
-            raise PermissionDenied("User has insufficient privilege to unshare")
+            raise PermissionDenied("You do not have permission to remove this sharing setting")
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
         if not UserResourcePrivilege.objects.filter(resource=this_resource,
