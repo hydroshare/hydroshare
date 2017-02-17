@@ -147,7 +147,7 @@ $(document).ready(function () {
     });
 
     function inspectResources(indexes, notOwned, published) {
-        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr[data-tr-index]");
+        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr.data-row");
         for (var i = 0; i < selectedRows.length; i++) {
             var index = resourceTable.row($(selectedRows[i])).index();
             var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
@@ -293,7 +293,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
                     resourceTable.row(row).remove();  // Delete row from the table
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log(textStatus, errorThrown);
+
                 }
             })
         );
@@ -322,6 +322,7 @@ function label_ajax_submit() {
         success: function (result) {
             var json_response = JSON.parse(result);
             if (json_response.status == "success") {
+                var rowIndex = resourceTable.row(tableRow).index();
                 if (formType == "create-label") {
                     createLabel();
                 }
@@ -340,7 +341,6 @@ function label_ajax_submit() {
                     var action = form.find("input[name='action']");
 
                     el.toggleClass("isfavorite");
-                    var rowIndex = parseInt(form.closest("tr").attr("data-tr-index"));
 
                     if (json_response.action == "DELETE") { // Got unchecked
                         action.val("CREATE");
@@ -356,7 +356,6 @@ function label_ajax_submit() {
                     var action = form.find("input[name='action']");
                     var label = el[0].value;
 
-                    var rowIndex = parseInt(tableRow.attr("data-tr-index"));
                     var currentCell = resourceTable.cell(rowIndex, LABELS_COL);
 
                     var dataColLabels = currentCell.data().replace(/\s+/g,' ').split(","); // List of labels already applied to the resource;
@@ -379,7 +378,7 @@ function label_ajax_submit() {
                     }
 
                     // If the row has labels, color the label icon blue
-                    var labelButton = $("#item-selectors tr[data-tr-index='" + rowIndex + "']").find(".btn-inline-label");
+                    var labelButton = tableRow.find(".btn-inline-label");
                     if (dataColLabels.length > 0) {
                         if (dataColLabels.length == 1 && dataColLabels[0].trim() == "") {   // The list could have an empty []
                             labelButton.removeClass("has-labels");
@@ -469,7 +468,7 @@ function updateLabelLists() {
     // Check checkboxes for labels currently in the resource
     if (dropdowns) {
         for (var i = 0; i < dropdowns.length; i++) {
-            var rowIndex = parseInt($(dropdowns[i]).closest("tr").attr("data-tr-index"));
+            var rowIndex = resourceTable.row($(dropdowns[i]).closest("tr")).index();
 
             var dataColLabels = resourceTable.cell(rowIndex,LABELS_COL).data().replace(/\s+/g,' ').split(",");
 
