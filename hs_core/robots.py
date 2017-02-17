@@ -10,29 +10,29 @@ from django.http import HttpResponseForbidden
 
 class CrawlerBlocker:
     def __init__(self):
-        self.whitelist = getattr(settings, "BOT_WHITELIST", -1)
+        self.whitelist = getattr(settings, "BOT_WHITELIST", [])
 
     def process_request(self, request):
 
         user_agent = request.META.get('HTTP_USER_AGENT', None)
-        request.is_crawler = 0
-        request.is_whitelisted = 1
+        request.is_crawler = False
+        request.is_whitelisted = True
 
         if user_agent is None:
             # calls without a user agent generally reflect internal calls (e.g. testing).
             # whitelist these calls since they are not very common and not doing so will
             # break unittests
             request.is_crawler = True
-            request.is_whitelisted = 1
+            request.is_whitelisted = True
         else:
             # if user agent is a bot, tag it as a crawler (checks against
             # robotstxt.org master list). Webcrawlers are also checked against
             # the whitelist defined in settings.py to determine if
             # site access will be granted
             request.is_crawler = robot_detection.is_robot(user_agent)
-            if self.whitelist != -1 and request.is_crawler:
+            if len(self.whitelist) > 0 and request.is_crawler:
                 if not re.match("(" + ")|(".join(self.whitelist) + ")", user_agent):
-                    request.is_whitelisted = 0
+                    request.is_whitelisted = False
 
         # return 403 if the request is not whitelisted
         if not request.is_whitelisted:
