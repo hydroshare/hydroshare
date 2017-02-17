@@ -976,12 +976,12 @@ def delete_format_metadata_after_delete_file(resource, file_name):
             resource.metadata.delete_element(format_element.term, format_element.id)
 
 
-def filter_condition(filename_or_id, fed_path, fl):
+# TODO: test in-folder delete of short path
+def filter_condition(filename_or_id, fl):
     """
-    Converted lambda defintion of filter_condition into def to conform to pep8 E731 rule: do not
+    Converted lambda definition of filter_condition into def to conform to pep8 E731 rule: do not
     assign a lambda expression, use a def
     :param filename_or_id: passed in filename_or id as the filter
-    :param fed_path: resource federation path
     :param fl: the ResourceFile object to filter against
     :return: boolean indicating whether fl conforms to filename_or_id
     """
@@ -989,17 +989,11 @@ def filter_condition(filename_or_id, fed_path, fl):
         file_id = int(filename_or_id)
         return fl.id == file_id
     except ValueError:
-        if fed_path:
-            return os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
-                if fl.fed_resource_file_name_or_path else \
-                os.path.basename(fl.fed_resource_file.name) == filename_or_id \
-                if fl.fed_resource_file else False
-        else:
-            return os.path.basename(fl.resource_file.name) == filename_or_id
+        return fl.short_path == filename_or_id
 
 
 # TODO: Remove option for file id to disamiguate between duplicates.
-# TODO: Require file short paths to be unique, instead.
+# TODO: Test that short_path deletes properly.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist,
@@ -1039,10 +1033,9 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
-    fed_path = resource.resource_federation_path
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
-        if filter_condition(filename_or_id, fed_path, f):
+        if filter_condition(filename_or_id, f):
             if delete_logical_file:
                 if f.logical_file is not None:
                     # logical_delete() calls this function (delete_resource_file())

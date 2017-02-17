@@ -128,13 +128,14 @@ class CompositeResource(BaseResource):
         """check if the given folder can be zipped or not"""
 
         # find all the resource files in the folder to be zipped
-        if self.resource_federation_path:
+        full_path = os.path.join(self.file_path, folder_to_zip)
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=folder_to_zip).all()
+                fed_resource_file__name__startswith=full_path).all()
         else:
             res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=folder_to_zip).all()
+                                                 resource_file__name__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:
@@ -147,13 +148,16 @@ class CompositeResource(BaseResource):
         """check if the specified folder can be deleted at the end of zipping that folder"""
 
         # find all the resource files in the folder to be deleted
-        if self.resource_federation_path:
+
+        full_path = os.path.join(self.file_path, original_folder)
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=original_folder).all()
+                fed_resource_file__startswith=full_path).all()
         else:
-            res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=original_folder).all()
+            res_file_objects = self.files.filter(
+                object_id=self.id,
+                resource_file__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped

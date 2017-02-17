@@ -271,29 +271,29 @@ def geofeature_pre_create_resource(sender, **kwargs):
     tmp_dir = None
     try:
         files = kwargs['files']
-        fed_res_fnames = kwargs['source_names']
+        source_names = kwargs['source_names']
         fed_res_path = kwargs['fed_res_path']
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
 
-        if files and fed_res_fnames:
+        if files and source_names:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please upload files from ' \
                                              'either local disk or irods, not both.'
             return
 
-        if files or fed_res_fnames:
+        if files or source_names:
             file_info_list = []  # [[full_name1, full_path1], [full_name2, full_path2], ...]
             for f in files:
                 f_info = [f.name, f.file.name]
                 file_info_list.append(f_info)
-            if fed_res_fnames:
+            if source_names:
                 # copy all irods files to django server to extract metadata
-                irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+                irods_file_path_list = utils.get_fed_zone_files(source_names)
                 fed_tmpfile_name_list = []
                 for file_path in irods_file_path_list:
                     fed_tmpfile_name_list.append(file_path)
-                    file_full_name = file_path[file_path.rfind('/')+1:]
+                    file_full_name = os.path.basename(file_path)
                     f_info = [file_full_name, file_path]
                     file_info_list.append(f_info)
 
@@ -318,21 +318,21 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     metadata.extend(meta_array)
                     metadata.extend(parse_shp_xml(files_type['shp_xml_full_path']))
 
-                    if fed_res_fnames:
+                    if source_names:
                         # as long as there is a file uploaded from a fed'd
                         # irod zone, the res should be created in that fed'd zone
                         # TODO: If fed_res_path is already set, this will break.
-                        fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
+                        fed_res_path.append(utils.get_federated_zone_home_path(source_names[0]))
 
                     if uploaded_file_type == "zipped_shp":
-                        if fed_res_fnames:
+                        if source_names:
                             # remove the temp zip file retrieved from federated zone
                             if fed_tmpfile_name_list:
                                 shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             # zip file from fed'd irods zone should be extracted on django sever
                             # the original zip file should NOT be stored in res
                             # instead, those unzipped files should be stored
-                            del fed_res_fnames[:]
+                            del source_names[:]
 
                         del kwargs['files'][:]
                         kwargs['files'].extend(files_type["files_new"])
@@ -353,7 +353,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
         # remove all temp files retrieved from federated zone
-        if fed_res_fnames and fed_tmpfile_name_list:
+        if source_names and fed_tmpfile_name_list:
             for file_path in fed_tmpfile_name_list:
                 shutil.rmtree(os.path.dirname(file_path))
 
@@ -442,10 +442,10 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     res_obj = kwargs['resource']
     res_id = res_obj.short_id
     files = kwargs['files']
-    fed_res_fnames = kwargs['source_names']
+    source_names = kwargs['source_names']
 
     validate_files_dict = kwargs['validate_files']
-    if files and fed_res_fnames:
+    if files and source_names:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Please upload files from ' \
                                          'either local disk or irods, not both.'
@@ -458,13 +458,14 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     for f in files:
         f_info = [f.name, f.file.name]
         file_info_list.append(f_info)
-    if fed_res_fnames:
+    if source_names:
+        # TODO: This copy is done *twice*; once in pre-add and once in post-add.
         # copy all irods files to django server to extract metadata
-        irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+        irods_file_path_list = utils.get_fed_zone_files(source_names)
         fed_tmpfile_name_list = []
         for file_path in irods_file_path_list:
             fed_tmpfile_name_list.append(file_path)
-            file_full_name = file_path[file_path.rfind('/')+1:]
+            file_full_name = os.path.basename(file_path)
             f_info = [file_full_name, file_path]
             file_info_list.append(f_info)
 
@@ -605,7 +606,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                             ['subject']['value'])
 
                 if uploaded_file_type == "zipped_shp":
-                        if fed_res_fnames:
+                        if source_names:
                             # remove the temp zip file retrieved from federated zone
                             if fed_tmpfile_name_list:
                                 shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
@@ -623,7 +624,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
             # remove all temp files retrieved from federated zone
-            if fed_res_fnames and fed_tmpfile_name_list:
+            if source_names and fed_tmpfile_name_list:
                 for file_path in fed_tmpfile_name_list:
                     shutil.rmtree(os.path.dirname(file_path))
     except Exception as ex:
@@ -643,51 +644,56 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     res_id = resource.short_id
     validate_files_dict = kwargs['validate_files']
     try:
-        files = kwargs['files']
-        fed_res_fnames = kwargs.get('source_names', [])
+        files = kwargs.get('files', [])  # array of type File
+        source_names = kwargs.get('source_names', [])  # array of type str
         found_shp = False
         found_prj = False
 
+        # make a list of all input files: uploaded and/or iRODS
         files_full_name_list = [f.name.lower() for f in files]
-        if fed_res_fnames:
-            for file_path in fed_res_fnames:
-                file_full_name = file_path[file_path.rfind('/')+1:]
-                files_full_name_list.append(file_full_name.lower())
+        for file_path in source_names:
+            file_full_name = os.path.basename(file_path)
+            files_full_name_list.append(file_full_name.lower())
 
+        # determine which files are
         for fn in files_full_name_list:
             if fn.endswith(".shp"):
                 found_shp = True
             elif fn.endswith(".prj"):
                 found_prj = True
 
+        # ALVA: My understanding of this is that the .shp file is parsed before inclusion
+        # in the pre_add signal if the file is uploaded, but is not parsed if the file is
+        # from a federated # user account. In that case, it must be parsed after inclusion.
+        # Thus this script looks for that file in federated space only. Is this correct?
+        # If it is, then I would propose moving all of this to the pre_add script and doing
+        # the download there, for cohesion.
         if found_prj and (not found_shp):
             res_file_list = resource.files.all()
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
-                    if res_f.resource_file:
+                    if not resource.is_federated:
+                        pass
+                        # TODO: This case does nothing! It is never copied to local disk!
                         # file is stored on hs irods
-                        source = res_f.resource_file.file.name
-                        f_fullname = res_f.resource_file.name
-                    elif res_f.fed_resource_file:
+                        # source = res_f.storage_path
+                        # f_fullname = os.path.basename(source)
+                        # fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                    else:
                         # file is stored on fed'd user irods
+                        # TODO: revise get_fed_zone_files to specify target and avoid a copy.
+                        # copy from iRODS to local filesystem
                         source = utils.get_fed_zone_files(res_f.storage_path)
-                        # os.path.join(resource.resource_federation_path, resource.short_id,
-                        #              res_f.fed_resource_file_name_or_path))[0]
-                        f_fullname = source
-                    # elif res_f.fed_resource_file:
-                    #     # was originally from local disk, but now is stored on fed'd user irods
-                    #     source = res_f.fed_resource_file.file.name
-                    #     f_fullname = res_f.fed_resource_file.name
-
-                    f_fullname = f_fullname[f_fullname.rfind('/')+1:]
-                    fileName, fileExtension = os.path.splitext(f_fullname.lower())
-                    target = tmp_dir + "/" + fileName + fileExtension
-                    shutil.copy(source, target)
-                    # for temp file retrieved from federation zone,
-                    # it should be deleted after it is copied
-                    if res_f.fed_resource_file_name_or_path:
+                        # store in a common local temp directory
+                        f_fullname = os.path.basename(source)
+                        fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                        target = tmp_dir + "/" + fileName + fileExtension
+                        shutil.copy(source, target)
+                        # remove temp copy used to fetch file from iRODS
                         shutil.rmtree(source)
+                # parse the .shp file from that copy.
+                # TODO: why copy the files other than .shp? Are they accessed in parse_shp?
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
                 parsed_md_dict = parse_shp(shp_full_path)

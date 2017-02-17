@@ -453,17 +453,18 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
+
+    # This makes the assumption that the destination is in the same exact zone. 
+    # Also, bags and similar attached files are not copied. 
     istorage = src_res.get_irods_storage()
     src_coll = os.path.join(src_res.root_path, 'data')
-    if src_res.resource_federation_path:
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
-        dest_coll += '/'
-    else:
-        dest_coll = dest_res_id + '/'
+    dest_coll = os.path.join(tgt_res.root_path, 'data')
 
+    # TODO: This copies everything but bags, including unmapped junk files(!)
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
+        # TODO: what do these AVU flags do? 
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
@@ -474,37 +475,17 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     res_id_len = len(src_res.short_id)
     files = src_res.files.all()
 
-    # if resource files are part of logical files, then logical files also need
-    # copying
+    # if resource files are part of logical files, then logical files also need copying
     src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
     map_logical_files = {}
     for src_logical_file in src_logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy()
 
     for n, f in enumerate(files):
-        new_resource_file = None
-        if f.fed_resource_file_name_or_path:
-            new_resource_file = ResourceFile.objects.create(
-                content_object=tgt_res,
-                resource_file=None,
-                fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
-                fed_resource_file_size=f.fed_resource_file_size)
-        elif f.fed_resource_file:
-            ori_file_path = f.fed_resource_file.name
-            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-            # find idx2 to start right after resource id
-            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
-            if idx1 > 0:
-                new_file_path = ori_file_path[0:idx1] + \
-                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
-                                '/' + tgt_res.short_id + ori_file_path[idx2:]
-                new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
-                                                                fed_resource_file=new_file_path)
-        elif f.resource_file:
-            ori_file_path = f.resource_file.name
-            new_file_path = tgt_res.short_id + ori_file_path[res_id_len:]
-            new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
-                                                            resource_file=new_file_path)
+        folder, base = os.split(f.short_path)  # strips object information. 
+        # this form of ResourceFile.create creates a reference to an existing file in iRODS
+        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder) 
+
         # if the original file is part of a logical file, then
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
@@ -599,7 +580,7 @@ def set_dirty_bag_flag(resource):
     bag is recreated only after multiple changes to the bag files, rather than
     after each change. It is created when someone attempts to download it.
     """
-    res_coll = resource.root_path 
+    res_coll = resource.root_path
 
     istorage = resource.get_irods_storage()
     res_coll = resource.root_path

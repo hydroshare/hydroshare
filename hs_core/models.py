@@ -1855,9 +1855,9 @@ class ResourceFile(models.Model):
                                          null=True, blank=True, storage=FedStorage())
 
     # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
-    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     # DEPRECATED: use native size() routine
-    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
@@ -2305,7 +2305,7 @@ class ResourceFile(models.Model):
         elif self.fed_resource_file:
             return self.fed_resource_file.url
         else:
-            return self.fed_resource_file_name_or_path
+            return None
 
 
 class Bags(models.Model):
