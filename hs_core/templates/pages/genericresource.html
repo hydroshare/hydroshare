@@ -740,7 +740,6 @@
                                                             <input class="order-input"
                                                                    name="creator-{{ author.order|add:"- 1" }}-order"
                                                                    type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
-
                                                         </form>
                                                     </td>
                                                     <td>
@@ -776,6 +775,7 @@
                                         </a>
 
                                         <hr>
+
                                         <h4>Contributors</h4>
 
                                         <div>
@@ -918,9 +918,9 @@
                                                         </tr>
                                                     {% endif %}
                                                 {% endfor %}
-
                                                 </tbody>
                                             </table>
+
                                             <a id="add-relation" class="btn btn-success" data-toggle="modal"
                                                data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
                                             <span data-toggle="tooltip" data-placement="auto"
@@ -1009,11 +1009,8 @@
                                 {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                     {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
                                         {% if  cm|resource_type|lower != "collection resource" %}
-                                            {% if not is_resource_specific_tab_active %}
-                                                <div class="tab-pane" id="resourceSpecificTab">
-                                            {% else %}
-                                                <div class="tab-pane active" id="resourceSpecificTab">
-                                            {%  endif %}
+                                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                                 id="resourceSpecificTab">
                                                 {% if not metadata_form %}
 
                                                     {% block extended_metadata %}
@@ -1030,7 +1027,8 @@
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
-                                <!-- ========= RELEVANT TOOLS TAB ========= -->
+
+                            <!-- ========= RELEVANT TOOLS TAB ========= -->
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
                                     {% if not metadata_form %}
@@ -1091,12 +1089,13 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
-                                {% if metadata_form %}
-                                    <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
-                                {% endif %}
 
+                                    {% if metadata_form %}
+                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
+                                    {% endif %}
                             </div>
                             {% endif %}
+
                             {# ===========   File Type Metadata Tab ================== #}
                             {% if cm.resource_type == "CompositeResource" %}
                                 <div class="tab-pane" id="fileTypeMetaDataTab">
@@ -1105,7 +1104,7 @@
                                     </div>
                                 </div>
                             {% endif %}
-                        </div>
+                            </div>
                         </div>
                      <!-- ==== Tabs end ==== -->
                     </div>
