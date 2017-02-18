@@ -694,7 +694,7 @@
                                         </div>
                                         <br>
 
-                                        <table class="contact-table table">
+                                        <table id="authors-table" class="contact-table table">
                                             <thead>
                                             <tr class="header-row">
                                                 <td class="drag-indicator"></td>
@@ -710,6 +710,38 @@
                                                 <tr>
                                                     <td class="drag-indicator">
                                                         <i class="fa fa-arrows-v" aria-hidden="true"></i>
+                                                        <form class="hidden-form"
+                                                              action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                                               enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <input name="resource-mode" type="hidden" value="edit">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                                                   value="{% if author.name %}{{ author.name }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                                                   value="{% if author.description %}{{ author.description }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
+                                                                   value="{% if author.organization %}{{ author.organization }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                                                   value="{% if author.email %}{{ author.email }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                                                   value="{% if author.address %}{{ author.address }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                                                   type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
+                                                                   value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
+
+                                                            <input class="order-input"
+                                                                   name="creator-{{ author.order|add:"- 1" }}-order"
+                                                                   type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
+
+                                                        </form>
                                                     </td>
                                                     <td>
                                                         {% if author.description %}
@@ -1440,11 +1472,33 @@
             if (task_id)
                 update_download_status(task_id, download_path);
 
-
             $('.contact-table .sortable').sortable({
                 axis: "y",
                 stop: function( event, ui ) {
-                    console.log(ui.item);
+                    var forms = $("#authors-table .drag-indicator > form");
+
+                    // Set the new order value in the form items
+                    for (var i = 0; i < forms.length; i++) {
+                        $(forms[i]).find("input.order-input").attr("value", i + 1);
+                        $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
+                    }
+
+                    $form = $(ui.item.find(".drag-indicator > form"));
+                    var url = $form.attr('action');
+                    var datastring = $form.serialize();
+                    $("html").css("cursor", "progress");
+
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: datastring,
+                        success: function (result) {
+                            $("html").css("cursor", "initial");
+                        },
+                        error: function (xhr, errmsg, err) {
+                            $("html").css("cursor", "initial");
+                        }
+                    });
                 }
             });
 
