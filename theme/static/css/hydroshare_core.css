@@ -946,25 +946,53 @@ li.account p{
 }
 /* ===== Resource edit page changes ===== */
 
-#contact-table .icon-button{
-    float:left;
-    background-color: transparent;
-    border: 0;
-}
-
-#contact-table .icon-button, .funding-agencies-table .icon-button {
+.contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;
     text-decoration: none;
 }
 
+.contact-table {
+	table-layout: fixed;
+	border: 1px solid #DDD;
+}
+
+.contact-table .drag-indicator > i {
+	color: #777;
+}
+
+.contact-table td.drag-indicator {
+	width: 20px;
+}
+
+.contact-table td:last-child{
+    width: calc(20% - 20px);
+}
+
+.contact-table td {
+	width: 20%;
+	border-top: 0 !important;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.contact-table tr {
+	border: 1px solid #DDD;
+	background: rgba(255, 255, 255, 0.68);
+}
+
+.contact-table-view td {
+	width: 25%;
+}
 #contactTab table .header-row {
     border-bottom: 1px solid #DDD;
 }
 
 #contactTab table .header-row th {
-    background-color: #FFF;
+	background-color: #FFF;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 #txt-abstract{
@@ -1685,16 +1713,16 @@ a.tag:hover {
     border:0;
 }
 
-.tab-elements .table:not(.table-striped) {
+.tab-elements .table:not(.contact-table) {
     width:auto;
 }
 
-.tab-elements .table td, .tab-elements .table th {
+.tab-elements .table th {
     border:0;
 }
 
-.tab-elements .nav-tabs>li>a {
-    border: 1px solid #ddd;
+.tab-elements .nav-tabs > li > a {
+	border: 1px solid #ddd;
 }
 
 .tab-elements .nav-tabs > li.active > a {
