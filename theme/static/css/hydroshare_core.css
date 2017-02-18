@@ -985,12 +985,13 @@ li.account p{
 .contact-table-view td {
 	width: 25%;
 }
+
 #contactTab table .header-row {
     border-bottom: 1px solid #DDD;
 }
 
 #contactTab table .header-row th {
-	background-color: #FFF;
+	background-color: #F1F1F1;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
