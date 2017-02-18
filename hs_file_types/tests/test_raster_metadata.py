@@ -158,9 +158,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         box_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.04959948647449)
+        self.assertEqual(box_coverage.value['northlimit'], 42.050028785767275)
         self.assertEqual(box_coverage.value['eastlimit'], -111.5773750264389)
-        self.assertEqual(box_coverage.value['southlimit'], 41.987886149256404)
+        self.assertEqual(box_coverage.value['southlimit'], 41.98745777902698)
         self.assertEqual(box_coverage.value['westlimit'], -111.65768822411239)
 
         # testing extended metadata element: original coverage
