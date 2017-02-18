@@ -962,7 +962,7 @@ li.account p{
 	color: #777;
 }
 
-.contact-table td.drag-indicator {
+.contact-table td.drag-indicator, .contact-table th.drag-indicator {
 	width: 20px;
 }
 
