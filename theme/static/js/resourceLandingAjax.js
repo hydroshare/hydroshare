@@ -729,6 +729,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             bindFileBrowserItemEvents();
 
             $("#hs-file-browser").attr("data-current-path", store_path);
+            $("#upload-folder-path").text(store_path);
             $("#hs-file-browser").attr("data-res-id", res_id);
 
             // strip the 'data' folder from the path

@@ -728,6 +728,8 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
+                        var currentPath = $("#hs-file-browser").attr("data-current-path");
+                        previewNode.find("#upload-folder-path").text(currentPath);
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -774,6 +776,10 @@ $(document).ready(function () {
                 // Called with the total uploadProgress (0-100), the totalBytes and the totalBytesSent
                 this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
                     $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
+                });
+
+                this.on('sending', function (file, xhr, formData) {
+                    formData.append('file_folder', $("#upload-folder-path").text());
                 });
 
                 // Applies allowing upload of multiple files to OS upload dialog
