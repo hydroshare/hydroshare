@@ -742,7 +742,7 @@ $(document).ready(function () {
                         location.reload(true);
                     }
                     else {
-                        $("#hs-file-browser").attr("data-current-path", "data/contents");
+                        // $("#hs-file-browser").attr("data-current-path", "data/contents");
 
                         // Remove further paths from the log
                         var range = pathLog.length - pathLogIndex;
