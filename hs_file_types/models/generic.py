@@ -10,6 +10,9 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GenericFileMetaData(AbstractFileMetaData):
+    # the metadata element models are from the hs_core type app
+    model_app_label = 'hs_core'
+
     def get_html(self):
         """overrides the base class function"""
 
