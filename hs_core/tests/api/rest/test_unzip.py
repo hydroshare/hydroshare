@@ -45,16 +45,29 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
-        pass
+
+        # create a folder 'foo'
+        url2 = str.format('/hsapi/resource/{}/folders/foo/', self.pid)
+        response = self.client.put(url2, {})
+
+        # put a file 'test.txt' into folder 'foo'
+        url4 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
+        params = {'file': ('test2.zip',
+                           open(zip_path, 'rb'),
+                           'application/zip')}
+        response = self.client.post(url4, params)
 
     def test_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
         response = self.client.post(unzip_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pass
+
+    def test_deep_unzip(self):
+        unzip_url = "/hsapi/resource/%s/functions/unzip/foo/test.zip/" % self.pid
+        response = self.client.post(unzip_url, {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unzip_unsuccessful(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/badpath/" % self.pid
         response = self.client.post(unzip_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        pass
