@@ -17,7 +17,5 @@ class RobotFilter:
         user_agent = request.META.get('HTTP_USER_AGENT', None)
         request.is_human = True
 
-        if user_agent is None:
+        if user_agent is None or robot_detection.is_robot(user_agent):
             request.is_human = False
-        else:
-            request.is_crawler = robot_detection.is_robot(user_agent)

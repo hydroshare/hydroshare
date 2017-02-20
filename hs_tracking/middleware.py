@@ -12,12 +12,17 @@ class Tracking(object):
         if request.path.startswith('/heartbeat/'):
             return response
 
+        is_human = getattr(request, 'is_human', False)
+
         # filter out web crawlers
-        user_agent = request.META.get('HTTP_USER_AGENT', None)
-        if user_agent is None:
+        if not is_human:
             return response
-        elif not utils.is_human(user_agent):
-            return response
+
+        # user_agent = request.META.get('HTTP_USER_AGENT', None
+        # if user_agent is None:
+        #     return response
+        # elif not utils.is_human(user_agent):
+        #     return response
 
         # filter out everything that is not an OK response
         if response.status_code != 200:
