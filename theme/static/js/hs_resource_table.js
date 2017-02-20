@@ -295,7 +295,7 @@ function delete_multiple_resources_ajax_submit(indexes) {
                     resourceTable.row(row).remove();  // Delete row from the table
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    // Unused for now
+                    console.log(textStatus, errorThrown);
                 }
             })
         );
