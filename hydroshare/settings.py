@@ -289,8 +289,6 @@ INSTALLED_APPS = (
     "jquery_ui",
     "rest_framework",
     "robots",
-    "ga_ows",
-    "ga_resources",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -319,8 +317,6 @@ INSTALLED_APPS = (
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
-    'ga_ows',
-    'ga_resources',
     'jquery_ui',
     'rest_framework',
     'django_nose',
@@ -372,7 +368,6 @@ MIDDLEWARE_CLASSES = (
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
-    "ga_resources.middleware.PagePermissionsViewableMiddleware",
     "hs_tracking.middleware.Tracking",
     'security.middleware.XssProtectMiddleware',
     'security.middleware.ContentSecurityPolicyMiddleware',

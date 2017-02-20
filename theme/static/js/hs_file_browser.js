@@ -413,39 +413,42 @@ function bindFileBrowserItemEvents() {
     });
 }
 
-function showFileTypeMetadata() {
-    var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-    var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    var resource_mode = $("#resource-mode").val();
-    resource_mode = resource_mode.toLowerCase();
-    var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
-    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-    var calls = [];
-    calls.push(get_file_type_metadata_ajax_submit(url));
-    // Wait for the asynchronous calls to finish to get new folder structure
-    $.when.apply($, calls).done(function (result) {
-        var json_response = JSON.parse(result);
-        $("#fileTypeMetaDataTab").html(json_response.metadata);
-        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-        showMetadataFormSaveChangesButton();
-        initializeDatePickers();
-        setFileTypeSpatialCoverageFormFields();
-        var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
-        var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
-        if (logical_type === "GeoRasterLogicalFile") {
-            $spatial_type_radio_button_1.prop("checked", true);
-            $("#div_id_type_filetype input:radio").trigger("change");
-            $spatial_type_radio_button_1.attr('onclick', 'return false');
-            $spatial_type_radio_button_2.attr('onclick', 'return false');
-        }
-        else {
-            if ($spatial_type_radio_button_1.attr('checked') == 'checked') {
-                $spatial_type_radio_button_1.prop("checked", true);
-            }
-            else {
-                $spatial_type_radio_button_2.prop("checked", true);
-            }
-        }
+function showFileTypeMetadata(){
+     var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+     if (logical_file_id.length == 0){
+         return;
+     }
+     var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+     var resource_mode = $("#resource-mode").val();
+     resource_mode = resource_mode.toLowerCase();
+     var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+     var calls = [];
+     calls.push(get_file_type_metadata_ajax_submit(url));
+     // Wait for the asynchronous calls to finish to get new folder structure
+     $.when.apply($, calls).done(function (result) {
+         var json_response = JSON.parse(result);
+         $("#fileTypeMetaDataTab").html(json_response.metadata);
+         $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+         showMetadataFormSaveChangesButton();
+         initializeDatePickers();
+         setFileTypeSpatialCoverageFormFields();
+         var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
+         var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         if (logical_type === "GeoRasterLogicalFile"){
+             $spatial_type_radio_button_1.prop("checked", true);
+             $("#div_id_type_filetype input:radio").trigger("change");
+             $spatial_type_radio_button_1.attr('onclick', 'return false');
+             $spatial_type_radio_button_2.attr('onclick', 'return false');
+         }
+         else {
+             if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
+                 $spatial_type_radio_button_1.prop("checked", true);
+             }
+             else {
+                 $spatial_type_radio_button_2.prop("checked", true);
+             }
+         }
 
         $("#div_id_type_filetype input:radio").trigger("change");
     });
@@ -633,6 +636,23 @@ $(document).ready(function () {
     if (!$("#hs-file-browser").length) {
         return;
     }
+
+    if (localStorage.getItem('file-browser-view')) {
+        var view = localStorage.getItem('file-browser-view');
+        // ------- switch to table view -------
+        $("#fb-files-container").removeClass("fb-view-grid fb-view-list");
+        $("#fb-files-container").addClass(view);
+
+        $("#btn-group-view button").removeClass("active");
+
+        if (view == "fb-view-list") {
+            $("#btn-group-view button[data-view='list']").addClass("active");
+        }
+        else {
+            $("#btn-group-view button[data-view='grid']").addClass("active");
+        }
+    }
+
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
@@ -775,11 +795,13 @@ $(document).ready(function () {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
+            localStorage.setItem('file-browser-view', 'fb-view-list');
         }
         else {
             // ------- Switch to grid view -------
             $("#fb-files-container").removeClass("fb-view-list");
             $("#fb-files-container").addClass("fb-view-grid");
+            localStorage.setItem('file-browser-view', 'fb-view-grid');
         }
     });
 
