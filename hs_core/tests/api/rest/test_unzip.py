@@ -9,6 +9,7 @@ from hs_core.tests.api.utils import MyTemporaryUploadedFile
 
 from .base import HSRESTTestCase
 
+
 class TestPublicUnzipEndpoint(HSRESTTestCase):
     def setUp(self):
         super(TestPublicUnzipEndpoint, self).setUp()
@@ -40,7 +41,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
-                                       self.title,files=(payload,),
+                                       self.title, files=(payload,),
                                        unpack_file=False)
 
         self.pid = res.short_id
@@ -55,7 +56,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         params = {'file': ('test2.zip',
                            open(zip_path, 'rb'),
                            'application/zip')}
-        response = self.client.post(url4, params)
+        self.client.post(url4, params)
 
     def test_unzip(self):
         unzip_url = "/hsapi/resource/%s/functions/unzip/test.zip/" % self.pid
