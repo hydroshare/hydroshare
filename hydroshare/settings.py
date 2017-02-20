@@ -622,7 +622,8 @@ CSP_DICT = {
     "img-src" : [
         "self",
         "*.datatables.net",
-        "*.gstatic.com"
+        "*.gstatic.com",
+        "*.google.com"
     ],
     "connect-src" : [
         "self",
