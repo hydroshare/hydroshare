@@ -621,11 +621,6 @@ function updateLabelCount() {
             viewableCount++;
         }
 
-        // Update filter badges count
-        $("#filter .badge[data-facet='owned']").text(ownedCount);
-        $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
-        $("#filter .badge[data-facet='viewable by me']").text(viewableCount+editableCount+ownedCount);
-
         if (dataColFavorite == "Favorite") {
             favorites++;
         }
@@ -639,6 +634,11 @@ function updateLabelCount() {
             collection[label]++;
         }
     });
+
+    // Update filter badges count
+    $("#filter .badge[data-facet='owned']").text(ownedCount);
+    $("#filter .badge[data-facet='editable']").text(ownedEditableCount + editableCount);
+    $("#filter .badge[data-facet='viewable by me']").text(viewableCount + editableCount + ownedCount);
 
     // Set label counts
     for (var key in collection) {
