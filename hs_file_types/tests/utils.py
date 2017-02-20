@@ -64,9 +64,9 @@ def assert_raster_file_type_metadata(self):
     box_coverage = logical_file.metadata.spatial_coverage
     self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
     self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-    self.assertEqual(box_coverage.value['northlimit'], 42.049364058252266)
+    self.assertEqual(box_coverage.value['northlimit'], 42.0500269597691)
     self.assertEqual(box_coverage.value['eastlimit'], -111.57773718106195)
-    self.assertEqual(box_coverage.value['southlimit'], 41.987884327209976)
+    self.assertEqual(box_coverage.value['southlimit'], 41.98722286029891)
     self.assertEqual(box_coverage.value['westlimit'], -111.69756293084055)
 
     # testing extended metadata element: original coverage
