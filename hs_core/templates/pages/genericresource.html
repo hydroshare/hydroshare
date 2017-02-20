@@ -1493,9 +1493,11 @@
                         data: datastring,
                         success: function (result) {
                             $("html").css("cursor", "initial");
+
                         },
                         error: function (xhr, errmsg, err) {
                             $("html").css("cursor", "initial");
+                            console.log(errmsg, err);
                         }
                     });
                 }
