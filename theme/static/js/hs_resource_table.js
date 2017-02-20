@@ -235,9 +235,9 @@ $(document).ready(function () {
             '<div class="alert alert-danger">' +
                 '<strong>THIS IS A PERMANENT ACTION</strong>' +
                 '<ul>' +
-                    '<li>This will delete the resource file.</li>' +
-                    '<li>A copy of your resource file will not be retained by Hydroshare.</li>' +
-                    '<li>We highly recommend that you download the latest copy of your resource file before</li>' +
+                    '<li>This will delete any resources you have selected.</li>' +
+                    '<li>HydroShare will not retain copies of any of your content files.</li>' +
+                    '<li>We highly recommend that you download the latest copy of your resource file(s) before deleting</li>' +
                 '</ul>' +
             '</div>';
 
