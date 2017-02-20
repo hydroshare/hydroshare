@@ -601,18 +601,20 @@ CSP_DICT = {
         "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
         "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
         "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
-        "'sha256-DC3munJ0pghuoA4hX8dh32935FOMe4Ek0lEToguPh04='"
+        "'sha256-DC3munJ0pghuoA4hX8dh32935FOMe4Ek0lEToguPh04='",
+        "'sha256-NDFP8wAl44R2n9vT1corxoEbvzy3cusyeGupfuQ1U0c='"
     ],
     "style-src" : [
         "self",
         "unsafe-inline",
-        "https://fonts.googleapis.com",
+        "*.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
         "*.cloudflare.com "
-        "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
-        "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
-        "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='"
+        # "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
+        # "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
+        # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
+        # "'sha256-qxBJozwM44kf1mKAeiT/XkAwReBZ/To9FXKNw3bdVwk='"
     ],
     "img-src" : [
         "self",
