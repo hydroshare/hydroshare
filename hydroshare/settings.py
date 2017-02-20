@@ -583,6 +583,7 @@ CSP_DICT = {
     "default-src" : ["none",],
     "script-src" : [
         "self",
+        "*.google.com",
         "*.googleapis.com",
         "*.rawgit.com",
         "*.cloudflare.com",
@@ -602,7 +603,9 @@ CSP_DICT = {
         "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
         "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
         "'sha256-DC3munJ0pghuoA4hX8dh32935FOMe4Ek0lEToguPh04='",
-        "'sha256-NDFP8wAl44R2n9vT1corxoEbvzy3cusyeGupfuQ1U0c='"
+        "'sha256-NDFP8wAl44R2n9vT1corxoEbvzy3cusyeGupfuQ1U0c='",
+        "'sha256-PA1G79Xx6LLYGxSPHSieelZ8bBLAWIMgD/XXawZp7qU='",
+        "'sha256-mCQxt+MP+ovw3u4TQgt01msH6eqt4mSVB0Qu2YWWMTg='"
     ],
     "style-src" : [
         "self",
