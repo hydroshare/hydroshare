@@ -1,15 +1,15 @@
-import re
 import os
-import StringIO
 import shutil
 import logging
 
 import netCDF4
 
-
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.template import Template, Context
+
+from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -41,6 +41,23 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     @property
     def original_coverage(self):
         return self.ori_coverage.all().first()
+
+    def get_html(self):
+        """overrides the base class function"""
+
+        html_string = super(NetCDFFileMetaData, self).get_html()
+        html_string += self.spatial_coverage.get_html()
+        html_string += self.originalCoverage.get_html()
+        if self.temporal_coverage:
+            html_string += self.temporal_coverage.get_html()
+        variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
+        html_string += variable_legend.render()
+        for variable in self.variables.all():
+            html_string += variable.get_html()
+
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
@@ -160,16 +177,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     keywords = res_dublin_core_meta['subject'].split(',')
                     file_type_metadata.append({'subject': keywords})
 
-                # add source
-                if res_dublin_core_meta.get('source'):
-                    source = {'source': {'derived_from': res_dublin_core_meta['source']}}
-                    resource_metadata.append(source)
+                # add source element - we can't add this resource level metadata as there can be
+                # multiple netcdf files in composite resource
 
-                # add relation
-                if res_dublin_core_meta.get('references'):
-                    relation = {'relation': {'type': 'cites',
-                                             'value': res_dublin_core_meta['references']}}
-                    resource_metadata.append(relation)
+                # add relation element - we can't add this resource level metadata as there can be
+                # multiple netcdf files in composite resource
 
                 # add coverage - period
                 if res_dublin_core_meta.get('period'):
@@ -216,106 +228,108 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                }
                     file_type_metadata.append(ori_cov)
 
-                    # create the ncdump text file
-                    if nc_dump.get_nc_dump_string_by_ncdump(temp_file):
-                        dump_str = nc_dump.get_nc_dump_string_by_ncdump(temp_file)
-                    else:
-                        dump_str = nc_dump.get_nc_dump_string(temp_file)
+                # create the ncdump text file
+                if nc_dump.get_nc_dump_string_by_ncdump(temp_file):
+                    dump_str = nc_dump.get_nc_dump_string_by_ncdump(temp_file)
+                else:
+                    dump_str = nc_dump.get_nc_dump_string(temp_file)
 
-                    if dump_str:
-                        # refine dump_str first line
-                        first_line = list('netcdf {0} '.format(nc_file_name))
-                        first_line_index = dump_str.index('{')
-                        dump_str_list = first_line + list(dump_str)[first_line_index:]
-                        dump_str = "".join(dump_str_list)
-                        dump_file_name = nc_file_name + '_header_info.txt'
-                        dump_file = os.path.join(temp_dir, dump_file_name)
-                        with open(dump_file, 'w') as dump_file_obj:
-                            dump_file_obj.write(dump_str)
+                if dump_str:
+                    # refine dump_str first line
+                    first_line = list('netcdf {0} '.format(nc_file_name))
+                    first_line_index = dump_str.index('{')
+                    dump_str_list = first_line + list(dump_str)[first_line_index:]
+                    dump_str = "".join(dump_str_list)
+                    dump_file_name = nc_file_name + '_header_info.txt'
+                    dump_file = os.path.join(temp_dir, dump_file_name)
+                    with open(dump_file, 'w') as dump_file_obj:
+                        dump_file_obj.write(dump_str)
 
-                        files_to_add_to_resource.append(dump_file)
+                    files_to_add_to_resource.append(dump_file)
 
-                    with transaction.atomic():
-                        # first delete the netcdf file that we retrieved from irods
-                        # for setting it to netcdf file type
-                        delete_resource_file(resource.short_id, res_file.id, user)
-                        # delete_resource_file(resource.short_id, res_file.id, user)
-                        # create a netcdf logical file object to be associated with
-                        # resource files
-                        logical_file = cls.create()
-                        # by default set the dataset_name attribute of the logical file to the
-                        # name of the file selected to set file type
-                        logical_file.dataset_name = file_name
-                        logical_file.save()
+                with transaction.atomic():
+                    # first delete the netcdf file that we retrieved from irods
+                    # for setting it to netcdf file type
+                    delete_resource_file(resource.short_id, res_file.id, user)
+                    # delete_resource_file(resource.short_id, res_file.id, user)
+                    # create a netcdf logical file object to be associated with
+                    # resource files
+                    logical_file = cls.create()
+                    # by default set the dataset_name attribute of the logical file to the
+                    # name of the file selected to set file type
+                    logical_file.dataset_name = file_name
+                    logical_file.save()
 
-                        try:
-                            # create a folder for the raster file type using the base file
-                            # name as the name for the new folder
-                            new_folder_path = 'data/contents/{}'.format(nc_file_name)
-                            # To avoid folder creation failure when there is already matching
-                            # directory path, first check that the folder does not exist
-                            # If folder path exists then change the folder name by adding a number
-                            # to the end
-                            istorage = resource.get_irods_storage()
-                            counter = 0
-                            new_file_name = nc_file_name
-                            while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-                                new_file_name = nc_file_name + "_{}".format(counter)
-                                new_folder_path = 'data/contents/{}'.format(new_file_name)
-                                counter += 1
+                    try:
+                        # create a folder for the raster file type using the base file
+                        # name as the name for the new folder
+                        new_folder_path = 'data/contents/{}'.format(nc_file_name)
+                        # To avoid folder creation failure when there is already matching
+                        # directory path, first check that the folder does not exist
+                        # If folder path exists then change the folder name by adding a number
+                        # to the end
+                        istorage = resource.get_irods_storage()
+                        counter = 0
+                        new_file_name = nc_file_name
+                        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
+                            new_file_name = nc_file_name + "_{}".format(counter)
+                            new_folder_path = 'data/contents/{}'.format(new_file_name)
+                            counter += 1
 
-                            fed_file_full_path = ''
-                            if resource.resource_federation_path:
-                                fed_file_full_path = os.path.join(resource.root_path,
-                                                                  new_folder_path)
+                        fed_file_full_path = ''
+                        if resource.resource_federation_path:
+                            fed_file_full_path = os.path.join(resource.root_path,
+                                                              new_folder_path)
 
-                            create_folder(resource.short_id, new_folder_path)
-                            log.info("Folder created:{}".format(new_folder_path))
+                        create_folder(resource.short_id, new_folder_path)
+                        log.info("Folder created:{}".format(new_folder_path))
 
-                            # add all new files to the resource
-                            for f in files_to_add_to_resource:
-                                uploaded_file = UploadedFile(file=open(f, 'rb'),
-                                                             name=os.path.basename(f))
-                                new_res_file = utils.add_file_to_resource(
-                                    resource, uploaded_file, folder=new_file_name,
-                                    fed_res_file_name_or_path=fed_file_full_path
-                                )
-                                # make each resource file we added as part of the logical file
-                                logical_file.add_resource_file(new_res_file)
+                        # add all new files to the resource
+                        for f in files_to_add_to_resource:
+                            uploaded_file = UploadedFile(file=open(f, 'rb'),
+                                                         name=os.path.basename(f))
+                            new_res_file = utils.add_file_to_resource(
+                                resource, uploaded_file, folder=new_file_name,
+                                fed_res_file_name_or_path=fed_file_full_path
+                            )
+                            # make each resource file we added as part of the logical file
+                            logical_file.add_resource_file(new_res_file)
 
-                            log.info("NetCDF file type - new files were added to the resource.")
-                        except Exception as ex:
-                            msg = "NetCDF file type. Error when setting file type. Error:{}"
-                            msg = msg.format(ex.message)
-                            log.exception(msg)
-                            raise ex
-                        finally:
-                            # remove temp dir
-                            if os.path.isdir(temp_dir):
-                                shutil.rmtree(temp_dir)
+                        log.info("NetCDF file type - new files were added to the resource.")
+                    except Exception as ex:
+                        msg = "NetCDF file type. Error when setting file type. Error:{}"
+                        msg = msg.format(ex.message)
+                        log.exception(msg)
+                        # TODO: in case of any error we should put the original file back and
+                        # delete the folder that was created
+                        raise ValidationError(msg)
+                    finally:
+                        # remove temp dir
+                        if os.path.isdir(temp_dir):
+                            shutil.rmtree(temp_dir)
 
-                        log.info("NetCDF file type was created.")
+                    log.info("NetCDF file type was created.")
 
-                        # use the extracted metadata to populate resource metadata
-                        for element in resource_metadata:
-                            # here k is the name of the element
-                            # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
-                            resource.metadata.create_element(k, **v)
+                    # use the extracted metadata to populate resource metadata
+                    for element in resource_metadata:
+                        # here k is the name of the element
+                        # v is a dict of all element attributes/field names and field values
+                        k, v = element.items()[0]
+                        resource.metadata.create_element(k, **v)
 
-                        log.info("Resource - metadata was saved to DB")
+                    log.info("Resource - metadata was saved to DB")
 
-                        # use the extracted metadata to populate file metadata
-                        for element in file_type_metadata:
-                            # here k is the name of the element
-                            # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
-                            if k == 'subject':
-                                logical_file.metadata.keywords = v
-                                logical_file.metadata.save()
-                            else:
-                                logical_file.metadata.create_element(k, **v)
-                        log.info("NetCDF file type - metadata was saved to DB")
+                    # use the extracted metadata to populate file metadata
+                    for element in file_type_metadata:
+                        # here k is the name of the element
+                        # v is a dict of all element attributes/field names and field values
+                        k, v = element.items()[0]
+                        if k == 'subject':
+                            logical_file.metadata.keywords = v
+                            logical_file.metadata.save()
+                        else:
+                            logical_file.metadata.create_element(k, **v)
+                    log.info("NetCDF file type - metadata was saved to DB")
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
                 log.info(err_msg)

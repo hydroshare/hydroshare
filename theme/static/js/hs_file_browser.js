@@ -104,6 +104,7 @@ function updateSelectionMenuContext() {
     var flagDisableCut = false;
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
+    var flagDisableSetNetCDFFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -113,6 +114,7 @@ function updateSelectionMenuContext() {
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableSetNetCDFFileType = true;
         flagDisableGetLink = true;
     }
     else if (selected.length == 1) {    // Unused for now
@@ -155,7 +157,11 @@ function updateSelectionMenuContext() {
             flagDisableSetGeoRasterFileType = true;
         }
 
-        if(logicalFileType === "GeoRasterLogicalFile"){
+        if (fileExt.toUpperCase() != "NC"  || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetNetCDFFileType = true;
+        }
+
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
@@ -164,7 +170,7 @@ function updateSelectionMenuContext() {
     }
 
     var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    if (logicalFileType === "GeoRasterLogicalFile"){
+    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
             flagDisableCreateFolder = true;
         }
     // Show Create folder toolbar option
@@ -191,6 +197,10 @@ function updateSelectionMenuContext() {
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
     $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+
+    // set NetCDF file type
+    menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
+    $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -1178,18 +1188,13 @@ $(document).ready(function () {
 
     // set geo raster file type method
      $("#btn-set-geo-file-type").click(function () {
-         var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
-         var resID = $("#hs-file-browser").attr("data-res-id");
-         var url = "/hsapi/_internal/" + resID + "/" + file_id + "/GeoRaster/set-file-type/";
-         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-         var calls = [];
-         calls.push(set_file_type_ajax_submit(url));
-         // Wait for the asynchronous calls to finish to get new folder structure
-         $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-            $("#fileTypeMetaDataTab").html(file_metadata_alert);
-         });
+         setFileType("GeoRaster");
       });
+
+    // set NetCDF file type method
+     $("#btn-set-netcdf-file-type").click(function () {
+         setFileType("NetCDF");
+     });
 
     // show file type metadata
     $("#btn-show-file-metadata").click(function () {
@@ -1288,6 +1293,20 @@ $(document).ready(function () {
 var cookieName = "page_scroll";
 var expdays = 365;
 
+// used for setting various file types within composite resource
+function setFileType(fileType){
+    var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    var calls = [];
+    calls.push(set_file_type_ajax_submit(url));
+    // Wait for the asynchronous calls to finish to get new folder structure
+    $.when.apply($, calls).done(function () {
+       refreshFileBrowser();
+       $("#fileTypeMetaDataTab").html(file_metadata_alert);
+    });
+}
 // Used to set the previous scroll position after refresh
 function setCookie(name, value, expires, path, domain, secure) {
     if (!expires) {

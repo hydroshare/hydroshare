@@ -12,7 +12,7 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
 
-from .models import GeoRasterLogicalFile
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile
 
 
 @login_required
@@ -24,6 +24,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
+    file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile}
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
@@ -35,16 +36,17 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
-    if hs_file_type != "GeoRaster":
-        err_msg = "Currently a file can be set to Geo Raster file type only."
+    if hs_file_type not in file_type_map:
+        err_msg = "Unsupported file type."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     try:
-        GeoRasterLogicalFile.set_file_type(resource=res, file_id=file_id, user=request.user)
+        logical_file_type_class = file_type_map[hs_file_type]
+        logical_file_type_class.set_file_type(resource=res, file_id=file_id, user=request.user)
         resource_modified(res, request.user, overwrite_bag=False)
-        msg = "File was successfully set to Geo Raster file type. " \
-              "Raster metadata extraction was successful."
+        msg = "File was successfully set to selected file type. " \
+              "Metadata extraction was successful."
         response_data['message'] = msg
         response_data['status'] = 'success'
         spatial_coverage_dict = get_coverage_data_dict(res)

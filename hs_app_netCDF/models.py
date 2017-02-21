@@ -6,6 +6,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
@@ -100,6 +102,51 @@ class OriginalCoverage(AbstractMetaDataElement):
             kwargs['_value'] = value_json
             super(OriginalCoverage, cls).update(element_id, **kwargs)
 
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Spatial Reference')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Coordinate Reference System')
+                        td(self.value.get('projection', ''))
+                    with tr():
+                        get_th('Datum')
+                        td(self.datum)
+                    with tr():
+                        get_th('Coordinate String Type')
+                        td(self.projection_string_type)
+                    with tr():
+                        get_th('Coordinate String Text')
+                        td(self.projection_string_text)
+            h4('Extent')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('North')
+                        td(self.value['northlimit'])
+                    with tr():
+                        get_th('West')
+                        td(self.value['westlimit'])
+                    with tr():
+                        get_th('South')
+                        td(self.value['southlimit'])
+                    with tr():
+                        get_th('East')
+                        td(self.value['eastlimit'])
+                    with tr():
+                        get_th('Unit')
+                        td(self.value['units'])
+
+        return root_div.render(pretty=pretty)
+
 
 # Define netCDF variable metadata
 class Variable(AbstractMetaDataElement):
@@ -139,6 +186,43 @@ class Variable(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("The variable of the resource can't be deleted.")
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Unit')
+                            td(self.unit)
+                        with tr():
+                            get_th('Type')
+                            td(self.type)
+                        with tr():
+                            get_th('Shape')
+                            td(self.shape)
+                        if self.descriptive_name:
+                            with tr():
+                                get_th('Long Name')
+                                td(self.descriptive_name)
+                        if self.missing_value:
+                            with tr():
+                                get_th('Missing Value')
+                                td(self.missing_value)
+                        if self.method:
+                            with tr():
+                                get_th('Comment')
+                                td(self.method)
+
+        return root_div.render(pretty=pretty)
 
 
 # Define the netCDF resource
