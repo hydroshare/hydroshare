@@ -12,7 +12,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import SuspiciousFileOperation
-from django.core.files.uploadedfile import UploadedFile
+from django.core.files.base import File
 from django.utils.http import int_to_base36
 from django.http import HttpResponse
 
@@ -27,8 +27,7 @@ from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile, \
     get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
-from hs_core.hydroshare import FILE_SIZE_LIMIT
-from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
+from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 
@@ -82,11 +81,11 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     ifnames = string.split(irods_fnames, ',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
-        if size > FILE_SIZE_LIMIT:
-            raise_file_size_exception()
         tmpFile = irods_storage.download(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
-        res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
+        fileobj = File(file=tmpFile, name=fname)
+        fileobj.size = size
+        res_files.append(fileobj)
 
     # delete the user session after iRODS file operations are done
     irods_storage.delete_user_session()
