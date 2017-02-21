@@ -870,14 +870,9 @@ class GroupUpdateForm(GroupForm):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-
-    import sys
-    sys.path.append('/pycharm-debug')
-    import pydevd
-    pydevd.settrace('10.20.1.11', port=21000, suspend=False)
-
-
+    
     return context
+
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
