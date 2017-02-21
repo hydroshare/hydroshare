@@ -89,43 +89,20 @@
                     {########################}
                     {#  SOFTWARE  METADATA  #}
                     {########################}
-                {% if mpmetadata.modelVersion or mpmedata.modelProgramLanguage or mpmetadata.modelCodeRepository or mpmetadata.modelOperatingSystem %}
+                {% if mpmetadata.modelProgramLanguage or mpmedata.modelOperatingSystem or mpmetadata.modelCodeRepository or mpmetadata.modelReleaseDate or mpmetadata.modelVersion or mpmetadata.modelWebsite%}
                     <legend>Software</legend>
                     <table class="custom-table">
                         <tbody>
-                           {% if mpmetadata.modelVersion %}<tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelProgramLanguage %}<tr><th class="text-muted">Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>{% endif %}
-                           {% if mpmetadata.modelCodeRepository %}<tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>{% endif %}
+                           {% if mpmetadata.modelProgramLanguage %}<tr><th class="text-muted">Programming Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>{% endif %}
                            {% if mpmetadata.modelOperatingSystem %}<tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelCodeRepository %}<tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>{% endif %}
+                           {% if mpmetadata.modelReleaseDate %}<tr><th class="text-muted">Release Date </th><td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelVersion %}<tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelWebsite %}<tr><th class="text-muted">Website </th><td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td></tr>{% endif %}
                         </tbody>
                     </table>
                     <hr style="border:0"/>
                 {% endif %}
-
-                    {########################}
-                    {#   MODEL  METADATA  #}
-                    {########################}
-                {% if mpmetadata.modelReleaseDate or mpmedata.modelWebsite %}
-                    <legend>General</legend>
-                    <table class="custom-table">
-                        <tbody>
-                            {% if mpmetadata.modelReleaseDate %}
-                            <tr>
-                                <th class="text-muted">Release Date </th>
-                                <td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
-                            </tr>
-                            {% endif %}
-                            {% if mpmetadata.modelWebsite %}
-                            <tr>
-                                <th class="text-muted">Website </th>
-                                <td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td>
-                            </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                    <hr style="border:0"/>
-                {% endif %}
-
                 {% endif %}
 
             </div>
