@@ -1,3 +1,6 @@
+import datetime
+from django.utils import timezone
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
@@ -90,9 +93,26 @@ class HomePage(Page):
     number_recent_posts = models.PositiveIntegerField(default=3,
         help_text="Number of recent blog posts to show")
 
+    # The following date fields are used for controlling when the message will be displayed
+    message_start_date = models.DateField(null=True, help_text="Date from which the message will "
+                                                               "be displayed")
+    message_end_date = models.DateField(null=True, help_text="Date on which the message will no "
+                                                             "more be displayed")
+
     class Meta:
         verbose_name = _("Home page")
         verbose_name_plural = _("Home pages")
+
+    @property
+    def is_show_message(self):
+        today = datetime.datetime.combine(datetime.datetime.today(), datetime.time())
+        today = timezone.make_aware(today)
+
+        if self.message_start_date and self.message_end_date:
+            if self.message_start_date <= today <= self.message_end_date:
+                return True
+
+        return False
 
 
 class IconBox(Orderable):
