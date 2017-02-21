@@ -99,6 +99,12 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
+    file_folder = request.POST.get('file_folder', None)
+    if file_folder is not None:
+        if file_folder == "data/contents":
+            file_folder = None
+        elif file_folder.startswith("data/contents/"):
+            file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
@@ -113,8 +119,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponse(msg, status=500)
 
     try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
+                                                   user=request.user,
+                                                   extract_metadata=extract_metadata,
+                                                   folder=file_folder)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
