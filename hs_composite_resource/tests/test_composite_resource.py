@@ -348,6 +348,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.raster_file_obj = open(self.raster_file, 'r')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.raster_file_obj,), user=self.user)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
         # add some core metadata
         # create abstract
         metadata = self.composite_resource.metadata
@@ -394,7 +396,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
         gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
 
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        tif_res_file = [f for f in self.composite_resource.files.all()
+                        if f.extension == ".tif"][0]
+
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
         # add generic logical file type metadata
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
@@ -525,9 +530,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             type='box').first()
         self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(res_coverage.value['northlimit'], 42.049364058252266)
+        self.assertEqual(res_coverage.value['northlimit'], 42.0500269597691)
         self.assertEqual(res_coverage.value['eastlimit'], -111.57773718106195)
-        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
         self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
         value_dict = {'east': '-110.88845678', 'north': '43.6789', 'units': 'Decimal deg'}
         generic_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
@@ -537,7 +542,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(res_coverage.value['northlimit'], 43.6789)
         self.assertEqual(res_coverage.value['eastlimit'], -110.88845678)
-        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
         self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
         # update the LFO coverage to box type
         value_dict = {'eastlimit': '-110.88845678', 'northlimit': '43.6789',
