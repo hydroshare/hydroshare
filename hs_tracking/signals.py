@@ -26,9 +26,9 @@ def capture_download(**kwargs):
     # exit early if the request is not passed in as a kwarg
     if 'request' not in kwargs.keys():
         return
-    
+
     # exit early if not human (necessary b/c this action does not require log in)
-    is_human = getattr(request, 'is_human', False)
+    is_human = getattr(kwargs['request'], 'is_human', False)
     if not is_human:
         return
 

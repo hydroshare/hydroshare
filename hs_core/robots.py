@@ -1,12 +1,8 @@
-import re
 
 import robot_detection
-from django.conf import settings
-from django.http import HttpResponseForbidden
-
-
 # note: robot_detection needs to be updated periodically (possible inside the Dockerfile)
 # (wget http://www.robotstxt.org/db/all.txt, python robot_detection.py all.txt)
+
 
 class RobotFilter:
 
