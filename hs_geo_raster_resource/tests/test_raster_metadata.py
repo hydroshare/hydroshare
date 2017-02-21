@@ -66,7 +66,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.raster_mawhefel_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
             self.raster_mawhefel_tif_file_name)
         target_temp_raster_mawhefel_tif_file = os.path.join(self.temp_dir,
-                                                         self.raster_mawhefel_tif_file_name)
+                                                            self.raster_mawhefel_tif_file_name)
         shutil.copy(self.raster_mawhefel_tif_file, target_temp_raster_mawhefel_tif_file)
         self.raster_mawhefel_tif_file_obj = open(target_temp_raster_mawhefel_tif_file, 'r')
 
@@ -657,4 +657,3 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertTrue(self.resRaster.metadata.has_all_required_elements())
         self.assertTrue(self.resRaster.can_be_public_or_discoverable)
         self.resRaster.delete()
-
