@@ -166,11 +166,11 @@ class Command(BaseCommand):
     def yesterdays_variables(self):
 
         today_start = timezone.datetime.now().replace(
-             hour=0,
-             minute=0,
-             second=0,
-             microsecond=0
-         )
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
 
         yesterday_start = today_start - datetime.timedelta(days=1)
         variables = hs_tracking.Variable.objects.filter(
