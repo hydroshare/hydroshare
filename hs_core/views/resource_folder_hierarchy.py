@@ -6,6 +6,7 @@ from django.http import HttpResponse
 
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
+from rest_framework.decorators import api_view
 
 from django_irods.icommands import SessionException
 
@@ -166,7 +167,7 @@ def data_store_folder_zip(request):
     )
 
 
-def data_store_folder_unzip(request):
+def data_store_folder_unzip(request, **kwargs):
     """
     Unzip requested zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store. It is invoked by an AJAX call,
@@ -177,7 +178,7 @@ def data_store_folder_unzip(request):
     unzipped, and remove_original_zip has a value of "true" or "false" (default is "true")
     indicating whether original zip file will be deleted after unzipping.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', kwargs.get('res_id'))
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -190,7 +191,7 @@ def data_store_folder_unzip(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    zip_with_rel_path = request.POST.get('zip_with_rel_path', None)
+    zip_with_rel_path = request.POST.get('zip_with_rel_path', kwargs.get('zip_with_rel_path'))
     if zip_with_rel_path is None:
         return HttpResponse('Bad request - zip_with_rel_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -224,6 +225,21 @@ def data_store_folder_unzip(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+@api_view(['POST'])
+def data_store_folder_unzip_public(request, pk, pathname):
+    """
+    Public version of data_store_folder_unzip, incorporating path variables
+
+    :param request:
+    :param pk:
+    :param pathname:
+    :return HttpResponse:
+    """
+
+    sys_pathname = 'data/contents/%s' % pathname
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
 
 
 def data_store_create_folder(request):
