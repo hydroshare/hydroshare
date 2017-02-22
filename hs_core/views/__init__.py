@@ -452,12 +452,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
-
+    ajax_response_data = {'status': 'success'}
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        if request.is_ajax():
+            ajax_response_data['status'] = 'error'
+            ajax_response_data['message'] = ex.message
+            return JsonResponse(ajax_response_data)
+        else:
+            request.session['validation_error'] = ex.message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # if the deleted resource is part of any collection resource, then for each of those collection
     # create a CollectionDeletedResource object which can then be used to list collection deleted
@@ -476,7 +481,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
 
-    return HttpResponseRedirect('/my-resources/')
+    if request.is_ajax():
+        return JsonResponse(ajax_response_data)
+    else:
+        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
