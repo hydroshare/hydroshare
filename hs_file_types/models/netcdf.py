@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, form, button
+from dominate.tags import div, legend, form, button, p, textarea
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -55,6 +55,21 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         for variable in self.variables.all():
             html_string += variable.get_html()
 
+        # ncdump text from the txt file
+        nc_dump_res_file = None
+        for f in self.logical_file.files.all():
+            if f.extension == ".txt":
+                nc_dump_res_file = f
+                break
+        if nc_dump_res_file is not None:
+            nc_dum_div = div(style="clear: both", cls="col-xs-12")
+            with nc_dum_div:
+                legend("NetCDF Header Information")
+                p(nc_dump_res_file.full_path[33:])
+                textarea(nc_dump_res_file.resource_file.read(), readonly="", rows="15",
+                         cls="input-xlarge", style="min-width: 100%")
+
+            html_string += nc_dum_div.render()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
