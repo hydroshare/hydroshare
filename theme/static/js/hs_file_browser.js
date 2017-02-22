@@ -636,6 +636,23 @@ $(document).ready(function () {
     if (!$("#hs-file-browser").length) {
         return;
     }
+
+    if (localStorage.getItem('file-browser-view')) {
+        var view = localStorage.getItem('file-browser-view');
+        // ------- switch to table view -------
+        $("#fb-files-container").removeClass("fb-view-grid fb-view-list");
+        $("#fb-files-container").addClass(view);
+
+        $("#btn-group-view button").removeClass("active");
+
+        if (view == "fb-view-list") {
+            $("#btn-group-view button[data-view='list']").addClass("active");
+        }
+        else {
+            $("#btn-group-view button[data-view='grid']").addClass("active");
+        }
+    }
+
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
@@ -711,6 +728,8 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
+                        var currentPath = $("#hs-file-browser").attr("data-current-path");
+                        previewNode.find("#upload-folder-path").text(currentPath);
                         $("#fb-inner-controls").append(previewNode);
                     }
                     $("#hsDropzone").toggleClass("glow-blue", false);
@@ -723,8 +742,6 @@ $(document).ready(function () {
                         location.reload(true);
                     }
                     else {
-                        $("#hs-file-browser").attr("data-current-path", "data/contents");
-
                         // Remove further paths from the log
                         var range = pathLog.length - pathLogIndex;
                         pathLog.splice(pathLogIndex + 1, range);
@@ -759,6 +776,10 @@ $(document).ready(function () {
                     $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
                 });
 
+                this.on('sending', function (file, xhr, formData) {
+                    formData.append('file_folder', $("#upload-folder-path").text());
+                });
+
                 // Applies allowing upload of multiple files to OS upload dialog
                 if (allowMultiple) {
                     this.hiddenFileInput.removeAttribute('multiple');
@@ -778,11 +799,13 @@ $(document).ready(function () {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
+            localStorage.setItem('file-browser-view', 'fb-view-list');
         }
         else {
             // ------- Switch to grid view -------
             $("#fb-files-container").removeClass("fb-view-list");
             $("#fb-files-container").addClass("fb-view-grid");
+            localStorage.setItem('file-browser-view', 'fb-view-grid');
         }
     });
 

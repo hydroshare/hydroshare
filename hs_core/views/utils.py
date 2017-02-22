@@ -417,6 +417,9 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
         }) + "?next=" + (next_url(request) or "/")
 
         context['group'] = kwargs.pop('group')
+    elif action_type == 'group_auto_membership':
+        context['group'] = kwargs.pop('group')
+        action_url = ''
     else:
         action_url = reverse(action_type, kwargs={
             "uidb36": int_to_base36(email_to.id),

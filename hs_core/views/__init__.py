@@ -99,6 +99,12 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
+    file_folder = request.POST.get('file_folder', None)
+    if file_folder is not None:
+        if file_folder == "data/contents":
+            file_folder = None
+        elif file_folder.startswith("data/contents/"):
+            file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
@@ -113,8 +119,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponse(msg, status=500)
 
     try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
+                                                   user=request.user,
+                                                   extract_metadata=extract_metadata,
+                                                   folder=file_folder)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
@@ -444,12 +452,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
-
+    ajax_response_data = {'status': 'success'}
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        if request.is_ajax():
+            ajax_response_data['status'] = 'error'
+            ajax_response_data['message'] = ex.message
+            return JsonResponse(ajax_response_data)
+        else:
+            request.session['validation_error'] = ex.message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # if the deleted resource is part of any collection resource, then for each of those collection
     # create a CollectionDeletedResource object which can then be used to list collection deleted
@@ -468,7 +481,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
 
-    return HttpResponseRedirect('/my-resources/')
+    if request.is_ajax():
+        return JsonResponse(ajax_response_data)
+    else:
+        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
@@ -816,6 +832,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
+    auto_approve = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -840,9 +857,11 @@ class GroupForm(forms.Form):
 class GroupCreateForm(GroupForm):
     def save(self, request):
         frm_data = self.cleaned_data
+
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
-                                                      purpose=frm_data['purpose'])
+                                                      purpose=frm_data['purpose'],
+                                                      auto_approve=frm_data['auto_approve'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -859,6 +878,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1126,20 +1146,33 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
-        membership_request = requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        membership_request = requesting_user.uaccess.create_group_membership_request(
+            group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request)
         else:
-            message = 'Group membership request was successful'
-            # send mail to all owners of the group
-            for grp_owner in group_to_join.gaccess.owners:
-                send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                          group=group_to_join, group_owner=grp_owner,
-                                          membership_request=membership_request)
-
+            message = 'You are now a member of this group'
+            # membership_request is None in case where group allows auto approval of membership
+            # request. no need send email notification to group owners for membership approval
+            if membership_request is not None:
+                message = 'Group membership request was successful'
+                # send mail to all owners of the group for approval of the request
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_membership',
+                                              group=group_to_join, group_owner=grp_owner,
+                                              membership_request=membership_request)
+            else:
+                # send mail to all owners of the group to let them know that someone has
+                # joined this group
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_auto_membership',
+                                              group=group_to_join,
+                                              group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, ex.message)
