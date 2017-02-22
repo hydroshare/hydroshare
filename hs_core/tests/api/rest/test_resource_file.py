@@ -94,7 +94,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEquals(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
-        response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -130,7 +130,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEquals(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
-        response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
