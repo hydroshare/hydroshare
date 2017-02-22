@@ -311,6 +311,7 @@ INSTALLED_APPS = (
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",
+    "security",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -368,6 +369,11 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_tracking.middleware.Tracking",
+    'security.middleware.XssProtectMiddleware',
+    'security.middleware.ContentSecurityPolicyMiddleware',
+    'security.middleware.ContentNoSniff',
+    'security.middleware.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware'
 )
 
 # Store these package names here as they may change in the future since
@@ -567,3 +573,106 @@ TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
 
 # info django that a reverse proxy sever (nginx) is handling ssl/https for it
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Content Security Policy
+# See http://django-csp.readthedocs.io/en/latest/configuration.html#configuration-chapter
+# sha256-* strings are hashes of inline scripts and styles
+
+CSP_DICT = {
+    "default-src" : ["none",],
+    "script-src" : [
+        "self",
+        "*.google.com",
+        "*.googleapis.com",
+        "*.rawgit.com",
+        "*.cloudflare.com",
+        "*.datatables.net ",
+        "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
+        "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
+        "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
+        "'sha256-EeeHsgrKQ0j+QXY9+NqkhS9pB8fZ4iPEiytjK3sVD/k='",
+        "'sha256-JB94IjPO9ws/1kVTgg5lq3sUp/3Yt/1gm4wx82JRCVE='",
+        "'sha256-5ps1OUcNv+F/rpDQlMFLOuF67quHYXVbFf9yOJNjqaw='",
+        "'sha256-ptl8NJjRX6En62nAGX95mPmBq5Zq1p7JIsTIzhM+s3Q='",
+        "'sha256-ukGEpm76ZWGDlDStysCDbVRJgILWSgR1XiInXHpnqeo='",
+        "'sha256-1pdWRQ5pLai42G3EWfkHyJXR4TFGVlzxJHpNF89iLTQ='",
+        "'sha256-C8FeZKK7Sju/xx6ArM4j9W2/TcxCpb2IPSHJeqVK3hg='",
+        "'sha256-/dNLhMcPPsv9gDusbsJ+xgTBKgl67iqN75nRsJwY1y8='",
+        "'sha256-Fj+sWytTahUAg3Na/4zjY6QnSNhwgFsnz4JxbA2vzcw='",
+        "'sha256-JCBsts/37Jx84rU5noLWawBDCAgz9kEjdmJQN3jBY8k='",
+        "'sha256-04T2hHmvLBivvYNrvZCsJi3URODWHuMDbrtYi3CIfB4='",
+        "'sha256-DC3munJ0pghuoA4hX8dh32935FOMe4Ek0lEToguPh04='",
+        "'sha256-NDFP8wAl44R2n9vT1corxoEbvzy3cusyeGupfuQ1U0c='",
+        "'sha256-PA1G79Xx6LLYGxSPHSieelZ8bBLAWIMgD/XXawZp7qU='",
+        "'sha256-mCQxt+MP+ovw3u4TQgt01msH6eqt4mSVB0Qu2YWWMTg='",
+        "'sha256-JvKBe3eX3y4VMRRoZ6gtD3NERM2ie6izqcfCYApav2Y='",
+        "'sha256-TxuSliz/loxO7gZryrQvb0iCfYpUhvSaFj/6Td2gWFQ='",
+        "'sha256-45pN/AJ0kQzJz9vwICzvV3MnuOG8gtGxggQwABWnymA='",
+        "'sha256-obaP6XgYiPObVeZTvXdVlgt809T2Dm6PIk16JE30820='",
+        "'sha256-X48Mhnt413YPDQKQ1WJRKySArZrDCn1RHfPwUz3f1n8='",
+        "'sha256-4xP5qvZtoBaEfC9gZ43CQp8bEku+/CZOsq9FaRvF7OU='",
+        "'sha256-mZcvwmv6hKtoYTrQMxgb/EQ337dAnjIahuJ3pleT24M='",
+        "'sha256-DkOZu61D7CazmSXGaEnSn2z9djJ8MykUT8DxDGQdjbs='",
+        "'sha256-DkOZu61D7CazmSXGaEnSn2z9djJ8MykUT8DxDGQdjbs='",
+        "'sha256-rkLuhOrYkT+nja4WGqG4TPLui5JaWiPDYJJ8UCuslJw='",
+        "'sha256-LvGubOm7HawnJzw+vOyACi6DYfal1wKpJYCE7KN/XDI='",
+        "'sha256-5tQ8oYGMvQerAFL7X6FcoOun/fzsYLKwBeMevN0pth8='",
+        "'sha256-wwXL5J3dFy1OlT0B3+GEak+gfFt97tLZtgA03Ww5uKU='",
+        "'sha256-jZ0Oc9ZvtRDz3fu+52erC3krRmxFNM123/clxHqXT6I='",
+        "'sha256-5SxuHuYxmlu7rNBznCkw0RTE+ONtAqVChmyV8gMsnyM='",
+        "'sha256-fH3rM69L3MlQuLHwmENXZ9SSP9u+7mECRGOpE5pY/Hw='",
+        "'sha256-7Xlpbhi2uHJajOb377ImeVoPP2wXatX9zj+Yr/DS0qA='",
+        "'sha256-4rt4xlh501T8mF5LZkGs/NIyq3fs7igdd8csZexAN8I='",
+        "'sha256-daEdpEyAJIa8b2VkCqSKcw8PaExcB6Qro80XNes/sHA='",
+        "'sha256-j91bFxk70pyBgSjXdJizPOSoYZaC0Zt+fq9U4OF/npQ='",
+        "'sha256-ZWirjyeue1OSyGpYxoRjbS2NRwKf/b/XZiYaHuUV6Wc='",
+        "'sha256-rQJ6epAwyFQxC0sb4uq4sgIKJLr2jP19K4M0Bork7kM='",
+        "'sha256-hH6THo5mChVoQ5wrDhew4wuTZxOayUnEJC3U1SK80VQ='",
+        "'sha256-fUjKhLcjxDsHY0YkuZGJ9RcBu+3nIlSqpSUI9biHAJw='",
+        "'sha256-7ydyyMhpPIo0fTHZtxmllQ+MJpMVM299EkUKAf0K1hs='"
+    ],
+    "style-src" : [
+        "self",
+        "unsafe-inline",
+        "*.googleapis.com",
+        "*.bootstrapcdn.com",
+        "*.datatables.net",
+        "*.cloudflare.com "
+        # "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
+        # "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
+        # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
+        # "'sha256-qxBJozwM44kf1mKAeiT/XkAwReBZ/To9FXKNw3bdVwk='"
+    ],
+    "img-src" : [
+        "self",
+        "*.datatables.net",
+        "*.googleapis.com",
+        "*.gstatic.com",
+        "*.google.com"
+    ],
+    "connect-src" : [
+        "self",
+        "*.github.com"
+    ],
+    "font-src" : [
+        "self",
+        "*.gstatic.com",
+        "*.bootstrapcdn.com"
+    ],
+    "frame-src" : [
+        "self",
+        "*.hydroshare.org"
+    ]
+}
+
+
+
+X_FRAME_OPTIONS = "deny"
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000
+
+# Cookie Stuff
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
