@@ -3,6 +3,7 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
 RUN pip install --upgrade pip && pip install \
+  robot_detection \ 
   xmltodict==0.10.2 \
   selenium \
   dominate \

@@ -368,6 +368,7 @@ MIDDLEWARE_CLASSES = (
     # "mezzanine.core.middleware.SSLRedirectMiddleware",
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
+    "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
     'security.middleware.XssProtectMiddleware',
     'security.middleware.ContentSecurityPolicyMiddleware',

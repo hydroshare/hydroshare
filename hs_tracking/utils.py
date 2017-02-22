@@ -1,3 +1,4 @@
+import robot_detection
 
 
 def get_client_ip(request):
@@ -28,3 +29,9 @@ def get_user_email_domain(session):
     except AttributeError:
         emaildomain = None
     return emaildomain
+
+
+def is_human(user_agent):
+    if robot_detection.is_robot(user_agent):
+        return False
+    return True
