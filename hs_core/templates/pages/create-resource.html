@@ -14,6 +14,179 @@
 
 {% block main %}
     <div class="container">
+        <div class="stepper">
+            <div class="stepper-steps">
+                {#                stepper-step-isValid#}
+                <div class="stepper-step stepper-step-isActive">
+                    <div class="stepper-stepContent">
+                        <span class="stepper-stepMarker">1</span>
+                        <span class="stepper-title">Select a resource type</span>
+                    </div>
+                </div>
+                <div class="stepper-step">
+                    <div class="stepper-stepContent">
+                        <span class="stepper-stepMarker">2</span>
+                        <span class="stepper-title">Input a resource title</span>
+                    </div>
+                </div>
+                <div class="stepper-step">
+                    <div class="stepper-stepContent">
+                        <span class="stepper-stepMarker">3</span>
+                        <span class="stepper-title">Step Title Here</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stepper-content" data-step-number="1">
+            <div class="panel panel-default">
+                <div class="panel-heading">General</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                     alt="Generic Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Generic</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                     alt="Collection Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Collection</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                     alt="Composite Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Composite</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                     alt="Web App Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Web App</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                     alt="Multidimensional Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Multidimensional</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Geographic Resources</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                     alt="Geographic Feature Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Geographic Feature</div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                     alt="Geographic Raster Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Geographic Raster</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Time Series Resources</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                     alt="Time Series Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Time Series</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                     alt="HIS Referenced Time Series Resource Icon"
+                                     class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;HIS Referenced Time Series</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Modeling</div>
+
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                     alt="SWAT Model Instance Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                     alt="Collection Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                     alt="Model Program Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Program</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                     alt="Model Instance Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Instance</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-6 col-md-4">
+                            <div class="resource-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                     alt="Script Resource Icon" class="table-res-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Script</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stepper-actions">
+                <a href="#" class="btn btn-default btn-lg btn-simple mbn">Back</a>
+                <a href="#" class="btn btn-info btn-lg btn-simple pull-right mbn">Continue</a>
+            </div>
+    </div>
+
+    <div class="container">
         <div class="row">
             {% block error %}
                 {%  if validation_error %}
