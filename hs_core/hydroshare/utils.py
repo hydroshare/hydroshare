@@ -166,9 +166,9 @@ def is_federated(homepath):
     homepath = homepath.strip()
     homepath_list = homepath.split('/')
     # homepath is an iRODS logical path in the format of
-    # /irods_zone/home/irods_account/collection_path, so homepath_list[1] is the irods_zone
-    # which we can use to form the fed_proxy_path to check whether fed_proxy_path exists to
-    # hold hydroshare resources in a federated zone
+    # /irods_zone/home/irods_account_username/collection_relative_path, so homepath_list[1]
+    # is the irods_zone which we can use to form the fed_proxy_path to check whether
+    # fed_proxy_path exists to hold hydroshare resources in a federated zone
     if homepath_list[1]:
         fed_proxy_path = os.path.join(homepath_list[1], 'home',
                                       settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
