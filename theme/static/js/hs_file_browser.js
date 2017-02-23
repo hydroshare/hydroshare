@@ -306,7 +306,10 @@ function bindFileBrowserItemEvents() {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
             if ($(this).hasClass("fb-file")){
-                showFileTypeMetadata();
+                // check if this is a left mouse button click
+                if(e.which == 1){
+                    showFileTypeMetadata();
+                }
             }
             else{
                 $("#fileTypeMetaDataTab").html(file_metadata_alert);
