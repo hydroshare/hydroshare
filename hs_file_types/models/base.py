@@ -212,6 +212,7 @@ class AbstractFileMetaData(models.Model):
 
             # TODO: check if we should include the file size here
 
+        self.add_keywords_to_xml_container(rdf_Description)
         self.add_extra_metadata_to_xml_container(rdf_Description)
         for coverage in self.coverages.all():
             coverage.add_to_xml_container(rdf_Description)
@@ -232,6 +233,14 @@ class AbstractFileMetaData(models.Model):
             hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
                                              '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
             hsterms_value.text = value
+
+    def add_keywords_to_xml_container(self, container):
+        """Generates xml+rdf representation of the all the keywords associated
+        with an instance of the logical file type"""
+
+        for kw in self.keywords:
+            dc_subject = etree.SubElement(container, '{%s}subject' % CoreMetaData.NAMESPACES['dc'])
+            dc_subject.text = kw
 
     def create_element(self, element_model_name, **kwargs):
         # had to import here to avoid circular import

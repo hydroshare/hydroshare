@@ -222,6 +222,19 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all metadata elements associated with this
+        logical file type instance"""
+
+        container_to_add_to = super(NetCDFFileMetaData, self).add_to_xml_container(container)
+        if self.originalCoverage:
+            self.originalCoverage.add_to_xml_container(container_to_add_to)
+
+        # TODO: check with Tian if we have to add the spatial coverage
+
+        for variable in self.variables.all():
+            variable.add_to_xml_container(container_to_add_to)
+
 
 class NetCDFLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
@@ -420,7 +433,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     logical_file = cls.create()
                     # by default set the dataset_name attribute of the logical file to the
                     # name of the file selected to set file type
-                    logical_file.dataset_name = file_name
+                    logical_file.dataset_name = nc_file_name
                     logical_file.save()
 
                     try:

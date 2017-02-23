@@ -1,4 +1,5 @@
 import json
+from lxml import etree
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -10,7 +11,8 @@ from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
+    add_metadata_element_to_xml
 
 
 # Define original spatial coverage metadata info
@@ -101,6 +103,33 @@ class OriginalCoverage(AbstractMetaDataElement):
             del kwargs['value']
             kwargs['_value'] = value_json
             super(OriginalCoverage, cls).update(element_id, **kwargs)
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
+        cov_term = '{%s}' + 'box'
+        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
+        rdf_coverage_value = etree.SubElement(coverage_terms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        # netcdf original coverage is of box type
+        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                    % (self.value['northlimit'], self.value['eastlimit'],
+                       self.value['southlimit'], self.value['westlimit'],
+                       self.value['units'])
+
+        for meta_element in self.value:
+            if meta_element == 'projection':
+                cov_value += '; projection_name={}'.format(self.value[meta_element])
+
+        if self.projection_string_text:
+            cov_value += '; projection_string={}'.format(self.projection_string_text)
+
+        if self.datum:
+            cov_value += '; datum={}'.format(self.datum)
+
+        rdf_coverage_value.text = cov_value
 
     def get_html_form(self, resource):
         """Generates html form code for this metadata element so that this element can be edited"""
@@ -209,6 +238,21 @@ class Variable(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("The variable of the resource can't be deleted.")
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        md_fields = {
+            "md_element": "netcdfVariable",
+            "name": "name",
+            "unit": "unit",
+            "type": "type",
+            "shape": "shape",
+            "descriptive_name": "longName",
+            "method": "comment",
+            "missing_value": "missingValue"
+        }  # element name : name in xml
+        add_metadata_element_to_xml(container, self, md_fields)
 
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
