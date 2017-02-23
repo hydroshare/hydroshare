@@ -1800,6 +1800,8 @@ class ResourceFile(models.Model):
     fed_resource_file_size = models.CharField(max_length=15,
                                               null=True, blank=True)
 
+    # TODO: The following 3 fields related to GenericForeignKey need to be deleted
+    # once we decide to store file type metadata using HStore
     # we are using GenericForeignKey to allow resource file to be associated with any
     # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
     logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
@@ -1809,6 +1811,10 @@ class ResourceFile(models.Model):
 
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
+
+    # TODO: this field name needs to change to 'logical_file' after testing
+    logical_file_new = models.ForeignKey("hs_file_types.BaseLogicalFile", null=True, blank=True,
+                                         related_name='files')
 
     @property
     def resource(self):
