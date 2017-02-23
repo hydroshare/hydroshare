@@ -14,151 +14,202 @@
 
 {% block main %}
     <div class="container">
-        <div class="stepper">
-            <div class="stepper-steps">
-                {#                stepper-step-isValid#}
-                <div class="stepper-step stepper-step-isActive" data-step="1">
-                    <div class="stepper-stepContent">
-                        <span class="stepper-stepMarker">1</span>
-                        <span class="stepper-title">Select a resource type</span>
-                    </div>
-                </div>
-                <div class="stepper-step" data-step="2">
-                    <div class="stepper-stepContent">
-                        <span class="stepper-stepMarker">2</span>
-                        <span class="stepper-title">Input a resource title</span>
-                    </div>
-                </div>
-                <div class="stepper-step" data-step="3">
-                    <div class="stepper-stepContent">
-                        <span class="stepper-stepMarker">3</span>
-                        <span class="stepper-title">Add  your files</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="stepper-content" data-step="1">
-            <div class="row">
-                <div class="col-xs-12 col-sm-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">General</div>
-                        <div class="panel-body">
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                     alt="Generic Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Generic</div>
-                            </div>
-
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Collection</div>
-                            </div>
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                     alt="Composite Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Composite</div>
-                            </div>
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                     alt="Web App Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Web App</div>
-                            </div>
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Multidimensional</div>
-                            </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="stepper">
+                <div class="stepper-steps">
+                    {#                stepper-step-isValid#}
+                    <div class="stepper-step stepper-step-isActive" data-step="1">
+                        <div class="stepper-stepContent">
+                            <span class="stepper-stepMarker">1</span>
+                            <span class="stepper-title">Select a resource type</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-xs-12 col-sm-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Modeling</div>
-
-                        <div class="panel-body">
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
-                            </div>
-
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </div>
-
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Program</div>
-                            </div>
-
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Instance</div>
-                            </div>
-
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                     alt="Script Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Script</div>
-                            </div>
+                    <div class="stepper-step" data-step="2">
+                        <div class="stepper-stepContent">
+                            <span class="stepper-stepMarker">2</span>
+                            <span class="stepper-title">Input a resource title</span>
+                        </div>
+                    </div>
+                    <div class="stepper-step" data-step="3">
+                        <div class="stepper-stepContent">
+                            <span class="stepper-stepMarker">3</span>
+                            <span class="stepper-title">Add  your files</span>
                         </div>
                     </div>
                 </div>
             </div>
+            </div>
 
-            <div class="row">
-                <div class="col-xs-12 col-sm-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Geographic Resources</div>
-                        <div class="panel-body">
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                     alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Feature</div>
+            <div class="stepper-content col-xs-12" data-step="1">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">General</div>
+                            <div class="panel-body">
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         alt="Generic Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Generic</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                         alt="Collection Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Collection</div>
+                                </div>
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                         alt="Composite Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Composite</div>
+                                </div>
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                         alt="Web App Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Web App</div>
+                                </div>
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         alt="Multidimensional Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Multidimensional</div>
+                                </div>
                             </div>
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                     alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Raster</div>
+                        </div>
+                    </div>
+
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">Modeling</div>
+
+                            <div class="panel-body">
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                         alt="Collection Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         alt="Model Program Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Model Program</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Model Instance</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                         alt="Script Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Script</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-sm-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Time Series Resources</div>
-                        <div class="panel-body">
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                     alt="Time Series Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Time Series</div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">Geographic Resources</div>
+                            <div class="panel-body">
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                         alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Geographic Feature</div>
+                                </div>
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                         alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Geographic Raster</div>
+                                </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="resource-type">
-                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                     alt="HIS Referenced Time Series Resource Icon"
-                                     class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;HIS Referenced Time Series</div>
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">Time Series Resources</div>
+                            <div class="panel-body">
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         alt="Time Series Resource Icon" class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;Time Series</div>
+                                </div>
+
+                                <div class="resource-type">
+                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                         alt="HIS Referenced Time Series Resource Icon"
+                                         class="resource-type-icon"/>
+                                    <div class="resource-type-name">&nbsp;HIS Referenced Time Series</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="stepper-actions">
-            <a href="#" class="btn btn-default btn-lg btn-simple mbn">Back</a>
-            <a href="#" class="btn btn-info btn-lg btn-simple pull-right mbn">Continue</a>
-        </div>
+            <div class="stepper-content col-xs-12" data-step="2">
+                <div class="form-group row">
+                    <div class="col-xs-12">
+                        <div id="selected-type" class="resource-type">
+                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                 alt="Generic Resource Icon" class="resource-type-icon"/>
+                            <div class="resource-type-name">&nbsp;Generic</div>
+                        </div>
+                    </div>
+                    <br>
+                    <label for="title" class="col-xs-12 col-form-label">Title</label>
+                    <div class="col-xs-12">
+                        <input placeholder="Untitled Resource" class="form-control" type="text"
+                               id="title">
+                    </div>
+                </div>
+            </div>
 
+            <div class="stepper-content col-xs-12" data-step="3">
+                <div class="row">
+                    <div class="col-xs-12 col-sm-7">
+                        <form id="hsDropzone" role="form" method="POST" enctype="multipart/form-data"
+                              action="/hsapi/_internal/create-resource/do/">
+                            {% csrf_token %}
+                            <div class="caption">
+                                <h2 class="text-center text-muted"><i class="fa fa-file-o" aria-hidden="true"></i></h2>
+                                <h4 class="text-center text-muted"> Drop files here or click to upload.</h4>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-xs-12 col-sm-5">
+                        <ul class="list-group">
+                            <li class="list-group-item">Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
+                            <li class="list-group-item">File size is limited to 1 GB per file for direct browser upload from your local disk.
+                            </li>
+                            <li class="list-group-item">Files larger than 1GB can be imported directly from any iRODS account. You can create
+                                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
+                                page.
+                                See <a href="https://pages.hydroshare.org/">Help</a> for information on working with iRODS directly.
+                            </li>
+                            <li class="list-group-item"> You can also add files directly from any iRODS server regardless of the file size.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="stepper-actions col-xs-12">
+                <a href="#" class="btn btn-default btn-lg btn-simple mbn">Back</a>
+                <a href="#" class="btn btn-info btn-lg btn-simple pull-right mbn">Continue</a>
+            </div>
+        </div>
     </div>
 
 
