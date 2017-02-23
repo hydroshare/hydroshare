@@ -1067,9 +1067,11 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         try:
+            folder = request.POST.get('folder', None)
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           user=request.user,
+                                                                          folder=folder,
                                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
