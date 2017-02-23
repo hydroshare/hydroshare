@@ -97,7 +97,7 @@ class PrivilegeBase(models.Model):
     """
     Shared methods for Privilege handling
 
-    These polymorphic routines act on any type of foreign keys, so that
+    These polymorphic routines act on any type of keys, so that
     they are independent of the types of the base class members.
     They implement the major interactions with privileges, including
     share, unshare, undo_share, and ensure that provenance and privilege
@@ -370,7 +370,7 @@ class UserGroupPrivilege(PrivilegeBase):
         Important: this does not guard against removing a single owner.
 
         **This is a system routine** that should not be called directly by developers!
-        Use UserAccess.get_group_undo_users instead. That routine avoids single-owner deletion.
+        Use UserAccess.__get_group_undo_users instead. That routine avoids single-owner deletion.
         """
         if __debug__:
             assert 'group' in kwargs
@@ -526,7 +526,7 @@ class UserResourcePrivilege(PrivilegeBase):
         Important: this does not guard against removing a single owner.
 
         **This is a system routine** that should not be called directly by developers!
-        Use UserAccess.get_resource_undo_users instead. That routine avoids single-owner
+        Use UserAccess.__get_resource_undo_users instead. That routine avoids single-owner
         deletion.
         """
         if __debug__:
@@ -667,7 +667,7 @@ class GroupResourcePrivilege(PrivilegeBase):
         :param grantor: user that will undo privilege
 
         **This is a system routine** that should not be called directly by developers!
-        Use UserAccess.get_resource_undo_groups instead.
+        Use UserAccess.__get_resource_undo_groups instead.
         """
         if __debug__:
             assert 'resource' in kwargs
@@ -676,34 +676,6 @@ class GroupResourcePrivilege(PrivilegeBase):
             assert isinstance(kwargs['grantor'], User)
             assert len(kwargs) == 2
         return GroupResourceProvenance.get_undo_groups(**kwargs)
-
-
-class ProvenanceCodes(object):
-    """
-    Provenance states describe whether a privilege can be undone
-    State is a numeric code 1-3:
-
-        * 1 or ProvenanceCodes.REQUESTED:
-            Active; can be undone. This is the resulting state after any share or unshare.
-
-        * 2 or ProvenanceCodes.RESTORED:
-            Active; restored as the result of an undo. Can potentially be undone by further undos
-            until all privilege is removed.
-
-        * 3 or ProvenanceCodes.INITIAL:
-            Active; cannot be undone because it represents an initial state. Corresponds to
-            PrivilegeCodes.NONE.
-
-    """
-    REQUESTED = 1
-    RESTORED = 2
-    INITIAL = 3
-    CHOICES = (
-        (REQUESTED, 'Requested'),  # an explicit share or unshare
-        (RESTORED,  'Restored'),   # result of an undo operation
-        (INITIAL,   'Initial'),    # initial state: cannot be undone
-    )
-    NAMES = ('Unspecified', 'Requested', 'Restored', 'Initial')
 
 
 class ProvenanceBase(models.Model):
@@ -727,14 +699,12 @@ class ProvenanceBase(models.Model):
                ' (' + str(self.privilege) + ')' + \
                ', grantor=' + str(self.grantor) + \
                ', start=' + str(self.start) + \
-               ', state=' + ProvenanceCodes.NAMES[self.state] + \
-               ' (' + str(self.state) + ')' + \
                ', undone=' + str(self.undone)
 
     @classmethod
     def __get_current_start(cls, **kwargs):
         """
-        Get the last start time (that is not undone) for a given pair of keys.
+        Get the last start time for a given pair of keys.
 
         This is the timestamp of the record that represents current state.
 
@@ -744,7 +714,7 @@ class ProvenanceBase(models.Model):
             GroupResourceProvenance.__get_current_start(resource={X}, group={Y})
         """
         result = cls.objects\
-            .filter(undone=False, **kwargs)\
+            .filter(**kwargs)\
             .aggregate(Max('start'))
         # This can be None if there is no start pair
         return result['start__max']
@@ -801,32 +771,29 @@ class ProvenanceBase(models.Model):
         Add a provenance record to the provenance chain.
 
         The Provenance models are append-only tables, in the sense that no
-        record is ever deleted, but records are marked as `undone` when no
-        longer used. At any point in time the last record entered for a pair is binding.
-        Records are automatically timestamped to enforce this.
+        record is ever deleted or changed. At any point in time the last record
+        entered for a pair is binding.  Records are automatically timestamped to enforce this.
 
         Usage:
             UserResourceProvenance.update(resource={X}, user={Y}, privilege={Z}, ...)
             UserGroupProvenance.update(group={X}, user={Y}, privilege={Z}, ...)
             GroupResourceProvenance.update(resource={X}, group={Y}, privilege={Z}, ...)
         """
-        if 'state' not in kwargs or kwargs['state'] is None:
-            kwargs['state'] = ProvenanceCodes.REQUESTED
         cls.objects.create(**kwargs)
 
     @classmethod
-    def __get_undo_share_start(cls, **kwargs):
+    def __get_prev_start(cls, **kwargs):
         """
-        Get the previous start time for undo
+        Get the previous start time.
 
         An undo consists of backing up one time step from the current record to
         find the previous one. This is then reinstated as the current record by
-        creating a copy.
+        creating a copy. This can only be done once.
 
         Usage:
-            UserResourceProvenance.__get_undo_share_start(resource={X}, user={Y})
-            UserGroupProvenance.__get_undo_share_start(group={X}, user={Y})
-            GroupResourceProvenance.__get_undo_share_start(resource={X}, group={Y})
+            UserResourceProvenance.__get_prev_start(resource={X}, user={Y})
+            UserGroupProvenance.__get_prev_start(group={X}, user={Y})
+            GroupResourceProvenance.__get_prev_start(resource={X}, group={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
@@ -834,7 +801,6 @@ class ProvenanceBase(models.Model):
         if last is not None:
             result = cls.objects\
                 .filter(start__lt=last,
-                        undone=False,
                         **kwargs) \
                 .aggregate(Max('start'))
             return result['start__max']
@@ -842,22 +808,22 @@ class ProvenanceBase(models.Model):
             return None
 
     @classmethod
-    def __get_undo_share_record(cls, **kwargs):
+    def __get_prev_record(cls, **kwargs):
         """
         Get the previous privilege record for a given pair.
 
         This is the record that will be copied to reinstate its privilege after an undo.
 
         Usage:
-            UserResourceProvenance.__get_undo_share_record(resource={X}, user={Y})
-            UserGroupProvenance.__get_undo_share_record(group={X}, user={Y})
-            GroupResourceProvenance.__get_undo_share_record(resource={X}, group={Y})
+            UserResourceProvenance.__get_prev_record(resource={X}, user={Y})
+            UserGroupProvenance.__get_prev_record(group={X}, user={Y})
+            GroupResourceProvenance.__get_prev_record(resource={X}, group={Y})
         """
         if __debug__:
             assert len(kwargs) == 2
         # First, compute the latest start time for the privilege.
         # This is the start of the effective record.
-        start = cls.__get_undo_share_start(**kwargs)
+        start = cls.__get_prev_start(**kwargs)
 
         # Then, fetch that (hopefully) unique record(s). There is a small chance of non-uniqueness.
         if start is not None:
@@ -872,8 +838,6 @@ class ProvenanceBase(models.Model):
 
         To undo a change, one must find the last record and step back one time step.
         One must also prevent backstep records from themselves being backstepped.
-        Thus, one marks both the record being undone as "undone" and the action that undoes
-        it as "undone" so that neither record will be used for another "undo".
 
         Usage:
         ------
@@ -903,32 +867,26 @@ class ProvenanceBase(models.Model):
         grantor = kwargs['grantor']
         del kwargs['grantor']
         current = cls.get_current_record(**kwargs)
-        if current is None or current.state == ProvenanceCodes.INITIAL:
+        if current is None:
             raise PermissionDenied("No privilege to undo")
+        if current.undone:
+            raise PermissionDenied("Current privilege is already undone.")
         if current.grantor != grantor:
             raise PermissionDenied("Current user is not grantor")
 
-        previous = cls.__get_undo_share_record(**kwargs)
+        previous = cls.__get_prev_record(**kwargs)
         if previous is not None:
-
             # create a rollback record that reinstates the previous privilege.
             cls.update(privilege=previous.privilege,
                        grantor=previous.grantor,
-                       state=ProvenanceCodes.RESTORED,
+                       undone=True,
                        **kwargs)
-            # mark the reinstated record as reused and inactive.
-            previous.undone = True
-            previous.save()
         else:
             # put in a record revoking all privilege -- cannot be undone
             cls.update(privilege=PrivilegeCodes.NONE,
                        grantor=None,
-                       state=ProvenanceCodes.INITIAL,
+                       undone=True,
                        **kwargs)
-
-        # mark the current record as overridden so it won't be reinstated again.
-        current.undone = True
-        current.save()
 
     @classmethod
     def share(cls, **kwargs):
@@ -955,7 +913,7 @@ class ProvenanceBase(models.Model):
         Note that this does not modify the *Privilege class accordingly.
         That must be done separately.
         """
-        cls.update(state=ProvenanceCodes.REQUESTED, **kwargs)
+        cls.update(**kwargs)
 
     @classmethod
     def unshare(cls, **kwargs):
@@ -991,7 +949,7 @@ class ProvenanceBase(models.Model):
         That must be done separately.
 
         """
-        cls.update(state=ProvenanceCodes.REQUESTED, privilege=PrivilegeCodes.NONE, **kwargs)
+        cls.update(privilege=PrivilegeCodes.NONE, **kwargs)
 
 
 class UserGroupProvenance(ProvenanceBase):
@@ -1009,16 +967,7 @@ class UserGroupProvenance(ProvenanceBase):
     This is indistinguishable from having no record at all.  Thus, this provides a
     complete time-based journal of what privilege was in effect when.
 
-    Limited time-based undo is supported with an "state" variable. This allows one to undo
-    privileges one at a time in the order in which they were granted. Undo differs from
-    unshare in two important ways:
-
-    * It is unprivileged; one can undo anything one did, regardless of current privilege.
-
-    * It is limited to last operation performed on the pair.  If someone else asserts a
-      different privilege via share or unshare, this makes the undo impossible.
-
-    * Undo becomes possible again when the operations that came after it are undone.
+    An "undone" field allows one-step undo but prohibits further undo.
 
     """
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -1040,14 +989,10 @@ class UserGroupProvenance(ProvenanceBase):
                               help_text='group to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone
+                                null=True,
                                 editable=False,
                                 related_name='x2ugq',
                                 help_text='grantor of privilege')
-
-    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
-                                editable=False,
-                                default=ProvenanceCodes.REQUESTED)
 
     undone = models.BooleanField(editable=False, default=False)
 
@@ -1087,12 +1032,12 @@ class UserGroupProvenance(ProvenanceBase):
                                .annotate(start=Max('u2ugq__start'))\
                                .filter(u2ugq__start=F('start'),
                                        u2ugq__grantor=grantor,
-                                       u2ugq__state__lt=ProvenanceCodes.INITIAL)
+                                       u2ugq__undone=False)
         # launder out annotations used to select users
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
     @classmethod
-    def update(cls, group, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
+    def update(cls, group, user, privilege, grantor, undone=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -1104,13 +1049,12 @@ class UserGroupProvenance(ProvenanceBase):
             assert isinstance(user, User)
             assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
 
         super(UserGroupProvenance, cls).update(group=group,
                                                user=user,
                                                privilege=privilege,
                                                grantor=grantor,
-                                               state=state)
+                                               undone=undone)
 
 
 class UserResourceProvenance(ProvenanceBase):
@@ -1126,16 +1070,7 @@ class UserResourceProvenance(ProvenanceBase):
     This is indistinguishable from having no record at all.  Thus, this provides a
     time-based journal of what privilege was in effect when.
 
-    Limited time-based undo is supported with an "state" variable. This allows one to undo
-    privileges one at a time in the order in which they were granted. Undo differs from
-    unshare in two important ways:
-
-    * It is unprivileged; one can undo anything one did, regardless of current privilege.
-
-    * It is limited to last operation performed on the pair.  If someone else asserts a
-      different privilege via share or unshare, this makes the undo impossible.
-
-    * Undo becomes possible again when the operations that came after it are undone.
+    An "undone" field allows one-step undo but prohibits further undo.
     """
 
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -1157,14 +1092,10 @@ class UserResourceProvenance(ProvenanceBase):
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone
+                                null=True,
                                 editable=False,
                                 related_name='x2urq',
                                 help_text='grantor of privilege')
-
-    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
-                                editable=False,
-                                default=ProvenanceCodes.REQUESTED)
 
     undone = models.BooleanField(editable=False, default=False)
 
@@ -1194,12 +1125,12 @@ class UserResourceProvenance(ProvenanceBase):
                                .annotate(start=Max('u2urq__start'))\
                                .filter(u2urq__start=F('start'),
                                        u2urq__grantor=grantor,
-                                       u2urq__state__lte=ProvenanceCodes.RESTORED)
+                                       u2urq__undone=False)
         # launder out annotations used to select users
         return User.objects.filter(pk__in=selected).exclude(pk=grantor.pk)
 
     @classmethod
-    def update(cls, resource, user, privilege, grantor, state=ProvenanceCodes.REQUESTED):
+    def update(cls, resource, user, privilege, grantor, undone=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -1213,13 +1144,12 @@ class UserResourceProvenance(ProvenanceBase):
             assert isinstance(user, User)
             assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
 
         super(UserResourceProvenance, cls).update(resource=resource,
                                                   user=user,
                                                   privilege=privilege,
                                                   grantor=grantor,
-                                                  state=state)
+                                                  undone=undone)
 
 
 class GroupResourceProvenance(ProvenanceBase):
@@ -1239,16 +1169,8 @@ class GroupResourceProvenance(ProvenanceBase):
     This is indistinguishable from having no record at all.  Thus, this provides a
     time-based journal of what privilege was in effect when.
 
-    Limited time-based undo is supported with an "state" variable. This allows one to undo
-    privileges one at a time in the order in which they were granted. Undo differs from
-    unshare in two important ways:
+    An "undone" field allows one-step undo but prohibits further undo.
 
-    * It is unprivileged; one can undo anything one did, regardless of current privilege.
-
-    * It is limited to last operation performed on the pair.  If someone else asserts a
-      different privilege via share or unshare, this makes the undo impossible.
-
-    * Undo becomes possible again when the operations that came after it are undone.
     """
 
     privilege = models.IntegerField(choices=PrivilegeCodes.CHOICES,
@@ -1270,14 +1192,10 @@ class GroupResourceProvenance(ProvenanceBase):
                                  help_text='resource to which privilege applies')
 
     grantor = models.ForeignKey(User,
-                                null=True,  # NULL grantor cannot be undone
+                                null=True,
                                 editable=False,
                                 related_name='x2grq',
                                 help_text='grantor of privilege')
-
-    state = models.IntegerField(choices=ProvenanceCodes.CHOICES,
-                                editable=False,
-                                default=ProvenanceCodes.REQUESTED)
 
     undone = models.BooleanField(editable=False, default=False)
 
@@ -1309,13 +1227,13 @@ class GroupResourceProvenance(ProvenanceBase):
             .annotate(start=Max('g2grq__start'))\
             .filter(g2grq__start=F('start'),
                     g2grq__grantor=grantor,
-                    g2grq__state__lte=ProvenanceCodes.RESTORED)
+                    g2grq__undone=False)
 
         # launder out annotations used to select users
         return Group.objects.filter(pk__in=selected)
 
     @classmethod
-    def update(cls, resource, group, privilege, grantor, state=ProvenanceCodes.REQUESTED):
+    def update(cls, resource, group, privilege, grantor, undone=False):
         """
         Add a provenance record to the provenance chain.
 
@@ -1326,12 +1244,11 @@ class GroupResourceProvenance(ProvenanceBase):
             assert isinstance(group, Group)
             assert grantor is None or isinstance(grantor, User)
             assert privilege >= PrivilegeCodes.OWNER and privilege <= PrivilegeCodes.NONE
-            assert state >= ProvenanceCodes.REQUESTED and state <= ProvenanceCodes.INITIAL
         super(GroupResourceProvenance, cls).update(resource=resource,
                                                    group=group,
                                                    privilege=privilege,
                                                    grantor=grantor,
-                                                   state=state)
+                                                   undone=undone)
 
 
 class UserAccess(models.Model):
@@ -3144,7 +3061,7 @@ class UserAccess(models.Model):
     # "undo" system based upon provenance
     #######################
 
-    def get_group_undo_users(self, this_group):
+    def __get_group_undo_users(self, this_group):
         """
         Get a list of users whose privilege was granted by self and can be undone.
 
@@ -3162,8 +3079,7 @@ class UserAccess(models.Model):
 
             g = some_group
             u = some_user
-            undo_users = request_user.get_group_undo_users(g)
-            if u in undo_users:
+            if request_user.can_undo_share_group_with_user(g,u)
                 request_user.undo_share_group_with_user(g,u)
 
         """
@@ -3187,7 +3103,26 @@ class UserAccess(models.Model):
             return candidates
 
     def can_undo_share_group_with_user(self, this_group, this_user):
-        """ Check that a group share can be undone """
+        """
+        Check that a group share can be undone
+
+        :param this_group: group to check.
+        :param this_user: user to check.
+        :returns: Boolean
+
+        "undo_share" differs from "unshare" in that no special privilege is required to
+        "undo" a share; all that is required is that one granted the privilege initially.
+        Thus -- under freakish circumstances --  one can undo a share that one no
+        longer has the privilege to grant.
+
+        Usage:
+        ------
+
+            g = some_group
+            u = some_user
+            if request_user.can_undo_share_group_with_user(g,u)
+                request_user.undo_share_group_with_user(g,u)
+        """
         if __debug__:
             assert isinstance(this_group, Group)
             assert isinstance(this_user, User)
@@ -3199,7 +3134,7 @@ class UserAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("User is not active")
 
-        return this_user in self.get_group_undo_users(this_group)
+        return this_user in self.__get_group_undo_users(this_group)
 
     def undo_share_group_with_user(self, this_group, this_user):
         """
@@ -3221,8 +3156,7 @@ class UserAccess(models.Model):
 
             g = some_group
             u = some_user
-            undo_users = request_user.get_group_undo_users(g)
-            if u in undo_users:
+            if request_user.can_undo_share_group_with_user(g, u)
                 request_user.undo_share_group_with_user(g, u)
         """
 
@@ -3237,7 +3171,7 @@ class UserAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("User is not active")
 
-        qual_undo = self.get_group_undo_users(this_group)
+        qual_undo = self.__get_group_undo_users(this_group)
         if this_user in qual_undo:
             UserGroupPrivilege.undo_share(group=this_group, user=this_user, grantor=self.user)
         else:
@@ -3248,7 +3182,7 @@ class UserAccess(models.Model):
             else:
                 raise PermissionDenied("User did not grant last privilege")
 
-    def get_resource_undo_users(self, this_resource):
+    def __get_resource_undo_users(self, this_resource):
         """
         Get a list of users whose privilege was granted by self and can be undone.
 
@@ -3266,8 +3200,7 @@ class UserAccess(models.Model):
 
             g = some_resource
             u = some_user
-            undo_users = request_user.get_resource_undo_users(g)
-            if u in undo_users:
+            if request_user.can_undo_share_resource_with_user(g,u)
                 request_user.undo_share_resource_with_user(g,u)
 
         """
@@ -3299,7 +3232,7 @@ class UserAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("User is not active")
 
-        return this_user in self.get_resource_undo_users(this_resource)
+        return this_user in self.__get_resource_undo_users(this_resource)
 
     def undo_share_resource_with_user(self, this_resource, this_user):
         """
@@ -3321,8 +3254,7 @@ class UserAccess(models.Model):
 
             r = some_resource
             u = some_user
-            undo_users = request_user.get_resource_undo_users(r)
-            if u in undo_users:
+            if request_user.can_undo_share_resource_with_user(r, u)
                 request_user.undo_share_resource_with_user(r, u)
         """
 
@@ -3335,7 +3267,7 @@ class UserAccess(models.Model):
         if not this_user.is_active:
             raise PermissionDenied("User is not active")
 
-        qual_undo = self.get_resource_undo_users(this_resource)
+        qual_undo = self.__get_resource_undo_users(this_resource)
         if this_user in qual_undo:
             UserResourcePrivilege.undo_share(resource=this_resource,
                                              user=this_user,
@@ -3349,7 +3281,7 @@ class UserAccess(models.Model):
             else:
                 raise PermissionDenied("User did not grant last privilege")
 
-    def get_resource_undo_groups(self, this_resource):
+    def __get_resource_undo_groups(self, this_resource):
         """ get a list of groups that can be removed from resource privilege by self """
         """
         Get a list of users whose privilege was granted by self and can be undone.
@@ -3368,7 +3300,7 @@ class UserAccess(models.Model):
 
             r = some_resource
             g = some_group
-            undo_groups = request_user.get_resource_undo_groups(r)
+            undo_groups = request_user.__get_resource_undo_groups(r)
             if u in undo_groups:
                 request_user.undo_share_resource_with_group(r,g)
 
@@ -3392,7 +3324,7 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             raise PermissionDenied("Group is not active")
 
-        return this_group in self.get_resource_undo_groups(this_resource)
+        return this_group in self.__get_resource_undo_groups(this_resource)
 
     def undo_share_resource_with_group(self, this_resource, this_group):
         """
@@ -3414,8 +3346,7 @@ class UserAccess(models.Model):
 
             r = some_resource
             g = some_group
-            undo_groups = request_group.get_resource_undo_groups(r)
-            if g in undo_groups:
+            if request_user.can_undo_share_resource_with_group(r, g):
                 request_user.undo_share_resource_with_group(r, g)
         """
 
@@ -3428,7 +3359,7 @@ class UserAccess(models.Model):
         if not this_group.gaccess.active:
             raise PermissionDenied("Group is not active")
 
-        qual_undo = self.get_resource_undo_groups(this_resource)
+        qual_undo = self.__get_resource_undo_groups(this_resource)
         if this_group in qual_undo:
             GroupResourcePrivilege.undo_share(resource=this_resource,
                                               group=this_group,
@@ -3521,26 +3452,6 @@ class UserAccess(models.Model):
             return self.can_undo_share_group_with_user(kwargs['group'], kwargs['user'])
         else:
             raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
-
-    def get_undo_users(self, **kwargs):
-        """ this simple polymorphic routine simplifies getting various kinds of undo users """
-        if __debug__:
-            assert len(kwargs) == 1
-            assert 'resource' not in kwargs or isinstance(kwargs['resource'], BaseResource)
-            assert 'group' not in kwargs or isinstance(kwargs['group'], Group)
-        if 'resource' in kwargs:
-            return self.get_resource_undo_users(kwargs['resource'])
-        elif 'group' in kwargs:
-            return self.get_group_undo_users(kwargs['group'])
-        else:
-            raise PolymorphismError(str.format("No action for arguments {}", str(kwargs)))
-
-    def get_undo_groups(self, **kwargs):
-        """ this simple polymorphic routine simplifies getting various kinds of undo groups """
-        if __debug__:
-            assert len(kwargs) == 1
-            assert 'resource' in kwargs and isinstance(kwargs['resource'], BaseResource)
-        return self.get_resource_undo_groups(kwargs['resource'])
 
 
 class GroupMembershipRequest(models.Model):

@@ -33,28 +33,13 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(related_name='x2grq', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'grantor of privilege', null=True),
         ),
         migrations.AlterField(
-            model_name='groupresourceprovenance',
-            name='state',
-            field=models.IntegerField(default=1, editable=False, choices=[(1, b'Requested'), (2, b'Restored'), (3, b'Initial')]),
-        ),
-        migrations.AlterField(
             model_name='usergroupprovenance',
             name='grantor',
             field=models.ForeignKey(related_name='x2ugq', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'grantor of privilege', null=True),
         ),
         migrations.AlterField(
-            model_name='usergroupprovenance',
-            name='state',
-            field=models.IntegerField(default=1, editable=False, choices=[(1, b'Requested'), (2, b'Restored'), (3, b'Initial')]),
-        ),
-        migrations.AlterField(
             model_name='userresourceprovenance',
             name='grantor',
             field=models.ForeignKey(related_name='x2urq', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'grantor of privilege', null=True),
-        ),
-        migrations.AlterField(
-            model_name='userresourceprovenance',
-            name='state',
-            field=models.IntegerField(default=1, editable=False, choices=[(1, b'Requested'), (2, b'Restored'), (3, b'Initial')]),
         ),
     ]

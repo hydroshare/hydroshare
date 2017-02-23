@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import Group
+from django.core.exceptions import PermissionDenied
 
 from hs_access_control.models import \
     UserResourceProvenance, UserResourcePrivilege, \
@@ -186,18 +187,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers,
                 user=alva),
             PrivilegeCodes.NONE)
-        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
-        self.assertEqual(
-            UserGroupProvenance.get_privilege(
-                group=bikers,
-                user=alva),
-            PrivilegeCodes.CHANGE)
-        UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
-        self.assertEqual(
-            UserGroupProvenance.get_privilege(
-                group=bikers,
-                user=alva),
-            PrivilegeCodes.NONE)
+
+        # no further undo is possible.
+        with self.assertRaises(PermissionDenied):
+            UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
+        with self.assertRaises(PermissionDenied):
+            UserGroupProvenance.undo_share(group=bikers, user=alva, grantor=george)
+
         UserGroupProvenance.update(
             group=bikers,
             user=alva,
@@ -401,18 +397,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 user=alva),
             PrivilegeCodes.NONE)
-        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
-        self.assertEqual(
-            UserResourceProvenance.get_privilege(
-                resource=bikes,
-                user=alva),
-            PrivilegeCodes.CHANGE)
-        UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
-        self.assertEqual(
-            UserResourceProvenance.get_privilege(
-                resource=bikes,
-                user=alva),
-            PrivilegeCodes.NONE)
+
+        # further undo is prohibited
+        with self.assertRaises(PermissionDenied):
+            UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
+        with self.assertRaises(PermissionDenied):
+            UserResourceProvenance.undo_share(resource=bikes, user=alva, grantor=george)
+
         UserResourceProvenance.update(
             resource=bikes,
             user=alva,
@@ -616,18 +607,12 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 resource=bikes,
                 group=bikers),
             PrivilegeCodes.NONE)
-        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
-        self.assertEqual(
-            GroupResourceProvenance.get_privilege(
-                resource=bikes,
-                group=bikers),
-            PrivilegeCodes.CHANGE)
-        GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
-        self.assertEqual(
-            GroupResourceProvenance.get_privilege(
-                resource=bikes,
-                group=bikers),
-            PrivilegeCodes.NONE)
+
+        # further undos are prohibited
+        with self.assertRaises(PermissionDenied):
+            GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
+        with self.assertRaises(PermissionDenied):
+            GroupResourceProvenance.undo_share(resource=bikes, group=bikers, grantor=george)
         GroupResourceProvenance.update(
             resource=bikes,
             group=bikers,
@@ -715,44 +700,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                 group=bikers),
             PrivilegeCodes.CHANGE)
 
-    def test_get_group_undo_users(self):
-        george = self.george
-        bikers = self.bikers
-        alva = self.alva
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_undo_users(bikers), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_group_undo_users(bikers), []))
-        self.assertEqual(
-            UserGroupPrivilege.get_privilege(
-                group=bikers,
-                user=alva),
-            PrivilegeCodes.NONE)
-        george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.CHANGE)
-        self.assertEqual(
-            UserGroupPrivilege.get_privilege(
-                group=bikers,
-                user=alva),
-            PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_undo_users(bikers), [alva]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_group_undo_users(bikers), []))
-        george.uaccess.undo_share_group_with_user(bikers, alva)
-        self.assertEqual(
-            UserGroupPrivilege.get_privilege(group=bikers, user=alva),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_undo_users(bikers), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_group_undo_users(bikers), []))
-        george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
-        self.assertEqual(
-            UserGroupPrivilege.get_privilege(group=bikers, user=alva),
-            PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_undo_users(bikers), [alva]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_group_undo_users(bikers), []))
-        george.uaccess.undo_share_group_with_user(bikers, alva)
-        self.assertEqual(
-            UserGroupPrivilege.get_privilege(group=bikers, user=alva),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_group_undo_users(bikers), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_group_undo_users(bikers), []))
-
     def test_can_undo_share_group_with_user(self):
         george = self.george
         bikers = self.bikers
@@ -817,46 +764,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             UserGroupPrivilege.get_privilege(group=bikers, user=alva),
             PrivilegeCodes.NONE)
 
-    def test_get_resource_undo_users(self):
-        george = self.george
-        bikes = self.bikes
-        alva = self.alva
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_users(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_users(bikes), []))
-        self.assertEqual(
-            UserResourcePrivilege.get_privilege(
-                resource=bikes,
-                user=alva),
-            PrivilegeCodes.NONE)
-        george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.CHANGE)
-        self.assertEqual(
-            UserResourcePrivilege.get_privilege(
-                resource=bikes,
-                user=alva),
-            PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_users(bikes), [alva]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_users(bikes), []))
-        george.uaccess.undo_share_resource_with_user(bikes, alva)
-        self.assertEqual(
-            UserResourcePrivilege.get_privilege(resource=bikes, user=alva),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_users(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_users(bikes), []))
-        george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW)
-        self.assertEqual(
-            UserResourcePrivilege.get_privilege(resource=bikes, user=alva),
-            PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_users(bikes), [alva]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_users(bikes), []))
-        george.uaccess.undo_share_resource_with_user(bikes, alva)
-        self.assertEqual(
-            UserResourcePrivilege.get_privilege(
-                resource=bikes,
-                user=alva),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_users(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_users(bikes), []))
-
     def test_can_undo_share_resource_with_user(self):
         george = self.george
         bikes = self.bikes
@@ -920,49 +827,6 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             UserResourcePrivilege.get_privilege(resource=bikes, user=alva),
             PrivilegeCodes.NONE)
 
-    def test_get_resource_undo_groups(self):
-        george = self.george
-        bikes = self.bikes
-        bikers = self.bikers
-        alva = self.alva
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
-        self.assertEqual(
-            GroupResourcePrivilege.get_privilege(
-                resource=bikes,
-                group=bikers),
-            PrivilegeCodes.NONE)
-        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
-        self.assertEqual(
-            GroupResourcePrivilege.get_privilege(
-                resource=bikes,
-                group=bikers),
-            PrivilegeCodes.CHANGE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes),
-                                           [bikers]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
-        george.uaccess.undo_share_resource_with_group(bikes, bikers)
-        self.assertEqual(
-            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
-        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
-        self.assertEqual(
-            GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
-            PrivilegeCodes.VIEW)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes),
-                                           [bikers]))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
-        george.uaccess.undo_share_resource_with_group(bikes, bikers)
-        self.assertEqual(
-            GroupResourcePrivilege.get_privilege(
-                resource=bikes,
-                group=bikers),
-            PrivilegeCodes.NONE)
-        self.assertTrue(is_equal_to_as_set(george.uaccess.get_resource_undo_groups(bikes), []))
-        self.assertTrue(is_equal_to_as_set(alva.uaccess.get_resource_undo_groups(bikes), []))
-
     def test_can_undo_share_resource_with_group(self):
         george = self.george
         bikes = self.bikes
@@ -984,12 +848,18 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
             PrivilegeCodes.NONE)
         self.assertFalse(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertTrue(
+            GroupResourceProvenance.get_current_record(resource=bikes, group=bikers).undone)
+
         self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+
         george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.VIEW)
         self.assertEqual(
             GroupResourcePrivilege.get_privilege(resource=bikes, group=bikers),
             PrivilegeCodes.VIEW)
         self.assertTrue(george.uaccess.can_undo_share_resource_with_group(bikes, bikers))
+        self.assertFalse(
+            GroupResourceProvenance.get_current_record(resource=bikes, group=bikers).undone)
         self.assertFalse(alva.uaccess.can_undo_share_resource_with_group(bikes, bikers))
         george.uaccess.undo_share_resource_with_group(bikes, bikers)
         self.assertEqual(

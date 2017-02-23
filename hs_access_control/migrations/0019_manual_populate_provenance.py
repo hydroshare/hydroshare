@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import migrations
-from hs_access_control.models import ProvenanceCodes
 
 
 def populate_provenance(apps, schema_editor):
@@ -26,7 +25,7 @@ def populate_provenance(apps, schema_editor):
                                                start=r.start,
                                                privilege=r.privilege,
                                                grantor=r.grantor,
-                                               state=ProvenanceCodes.REQUESTED)
+                                               undone=False)
 
     for r in UserResourcePrivilege.objects.all():
         UserResourceProvenance.objects.create(user=r.user,
@@ -34,7 +33,7 @@ def populate_provenance(apps, schema_editor):
                                               start=r.start,
                                               privilege=r.privilege,
                                               grantor=r.grantor,
-                                              state=ProvenanceCodes.REQUESTED)
+                                              undone=False)
 
     for r in UserGroupPrivilege.objects.all():
         UserGroupProvenance.objects.create(user=r.user,
@@ -42,7 +41,7 @@ def populate_provenance(apps, schema_editor):
                                            start=r.start,
                                            privilege=r.privilege,
                                            grantor=r.grantor,
-                                           state=ProvenanceCodes.REQUESTED)
+                                           undone=False)
 
 
 class Migration(migrations.Migration):
