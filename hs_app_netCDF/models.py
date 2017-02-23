@@ -102,6 +102,29 @@ class OriginalCoverage(AbstractMetaDataElement):
             kwargs['_value'] = value_json
             super(OriginalCoverage, cls).update(element_id, **kwargs)
 
+    def get_html_form(self, resource):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
+        from .forms import OriginalCoverageForm
+
+        ori_coverage_data_dict = dict()
+        ori_coverage_data_dict['projection'] = self.value.get('projection', None)
+        ori_coverage_data_dict['datum'] = self.datum
+        ori_coverage_data_dict['projection_string_type'] = self.projection_string_type
+        ori_coverage_data_dict['projection_string_text'] = self.projection_string_text
+        ori_coverage_data_dict['units'] = self.value['units']
+        ori_coverage_data_dict['northlimit'] = self.value['northlimit']
+        ori_coverage_data_dict['eastlimit'] = self.value['eastlimit']
+        ori_coverage_data_dict['southlimit'] = self.value['southlimit']
+        ori_coverage_data_dict['westlimit'] = self.value['westlimit']
+
+        originalcov_form = OriginalCoverageForm(
+            initial=ori_coverage_data_dict, allow_edit=True,
+            res_short_id=resource.short_id if resource else None,
+            element_id=self.id if self else None)
+
+        return originalcov_form
+
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 

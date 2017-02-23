@@ -2,19 +2,25 @@ import os
 import shutil
 import logging
 
+from functools import partial, wraps
 import netCDF4
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
+from django.forms.models import formset_factory, BaseFormSet
 
 from dominate.tags import div, legend, form, button, p, textarea
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.models import Coverage
+from hs_core.forms import CoverageTemporalForm
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
+from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
+
 from base import AbstractFileMetaData, AbstractLogicalFile
 import hs_file_types.nc_functions.nc_utils as nc_utils
 import hs_file_types.nc_functions.nc_dump as nc_dump
@@ -73,6 +79,148 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         template = Template(html_string)
         context = Context({})
         return template.render(context)
+
+    def get_html_forms(self, datatset_name_form=True):
+        """overrides the base class function"""
+
+        root_div = div("{% load crispy_forms_tags %}")
+        with root_div:
+            super(NetCDFFileMetaData, self).get_html_forms()
+            with div(cls="well", id="temporal-coverage"):
+                with div(cls="col-lg-12 col-xs-12"):
+                    with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% crispy temp_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       style="display: none;",
+                                       onclick="metadata_update_ajax_submit("
+                                               "'id-coverage_temporal-file-type'); return false;")
+            with div(cls="col-lg-6 col-xs-12"):
+                with form(id="id-origcoverage-file-type",
+                          action="{{ orig_coverage_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy orig_coverage_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;",
+                                   onclick="metadata_update_ajax_submit("
+                                           "'id-origcoverage-file-type'); return false;")
+
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy spatial_coverage_form %}")
+
+            with div(cls="pull-left col-sm-12"):
+                with div(cls="well", id="variables"):
+                    with div(cls="row"):
+                        div("{% for form in variable_formset_forms %}")
+                        with div(cls="col-sm-6 col-xs-12"):
+                            with form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% crispy form %}")
+                                with div(cls="row", style="margin-top:10px;"):
+                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                 "col-md-2 col-xs-6"):
+                                        button("Save changes", type="button",
+                                               cls="btn btn-primary pull-right",
+                                               style="display: none;",
+                                               onclick="metadata_update_ajax_submit({{ "
+                                                       "form.form_id_button }}); return false;")
+                        div("{% endfor %}")
+
+        template = Template(root_div.render())
+        temp_cov_form = self.get_temporal_coverage_form()
+        update_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        create_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/add-file-metadata/"
+        if self.temporal_coverage:
+            temp_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.temporal_coverage.id)
+        else:
+            temp_action = create_action.format(self.logical_file.id, "coverage")
+
+        temp_cov_form.action = temp_action
+
+        orig_cov_form = self.originalCoverage.get_html_form(resource=None)
+        update_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        create_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/add-file-metadata/"
+        if self.originalCoverage:
+            temp_action = update_action.format(self.logical_file.id, "originalcoverage",
+                                               self.originalCoverage.id)
+        else:
+            temp_action = create_action.format(self.logical_file.id, "originalcoverage")
+
+        orig_cov_form.action = temp_action
+
+        # TODO: No editing allowed for spatial coverage - check with Tian if editing should be
+        # allowed
+        spatial_cov_form = self.get_spatial_coverage_form()
+
+        context_dict = dict()
+        context_dict["temp_form"] = temp_cov_form
+        context_dict["orig_coverage_form"] = orig_cov_form
+        context_dict["spatial_coverage_form"] = spatial_cov_form
+        context_dict["variable_formset_forms"] = self.get_variable_formset().forms
+        context = Context(context_dict)
+        rendered_html = template.render(context)
+        rendered_html = self.update_coverage_forms_ids(rendered_html)
+        return rendered_html
+
+    def get_spatial_coverage_form(self):
+        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
+                                              allow_edit=False)
+
+    def get_temporal_coverage_form(self):
+        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
+
+    def get_variable_formset(self):
+        VariableFormSetEdit = formset_factory(
+            wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
+            formset=BaseFormSet, extra=0)
+        variable_formset = VariableFormSetEdit(
+            initial=self.variables.all().values(), prefix='Variable')
+
+        for frm in variable_formset.forms:
+            if len(frm.initial) > 0:
+                frm.action = "/hsapi/_internal/%s/%s/variable/%s/update-file-metadata/" % (
+                    "NetCDFLogicalFile", self.logical_file.id, frm.initial['id'])
+                frm.number = frm.initial['id']
+
+        return variable_formset
+
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        """overriding the base class method"""
+
+        if element_name.lower() not in [el_name.lower() for el_name
+                                        in cls.get_supported_element_names()]:
+            err_msg = "{} is nor a supported metadata element for NetCDF file type"
+            err_msg = err_msg.format(element_name)
+            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+        element_name = element_name.lower()
+        if element_name == 'variable':
+            form_data = {}
+            for field_name in VariableValidationForm().fields:
+                matching_key = [key for key in request.POST if '-' + field_name in key][0]
+                form_data[field_name] = request.POST[matching_key]
+            element_form = VariableValidationForm(form_data)
+        elif element_name == 'originalcoverage':
+            element_form = OriginalCoverageForm(data=request.POST)
+
+        else:
+            # element_name must be coverage
+            # here we are assuming temporal coverage
+            element_form = CoverageTemporalForm(data=request.POST)
+
+        if element_form.is_valid():
+            return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        else:
+            return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 class NetCDFLogicalFile(AbstractLogicalFile):
