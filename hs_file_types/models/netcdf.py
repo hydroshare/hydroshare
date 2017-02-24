@@ -62,20 +62,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             html_string += variable.get_html()
 
         # ncdump text from the txt file
-        nc_dump_res_file = None
-        for f in self.logical_file.files.all():
-            if f.extension == ".txt":
-                nc_dump_res_file = f
-                break
-        if nc_dump_res_file is not None:
-            nc_dum_div = div(style="clear: both", cls="col-xs-12")
-            with nc_dum_div:
-                legend("NetCDF Header Information")
-                p(nc_dump_res_file.full_path[33:])
-                textarea(nc_dump_res_file.resource_file.read(), readonly="", rows="15",
-                         cls="input-xlarge", style="min-width: 100%")
-
-            html_string += nc_dum_div.render()
+        html_string += self.get_ncdump_html().render()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
@@ -133,6 +120,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                                onclick="metadata_update_ajax_submit({{ "
                                                        "form.form_id_button }}); return false;")
                         div("{% endfor %}")
+
+            self.get_ncdump_html()
 
         template = Template(root_div.render())
         temp_cov_form = self.get_temporal_coverage_form()
@@ -192,6 +181,25 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                 frm.number = frm.initial['id']
 
         return variable_formset
+
+    def get_ncdump_html(self):
+        # ncdump text from the txt file
+        # the generated html used both in view and edit mode
+        nc_dum_div = div()
+        nc_dump_res_file = None
+        for f in self.logical_file.files.all():
+            if f.extension == ".txt":
+                nc_dump_res_file = f
+                break
+        if nc_dump_res_file is not None:
+            nc_dum_div = div(style="clear: both", cls="col-xs-12")
+            with nc_dum_div:
+                legend("NetCDF Header Information")
+                p(nc_dump_res_file.full_path[33:])
+                textarea(nc_dump_res_file.resource_file.read(), readonly="", rows="15",
+                         cls="input-xlarge", style="min-width: 100%")
+
+        return nc_dum_div
 
     @classmethod
     def validate_element_data(cls, request, element_name):
