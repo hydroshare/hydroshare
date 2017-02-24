@@ -9,7 +9,7 @@ from django.forms.models import model_to_dict
 from django.contrib.postgres.fields import HStoreField, ArrayField
 
 from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
-    textarea, h4, input
+    textarea, h4, input, ul, li, p
 
 from lxml import etree
 
@@ -51,6 +51,7 @@ class AbstractFileMetaData(models.Model):
         Subclass must override to include additional html for additional metadata it supports.
         """
 
+        root_div = div()
         dataset_name_div = div()
         if self.logical_file.dataset_name:
             with dataset_name_div:
@@ -59,11 +60,21 @@ class AbstractFileMetaData(models.Model):
                         with tr():
                             th("Title", cls="text-muted")
                             td(self.logical_file.dataset_name)
+        keywords_div = div()
+        if self.keywords:
+            keywords_div = div(cls="col-sm-12 content-block")
+            with keywords_div:
+                legend('Keywords')
+                with div(cls="tags"):
+                    with ul(id="list-keywords-file-type", cls="tag-list custom-well"):
+                        for kw in self.keywords:
+                            with li():
+                                a(kw, cls="tag")
 
+        extra_metadata_div = div()
         if self.extra_metadata:
-            root_div = div(cls="col-sm-12 content-block")
-            root_div.add(dataset_name_div)
-            with root_div:
+            extra_metadata_div = div(cls="col-sm-12 content-block")
+            with extra_metadata_div:
                 legend('Extended Metadata')
                 with table(cls="table table-striped funding-agencies-table"):
                     with tbody():
@@ -75,9 +86,14 @@ class AbstractFileMetaData(models.Model):
                                 td(k)
                                 td(v)
 
-            return root_div.render()
-        else:
-            return dataset_name_div.render()
+        if self.logical_file.dataset_name:
+            root_div.add(dataset_name_div)
+        if self.keywords:
+            root_div.add(keywords_div)
+        if self.extra_metadata:
+            root_div.add(extra_metadata_div)
+
+        return root_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
         """generates html forms for all the metadata elements associated with this logical file
@@ -99,45 +115,90 @@ class AbstractFileMetaData(models.Model):
         with root_div:
             if datatset_name_form:
                 self._get_dataset_name_form()
-            if self.extra_metadata:
-                root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
-                with root_div_extra:
-                    legend('Extended Metadata')
-                    get_add_keyvalue_button()
-                    with table(cls="table table-striped funding-agencies-table"):
-                        with tbody():
-                            with tr(cls="header-row"):
-                                th("Key")
-                                th("Value")
-                                th("Edit/Remove")
-                            counter = 0
-                            for k, v in self.extra_metadata.iteritems():
-                                counter += 1
-                                with tr(data_key=k):
-                                    td(k)
-                                    td(v)
-                                    with td():
-                                        a(data_toggle="modal", data_placement="auto", title="Edit",
-                                          cls="glyphicon glyphicon-pencil icon-button icon-blue",
-                                          data_target="#edit-keyvalue-filetype-modal"
-                                                      "-{}".format(counter))
-                                        a(data_toggle="modal", data_placement="auto",
-                                          title="Remove",
-                                          cls="glyphicon glyphicon-trash icon-button btn-remove",
-                                          data_target="#delete-keyvalue-filetype-modal"
-                                                      "-{}".format(counter))
 
-                    self._get_add_key_value_modal_form()
-                    self._get_edit_key_value_modal_forms()
-                    self._get_delete_key_value_modal_forms()
-                return root_div
-            else:
-                root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
-                with root_div_extra:
-                    legend('Extended Metadata')
-                    get_add_keyvalue_button()
-                    self._get_add_key_value_modal_form()
-                return root_div
+            keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
+            action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
+            action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+            delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
+            delete_action = delete_action.format(self.logical_file.__class__.__name__,
+                                                 self.logical_file.id)
+            with keywords_div:
+                legend("Keywords")
+                with form(id="id-keywords-filetype", action=action, method="post",
+                          enctype="multipart/form-data"):
+
+                    input(id="id-delete-keyword-filetype-action", type="hidden",
+                          value=delete_action)
+                    with div(cls="tags"):
+                        with div(id="add-keyword-wrapper", cls="input-group"):
+                            input(id="txt-keyword-filetype", cls="form-control",
+                                  placeholder="keyword",
+                                  type="text", name="keywords")
+                            with span(cls="input-group-btn"):
+                                a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
+                                  type="button")
+                    with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
+                        for kw in self.keywords:
+                            with li(cls="tag"):
+                                span(kw)
+                                with a():
+                                    span(cls="glyphicon glyphicon-remove-circle icon-remove")
+                p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
+                  cls="text-danger small", style="display: none;")
+            if self.extra_metadata:
+                self.get_extra_metadata_html_form()
+
+        return root_div
+
+    def get_extra_metadata_html_form(self):
+        def get_add_keyvalue_button():
+            add_key_value_btn = a(cls="btn btn-success", type="button", data_toggle="modal",
+                                  data_target="#add-keyvalue-filetype-modal",
+                                  style="margin-bottom:20px;")
+            with add_key_value_btn:
+                with span(cls="glyphicon glyphicon-plus"):
+                    span("Add Key/Value", cls="button-label")
+            return add_key_value_btn
+
+        if self.extra_metadata:
+            root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
+            with root_div_extra:
+                legend('Extended Metadata')
+                get_add_keyvalue_button()
+                with table(cls="table table-striped funding-agencies-table"):
+                    with tbody():
+                        with tr(cls="header-row"):
+                            th("Key")
+                            th("Value")
+                            th("Edit/Remove")
+                        counter = 0
+                        for k, v in self.extra_metadata.iteritems():
+                            counter += 1
+                            with tr(data_key=k):
+                                td(k)
+                                td(v)
+                                with td():
+                                    a(data_toggle="modal", data_placement="auto", title="Edit",
+                                      cls="glyphicon glyphicon-pencil icon-button icon-blue",
+                                      data_target="#edit-keyvalue-filetype-modal"
+                                                  "-{}".format(counter))
+                                    a(data_toggle="modal", data_placement="auto",
+                                      title="Remove",
+                                      cls="glyphicon glyphicon-trash icon-button btn-remove",
+                                      data_target="#delete-keyvalue-filetype-modal"
+                                                  "-{}".format(counter))
+
+                self._get_add_key_value_modal_form()
+                self._get_edit_key_value_modal_forms()
+                self._get_delete_key_value_modal_forms()
+            return root_div_extra
+        else:
+            root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
+            with root_div_extra:
+                legend('Extended Metadata')
+                get_add_keyvalue_button()
+                self._get_add_key_value_modal_form()
+            return root_div_extra
 
     def update_coverage_forms_ids(self, rendered_html):
         # file level form field ids need to changed so that they are different from

@@ -443,6 +443,8 @@ function showFileTypeMetadata(){
          var json_response = JSON.parse(result);
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+         $(".icon-remove").click(onRemoveKeywordFileType);
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields();
@@ -1214,6 +1216,7 @@ $(document).ready(function () {
              var json_response = JSON.parse(result);
              $("#fileTypeMetaDataTab").html(json_response.metadata);
              $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+             $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
              showMetadataFormSaveChangesButton();
              initializeDatePickers();
 

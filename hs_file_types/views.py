@@ -268,7 +268,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     logical_file.metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms(datatset_name_form=False)
+                               logical_file.metadata).get_extra_metadata_html_form()
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
@@ -304,7 +304,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         resource_modified(resource, request.user, overwrite_bag=False)
 
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms(datatset_name_form=False)
+                               logical_file.metadata).get_extra_metadata_html_form()
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
@@ -312,6 +312,85 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
                           'extra_metadata': rendered_html,
                           'message': "Delete was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """adds one or more keywords for a given logical file
+    data for keywords is expected as part of the request.POST
+    multiple keywords are part of the post data in a comma separated format
+    If any of the keywords to be added already exists (case insensitive check) then none of
+    the posted keywords is added
+    NOTE: This view function must be called via ajax call
+    """
+
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    keywords = request.POST['keywords']
+    keywords = keywords.split(",")
+    existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
+    if not any(kw.lower() in keywords for kw in existing_keywords):
+        logical_file.metadata.keywords += keywords
+        logical_file.metadata.save()
+        resource_modified(resource, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'added_keywords': keywords,
+                              'message': "Add was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    else:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Keyword already exists"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """deletes a keyword for a given logical file
+    The keyword to be deleted is expected as part of the request.POST
+    NOTE: This view function must be called via ajax call
+    """
+
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    keyword = request.POST['keyword']
+    existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
+    if keyword.lower() in existing_keywords:
+        logical_file.metadata.keywords = [kw for kw in logical_file.metadata.keywords if
+                                          kw.lower() != keyword.lower()]
+        logical_file.metadata.save()
+        resource_modified(resource, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'deleted_keyword': keyword,
+                              'message': "Add was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    else:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Keyword was not found"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
 @login_required

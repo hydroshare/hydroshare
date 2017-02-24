@@ -614,6 +614,48 @@ function get_file_type_metadata_ajax_submit(url) {
     });
 }
 
+function filetype_keywords_update_ajax_submit() {
+    $form = $('#id-keywords-filetype');
+    var datastring = $form.serialize();
+    $.ajax({
+        type: "POST",
+        url: $form.attr('action'),
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                var keywords = json_response.added_keywords;
+                // add each of the newly added keywords as new li element for display
+                for (var i = 0; i < keywords.length; i++) {
+                    var li = $("<li class='tag'><span></span></li>");
+                    li.find('span').text(keywords[i]);
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+                    $("#lst-tags-filetype").append(li);
+                    $(".icon-remove").click(onRemoveKeywordFileType);
+                }
+            }
+        }
+    });
+}
+
+function filetype_keyword_delete_ajax_submit(keyword, tag) {
+    var datastring = 'keyword=' + keyword;
+    var url = $('#id-delete-keyword-filetype-action').val();
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                // remove the li element containing the deleted keyword
+                tag.remove();
+            }
+        }
+    });
+}
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");

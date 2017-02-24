@@ -1278,6 +1278,46 @@
             $("#id-subject").find("#id_value").val(keywords);
         }
 
+        // function for adding keywords associated with file type
+        function onAddKeywordFileType(event) {
+            var keyword = $("#txt-keyword-filetype").val();
+            keyword = keyword.split(",");
+            var existsNewKeywords = false;
+            for (var i = 0; i < keyword.length; i++) {
+                keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
+                var exists = false;
+                // Check if the keyword already exists
+                for (var x = 0; x < $("#lst-tags-filetype").find(".tag > span").length; x++) {
+                    if ($($("#lst-tags-filetype").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
+                        exists = true;
+                    }
+                }
+                if (exists){
+                    $("#id-keywords-filetype-msg").show();
+                }
+                else {
+                    $("#id-keywords-filetype-msg").hide();
+                }
+                // If does not exist, add it
+                if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
+                    existsNewKeywords = true;
+                }
+            }
+
+            if(existsNewKeywords){
+                filetype_keywords_update_ajax_submit();
+                $("#txt-keyword-filetype").val("");  // Clear text input
+            }
+        }
+
+        // function for deleteing keywords associated with file type
+        function onRemoveKeywordFileType(event) {
+            var tag = $(event.target).closest(".tag");
+            var keyword = tag.find('span').text();
+            filetype_keyword_delete_ajax_submit(keyword, tag);
+            $("#id-keywords-filetype-msg").hide();
+        }
+
         function customAlert(msg, duration) {
             var el = document.createElement("div");
             var top = 200;
