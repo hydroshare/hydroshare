@@ -103,13 +103,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             utils.resource_file_add_process(resource=self.resRaster, files=files,
                                             user=self.user, extract_metadata=False)
 
-        # trying to add bad .zip file should raise file validation error
-        files = [UploadedFile(file=self.raster_bad_zip_file_obj,
-                              name=self.raster_bad_zip_file_name)]
-        with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
-                                                user=self.user, extract_metadata=False)
-
         # trying to add good .tif file should pass the file check
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
         utils.resource_file_add_pre_process(resource=self.resRaster, files=files,

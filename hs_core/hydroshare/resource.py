@@ -498,7 +498,7 @@ def copy_resource(ori_res, new_res):
         new_res.resources = ori_res.resources.all()
 
     # create bag for the new resource
-    hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
+    hs_bagit.create_bag(new_res)
 
     return new_res
 
@@ -523,12 +523,6 @@ def create_new_version_resource(ori_res, new_res, user):
 
     # add files directly via irods backend file operation
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
-
-    # link copied resource files to Django resource model
-    files = ResourceFile.objects.filter(object_id=ori_res.id)
-    for n, f in enumerate(files):
-        folder, base = f.parse()
-        ResourceFile.create(new_res, base, folder=folder)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     utils.copy_and_create_metadata(ori_res, new_res)

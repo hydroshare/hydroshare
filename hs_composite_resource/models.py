@@ -132,10 +132,10 @@ class CompositeResource(BaseResource):
         if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file__name__startswith=full_path).all()
+                fed_resource_file__startswith=full_path).all()
         else:
             res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__name__startswith=full_path).all()
+                                                 resource_file__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:

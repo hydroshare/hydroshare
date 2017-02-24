@@ -444,7 +444,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
         map_logical_files[src_logical_file] = src_logical_file.get_copy()
 
     for n, f in enumerate(files):
-        folder, base = os.split(f.short_path)  # strips object information.
+        folder, base = os.path.split(f.short_path)  # strips object information.
         # this form of ResourceFile.create creates a reference to an existing file in iRODS
         new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
 

@@ -1867,7 +1867,7 @@ class ResourceFile(models.Model):
 
     # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
     # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    # DEPRECATED: use native size() routine
+    # DEPRECATED: use native size routine
     # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
@@ -1987,12 +1987,12 @@ class ResourceFile(models.Model):
             if __debug__:
                 assert self.resource_file.name is None or \
                        self.resource_file.name == ''
-            return self.fed_resource_file.size()
+            return self.fed_resource_file.size
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
                        self.fed_resource_file.name == ''
-            return self.resource_file.size()
+            return self.resource_file.size
 
     # TODO: write unit test
     @property
