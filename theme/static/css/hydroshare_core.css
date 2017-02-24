@@ -4479,7 +4479,7 @@ div#fb-file-operations-controls {
 .stepper {
     background-color: #fff;
     margin-bottom: 20px;
-	border: 1px solid #fafafa;
+	border: 0;
     border-radius: 3px;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
@@ -4508,8 +4508,8 @@ div#fb-file-operations-controls {
 	height: 100%;
 }
 
-.stepper-step:not(.stepper-step-isDisabled):hover,
-.stepper-step:not(.stepper-step-isDisabled):hover .stepper-stepContent {
+.stepper-step:not(.stepper-step-isDisabled):not(.stepper-step-isActive):hover,
+.stepper-step:not(.stepper-step-isDisabled):not(.stepper-step-isActive):hover .stepper-stepContent {
 	background-color: #F5F5F5;
 }
 
@@ -4568,14 +4568,9 @@ div#fb-file-operations-controls {
     font-size: 12px;
 }
 
-.stepper-step-isActive .stepper-stepMarker {
-    background-color: #2196F3;
-}
-
-.stepper-step-isValid .stepper-stepMarker {
-    text-indent: -10000px;
-    background-position: 2px 1px;
-    background-color: #2196F3;
+.stepper-step-isActive .stepper-stepMarker, .stepper-step-isValid .stepper-stepMarker {
+    background-image: -webkit-linear-gradient(#1cafff, #0086ce);
+    background-image: linear-gradient(#1cafff, #0086ce);
 }
 
  /*colored block to cover the connector line where needed*/
@@ -4596,6 +4591,7 @@ div#fb-file-operations-controls {
 .stepper-content #hsDropzone {
 	border: 1px dashed #777;
 	height: 300px;
+    cursor: pointer;
 }
 
 .stepper-content .resource-title {
@@ -4616,6 +4612,10 @@ div#fb-file-operations-controls {
 	-ms-transition: box-shadow 0.3s;
 }
 
+.stepper-content .resource-type.selected {
+    background-color: #F5F5F5;
+}
+
 .stepper-content[data-step="1"] .resource-type {
 	margin: 5px;
 }
@@ -4634,3 +4634,13 @@ div#fb-file-operations-controls {
     display: inline-block;
 }
 
+#btn-next-step, #btn-previous-step {
+    width: 100px;
+}
+
+.stepper-content #hsDropzone .caption {
+    position: absolute;
+    left: calc(50% - 125px);
+    top: calc(50% - 110px);
+    z-index: -1;
+}

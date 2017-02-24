@@ -41,7 +41,7 @@
             </div>
 
             <div class="stepper-actions col-xs-12">
-                <span id="btn-previous-step" class="btn btn-default">Back</span>
+                <span id="btn-previous-step" class="btn btn-default" disabled>Back</span>
                 <span id="btn-next-step" class="btn btn-info pull-right ">Continue</span>
                 <hr>
             </div>
@@ -76,7 +76,7 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">General</div>
                             <div class="panel-body">
-                                <div class="resource-type" data-value="GenericResource">
+                                <div class="resource-type selected" data-value="GenericResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                          alt="Generic Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Generic</div>
@@ -201,6 +201,7 @@
                     <label for="title" class="col-xs-12 col-form-label">Title</label>
                     <div class="col-xs-12">
                         <input id="txtTitle" placeholder="Untitled Resource" class="form-control" type="text">
+                        <small class="text-muted">Press Enter to continue</small>
                     </div>
                 </div>
             </div>
@@ -218,11 +219,10 @@
                             <br>
 
                             <h3 class="resource-title">Resource Title Here</h3>
-
                         </div>
 
                         <div class="col-xs-12 col-sm-7">
-                            <form id="hsDropzone" role="form" method="POST" enctype="multipart/form-data"
+                            <form id="hsDropzone" class="dropzone" role="form" method="POST" enctype="multipart/form-data"
                                   action="/hsapi/_internal/create-resource/do/">
                                 {% csrf_token %}
                                 <div class="caption">
@@ -230,6 +230,9 @@
                                     </h2>
                                     <h4 class="text-center text-muted"> Drop files here or click to upload.</h4>
                                 </div>
+
+                                <input id="form-title" type="hidden" name="title" value=""/>
+                                <input id="form-resource-type" type="hidden" name="resource-type" value="GenericResource"/>
                             </form>
 
                             <br>
@@ -240,7 +243,6 @@
                                     <li id="file-multiple">Multiple file upload is allowed.</li>
                                 </ul>
                             </div>
-
 
                             <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will
                                 move
@@ -458,16 +460,36 @@
             var currentStep = parseInt($(".stepper-step-isActive").attr("data-step"));
             var maxSteps = $(".stepper-step").length;
             currentStep = Math.min(currentStep + 1, maxSteps);
+
             setStep(currentStep);
         }
 
         function previousStep() {
             var currentStep = parseInt($(".stepper-step-isActive").attr("data-step"));
             var stepNumber = Math.max(currentStep - 1, 1);
+
             setStep(stepNumber);
         }
 
         function setStep(value) {
+            var minStep = 1;
+            var maxStep = $(".stepper-step").length;
+
+            if (value == minStep) {
+                $("#btn-previous-step").attr("disabled", true);
+            }
+            else {
+                $("#btn-previous-step").attr("disabled", false);
+            }
+
+            if (value == maxStep) {
+                $("#btn-next-step").attr("disabled", true);
+            }
+            else {
+                $("#btn-next-step").attr("disabled", false);
+            }
+
+
             $(".stepper-content").addClass("hidden");
             $(".stepper-content[data-step='" + value + "']").removeClass("hidden");
 
@@ -484,26 +506,29 @@
                 if (stepNumber < value) {
                     $(step).removeClass("stepper-step-isActive");
                     $(step).addClass("stepper-step-isValid");
+{#                    $(step).removeClass("stepper-step-isDisabled");#}
                 }
                 else if (stepNumber > value) {
                     $(step).removeClass("stepper-step-isActive");
                     $(step).removeClass("stepper-step-isValid");
+{#                    $(step).addClass("stepper-step-isDisabled");#}
                 }
                 else {
                     $(step).addClass("stepper-step-isActive");
                     $(step).removeClass("stepper-step-isValid");
+{#                    $(step).removeClass("stepper-step-isDisabled");#}
                 }
             });
         }
 
         function setTitle() {
             var title = $("#txtTitle").val();
-            if (title.length) {
-                $(".resource-title").text(title);
+            if (!title.length) {
+                title = $("#txtTitle").attr("placeholder");
             }
-            else {
-                $(".resource-title").text($("#txtTitle").attr("placeholder"));
-            }
+
+            $(".resource-title").text(title);
+            $("#form-title").val(title);
         }
 
         $(document).ready(function () {
@@ -537,13 +562,13 @@
             });
 
             $(".stepper-step").click(function () {
-                if ($(this).hasClass("stepper-step-isValid")) {
-                    var stepNumber = parseInt($(this).attr("data-step"));
-                    setStep(stepNumber);
-                }
+                var stepNumber = parseInt($(this).attr("data-step"));
+                setStep(stepNumber);
             });
 
             $('.stepper-content[data-step="1"] .resource-type').click(function () {
+                $('.stepper-content .resource-type').removeClass("selected");
+                $(this).addClass("selected");
                 $('#select-file').value = '';
                 $('#select-file').attr('value', '');
                 $('#irods-sel-file').text("No file selected.");
@@ -553,6 +578,7 @@
                 }
 
                 var selected = $('.stepper-content .selected-type');
+                $("#form-resource-type").val($(this).attr("data-value"));
 
                 var template = this.innerHTML;
                 selected.each(function (i, obj) {
@@ -641,7 +667,120 @@
                         $('#file-type-error').text('');
                     }
                 }
-            })
+            });
+
+            Dropzone.options.hsDropzone = {
+            paramName: "files", // The name that will be used to transfer the file
+{#            clickable: "#upload-toggle",#}
+{#            previewsContainer: "#previews", // Define the container to display the previews#}
+            maxFilesize: 1024, // MB
+{#            acceptedFiles: acceptedFiles,#}
+{#            maxFiles: allowMultiple,#}
+            autoProcessQueue: false,
+{#            uploadMultiple: true,#}
+{#            parallelUploads : 10,#}
+            error: function (file, response) {
+                // console.log(response);
+            },
+            success: function (file, response) {
+                // console.log(response);
+            },
+            init: function () {
+                // The user dragged a file onto the Dropzone
+                this.on("dragenter", function (file) {
+{#                    $(".fb-drag-flag").show();#}
+{#                    $("#hsDropzone").toggleClass("glow-blue", true);#}
+                });
+
+                this.on("drop", function (event) {
+{#                    var myDropzone = this;#}
+{#                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.#}
+{#                    (function () {#}
+{#                        // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds#}
+{#                        if (myDropzone.files.length > 0) {#}
+{#                            myDropzone.processQueue();#}
+{#                            myDropzone.options.autoProcessQueue = true; // Restore autoprocess#}
+{#                            return;#}
+{#                        }#}
+{#                        setTimeout(arguments.callee, 200);#}
+{#                    })();#}
+                });
+
+                // The user dragged a file out of the Dropzone
+                this.on("dragleave", function (event) {
+{#                    $(".fb-drag-flag").hide();#}
+{#                    $("#hsDropzone").toggleClass("glow-blue", false);#}
+                });
+
+                // When a file is added to the list
+                this.on("addedfile", function (file) {
+{#                    $(".fb-drag-flag").hide();#}
+{#                    // console.log(file);#}
+                });
+
+                // When a file gets processed
+                this.on("processing", function (file) {
+{#                    if (!$("#flag-uploading").length) {#}
+{#                        $("#fb-inner-controls").append(previewNode);#}
+{#                    }#}
+{#                    $("#hsDropzone").toggleClass("glow-blue", false);#}
+                });
+
+                // Called when all files in the queue finish uploading.
+                this.on("queuecomplete", function () {
+{#                    if ($("#hs-file-browser").attr("data-refresh-on-upload") == "true") {#}
+{#                        // Page refresh is needed to show updated metadata#}
+{#                        location.reload(true);#}
+{#                    }#}
+{#                    else {#}
+{#                        $("#hs-file-browser").attr("data-current-path", "data/contents");#}
+{##}
+{#                        // Remove further paths from the log#}
+{#                        var range = pathLog.length - pathLogIndex;#}
+{#                        pathLog.splice(pathLogIndex + 1, range);#}
+{#                        pathLog.push("data/contents");#}
+{#                        pathLogIndex = pathLog.length - 1;#}
+{##}
+{#                        refreshFileBrowser();#}
+{#                        $("#previews").empty();#}
+{#                    }#}
+                });
+
+                // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
+                this.on("error", function (error, errorMessage, xhr) {
+{#                    $("#fb-alerts .upload-failed-alert").remove();#}
+{#                    $("#hsDropzone").toggleClass("glow-blue", false);#}
+{##}
+{#                    $("#fb-alerts").append(#}
+{#                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +#}
+{#                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +#}
+{#                                    '<span aria-hidden="true">&times;</span></button>' +#}
+{#                                '<div>' +#}
+{#                                    '<strong>File Upload Failed</strong>'+#}
+{#                                '</div>'+#}
+{#                                '<div>'+#}
+{#                                    '<span>' + errorMessage + '</span>' +#}
+{#                                '</div>'+#}
+{#                            '</div>').fadeIn(200);#}
+                });
+
+                // Called with the total uploadProgress (0-100), the totalBytes and the totalBytesSent
+                this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
+{#                    $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );#}
+                });
+
+                // Applies allowing upload of multiple files to OS upload dialog
+{#                if (allowMultiple) {#}
+{#                    this.hiddenFileInput.removeAttribute('multiple');#}
+{#                    var fileCount = parseInt($("#hs-file-browser").attr("data-initial-file-count"));#}
+{#                    if (fileCount > 0) {#}
+{#                        $('.dz-input').hide();#}
+{#                    }#}
+{#                }#}
+            }
+        };
         })
     </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+
 {% endblock %}
