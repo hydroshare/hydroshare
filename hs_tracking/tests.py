@@ -169,12 +169,12 @@ class TrackingTests(TestCase):
 
         self.assertEqual(Variable.objects.count(), 2)
         var1, var2 = Variable.objects.all()
-
-        kvp = {i.split('=')[0]:i.split('=')[1] for i in var1.value.split(' ')}
+        
+        kvp = dict((k,v) for k,v in  (kv.split('=') for kv in var1.value.split()))
         self.assertEqual(var1.name, 'begin_session')
         self.assertEqual(len(kvp.keys()),  3)
 
-        kvp = {i.split('=')[0]:i.split('=')[1] for i in var2.value.split(' ')}
+        kvp = dict((k,v) for k,v in  (kv.split('=') for kv in var2.value.split()))
         self.assertEqual(var2.name, 'login')
         self.assertEqual(len(kvp.keys()), 3)
 
@@ -182,7 +182,7 @@ class TrackingTests(TestCase):
 
         self.assertEqual(Variable.objects.count(), 3)
         var = Variable.objects.latest('timestamp')
-        kvp = {i.split('=')[0]:i.split('=')[1] for i in var.value.split(' ')}
+        kvp = dict((k,v) for k,v in  (kv.split('=') for kv in var.value.split()))
         self.assertEqual(var.name, 'logout')
         self.assertEqual(len(kvp.keys()), 3)
 
