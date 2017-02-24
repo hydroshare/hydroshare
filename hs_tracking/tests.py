@@ -5,10 +5,11 @@ from cStringIO import StringIO
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test import Client
-
+from django.http import HttpRequest
 from mock import patch, Mock
 
 from .models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
+import utils
 
 
 class TrackingTests(TestCase):
@@ -170,3 +171,106 @@ class TrackingTests(TestCase):
         var = Variable.objects.latest('timestamp')
         self.assertEqual(var.name, 'logout')
         self.assertEqual(var.value, 'none')
+
+
+class UtilsTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='testuser', email='testuser@example.com')
+        self.user.set_password('password')
+        self.user.save()
+
+        self.visitor = Visitor.objects.create()
+        self.session = Session.objects.create(visitor=self.visitor)
+
+        # sample request with mocked ip address
+        self.request = HttpRequest()
+        self.request.META = {
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, 127.0.0.1, 198.84.193.157, '
+            '177.139.233.139',
+            'HTTP_X_REAL_IP': '177.139.233.132',
+            'REMOTE_ADDR': '177.139.233.133',
+        }
+
+    def tearDown(self):
+        self.user.delete
+
+    def test_std_log_fields(self):
+
+        log_fields = utils.get_std_log_fields(self.request, self.session)
+        self.assertTrue(len(log_fields.keys()) == 3)
+        self.assertTrue('user_ip' in log_fields)
+        self.assertTrue('user_type' in log_fields)
+        self.assertTrue('user_email_domain' in log_fields)
+
+    def test_ishuman(self):
+
+        useragents = [
+            ('Mozilla/5.0 (compatible; bingbot/2.0; '
+             '+http://www.bing.com/bingbot.htm)', False),
+            ('Googlebot/2.1 (+http://www.googlebot.com/bot.html)', False),
+            ('Mozilla/5.0 (compatible; Yahoo! Slurp; '
+             'http://help.yahoo.com/help/us/ysearch/slurp)', False),
+            ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) '
+             'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36', True),
+            ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_6; en-US) '
+             'AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27', True),
+            ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:21.0) Gecko/20100101 '
+             'Firefox/21.0', True),
+            ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+             'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 '
+             'Edge/13.10586', True)
+        ]
+
+        for useragent, ishuman in useragents:
+            self.assertEqual(ishuman, utils.is_human(useragent))
+
+    def test_get_user_email(self):
+
+        # list of common and unusual valid email address formats
+        valid_emails = [
+                ('email@example.com', 'com'),
+                ('firstname.lastname@example.com', 'com'),
+                ('firstname+lastname@example.com', 'com'),
+                ('"email"@example.com', 'com'),
+                ('1234567890@example.com', 'com'),
+                ('email@example-one.com', 'com'),
+                ('_______@example.com', 'com'),
+                ('email@example.co.uk', 'co.uk'),
+                ('firstname-lastname@example.com', 'com'),
+                ('much."more\ unusual"@example.com', 'com'),
+                ('very.unusual."@".unusual.com@example.com', 'com'),
+                ('very."(),:;<>[]".VERY."very@\\ "very".unusual@strange.example.com', 'example.com')
+                ]
+
+        # create session for each email and test email domain parsing
+        for email, dom in valid_emails:
+            user = User.objects.create(username='testuser1', email=email)
+            visitor = Visitor.objects.create()
+            visitor.user = user
+            session = Session.objects.create(visitor=visitor)
+            emaildom = utils.get_user_email_domain(session)
+            self.assertTrue(emaildom == dom)
+            user.delete()
+
+    def test_client_ip(self):
+        ip = utils.get_ip(self.request)
+        self.assertEqual(ip, "198.84.193.157")
+
+    def test_get_user_type(self):
+
+        user_types = ['Faculty', 'Researcher', 'Test', None]
+        for user_type in user_types:
+            self.user.userprofile.user_type = user_type
+            visitor = Visitor.objects.create()
+            visitor.user = self.user
+            session = Session.objects.create(visitor=visitor)
+            usrtype = utils.get_user_type(session)
+            self.assertTrue(user_type == usrtype)
+
+        del self.user.userprofile.user_type
+        visitor = Visitor.objects.create()
+        visitor.user = self.user
+        session = Session.objects.create(visitor=visitor)
+        usrtype = utils.get_user_type(session)
+        self.assertTrue(usrtype is None)
