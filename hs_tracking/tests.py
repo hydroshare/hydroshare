@@ -32,6 +32,15 @@ class TrackingTests(TestCase):
         request = Mock()
         if user is not None:
             request.user = user
+        
+        # sample request with mocked ip address
+        request.META = {
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, 127.0.0.1, 198.84.193.157, '
+            '177.139.233.139',
+            'HTTP_X_REAL_IP': '177.139.233.132',
+            'REMOTE_ADDR': '177.139.233.133',
+        }
+
         return request
 
     def test_record_variable(self):
@@ -160,17 +169,22 @@ class TrackingTests(TestCase):
 
         self.assertEqual(Variable.objects.count(), 2)
         var1, var2 = Variable.objects.all()
+
+        kvp = {i.split('=')[0]:i.split('=')[1] for i in var1.value.split(' ')}
         self.assertEqual(var1.name, 'begin_session')
-        self.assertEqual(var1.value, 'none')
+        self.assertEqual(len(kvp.keys()),  3)
+
+        kvp = {i.split('=')[0]:i.split('=')[1] for i in var2.value.split(' ')}
         self.assertEqual(var2.name, 'login')
-        self.assertEqual(var2.value, 'none')
+        self.assertEqual(len(kvp.keys()), 3)
 
         client.logout()
 
         self.assertEqual(Variable.objects.count(), 3)
         var = Variable.objects.latest('timestamp')
+        kvp = {i.split('=')[0]:i.split('=')[1] for i in var.value.split(' ')}
         self.assertEqual(var.name, 'logout')
-        self.assertEqual(var.value, 'none')
+        self.assertEqual(len(kvp.keys()), 3)
 
 
 class UtilsTests(TestCase):
