@@ -6,40 +6,69 @@
       <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
 {% endblock %}
 
-{% block title %}
-
-    Create resource
-
-{% endblock %}
+{% block title %}Create resource{% endblock %}
 
 {% block main %}
     <div class="container">
         <div class="row">
             <div class="col-xs-12">
+                <h2 class="page-title">Create Resource</h2>
                 <div class="stepper">
-                <div class="stepper-steps">
-                    {#                stepper-step-isValid#}
-                    <div class="stepper-step stepper-step-isActive" data-step="1">
-                        <div class="stepper-stepContent">
-                            <span class="stepper-stepMarker">1</span>
-                            <span class="stepper-title">Select a resource type</span>
+                    <div class="stepper-steps">
+                        {#                stepper-step-isValid#}
+                        <div class="stepper-step stepper-step-isActive" data-step="1">
+                            <div class="stepper-stepContent">
+                                <span class="stepper-stepMarker">1</span>
+                                <span class="stepper-title">Select a resource type</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stepper-step" data-step="2">
-                        <div class="stepper-stepContent">
-                            <span class="stepper-stepMarker">2</span>
-                            <span class="stepper-title">Input a resource title</span>
+
+                        <div class="stepper-step" data-step="2">
+                            <div class="stepper-stepContent">
+                                <span class="stepper-stepMarker">2</span>
+                                <span class="stepper-title">Choose a title</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="stepper-step" data-step="3">
-                        <div class="stepper-stepContent">
-                            <span class="stepper-stepMarker">3</span>
-                            <span class="stepper-title">Add  your files</span>
+
+                        <div class="stepper-step" data-step="3">
+                            <div class="stepper-stepContent">
+                                <span class="stepper-stepMarker">3</span>
+                                <span class="stepper-title">Add  your files</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="stepper-actions col-xs-12">
+                <span id="btn-previous-step" class="btn btn-default">Back</span>
+                <span id="btn-next-step" class="btn btn-info pull-right ">Continue</span>
+                <hr>
             </div>
+
+            {% block error %}
+                {% if validation_error %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <strong>Validation Error: {{ validation_error }}</strong>
+                    </div>
+                {% endif %}
+                {% if file_size_error %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <strong>Uploaded File Size Error: {{ file_size_error }}</strong>
+                    </div>
+                {% endif %}
+                {% if resource_creation_error %}
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <strong>Failed to Create Resource: {{ resource_creation_error }}</strong>
+                    </div>
+                {% endif %}
+            {% endblock %}
 
             <div class="stepper-content col-xs-12" data-step="1">
                 <div class="row">
@@ -47,28 +76,28 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">General</div>
                             <div class="panel-body">
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="GenericResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                          alt="Generic Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Generic</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="CollectionResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                          alt="Collection Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Collection</div>
                                 </div>
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="CompositeResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                          alt="Composite Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Composite</div>
                                 </div>
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="ToolResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                          alt="Web App Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Web App</div>
                                 </div>
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="NetcdfResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                          alt="Multidimensional Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Multidimensional</div>
@@ -82,31 +111,31 @@
                             <div class="panel-heading">Modeling</div>
 
                             <div class="panel-body">
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="SWATModelInstanceResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
                                          alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="MODFLOWModelInstanceResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
                                          alt="Collection Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="ModelProgramResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
                                          alt="Model Program Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Model Program</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="ModelInstanceResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
                                          alt="Model Instance Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Model Instance</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="ScriptResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                          alt="Script Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Script</div>
@@ -121,12 +150,12 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">Geographic Resources</div>
                             <div class="panel-body">
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="GeographicFeatureResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
                                          alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
-                                    <div class="resource-type-name">&nbsp;Geographic Feature</div>
+                                    <div class="resource-type-name">&nbsp;Geographic Feature (ESRI Shapefiles)</div>
                                 </div>
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="RasterResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
                                          alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Geographic Raster</div>
@@ -137,15 +166,15 @@
 
                     <div class="col-xs-12 col-sm-6">
                         <div class="panel panel-default">
-                            <div class="panel-heading">Time Series Resources</div>
+                            <div class="panel-heading" data-value="">Time Series Resources</div>
                             <div class="panel-body">
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="TimeSeriesResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
                                          alt="Time Series Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Time Series</div>
                                 </div>
 
-                                <div class="resource-type">
+                                <div class="resource-type" data-value="RefTimeSeriesResource">
                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
                                          alt="HIS Referenced Time Series Resource Icon"
                                          class="resource-type-icon"/>
@@ -157,312 +186,462 @@
                 </div>
             </div>
 
-            <div class="stepper-content col-xs-12" data-step="2">
+            <div class="stepper-content col-xs-12 hidden" data-step="2">
                 <div class="form-group row">
                     <div class="col-xs-12">
-                        <div id="selected-type" class="resource-type">
+                        <div class="resource-type selected-type">
                             <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                  alt="Generic Resource Icon" class="resource-type-icon"/>
                             <div class="resource-type-name">&nbsp;Generic</div>
                         </div>
                     </div>
+
                     <br>
+
                     <label for="title" class="col-xs-12 col-form-label">Title</label>
                     <div class="col-xs-12">
-                        <input placeholder="Untitled Resource" class="form-control" type="text"
-                               id="title">
+                        <input id="txtTitle" placeholder="Untitled Resource" class="form-control" type="text">
                     </div>
                 </div>
             </div>
 
-            <div class="stepper-content col-xs-12" data-step="3">
-                <div class="row">
-                    <div class="col-xs-12 col-sm-7">
-                        <form id="hsDropzone" role="form" method="POST" enctype="multipart/form-data"
-                              action="/hsapi/_internal/create-resource/do/">
-                            {% csrf_token %}
-                            <div class="caption">
-                                <h2 class="text-center text-muted"><i class="fa fa-file-o" aria-hidden="true"></i></h2>
-                                <h4 class="text-center text-muted"> Drop files here or click to upload.</h4>
+            <div class="stepper-content col-xs-12 hidden" data-step="3">
+                <div id="upload-content">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="resource-type selected-type">
+                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                     alt="Generic Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Generic</div>
                             </div>
-                        </form>
+
+                            <br>
+
+                            <h3 class="resource-title">Resource Title Here</h3>
+
+                        </div>
+
+                        <div class="col-xs-12 col-sm-7">
+                            <form id="hsDropzone" role="form" method="POST" enctype="multipart/form-data"
+                                  action="/hsapi/_internal/create-resource/do/">
+                                {% csrf_token %}
+                                <div class="caption">
+                                    <h2 class="text-center text-muted"><i class="fa fa-file-o" aria-hidden="true"></i>
+                                    </h2>
+                                    <h4 class="text-center text-muted"> Drop files here or click to upload.</h4>
+                                </div>
+                            </form>
+
+                            <br>
+
+                            <div class="alert alert-info" role="alert">
+                                <ul>
+                                    <li id="file-types">Any file type can be uploaded.</li>
+                                    <li id="file-multiple">Multiple file upload is allowed.</li>
+                                </ul>
+                            </div>
+
+
+                            <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will
+                                move
+                                the selected files out of your iRODS account into a HydroShare resource once
+                                created. </h2>
+                            <h2 class="text-red">{{ file_size_error }}</h2>
+                            <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>
+                        </div>
+
+                        <div class="col-xs-12 col-sm-5">
+                            <ul class="list-group">
+                                <li class="list-group-item">Files you upload here will be grouped together into a
+                                    "Resource" in HydroShare.
+                                </li>
+                                <li class="list-group-item">File size is limited to 1 GB per file for direct browser
+                                    upload from your local disk.
+                                </li>
+                                <li class="list-group-item">Files larger than 1GB can be imported directly from any
+                                    iRODS account. You can create
+                                    a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
+                                    page.
+                                    See <a href="https://pages.hydroshare.org/">Help</a> for information on working with
+                                    iRODS directly.
+                                </li>
+                                <li class="list-group-item"> You can also add files directly from any iRODS server
+                                    regardless of the file size.
+                                </li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="col-xs-12 col-sm-5">
-                        <ul class="list-group">
-                            <li class="list-group-item">Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
-                            <li class="list-group-item">File size is limited to 1 GB per file for direct browser upload from your local disk.
-                            </li>
-                            <li class="list-group-item">Files larger than 1GB can be imported directly from any iRODS account. You can create
-                                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
-                                page.
-                                See <a href="https://pages.hydroshare.org/">Help</a> for information on working with iRODS directly.
-                            </li>
-                            <li class="list-group-item"> You can also add files directly from any iRODS server regardless of the file size.</li>
-                        </ul>
-                    </div>
-                </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <hr>
+                            <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
 
-            </div>
-
-            <div class="stepper-actions col-xs-12">
-                <a href="#" class="btn btn-default btn-lg btn-simple mbn">Back</a>
-                <a href="#" class="btn btn-info btn-lg btn-simple pull-right mbn">Continue</a>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="container">
-        <div class="row">
-            {% block error %}
-                {%  if validation_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                          <strong>Validation Error: {{ validation_error }}</strong>
-                     </div>
-                {%  endif %}
-                {%  if file_size_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                          <strong>Uploaded File Size Error: {{ file_size_error }}</strong>
-                     </div>
-                {%  endif %}
-                {%  if resource_creation_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                          <strong>Failed to Create Resource: {{ resource_creation_error }}</strong>
-                     </div>
-                {%  endif %}
-            {% endblock %}
-
-            <h2>Select a resource type and upload files as needed to create a new resource</h2>
-
-            <ul>
-            <li>Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
-            <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>
-            <li>Files larger than 1GB can be imported directly from any iRODS account. You can create
-                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">user profile</a> page.
-                See help for information on working with iRODS directly.
-            </li>
-            <li> You can also add files directly from any iRODS server regardless of the file size. </li>
-            </ul>
-
-            <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="" class="col-sm-2 control-label">Select a resource type</label>
-
-                    <div class="col-sm-10">
-                        <select class="form-control" name="resource-type" id="resource-type">
-                            <option value="GenericResource">Generic</option>
-                            <option value="NetcdfResource">Multidimensional (NetCDF)</option>
-                            <option value="ToolResource">Web App</option>
-                            <option value="CollectionResource">Collection Resource</option>
-                            <option value="CompositeResource">Composite Resource</option>
-
-                            <optgroup label="Geographic Resources">
-                                <option value="RasterResource">Geographic Raster</option>
-                                <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
-                            </optgroup>
-
-                            <optgroup label="Time Series Resources">
-                                <option value="TimeSeriesResource">Time Series</option>
-                                <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>
-                            </optgroup>
-
-                            <optgroup label="Modeling">
-                                <option value="ModelProgramResource">Model Program</option>
-                                <option value="ModelInstanceResource">Model Instance</option>
-                                <option value="SWATModelInstanceResource">SWAT Model Instance</option>
-                                <option value="MODFLOWModelInstanceResource">MODFLOW Model Instance</option>
-                                <option value="ScriptResource">Script</option>
-                            </optgroup>
-
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="" class="col-sm-2 control-label">Title</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" name="title" id="title" placeholder="Untitled resource">
-                    </div>
-                </div>
-                <div id="upload-file">
-                    <h3>Add your files here:</h3>
-                    <table class="table" id="file-list">
-                    <tbody id="files">
-                        <tr>
-                            <td>To load files from your local disk with file size limited to 1GB per file:
-                                <input type="file" class="btn-add-access" name="files" id="select-file" multiple/>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>
-                                To load files from an iRODS server including your iRODS user HydroShare server:
-                                <div id="irods-browse">
+                            <div id="irods-browse">
                                     <span id="log-into-irods">
-                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal"
+                                           data-target="#irodsSignin">log in to iRODS</a>
                                     </span>
-                                    <input type="hidden" id="irods-username" name="irods-username" value="">
-                                    <input type="hidden" id="irods-password" name="irods-password" value="">
-                                    <input type="hidden" id="irods-host" name="irods-host" value="">
-                                    <input type="hidden" id="irods-port" name="irods-port" value="">
-                                    <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                                    <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                                    <input type="hidden" id="irods_federated" name="irods_federated" value="">
-                                    <span id="sign-in-info"></span>
-                                    <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form" data-toggle="modal" data-target="#irodsContent">
-                                        Browse iRODS...
-                                    </a>
-                                    <span id="irods-sel-file"></span>
-                                    <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
-                                    <span id="irods-copy-move" class="hidden-form">
-                                        <input type="radio" id='copy-radio' name="copy-move" value="copy" checked="checked"> Copy
+                                <input type="hidden" id="irods-username" name="irods-username" value="">
+                                <input type="hidden" id="irods-password" name="irods-password" value="">
+                                <input type="hidden" id="irods-host" name="irods-host" value="">
+                                <input type="hidden" id="irods-port" name="irods-port" value="">
+                                <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                                <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
+                                <input type="hidden" id="irods_federated" name="irods_federated" value="">
+                                <span id="sign-in-info"></span>
+                                <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form"
+                                   data-toggle="modal" data-target="#irodsContent">
+                                    Browse iRODS...
+                                </a>
+                                <span id="irods-sel-file"></span>
+                                <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
+                                <span id="irods-copy-move" class="hidden-form">
+                                        <input type="radio" id='copy-radio' name="copy-move" value="copy"
+                                               checked="checked"> Copy
                                         <input type="radio" id='move-radio' name="copy-move" value="move"> Move
                                     </span>
-                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <div id="file-types">Any file type can be uploaded.</div>
-                    <div id="file-multiple">Multiple file upload is allowed.</div>
-                    </table>
-                    <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will move
-                        the selected files out of your iRODS account into a HydroShare resource once created. </h2>
-                    <h2 class="text-red">{{ file_size_error }}</h2>
-                    <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>
-                </div>
-
-                <div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <button type="submit" class="btn btn-primary btn-lg btn-block">Create Resource</button>
+                                <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of
+                                    iRODS</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </form>
-            {% block modal %}
-                {% include "irods_signin.html" %}
-                {% include "irods_upload_create.html" %}
-            {% endblock %}
+            </div>
         </div>
     </div>
 
-{% block extra_js %}
+    {% block modal %}
+        {% include "irods_signin.html" %}
+        {% include "irods_upload_create.html" %}
+    {% endblock %}
+
+
+{#    <div class="container">#}
+{#        <div class="row">#}
+{#            {% block error %}#}
+{#                {%  if validation_error %}#}
+{#                    <div class="alert alert-danger alert-dismissible" role="alert">#}
+{#                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
+{#                          <strong>Validation Error: {{ validation_error }}</strong>#}
+{#                     </div>#}
+{#                {%  endif %}#}
+{#                {%  if file_size_error %}#}
+{#                    <div class="alert alert-danger alert-dismissible" role="alert">#}
+{#                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
+{#                          <strong>Uploaded File Size Error: {{ file_size_error }}</strong>#}
+{#                     </div>#}
+{#                {%  endif %}#}
+{#                {%  if resource_creation_error %}#}
+{#                    <div class="alert alert-danger alert-dismissible" role="alert">#}
+{#                          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
+{#                          <strong>Failed to Create Resource: {{ resource_creation_error }}</strong>#}
+{#                     </div>#}
+{#                {%  endif %}#}
+{#            {% endblock %}#}
+{##}
+{#            <h2>Select a resource type and upload files as needed to create a new resource</h2>#}
+{##}
+{#            <ul>#}
+{#                <li>Files you upload here will be grouped together into a "Resource" in HydroShare.</li>#}
+{#                <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>#}
+{#                <li>Files larger than 1GB can be imported directly from any iRODS account. You can create#}
+{#                    a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">user profile</a> page.#}
+{#                    See help for information on working with iRODS directly.#}
+{#                </li>#}
+{#                <li> You can also add files directly from any iRODS server regardless of the file size.</li>#}
+{#            </ul>#}
+{##}
+{#            <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">#}
+{#                {% csrf_token %}#}
+{#                <div class="form-group">#}
+{#                    <label for="" class="col-sm-2 control-label">Select a resource type</label>#}
+{##}
+{#                    <div class="col-sm-10">#}
+{#                        <select class="form-control" name="resource-type" id="resource-type">#}
+{#                            <option value="GenericResource">Generic</option>#}
+{#                            <option value="NetcdfResource">Multidimensional (NetCDF)</option>#}
+{#                            <option value="ToolResource">Web App</option>#}
+{#                            <option value="CollectionResource">Collection Resource</option>#}
+{#                            <option value="CompositeResource">Composite Resource</option>#}
+{##}
+{#                            <optgroup label="Geographic Resources">#}
+{#                                <option value="RasterResource">Geographic Raster</option>#}
+{#                                <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>#}
+{#                            </optgroup>#}
+{##}
+{#                            <optgroup label="Time Series Resources">#}
+{#                                <option value="TimeSeriesResource">Time Series</option>#}
+{#                                <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>#}
+{#                            </optgroup>#}
+{##}
+{#                            <optgroup label="Modeling">#}
+{#                                <option value="ModelProgramResource">Model Program</option>#}
+{#                                <option value="ModelInstanceResource">Model Instance</option>#}
+{#                                <option value="SWATModelInstanceResource">SWAT Model Instance</option>#}
+{#                                <option value="MODFLOWModelInstanceResource">MODFLOW Model Instance</option>#}
+{#                                <option value="ScriptResource">Script</option>#}
+{#                            </optgroup>#}
+{##}
+{#                        </select>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="form-group">#}
+{#                    <label for="" class="col-sm-2 control-label">Title</label>#}
+{#                    <div class="col-sm-10">#}
+{#                      <input type="text" class="form-control" name="title" id="title" placeholder="Untitled resource">#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div id="upload-file">#}
+{#                    <h3>Add your files here:</h3>#}
+{#                    <table class="table" id="file-list">#}
+{#                    <tbody id="files">#}
+{#                        <tr>#}
+{#                            <td>To load files from your local disk with file size limited to 1GB per file:#}
+{#                                <input type="file" class="btn-add-access" name="files" id="select-file" multiple/>#}
+{#                            </td>#}
+{#                        </tr>#}
+{##}
+{#                        <tr>#}
+{#                            <td>#}
+{#                                To load files from an iRODS server including your iRODS user HydroShare server:#}
+{#                                <div id="irods-browse">#}
+{#                                    <span id="log-into-irods">#}
+{#                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>#}
+{#                                    </span>#}
+{#                                    <input type="hidden" id="irods-username" name="irods-username" value="">#}
+{#                                    <input type="hidden" id="irods-password" name="irods-password" value="">#}
+{#                                    <input type="hidden" id="irods-host" name="irods-host" value="">#}
+{#                                    <input type="hidden" id="irods-port" name="irods-port" value="">#}
+{#                                    <input type="hidden" id="irods-zone" name="irods-zone" value="">#}
+{#                                    <input type="hidden" id="irods_file_names" name="irods_file_names" value="">#}
+{#                                    <input type="hidden" id="irods_federated" name="irods_federated" value="">#}
+{#                                    <span id="sign-in-info"></span>#}
+{#                                    <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form" data-toggle="modal" data-target="#irodsContent">#}
+{#                                        Browse iRODS...#}
+{#                                    </a>#}
+{#                                    <span id="irods-sel-file"></span>#}
+{#                                    <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>#}
+{#                                    <span id="irods-copy-move" class="hidden-form">#}
+{#                                        <input type="radio" id='copy-radio' name="copy-move" value="copy" checked="checked"> Copy#}
+{#                                        <input type="radio" id='move-radio' name="copy-move" value="move"> Move#}
+{#                                    </span>#}
+{#                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>#}
+{#                                </div>#}
+{#                            </td>#}
+{#                        </tr>#}
+{#                    </tbody>#}
+{#                        <div id="file-types">Any file type can be uploaded.</div>#}
+{#                        <div id="file-multiple">Multiple file upload is allowed.</div>#}
+{#                    </table>#}
+{#                    <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will move#}
+{#                        the selected files out of your iRODS account into a HydroShare resource once created. </h2>#}
+{#                    <h2 class="text-red">{{ file_size_error }}</h2>#}
+{#                    <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>#}
+{#                </div>#}
+{##}
+{#                <div class="form-group">#}
+{#                    <div class="col-sm-offset-2 col-sm-10">#}
+{#                        <button type="submit" class="btn btn-primary btn-lg btn-block">Create Resource</button>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </form>#}
+{#            {% block modal %}#}
+{#                {% include "irods_signin.html" %}#}
+{#                {% include "irods_upload_create.html" %}#}
+{#            {% endblock %}#}
+{#        </div>#}
+{#    </div>#}
+
     <script type="text/javascript">
-    $(document).ready(function() {
-        var json_response_file_types = {};
-        var json_response_multiple_file = {};
-        var selected_file = undefined;
-        if (sessionStorage.signininfo) {
-            $("#sign-in-info").text(sessionStorage.signininfo);
-            $("#btn-select-irods-file").show();
-            $("#irods-sel-file").text("No file selected.");
+        function nextStep() {
+            var currentStep = parseInt($(".stepper-step-isActive").attr("data-step"));
+            var maxSteps = $(".stepper-step").length;
+            currentStep = Math.min(currentStep + 1, maxSteps);
+            setStep(currentStep);
         }
 
-        $('input:radio[name="copy-move"]').change(function(){
-            if($(this).val()=='move') {
-                $("#copy-or-move").val('move');
-                $("#file-move-warning").show();
-            }
-            else {
-                $("#copy-or-move").val('copy');
-                $("#file-move-warning").hide();
-            }
-        });
-        $('#resource-type').on('change', function(){
-            $('#select-file').value = '';
-            $('#select-file').attr('value', '');
-            $('#irods-sel-file').text("No file selected.");
+        function previousStep() {
+            var currentStep = parseInt($(".stepper-step-isActive").attr("data-step"));
+            var stepNumber = Math.max(currentStep - 1, 1);
+            setStep(stepNumber);
+        }
 
-            if(selected_file != undefined){
-                selected_file.value = '';
-            }
-            $.ajax({
-                type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/supported-file-types/",
-                success: function(result) {
-                    console.log(result);
-                    json_response_file_types = JSON.parse(result);
-                    console.log(json_response_file_types.file_types);
-                    var supported_file_types = "Any file type can be uploaded."
-                    if(JSON.parse(json_response_file_types.file_types).length == 0){
-                        $("#upload-file").hide();
-                    }
-                    else{
-                        if(JSON.parse(json_response_file_types.file_types)[0] != ".*"){
-                            supported_file_types = "Only the listed file types can be uploaded: " + json_response_file_types.file_types + ".";
-                        }
-                        $("#upload-file").show();
-                        $("#file-types").text(supported_file_types);
-                    }
+        function setStep(value) {
+            $(".stepper-content").addClass("hidden");
+            $(".stepper-content[data-step='" + value + "']").removeClass("hidden");
 
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
-                    $("#file-types").text('Error in determining supported file types');
+            if (value == 2) {
+                $("#txtTitle").focus();
+            }
+            else if (value == 3) {
+                setTitle();
+            }
+
+            $(".stepper-step").each(function (i, step) {
+                var stepNumber = parseInt($(step).attr("data-step"));
+
+                if (stepNumber < value) {
+                    $(step).removeClass("stepper-step-isActive");
+                    $(step).addClass("stepper-step-isValid");
                 }
-            })
-
-            $.ajax({
-                type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file/",
-                success: function(result) {
-                    console.log(result);
-                    json_response_multiple_file = JSON.parse(result);
-                    console.log(json_response_multiple_file);
-                    if(json_response_multiple_file.allow_multiple_file == true){
-                        $("#file-multiple").text("Multiple file upload is allowed.");
-                        $("#select-file").attr('multiple', 'multiple')
-                    }
-                    else{
-                        $("#file-multiple").text("Only one file can be uploaded.");
-                        $("#select-file").removeAttr('multiple');
-                    }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
-                    $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
-                }
-            })
-        })
-
-        $('#select-file').on('change', function(){
-            var file_types = JSON.parse(json_response_file_types.file_types);
-            if(file_types == ".*"){
-                return;
-            }
-
-            var fileList = this.files || []
-            var ext = ".*";
-            for (var i = 0; i < fileList.length; i++) {
-                ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                ext = "." + ext.toLowerCase();
-                var ext_found = false;
-                if (ext === file_types) {
-                    ext_found = true;
+                else if (stepNumber > value) {
+                    $(step).removeClass("stepper-step-isActive");
+                    $(step).removeClass("stepper-step-isValid");
                 }
                 else {
-                    var index;
-                    for (index = 0; index < file_types.length; index++) {
-                        if (ext === file_types[index].trim()) {
-                            ext_found = true;
-                            break;
+                    $(step).addClass("stepper-step-isActive");
+                    $(step).removeClass("stepper-step-isValid");
+                }
+            });
+        }
+
+        function setTitle() {
+            var title = $("#txtTitle").val();
+            if (title.length) {
+                $(".resource-title").text(title);
+            }
+            else {
+                $(".resource-title").text($("#txtTitle").attr("placeholder"));
+            }
+        }
+
+        $(document).ready(function () {
+            var json_response_file_types = {};
+            var json_response_multiple_file = {};
+            var selected_file = undefined;
+            if (sessionStorage.signininfo) {
+                $("#sign-in-info").text(sessionStorage.signininfo);
+                $("#btn-select-irods-file").show();
+                $("#irods-sel-file").text("No file selected.");
+            }
+
+            $('input:radio[name="copy-move"]').change(function () {
+                if ($(this).val() == 'move') {
+                    $("#copy-or-move").val('move');
+                    $("#file-move-warning").show();
+                }
+                else {
+                    $("#copy-or-move").val('copy');
+                    $("#file-move-warning").hide();
+                }
+            });
+
+            $("#btn-next-step").click(nextStep);
+            $("#btn-previous-step").click(previousStep);
+
+            $('#txtTitle').keyup(function (e) {
+                if (e.keyCode == 13) {
+                    nextStep();
+                }
+            });
+
+            $(".stepper-step").click(function () {
+                if ($(this).hasClass("stepper-step-isValid")) {
+                    var stepNumber = parseInt($(this).attr("data-step"));
+                    setStep(stepNumber);
+                }
+            });
+
+            $('.stepper-content[data-step="1"] .resource-type').click(function () {
+                $('#select-file').value = '';
+                $('#select-file').attr('value', '');
+                $('#irods-sel-file').text("No file selected.");
+
+                if (selected_file != undefined) {
+                    selected_file.value = '';
+                }
+
+                var selected = $('.stepper-content .selected-type');
+
+                var template = this.innerHTML;
+                selected.each(function (i, obj) {
+                    obj.innerHTML = template;
+                });
+
+                // Get supported file types
+                $.ajax({
+                    type: "GET",
+                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/supported-file-types/",
+                    success: function (result) {
+                        {#                    console.log(result);#}
+                        json_response_file_types = JSON.parse(result);
+                        {#                    console.log(json_response_file_types.file_types);#}
+                        var supported_file_types = "Any file type can be uploaded.";
+                        if (JSON.parse(json_response_file_types.file_types).length == 0) {
+                            $("#upload-content").hide();
+                        }
+                        else {
+                            if (JSON.parse(json_response_file_types.file_types)[0] != ".*") {
+                                supported_file_types = "Only the listed file types can be uploaded: " + json_response_file_types.file_types;
+                            }
+                            $("#upload-content").show();
+                            $("#file-types").text(supported_file_types);
+                        }
+                        nextStep();
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#file-types").text('Error in determining supported file types');
+                    }
+                });
+
+                // Get multiple files flag value
+                $.ajax({
+                    type: "GET",
+                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
+                    success: function (result) {
+                        {#                    console.log(result);#}
+                        json_response_multiple_file = JSON.parse(result);
+                        {#                    console.log(json_response_multiple_file);#}
+                        if (json_response_multiple_file.allow_multiple_file == true) {
+                            $("#file-multiple").text("Multiple file upload is allowed.");
+                            $("#select-file").attr('multiple', 'multiple');
+                        }
+                        else {
+                            $("#file-multiple").text("Only one file can be uploaded.");
+                            $("#select-file").removeAttr('multiple');
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
+                    }
+                })
+            });
+
+            $('#select-file').on('change', function () {
+                var file_types = JSON.parse(json_response_file_types.file_types);
+                if (file_types == ".*") {
+                    return;
+                }
+
+                var fileList = this.files || [];
+                var ext = ".*";
+                for (var i = 0; i < fileList.length; i++) {
+                    ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
+                    ext = "." + ext.toLowerCase();
+                    var ext_found = false;
+                    if (ext === file_types) {
+                        ext_found = true;
+                    }
+                    else {
+                        var index;
+                        for (index = 0; index < file_types.length; index++) {
+                            if (ext === file_types[index].trim()) {
+                                ext_found = true;
+                                break;
+                            }
                         }
                     }
+                    if (!ext_found) {
+                        this.value = '';
+                        var err_msg = "Invalid file type: '" + ext + "'";
+                        $('#file-type-error').text(err_msg);
+                    }
+                    else {
+                        $('#file-type-error').text('');
+                    }
                 }
-                if(!ext_found){
-                    this.value ='';
-                    var err_msg = "Invalid file type: '" + ext +"'";
-                    $('#file-type-error').text(err_msg);
-                }
-                else{
-                    $('#file-type-error').text('');
-                }
-            }
+            })
         })
-    })
     </script>
-{% endblock %}
 {% endblock %}
