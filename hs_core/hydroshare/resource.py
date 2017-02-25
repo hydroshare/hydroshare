@@ -203,6 +203,11 @@ def check_resource_files(files=()):
     Returns:    True if files are supported; otherwise, returns False
     """
     for file in files:
+        if not isinstance(file, UploadedFile):
+            # if file is already on the server, e.g., a file transferred directly from iRODS,
+            # the file should not be subject to file size check since the file size check is
+            # only prompted by file upload limit
+            continue
         if hasattr(file, '_size'):
             if file._size > FILE_SIZE_LIMIT:
                 # file is greater than FILE_SIZE_LIMIT, which is not allowed

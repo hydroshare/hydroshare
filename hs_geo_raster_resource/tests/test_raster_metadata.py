@@ -46,6 +46,46 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         shutil.copy(self.raster_tif_file, target_temp_raster_tif_file)
         self.raster_tif_file_obj = open(target_temp_raster_tif_file, 'r')
 
+        self.raster_bearcr_tif_file_name = 'BearCk.tif'
+        self.raster_bearcr_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_bearcr_tif_file_name)
+        target_temp_raster_bearcr_tif_file = os.path.join(self.temp_dir,
+                                                          self.raster_bearcr_tif_file_name)
+        shutil.copy(self.raster_bearcr_tif_file, target_temp_raster_bearcr_tif_file)
+        self.raster_bearcr_tif_file_obj = open(target_temp_raster_bearcr_tif_file, 'r')
+
+        self.raster_honduras_tif_file_name = 'Honduras.tif'
+        self.raster_honduras_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_honduras_tif_file_name)
+        target_temp_raster_honduras_tif_file = os.path.join(self.temp_dir,
+                                                            self.raster_honduras_tif_file_name)
+        shutil.copy(self.raster_honduras_tif_file, target_temp_raster_honduras_tif_file)
+        self.raster_honduras_tif_file_obj = open(target_temp_raster_honduras_tif_file, 'r')
+
+        self.raster_mawhefel_tif_file_name = 'mawhefel.tif'
+        self.raster_mawhefel_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_mawhefel_tif_file_name)
+        target_temp_raster_mawhefel_tif_file = os.path.join(self.temp_dir,
+                                                            self.raster_mawhefel_tif_file_name)
+        shutil.copy(self.raster_mawhefel_tif_file, target_temp_raster_mawhefel_tif_file)
+        self.raster_mawhefel_tif_file_obj = open(target_temp_raster_mawhefel_tif_file, 'r')
+
+        self.raster_lidardem_tif_file_name = 'lidarDem.tif'
+        self.raster_lidardem_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_lidardem_tif_file_name)
+        target_temp_raster_lidardem_tif_file = os.path.join(self.temp_dir,
+                                                            self.raster_lidardem_tif_file_name)
+        shutil.copy(self.raster_lidardem_tif_file, target_temp_raster_lidardem_tif_file)
+        self.raster_lidardem_tif_file_obj = open(target_temp_raster_lidardem_tif_file, 'r')
+
+        self.raster_htelevation_tif_file_name = 'HT_Elevation.tif'
+        self.raster_htelevation_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_htelevation_tif_file_name)
+        target_temp_raster_htelevation_tif_file = os.path.join(
+            self.temp_dir, self.raster_htelevation_tif_file_name)
+        shutil.copy(self.raster_htelevation_tif_file, target_temp_raster_htelevation_tif_file)
+        self.raster_htelevation_tif_file_obj = open(target_temp_raster_htelevation_tif_file, 'r')
+
         self.raster_bad_tif_file_name = 'raster_tif_invalid.tif'
         self.raster_bad_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
             self.raster_bad_tif_file_name)
@@ -186,6 +226,121 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
+    def test_wgs84_coverage_extraction(self):
+        # this is test that the resource level coverage (wsg84) is being created correctly
+
+        # test for BearCr.tif
+        files = [UploadedFile(file=self.raster_bearcr_tif_file_obj,
+                              name=self.raster_bearcr_tif_file_name)]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 30.214583003567654)
+        self.assertEqual(box_coverage.value['eastlimit'], -97.92170777387547)
+        self.assertEqual(box_coverage.value['southlimit'], 30.127513332692264)
+        self.assertEqual(box_coverage.value['westlimit'], -98.01556648306897)
+
+        self.resRaster.delete()
+
+        # test for Honduras.tif
+        files = [UploadedFile(file=self.raster_honduras_tif_file_obj,
+                              name=self.raster_honduras_tif_file_name)]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        self.assertEqual(self.resRaster.files.all().count(), 2)
+        # there should not be any coverage extracted in the case of Honduras
+        self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
+
+        self.resRaster.delete()
+
+        # test for mawhefel.tif
+        files = [UploadedFile(file=self.raster_mawhefel_tif_file_obj,
+                              name=self.raster_mawhefel_tif_file_name)]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        self.assertEqual(self.resRaster.files.all().count(), 2)
+        # there should not be any coverage extracted in the case of Honduras
+        self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
+
+        self.resRaster.delete()
+
+        # test for lidarDEM.tif
+        files = [UploadedFile(file=self.raster_lidardem_tif_file_obj,
+                              name=self.raster_lidardem_tif_file_name)]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 40.678328957336106)
+        self.assertEqual(box_coverage.value['eastlimit'], -77.88875113570533)
+        self.assertEqual(box_coverage.value['southlimit'], 40.650831557543725)
+        self.assertEqual(box_coverage.value['westlimit'], -77.92486166705822)
+
+        self.resRaster.delete()
+
+        # test for HT_Elevation.tif
+        files = [UploadedFile(file=self.raster_htelevation_tif_file_obj,
+                              name=self.raster_htelevation_tif_file_name)]
+
+        self.resRaster = hydroshare.create_resource(
+            'RasterResource',
+            self.user,
+            'My Test Raster Resource Coverage',
+            files=files,
+            metadata=[]
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler
+        utils.resource_post_create_actions(resource=self.resRaster, user=self.user, metadata=[])
+        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 40.75042571735219)
+        self.assertEqual(box_coverage.value['eastlimit'], -77.84406750606215)
+        self.assertEqual(box_coverage.value['southlimit'], 40.58088597175731)
+        self.assertEqual(box_coverage.value['westlimit'], -78.01781620659817)
+
+        self.resRaster.delete()
+
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -238,6 +393,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         self.assertEqual(self.resRaster.metadata.cellInformation, None)
         self.assertEqual(self.resRaster.metadata.bandInformations.count(), 0)
+
+        self.resRaster.delete()
 
     def test_metadata_delete_on_resource_delete(self):
         # adding a valid raster tif file should generate some core metadata and all extended
@@ -456,6 +613,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(band_info.minimumValue, '1')
         self.assertEqual(band_info.noDataValue, '-9998')
 
+        self.resRaster.delete()
+
     def test_get_xml(self):
         # add a valid raster file to generate metadata
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -467,6 +626,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resRaster.metadata.get_xml())
+
+        self.resRaster.delete()
 
     def test_can_have_multiple_content_files(self):
         self.assertFalse(RasterResource.can_have_multiple_files())
@@ -495,3 +656,4 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertTrue(self.resRaster.has_required_content_files())
         self.assertTrue(self.resRaster.metadata.has_all_required_elements())
         self.assertTrue(self.resRaster.can_be_public_or_discoverable)
+        self.resRaster.delete()
