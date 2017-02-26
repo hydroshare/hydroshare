@@ -462,9 +462,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test file type metadata
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        # there should be one subject element
+        # there should be one keyword element
         self.assertEqual(len(logical_file.metadata.keywords), 1)
-        subj_element = self.composite_resource.metadata.subjects.all().first()
         self.assertIn('Snow water equivalent', logical_file.metadata.keywords)
 
         # testing extended metadata element: original coverage

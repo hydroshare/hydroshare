@@ -13,7 +13,6 @@ from functools import partial, wraps
 from django.db import models, transaction
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.fields import GenericRelation
 from django.forms.models import formset_factory
 from django.template import Template, Context
 
