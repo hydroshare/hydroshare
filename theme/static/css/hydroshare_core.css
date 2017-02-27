@@ -3857,7 +3857,12 @@ div.group-add-photo {
 	margin-bottom: 10px;
 }
 
-#discover-map {
+#discover-point-map {
+	height:650px;
+	border: 1px solid #DDD;
+}
+
+#discover-area-map {
 	height:650px;
 	border: 1px solid #DDD;
 }

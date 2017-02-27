@@ -167,7 +167,8 @@
 
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
-                <li><a href="#map-view"><i class="glyphicon glyphicon-map-marker"></i> Map</a></li>
+                <li><a href="#map-point-view"><i class="glyphicon glyphicon-map-marker"></i> Point Coverage</a></li>
+                <li><a href="#map-area-view"><i class="glyphicon glyphicon-map-marker"></i> Area Coverage</a></li>
             </ul>
 
             <div class="tab-content">
@@ -315,7 +316,7 @@
                     {% include "includes/legend.html" %}
                 </div>
 
-                <div id="map-view" class="tab-pane fade">
+                <div id="map-point-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
                             <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
@@ -332,16 +333,20 @@
 
                             <div id="geocoder-panel"></div>
 
-                            <div id="discover-map"></div>
+                            <div id="discover-point-map"></div>
 
                             <div id="discover-map-legend"></div>
 
                             <div id="resetZoom"></div>
-                            <br />
-                            <table class="table-hover table-striped" id="map-items" style="width:100%; max-height:200px">
-                            </table>
+
                         </div>
                     </div>
+                </div>
+                <div id="map-area-view" class="tab-pane fade">
+                    <div id="discover-area-map"></div>
+                    <br />
+                    <table class="table-hover table-striped" id="map-items" style="width:100%; max-height:200px">
+                    </table>
                 </div>
             </div>
         </div>
@@ -358,6 +363,7 @@
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
         var map = null;
+        var area_map = null;
         var map_default_bounds = null;
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
@@ -368,7 +374,7 @@
         var shade_rects = [];
 
         var initMap = function(json_results) {
-            var $mapDiv = $("#discover-map");
+            var $mapDiv = $("#discover-point-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
@@ -465,38 +471,16 @@
 
         var setMarkers = function(json_results) {
             var modified_points_data = [];
-            var modified_boxes_data = [];
-            var boxes_data = [];
             for (var i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'point') {
+                //if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
-                } else if (json_results[i].coverage_type == 'box') {
-                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-                    boxes_data.push(json_results[i]);
-                }
+                //}
             }
 
             modified_points_data.forEach(function(point){
                 createPointResourceMarker(point);
             });
 
-            modified_boxes_data.forEach(function(box){
-                createBoxResourceMarker (box);
-            });
-
-            drawShadeRectangles(boxes_data);
-
-            shade_rects.forEach(function(rect){
-                google.maps.event.addListener(rect,'click',function(e){
-                    highlightOverlapping(e.latLng);
-                    var map_resources = [];
-                    buildMapItemsTableData(boxes_data, map_resources, e.latLng);
-                    var map_items_table = $('#map-items').DataTable();
-                    map_items_table.clear();
-                    map_items_table.rows.add(map_resources);
-                    map_items_table.draw();
-                });
-            });
             markerCluster = new MarkerClusterer(map, markers, {
                 styles:[{
                     height: 55,
@@ -595,6 +579,7 @@
             });
         };
 
+
         var setMapItemsList = function(json_results, latLng) {
             var map_resources = [];
             buildMapItemsTableData(json_results, map_resources, latLng);
@@ -664,25 +649,14 @@
             var bnds = map.getBounds();
             if (bnds) {
                 for (var  i = 0; i < raw_results.length; i++ ) {
-                    if (raw_results[i].coverage_type == 'point') {
+                    //if (raw_results[i].coverage_type == 'point') {
                         var data_lat = parseFloat(raw_results[i].north);
                         var data_lng = parseFloat(raw_results[i].east);
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
                         if (bnds.contains(latlng)) {
                             filtered_results.push(raw_results[i]);
                         }
-                    } else if (raw_results[i].coverage_type == 'box') {
-                        var northlimit = parseFloat(raw_results[i].northlimit);
-                        var southlimit =  parseFloat(raw_results[i].southlimit);
-                        var eastlimit = parseFloat(raw_results[i].eastlimit);
-                        var westlimit = parseFloat(raw_results[i].westlimit);
-                        var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-                        var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                        var box_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
-                        if (bnds.intersects(box_bound)) {
-                            filtered_results.push(raw_results[i]);
-                        }
-                    }
+                    //}
                 }
             }
         };
@@ -773,11 +747,6 @@
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
                 var map_resources = [];
-                buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
-                var map_items_table = $('#map-items').DataTable();
-                map_items_table.clear();
-                map_items_table.rows.add(map_resources);
-                map_items_table.draw();
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
 
@@ -895,7 +864,7 @@
             setMarkers(raw_results);
             var map_items_table = $('#map-items').DataTable();
             map_items_table.clear().draw();
-            var $mapDiv = $("#discover-map");
+            var $mapDiv = $("#discover-point-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
@@ -1186,6 +1155,7 @@
         }
 
         $(document).ready(function () {
+
             $("#id_start_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
@@ -1226,7 +1196,7 @@
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if (tabId == "map-view" && map == null) {
+                if (tabId == "map-point-view" && map == null) {
                     var requestURL = "/searchjson/";
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
@@ -1248,7 +1218,8 @@
                             SWlat: sw_lat,
                             SWlng: sw_lng,
                             start_date: start_date,
-                            end_date: end_date
+                            end_date: end_date,
+                            coverage_type: "point"
                         },
                         dataType: 'json',
                         success: function (data) {
@@ -1267,6 +1238,11 @@
                             $("#discover-map-loading-spinner").hide();
                             console.error("Ajax call for getting map data failed");
                         }
+                    });
+                } else if (tabId == "map-area-view" && area_map == null) {
+                    area_map = new google.maps.Map(document.getElementById('discover-area-map'), {
+                        center: {lat: -34.397, lng: 150.644},
+                        zoom: 8
                     });
                 }
             });
