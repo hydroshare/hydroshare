@@ -110,6 +110,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=True)
 
+        print("the files are:") 
+        for f in self.res.files.all(): 
+            print(" path is {}".format(f.storage_path))
+
         # there should two content files
         self.assertEqual(self.res.files.all().count(), 2)
 
