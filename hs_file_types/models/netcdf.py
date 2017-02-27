@@ -106,19 +106,19 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with div(cls="pull-left col-sm-12"):
                 with div(cls="well", id="variables"):
                     with div(cls="row"):
-                        div("{% for form in variable_formset_forms %}")
-                        with div(cls="col-sm-6 col-xs-12"):
-                            with form(id="{{ form.form_id }}", action="{{ form.action }}",
-                                      method="post", enctype="multipart/form-data"):
-                                div("{% crispy form %}")
-                                with div(cls="row", style="margin-top:10px;"):
-                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                                 "col-md-2 col-xs-6"):
-                                        button("Save changes", type="button",
-                                               cls="btn btn-primary pull-right",
-                                               style="display: none;",
-                                               onclick="metadata_update_ajax_submit({{ "
-                                                       "form.form_id_button }}); return false;")
+                        with div("{% for form in variable_formset_forms %}"):
+                            with div(cls="col-sm-6 col-xs-12"):
+                                with form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                          method="post", enctype="multipart/form-data"):
+                                    div("{% crispy form %}")
+                                    with div(cls="row", style="margin-top:10px;"):
+                                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                     "col-md-2 col-xs-6"):
+                                            button("Save changes", type="button",
+                                                   cls="btn btn-primary pull-right",
+                                                   style="display: none;",
+                                                   onclick="metadata_update_ajax_submit({{ "
+                                                           "form.form_id_button }}); return false;")
                         div("{% endfor %}")
 
             self.get_ncdump_html()
@@ -185,21 +185,21 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
     def get_ncdump_html(self):
         # ncdump text from the txt file
         # the generated html used both in view and edit mode
-        nc_dum_div = div()
+        nc_dump_div = div()
         nc_dump_res_file = None
         for f in self.logical_file.files.all():
             if f.extension == ".txt":
                 nc_dump_res_file = f
                 break
         if nc_dump_res_file is not None:
-            nc_dum_div = div(style="clear: both", cls="col-xs-12")
-            with nc_dum_div:
+            nc_dump_div = div(style="clear: both", cls="col-xs-12")
+            with nc_dump_div:
                 legend("NetCDF Header Information")
                 p(nc_dump_res_file.full_path[33:])
                 textarea(nc_dump_res_file.resource_file.read(), readonly="", rows="15",
                          cls="input-xlarge", style="min-width: 100%")
 
-        return nc_dum_div
+        return nc_dump_div
 
     @classmethod
     def validate_element_data(cls, request, element_name):

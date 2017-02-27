@@ -103,15 +103,6 @@ class AbstractFileMetaData(models.Model):
         """
         root_div = div()
 
-        def get_add_keyvalue_button():
-            add_key_value_btn = a(cls="btn btn-success", type="button", data_toggle="modal",
-                                  data_target="#add-keyvalue-filetype-modal",
-                                  style="margin-bottom:20px;")
-            with add_key_value_btn:
-                with span(cls="glyphicon glyphicon-plus"):
-                    span("Add Key/Value", cls="button-label")
-            return add_key_value_btn
-
         with root_div:
             if datatset_name_form:
                 self._get_dataset_name_form()
@@ -145,8 +136,8 @@ class AbstractFileMetaData(models.Model):
                                     span(cls="glyphicon glyphicon-remove-circle icon-remove")
                 p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
                   cls="text-danger small", style="display: none;")
-            if self.extra_metadata:
-                self.get_extra_metadata_html_form()
+
+            self.get_extra_metadata_html_form()
 
         return root_div
 
