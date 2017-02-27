@@ -1108,23 +1108,23 @@
                             </div>
                         </div>
                      <!-- ==== Tabs end ==== -->
-                    </div>
                 </div>
-
-                {# ======= Credits ======= #}
-                {% include "resource-landing-page/credits.html" %}
-
-                {# ======= Ratings ======= #}
-                {% include "resource-landing-page/ratings.html" %}
-
-                {# ======= Comments ======= #}
-                {% include "resource-landing-page/comments.html" %}
-
-                {%  block modal %}
-                    {% include "resource-landing-page/modals.html" %}
-                {%  endblock %}
             </div>
-        </div>
+
+            {# ======= Credits ======= #}
+            {% include "resource-landing-page/credits.html" %}
+
+            {# ======= Ratings ======= #}
+            {% include "resource-landing-page/ratings.html" %}
+
+            {# ======= Comments ======= #}
+            {% include "resource-landing-page/comments.html" %}
+
+            {% block modal %}
+                {% include "resource-landing-page/modals.html" %}
+            {% endblock %}
+            </div>
+
     {% endwith %}
 {% endblock %}
 

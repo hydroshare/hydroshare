@@ -4583,17 +4583,18 @@ div#fb-file-operations-controls {
 }
 
 .stepper-stepMarker {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    margin-right: 8px;
-    text-align: center;
-    color: white;
-    line-height: 24px;
-    background-color: rgba(0,0,0,.38);
-    border-radius: 24px;
-    font-weight: 100;
-    font-size: 12px;
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	margin-right: 8px;
+	text-align: center;
+	color: white;
+	line-height: 24px;
+	background-color: rgba(0, 0, 0, .38);
+	border-radius: 24px;
+	font-weight: 100;
+	font-size: 12px;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .stepper-step-isActive .stepper-stepMarker, .stepper-step-isValid .stepper-stepMarker {
@@ -4620,6 +4621,10 @@ div#fb-file-operations-controls {
 	border: 1px dashed #777;
 	height: 300px;
     cursor: pointer;
+}
+
+.stepper-content #hsDropzone.hs-dropzone-highlight {
+	border: 1px solid #777;
 }
 
 .stepper-content .resource-title {
@@ -4671,4 +4676,16 @@ div#fb-file-operations-controls {
     left: calc(50% - 125px);
     top: calc(50% - 110px);
     z-index: -1;
+}
+
+.stepper-content #hsDropzone .dz-details {
+    display: inline-block;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    margin: 5px;
+    width: 150px;
+    height: 100px;
+    padding: 4px;
+    text-align: center;
+    overflow: hidden;
 }
