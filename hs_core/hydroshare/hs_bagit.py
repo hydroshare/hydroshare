@@ -99,7 +99,7 @@ def create_bag_files(resource):
         # as well as file type metadata
         out.write(resource.get_metadata_xml())
     if resource.resource_federation_path:
-        to_file_name = os.path.join(resource.resource_federation_path, 'data',
+        to_file_name = os.path.join(resource.root_path, 'data',
                                     'resourcemetadata.xml')
     else:
         to_file_name = os.path.join(resource.short_id, 'data', 'resourcemetadata.xml')
@@ -210,7 +210,7 @@ def create_bag_files(resource):
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
     if resource.resource_federation_path:
-        to_file_name = os.path.join(resource.resource_federation_path, 'data', 'resourcemap.xml')
+        to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     else:
         to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
