@@ -272,6 +272,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
     try:
         files = kwargs['files']
         source_names = kwargs['source_names']
+
+        if __debug__:
+            assert(isinstance(source_names, list))
+
         fed_res_path = kwargs['fed_res_path']
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
@@ -443,6 +447,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     res_id = res_obj.short_id
     files = kwargs['files']
     source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     validate_files_dict = kwargs['validate_files']
     if files and source_names:
@@ -646,6 +653,10 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     try:
         files = kwargs.get('files', [])  # array of type File
         source_names = kwargs.get('source_names', [])  # array of type str
+
+        if __debug__:
+            assert(isinstance(source_names, list))
+
         found_shp = False
         found_prj = False
 

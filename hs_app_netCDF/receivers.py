@@ -28,6 +28,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     source_names = kwargs['source_names']
 
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     file_selected = False
     in_file_name = ''
     nc_file_name = ''
@@ -206,6 +209,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
     source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     if len(files) > 1:
         # file number validation

@@ -649,6 +649,9 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     if not resource_title:
         resource_title = 'Untitled resource'
     else:
@@ -793,6 +796,8 @@ def get_party_data_from_user(user):
 # TODO: make this part of resource api. resource --> self.
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
+    if __debug__:
+        assert(isinstance(source_names, list))
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -812,6 +817,8 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                               source_names=[], **kwargs):
 
     from .resource import add_resource_files
+    if __debug__:
+        assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                source_names=source_names)

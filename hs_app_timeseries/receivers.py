@@ -37,6 +37,9 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     source_names = kwargs['source_names']
 
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     if files or source_names:
         if resource.has_sqlite_file or resource.has_csv_file:
             validate_files_dict['are_files_valid'] = False
@@ -86,6 +89,10 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
     source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     if files:
         file_name = files[0].name
     elif source_names:

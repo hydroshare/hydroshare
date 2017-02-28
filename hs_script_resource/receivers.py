@@ -12,6 +12,10 @@ def script_pre_create(sender, **kwargs):
     files = kwargs['files']
     metadata = kwargs['metadata']
     source_names = kwargs['source_names']
+
+    if __debug__: 
+        assert(isinstance(source_names, list))
+
     extended_metadata = {}
     script_language = None
     file_selected = False

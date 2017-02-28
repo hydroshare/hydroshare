@@ -2,7 +2,7 @@ import os
 import zipfile
 import shutil
 import logging
-import string
+# import string
 import requests
 
 from django.conf import settings
@@ -311,8 +311,8 @@ def create_resource(
     :param extra_metadata: one dict containing keys and corresponding values
          { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
-    :param source_names: the file names separated by comma from a federated zone to be
-         used to create the resource in the federated zone, default is empty string
+    :param source_names: an array of file names separated by comma from a federated zone to be
+         used to create the resource in the federated zone, default is empty array
     :param fed_res_path: the federated zone path in the format of
          /federation_zone/home/localHydroProxy that indicate where the resource
          is stored, default is empty string
@@ -326,6 +326,9 @@ def create_resource(
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
     """
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     with transaction.atomic():
         cls = check_resource_type(resource_type)
         owner = utils.user_from_id(owner)
@@ -586,6 +589,10 @@ def add_resource_files(pk, *files, **kwargs):
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
     source_names = kwargs.pop('source_names', [])
+
+    if __debug__:
+        assert(isinstance(source_names, list))
+
     move = kwargs.pop('move', False)
     folder = kwargs.pop('folder', None)
 
@@ -599,13 +606,7 @@ def add_resource_files(pk, *files, **kwargs):
 
     if len(source_names) > 0:
         # TODO: eliminate string option; always pass a list. File names can contain ','!
-        if isinstance(source_names, basestring):
-            ifnames = string.split(source_names, ',')
-        elif isinstance(source_names, list):
-            ifnames = source_names
-        else:
-            return ret
-        for ifname in ifnames:
+        for ifname in source_names:
             ret.append(utils.add_file_to_resource(resource, None,
                                                   folder=folder,
                                                   source_name=ifname,
