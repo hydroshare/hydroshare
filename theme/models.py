@@ -110,6 +110,21 @@ class IconBox(Orderable):
         help_text="Optional, if provided clicking the box will go here.")
 
 
+class UserQuota(models.Model):
+    # ForeignKey relationship makes it possible to associate multiple UserQuota models to
+    # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
+    # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
+    # categorized as hydroshare_internal in zone field in UserQuota model, however,
+    # another UserQuota model instance could be defined in a third-party federated zone as needed.
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quotas')
+    value = models.BigIntegerField(default=10000)
+    unit = models.CharField(max_length=10, default="MB")
+    zone = models.CharField(max_length=100, default="hydroshare_internal")
+    class Meta:
+        verbose_name = _("User quota")
+        verbose_name_plural = _("User quotas")
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)

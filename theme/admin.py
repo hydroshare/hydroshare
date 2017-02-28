@@ -1,12 +1,9 @@
-
 from django.contrib import admin
 
 from mezzanine.core.admin import TabularDynamicInlineAdmin, SingletonAdmin
 from mezzanine.pages.admin import PageAdmin
 
-from models import SiteConfiguration, HomePage, IconBox
-
-admin.site.register(SiteConfiguration, SingletonAdmin)
+from models import SiteConfiguration, HomePage, IconBox, UserQuota
 
 
 class IconBoxInline(TabularDynamicInlineAdmin):
@@ -19,4 +16,10 @@ class HomePageAdmin(PageAdmin):
     inlines = (IconBoxInline,)
 
 
+class QuotaAdmin(admin.ModelAdmin):
+    list_display = ('user', 'value', 'unit', 'zone')
+
+
 admin.site.register(HomePage, HomePageAdmin)
+admin.site.register(SiteConfiguration, SingletonAdmin)
+admin.site.register(UserQuota, QuotaAdmin)
