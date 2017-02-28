@@ -207,10 +207,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         resfile.content_object.refresh_from_db()
         resfile.set_storage_path('file1.txt', test_exists=False)
 
-        print("storage path is " + str(resfile.storage_path))
-        print("get_path is " + get_path(resfile, 'file1.txt'))
         self.assertEqual(self.res.resource_federation_path, fedpath)
-
         self.assertEqual(resfile.storage_path, get_path(resfile, 'file1.txt'))
 
         # determine where that file should live; THIS IS FAKE
