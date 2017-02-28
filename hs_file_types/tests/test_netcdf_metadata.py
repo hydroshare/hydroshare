@@ -107,6 +107,34 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_set_file_type_to_netcdf_resource_title(self):
+        # here we are using a valid nc file for setting it
+        # to NetCDF file type which includes metadata extraction
+        # and testing that the resource title gets set with the
+        # extracted metadata if the original title is 'untitled resource'
+
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource(title='untitled resource')
+
+        self.assertEqual(self.composite_resource.metadata.title.value, 'untitled resource')
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that there is one GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # check that there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+
+        # set the nc file to NetCDF file type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # test resource title was updated with the extracted netcdf data
+        res_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+        self.assertEqual(self.composite_resource.metadata.title.value, res_title)
+
     def test_set_file_type_to_necdf_invalid_file(self):
         # here we are using an invalid netcdf file for setting it
         # to netCDF file type which should fail
@@ -167,7 +195,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         coverage_data = {'northlimit': '121.345a', 'southlimit': '42.678', 'eastlimit': '123.789',
                          'westlimit': '40.789', 'units': 'meters'}
 
-        # ToDO: modify the create() and update() of OriginalCoverage to check for numerical values
+        # TODO: modify the create() and update() of OriginalCoverage to check for numerical values
         # of the bounding box limits then uncomment the following test
         # with self.assertRaises(Exception):
         #     netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
@@ -284,7 +312,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test with deleting of 'txt' file
         self._test_file_metadata_on_file_delete(ext='.txt')
 
-    def test_raster_file_type_folder_delete(self):
+    def test_netcdf_file_type_folder_delete(self):
         # when  a file is set to NetCDFLogicalFile type
         # system automatically creates folder using the name of the file
         # that was used to set the file type
@@ -364,13 +392,13 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
-    def _create_composite_resource(self):
+    def _create_composite_resource(self, title='Test NetCDF File Type Metadata'):
         uploaded_file = UploadedFile(file=self.netcdf_file_obj,
                                      name=os.path.basename(self.netcdf_file_obj.name))
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Test NetCDF File Type Metadata',
+            title=title,
             files=(uploaded_file,)
         )
 
@@ -465,6 +493,10 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be one keyword element
         self.assertEqual(len(logical_file.metadata.keywords), 1)
         self.assertIn('Snow water equivalent', logical_file.metadata.keywords)
+
+        # test dataset_name attribute of the logical file which shoould have the extracted value
+        dataset_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+        self.assertEqual(logical_file.dataset_name, dataset_title)
 
         # testing extended metadata element: original coverage
         ori_coverage = logical_file.metadata.originalCoverage

@@ -435,13 +435,19 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     # first delete the netcdf file that we retrieved from irods
                     # for setting it to netcdf file type
                     delete_resource_file(resource.short_id, res_file.id, user)
-                    # delete_resource_file(resource.short_id, res_file.id, user)
+
                     # create a netcdf logical file object to be associated with
                     # resource files
                     logical_file = cls.create()
+
                     # by default set the dataset_name attribute of the logical file to the
-                    # name of the file selected to set file type
-                    logical_file.dataset_name = nc_file_name
+                    # name of the file selected to set file type unless the extracted metadata
+                    # has a value for title
+                    dataset_title = res_dublin_core_meta.get('title', None)
+                    if dataset_title is not None:
+                        logical_file.dataset_name = dataset_title
+                    else:
+                        logical_file.dataset_name = nc_file_name
                     logical_file.save()
 
                     try:
@@ -499,7 +505,12 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # here k is the name of the element
                         # v is a dict of all element attributes/field names and field values
                         k, v = element.items()[0]
-                        resource.metadata.create_element(k, **v)
+                        if k == 'title':
+                            # update title element
+                            title_element = resource.metadata.title
+                            resource.metadata.update_element('title', title_element.id, **v)
+                        else:
+                            resource.metadata.create_element(k, **v)
 
                     log.info("Resource - metadata was saved to DB")
 
