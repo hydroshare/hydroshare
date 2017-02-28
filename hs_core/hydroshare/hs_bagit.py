@@ -37,8 +37,8 @@ def delete_files_and_bag(resource):
     if istorage.exists(resource.bag_path):
         istorage.delete(resource.bag_path)
 
+    # TODO: delete this whole mechanism; redundant. 
     # delete the bags table
-    # TODO: Why were extra bags created in the first place?
     for bag in resource.bags.all():
         bag.delete()
 
