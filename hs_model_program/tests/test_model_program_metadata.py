@@ -42,11 +42,10 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         text_file.write("Model Program resource files")
         self.text_file_obj = open(temp_text_file, 'r')
 
-        # TODO: this really should have a different extension for intent of test to be satisfied.
-        self.file_name_2 = "MP2.txt"
+        self.file_name_2 = "MP.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
         text_file_2 = open(temp_text_file_2, 'w')
-        text_file_2.write("Model SWAT Instance resource files")
+        text_file_2.write("Model,Program,resource,file")
         self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
