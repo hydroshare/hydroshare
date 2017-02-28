@@ -56,10 +56,10 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         text_file.write("Model Instance resource files")
         self.text_file_obj = open(temp_text_file, 'r')
 
-        self.file_name_2 = "MIS.txt"
+        self.file_name_2 = "MIR.csv"
         temp_text_file = os.path.join(self.temp_dir, self.file_name_2)
         text_file = open(temp_text_file, 'w')
-        text_file.write("Model Instance resource files")
+        text_file.write("Model,Instance,resource,files")
         self.text_file_obj_2 = open(temp_text_file, 'r')
 
     def tearDown(self):

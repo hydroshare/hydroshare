@@ -639,17 +639,20 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEqual(self.composite_resource.files.count(), 1)
         # we should be able to create this new folder
-        new_folder_path = "data/contents/my-new-folder"
-        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        new_folder_full_path = os.path.join(self.composite_resource.file_path, "my-new-folder")
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_full_path),
+                         True)
         # create the folder
+        new_folder_path = os.path.join("data", "contents", "my-new-folder")
         create_folder(self.composite_resource.short_id, new_folder_path)
         # now move the file to this new folder
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + self.generic_file_name,
-                                      new_folder_path + "/" + self.generic_file_name)
+        move_or_rename_file_or_folder(self.user,
+                                      os.path.join(self.composite_resource.file_path,
+                                                   self.generic_file_name),
+                                      os.path.join(new_folder_path, self.generic_file_name))
         # test that we should be able to create a folder inside the folder that contains
         # a resource file that is part of a Generic Logical file
-        new_folder_path = "data/contents/my-new-folder/another-folder"
+        new_folder_path = os.path.join(new_folder_path, "another-folder")
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
 
         # add a raster tif file to the resource which will be part of
@@ -684,8 +687,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         gen_res_file_basename = hydroshare.utils.get_resource_file_name_and_extension(
             gen_res_file)[1]
         self.assertEqual(self.generic_file_name, gen_res_file_basename)
-        src_full_path = self.composite_resource.short_id + 'data/contents/' + self.generic_file_name
-        tgt_full_path = self.composite_resource.short_id + 'data/contents/renamed_file.txt'
+        src_full_path = os.path.join(self.composite_resource.file_path, self.generic_file_name)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, 'renamed_file.txt')
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)

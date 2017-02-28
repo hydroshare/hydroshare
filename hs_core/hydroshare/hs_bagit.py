@@ -19,7 +19,7 @@ class HsBagitException(Exception):
     pass
 
 
-def delete_bag(resource):
+def delete_files_and_bag(resource):
     """
     delete the resource bag
 

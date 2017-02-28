@@ -19,7 +19,7 @@ class MockIRODSTestCaseMixin(object):
         if settings.IRODS_HOST != 'data.local.org':
             from mock import patch
             self.irods_patchers = (
-                patch("hs_core.hydroshare.hs_bagit.delete_bag"),
+                patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
                 patch("hs_core.hydroshare.hs_bagit.create_bag"),
                 patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
                 patch("hs_core.tasks.create_bag_by_irods"),

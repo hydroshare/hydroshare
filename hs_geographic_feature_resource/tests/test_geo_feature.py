@@ -505,15 +505,16 @@ class TestGeoFeature(TransactionTestCase):
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
         # add .prj
         add_files = []
-        target = 'hs_geographic_feature_resource/' \
+        target = 'hs_geographic_feature_resource/' + \
                  'tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
         add_files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06.prj'))
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
-        geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
-                                                      resource=self.resGeoFeature, files=add_files,
-                                                      validate_files={'are_files_valid': True,
-                                                                      'message': ''})
+        # this is already called by hydroshare.add_resource_files
+        # geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
+        #                                               resource=self.resGeoFeature, files=add_files,
+        #                                               validate_files={'are_files_valid': True,
+        #                                                               'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
