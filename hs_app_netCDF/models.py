@@ -292,7 +292,6 @@ class Variable(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
 
-# Define the netCDF resource
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
@@ -303,7 +302,7 @@ class NetcdfResource(BaseResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        # 3 file types are supported
+        # only file with extension .nc is supported for uploading
         return (".nc",)
 
     @classmethod
@@ -424,7 +423,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -434,70 +433,34 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
         # inject netcdf resource specific metadata element 'variable' to container element
         for variable in self.variables.all():
-            md_fields = {
-                "md_element": "netcdfVariable",
-                "name": "name",
-                "unit": "unit",
-                "type": "type",
-                "shape": "shape",
-                "descriptive_name": "longName",
-                "method": "comment",
-                "missing_value": "missingValue"
-            }  # element name : name in xml
-            self.add_metadata_element_to_xml(container, variable, md_fields)
+            variable.add_to_xml_container(container)
 
-        if self.ori_coverage.all().first():
-            ori_cov_obj = self.ori_coverage.all().first()
-            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' %
-                                               self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            hsterms_coverage_terms = etree.SubElement(hsterms_ori_cov, cov_term %
-                                                      self.NAMESPACES['hsterms'])
-
-            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_coverage_terms, '{%s}value' %
-                                                               self.NAMESPACES['rdf'])
-            cov_box = ''
-
-            # add extent info
-            if ori_cov_obj.value:
-                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; unit=%s' \
-                        % (ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
-                           ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'],
-                           ori_cov_obj.value['units'])
-
-            if ori_cov_obj.value.get('projection'):
-                cov_box += '; projection_name={}'.format(ori_cov_obj.value['projection'])
-
-            if ori_cov_obj.projection_string_text:
-                cov_box += '; projection_string={}'.format(ori_cov_obj.projection_string_text)
-
-            if ori_cov_obj.datum:
-                cov_box += '; datum={}'.format(ori_cov_obj.datum)
-
-            hsterms_ori_cov_rdf_Description.text = cov_box
-
+        ori_cov_obj = self.ori_coverage.all().first()
+        if ori_cov_obj is not None:
+            ori_cov_obj.add_to_xml_container(container)
+            
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
-    def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        from lxml import etree
-        element_name = md_fields.get('md_element') if md_fields.get('md_element') \
-            else md_element.term
-
-        hsterms_newElem = etree.SubElement(
-            root,
-            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=element_name))
-
-        hsterms_newElem_rdf_Desc = etree.SubElement(
-            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
-
-        for md_field in md_fields.keys():
-            if hasattr(md_element, md_field):
-                attr = getattr(md_element, md_field)
-                if attr:
-                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
-                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_fields[md_field]))
-                    field.text = str(attr)
+    # def add_metadata_element_to_xml(self, root, md_element, md_fields):
+    #     from lxml import etree
+    #     element_name = md_fields.get('md_element') if md_fields.get('md_element') \
+    #         else md_element.term
+    #
+    #     hsterms_newElem = etree.SubElement(
+    #         root,
+    #         "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=element_name))
+    #
+    #     hsterms_newElem_rdf_Desc = etree.SubElement(
+    #         hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+    #
+    #     for md_field in md_fields.keys():
+    #         if hasattr(md_element, md_field):
+    #             attr = getattr(md_element, md_field)
+    #             if attr:
+    #                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
+    #                                          "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
+    #                                                                   field=md_fields[md_field]))
+    #                 field.text = str(attr)
 
     # def delete_all_elements(self):
     #     super(NetcdfMetaData, self).delete_all_elements()
