@@ -14,7 +14,9 @@ from django.contrib.auth.models import User, Group
 from pprint import pprint
 
 from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes, \
+    UserResourceProvenance, GroupResourceProvenance, UserGroupProvenance
+
 
 # from hs_core import hydroshare
 from hs_core.models import BaseResource
@@ -25,6 +27,9 @@ def global_reset():
     UserResourcePrivilege.objects.all().delete()
     UserGroupPrivilege.objects.all().delete()
     GroupResourcePrivilege.objects.all().delete()
+    UserResourceProvenance.objects.all().delete()
+    UserGroupProvenance.objects.all().delete()
+    GroupResourceProvenance.objects.all().delete()
     UserAccess.objects.all().delete()
     GroupAccess.objects.all().delete()
     ResourceAccess.objects.all().delete()
@@ -878,3 +883,108 @@ def assertGroupResourceUnshareCoherence(self):
                         g in u.uaccess.get_resource_unshare_groups(r))
                     with self.assertRaises(PermissionDenied):
                         u.uaccess.unshare_resource_with_group(r, g)
+
+
+def check_provenance_synchronization(self):
+    for u in User.objects.all():
+        for r in BaseResource.objects.all():
+            prov = UserResourceProvenance.get_privilege(resource=r, user=u)
+            priv = UserResourcePrivilege.get_privilege(resource=r, user=u)
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, resource={}, user={}",
+                                        prov, priv, r, u))
+    for u in User.objects.all():
+        for g in Group.objects.all():
+            prov = UserGroupProvenance.get_privilege(group=g, user=u)
+            priv = UserGroupPrivilege.get_privilege(group=g, user=u)
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, group={}, user={}",
+                                        prov, priv, g, u))
+    for g in Group.objects.all():
+        for r in BaseResource.objects.all():
+            prov = GroupResourceProvenance.get_privilege(resource=r, group=g)
+            priv = GroupResourcePrivilege.get_privilege(resource=r, group=g)
+            self.assertEqual(prov, priv,
+                             str.format("prov={}, priv={}, group={}, resource={}",
+                                        prov, priv, g, r))
+
+
+def printGroupResourceProvenance():
+    print "==================================="
+    print "GroupResourcePrivilege"
+    priv = GroupResourcePrivilege.objects.all().order_by('group__id', 'resource__id')
+    o = None
+    for p in priv:
+        if o is not None and (p.group != o.group or p.resource != o.resource):
+            print "------------------------------"
+        print(p)
+        o = p
+    print "==================================="
+    print "GroupResourceProvenance"
+    prov = GroupResourceProvenance.objects.all().order_by(
+        'group__id', 'resource__id', 'start')
+    o = None
+    for p in prov:
+        if o is not None and (p.group != o.group or p.resource != o.resource):
+            print "------------------------------"
+        current = GroupResourceProvenance.get_current_record(
+            resource=p.resource, group=p.group)
+        star = ''
+        if current == p:
+            star = 'CURRENT'
+        print(p, star)
+        o = p
+
+
+def printUserResourceProvenance():
+    print "==================================="
+    print "UserResourcePrivilege"
+    priv = UserResourcePrivilege.objects.all().order_by('user__id', 'resource__id')
+    o = None
+    for p in priv:
+        if o is not None and (p.user != o.user or p.resource != o.resource):
+            print "------------------------------"
+        print(p)
+        o = p
+    print "==================================="
+    print "UserResourceProvenance"
+    prov = UserResourceProvenance.objects.all().order_by(
+        'user__id', 'resource__id', 'start')
+    o = None
+    for p in prov:
+        if o is not None and (p.user != o.user or p.resource != o.resource):
+            print "------------------------------"
+        current = UserResourceProvenance.get_current_record(
+            resource=p.resource, user=p.user)
+        star = ''
+        if current == p:
+            star = 'CURRENT'
+        print(p, star)
+        o = p
+
+
+def printUserGroupProvenance():
+    print "==================================="
+    print "UserGroupPrivilege"
+    priv = UserGroupPrivilege.objects.all().order_by('user__id', 'group__id')
+    o = None
+    for p in priv:
+        if o is not None and (p.user != o.user or p.group != o.group):
+            print "------------------------------"
+        pprint(p)
+        o = p
+    print "==================================="
+    print "UserGroupProvenance"
+    prov = UserGroupProvenance.objects.all().order_by(
+        'user__id', 'group__id', 'start')
+    o = None
+    for p in prov:
+        if o is not None and (p.user != o.user or p.group != o.group):
+            print "------------------------------"
+        current = UserGroupProvenance.get_current_record(
+            group=p.group, user=p.user)
+        star = ''
+        if current == p:
+            star = 'CURRENT'
+        print(p, star)
+        o = p
