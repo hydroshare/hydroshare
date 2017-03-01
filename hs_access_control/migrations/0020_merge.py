@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+# Merge two concurrent changes to access control. 
+
 
 class Migration(migrations.Migration):
 
