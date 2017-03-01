@@ -368,16 +368,11 @@
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
         var point_markers = [];
-<<<<<<< HEAD
         var area_centers = [];
         var raw_point_results = [];
         var raw_box_results = [];
         var marker_cluster = null;
         var center_cluster = null;
-=======
-        var raw_point_results = [];
-        var markerCluster = null;
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
         var info_window = null;
         var area_center_info = null;
         var shade_rects = [];
@@ -468,11 +463,7 @@
             document.getElementById('geocoder-submit').addEventListener('click', function() {
                 geocodeAddress(geocoder, point_map, mapDim);
             });
-<<<<<<< HEAD
         };
-=======
-        }
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
 
         var setMarkers = function(json_results) {
             var modified_points_data = [];
@@ -484,11 +475,7 @@
                 createPointResourceMarker(point);
             });
 
-<<<<<<< HEAD
             marker_cluster = new MarkerClusterer(point_map, point_markers, {
-=======
-            markerCluster = new MarkerClusterer(point_map, point_markers, {
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
                 styles:[{
                     height: 55,
                     width: 56,
@@ -504,7 +491,6 @@
             modified_points_data.forEach(function(item) {
                 var item_lat = parseFloat(item.north);
                 var item_lng = parseFloat(item.east);
-<<<<<<< HEAD
 
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
@@ -649,21 +635,9 @@
                     width: 56,
                     url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
                 }]
-=======
-
-                var lat_diff = Math.abs(test_lat - item_lat);
-                var lng_diff = Math.abs(test_lng - item_lng);
-                if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title +'</a>';
-                    item.counter++;
-                    item.resources_list.push(test);
-                    existed = true;
-                }
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
             });
         };
 
-<<<<<<< HEAD
         var checkDuplicateBoxResults = function (modified_boxes_data, test){
             var test_lat = (parseFloat(test.northlimit) + parseFloat(test.southlimit)) / 2;
             var test_lng = (parseFloat(test.eastlimit) + parseFloat(test.westlimit)) / 2;
@@ -727,28 +701,6 @@
         };
 
 
-=======
-        var createPointResourceMarker = function (point) {
-            var info_content = point.info_link;
-            var lat = parseFloat(point.north);
-            var lng = parseFloat(point.east);
-            var counter = point.counter.toString();
-            var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: point_map,
-                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
-                position: latlng
-            });
-            point_markers.push(marker);
-            google.maps.event.addListener(marker, 'click', function() {
-                var map_resources = [];
-                info_window.setContent(info_content);
-                info_window.open(point_map, marker);
-
-            });
-        };
-
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
         var createBoundsForMarkers = function(markers) {
             var bounds = new google.maps.LatLngBounds();
             $.each(markers, function() {
@@ -817,13 +769,8 @@
             // }
             // shade_rects = [];
 
-<<<<<<< HEAD
             if (marker_cluster) {
                 marker_cluster.clearMarkers(point_markers);
-=======
-            if (markerCluster) {
-                markerCluster.clearMarkers(point_markers);
->>>>>>> 64eef6e17b8d28eb0c897d7ca1bba4dc176336b3
             }
             for (var i = 0; i < point_markers.length; i++) {
                 if (point_markers[i].getMap() != null) {
