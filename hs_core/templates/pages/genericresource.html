@@ -428,8 +428,9 @@
                                     <div id="flag-uploading" class="hidden">
                                         <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
                                         <small class="uploading-message">
-                                            <strong>Uploading files to:</strong>&nbsp;data/contents<strong>
-                                            &nbsp;&nbsp;Progress:&nbsp;</strong>
+                                            <strong>Uploading files to:</strong>&nbsp;
+                                            <span id="upload-folder-path"></span>
+                                            <strong>&nbsp;&nbsp;Progress:&nbsp;</strong>
                                             <span id="upload-progress"></span></small>
                                     </div>
 
@@ -507,7 +508,7 @@
                                 </a>
                             </div>
                             <div>
-                                <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                                <a target="_blank" href="https://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                             </div>
                         {% endfor %}
                         {% if user_zone_account_exist %}
@@ -613,25 +614,26 @@
                             <!-- ========= CONTACT TAB ========= -->
                             <div {% if not is_resource_specific_tab_active %}class="tab-pane active"
                                  {% else %} class="tab-pane"{% endif %} id="contactTab">
-                            {% if not metadata_form %}
-                                    <table class="table table-striped">
-                                        <tbody>
-                                        <tr>
-                                            <th class="division-title" colspan="5"><span>Authors </span>
-                                                <div>
-                                                    <small class="text-muted division-title-caption">The people
-                                                        or organizations that created the intellectual content
-                                                        of the resource.
-                                                    </small>
-                                                </div>
-                                            </th>
-                                        </tr>
+                                {% if not metadata_form %}
+                                    <h4>Authors </h4>
+                                    <div>
+                                        <small class="text-muted division-title-caption">The people
+                                            or organizations that created the intellectual content
+                                            of the resource.
+                                        </small>
+                                    </div>
+                                    <br>
+                                    <table class="table contact-table contact-table-view">
+                                        <thead>
                                         <tr class="header-row">
                                             <th>Name</th>
                                             <th>Organization</th>
                                             <th>Address</th>
                                             <th>Phone</th>
                                         </tr>
+                                        </thead>
+
+                                        <tbody>
                                         {% for cr in creators %}
                                             <tr>
                                                 <td>{% if cr.description %}
@@ -642,73 +644,118 @@
                                                 <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
                                             </tr>
                                         {% endfor %}
-                                        {% if contributors %}
-                                            <tr>
-                                                <th class="division-title" colspan="5"><span>Contributors</span>
-                                                    <div>
-                                                        <small class="text-muted division-title-caption">People or
-                                                            organizations that contributed technically, materially,
-                                                            financially, or provided general support for the
-                                                            creation of the resource's content but are not
-                                                            considered authors.
-                                                        </small>
-                                                    </div>
-                                                </th>
-                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    {% if contributors %}
+                                        <hr>
+                                        <h4>Contributors</h4>
+                                        <div>
+                                            <small class="text-muted division-title-caption">People or
+                                                organizations that contributed technically, materially,
+                                                financially, or provided general support for the
+                                                creation of the resource's content but are not
+                                                considered authors.
+                                            </small>
+                                        </div>
+                                        <br>
+                                        <table class="table contact-table contact-table-view">
+                                            <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
                                                 <th>Organization</th>
                                                 <th>Address</th>
                                                 <th>Phone</th>
                                             </tr>
-
+                                            </thead>
+                                            <tbody>
                                             {% for cont in contributors %}
                                                 <tr>
                                                     <td>{% if cont.description %}
                                                         <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
                                                         {{ cont.name }}{% endif %}</td>
-                                                    <td>{% if cont.organization %} {{ cont.organization }}{% endif %}</td>
+                                                    <td>{% if cont.organization %}
+                                                        {{ cont.organization }}{% endif %}</td>
                                                     <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
                                                     <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
                                                 </tr>
                                             {% endfor %}
-                                        {% endif %}
-                                        </tbody>
-                                    </table>
+                                            </tbody>
+                                        </table>
+                                    {% endif %}
+
                                 {% else %}
                                     <div class="tab-pane active" id="contactTab">
-                                        <table id="contact-table" class="table table-striped">
-                                            <tbody>
-                                            <tr>
-                                                <th class="division-title" colspan="5"><span>Authors</span>
-                                                    <div>
-                                                        <small class="text-muted division-title-caption">The people
-                                                            or organizations that created the intellectual content
-                                                            of the resource.
-                                                        </small>
-                                                    </div>
-                                                </th>
-                                            </tr>
+                                        <h4>Authors</h4>
+                                        <div>
+                                            <small class="text-muted division-title-caption">The people
+                                                or organizations that created the intellectual content
+                                                of the resource.
+                                            </small>
+                                        </div>
+                                        <br>
+
+                                        <table id="authors-table" class="contact-table table">
+                                            <thead>
                                             <tr class="header-row">
+                                                <th class="drag-indicator"></th>
                                                 <th>Name</th>
                                                 <th>Organization</th>
                                                 <th>Address</th>
                                                 <th>Phone</th>
                                                 <th></th>
                                             </tr>
+                                            </thead>
+                                            <tbody class="sortable">
                                             {% for author in creator_formset.initial %}
                                                 <tr>
-                                                    <td>{% if author.description %}
+                                                    <td class="drag-indicator">
+                                                        <i class="fa fa-arrows-v" aria-hidden="true"></i>
+                                                        <form class="hidden-form"
+                                                              action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                                                               enctype="multipart/form-data">
+                                                            {% csrf_token %}
+                                                            <input name="resource-mode" type="hidden" value="edit">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-name"
+                                                                   value="{% if author.name %}{{ author.name }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-description"
+                                                                   value="{% if author.description %}{{ author.description }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-organization" type="text"
+                                                                   value="{% if author.organization %}{{ author.organization }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-email"
+                                                                   value="{% if author.email %}{{ author.email }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-address"
+                                                                   value="{% if author.address %}{{ author.address }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-phone"
+                                                                   type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+
+                                                            <input name="creator-{{ author.order|add:"- 1" }}-homepage" type="url"
+                                                                   value="{% if author.homepage %}{{ author.homepage }}{% endif %}">
+
+                                                            <input class="order-input"
+                                                                   name="creator-{{ author.order|add:"- 1" }}-order"
+                                                                   type="number" value="{% if author.order %}{{ author.order }}{% endif %}">
+                                                        </form>
+                                                    </td>
+                                                    <td>
+                                                        {% if author.description %}
                                                         <a href="{{ author.description }}">{{ author.name }}</a>{% else %}
                                                         {{ author.name }}{% endif %}</td>
-                                                    <td>{% if  author.organization %}{{ author.organization }}{% endif %}</td>
+                                                    <td>{% if  author.organization %}
+                                                        {{ author.organization }}{% endif %}</td>
                                                     <td>{% if  author.address %}{{ author.address }}{% endif %}</td>
                                                     <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
                                                            class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                            data-target="#edit-creator-dialog{{ author.id }}"
-                                                                ></a>
+                                                        ></a>
 
                                                         {# Prevent deletion of last creator#}
                                                         {% if creator_formset.initial|length > 1 %}
@@ -718,29 +765,32 @@
                                                         {% endif %}
                                                     </td>
                                                 </tr>
-
                                             {% endfor %}
-                                            <tr>
-                                                <th class="division-title" colspan="5">
-                                                    <a type="button" class="btn btn-success" data-toggle="modal"
-                                                       data-target="#add-creator-dialog" multiple="multiple">
-                                                            <span class="glyphicon glyphicon-plus"><span
-                                                                    class="button-label"> Add Author</span></span>
-                                                    </a>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th class="division-title" colspan="5"><span>Contributors</span>
-                                                    <div>
-                                                        <small class="text-muted division-title-caption">People or
-                                                            organizations that contributed technically, materially,
-                                                            financially, or provided general support for the
-                                                            creation of the resource's content but are not
-                                                            considered authors.
-                                                        </small>
-                                                    </div>
-                                                </th>
-                                            </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <a type="button" class="btn btn-success" data-toggle="modal"
+                                           data-target="#add-creator-dialog" multiple="multiple">
+                                                                <span class="glyphicon glyphicon-plus"><span
+                                                                        class="button-label"> Add Author</span></span>
+                                        </a>
+
+                                        <hr>
+
+                                        <h4>Contributors</h4>
+
+                                        <div>
+                                            <small class="text-muted division-title-caption">People or
+                                                organizations that contributed technically, materially,
+                                                financially, or provided general support for the
+                                                creation of the resource's content but are not
+                                                considered authors.
+                                            </small>
+                                        </div>
+                                        <br>
+
+                                        <table class="contact-table table">
+                                            <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
                                                 <th>Organization</th>
@@ -748,6 +798,8 @@
                                                 <th>Phone</th>
                                                 <th></th>
                                             </tr>
+                                            </thead>
+                                            <tbody>
                                             {% for contributor in contributor_formset.initial %}
                                                 <tr>
                                                     <td>{% if contributor.description %}
@@ -755,32 +807,29 @@
                                                         {{ contributor.name }}{% endif %}</td>
                                                     <td>{% if  contributor.organization %}
                                                         {{ contributor.organization }}{% endif %}</td>
-                                                    <td>{% if  contributor.address %}{{ contributor.address }}{% endif %}</td>
-                                                    <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
+                                                    <td>{% if  contributor.address %}
+                                                        {{ contributor.address }}{% endif %}</td>
+                                                    <td>{% if  contributor.phone %}
+                                                        {{ contributor.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
                                                            class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
-                                                                ></a>
+                                                        ></a>
                                                         <a data-toggle="modal" data-placement="auto" title="Remove"
                                                            class="glyphicon glyphicon-trash icon-button btn-remove"
                                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
-                                                                ></a>
+                                                        ></a>
                                                     </td>
                                                 </tr>
                                             {% endfor %}
-
-                                            <tr>
-                                                <th class="division-title" colspan="5">
-                                                    <a type="button" class="btn btn-success" data-toggle="modal"
-                                                       data-target="#add-contributor-dialog" multiple="multiple">
-                                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
-                                                    </a>
-                                                </th>
-                                            </tr>
-
                                             </tbody>
                                         </table>
+
+                                        <a type="button" class="btn btn-success" data-toggle="modal"
+                                           data-target="#add-contributor-dialog" multiple="multiple">
+                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
+                                        </a>
                                     </div>
                                 {% endif %}
                             </div>
@@ -870,9 +919,9 @@
                                                         </tr>
                                                     {% endif %}
                                                 {% endfor %}
-
                                                 </tbody>
                                             </table>
+
                                             <a id="add-relation" class="btn btn-success" data-toggle="modal"
                                                data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
                                             <span data-toggle="tooltip" data-placement="auto"
@@ -961,11 +1010,8 @@
                                 {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                     {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
                                         {% if  cm|resource_type|lower != "collection resource" %}
-                                            {% if not is_resource_specific_tab_active %}
-                                                <div class="tab-pane" id="resourceSpecificTab">
-                                            {% else %}
-                                                <div class="tab-pane active" id="resourceSpecificTab">
-                                            {%  endif %}
+                                            <div class="{% if not is_resource_specific_tab_active %}tab-pane{% else %}tab-pane active{% endif %}"
+                                                 id="resourceSpecificTab">
                                                 {% if not metadata_form %}
 
                                                     {% block extended_metadata %}
@@ -982,7 +1028,8 @@
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
-                                <!-- ========= RELEVANT TOOLS TAB ========= -->
+
+                            <!-- ========= RELEVANT TOOLS TAB ========= -->
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
                                     {% if not metadata_form %}
@@ -1043,12 +1090,13 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
-                                {% if metadata_form %}
-                                    <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
-                                {% endif %}
 
+                                    {% if metadata_form %}
+                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
+                                    {% endif %}
                             </div>
                             {% endif %}
+
                             {# ===========   File Type Metadata Tab ================== #}
                             {% if cm.resource_type == "CompositeResource" %}
                                 <div class="tab-pane" id="fileTypeMetaDataTab">
@@ -1057,7 +1105,7 @@
                                     </div>
                                 </div>
                             {% endif %}
-                        </div>
+                            </div>
                         </div>
                      <!-- ==== Tabs end ==== -->
                     </div>
@@ -1423,6 +1471,38 @@
             resID = $("#hs-file-browser").attr("data-res-id");
             if (task_id)
                 update_download_status(task_id, download_path);
+
+            $('.contact-table .sortable').sortable({
+                axis: "y",
+                stop: function( event, ui ) {
+                    var forms = $("#authors-table .drag-indicator > form");
+
+                    // Set the new order value in the form items
+                    for (var i = 0; i < forms.length; i++) {
+                        $(forms[i]).find("input.order-input").attr("value", i + 1);
+                        $("#id_creator-" + i + "-order").attr("value", $("input[name='creator-" + i + "-order']").val());
+                    }
+
+                    $form = $(ui.item.find(".drag-indicator > form"));
+                    var url = $form.attr('action');
+                    var datastring = $form.serialize();
+                    $("html").css("cursor", "progress");
+
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: datastring,
+                        success: function (result) {
+                            $("html").css("cursor", "initial");
+
+                        },
+                        error: function (xhr, errmsg, err) {
+                            $("html").css("cursor", "initial");
+                            console.log(errmsg, err);
+                        }
+                    });
+                }
+            });
 
             $("#agree-chk").on('click', function(e) {
                 e.stopImmediatePropagation();

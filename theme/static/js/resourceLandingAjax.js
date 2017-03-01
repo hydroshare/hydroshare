@@ -115,6 +115,7 @@ function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permissi
             else {
                 $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
                 $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                $form.parent().closest("tr").removeClass("loading");
                 setPointerEvents(true);
             }
         },
@@ -728,6 +729,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             bindFileBrowserItemEvents();
 
             $("#hs-file-browser").attr("data-current-path", store_path);
+            $("#upload-folder-path").text(store_path);
             $("#hs-file-browser").attr("data-res-id", res_id);
 
             // strip the 'data' folder from the path
@@ -993,15 +995,18 @@ function showMetadataFormSaveChangesButton(){
 // Initialize date pickers
 function initializeDatePickers(){
     $(".dateinput").each(function () {
-        $(this).datepicker({
-            format: 'mm-dd-yyyy',
-            yearRange: "-1000:+1000",
-            changeMonth: true,
-            changeYear: true
-        });
+        $(this).datepicker({dateFormat: 'mm/dd/yy'});
         $(this).on('change', function () {
             $(this).closest("form").find("button").show();
         });
+    });
+
+    // Set stored dates
+    $(".dateinput").each(function () {
+        var dateString = $(this).attr("data-date").split("-");
+        var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
+
+        $(this).datepicker("setDate", pickerDate);
     });
 }
 

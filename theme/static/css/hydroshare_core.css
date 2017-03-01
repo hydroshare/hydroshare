@@ -946,17 +946,44 @@ li.account p{
 }
 /* ===== Resource edit page changes ===== */
 
-#contact-table .icon-button{
-    float:left;
-    background-color: transparent;
-    border: 0;
-}
-
-#contact-table .icon-button, .funding-agencies-table .icon-button {
+.contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;
     text-decoration: none;
+}
+
+.contact-table {
+	table-layout: fixed;
+	border: 1px solid #DDD;
+}
+
+.contact-table .drag-indicator > i {
+	color: #777;
+}
+
+.contact-table td.drag-indicator, .contact-table th.drag-indicator {
+	width: 20px;
+}
+
+.contact-table td:last-child{
+    width: calc(20% - 20px);
+}
+
+.contact-table td {
+	width: 20%;
+	border-top: 0 !important;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.contact-table tr {
+	border: 1px solid #DDD;
+	background: #FFF;
+}
+
+.contact-table-view td {
+	width: 25%;
 }
 
 #contactTab table .header-row {
@@ -964,7 +991,9 @@ li.account p{
 }
 
 #contactTab table .header-row th {
-    background-color: #FFF;
+	background-color: #F1F1F1;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 #txt-abstract{
@@ -1489,7 +1518,6 @@ body > .main-container {
 	height: 34px;
 	border-radius: 0;
 	width: 100%;
-	margin-top: 7px;
 }
 
 #invite-to-group .btn-add-access {
@@ -1686,16 +1714,16 @@ a.tag:hover {
     border:0;
 }
 
-.tab-elements .table:not(.table-striped) {
+.tab-elements .table:not(.contact-table) {
     width:auto;
 }
 
-.tab-elements .table td, .tab-elements .table th {
+.tab-elements .table th {
     border:0;
 }
 
-.tab-elements .nav-tabs>li>a {
-    border: 1px solid #ddd;
+.tab-elements .nav-tabs > li > a {
+	border: 1px solid #ddd;
 }
 
 .tab-elements .nav-tabs > li.active > a {
