@@ -700,7 +700,119 @@
             });
         };
 
+        var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
+            box_resources.forEach(function(resource) {
+                var northlimit = parseFloat(resource.northlimit);
+                var southlimit = parseFloat(resource.southlimit);
+                var eastlimit = parseFloat(resource.eastlimit);
+                var westlimit = parseFloat(resource.westlimit);
+                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+                //if (resource_bound.contains(latLng)) {
+                    var author_name = "";
+                    if (resource.first_author_description) {
+                        author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+                    } else {
+                        author_name = resource.first_author;
+                    }
+                    var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
+                    var map_resource = [resource, resource.resource_type, resource_title, author_name];
+                    map_resources.push(map_resource);
+                //}
+            });
 
+        };
+
+        var setMapItemsList = function(json_results, latLng) {
+            var map_resources = [];
+            buildMapItemsTableData(json_results, map_resources, latLng);
+
+            var mapItems = $('#map-items').DataTable( {
+                data: map_resources,
+                "scrollY": "200px",
+                "scrollCollapse": true,
+                "paging": false,
+                "bDestroy": true,
+                "language": {
+                    "emptyTable": "Click on map to explore resource data."
+                },
+                columns: [
+                    { title: "Show on Map"},
+                    { title: "Resource Type" },
+                    { title: "Title" },
+                    { title: "First Author" }
+                ],
+                "columnDefs": [ {
+                    "targets": [0],
+                    "width": "90px",
+                    "data": null,
+                    "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
+                },
+                {
+                   "targets": [1],     // Resource type
+                    "width": "110px"
+                }]
+            });
+            setMapFunctions(mapItems);
+        };
+
+        var setMapFunctions = function (datatable) {
+            $('#map-items tbody').on('click', '[role="button"]', function () {
+                var data = datatable.row($(this).parents('tr')).data();
+                showBoxMarker(data[0], true);
+            });
+            $('#map-items tbody').on('hover', 'tr', function () {
+                var data = datatable.row(this).data();
+                if (data) {
+                    showBoxMarker(data[0], false);
+                }
+            });
+        };
+        var showBoxMarker = function(box, zoom_on_map) {
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+
+            var rectBounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(southlimit, westlimit),
+                    new google.maps.LatLng(northlimit, eastlimit)
+            );
+
+            if (zoom_on_map) {
+                area_map.fitBounds(rectBounds);
+                updateMapView();
+            }
+            findShadeRect(rectBounds);
+        };
+
+        var calShadeRectBounds = function (rect, shade_rect_bound) {
+            rect.getPaths().getArray().forEach(function(path){
+                path.getArray().forEach(function(latlng){
+                    shade_rect_bound.extend(latlng);
+                });
+            });
+        };
+        var findShadeRect = function(rectBounds) {
+            var found = 0;
+            shade_rects.forEach(function(rect){
+                var shade_rect_bound = new google.maps.LatLngBounds();
+                calShadeRectBounds(rect, shade_rect_bound);
+                if (rectBounds.equals(shade_rect_bound) && found == 0) {
+                    rect.setOptions({fillOpacity: 0.35});
+                    found = 1;
+                } else {
+                    rect.setOptions({fillOpacity: 0});
+                }
+            });
+        };
+
+
+
+
+
+//-----------------------------------------------------------------------
         var createBoundsForMarkers = function(markers) {
             var bounds = new google.maps.LatLngBounds();
             $.each(markers, function() {
@@ -1195,14 +1307,19 @@
                         dataType: 'json',
                         success: function (data) {
                             var json_results = [];
+                            var counter = 0;
                             for (var j = 0; j < data.length; j++) {
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
+{#                                if (item.coverage_type == "box") {#}
+{#                                    //console.log("box");#}
+{#                                    counter++;#}
+{#                                }#}
                                 raw_box_results.push(item);
                             }
-                            console.log("~~~" + json_results.length);
+                            //console.log(counter + "~~~" + json_results.length);
                             initAreaMap(json_results);
-                            //setMapItemsList([], null);
+                            setMapItemsList(json_results, null);
                             //$("#resource-search").show();
                             //$("#discover-map-loading-spinner").hide();
                         },
