@@ -113,4 +113,7 @@ $(document).ready(function() {
 
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
+
+	// Initialize tooltips
+	$('[data-toggle="tooltip"]').tooltip();
 });

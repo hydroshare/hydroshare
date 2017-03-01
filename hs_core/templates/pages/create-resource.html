@@ -76,28 +76,38 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">General</div>
                             <div class="panel-body">
-                                <div class="resource-type selected" data-value="GenericResource">
+                                <div class="resource-type selected" data-value="GenericResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="An arbitrary file or collection of files that are logically grouped together as a resource.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                          alt="Generic Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Generic</div>
                                 </div>
 
-                                <div class="resource-type" data-value="CollectionResource">
+                                <div class="resource-type" data-value="CollectionResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A resource that holds a list of other resources in HydroShare.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                          alt="Collection Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Collection</div>
                                 </div>
-                                <div class="resource-type" data-value="CompositeResource">
+                                <div class="resource-type" data-value="CompositeResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="">
                                     <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                          alt="Composite Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Composite</div>
                                 </div>
-                                <div class="resource-type" data-value="ToolResource">
+                                <div class="resource-type" data-value="ToolResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A shortcut (or reference) to an external web application that functions with HydroShare data resources.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                          alt="Web App Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Web App</div>
                                 </div>
-                                <div class="resource-type" data-value="NetcdfResource">
+                                <div class="resource-type" data-value="NetcdfResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="Multidimensional space-time data.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
                                          alt="Multidimensional Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Multidimensional</div>
@@ -111,31 +121,41 @@
                             <div class="panel-heading">Modeling</div>
 
                             <div class="panel-body">
-                                <div class="resource-type" data-value="SWATModelInstanceResource">
+                                <div class="resource-type" data-value="SWATModelInstanceResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
                                          alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
                                 </div>
 
-                                <div class="resource-type" data-value="MODFLOWModelInstanceResource">
+                                <div class="resource-type" data-value="MODFLOWModelInstanceResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
                                          alt="Collection Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
                                 </div>
 
-                                <div class="resource-type" data-value="ModelProgramResource">
+                                <div class="resource-type" data-value="ModelProgramResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="Describes the software component of a generic model within the water domain.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
                                          alt="Model Program Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Model Program</div>
                                 </div>
 
-                                <div class="resource-type" data-value="ModelInstanceResource">
+                                <div class="resource-type" data-value="ModelInstanceResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="Defines the input and output data for a generic hydrological model, for a specific time and place.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
                                          alt="Model Instance Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Model Instance</div>
                                 </div>
 
-                                <div class="resource-type" data-value="ScriptResource">
+                                <div class="resource-type" data-value="ScriptResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                          alt="Script Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Script</div>
@@ -150,12 +170,16 @@
                         <div class="panel panel-default">
                             <div class="panel-heading">Geographic Resources</div>
                             <div class="panel-body">
-                                <div class="resource-type" data-value="GeographicFeatureResource">
+                                <div class="resource-type" data-value="GeographicFeatureResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A set of point, line, or polygon features stored in ESRI Shapefile format.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
                                          alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Geographic Feature (ESRI Shapefiles)</div>
                                 </div>
-                                <div class="resource-type" data-value="RasterResource">
+                                <div class="resource-type" data-value="RasterResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="Commonly used for representing and managing imagery, digital elevation, and other phenomena which is widely used in hydrological research.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
                                          alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Geographic Raster</div>
@@ -168,13 +192,17 @@
                         <div class="panel panel-default">
                             <div class="panel-heading" data-value="">Time Series Resources</div>
                             <div class="panel-body">
-                                <div class="resource-type" data-value="TimeSeriesResource">
+                                <div class="resource-type" data-value="TimeSeriesResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A sequence of individual data values that are ordered in time to record the changing trend of a certain phenomenon. ">
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
                                          alt="Time Series Resource Icon" class="resource-type-icon"/>
                                     <div class="resource-type-name">&nbsp;Time Series</div>
                                 </div>
 
-                                <div class="resource-type" data-value="RefTimeSeriesResource">
+                                <div class="resource-type" data-value="RefTimeSeriesResource"
+                                     data-toggle="tooltip" data-placement="top"
+                                     title="A reference to a time series stored in HydroServer that is available via a WaterOneFlow web service in WaterML format.">
                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
                                          alt="HIS Referenced Time Series Resource Icon"
                                          class="resource-type-icon"/>
@@ -221,7 +249,7 @@
                             <h3 class="resource-title">Resource Title Here</h3>
                         </div>
 
-                        <div class="col-xs-12 col-sm-7">
+                        <div class="col-xs-12 col-sm-8 col-md-9">
                             <form id="hsDropzone" class="dropzone" role="form" method="POST" enctype="multipart/form-data"
                                   action="/hsapi/_internal/create-resource/do/">
                                 {% csrf_token %}
@@ -233,9 +261,6 @@
                                 <input id="form-resource-type" type="hidden" name="resource-type"
                                        value="GenericResource"/>
                             </form>
-
-
-                            <span id="btn-create-resource" class="btn btn-primary">Create Resource</span>
 
                             <div id="preview-template" class="dz-preview dz-file-preview" style="display: none;">
                                 <div class="dz-details">
@@ -266,7 +291,7 @@
                             <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>
                         </div>
 
-                        <div class="col-xs-12 col-sm-5">
+                        <div class="col-xs-12 col-sm-4 col-md-3">
                             <ul class="list-group">
                                 <li class="list-group-item">Files you upload here will be grouped together into a
                                     "Resource" in HydroShare.
@@ -295,8 +320,9 @@
 
                             <div id="irods-browse">
                                     <span id="log-into-irods">
-                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal"
-                                           data-target="#irodsSignin">log in to iRODS</a>
+                                        <a id="btn-signin-irods" type="button" class="btn btn-default"
+                                           data-toggle="modal"
+                                           data-target="#irodsSignin"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
                                     </span>
                                 <input type="hidden" id="irods-username" name="irods-username" value="">
                                 <input type="hidden" id="irods-password" name="irods-password" value="">
@@ -320,6 +346,11 @@
                                 <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of
                                     iRODS</a>
                             </div>
+                        </div>
+
+                        <div class="col-xs-12">
+                            <hr>
+                            <span id="btn-create-resource" class="btn btn-primary">Create Resource</span>
                         </div>
                     </div>
                 </div>
@@ -552,7 +583,7 @@
             if (sessionStorage.signininfo) {
                 $("#sign-in-info").text(sessionStorage.signininfo);
                 $("#btn-select-irods-file").show();
-                $("#irods-sel-file").text("No file selected.");
+{#                $("#irods-sel-file").text("No file selected.");#}
             }
 
             $('input:radio[name="copy-move"]').change(function () {
@@ -585,7 +616,7 @@
                 $(this).addClass("selected");
                 $('#select-file').value = '';
                 $('#select-file').attr('value', '');
-                $('#irods-sel-file').text("No file selected.");
+{#                $('#irods-sel-file').text("No file selected.");#}
 
                 if (selected_file != undefined) {
                     selected_file.value = '';

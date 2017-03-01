@@ -1435,11 +1435,6 @@ body > .main-container {
 	outline: 0;
 }
 
-.lined-wrapper {
-    border-top: 1px solid rgb(204, 204, 204);
-    margin-bottom: 5px;
-}
-
 #success-alert, #error-alert{
     position: fixed;
     z-index: 999;
@@ -2904,7 +2899,7 @@ h4.title {
 	margin: 4px 10px;
 }
 
-#resource-actions-container > span.glyphicon-tags {
+#resource-actions-container #btn-label {
 	color: #0A91AB;
 }
 
@@ -4631,6 +4626,10 @@ div#fb-file-operations-controls {
     display: inline-block;
     margin-left: 10px;
     margin-bottom: 35px
+}
+
+#resource-title {
+	border-bottom: 1px solid #DDD;
 }
 
 .stepper-content .resource-type {
