@@ -50,12 +50,12 @@ class FunctionalTests(StaticLiveServerTestCase):
         cls.mobile_drvr.quit()
         super(FunctionalTests, cls).tearDownClass()
 
-    #def test_show_login_link_mobile(self):
-    #    """The login link and form should not be displayed on the home page on mobile"""
-    #    self.mobile_drvr.get(self.live_server_url)
-    #    mobile_login_link = self.mobile_drvr.find_element_by_id('signin-menu')
-    #    self.assertFalse(mobile_login_link.is_displayed(),
-    #                     'Login link should not be visible on mobile.')
+    def test_show_login_link_mobile(self):
+        """The login link and form should not be displayed on the home page on mobile"""
+        self.mobile_drvr.get(self.live_server_url)
+        mobile_login_link = self.mobile_drvr.find_element_by_id('signin-menu')
+        self.assertFalse(mobile_login_link.is_displayed(),
+                         'Login link should not be visible on mobile.')
 
     def test_show_login_link_desktop(self):
         """The login link but not form should be displayed on the home page"""
