@@ -9,6 +9,7 @@ HS_SERVICE_GID: 1000
 ### Deployment Options ###
 USE_NGINX: false
 USE_SSL: false
+USE_SECURITY: false
 
 ### nginx Configuration Variables ###
 FQDN_OR_IP: localhost
