@@ -679,42 +679,32 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
         # If it is, then I would propose moving all of this to the pre_add script and doing
         # the download there, for cohesion.
         if found_prj and (not found_shp):
-            print("found a project file only")
             res_file_list = resource.files.all()
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
-                    if not resource.is_federated:
-                        source = utils.get_file_from_irods(res_f.storage_path)
-                        # store in a common local temp directory
-                        f_fullname = os.path.basename(source)
-                        fileName, fileExtension = os.path.splitext(f_fullname.lower())
-                        target = tmp_dir + "/" + fileName + fileExtension
-                        shutil.copy(source, target)
-                        # remove temp copy used to fetch file from iRODS
-                        shutil.rmtree(source)
-                    else:
+                    if res_f.resource_file:
+                        # file is stored on hs irods but 'source' points to a temporary 
+                        # (local) location that persists only for this request. 
+                        source = res_f.resource_file.file.name
+                        f_fullname = res_f.resource_file.name
+                    elif res_f.fed_resource_file:
                         # file is stored on fed'd user irods
-                        # TODO: revise get_fed_zone_files to specify target and avoid a copy.
-                        # copy from iRODS to local filesystem
-                        source = utils.get_fed_zone_files(res_f.storage_path)
-                        # store in a common local temp directory
-                        f_fullname = os.path.basename(source)
-                        fileName, fileExtension = os.path.splitext(f_fullname.lower())
-                        target = tmp_dir + "/" + fileName + fileExtension
-                        shutil.copy(source, target)
-                        # remove temp copy used to fetch file from iRODS
+                        source = utils.get_fed_zone_files(res_f.fed_resource_file.storage_path)
+                        f_fullname = source
+                    # in either case, source now points to a local file. 
+                    f_fullname = f_fullname[f_fullname.rfind('/')+1:]
+                    fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                    target = tmp_dir + "/" + fileName + fileExtension
+                    shutil.copy(source, target)
+                    # for temp file retrieved from federation zone,
+                    # it should be deleted after it is copied
+                    if res_f.fed_resource_file:
                         shutil.rmtree(source)
                 # parse the .shp file from that copy.
                 # TODO: why copy the files other than .shp? Are they accessed in parse_shp?
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
-                if __debug__:
-                    if not os.path.exists(shp_full_path):
-                        print("{} does not exist".format(shp_full_path))
-                        print("{} contains the following".format(tmp_dir))
-                        file = os.path.listdir(tmp_dir)
-                        print("   {}".format(file))
 
                 parsed_md_dict = parse_shp(shp_full_path)
                 originalcoverage_obj = resource.metadata.originalcoverage.all().first()
