@@ -9,10 +9,10 @@ from theme.models import UserQuota
 
 def migrate_user_quotas(apps, schema_editor):
     # create a UserQuota record for each existing user with default quota allocation values
-    UserQuota.objects.all().delete()
     for u in User.objects.all():
-        uq = UserQuota.objects.create(user=u)
-        uq.save()
+        if not UserQuota.objects.filter(user=u).exists():
+            uq = UserQuota.objects.create(user=u)
+            uq.save()
 
 
 def undo_migrate_user_quotas(apps, schema_editor):

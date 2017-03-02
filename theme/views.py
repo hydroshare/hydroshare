@@ -30,7 +30,7 @@ from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.models import UserProfile
+from theme.models import UserProfile, UserQuota
 
 from .forms import SignupForm
 
@@ -169,6 +169,9 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
             else:
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
+                # create default UserQuota object for the new user
+                uq = UserQuota.objects.create(user=new_user)
+                uq.save()
                 return login_redirect(request)
 
     # remove the key 'response' from errors as the user would have no idea what it means
