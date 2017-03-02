@@ -108,9 +108,8 @@ class FunctionalTests(StaticLiveServerTestCase):
             self.assertTrue(self.user.first_name in name_elem.get_attribute('innerHTML').strip())
             self.assertTrue(self.user.last_name in name_elem.get_attribute('innerHTML').strip())
 
-
     #def test_login_username(self):
     #    self._login_helper(self.user.username, self.user_password)
 
-    def test_email_username(self):
+    def test_login_email(self):
         self._login_helper(self.user.email, self.user_password)
