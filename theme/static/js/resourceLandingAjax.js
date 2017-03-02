@@ -1050,32 +1050,24 @@ function initializeDatePickers(){
 
 // act on spatial coverage type change
 function setFileTypeSpatialCoverageFormFields(){
-    $("#div_id_type_filetype input:radio").change(function () {
-        if ($(this).val() == "point" && $(this).attr("checked") == "checked") {
-            $("#div_id_north_filetype").show();
-            $("#div_id_east_filetype").show();
-            $("#div_id_elevation_filetype").show();
-            $("#div_id_northlimit_filetype").hide();
-            $("#div_id_eastlimit_filetype").hide();
-            $("#div_id_southlimit_filetype").hide();
-            $("#div_id_westlimit_filetype").hide();
-            $("#div_id_uplimit_filetype").hide();
-            $("#div_id_downlimit_filetype").hide();
+    // Don't allow the user to change the coverage type
+    var $id_type_filetype_div = $("#id_type_filetype");
+    $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
+    $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
+    $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+
+    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked"){
+            // coverage type is box
+            $("#id_north_filetype").parent().closest("#div_id_north").hide();
+            $("#id_east_filetype").parent().closest("#div_id_east").hide();
         }
-        else {
-            $("#div_id_north_filetype").hide();
-            $("#div_id_east_filetype").hide();
-            $("#div_id_elevation_filetype").hide();
-            $("#div_id_northlimit_filetype").show();
-            $("#div_id_eastlimit_filetype").show();
-            $("#div_id_southlimit_filetype").show();
-            $("#div_id_westlimit_filetype").show();
-            $("#div_id_uplimit_filetype").show();
-            $("#div_id_downlimit_filetype").show();
-        }
-        // Show save changes button
-        $("#id-coverage-spatial-filetype").find(".btn-primary").show();
-    });
+    else {
+        // coverage type is point
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+    }
 }
 
 // updates the UI spatial coverage elements
