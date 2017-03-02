@@ -527,7 +527,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource)
+        new_resource = hydroshare.copy_resource(res, new_resource, requesting_user=request.user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
