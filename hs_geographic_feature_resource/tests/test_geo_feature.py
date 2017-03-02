@@ -510,12 +510,13 @@ class TestGeoFeature(TransactionTestCase):
         add_files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06.prj'))
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
-        # I am curious as to why this isn't called in add_resource_files....
+        # TODO: why is this not called in add_resource_files? It should be called with post_add_*
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
                                                       resource=self.resGeoFeature, files=add_files,
                                                       validate_files={'are_files_valid': True,
                                                                       'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
+        # TODO: this test fails. 
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
     def test_metadata_element_pre_create_and_update(self):

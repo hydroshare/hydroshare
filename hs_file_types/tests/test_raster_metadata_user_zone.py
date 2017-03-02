@@ -66,9 +66,9 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='Federated Composite Resource Raster File Type Testing',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
-            fed_copy_or_move='copy',
+            move=False,
             metadata=[]
         )
 

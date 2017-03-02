@@ -163,7 +163,7 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resRaster,
                                         files=[],
                                         user=self.user,
-                                        fed_res_file_names=[fed_test_file_full_path])
+                                        source_names=[fed_test_file_full_path])
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
         # there should be 2 content file: tif file and vrt file at this point

@@ -15,7 +15,6 @@ from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
                             pre_metadata_element_update, pre_delete_file_from_resource,\
                             pre_add_files_to_resource, post_add_files_to_resource
 
-
 from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR, parse_shp_xml
 from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,\
                                                  GeometryInformationValidationForm,\
@@ -675,22 +674,25 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
 
         # ALVA: My understanding of this is that the .shp file is parsed before inclusion
         # in the pre_add signal if the file is uploaded, but is not parsed if the file is
-        # from a federated # user account. In that case, it must be parsed after inclusion.
+        # from a federated user account. In that case, it must be parsed after inclusion.
         # Thus this script looks for that file in federated space only. Is this correct?
         # If it is, then I would propose moving all of this to the pre_add script and doing
         # the download there, for cohesion.
         if found_prj and (not found_shp):
+            print("found a project file only")
             res_file_list = resource.files.all()
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
                     if not resource.is_federated:
-                        pass
-                        # TODO: This case does nothing! It is never copied to local disk!
-                        # file is stored on hs irods
-                        # source = res_f.storage_path
-                        # f_fullname = os.path.basename(source)
-                        # fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                        source = utils.get_file_from_irods(res_f.storage_path)
+                        # store in a common local temp directory
+                        f_fullname = os.path.basename(source)
+                        fileName, fileExtension = os.path.splitext(f_fullname.lower())
+                        target = tmp_dir + "/" + fileName + fileExtension
+                        shutil.copy(source, target)
+                        # remove temp copy used to fetch file from iRODS
+                        shutil.rmtree(source)
                     else:
                         # file is stored on fed'd user irods
                         # TODO: revise get_fed_zone_files to specify target and avoid a copy.
@@ -707,6 +709,13 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 # TODO: why copy the files other than .shp? Are they accessed in parse_shp?
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
+                if __debug__:
+                    if not os.path.exists(shp_full_path):
+                        print("{} does not exist".format(shp_full_path))
+                        print("{} contains the following".format(tmp_dir))
+                        file = os.path.listdir(tmp_dir)
+                        print("   {}".format(file))
+
                 parsed_md_dict = parse_shp(shp_full_path)
                 originalcoverage_obj = resource.metadata.originalcoverage.all().first()
                 if originalcoverage_obj:

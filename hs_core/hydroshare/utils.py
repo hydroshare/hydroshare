@@ -246,7 +246,7 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
-# TODO: make the local cache file (and cleanup) part of the ResourceFile state?
+# TODO: make the local cache file (and cleanup) part of ResourceFile state?
 def get_file_from_irods(res_file):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
@@ -265,6 +265,8 @@ def get_file_from_irods(res_file):
     tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
     tmpfile = os.path.join(tmpdir, file_name)
 
+    # TODO: If collisions occur, really bad things happen. 
+    # TODO: Directories are never cleaned up when unused. need cache management. 
     try:
         os.makedirs(tmpdir)
     except OSError as ex:
@@ -301,7 +303,6 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
 
 
 # TODO: should be inside ResourceFile, and federation logic should be transparent.
-# TODO: should return short_path for the purposes of recording file metadata, not full name.
 def get_resource_file_name_and_extension(res_file):
     """
     Gets the full file name with path, file base name, and extension of the specified resource file
@@ -316,7 +317,7 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
-# TODO: should be method of ResourceFile
+# TODO: should be ResourceFile.url 
 def get_resource_file_url(res_file):
     """
     Gets the download url of the specified resource file

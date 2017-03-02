@@ -181,8 +181,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             resource_type='GenericResource',
             owner=self.user,
             title='My Original Generic Resource in User Zone',
-            fed_res_file_names=[fed_test_file1_full_path],
-            fed_copy_or_move='copy'
+            source_names=[fed_test_file1_full_path],
+            move=False
         )
         # make sure ori_res is created in federated user zone
         fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
@@ -243,15 +243,15 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
         hydroshare.add_resource_files(
             res.short_id,
-            fed_res_file_names=[fed_test_file1_full_path],
-            fed_copy_or_move='copy')
+            source_names=[fed_test_file1_full_path],
+            move=False)
         # test resource has one file
         self.assertEqual(res.files.all().count(), 1,
                          msg="Number of content files is not equal to 1")
 
         file_list = []
         for f in res.files.all():
-            file_list.append(f.fed_resource_file_name_or_path.split('/')[-1])
+            file_list.append(os.path.basename(f.storage_path))
         self.assertTrue(self.file_one in file_list,
                         msg='file 1 has not been added in the resource in hydroshare zone')
         # test original file in user test zone still exist after adding it to the resource

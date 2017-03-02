@@ -2286,7 +2286,7 @@ class ResourceFile(models.Model):
         from .hydroshare.utils import get_resource_file_name_and_extension
         return get_resource_file_name_and_extension(self)[2]
 
-    # TODO: these are much simpler than this now. use storage_path, short_path, etc. 
+    # TODO: these are much simpler than this now. use storage_path, short_path, etc.
     @property
     def dir_path(self):
         from .hydroshare.utils import get_resource_file_name_and_extension
@@ -2296,13 +2296,13 @@ class ResourceFile(models.Model):
     def full_path(self):
         # from .hydroshare.utils import get_resource_file_name_and_extension
         # return get_resource_file_name_and_extension(self)[0]
-        return self.storage_path 
+        return self.storage_path
 
     @property
     def file_name(self):
         # from .hydroshare.utils import get_resource_file_name_and_extension
         # return get_resource_file_name_and_extension(self)[1]
-        return os.path.basename(self.storage_path) 
+        return os.path.basename(self.storage_path)
 
     @property
     def can_set_file_type(self):
