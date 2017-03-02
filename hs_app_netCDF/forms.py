@@ -1,13 +1,14 @@
+import copy
+
 from django.forms import ModelForm
 from django import forms
+
 from crispy_forms.layout import Layout, HTML, Fieldset
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import Field
-from hs_app_netCDF.models import Variable
-from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm
-from hs_core.forms import Helper
 
-import copy
+from hs_core.forms import BaseFormHelper, MetaDataElementDeleteForm, Helper, get_crispy_form_fields
+from hs_app_netCDF.models import Variable
 
 
 # Define form for original coverage
@@ -16,19 +17,12 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                  *args, **kwargs):
 
         # The layout below orders how each filed from the Form will be displayed in the frontend
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('projection', css_class=field_width),
-                        Field('datum', css_class=field_width),
-                        Field('projection_string_type', css_class=field_width),
-                        Field('projection_string_text', css_class=field_width),
-                        Field('units', css_class=field_width),
-                        Field('northlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width),
-                        Field('southlimit', css_class=field_width),
-                        Field('westlimit', css_class=field_width),
-
-                 )
+        file_type = kwargs.pop('file_type', False)
+        form_field_names = ['projection', 'datum', 'projection_string_type',
+                            'projection_string_text', 'units', 'northlimit', 'eastlimit',
+                            'southlimit', 'westlimit']
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
+        layout = Layout(*crispy_form_fields)
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                          element_name, layout,
@@ -57,9 +51,11 @@ class OriginalCoverageForm(forms.Form):
     datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='originalcoverage')
+                                                 element_name='originalcoverage',
+                                                 file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit

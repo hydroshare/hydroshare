@@ -133,15 +133,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
         context = Context(context_dict)
         rendered_html = template.render(context)
-        rendered_html = self.update_coverage_forms_ids(rendered_html)
         return rendered_html
-
-    def get_spatial_coverage_form(self):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
-                                              allow_edit=False)
-
-    def get_temporal_coverage_form(self):
-        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     def get_cellinfo_form(self):
         return self.cellInformation.get_html_form(resource=None)

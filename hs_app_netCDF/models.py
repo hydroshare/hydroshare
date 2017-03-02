@@ -131,26 +131,28 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         rdf_coverage_value.text = cov_value
 
-    def get_html_form(self, resource):
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
         """Generates html form code for this metadata element so that this element can be edited"""
 
         from .forms import OriginalCoverageForm
 
         ori_coverage_data_dict = dict()
-        ori_coverage_data_dict['projection'] = self.value.get('projection', None)
-        ori_coverage_data_dict['datum'] = self.datum
-        ori_coverage_data_dict['projection_string_type'] = self.projection_string_type
-        ori_coverage_data_dict['projection_string_text'] = self.projection_string_text
-        ori_coverage_data_dict['units'] = self.value['units']
-        ori_coverage_data_dict['northlimit'] = self.value['northlimit']
-        ori_coverage_data_dict['eastlimit'] = self.value['eastlimit']
-        ori_coverage_data_dict['southlimit'] = self.value['southlimit']
-        ori_coverage_data_dict['westlimit'] = self.value['westlimit']
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.datum
+            ori_coverage_data_dict['projection_string_type'] = element.projection_string_type
+            ori_coverage_data_dict['projection_string_text'] = element.projection_string_text
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
 
         originalcov_form = OriginalCoverageForm(
-            initial=ori_coverage_data_dict, allow_edit=True,
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
             res_short_id=resource.short_id if resource else None,
-            element_id=self.id if self else None)
+            element_id=element.id if element else None, file_type=file_type)
 
         return originalcov_form
 
@@ -438,7 +440,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         ori_cov_obj = self.ori_coverage.all().first()
         if ori_cov_obj is not None:
             ori_cov_obj.add_to_xml_container(container)
-            
+
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     # def add_metadata_element_to_xml(self, root, md_element, md_fields):

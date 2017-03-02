@@ -15,8 +15,7 @@ from dominate.tags import div, legend, form, button, p, textarea
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.models import Coverage
-from hs_core.forms import CoverageTemporalForm
+from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -73,8 +72,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(NetCDFFileMetaData, self).get_html_forms()
-            with div(cls="well", id="temporal-coverage"):
-                with div(cls="col-lg-12 col-xs-12"):
+            with div(cls="well row", id="temporal-coverage-filetype"):
+                with div(cls="col-lg-6 col-xs-12"):
                     with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                               method="post", enctype="multipart/form-data"):
                         div("{% crispy temp_form %}")
@@ -86,24 +85,37 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                        style="display: none;",
                                        onclick="metadata_update_ajax_submit("
                                                "'id-coverage_temporal-file-type'); return false;")
-            with div(cls="col-lg-6 col-xs-12"):
-                with form(id="id-origcoverage-file-type",
-                          action="{{ orig_coverage_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy orig_coverage_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;",
-                                   onclick="metadata_update_ajax_submit("
-                                           "'id-origcoverage-file-type'); return false;")
+            with div(cls="row"):
+                with div(cls="col-lg-6 col-xs-12", id="original-coverage-filetype"):
+                    with form(id="id-origcoverage-file-type",
+                              action="{{ orig_coverage_form.action }}",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% crispy orig_coverage_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       style="display: none;",
+                                       onclick="metadata_update_ajax_submit("
+                                               "'id-origcoverage-file-type'); return false;")
 
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy spatial_coverage_form %}")
+                with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
+                    with form(id="id-spatial-coverage-file-type",
+                              action="{{ spatial_coverage_form.action }}",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% crispy spatial_coverage_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       style="display: none;",
+                                       onclick="metadata_update_ajax_submit("
+                                               "'id-spatial-coverage-file-type'); return false;")
 
             with div(cls="pull-left col-sm-12"):
+                # id has to be variables to get the vertical scrollbar
                 with div(cls="well", id="variables"):
                     with div(cls="row"):
                         with div("{% for form in variable_formset_forms %}"):
@@ -135,9 +147,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         temp_cov_form.action = temp_action
 
-        orig_cov_form = self.originalCoverage.get_html_form(resource=None)
-        update_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/{2}/update-file-metadata/"
-        create_action = "/hsapi/_internal/NetCDFLogicalFile/{0}/{1}/add-file-metadata/"
+        orig_cov_form = self.get_original_coverage_form()
         if self.originalCoverage:
             temp_action = update_action.format(self.logical_file.id, "originalcoverage",
                                                self.originalCoverage.id)
@@ -146,10 +156,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         orig_cov_form.action = temp_action
 
-        # TODO: No editing allowed for spatial coverage - check with Tian if editing should be
-        # allowed
-        spatial_cov_form = self.get_spatial_coverage_form()
-
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
+        update_action = update_action.format(self.logical_file.id, "coverage",
+                                             self.spatial_coverage.id)
+        spatial_cov_form.action = update_action
         context_dict = dict()
         context_dict["temp_form"] = temp_cov_form
         context_dict["orig_coverage_form"] = orig_cov_form
@@ -157,15 +167,11 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         context_dict["variable_formset_forms"] = self.get_variable_formset().forms
         context = Context(context_dict)
         rendered_html = template.render(context)
-        rendered_html = self.update_coverage_forms_ids(rendered_html)
         return rendered_html
 
-    def get_spatial_coverage_form(self):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
-                                              allow_edit=False)
-
-    def get_temporal_coverage_form(self):
-        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
+    def get_original_coverage_form(self):
+        return OriginalCoverage.get_html_form(resource=None, element=self.originalCoverage,
+                                              file_type=True)
 
     def get_variable_formset(self):
         VariableFormSetEdit = formset_factory(
@@ -219,9 +225,9 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             element_form = VariableValidationForm(form_data)
         elif element_name == 'originalcoverage':
             element_form = OriginalCoverageForm(data=request.POST)
-
+        elif element_name == 'coverage' and 'start' not in request.POST:
+            element_form = CoverageSpatialForm(data=request.POST)
         else:
-            # element_name must be coverage
             # here we are assuming temporal coverage
             element_form = CoverageTemporalForm(data=request.POST)
 

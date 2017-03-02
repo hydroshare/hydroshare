@@ -1209,7 +1209,7 @@ class Coverage(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
     @classmethod
-    def get_temporal_html_form(cls, resource, element=None):
+    def get_temporal_html_form(cls, resource, element=None, file_type=False):
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
         if element is not None:
@@ -1218,11 +1218,12 @@ class Coverage(AbstractMetaDataElement):
 
         coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
                                              res_short_id=resource.short_id if resource else None,
-                                             element_id=element.id if element else None)
+                                             element_id=element.id if element else None,
+                                             file_type=file_type)
         return coverage_form
 
     @classmethod
-    def get_spatial_html_form(cls, resource, element=None, allow_edit=True):
+    def get_spatial_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
         from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
         # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
@@ -1242,7 +1243,8 @@ class Coverage(AbstractMetaDataElement):
 
         coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                             res_short_id=resource.short_id if resource else None,
-                                            element_id=element.id if element else None)
+                                            element_id=element.id if element else None,
+                                            file_type=file_type)
         return coverage_form
 
 
