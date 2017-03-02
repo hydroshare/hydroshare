@@ -59,15 +59,20 @@ def create_bag_files(resource):
 
     istorage = resource.get_irods_storage()
 
-    # TODO: uuid4().hex not guaranteed unique. Just statistically unique.
-    temp_bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+    # the temp_path is a temporary holding path to make the files available to iRODS
+    # we have to make temp_path unique even for the same resource with same update time
+    # to accommodate asynchronous multiple file move operations for the same resource
+
+    # TODO: This is always /tmp; otherwise code breaks because open() is called on the result!
+    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     try:
-        os.makedirs(temp_bagit_path)
+        os.makedirs(temp_path)
     except OSError as ex:
+        # TODO: there might be concurrent operations.
         if ex.errno == errno.EEXIST:
-            shutil.rmtree(temp_bagit_path)
-            os.makedirs(temp_bagit_path)
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
         else:
             raise Exception(ex.message)
 
@@ -79,18 +84,17 @@ def create_bag_files(resource):
     # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
     # istorage.saveFile('', to_file_name, create_directory=True)
 
-    # create resourcemetadata.xml and upload it to iRODS
-    from_file_name = os.path.join(temp_bagit_path, 'resourcemetadata.xml')
+    # create resourcemetadata.xml in local directory and upload it to iRODS
+    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         # resources that don't support file types this would write only resource level metadata
         # resource types that support file types this would write resource level metadata
         # as well as file type metadata
-        out.write(resource.metadata.get_xml())
+        out.write(resource.get_metadata_xml())
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 
-    # make the resource map
-    # This is the URL of the whole site.
+    # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
     current_site_url = current_site_url()
     # This is the qualified resource url.
     hs_res_url = os.path.join(current_site_url, 'resource', resource.short_id, 'data')
@@ -175,14 +179,15 @@ def create_bag_files(resource):
         '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
     # create resourcemap.xml and upload it to iRODS
-    from_file_name = os.path.join(temp_bagit_path, 'resourcemap.xml')
+    from_file_name = os.path.join(temp_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
     to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
+
     res_coll = resource.root_path
     istorage.setAVU(res_coll, 'metadata_dirty', "false")
-    shutil.rmtree(temp_bagit_path)
+    shutil.rmtree(temp_path)
     return istorage
 
 

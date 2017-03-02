@@ -38,32 +38,11 @@ $(document).ready(function () {
         google.maps.event.addDomListener(window, "load", initMap);
     }
 
-    // Initialize date pickers
-    $(".dateinput").each(function () {
-        $(this).datepicker({
-            format: 'mm-dd-yyyy',
-            yearRange: "-1000:+1000",
-            changeMonth: true,
-            changeYear: true,
-            showAnim: "slideDown"
-        });
-        $(this).on('change', function () {
-            $(this).closest("form").find("button").show();
-        });
-    });
-
-    // Set stored dates
-    $(".dateinput").each(function () {
-        if ($(this).attr("data-date") != null) {
-            var date = new Date($(this).attr("data-date"));
-            $(this).datepicker("setDate", date);    // Date format already set in widget. No need to format it.
-        }
-    });
-
-    // Format and display dates in view mode
+    // Format the dates before displaying them
     $(".format-date").each(function () {
-        var date = new Date($(this).attr("data-date"));
-        $(this).text(date.getMonth() + "/" + date.getDate() + "/" + date.getFullYear());
+        var dateString = $(this).attr("data-date").split("-");
+        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
+        $(this).text(formattedDate);
     });
 });
 

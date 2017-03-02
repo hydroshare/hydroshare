@@ -178,17 +178,26 @@ def get_wgs84_coverage_info(raster_dataset):
     if proj and (None not in original_coverage_info.values()):
 
         original_cs = osr.SpatialReference()
-
-        try:
-            ogc_wkt = pycrs.parser.from_unknown_wkt(proj).to_ogc_wkt()
-            original_cs.ImportFromWkt(ogc_wkt)
-
-        except Exception:
-            original_cs.ImportFromWkt(proj)
-
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
         wgs84_cs.ImportFromEPSG(4326)
+        transform = None
+        try:
+            original_cs.ImportFromWkt(proj)
+            # create transform object
+            transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
+            # If there is a problem with a transform object such as occurs with
+            # USA_Contiguous_Albers_Equal_Area_Conic_USGS_version
+            # then use the following workaround that uses wkt
+            if transform.this is None:
+                ogc_wkt = pycrs.parser.from_unknown_wkt(proj).to_ogc_wkt()
+                original_cs.ImportFromWkt(ogc_wkt)
+                # create transform object
+                transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
+
+        except Exception as ex:
+            log = logging.getLogger()
+            log.exception(ex.message)
 
         # get original bounding box info
         original_northlimit = original_coverage_info['northlimit']
@@ -196,14 +205,23 @@ def get_wgs84_coverage_info(raster_dataset):
         original_westlimit = original_coverage_info['westlimit']
         original_eastlimit = original_coverage_info['eastlimit']
 
-        # create transform object
-        transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
-        if transform.this is not None:
-            # transform original bounding box to wgs84 bounding box
-            wgs84_westlimit, wgs84_northlimit = transform.TransformPoint(original_westlimit,
-                                                                         original_northlimit)[:2]
-            wgs84_eastlimit, wgs84_southlimit = transform.TransformPoint(original_eastlimit,
-                                                                         original_southlimit)[:2]
+        if transform is not None and transform.this is not None:
+            # Find bounding box that encapsulates tranformed original bounding box
+            xarr = [original_westlimit, original_eastlimit]
+            yarr = [original_northlimit, original_southlimit]
+            x_wgs84 = []
+            y_wgs84 = []
+            for px in xarr:
+                for py in yarr:
+                    xt, yt = transform.TransformPoint(px, py)[:2]
+                    x_wgs84.append(xt)
+                    y_wgs84.append(yt)
+                yarr.reverse()
+
+            wgs84_northlimit = max(y_wgs84)  # max y
+            wgs84_southlimit = min(y_wgs84)
+            wgs84_westlimit = min(x_wgs84)  # min x
+            wgs84_eastlimit = max(x_wgs84)
 
             wgs84_coverage_info = OrderedDict([
                 ('northlimit', wgs84_northlimit),

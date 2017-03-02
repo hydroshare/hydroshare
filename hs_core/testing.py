@@ -276,9 +276,9 @@ class TestCaseCommonUtilities(object):
         box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.11071605314457)
+        self.assertEqual(box_coverage.value['northlimit'], 42.11270614966863)
         self.assertEqual(box_coverage.value['eastlimit'], -111.45699925047542)
-        self.assertEqual(box_coverage.value['southlimit'], 41.66417975061928)
+        self.assertEqual(box_coverage.value['southlimit'], 41.66222054591102)
         self.assertEqual(box_coverage.value['westlimit'], -111.81761887121905)
 
         # there should be 2 format elements

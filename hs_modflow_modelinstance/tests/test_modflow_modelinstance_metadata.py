@@ -73,13 +73,15 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Instance resource files")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'r')
 
         self.file_name_2 = "MIR.csv"
-        temp_text_file = os.path.join(self.temp_dir, self.file_name_2)
-        text_file = open(temp_text_file, 'w')
+        temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
+        text_file = open(temp_text_file_2, 'w')
         text_file.write("Model,Instance,resource,files")
-        self.text_file_obj_2 = open(temp_text_file, 'r')
+        text_file.close()
+        self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()
@@ -97,7 +99,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                             extract_metadata=False)
-
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=False)
 
@@ -112,7 +113,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                             extract_metadata=True)
-
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=True)
 
