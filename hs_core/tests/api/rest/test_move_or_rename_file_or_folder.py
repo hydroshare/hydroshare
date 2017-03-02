@@ -1,18 +1,16 @@
 import os
 import tempfile
-import zipfile
 
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-from hs_core.tests.api.utils import MyTemporaryUploadedFile
 
 from .base import HSRESTTestCase
 
 
-class TestPublicUnzipEndpoint(HSRESTTestCase):
+class TestPublicRenameEndpoint(HSRESTTestCase):
     def setUp(self):
-        super(TestPublicUnzipEndpoint, self).setUp()
+        super(TestPublicRenameEndpoint, self).setUp()
 
         self.tmp_dir = tempfile.mkdtemp()
 
@@ -29,10 +27,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         self.rtype = 'GenericResource'
         self.title = 'My Test resource'
-        res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title,
-                                       unpack_file=False)
+        res = resource.create_resource(self.rtype, self.user, self.title)
 
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
@@ -43,7 +38,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
 
         # put a file 'test.txt' into folder 'foo'
         url2 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
-        params = {'file': ('text.txt',
+        params = {'file': (self.txt_file_name,
                            open(self.txt_file_path, 'rb'),
                            'text/plain')}
         self.client.post(url2, params)
