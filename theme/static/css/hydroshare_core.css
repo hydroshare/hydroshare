@@ -4497,13 +4497,13 @@ div#fb-file-operations-controls {
 	z-index: 1031 !important;
 }
 
-#resource-content #hsDropzone {
-	border: 1px dashed #777;
+#resource-content #dz-container {
+	border: 2px dashed #999;
 	height: 300px;
     cursor: pointer;
 }
 
-#resource-content #hsDropzone.hs-dropzone-highlight {
+#resource-content #dz-container.hs-dropzone-highlight {
 	border: 1px solid #777;
 }
 
@@ -4545,14 +4545,14 @@ div#fb-file-operations-controls {
     width: 100px;
 }
 
-#resource-content #hsDropzone .caption {
+#resource-content #dz-container .caption {
     position: absolute;
     left: calc(50% - 125px);
     top: calc(50% - 110px);
     z-index: -1;
 }
 
-#resource-content #hsDropzone .dz-details {
+#resource-content #dz-container .dz-details {
     display: inline-block;
     border: 1px solid #DDD;
     border-radius: 4px;
