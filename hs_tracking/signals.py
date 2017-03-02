@@ -5,19 +5,33 @@ from hs_core.signals import pre_download_file, post_delete_resource, post_create
 
 from .models import Session
 from .models import Variable
-from .utils import get_client_ip, get_user_type, get_user_email_domain
+from .utils import get_std_log_fields
 
 
 @receiver(user_logged_in, dispatch_uid='id_capture_login')
 def capture_login(sender, **kwargs):
     session = Session.objects.for_request(kwargs['request'], kwargs['user'])
-    session.record('login')
+
+    # get standard fields
+    fields = get_std_log_fields(kwargs['request'], session)
+
+    # format the 'download' kwargs
+    msg = Variable.format_kwargs(**fields)
+
+    session.record('login', value=msg)
 
 
 @receiver(user_logged_out, dispatch_uid='id_capture_logout')
 def capture_logout(sender, **kwargs):
     session = Session.objects.for_request(kwargs['request'], kwargs['user'])
-    session.record('logout')
+
+    # get standard fields
+    fields = get_std_log_fields(kwargs['request'], session)
+
+    # format the 'download' kwargs
+    msg = Variable.format_kwargs(**fields)
+
+    session.record('logout', value=msg)
 
 
 @receiver(pre_download_file)
@@ -32,29 +46,21 @@ def capture_download(**kwargs):
     if not is_human:
         return
 
-    # get input kwargs
-    resource = kwargs['resource']
-    filename = kwargs['download_file_name']
-    request = kwargs['request']
+    # get standard fields
+    user = None
+    if hasattr(kwargs, 'user'):
+        user = kwargs['user']
+    session = Session.objects.for_request(kwargs['request'], user)
+    fields = get_std_log_fields(kwargs['request'], session)
 
-    # get session object for the current user
-    user = request.user
-    session = Session.objects.for_request(request, user)
-
-    # get user-specific metadata
-    ip = get_client_ip(request)
-    usertype = get_user_type(session)
-    emaildomain = get_user_email_domain(session)
+    # add specific fields
+    fields['filename'] = kwargs['download_file_name']
+    fields['resource_size_bytes'] = kwargs['resource'].size
+    fields['resource_type'] = kwargs['resource'].resource_type
+    fields['resource_guid'] = kwargs['resource'].short_id
 
     # format the 'download' kwargs
-    msg = Variable.format_kwargs(user_ip=ip,
-                                 filename=filename,
-                                 resource_size_bytes=resource.size,
-                                 resource_type=resource.resource_type,
-                                 resource_guid=resource.short_id,
-                                 user_type=usertype,
-                                 user_email_domain=emaildomain
-                                 )
+    msg = Variable.format_kwargs(**fields)
 
     # record the download action
     session.record('download', value=msg)
@@ -67,27 +73,17 @@ def capture_resource_create(**kwargs):
     if 'request' not in kwargs.keys():
         return
 
-    # get user-specific metadata
-    resource = kwargs['resource']
-    user = kwargs['user']
-    request = kwargs['request']
+    # get standard fields
+    session = Session.objects.for_request(kwargs['request'], kwargs['user'])
+    fields = get_std_log_fields(kwargs['request'], session)
 
-    # get session object for the current user
-    session = Session.objects.for_request(request, user)
+    # add specific fields
+    fields['resource_size_bytes'] = kwargs['resource'].size
+    fields['resource_type'] = kwargs['resource'].resource_type
+    fields['resource_guid'] = kwargs['resource'].short_id
 
-    # get the user info
-    usertype = get_user_type(session)
-    emaildomain = get_user_email_domain(session)
-    ip = get_client_ip(request)
-
-    # format the 'create' kwargs
-    msg = Variable.format_kwargs(user_ip=ip,
-                                 resource_size_bytes=resource.size,
-                                 resource_type=resource.resource_type,
-                                 resource_guid=resource.short_id,
-                                 user_type=usertype,
-                                 user_email_domain=emaildomain
-                                 )
+    # format the 'download' kwargs
+    msg = Variable.format_kwargs(**fields)
 
     # record the create action
     session.record('create', value=msg)
@@ -100,27 +96,16 @@ def capture_resource_delete(**kwargs):
     if 'request' not in kwargs.keys():
         return
 
-    # get input kwargs
-    resource_type = kwargs['resource_type']
-    resource_shortid = kwargs['resource_shortkey']
-    user = kwargs['user']
-    request = kwargs['request']
+    # get standard fields
+    session = Session.objects.for_request(kwargs['request'], kwargs['user'])
+    fields = get_std_log_fields(kwargs['request'], session)
 
-    # get the session object for the current user
-    session = Session.objects.for_request(request, user)
+    # add specific fields
+    fields['resource_type'] = kwargs['resource_type']
+    fields['resource_guid'] = kwargs['resource_shortkey']
 
-    # get user-specific metadata
-    usertype = get_user_type(session)
-    emaildomain = get_user_email_domain(session)
-    ip = get_client_ip(request)
-
-    # formate the 'delete' kwargs
-    msg = Variable.format_kwargs(user_ip=ip,
-                                 resource_type=resource_type,
-                                 resource_guid=resource_shortid,
-                                 user_type=usertype,
-                                 user_email_domain=emaildomain
-                                 )
+    # format the delete message
+    msg = Variable.format_kwargs(**fields)
 
     # record the delete action
     session.record('delete', value=msg)
