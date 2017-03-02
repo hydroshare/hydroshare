@@ -101,7 +101,8 @@ def data_store_structure(request):
     )
 
 
-def data_store_folder_zip(request):
+def data_store_folder_zip(request, res_id=None, input_coll_path=None,
+                          output_zip_file_name=None, remove_original_after_zip=None):
     """
     Zip requested files and folders into a zip file in hydroshareZone or any federated zone
     used for HydroShare resource backend store. It is invoked by an AJAX call and returns
@@ -113,7 +114,7 @@ def data_store_folder_zip(request):
     and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
     whether original files will be deleted after zipping.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -126,7 +127,7 @@ def data_store_folder_zip(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    input_coll_path = request.POST.get('input_coll_path', None)
+    input_coll_path = request.POST.get('input_coll_path', input_coll_path)
     if input_coll_path is None:
         return HttpResponse('Bad request - input_coll_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -134,7 +135,7 @@ def data_store_folder_zip(request):
     if not input_coll_path:
         return HttpResponse('Bad request - input_coll_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    output_zip_fname = request.POST.get('output_zip_file_name', None)
+    output_zip_fname = request.POST.get('output_zip_file_name', output_zip_file_name)
     if output_zip_fname is None:
         return HttpResponse('Bad request - output_zip_fname is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +143,7 @@ def data_store_folder_zip(request):
     if not output_zip_fname:
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    remove_original = request.POST.get('remove_original_after_zip', None)
+    remove_original = request.POST.get('remove_original_after_zip', remove_original_after_zip)
     bool_remove_original = True
     if remove_original:
         remove_original = str(remove_original).strip().lower()
@@ -165,6 +166,15 @@ def data_store_folder_zip(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+@api_view(['POST'])
+def data_store_folder_zip_public(request, pk):
+    return data_store_folder_zip(request,
+                                 res_id=pk,
+                                 input_coll_path=request.data.get('input_coll_path', None),
+                                 output_zip_file_name=request.data.get('output_zip_file_name', None),
+                                 remove_original_after_zip=request.data.get('remove_original_after_zip', None))
 
 
 def data_store_folder_unzip(request, **kwargs):
