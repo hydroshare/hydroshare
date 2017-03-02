@@ -80,8 +80,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         zip_url = "/hsapi/resource/%s/functions/zip/" % self.pid
         response = self.client.post(zip_url, {
             "input_coll_path": "data/contents/foo",
-            "output_zip_file_name": "data/contents/test.zip",
+            "output_zip_file_name": "test.zip",
             "remove_original_after_zip": False
         }, format="json")
-        print(response)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
