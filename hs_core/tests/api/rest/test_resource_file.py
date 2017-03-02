@@ -60,7 +60,7 @@ class TestResourceFile(HSRESTTestCase):
         content_list = [os.path.basename(content['results'][0]['url']),
                         os.path.basename(content['results'][1]['url'])]
         self.assertIn(self.txt_file_name, content_list)
-        self.assertIn(self.raster_file_name, content_lslist)
+        self.assertIn(self.raster_file_name, content_list)
 
     def test_resource_file_list(self):
         response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
