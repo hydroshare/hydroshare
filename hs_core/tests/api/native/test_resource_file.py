@@ -33,8 +33,6 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # create a file
         self.test_file_name1 = 'file1.txt'
-        # self.test_file_name2 = 'file2.txt'
-        # self.test_file_name3 = 'file3.txt'
         self.file_name_list = [self.test_file_name1, ]
 
         # put predictable contents into these
@@ -42,17 +40,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        # test_file = open(self.test_file_name2, 'w')
-        # test_file.write("Test text file in file2.txt")
-        # test_file.close()
-
-        # test_file = open(self.test_file_name3, 'w')
-        # test_file.write("Test text file in file3.txt")
-        # test_file.close()
-
         self.test_file_1 = open(self.test_file_name1, 'r')
-        # self.test_file_2 = open(self.test_file_name2, 'r')
-        # self.test_file_3 = open(self.test_file_name3, 'r')
 
     def tearDown(self):
         super(TestResourceFileAPI, self).tearDown()
@@ -223,9 +211,12 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         self.assertTrue(resfile.path_is_acceptable(shortpath, test_exists=False))
 
-        # non-existent files should raise error
         otherpath = os.path.join(fedpath, self.res.short_id, "data", "contents", "file2.txt")
         resfile.path_is_acceptable(otherpath, test_exists=False)
+
+        # non-existent files should raise error
+        with self.assertRaises(ValidationError):
+            resfile.path_is_acceptable(otherpath, test_exists=True)
 
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("file1.txt", test_exists=False)
@@ -299,8 +290,9 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # non-existent files should raise error
         otherpath = os.path.join(fedpath, self.res.short_id, "data", "contents", "foo", "file2.txt")
-
         resfile.path_is_acceptable(otherpath, test_exists=False)
+        with self.assertRaises(ValidationError):
+            resfile.path_is_acceptable(otherpath, test_exists=True)
 
         # try setting to an unqualified name; should qualify it
         resfile.set_storage_path("foo/file1.txt", test_exists=False)

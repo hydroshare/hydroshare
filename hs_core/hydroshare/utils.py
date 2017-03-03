@@ -14,7 +14,7 @@ from django.apps import apps
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
@@ -205,25 +205,8 @@ def get_federated_zone_home_path(filepath):
         return ''
 
 
-# TODO: this is replaced with ResourceFile.size, for both federated and unfederated resources
-def get_fed_zone_file_size(fname):
-    """
-    Get size of a data object from iRODS user zone
-    Args:
-        fname: the logical iRODS file name with full logical path
-
-    Returns:
-    the size of the file
-    """
-
-    irods_storage = IrodsStorage('federated')
-    return irods_storage.size(fname)
-
-
-# TODO: replace with BaseResource.get_files, which wil copy files to a local zone
-# and keep track of them there.
-# TODO: make local cache cleanup automatic.
-# TODO: pass a list rather than a string. Eliminate commas in filenames.
+# TODO: replace with a cache facility that has automatic cleanup
+# TODO: pass a list rather than a string to allow commas in filenames.
 def get_fed_zone_files(irods_fnames):
     """
     Get the files from iRODS federated zone to Django server for metadata extraction on-demand
@@ -282,8 +265,8 @@ def get_file_from_irods(res_file):
     tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
     tmpfile = os.path.join(tmpdir, file_name)
 
-    # TODO: If collisions occur, really bad things happen. 
-    # TODO: Directories are never cleaned up when unused. need cache management. 
+    # TODO: If collisions occur, really bad things happen.
+    # TODO: Directories are never cleaned up when unused. need cache management.
     try:
         os.makedirs(tmpdir)
     except OSError as ex:
@@ -334,7 +317,7 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
-# TODO: should be ResourceFile.url 
+# TODO: should be ResourceFile.url
 def get_resource_file_url(res_file):
     """
     Gets the download url of the specified resource file
@@ -406,20 +389,22 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     # TODO: why would we want to do anything at all if the resource does not exist???
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-    if bag_modified == "true":
-        # import here to avoid circular import issue
-        from hs_core.tasks import create_bag_by_irods
-        create_bag_by_irods(res_id, istorage)
+        if bag_modified == "true":
+            # import here to avoid circular import issue
+            from hs_core.tasks import create_bag_by_irods
+            create_bag_by_irods(res_id, istorage)
 
-    # do replication of the resource bag to irods user zone
-    if not res.resource_federation_path:
-        istorage.set_fed_zone_session()
-    src_file = res.bag_path
-    # TODO: property of user
-    # TODO: allow setting destination path
-    tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-        userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-    istorage.copyFiles(src_file, tgt_file)
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        # TODO: property of user
+        # TODO: allow setting destination path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        istorage.copyFiles(src_file, tgt_file)
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
@@ -440,9 +425,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     istorage = src_res.get_irods_storage()
     src_coll = os.path.join(src_res.root_path, 'data')
     dest_coll = os.path.join(tgt_res.root_path, 'data')
-
-    # TODO: This copies everything but bags, including unmapped junk files(!)
     istorage.copyFiles(src_coll, dest_coll)
+
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         # TODO: what do these AVU flags do?
@@ -551,8 +535,6 @@ def set_dirty_bag_flag(resource):
     Set bag_modified=true AVU pair for the modified resource in iRODS
     to indicate that the resource is modified for on-demand bagging.
 
-    set bag_modified (AVU) to 'true' for the modified resource in iRODS to indicate
-    the resource is modified for on-demand bagging.
     set metadata_dirty (AVU) to 'true' to indicate that metadata has been modified for the
     resource so that xml metadata files need to be generated on-demand
 
@@ -887,11 +869,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     :return: The identifier of the ResourceFile added.
     """
     if f:
-        # does not seem to be needed
-        # if isinstance(f, basestring):
-        #     fname = os.path.basename(f)
-        # else:
-        #     fname = os.path.basename(f.name)
 
         openfile = File(f) if not isinstance(f, UploadedFile) else f
         ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
@@ -904,6 +881,10 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
             # create from existing iRODS file
             ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
         except SessionException as ex:
+            try:
+                ret.delete()
+            except Exception:
+                pass
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
 

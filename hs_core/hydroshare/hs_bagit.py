@@ -30,14 +30,13 @@ def delete_files_and_bag(resource):
     istorage = resource.get_irods_storage()
 
     # delete resource directory first to remove all generated bag-related files for the resource
-    # TODO: Is this correct? Is it really necessary? It seems this deletes all content!
     if istorage.exists(resource.root_path):
         istorage.delete(resource.root_path)
 
     if istorage.exists(resource.bag_path):
         istorage.delete(resource.bag_path)
 
-    # TODO: delete this whole mechanism; redundant. 
+    # TODO: delete this whole mechanism; redundant.
     # delete the bags table
     for bag in resource.bags.all():
         bag.delete()

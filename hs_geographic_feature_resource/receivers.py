@@ -684,15 +684,15 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
                     if res_f.resource_file:
-                        # file is stored on hs irods but 'source' points to a temporary 
-                        # (local) location that persists only for this request. 
+                        # file is stored on hs irods but 'source' points to a temporary
+                        # (local) location that persists only for this request.
                         source = res_f.resource_file.file.name
                         f_fullname = res_f.resource_file.name
                     elif res_f.fed_resource_file:
                         # file is stored on fed'd user irods
                         source = utils.get_fed_zone_files(res_f.fed_resource_file.storage_path)
                         f_fullname = source
-                    # in either case, source now points to a local file. 
+                    # in either case, source now points to a local file.
                     f_fullname = f_fullname[f_fullname.rfind('/')+1:]
                     fileName, fileExtension = os.path.splitext(f_fullname.lower())
                     target = tmp_dir + "/" + fileName + fileExtension

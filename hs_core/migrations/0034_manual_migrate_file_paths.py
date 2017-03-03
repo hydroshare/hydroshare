@@ -80,12 +80,12 @@ def get_path(rtype, rfile, filename, folder=None):
     """
     if not folder:
         folder = rfile.file_folder
-    return get_resource_path(get_resource_from_rfile(rtype, rfile), filename, folder)
+    return get_resource_file_path(get_resource_from_rfile(rtype, rfile), filename, folder)
 
 
-def get_resource_path(resource, filename, folder=None):
+def get_resource_file_path(resource, filename, folder=None):
     """
-    Copy of hs_core.models.get_resource_path (without model method references)
+    Copy of hs_core.models.get_resource_file_path (without model method references)
 
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
@@ -320,13 +320,13 @@ def resource_path_is_acceptable(resource, path, test_exists=True):
     # for existence
     if '/' in relpath:
         folder, base = os.path.split(relpath)
-        abspath = get_resource_path(resource, base, folder=folder)
+        abspath = get_resource_file_path(resource, base, folder=folder)
         if test_exists and not storage.exists(abspath):
             raise ValidationError("Local path does not exist in irods")
     else:
         folder = None
         base = relpath
-        abspath = get_resource_path(resource, base, folder=folder)
+        abspath = get_resource_file_path(resource, base, folder=folder)
         if test_exists and not storage.exists(abspath):
             raise ValidationError("Local path does not exist in irods")
 

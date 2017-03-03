@@ -17,7 +17,6 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
@@ -1640,9 +1639,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return False
 
-    # TODO: these should be instance methods, not class methods.
-    # These decisions are used when operating upon an instance.
-    # That requires less overhead than using a class method.
     @classmethod
     def get_supported_upload_file_types(cls):
         """
@@ -1655,6 +1651,8 @@ class AbstractResource(ResourcePermissionsMixin):
         To disallow all file upload, return an empty tuple ( return ())
 
         By default all file types are supported
+
+        This is called before creating a specific instance; hence it is a class method.
         """
         return (".*",)
 
@@ -1766,7 +1764,6 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 
-# TODO: change to get_resourcefile_path
 def get_path(instance, filename, folder=None):
     """
     Get a path from a ResourceFile, filename, and folder
@@ -1786,10 +1783,11 @@ def get_path(instance, filename, folder=None):
     """
     if not folder:
         folder = instance.file_folder
-    return get_resource_path(instance.resource, filename, folder)
+    return get_resource_file_path(instance.resource, filename, folder)
 
 
-def get_resource_path(resource, filename, folder=None):
+# TODO: make this an instance method of BaseResource.
+def get_resource_file_path(resource, filename, folder=None):
     """
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
@@ -1855,7 +1853,7 @@ class ResourceFile(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     # This is used to direct uploads to a subfolder of the root folder for the resource.
-    # See get_path and get_resource_path above.
+    # See get_path and get_resource_file_path above.
     file_folder = models.CharField(max_length=4096, null=True)
 
     # This pair of FileFields deals with the fact that there are two kinds of storage
@@ -1939,7 +1937,7 @@ class ResourceFile(models.Model):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 root, file = os.path.split(source)  # take from source path
-            target = get_resource_path(resource, file, folder=folder)
+            target = get_resource_file_path(resource, file, folder=folder)
             if source is not None:
                 istorage = resource.get_irods_storage()
                 if not move:
@@ -2174,13 +2172,13 @@ class ResourceFile(models.Model):
         # for existence
         if '/' in relpath:
             folder, base = os.path.split(relpath)
-            abspath = get_resource_path(resource, base, folder=folder)
+            abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
         else:
             folder = None
             base = relpath
-            abspath = get_resource_path(resource, base, folder=folder)
+            abspath = get_resource_file_path(resource, base, folder=folder)
             if test_exists and not storage.exists(abspath):
                 raise ValidationError("Local path does not exist in irods")
 
@@ -2206,17 +2204,18 @@ class ResourceFile(models.Model):
         """
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
-                                            fed_resource_file=get_resource_path(resource,
-                                                                                file,
-                                                                                folder))
+                                            fed_resource_file=get_resource_file_path(resource,
+                                                                                     file,
+                                                                                     folder))
         else:
             return ResourceFile.objects.get(object_id=resource.id,
-                                            resource_file=get_resource_path(resource,
-                                                                            file,
-                                                                            folder))
+                                            resource_file=get_resource_file_path(resource,
+                                                                                 file,
+                                                                                 folder))
 
+    # TODO: move to BaseResource as instance method
     @classmethod
-    def list(cls, resource, folder):
+    def list_folder(cls, resource, folder):
         """
         List a given folder
 
@@ -2236,6 +2235,7 @@ class ResourceFile(models.Model):
                 object_id=resource.id,
                 resource_file__startswith=folder)
 
+    # TODO: move to BaseResource as instance method
     @classmethod
     def create_folder(cls, resource, folder):
         """ create a folder for a resource """
@@ -2245,6 +2245,7 @@ class ResourceFile(models.Model):
         # TODO: move code from location used below to here
         create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
+    # TODO: move to BaseResource as instance method
     @classmethod
     def remove_folder(cls, resource, folder, user):
         """ remove a folder for a resource """
@@ -2529,14 +2530,12 @@ class BaseResource(Page, AbstractResource):
         This size does not include metadata. Just files. Specifically,
         resourcemetadata.xml, systemmetadata.xml are not included in this
         size estimate.
-        """
-        try:
-            # compute the total file size for the resource
-            f_sizes = [f.size for f in self.files.all()]
-            return sum(f_sizes)
 
-        except SessionException:
-            return -1
+        Raises SessionException if iRODS fails.
+        """
+        # compute the total file size for the resource
+        f_sizes = [f.size for f in self.files.all()]
+        return sum(f_sizes)
 
     @property
     def verbose_name(self):

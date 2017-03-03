@@ -2,7 +2,6 @@ import os
 import zipfile
 import shutil
 import logging
-# import string
 import requests
 
 from django.conf import settings
@@ -316,8 +315,8 @@ def create_resource(
     :param extra_metadata: one dict containing keys and corresponding values
          { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
-    :param source_names: an array of file names separated by comma from a federated zone to be
-         used to create the resource in the federated zone, default is empty array
+    :param source_names: a list of file names from a federated zone to be
+         used to create the resource in the federated zone, default is empty list
     :param fed_res_path: the federated zone path in the format of
          /federation_zone/home/localHydroProxy that indicate where the resource
          is stored, default is empty string
@@ -450,8 +449,8 @@ def create_empty_resource(pk, user, action='version'):
         user: the user who requests to create a new version for the resource or copy the resource.
         action: "version" or "copy" with default action being "version"
     Returns:
-        the empty new resource that is created as an initial new version for the original resource
-        which is then further populated with metadata and content in a subsequent step
+        the empty new resource that is created as an initial new version or copy for the original
+        resource which is then further populated with metadata and content in a subsequent step.
     """
     res = utils.get_resource_by_shortkey(pk)
     if action == 'version':

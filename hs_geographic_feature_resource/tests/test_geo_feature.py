@@ -516,7 +516,6 @@ class TestGeoFeature(TransactionTestCase):
                                                       validate_files={'are_files_valid': True,
                                                                       'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
-        # TODO: this test fails. 
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
     def test_metadata_element_pre_create_and_update(self):
