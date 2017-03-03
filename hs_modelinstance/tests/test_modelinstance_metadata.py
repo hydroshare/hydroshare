@@ -93,13 +93,8 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # Upload any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
-<<<<<<< HEAD
         utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, 
                                             user=self.user, extract_metadata=True)
-=======
-        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
-                                            extract_metadata=True)
->>>>>>> develop
 
         utils.resource_file_add_process(resource=self.resModelInstance, files=files, 
                                         user=self.user, extract_metadata=True)
