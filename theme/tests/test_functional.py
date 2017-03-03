@@ -45,8 +45,8 @@ class FunctionalTestsCases(object):
                 break
 
         # login page: fill login form
-        username_field = self.driver.find_element_by_id('id_username')
-        password_field = self.driver.find_element_by_id('id_password')
+        username_field = self.driver.find_element_by_name('username')
+        password_field = self.driver.find_element_by_name('password')
         submit = self.driver.find_element_by_xpath("//input[@type='submit']")
 
         username_field.send_keys(login_name, keys.Keys.TAB)
@@ -69,7 +69,7 @@ class FunctionalTestsCases(object):
                 e.click()
                 break
 
-        self.driver.find_element_by_id('id_username').click()
+        self.driver.find_element_by_name('username').click()
         self.assertTrue('accounts/login' in self.driver.current_url)
         self.driver.find_element_by_link_text('join HydroShare').click()
         form = self.driver.find_element_by_id('form-signup')
@@ -96,8 +96,8 @@ class FunctionalTestsCases(object):
         create_new_lnk.click()
 
         # complete new resource form
-        title_field = self.driver.find_element_by_id('title')
-        file_field = self.driver.find_element_by_id('select-file')
+        title_field = self.driver.find_element_by_name('title')
+        file_field = self.driver.find_element_by_name('files')
         submit_btn = self.driver.find_element_by_xpath("//button[@type='submit']")
 
         self.assertTrue(title_field.is_displayed())
