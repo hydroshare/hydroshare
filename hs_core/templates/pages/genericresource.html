@@ -1535,6 +1535,11 @@
                 return txtArea || (e.keyCode || e.which || e.charCode || 0) !== 13;
             });
 
+            // Submit for citation
+            $("#btn-rights-submit").click(function () {
+                metadata_update_ajax_submit('id-rights');
+            });
+
             // Display toggle for Add Author/Contributor radio buttons
             function onAddContributorTypeChange() {
                 var type = $(this).val();
