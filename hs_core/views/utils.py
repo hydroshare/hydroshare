@@ -535,7 +535,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
     except ObjectDoesNotExist:
         # src_name and tgt_name are folder names
-        res_file_objs = ResourceFile.list(resource, src_name)
+        res_file_objs = ResourceFile.list_folder(resource, src_name)
 
         for fobj in res_file_objs:
             src_path = fobj.storage_path
