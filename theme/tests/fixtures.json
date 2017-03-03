@@ -58,7 +58,14 @@
     "model": "pages.richtextpage",
     "pk": 421
   },
-  {"fields": {"domain": "www.hydroshare.org", "name": "Default"}, "model": "sites.site", "pk": 1},
+  {
+   "fields": {
+     "domain": "www.hydroshare.org",
+     "name": "Default"
+    },
+    "model": "sites.site",
+    "pk": 1
+  },
   {
    "fields": {
     "slide_in_two_icon": "",
@@ -77,5 +84,38 @@
    },
    "model": "theme.homepage",
    "pk": 2
+  },
+  {
+   "fields": {
+    "status": 2,
+    "login_required": false,
+    "updated": "2015-12-03T15:02:05.241Z",
+    "_order": 1,
+    "titles": "My Resources",
+    "description": "my-resources",
+    "parent": null,
+    "title": "My Resources",
+    "short_url": null,
+    "created": "2015-05-15T20:17:23.597Z",
+    "site": 1,
+    "in_sitemap": true,
+    "keywords_string": "",
+    "_meta_title": "",
+    "expiry_date": null,
+    "publish_date": "2015-05-15T20:17:23Z",
+    "content_model": "richtextpage",
+    "in_menus": "1,2,3",
+    "slug": "my-resources",
+    "gen_description": true
+   },
+   "model": "pages.page",
+   "pk": 3
+  },
+  {
+   "fields": {
+    "content": "<p>my-resources</p>"
+   },
+   "model": "pages.richtextpage",
+   "pk": 3
   }
 ]
