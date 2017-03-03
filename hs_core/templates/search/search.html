@@ -488,7 +488,6 @@
             modified_boxes_data.forEach(function(box){
                 createBoxResourceMarker (box);
             });
-
             drawShadeRectangles(boxes_data);
 
             shade_rects.forEach(function(rect){
@@ -931,6 +930,7 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
+            setMapItemsList(filtered_results, null);
         };
 
         var updateListView = function (data) {
