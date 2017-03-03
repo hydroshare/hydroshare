@@ -1143,14 +1143,6 @@
             $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
         }
 
-        function onRowRemove(event) {
-            var el = $(event.target);
-            var pk = el[0].getAttribute("data-pk");
-            el.closest("tr").remove();
-            var form = $(event.target).closest("form");
-            form.submit();
-        }
-
         // Toggles pointer events on and off for the access control interface
         function setPointerEvents(flag) {
             if (!flag) {
@@ -1536,8 +1528,9 @@
             });
 
             // Submit for citation
-            $("#btn-rights-submit").click(function () {
-                metadata_update_ajax_submit('id-rights');
+            $(".btn-form-submit").click(function () {
+                var formID = $(this).closest("form").attr("id");
+                metadata_update_ajax_submit(formID);
             });
 
             // Display toggle for Add Author/Contributor radio buttons
