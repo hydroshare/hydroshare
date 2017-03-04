@@ -445,6 +445,7 @@ function showFileTypeMetadata(){
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
          $(".icon-remove").click(onRemoveKeywordFileType);
+         $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields();

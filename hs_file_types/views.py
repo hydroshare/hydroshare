@@ -134,7 +134,9 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
             metadata_status = METADATA_STATUS_INSUFFICIENT
 
         ajax_response_data = {'status': 'success', 'element_name': element_name,
-                              'metadata_status': metadata_status}
+                              'metadata_status': metadata_status,
+                              'logical_file_type': logical_file.type_name()
+                              }
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -343,6 +345,7 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
     if not any(kw.lower() in keywords for kw in existing_keywords):
         logical_file.metadata.keywords += keywords
+        logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -381,6 +384,7 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     if keyword.lower() in existing_keywords:
         logical_file.metadata.keywords = [kw for kw in logical_file.metadata.keywords if
                                           kw.lower() != keyword.lower()]
+        logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
@@ -414,9 +418,44 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
     logical_file.save()
+    logical_file.metadata.is_dirty = True
+    logical_file.metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'datatset_name', 'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def update_netcdf_file(request, file_type_id, **kwargs):
+    """updates (writes the metadata) the netcdf file associated with a instance of a specified
+    NetCDFLogicalFile file object
+    """
+
+    hs_file_type = "NetCDFLogicalFile"
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'datatset_name', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    try:
+        logical_file.update_netcdf_file(request.user)
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': ex.message}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'message': "NetCDF file update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

@@ -4,6 +4,7 @@ import logging
 
 from functools import partial, wraps
 import netCDF4
+import numpy as np
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -11,7 +12,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 from django.forms.models import formset_factory, BaseFormSet
 
-from dominate.tags import div, legend, form, button, p, textarea
+from dominate.tags import div, legend, form, button, p, textarea, strong, input
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -71,6 +72,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
+            self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
             with div(cls="well row", id="temporal-coverage-filetype"):
                 with div(cls="col-lg-6 col-xs-12"):
@@ -169,6 +171,24 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         rendered_html = template.render(context)
         return rendered_html
 
+    def get_update_netcdf_file_html_form(self):
+        form_action = "/hsapi/_internal/{}/update-netcdf-file/".format(self.id)
+        style = "display:none;"
+        if self.is_dirty:
+            style = "margin-bottom:10px"
+        root_div = div(id="div-netcdf-file-update", cls="row", style=style)
+
+        with root_div:
+            with div(cls="col-sm-12"):
+                with div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    strong("NetCDF file needs to be synced with metadata changes.")
+                    input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    with form(action=form_action, method="post", id="update-netcdf-file"):
+                        button("Update NetCDf File", type="button", cls="btn btn-primary",
+                               id="id-update-netcdf-file")
+
+        return root_div
+
     def get_original_coverage_form(self):
         return OriginalCoverage.get_html_form(resource=None, element=self.originalCoverage,
                                               file_type=True)
@@ -244,8 +264,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         if self.originalCoverage:
             self.originalCoverage.add_to_xml_container(container_to_add_to)
 
-        # TODO: check with Tian if we have to add the spatial coverage
-
         for variable in self.variables.all():
             variable.add_to_xml_container(container_to_add_to)
 
@@ -284,6 +302,126 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     def supports_delete_folder_on_zip(self):
         """does not allow the original folder to be deleted upon zipping of that folder"""
         return False
+
+    def update_netcdf_file(self, user):
+        """
+        writes metadata to the netcdf file associated with this instance of the logical file
+        :return:
+        """
+
+        nc_res_file = ''
+        txt_res_file = ''
+        for f in self.files.all():
+            if f.extension == '.nc':
+                nc_res_file = f
+                break
+
+        for f in self.files.all():
+            if f.extension == '.txt':
+                txt_res_file = f
+                break
+        if not nc_res_file:
+            raise ValidationError("No netcdf file exists for this logical file.")
+
+        # get the file from irods to temp dir
+        temp_nc_file = utils.get_file_from_irods(nc_res_file)
+        nc_dataset = netCDF4.Dataset(temp_nc_file, 'a')
+        try:
+            # update title
+            if hasattr(nc_dataset, 'title'):
+                if nc_dataset.title != self.dataset_name:
+                    delattr(nc_dataset, 'title')
+                    nc_dataset.title = self.dataset_name
+            else:
+                nc_dataset.title = self.dataset_name
+
+            # update keywords
+            if self.metadata.keywords:
+                if hasattr(nc_dataset, 'keywords'):
+                    delattr(nc_dataset, 'keywords')
+                nc_dataset.keywords = ','.join(self.metadata.keywords)
+
+            # update temporal coverage
+            if self.metadata.temporal_coverage:
+                for attr_name in ['time_coverage_start', 'time_coverage_end']:
+                    if hasattr(nc_dataset, attr_name):
+                        delattr(nc_dataset, attr_name)
+                nc_dataset.time_coverage_start = self.metadata.temporal_coverage.value['start']
+                nc_dataset.time_coverage_end = self.metadata.temporal_coverage.value['end']
+
+            # update spatial coverage
+            if self.metadata.spatial_coverage:
+                for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
+                                  'geospatial_lon_max']:
+                    # clean up old info
+                    if hasattr(nc_dataset, attr_name):
+                        delattr(nc_dataset, attr_name)
+
+                spatial_coverage = self.metadata.spatial_coverage
+                nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
+                nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
+                nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
+                nc_dataset.geospatial_lon_max = spatial_coverage.value['eastlimit']
+
+            # update variables
+            if self.metadata.variables.all():
+                dataset_variables = nc_dataset.variables
+                for variable in self.metadata.variables.all():
+                    if variable.name in dataset_variables.keys():
+                        dataset_variable = dataset_variables[variable.name]
+                        if variable.unit != 'Unknown':
+                            # clean up old info
+                            if hasattr(dataset_variable, 'units'):
+                                delattr(dataset_variable, 'units')
+                                dataset_variable.setncattr('units', variable.unit)
+                        if variable.descriptive_name:
+                            # clean up old info
+                            if hasattr(dataset_variable, 'long_name'):
+                                delattr(dataset_variable, 'long_name')
+                            dataset_variable.setncattr('long_name', variable.descriptive_name)
+                        if variable.method:
+                            # clean up old info
+                            if hasattr(dataset_variable, 'comment'):
+                                delattr(dataset_variable, 'comment')
+                            dataset_variable.setncattr('comment', variable.method)
+                        if variable.missing_value:
+                            if hasattr(dataset_variable, 'missing_value'):
+                                missing_value = dataset_variable.missing_value
+                                delattr(dataset_variable, 'missing_value')
+                            else:
+                                missing_value = ''
+                            try:
+                                dt = np.dtype(dataset_variable.datatype.name)
+                                missing_value = np.fromstring(variable.missing_value + ' ',
+                                                              dtype=dt.type, sep=" ")
+                            except:
+                                pass
+
+                            if missing_value:
+                                dataset_variable.setncattr('missing_value', missing_value)
+
+            # close nc dataset
+            nc_dataset.close()
+        except Exception as ex:
+            # TODO: log the error here
+            print(ex.message)
+            if os.path.exists(temp_nc_file):
+                shutil.rmtree(os.path.dirname(temp_nc_file))
+            raise ex
+
+        # create the ncdump text file
+        temp_text_file = _create_header_info_txt_file(temp_nc_file)
+
+        # push the updated nc file and the txt file to iRODS
+        utils.replace_resource_file_on_irods(temp_nc_file, nc_res_file,
+                                             user)
+        utils.replace_resource_file_on_irods(temp_text_file, txt_res_file,
+                                             user)
+        self.metadata.is_dirty = False
+        self.metadata.save()
+        # cleanup the temp dir
+        if os.path.exists(temp_nc_file):
+            shutil.rmtree(os.path.dirname(temp_nc_file))
 
     @classmethod
     def set_file_type(cls, resource, file_id, user):
@@ -419,6 +557,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     file_type_metadata.append(ori_cov)
 
                 # create the ncdump text file
+                # TODO: use the _create_header_info_txt_file() to generate this text file
                 if nc_dump.get_nc_dump_string_by_ncdump(temp_file):
                     dump_str = nc_dump.get_nc_dump_string_by_ncdump(temp_file)
                 else:
@@ -538,3 +677,32 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
                 raise ValidationError(err_msg)
+
+
+def _create_header_info_txt_file(nc_temp_file):
+    # create the ncdump text file
+    if nc_dump.get_nc_dump_string_by_ncdump(nc_temp_file):
+        dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_temp_file)
+    else:
+        dump_str = nc_dump.get_nc_dump_string(nc_temp_file)
+
+    # file name without the extension
+    nc_file_name = os.path.basename(nc_temp_file).split(".")[0]
+    temp_dir = os.path.dirname(nc_temp_file)
+    dump_file_name = nc_file_name + '_header_info.txt'
+    dump_file = os.path.join(temp_dir, dump_file_name)
+    if dump_str:
+        # refine dump_str first line
+        first_line = list('netcdf {0} '.format(nc_file_name))
+        first_line_index = dump_str.index('{')
+        dump_str_list = first_line + list(dump_str)[first_line_index:]
+        dump_str = "".join(dump_str_list)
+        # dump_file_name = nc_file_name + '_header_info.txt'
+        # dump_file = os.path.join(temp_dir, dump_file_name)
+        with open(dump_file, 'w') as dump_file_obj:
+            dump_file_obj.write(dump_str)
+    else:
+        with open(dump_file, 'w') as dump_file_obj:
+            dump_file_obj.write("")
+
+    return dump_file

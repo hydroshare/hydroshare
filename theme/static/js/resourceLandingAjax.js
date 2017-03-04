@@ -411,6 +411,10 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
                 // start timeseries resource specific DOM manipulation
                 if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
@@ -634,6 +638,10 @@ function filetype_keywords_update_ajax_submit() {
                     $("#lst-tags-filetype").append(li);
                     $(".icon-remove").click(onRemoveKeywordFileType);
                 }
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
         }
     });
@@ -652,10 +660,46 @@ function filetype_keyword_delete_ajax_submit(keyword, tag) {
             if (json_response.status === 'success') {
                 // remove the li element containing the deleted keyword
                 tag.remove();
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
         }
     });
 }
+
+function update_netcdf_file_ajax_submit() {
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File update was successful.\
+    </div>';
+
+    var url = $('#update-netcdf-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-netcdf-file-update").hide();
+                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-success").alert('close');
+                });
+                // refetch file metadata to show the updated header file info
+                showFileTypeMetadata();
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
+        }
+    });
+}
+
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");

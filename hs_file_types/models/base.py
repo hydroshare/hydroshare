@@ -26,6 +26,8 @@ class AbstractFileMetaData(models.Model):
     extra_metadata = HStoreField(default={})
     # keywords
     keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+    # to track if any metadata element has been modified to trigger file update
+    is_dirty = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -160,8 +162,8 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div()
-            root_div_extra.add(div(cls="col-lg-12 content-block", id="filetype-extra-metadata"))
+            root_div_extra = div(id="filetype-extra-metadata")
+            root_div_extra.add(div(cls="col-lg-12 content-block"))
             with root_div_extra:
                 legend('Extended Metadata')
                 get_add_keyvalue_button()
@@ -306,6 +308,8 @@ class AbstractFileMetaData(models.Model):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
+        self.is_dirty = True
+        self.save()
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
@@ -314,6 +318,8 @@ class AbstractFileMetaData(models.Model):
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
         model_type.model_class().remove(element_id)
+        self.is_dirty = True
+        self.save()
 
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
