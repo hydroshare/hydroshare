@@ -28,8 +28,8 @@
             <br>
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
-            <div id="filter-buttons">
-                <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
+            <div>
+                <button id="btn-show-all" class="btn btn-default">Show All</button>
             </div>
 
             <div id="filter-items">
@@ -136,8 +136,7 @@
                             {% endfor %}
                             <td>
                                 <a id="clear-dates-options" data-toggle="tooltip" title="Clear Dates"
-                                   class="glyphicon glyphicon-remove-circle icon-remove"
-                                   onclick="clearDates()"></a>
+                                   class="glyphicon glyphicon-remove-circle icon-remove"></a>
                             </td>
                         </tr>
                     </table>
@@ -870,11 +869,13 @@
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
-            resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
+            resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm'>");
             resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
             map_legend.innerHTML = legend_table;
             geo_coder.innerHTML = geocoder_content.join('');
             reset_zoom_button.innerHTML = resetButton_content.join('');
+
+            $("#reset-zoom-btn").click(resetMapZoom);
         };
 
         var geocodeAddress = function(geocoder, resultsMap, mapDim) {
@@ -929,13 +930,16 @@
 
             if (window.location.search.length == 0) {
                 requestURL += "?q=";
-            } else {
+            }
+            else {
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
                 requestURL += searchURL;
                 requestURL += buildURLOnCheckboxes();
             }
+
             $("#discover-list-loading-spinner").show();
+
             $.ajax({
                 type: "GET",
                 url: requestURL,
@@ -1192,6 +1196,7 @@
                 changeYear: true,
                 yearRange: '1950:'
             });
+
             $("#id_end_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
@@ -1202,6 +1207,7 @@
             if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
+
             $(".search-field").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
@@ -1337,6 +1343,9 @@
                 content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
                 trigger: 'click'
             });
+
+            $("#btn-show-all").click(clearAllFaceted);
+            $("#clear-dates-options").click(clearDates);
         });
     </script>
 {% endblock %}
