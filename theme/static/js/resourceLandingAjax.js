@@ -292,7 +292,6 @@ function share_resource_ajax_submit(form_id) {
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
 
-
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
                 rowTemplate.find(".remove-user-form .btn-remove-row").attr("data-arg", "form-remove-user-" + share_with);
@@ -384,7 +383,6 @@ function share_resource_ajax_submit(form_id) {
             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
             setPointerEvents(true);
         }
-
     });
     //don't submit the form
     return false;

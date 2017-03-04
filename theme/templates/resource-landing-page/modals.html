@@ -2174,46 +2174,6 @@
             });
         }
 
-        function addEditExtraMeta2Table() {
-            $("#extra_meta_msg").hide();
-            var t = $('#extraMetaTable').DataTable();
-            var extra_meta_name = $("#extra_meta_name_input").val().trim();
-            var extra_meta_value = $("#extra_meta_value_input").val().trim();
-            var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
-
-            if(extra_meta_name.length==0 || extra_meta_value.length==0) {
-                $("#extra_meta_msg").html("<font color='red'>Both name and value are required fields that cannot be left blank.</font>");
-                $("#extra_meta_msg").show();
-                return;
-            }
-
-            if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
-                $("#extra_meta_msg").html("<font color='red'>The name already exists. Please input a different name.</font>");
-                $("#extra_meta_msg").show();
-                return;
-            }
-
-            if (edit_extra_meta_row_id == "") {
-                // add new
-                var new_row_id_0_base = findMaxRowID(t) + 1;
-                var edit_icon_str = '<span onclick="showAddEditExtraMetaPopup(true,' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-edit btn-inline-favorite"></span>';
-                var remove_icon_str = '<span onclick="removeExtraMetadataFromTable(' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-remove btn-inline-favorite"></span>';
-                var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
-                $(row_ele).attr( 'id', new_row_id_0_base);
-            }
-            else {
-                // edit existing
-                var row_to_edit = t.row("#" + edit_extra_meta_row_id);
-                var updated_data_array = row_to_edit.data();
-                updated_data_array[0] = extra_meta_name;
-                updated_data_array[1] = extra_meta_value;
-                row_to_edit.data(updated_data_array);
-            }
-            t.rows().invalidate().draw();
-            $('#extraMetaDialog').modal('hide');
-            $('#save-extra-meta-btn').show();
-        }
-
         $(document).ready(function() {
             var resID = $("#resID").val();
             {# TODO: TESTING #}
