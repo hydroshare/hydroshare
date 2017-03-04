@@ -832,7 +832,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                <button type='submit' id="create-irods-account-btn" class="btn btn-primary" onclick="create_irods_account(); return false;" disabled>Confirm</button>
+                                <button type='submit' id="btn-create-irods-account" class="btn btn-primary" disabled>Confirm</button>
                             </div>
                         </form>
                     </div>
@@ -865,7 +865,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button class="btn btn-danger" onclick="delete_irods_account();">Confirm</button>
+                            <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
                         </div>
                     </div>
                 </div>
@@ -1089,13 +1089,18 @@
             option.val("Unspecified");
             option.text("Unspecified");
 
+            {# TODO: TESTING #}
+            $("#btn-create-irods-account").click(create_irods_account);
+            {# TODO: TESTING #}
+            $("#btn-delete-irods-account").click(delete_irods_account);
+
             // Only enable Confirm button when input password is longer than 8 characters
             $("#id_irods_password").keyup(function () {
                 pwdlen = $("input#id_irods_password").val().length;
                 if (pwdlen >= 8)
-                    $('#create-irods-account-btn').removeAttr('disabled');
+                    $('#btn-create-irods-account').removeAttr('disabled');
                 else
-                    $('#create-irods-account-btn').attr('disabled', 'disabled');
+                    $('#btn-create-irods-account').attr('disabled', 'disabled');
             });
 
             // File name preview for Add CV
