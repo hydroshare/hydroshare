@@ -9,15 +9,13 @@ $(document).ready(function() {
 
 	// Smooth scrolling for UI elements page
 	// =====================================
-	$(document).ready(function(){
-	   $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function(e){
-		  var anchor = $(this);
-		  $('html, body').stop().animate({
-			 scrollTop: $(anchor.attr('href')).offset().top
-		  }, 1000);
-		  e.preventDefault();
-	   });
-	   return false;
+
+	$('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+		var anchor = $(this);
+		$('html, body').stop().animate({
+			scrollTop: $(anchor.attr('href')).offset().top
+		}, 1000);
+		e.preventDefault();
 	});
 
 	// 404 error page 
@@ -113,4 +111,10 @@ $(document).ready(function() {
 
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
+
+	// TODO: TESTING
+	// Close buttons for notification messages
+	$(".btn-close-message").click(function() {
+		$(this).parent().parent().parent().parent().hide(400);
+	});
 });
