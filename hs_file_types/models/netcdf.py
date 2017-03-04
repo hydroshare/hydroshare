@@ -635,7 +635,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         msg = "NetCDF file type. Error when setting file type. Error:{}"
                         msg = msg.format(ex.message)
                         log.exception(msg)
-                        # TODO: in case of any error we should put the original file back and
+                        # TODO: in case of any error put the original file back and
                         # delete the folder that was created
                         raise ValidationError(msg)
                     finally:
@@ -680,7 +680,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
 
 
 def _create_header_info_txt_file(nc_temp_file):
-    # create the ncdump text file
+    # create the nc dump text file
     if nc_dump.get_nc_dump_string_by_ncdump(nc_temp_file):
         dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_temp_file)
     else:
@@ -697,8 +697,6 @@ def _create_header_info_txt_file(nc_temp_file):
         first_line_index = dump_str.index('{')
         dump_str_list = first_line + list(dump_str)[first_line_index:]
         dump_str = "".join(dump_str_list)
-        # dump_file_name = nc_file_name + '_header_info.txt'
-        # dump_file = os.path.join(temp_dir, dump_file_name)
         with open(dump_file, 'w') as dump_file_obj:
             dump_file_obj.write(dump_str)
     else:

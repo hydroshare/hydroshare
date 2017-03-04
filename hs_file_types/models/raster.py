@@ -20,7 +20,6 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.models import Coverage
 from hs_core.forms import CoverageTemporalForm
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
@@ -32,8 +31,9 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
-
     # the metadata element models used for this file type are from the raster resource type app
+    # use the 'model_app_label' attribute with ContentType, do dynamically find the right element
+    # model class from element name (string)
     model_app_label = 'hs_geo_raster_resource'
 
     @classmethod
@@ -51,7 +51,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return elements
 
     def get_html(self):
-        """overrides the base class function"""
+        """overrides the base class function to generate html needed to display metadata
+        in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
         html_string += self.spatial_coverage.get_html()
@@ -69,7 +70,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return template.render(context)
 
     def get_html_forms(self, datatset_name_form=True):
-        """overrides the base class function"""
+        """overrides the base class function to generate html needed for metadata editing"""
 
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:

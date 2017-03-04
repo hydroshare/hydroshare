@@ -359,7 +359,8 @@ class NetCDFMetaDataMixin(models.Model):
             return False
         return True
 
-    def get_required_missing_elements(self):  # show missing required meta
+    def get_required_missing_elements(self):
+        # show missing required meta
         missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
@@ -386,41 +387,10 @@ class NetCDFMetaDataMixin(models.Model):
 
 # define the netcdf metadata
 class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
-    # variables = GenericRelation(Variable)
-    # ori_coverage = GenericRelation(OriginalCoverage)
-
-    # @classmethod
-    # def get_supported_element_names(cls):
-    #     # get the names of all core metadata elements
-    #     elements = super(NetcdfMetaData, cls).get_supported_element_names()
-    #     # add the name of any additional element to the list
-    #     elements.append('Variable')
-    #     elements.append('OriginalCoverage')
-    #     return elements
 
     @property
     def resource(self):
         return NetcdfResource.objects.filter(object_id=self.id).first()
-
-    # def has_all_required_elements(self):
-    #     if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
-    #         return False
-    #     if not self.variables.all():
-    #         return False
-    #     if not (self.coverages.all().filter(type='box').first() or
-    #             self.coverages.all().filter(type='point').first()):
-    #         return False
-    #     return True
-
-    # def get_required_missing_elements(self):  # show missing required meta
-    #     missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
-    #     if not (self.coverages.all().filter(type='box').first() or
-    #             self.coverages.all().filter(type='point').first()):
-    #         missing_required_elements.append('Spatial Coverage')
-    #     if not self.variables.all().first():
-    #         missing_required_elements.append('Variable')
-    #
-    #     return missing_required_elements
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
@@ -442,29 +412,3 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             ori_cov_obj.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
-    # def add_metadata_element_to_xml(self, root, md_element, md_fields):
-    #     from lxml import etree
-    #     element_name = md_fields.get('md_element') if md_fields.get('md_element') \
-    #         else md_element.term
-    #
-    #     hsterms_newElem = etree.SubElement(
-    #         root,
-    #         "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=element_name))
-    #
-    #     hsterms_newElem_rdf_Desc = etree.SubElement(
-    #         hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
-    #
-    #     for md_field in md_fields.keys():
-    #         if hasattr(md_element, md_field):
-    #             attr = getattr(md_element, md_field)
-    #             if attr:
-    #                 field = etree.SubElement(hsterms_newElem_rdf_Desc,
-    #                                          "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-    #                                                                   field=md_fields[md_field]))
-    #                 field.text = str(attr)
-
-    # def delete_all_elements(self):
-    #     super(NetcdfMetaData, self).delete_all_elements()
-    #     self.ori_coverage.all().delete()
-    #     self.variables.all().delete()
