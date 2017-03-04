@@ -589,6 +589,7 @@ CSP_DICT = {
         "*.rawgit.com",
         "*.cloudflare.com",
         "*.datatables.net ",
+        "*.github.io",
         "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
         "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
         "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
@@ -635,7 +636,18 @@ CSP_DICT = {
         "'sha256-V7ZzAcSoXIkrSYcqR/B8yWT13/fcOsyfHAgIecx4iUI='",
         "'sha256-OCUnyHkzmpZQoIx70r0bCBgKLYs1KhTIN7pJXMuSReE='",
         "'sha256-UiZL6JyEXfgjvacZxYTS/pVTCoZXaRWZV4DeogUnVhM='",
-        "'sha256-KnV4q+pdMMu4lsZ6JU2+oo4qV1ID5oizkGP0NOUsTCw='"
+        "'sha256-KnV4q+pdMMu4lsZ6JU2+oo4qV1ID5oizkGP0NOUsTCw='",
+        "'sha256-79BTzOMJsxBf1CxOOf4Ne2pU3Oa+QIQlx+0DOPuIp5c='",
+        "'sha256-eYTQptwh5U5Gxyu2uosE7NcjkJU9d5XYKy5vC2ct1rA='",
+        "'sha256-naN7Hr70KUHX4mDv97iDBDPlSVOan6zivONIlvalxBA='",
+        "'sha256-GcPS0P8xwwH/3UzKURigfG6doDLVF/McjEh+7P5N2yI='",
+        "'sha256-WodVEIwkAPqUasGstvyAi2csuaLFVTFUrb9LWkA2Pr4='",
+        "'sha256-8lxj98wP4zOZ5Z9I6hFV91HDWgO0p+YwfmY8NpVLWzs='",
+        "'sha256-SzNG1z5+hS1TqLU24bxEw+yHxB9P5lNdplo8q0iCvCo='",
+        "'sha256-r2jH/LxttyqZHg/JUMwlBF0tRiWedtZXjvpuuMQ/Npg='",
+        "'sha256-l8Wh30fPzMk3ygGvRNYYLxsyTNJa5kaZ4b0Um4kf/ew='",
+        "'sha256-ZwYN/3nh4U2hNLbH8CVS466Rvbz+gQPsETh3tVKUpYI='",
+        "'sha256-jjB1w4VtRdr0Y8LfKczmN5uPc725/DzdJThTXo714xI='"
     ],
     "style-src" : [
         "self",
@@ -643,7 +655,8 @@ CSP_DICT = {
         "*.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
-        "*.cloudflare.com "
+        "*.cloudflare.com ",
+        "*.github.io"
         # "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
         # "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
         # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",

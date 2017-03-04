@@ -491,9 +491,11 @@
                             {% block download_bag %}
                         <div>
                         {% if user_zone_account_exist %}
-                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
+                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal"
+                               data-target="#rep-resource-to-irods-dialog">
                                 <span class="glyphicon">
-                                   <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
+                                   <span title='Replicate Resource Bag to iRODS User Zone'
+                                         class="button-label">Replicate Resource Bag to iRODS User Zone</span>
                                 </span>
                             </a>
                         {% endif %}
@@ -1055,7 +1057,7 @@
                             {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                 <div class="tab-pane" id="extraMetaTab">
                                     {% if metadata_form %}
-                                        <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
+                                        <a id="btn-add-new-entry" type="button" class="btn btn-success">
                                                                 <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
                                         </a>
                                     {% endif %}
@@ -1460,9 +1462,10 @@
         $(document).ready(function () {
             var task_id = $('#task_id').val();
             var download_path = $('#download_path').val();
-            resID = $("#hs-file-browser").attr("data-res-id");
-            if (task_id)
+{#            var resID = $("#hs-file-browser").attr("data-res-id");#}
+            if (task_id) {
                 update_download_status(task_id, download_path);
+            }
 
             $('.contact-table .sortable').sortable({
                 axis: "y",
@@ -1503,6 +1506,7 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+
             $("#agree-chk-copy").on('click', function(e) {
                 e.stopImmediatePropagation();
                 if (e.currentTarget.checked)
@@ -1510,10 +1514,12 @@
                 else
                     $('#copy-btn').attr('disabled', 'disabled');
             });
+
             // add input element to each of the comment/rating forms to track resource mode (edit or view)
             var resourceMode = $("#resource-mode").val().toLowerCase();
             var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
             inputElementToAdd = inputElementToAdd.replace('mode_to_replace', resourceMode);
+
             $("[id^=comment-]").find('form').each(function () {
                 $(this).append(inputElementToAdd);
             });
@@ -1782,6 +1788,11 @@
                     $("#invite-flag button[data-value='groups']").removeClass("btn-default");
                     $("#invite-flag button[data-value='groups']").addClass("btn-primary");
                 }
+            });
+
+            {# TODO: TESTING #}
+            $("#btn-add-new-entry").click(function() {
+                showAddEditExtraMetaPopup(false, '');
             });
         });
     </script>

@@ -1,6 +1,10 @@
 {% extends "pages/page.html" %}
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
+{% block extra_css %}
+{#    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">#}
+{% endblock %}
+
 {% block main %}
     <div class="collaborate-header">
         <div class="container">
@@ -800,7 +804,7 @@
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
-                                    <a id="btn-invite" onclick="group_invite_ajax_submit(); return false;"
+                                    <a id="btn-group-invite"
                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
@@ -840,6 +844,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Delete/Inactive Group Modal -->
         <div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog"
              aria-labelledby="Delete">
@@ -971,8 +976,8 @@
                                     <small class="text-muted">( * ) Required fields</small>
                                 </fieldset>
                             </div>
-
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save</button>
@@ -987,8 +992,7 @@
 
 {% block extra_js %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
-    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+{#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
 
     <script>
         var ACTIONS_COL = 0;
@@ -1314,6 +1318,7 @@
             $(".btn-act-on-request").click(act_on_request_ajax_submit);
             $(".btn-share-group").click(share_group_ajax_submit);
             $(".btn-unshare-group").click(unshare_group_ajax_submit);
+            $("#btn-group-invite").click(group_invite_ajax_submit);
 
             // Initialize filters counters
             updateMembersLabelCount();
