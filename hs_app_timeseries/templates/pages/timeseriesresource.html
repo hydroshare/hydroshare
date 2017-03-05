@@ -178,12 +178,14 @@
             }
 
             $("#coverage-temporal :input").prop('disabled', true);
+
+            var tsSelect = $(".time-series-forms select");
             
-            $(".time-series-forms select").append('<option value="Other">Other...</option>');
+            tsSelect.append('<option value="Other">Other...</option>');
 
-            $(".time-series-forms select").parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
+            tsSelect.parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
 
-            $(".time-series-forms select").change(function(e){
+            tsSelect.change(function(e){
                 if (e.target.value == "Other") {
                     var name = e.target.name;
                     $(e.target).parent().parent().find(".other-field").show();
@@ -215,14 +217,7 @@
                 this.form.submit()
             });
         });
-        function setCheckboxValue(el){
-            if ($(el).is(':checked')){
-                $(el).attr('value', 'Yes')
-            }
-            else{
-                $(el).attr('value', 'No')
-            }
-        }
+
         function processSiteMetadataElement(){
             var sites_text = $('#id_available_sites').val();
             var sites_json = $.parseJSON(sites_text);
