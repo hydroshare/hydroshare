@@ -291,9 +291,8 @@ class AbstractFileMetaData(models.Model):
                                   name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                        button("Save changes", cls="btn btn-primary pull-right",
-                               onclick="metadata_update_ajax_submit('filetype-dataset-name'); "
-                                       "return false;", style="display: none;", type="button")
+                        button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                               style="display: none;", type="button")
         return root_div
 
     def _get_add_key_value_modal_form(self):
@@ -334,7 +333,7 @@ class AbstractFileMetaData(models.Model):
                             button("Cancel", type="button", cls="btn btn-default",
                                    data_dismiss="modal")
                             button("OK", type="button", cls="btn btn-primary",
-                                   onclick="addFileTypeExtraMetadata(); return true;")
+                                   id="btn-confirm-add-metadata")  # TODO: TESTING
         return modal_div
 
     def _get_edit_key_value_modal_forms(self):

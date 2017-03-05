@@ -44,10 +44,8 @@ class GenericFileMetaData(AbstractFileMetaData):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "
                                      "col-md-2 col-xs-6"):
                             button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;",
-                                   onclick="metadata_update_ajax_submit("
-                                           "'id-coverage_temporal-file-type'); return false;")
+                                   cls="btn btn-primary pull-right btn-form-submit",  #TODO: TESTING
+                                   style="display: none;")
 
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
@@ -57,10 +55,8 @@ class GenericFileMetaData(AbstractFileMetaData):
                         with div(cls="col-md-offset-10 col-xs-offset-6 "
                                      "col-md-2 col-xs-6"):
                             button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;",
-                                   onclick="metadata_update_ajax_submit("
-                                           "'id-coverage-spatial-filetype');")
+                                   cls="btn btn-primary pull-right btn-form-submit",  #TODO: TESTING
+                                   style="display: none;")
 
         template = Template(root_div.render())
         context_dict = dict()
