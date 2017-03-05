@@ -217,9 +217,7 @@ VariableLayoutEdit = Layout(
                  {% crispy form %}
                 <div class="row" style="margin-top:10px">
                     <div class="col-md-10 col-xs-6">
-                        <button type="button" class="btn btn-primary"
-                        onclick="metadata_update_ajax_submit({{ form.form_id_button }});
-                        return false;">Save Changes</button>
+                        <button type="button" class="btn btn-primary btn-form-submit">Save Changes</button>
                     </div>
                 </div>
                 {% crispy form.delete_modal_form %}
