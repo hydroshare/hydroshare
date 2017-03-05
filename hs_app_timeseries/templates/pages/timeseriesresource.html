@@ -10,7 +10,7 @@
                     timeseries:{{ series_ids.items|length }}):</strong>
                 <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
+                    <select class="form-control" name="series_id" id="series_id">
                         {% for series_id, label in series_ids.items %}
                             {% if selected_series_id == series_id %}
                                 <option value="{{ series_id }}" selected="selected"
@@ -199,10 +199,21 @@
                     }
                 }
             });
-              processSiteMetadataElement();
-              processVariableMetadataElement();
-              processMethodMetadataElement();
-              processProcessingLevelMetadataElement();
+
+            processSiteMetadataElement();
+            processVariableMetadataElement();
+            processMethodMetadataElement();
+            processProcessingLevelMetadataElement();
+
+            {# TODO: TESTING #}
+            $("#btn-update-sqlite-file").click(function () {
+                this.form.submit();
+                return false;
+            });
+
+            $("#series_id").change(function() {
+                this.form.submit()
+            });
         });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
