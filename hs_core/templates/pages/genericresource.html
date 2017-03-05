@@ -1333,8 +1333,8 @@
             if (edit_extra_meta_row_id == "") {
                 // add new
                 var new_row_id_0_base = findMaxRowID(t) + 1;
-                var edit_icon_str = '<span data-arg="' + new_row_id_0_base + '" data-form-type="toggle-favorite" class="btn-edit-icon glyphicon glyphicon-edit btn-inline-favorite"></span>';
-                var remove_icon_str = '<span data-arg="' + new_row_id_0_base + '" data-form-type="toggle-favorite" class="btn-remove-icon glyphicon glyphicon-remove btn-inline-favorite"></span>';
+                var edit_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-edit-icon glyphicon glyphicon-edit btn-inline-favorite"></span>';
+                var remove_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-remove-icon glyphicon glyphicon-remove btn-inline-favorite"></span>';
                 var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
                 $(row_ele).attr( 'id', new_row_id_0_base);
             }
@@ -1346,18 +1346,17 @@
                 updated_data_array[1] = extra_meta_value;
                 row_to_edit.data(updated_data_array);
             }
+
             t.rows().invalidate().draw();
             $('#extraMetaDialog').modal('hide');
             $('#save-extra-meta-btn').show();
 
-            {# TODO: TESTING #}
             // Bind click events
             $(".btn-edit-icon").click(function() {
                 var arg = $(this).attr("data-arg");
-                showAddEditExtraMetaPopup(arg);
+                showAddEditExtraMetaPopup(true, arg);
             });
 
-            {# TODO: TESTING #}
             $(".btn-remove-icon").click(function() {
                 var arg = $(this).attr("data-arg");
                 removeExtraMetadataFromTable(arg);
@@ -1483,7 +1482,6 @@
         $(document).ready(function () {
             var task_id = $('#task_id').val();
             var download_path = $('#download_path').val();
-{#            var resID = $("#hs-file-browser").attr("data-res-id");#}
             if (task_id) {
                 update_download_status(task_id, download_path);
             }
@@ -1835,6 +1833,18 @@
             $("#btn-confirm-add-metadata").click(function () {
                 addFileTypeExtraMetadata();
                 return true;
+            });
+
+            {# TODO: TESTING #}
+            $("#btn-confirm-edit-key-value").click(function () {
+                var formID = $(this).closest("form").attr("id");
+                updateFileTypeExtraMetadata(formID);
+            });
+
+            {# TODO: TESTING #}
+            $("#btn-delete-key-value").click(function () {
+                var formID = $(this).closest("form").attr("id");
+                deleteFileTypeExtraMetadata(formID);
             });
         });
     </script>

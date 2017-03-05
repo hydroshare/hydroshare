@@ -684,7 +684,9 @@ CSP_DICT = {
         "'sha256-1WRz25hEYxzj9Pt3J3cryUtem1xAwOORVfeB6qhye3c='",
         "'sha256-BV6FnOHUarXYMQeXWoSSLSMcK9mOmriSIU2G5/EKjxs='",
         "'sha256-Fvr4WmhEwiZ1MtyFT00qAqDdiUUIzzWlM0zNBF/ZhtQ='",
-        "'sha256-FfxxvkjiwDU5Eowtlz/F1WiQ/Bly/R/W5A5oinUQ9gU='"
+        "'sha256-FfxxvkjiwDU5Eowtlz/F1WiQ/Bly/R/W5A5oinUQ9gU='",
+        "'sha256-jzJjm424m6TarWMctEwasX1iK4daIWa6te5cFtFgdF8='",
+        "'sha256-d7p7FXpt2Yv+lTk3LQqEvNvjs/1xtsp/5EFNjYLeuEM='"
     ],
     "style-src" : [
         "self",
