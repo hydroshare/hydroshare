@@ -89,9 +89,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                            <span onclick="remove_collection_item_popup('{{ res.short_id }}')"
-                                  data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                    <span data-res-id="{{ res.short_id }}"
+                                          data-form-id="form-favorite-{{ res.short_id }}"
+                                          data-form-type="toggle-favorite"
+                                          class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -102,7 +103,7 @@
                 {% if edit_mode %}
                     </form>
                     <div>
-                        <a type="button" class="btn btn-success" onclick="$('#collection-candidate').modal('show');">
+                        <a id="btn-add-collection-resources" type="button" class="btn btn-success">
                         <span class="glyphicon glyphicon-plus"><span
                                 class="button-label"> Add resources...</span></span>
                         </a>
@@ -111,11 +112,10 @@
             </div>
             {% if deleted_resources|length > 0 %}
                 <div id="view_deleted_res_div">
-                    <input type="button" id="view_deleted_res_btn" class="btn btn-default" value="View deleted contents"
-                           onclick=" $('#deleted-resources-modal').modal('show');">
-            <span data-toggle="tooltip" data-placement="auto"
-                  title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if page.perms.change %} You need to clear deleted resources to fix that.{% endif %}'
-                  class="glyphicon glyphicon-info-sign text-muted"></span>
+                    <input type="button" id="view_deleted_res_btn" class="btn btn-default" value="View deleted contents">
+                    <span data-toggle="tooltip" data-placement="auto"
+                          title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if page.perms.change %} You need to clear deleted resources to fix that.{% endif %}'
+                          class="glyphicon glyphicon-info-sign text-muted"></span>
                 </div>
             {% endif %}
             <hr>
@@ -234,8 +234,10 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <span onclick="remove_collection_item_popup('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                        <span data-res-id="{{ res.short_id }}"
+                                              data-form-id="form-favorite-{{ res.short_id }}"
+                                              data-form-type="toggle-favorite"
+                                              class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-collection-item"></span>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -247,7 +249,7 @@
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
                        Cancel
                     </button>
-                    <button type="button" class="btn btn-success" id="save-collection-btn-ok" onclick="add_collection_item_ajax();">
+                    <button type="button" class="btn btn-success" id="save-collection-btn-ok">
                         Add to collection
                     </button>
                 </div>
@@ -317,9 +319,10 @@
                 </div>
                 <div class="modal-footer">
                     {% if page.perms.change %}
-                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table_ajax('{{cm.short_id}}');">
-                        Clear and Update Bag
-                    </button>
+                        <button type="button" data-res-id="{{ cm.short_id }}" class="btn btn-success"
+                                id="clear-deleted-res-btn">
+                            Clear and Update Bag
+                        </button>
                     {% endif %}
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="clear-deleted-res-btn-cancel">
                        Close
@@ -437,8 +440,30 @@
             $("#collection-table-candidate td").click(onCollectionTableRowClick);
 
             if (edit_mode.toLowerCase() == "true") {
-                $("#coverage-header").append($('<div><input id="btn-calc-coverage" value="Calculate Coverages" class="btn btn-info" type="button" onclick="collection_coverages_calculate_ajax()"/></div>'));
+                $("#coverage-header").append($('<div><input id="btn-calc-coverage" value="Calculate Coverages" class="btn btn-info" type="button"/></div>'));
             }
+
+            $("#btn-calc-coverage").click(collection_coverages_calculate_ajax);
+
+            $("#btn-add-collection-resources").click(function () {
+                $('#collection-candidate').modal('show');
+            });
+
+            $("#save-collection-btn-ok").click(add_collection_item_ajax);
+
+            $(".btn-remove-collection-item").click(function() {
+                var resID = $(this).attr("data-res-id");
+                remove_collection_item_popup(resID);
+            });
+
+            $("#view_deleted_res_btn").click(function() {
+                $('#deleted-resources-modal').modal('show');
+            });
+
+            $("#clear-deleted-res-btn").click(function() {
+                var resID = $(this).attr("data-res-id");
+                clear_deleted_resources_table_ajax(resID);
+            });
         });
 
         function onCollectionTableRowClick(e) {
@@ -626,13 +651,21 @@
                         updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
                         customAlert($alert_success, 3000);
 
-                        $.each($("#collection-candidate .row-selector:checked"), function( index, chkbox ) {
-                                var res_id = chkbox.id;
-                                var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
-                                $('#collection-table').DataTable().row.add(added_row.data()).draw(false);
-                                added_row.remove().draw(false);
+                        $.each($("#collection-candidate .row-selector:checked"), function (index, chkbox) {
+                            var res_id = chkbox.id;
+                            var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
+                            $('#collection-table').DataTable().row.add(added_row.data()).draw(false);
+                            added_row.remove().draw(false);
                         });
                         $('#collection-candidate').modal('hide');
+
+                        // Rebind click events
+                        $(".btn-remove-collection-item").click(function () {
+                            var resID = $(this).attr("data-res-id");
+                            remove_collection_item_popup(resID);
+                        });
+
+
                     }
                     else {
                         customAlert($alert_error, 3000);

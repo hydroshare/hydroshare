@@ -658,7 +658,21 @@ CSP_DICT = {
         "'sha256-c4od0bGxCcDSq6SLkmOP7kq9P1/wG9sde88zmRvVMaM='",
         "'sha256-3IJB9yQbv84j4L47GxPCwL58Oo2XtqjMHJjoHqL98U8='",
         "'sha256-PPYzKtDSyPGedb5lS0Xlo2FnTGrE/dd0bzhcMUzy+mM='",
-        "'sha256-0j17vHF1Yn7DCz5x+RSGZ3SdZGlO60KVLxcsbTWMWr4='"
+        "'sha256-0j17vHF1Yn7DCz5x+RSGZ3SdZGlO60KVLxcsbTWMWr4='",
+        "'sha256-j8gfhko697ohKyDbV/l3ob2vyGN0Lt7tVm+IRzeu6sg='",
+        "'sha256-n+HwVlo5Dmy9MfToFf25zYNAzB2RzbxmV+bmJl6OKfw='",
+        "'sha256-2DXGMJiUIhst0jZU+V0OE0qnQilr9ODWrQPfH6BNZDw='",
+        "'sha256-Y1NYulBirsvE7ZXXr8VM+cq8K2sX3ZNOhONLQSKGiDo='",
+        "'sha256-qOF9wU9K95jeUxDgw0Rwvw2Yfa0QIjUSe6ICMy/SUlk='",
+        "'sha256-c9ccTnCOg2CEel7oA+4VnZD+yFYJJxio57yYwJaF/c0='",
+        "'sha256-/HH8MoAi3E5aL1/GMBWM72+6Fkj+i8i7OHZr1crGjhM='",
+        "'sha256-wn49Q7ULRmO/0l2X0RMuPRwmLzHOhOlNlfPYFAiyCis='",
+        "'sha256-CxzrspWV1UTYRTR8FknnzFS8+PE9o9/Rvz06dD5Xm6w='",
+        "'sha256-ptonTlcU45DJc/YNkYewH1NC84oBywaGJC7wztxeJFQ='",
+        "'sha256-PawlGFZ9ao9zjiC1LmN/EdRhogKYLRLZ8rgNL+fCySk='",
+        "'sha256-YOA+ARAdWRc2FhzfLJx3Q6kM5DwcW2M1xGma9TXVRzs='",
+        "'sha256-pJEZMbtbgs1iPzpY0vU2pweWXUIf3EzDXS4XbLCe6GY='"
+
     ],
     "style-src" : [
         "self",
