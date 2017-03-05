@@ -1082,10 +1082,15 @@
                                                     </td>
                                                     {% if metadata_form %}
                                                         <td>
-                                                            <span onclick="showAddEditExtraMetaPopup(true, '{{ forloop.counter0 }}')" data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-edit btn-inline-favorite"></span>
-                                                            <span onclick="removeExtraMetadataFromTable('{{ forloop.counter0 }}')" data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                                            {# TODO: TESTING #}
+                                                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                                                  data-form-type="toggle-favorite"
+                                                                  class="glyphicon glyphicon-edit btn-inline-favorite btn-edit-extra-metadata"></span>
+
+                                                            {# TODO: TESTING #}
+                                                            <span data-loop-counter="{{ forloop.counter0 }}"
+                                                                  data-form-type="toggle-favorite"
+                                                                  class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-extra-metadata"></span>
                                                         </td>
                                                     {% endif %}
                                                 </tr>
@@ -1094,7 +1099,9 @@
                                     </table>
 
                                     {% if metadata_form %}
-                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
+                                        {# TODO: TESTING #}
+                                        <input class="btn btn-primary" type="button" id="save-extra-meta-btn"
+                                               value="Save Changes" style="display: none"/>
                                     {% endif %}
                             </div>
                             {% endif %}
@@ -1808,6 +1815,21 @@
             $("#btn-add-new-entry").click(function() {
                 showAddEditExtraMetaPopup(false, '');
             });
+
+            {# TODO: TESTING #}
+            $(".btn-edit-extra-metadata").click(function () {
+                var loopCounter = $(this).attr("data-loop-counter");
+                showAddEditExtraMetaPopup(true, loopCounter);
+            });
+
+            {# TODO: TESTING #}
+            $(".btn-remove-extra-metadata").click(function () {
+                var loopCounter = $(this).attr("data-loop-counter");
+                removeExtraMetadataFromTable(loopCounter);
+            });
+
+            {# TODO: TESTING #}
+            $("#save-extra-meta-btn").click(saveExtraMetadata);
         });
     </script>
 
