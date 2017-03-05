@@ -3925,6 +3925,10 @@ div.group-add-photo {
 	margin-top: 20px;
 }
 
+.fieldWrapper {
+    margin-right: 20px;
+}
+
 #clear-dates-options:hover {
 	text-decoration: none;
 }

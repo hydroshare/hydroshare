@@ -161,7 +161,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12">
-                    <button type="button" onClick="$(this).parent().parent().parent().parent().hide(400);" class="close">&times;</button>
+                    {# TODO: TESTING #}
+                    <button type="button" class="close btn-close-message">&times;</button>
                     <p>{{ message }}</p>
                 </div>
             </div>
@@ -170,7 +171,6 @@
     {% endfor %}
     {% endif %}
     {% endnevercache %}
-
 
     {% block all_content %}
     <div class="section-header">

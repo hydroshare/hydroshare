@@ -64,8 +64,8 @@
 <![endif]-->
 
 {% block extra_head %}{% endblock %}
-
 </head>
+
 <body id="{% block body_id %}body{% endblock %}">
 <!-- Navbar
     ============= -->
@@ -165,7 +165,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12">
-                    <button type="button" class="close btn-close-message">&times;</button>
+                    <button type="button" class="close btn-close-message">&times;</button>  {# TODO: TESTING #}
                     <p>{{ message }}</p>
                 </div>
             </div>
@@ -281,7 +281,5 @@
             </div>
         </div>
     </footer>
-
-
 </body>
 </html>
