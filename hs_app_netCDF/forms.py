@@ -59,6 +59,10 @@ class OriginalCoverageForm(forms.Form):
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
+        self.fields['projection'].widget.attrs['readonly'] = True
+        self.fields['datum'].widget.attrs['readonly'] = True
+        self.fields['projection_string_type'].widget.attrs['disabled'] = True
+        self.fields['projection_string_text'].widget.attrs['readonly'] = True
 
     @property
     def form_id(self):
