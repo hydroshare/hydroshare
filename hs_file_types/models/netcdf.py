@@ -484,17 +484,22 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # add creator:
                 if res_dublin_core_meta.get('creator_name'):
                     name = res_dublin_core_meta['creator_name']
-                    email = res_dublin_core_meta.get('creator_email', '')
-                    url = res_dublin_core_meta.get('creator_url', '')
-                    creator = {'creator': {'name': name, 'email': email, 'homepage': url}}
-                    resource_metadata.append(creator)
+                    # add creator only if there is no creator already with the same name
+                    if not resource.metadata.creators.all().filter(name=name).exists():
+                        email = res_dublin_core_meta.get('creator_email', '')
+                        url = res_dublin_core_meta.get('creator_url', '')
+                        creator = {'creator': {'name': name, 'email': email, 'homepage': url}}
+                        resource_metadata.append(creator)
 
                 # add contributor:
                 if res_dublin_core_meta.get('contributor_name'):
                     name_list = res_dublin_core_meta['contributor_name'].split(',')
                     for name in name_list:
-                        contributor = {'contributor': {'name': name}}
-                        resource_metadata.append(contributor)
+                        # add contributor only if there is no contributor already with the
+                        # same name
+                        if not resource.metadata.contributors.all().filter(name=name).exists():
+                            contributor = {'contributor': {'name': name}}
+                            resource_metadata.append(contributor)
 
                 # add title
                 if resource.metadata.title.value.lower() == 'untitled resource':
