@@ -11,7 +11,7 @@ from .base import HSRESTTestCase
 
 class TestPublicZipEndpoint(HSRESTTestCase):
     def setUp(self):
-        super(TestPublicUnzipEndpoint, self).setUp()
+        super(TestPublicZipEndpoint, self).setUp()
 
         self.tmp_dir = tempfile.mkdtemp()
 

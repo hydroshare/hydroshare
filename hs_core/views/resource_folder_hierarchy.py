@@ -134,7 +134,8 @@ def data_store_folder_zip(request, res_id=None):
     if not input_coll_path:
         return HttpResponse('Bad request - input_coll_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    output_zip_fname = request.POST.get('output_zip_file_name', request.data.get('output_zip_file_name'))
+    output_zip_fname = request.POST.get('output_zip_file_name',
+                                        request.data.get('output_zip_file_name'))
     if output_zip_fname is None:
         return HttpResponse('Bad request - output_zip_fname is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +143,8 @@ def data_store_folder_zip(request, res_id=None):
     if not output_zip_fname:
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    remove_original = request.POST.get('remove_original_after_zip', request.data.get('remove_original_after_zip'))
+    remove_original = request.POST.get('remove_original_after_zip',
+                                       request.data.get('remove_original_after_zip'))
     bool_remove_original = True
     if remove_original:
         remove_original = str(remove_original).strip().lower()
