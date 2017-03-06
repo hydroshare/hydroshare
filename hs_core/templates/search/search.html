@@ -318,6 +318,10 @@
 
                 <div id="map-point-view" class="tab-pane fade">
                     <div id="discover-point-map"></div>
+
+                    <div class="discover-map-legend"></div>
+
+                    <div class="resetZoom"></div>
                 </div>
                 <div id="map-area-view" class="tab-pane fade">
                     <div class="row">
@@ -338,9 +342,9 @@
 
                             <div id="discover-area-map"></div>
 
-                            <div id="discover-map-legend"></div>
+                            <div class="discover-map-legend"></div>
 
-                            <div id="resetZoom"></div>
+                            <div class="resetZoom"></div>
                             <br />
                             <table class="table-hover table-striped" id="map-items" style="width:100%; max-height:200px">
                             </table>
@@ -865,12 +869,18 @@
         };
 
         var generateLegend = function() {
-            var map_legend = document.getElementById('discover-map-legend');
+            //var map_legend = document.getElementById('discover-map-legend');
+            var map_legends = document.getElementsByClassName('discover-map-legend');
             var geo_coder = document.getElementById('geocoder-panel');
-            var reset_zoom_button = document.getElementById('resetZoom');
-            area_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+
+            var reset_zoom_buttons = document.getElementsByClassName('resetZoom');
+            //var reset_zoom_button = document.getElementById('resetZoom');
+
+            point_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[0]);
+            area_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[1]);
             area_map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
-            area_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
+            point_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[0]);
+            area_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[1]);
             var geocoder_content = [];
             var resetButton_content = [];
             var legend_table = "<table><tbody>";
@@ -879,11 +889,13 @@
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
-            resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
+            resetButton_content.push("<a data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
             resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
-            map_legend.innerHTML = legend_table;
+            map_legends[0].innerHTML = legend_table;
+            map_legends[1].innerHTML = legend_table;
             geo_coder.innerHTML = geocoder_content.join('');
-            reset_zoom_button.innerHTML = resetButton_content.join('');
+            reset_zoom_buttons[0].innerHTML = resetButton_content.join('');
+            reset_zoom_buttons[1].innerHTML = resetButton_content.join('');
         };
 
         var geocodeAddress = function(geocoder, resultsMap, mapDim) {

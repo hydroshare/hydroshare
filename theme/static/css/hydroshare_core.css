@@ -3867,7 +3867,7 @@ div.group-add-photo {
 	border: 1px solid #DDD;
 }
 
-#discover-map-legend {
+.discover-map-legend {
 	background: rgba(255, 255, 255, 0.75);
 	padding: 10px;
 	margin: 5px;
@@ -3898,7 +3898,7 @@ div.group-add-photo {
 	margin-top:20px;
 }
 
-#resetZoom {
+.resetZoom {
 	margin-right:5px;
 }
 
