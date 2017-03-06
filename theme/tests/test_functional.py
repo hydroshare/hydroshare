@@ -106,8 +106,8 @@ class FunctionalTestsCases(object):
         submit_btn.click()
 
         # check results
-        login = self.driver.find_element_by_xpath("//h2[@id='resource-title']")
-        self.assertEqual(login.text, RESOURCE_TITLE)
+        title = self.driver.find_element_by_xpath("//h2[@id='resource-title']").text
+        self.assertEqual(title, RESOURCE_TITLE)
         citation = self.driver.find_element_by_xpath("//input[@id='citation-text']")
         citation_text = citation.get_attribute('value')
         import re
@@ -172,6 +172,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
                     "Version/5.1 Mobile/9A334 Safari/7534.48.3")
 
         self.driver = webdriver.PhantomJS(desired_capabilities=mobile_dcap)
+        # iPhone 5 resolution
         self.driver.set_window_size(width=640, height=1136)
         self.driver.get(self.live_server_url)
         super(MobileTests, self).setUp()
