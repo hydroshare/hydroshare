@@ -167,8 +167,8 @@
 
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
-                <li><a href="#map-point-view"><i class="glyphicon glyphicon-map-marker"></i> Point Coverage</a></li>
-                <li><a href="#map-area-view"><i class="glyphicon glyphicon-map-marker"></i> Area Coverage</a></li>
+                <li><a href="#map-point-view"><i class="glyphicon glyphicon-map-marker"></i> Site</a></li>
+                <li><a href="#map-area-view"><i class="glyphicon glyphicon-map-marker"></i> Area</a></li>
             </ul>
 
             <div class="tab-content">
@@ -317,6 +317,9 @@
                 </div>
 
                 <div id="map-point-view" class="tab-pane fade">
+                    <div id="discover-point-map"></div>
+                </div>
+                <div id="map-area-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
                             <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
@@ -333,7 +336,7 @@
 
                             <div id="geocoder-panel"></div>
 
-                            <div id="discover-point-map"></div>
+                            <div id="discover-area-map"></div>
 
                             <div id="discover-map-legend"></div>
 
@@ -343,9 +346,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
-                <div id="map-area-view" class="tab-pane fade">
-                    <div id="discover-area-map"></div>
                 </div>
             </div>
         </div>
@@ -361,11 +361,14 @@
     <script src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
-        var map = null;
+        var point_map = null;
         var area_map = null;
         var map_default_bounds = null;
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
+        var current_map_bounds = null;
+        var current_map_zoom = 2;
+        var current_map_center = new google.maps.LatLng(0, 0);
         var markers = [];
         var raw_results = [];
         var markerCluster = null;
@@ -373,13 +376,13 @@
         var shade_rects = [];
 
         var initMap = function(json_results) {
-            var $mapDiv = $("#discover-point-map");
+            var $mapDiv = $("#discover-area-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
             };
 
-            map = new google.maps.Map($mapDiv[0], {
+            area_map = new google.maps.Map($mapDiv[0], {
                 zoom: map_default_zoom,
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             });
@@ -387,7 +390,7 @@
             info_window = new google.maps.InfoWindow();
 
             setMarkers(json_results);
-            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : area_map.setZoom(2);
             if (bounds) {
                 var ne = bounds.getNorthEast();
                 var sw = bounds.getSouthWest();
@@ -396,19 +399,19 @@
                 document.getElementById("id_SWlat").value = sw.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 map_default_bounds = bounds;
-                map.fitBounds(map_default_bounds);
+                area_map.fitBounds(map_default_bounds);
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
             }
 
-            var idle_listener = google.maps.event.addListener(map, "idle", function () {
-                map.setCenter(map_default_center);
-                map.setZoom(map_default_zoom);
+            var idle_listener = google.maps.event.addListener(area_map, "idle", function () {
+                area_map.setCenter(map_default_center);
+                area_map.setZoom(map_default_zoom);
                 google.maps.event.removeListener(idle_listener);
             });
 
-            var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
-                var bnds = map.getBounds();
+            var bounds_listener = google.maps.event.addListener(area_map, 'bounds_changed', function(){
+                var bnds = area_map.getBounds();
                 if (bnds) {
                     var ne = bnds.getNorthEast();
                     var sw = bnds.getSouthWest();
@@ -420,16 +423,16 @@
                 }
             });
 
-            map.enableKeyDragZoom({
+            area_map.enableKeyDragZoom({
                 key: 'shift',
                 visualEnabled: true
             });
 
-            var dz = map.getDragZoomObject();
+            var dz = area_map.getDragZoomObject();
 
             google.maps.event.addListener(dz, 'dragend', function (bnds) {
-                map.setCenter(bnds.getCenter());
-                map.setZoom(getBoundsZoomLevel(bnds, mapDim));
+                area_map.setCenter(bnds.getCenter());
+                area_map.setZoom(getBoundsZoomLevel(bnds, mapDim));
                 var ne = bnds.getNorthEast();
                 var sw = bnds.getSouthWest();
                 document.getElementById("id_NElng").value = ne.lng();
@@ -439,11 +442,11 @@
 
             });
 
-            var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
+            var zoom_listener = google.maps.event.addListener(area_map, 'zoom_changed', function(){
                 updateMapView();
             });
 
-            var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
+            var drag_listener = google.maps.event.addListener(area_map, 'dragend', function(){
                 updateMapView();
             });
 
@@ -455,10 +458,10 @@
 
             var geocoder = new google.maps.Geocoder();
             document.getElementById('geocoder-submit').addEventListener('click', function() {
-                geocodeAddress(geocoder, map, mapDim);
+                geocodeAddress(geocoder, area_map, mapDim);
             });
 
-            google.maps.event.addListener(map,'click',function(e){
+            google.maps.event.addListener(area_map,'click',function(e){
                 var map_items_table = $('#map-items').DataTable();
                 map_items_table.clear().draw();
                 shade_rects.forEach(function(rect){
@@ -501,7 +504,7 @@
                     map_items_table.draw();
                 });
             });
-{#            markerCluster = new MarkerClusterer(map, markers, {#}
+{#            markerCluster = new MarkerClusterer(area_map, markers, {#}
 {#                styles:[{#}
 {#                    height: 55,#}
 {#                    width: 56,#}
@@ -549,7 +552,7 @@
                     fillOpacity: 0
                 });
 
-                shade_rects[i].setMap(map);
+                shade_rects[i].setMap(area_map);
             }
         };
 
@@ -667,7 +670,7 @@
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
-            var bnds = map.getBounds();
+            var bnds = area_map.getBounds();
             if (bnds) {
                 for (var  i = 0; i < raw_results.length; i++ ) {
                     if (raw_results[i].coverage_type == 'point') {
@@ -865,9 +868,9 @@
             var map_legend = document.getElementById('discover-map-legend');
             var geo_coder = document.getElementById('geocoder-panel');
             var reset_zoom_button = document.getElementById('resetZoom');
-            map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
-            map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
+            area_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            area_map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
+            area_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
             var geocoder_content = [];
             var resetButton_content = [];
             var legend_table = "<table><tbody>";
@@ -902,26 +905,33 @@
 {#            var map_items_table = $('#map-items').DataTable();#}
 {#            map_items_table.clear().draw();#}
 {#            #}
-            setMapItemsList(raw_results, null);
-            var $mapDiv = $("#discover-point-map");
+
+            var map_resources = [];
+            buildMapItemsTableData(raw_results, map_resources, null);
+            var map_items_table = $('#map-items').DataTable();
+            map_items_table.clear();
+            map_items_table.rows.add(map_resources);
+            map_items_table.draw();
+
+            var $mapDiv = $("#discover-area-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
             };
 
-            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
-            map.fitBounds(bounds);
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : area_map.setZoom(2);
+            area_map.fitBounds(bounds);
             var zoom_level = getBoundsZoomLevel(bounds, mapDim);
             var reset_center = bounds.getCenter();
             if (bounds) {
-                map.fitBounds(bounds);
-                var listener = google.maps.event.addListener(map, "idle", function () {
-                    map.setZoom(zoom_level);
-                    map.setCenter(reset_center);
+                area_map.fitBounds(bounds);
+                var listener = google.maps.event.addListener(area_map, "idle", function () {
+                    area_map.setZoom(zoom_level);
+                    area_map.setCenter(reset_center);
                     google.maps.event.removeListener(listener);
                 });
             } else {
-                map.setZoom(map_default_zoom);
+                area_map.setZoom(map_default_zoom);
             }
         };
 
@@ -930,9 +940,18 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
-            setMapItemsList(filtered_results, null);
+
+            var map_resources = [];
+            buildMapItemsTableData(filtered_results, map_resources, null);
+            var map_items_table = $('#map-items').DataTable();
+            map_items_table.clear();
+            map_items_table.rows.add(map_resources);
+            map_items_table.draw();
+
         };
 
+
+//------------------------------------------------------
         var updateListView = function (data) {
             var requestURL = "/search/";
 
@@ -970,7 +989,7 @@
 
         var updateFacetingItems = function (request_url) {
             $("#discover-list-loading-spinner").show();
-            if (map != null) {
+            if (area_map != null) {
                 $("#discover-map-loading-spinner").show();
                 $.when(updateMapFaceting(), updateListFaceting(request_url)).done(function(){
                     $("#discover-list-loading-spinner").hide();
@@ -1236,7 +1255,7 @@
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if (tabId == "map-point-view" && map == null) {
+                if (tabId == "map-area-view" && area_map == null) {
                     var requestURL = "/searchjson/";
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
@@ -1279,8 +1298,8 @@
                             console.error("Ajax call for getting map data failed");
                         }
                     });
-                } else if (tabId == "map-area-view" && area_map == null) {
-                    area_map = new google.maps.Map(document.getElementById('discover-area-map'), {
+                } else if (tabId == "map-point-view" && point_map == null) {
+                    point_map = new google.maps.Map(document.getElementById('discover-point-map'), {
                         center: {lat: -34.397, lng: 150.644},
                         zoom: 8
                     });
