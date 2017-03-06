@@ -397,7 +397,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("OK", id="btn-confirm-edit-key-value", type="button", cls="btn btn-primary")
+                                    button("OK", id="btn-confirm-edit-key-value",
+                                           type="button", cls="btn btn-primary")
             return root_div
 
     def _get_delete_key_value_modal_forms(self):
@@ -448,8 +449,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("Delete", type="button", cls="btn btn-danger",  # TODO: TESTING
-                                           id="btn-delete-key-value")
+                                    button("Delete", type="button", cls="btn btn-danger",
+                                           id="btn-delete-key-value")  # TODO: TESTING
         return root_div
 
 

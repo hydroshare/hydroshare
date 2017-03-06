@@ -584,11 +584,11 @@ class BaseFormHelper(FormHelper):
                                      element_layout,
                                      HTML('<div style="margin-top:10px">'),
                                      HTML('<button type="button" '
-                                          'class="btn btn-primary pull-right btn-form-submit" '  # TODO: TESTING
+                                          'class="btn btn-primary pull-right btn-form-submit" '
                                           'return false;">Save changes</button>'),
                                      HTML('</div>')
                                      ),
-                         )
+                         )  # TODO: TESTING
         else:
             self.form_tag = False
             self.layout = Layout(

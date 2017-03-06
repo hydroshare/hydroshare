@@ -740,7 +740,8 @@ UpdateSQLiteLayout = Layout(HTML("""
             enctype="multipart/form-data">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit">
-                <button id="btn-update-sqlite-file" type="button" class="btn btn-primary">Update SQLite File</button>
+                <button id="btn-update-sqlite-file" type="button" class="btn btn-primary">
+                Update SQLite File</button>
             </form>
         </div>
     </div>

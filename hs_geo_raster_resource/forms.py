@@ -297,8 +297,8 @@ BandInfoLayoutEdit = Layout(HTML("""
                          {% crispy form %}
                          <div class="row" style="margin-top:10px">
                              <div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">
-                                 <button type="button" class="btn btn-primary pull-right btn-form-submit"
-                                 >Save Changes</button>
+                                 <button type="button" class="btn btn-primary
+                                 pull-right btn-form-submit">Save Changes</button>
                              </div>
                          </div>
                      </form>

@@ -76,8 +76,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                             with div(cls="col-md-offset-10 col-xs-offset-6 "
                                          "col-md-2 col-xs-6"):
                                 button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right btn-form-submit",  # TODO: TESTING
-                                       style="display: none;")
+                                       cls="btn btn-primary pull-right btn-form-submit",
+                                       style="display: none;")  # TODO: TESTING
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
