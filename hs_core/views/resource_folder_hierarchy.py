@@ -378,6 +378,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         content_type='application/json'
     )
 
+
 @api_view(['POST'])
 def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
