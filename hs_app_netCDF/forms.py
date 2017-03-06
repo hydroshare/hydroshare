@@ -169,6 +169,7 @@ class VariableForm(ModelForm):
             self.action = ""
         self.fields['name'].widget.attrs['readonly'] = True
         self.fields['shape'].widget.attrs['readonly'] = True
+        self.fields['type'].widget.attrs['disabled'] = True
 
     @property
     def form_id(self):
