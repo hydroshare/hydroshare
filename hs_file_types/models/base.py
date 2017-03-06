@@ -162,44 +162,46 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div(id="filetype-extra-metadata")
-            root_div_extra.add(div(cls="col-lg-12 content-block"))
+            root_div_extra = div(cls="row", id="filetype-extra-metadata")
             with root_div_extra:
-                legend('Extended Metadata')
-                get_add_keyvalue_button()
-                with table(cls="table table-striped funding-agencies-table"):
-                    with tbody():
-                        with tr(cls="header-row"):
-                            th("Key")
-                            th("Value")
-                            th("Edit/Remove")
-                        counter = 0
-                        for k, v in self.extra_metadata.iteritems():
-                            counter += 1
-                            with tr(data_key=k):
-                                td(k)
-                                td(v)
-                                with td():
-                                    a(data_toggle="modal", data_placement="auto", title="Edit",
-                                      cls="glyphicon glyphicon-pencil icon-button icon-blue",
-                                      data_target="#edit-keyvalue-filetype-modal"
-                                                  "-{}".format(counter))
-                                    a(data_toggle="modal", data_placement="auto",
-                                      title="Remove",
-                                      cls="glyphicon glyphicon-trash icon-button btn-remove",
-                                      data_target="#delete-keyvalue-filetype-modal"
-                                                  "-{}".format(counter))
+                with div(cls="col-lg-12 content-block"):
+                    legend('Extended Metadata')
+                    get_add_keyvalue_button()
+                    with table(cls="table table-striped funding-agencies-table",
+                               style="width: 100%"):
+                        with tbody():
+                            with tr(cls="header-row"):
+                                th("Key")
+                                th("Value")
+                                th("Edit/Remove")
+                            counter = 0
+                            for k, v in self.extra_metadata.iteritems():
+                                counter += 1
+                                with tr(data_key=k):
+                                    td(k)
+                                    td(v)
+                                    with td():
+                                        a(data_toggle="modal", data_placement="auto", title="Edit",
+                                          cls="glyphicon glyphicon-pencil icon-button icon-blue",
+                                          data_target="#edit-keyvalue-filetype-modal"
+                                                      "-{}".format(counter))
+                                        a(data_toggle="modal", data_placement="auto",
+                                          title="Remove",
+                                          cls="glyphicon glyphicon-trash icon-button btn-remove",
+                                          data_target="#delete-keyvalue-filetype-modal"
+                                                      "-{}".format(counter))
 
-                self._get_add_key_value_modal_form()
-                self._get_edit_key_value_modal_forms()
-                self._get_delete_key_value_modal_forms()
+                    self._get_add_key_value_modal_form()
+                    self._get_edit_key_value_modal_forms()
+                    self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
-            root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
+            root_div_extra = div(cls="row", id="filetype-extra-metadata")
             with root_div_extra:
-                legend('Extended Metadata')
-                get_add_keyvalue_button()
-                self._get_add_key_value_modal_form()
+                with div(cls="col-lg-12 content-block"):
+                    legend('Extended Metadata')
+                    get_add_keyvalue_button()
+                    self._get_add_key_value_modal_form()
             return root_div_extra
 
     def has_all_required_elements(self):
