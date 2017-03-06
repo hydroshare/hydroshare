@@ -267,6 +267,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
             return json_response
 
     logical_file.metadata.extra_metadata[key] = value
+    logical_file.metadata.is_dirty = True
     logical_file.metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     extra_metadata_div = super(logical_file.metadata.__class__,
@@ -302,6 +303,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     key = request.POST['key']
     if key in logical_file.metadata.extra_metadata.keys():
         del logical_file.metadata.extra_metadata[key]
+        logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
 

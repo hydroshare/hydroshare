@@ -339,7 +339,16 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             if self.metadata.keywords:
                 if hasattr(nc_dataset, 'keywords'):
                     delattr(nc_dataset, 'keywords')
-                nc_dataset.keywords = ','.join(self.metadata.keywords)
+                nc_dataset.keywords = ', '.join(self.metadata.keywords)
+
+            # update key/value metadata
+            if self.metadata.extra_metadata:
+                if hasattr(nc_dataset, 'hs_extra_metadata'):
+                    delattr(nc_dataset, 'hs_extra_metadata')
+                extra_metadata = []
+                for k, v in self.metadata.extra_metadata.items():
+                    extra_metadata.append("{}:{}".format(k, v))
+                nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
 
             # update temporal coverage
             if self.metadata.temporal_coverage:
