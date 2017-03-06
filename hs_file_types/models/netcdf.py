@@ -74,19 +74,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         with root_div:
             self.get_update_netcdf_file_html_form()
             super(NetCDFFileMetaData, self).get_html_forms()
-            with div(cls="well row", id="temporal-coverage-filetype"):
-                with div(cls="col-lg-6 col-xs-12"):
-                    with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy temp_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;",
-                                       onclick="metadata_update_ajax_submit("
-                                               "'id-coverage_temporal-file-type'); return false;")
             with div(cls="row"):
                 with div(cls="col-lg-6 col-xs-12", id="original-coverage-filetype"):
                     with form(id="id-origcoverage-file-type",

@@ -140,7 +140,7 @@ class AbstractFileMetaData(models.Model):
                   cls="text-danger small", style="display: none;")
 
             self.get_extra_metadata_html_form()
-
+            self.get_temporal_coverage_html_form()
         return root_div
 
     def get_spatial_coverage_form(self, allow_edit=False):
@@ -203,6 +203,25 @@ class AbstractFileMetaData(models.Model):
                     get_add_keyvalue_button()
                     self._get_add_key_value_modal_form()
             return root_div_extra
+
+    def get_temporal_coverage_html_form(self):
+        # Note: When using this form layout the context variable 'temp_form' must be
+        # set prior to calling the template.render(context)
+        root_div = div(cls="row", id="temporal-coverage-filetype")
+        with root_div:
+            with div(cls="col-lg-6 col-xs-12"):
+                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy temp_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;",
+                                   onclick="metadata_update_ajax_submit("
+                                           "'id-coverage_temporal-file-type'); return false;")
+        return root_div
 
     def has_all_required_elements(self):
         return True

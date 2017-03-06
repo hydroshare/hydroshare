@@ -40,19 +40,6 @@ class GenericFileMetaData(AbstractFileMetaData):
         with root_div:
             super(GenericFileMetaData, self).get_html_forms()
             with div(cls="col-lg-6 col-xs-12"):
-                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy temp_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;",
-                                   onclick="metadata_update_ajax_submit("
-                                           "'id-coverage_temporal-file-type'); return false;")
-
-            with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
                     div("{% crispy spatial_form %}")
