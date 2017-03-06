@@ -9,7 +9,7 @@ from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
 
 
-class TestPublicUnzipEndpoint(HSRESTTestCase):
+class TestPublicZipEndpoint(HSRESTTestCase):
     def setUp(self):
         super(TestPublicUnzipEndpoint, self).setUp()
 
@@ -82,5 +82,14 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
             "input_coll_path": "data/contents/foo",
             "output_zip_file_name": "test.zip",
             "remove_original_after_zip": False
+        }, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_zip_folder_remove(self):
+        zip_url = "/hsapi/resource/%s/functions/zip/" % self.pid
+        response = self.client.post(zip_url, {
+            "input_coll_path": "data/contents/foo",
+            "output_zip_file_name": "test.zip",
+            "remove_original_after_zip": True
         }, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
