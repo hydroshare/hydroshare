@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.messages import get_messages
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -19,7 +20,15 @@ def landing_page(request, page):
     for lf in netcdf_logical_files:
         if lf.metadata.is_dirty:
             msg = "One or more NetCDF files are out of sync with metadata changes."
-            messages.info(request, msg)
+            # prevent same message being displayed more than once
+            msg_exists = False
+            storage = get_messages(request)
+            for message in storage:
+                if message.message == msg:
+                    msg_exists = True
+                    break
+            if not msg_exists:
+                messages.info(request, msg)
             break
 
     edit_resource = page_processors.check_resource_mode(request)
