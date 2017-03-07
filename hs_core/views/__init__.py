@@ -12,7 +12,7 @@ from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpRequest
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -168,11 +168,9 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     key/value data in request.POST is assigned to the resource.extra_metadata field
     """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-
     post_data = request.POST.copy()
     resource_mode = post_data.pop('resource-mode', None)
     res.extra_metadata = post_data.dict()
-
     is_update_success = True
     err_message = ""
     try:
