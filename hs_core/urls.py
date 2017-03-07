@@ -15,13 +15,13 @@ urlpatterns = patterns('',
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='DEPRECATED_list_resources'),
 
-    url(r'^resource/$', views.resource_rest_api.ResourceListCreate.as_view(),
-        name='list_create_resource'),
-
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    # DEPRECATED: use form above instead 
+    # public copy resource endpoint
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$', views.copy_resource_public, name='copy_resource_public'),
+
+    # DEPRECATED: use form above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='DEPRECATED_update_access_rules'),
 
