@@ -28,10 +28,6 @@ class TestCustomScimetaEndpoint(HSRESTTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_set_metadata_bad(self):
-        # TODO: Not sure how to get this to throw an error here
-        pass
-
     def test_set_metadata_no_resource_mode(self):
         set_metadata = "/hsapi/resource/%s/scimeta/custom/" % self.pid
         response = self.client.post(set_metadata, {

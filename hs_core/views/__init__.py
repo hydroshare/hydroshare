@@ -169,14 +169,9 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-    if(request.POST):
-        post_data = request.POST.copy()
-        resource_mode = post_data.pop('resource-mode', None)
-        res.extra_metadata = post_data.dict()
-    elif(request.data):
-        post_data = request.data.copy()
-        resource_mode = post_data.pop('resource-mode', None)
-        res.extra_metadata = post_data
+    post_data = request.POST.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data.dict()
 
     is_update_success = True
     err_message = ""
@@ -199,24 +194,39 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     if resource_mode is not None:
         request.session['resource-mode'] = 'edit'
 
-    if isinstance(request, HttpRequest):
-        if is_update_success:
-            messages.success(request, "Metadata update successful")
-        else:
-            messages.error(request, err_message)
-
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
+    if is_update_success:
+        messages.success(request, "Metadata update successful")
     else:
-        if is_update_success:
-            return HttpResponse(status=200)
-        else:
-            return HttpResponse(status=400)
+        messages.error(request, err_message)
 
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @api_view(['POST'])
 def update_key_value_metadata_public(request, pk):
-    return update_key_value_metadata(request, pk)
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data
+
+    is_update_success = True
+    err_message = ""
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+        err_message = ex.message
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if resource_mode is not None:
+        request.session['resource-mode'] = 'edit'
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
