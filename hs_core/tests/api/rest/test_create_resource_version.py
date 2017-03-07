@@ -1,11 +1,6 @@
-import os
-import tempfile
-import zipfile
-
 from rest_framework import status
 
 from hs_core.hydroshare import resource
-from hs_core.tests.api.utils import MyTemporaryUploadedFile
 
 from .base import HSRESTTestCase
 
@@ -22,8 +17,6 @@ class TestCreateResourceVersion(HSRESTTestCase):
                                        unpack_file=False)
 
         self.pid = res.short_id
-
-
 
     def test_create_resource(self):
         version_url = "/hsapi/resource/%s/version/" % self.pid
