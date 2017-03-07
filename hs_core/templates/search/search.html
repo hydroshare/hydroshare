@@ -365,8 +365,11 @@
     <script src="https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
-        var point_map = null;
-        var area_map = null;
+        var maps = {};
+        maps["point_map"] = null;
+        maps["maps[view_type]"] = null;
+        // var point_map = null;
+        // var maps[view_type] = null;
         var map_default_bounds = null;
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
@@ -376,18 +379,18 @@
         var markers = [];
         var box_centers = [];
         var raw_box_results = [];
-        var markerCluster = null;
+        var markers_cluster = null;
         var info_window = null;
         var shade_rects = [];
 
-        var initAreaMap = function(json_results) {
+        var initMap = function(json_results, view_type) {
             var $mapDiv = $("#discover-area-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
             };
 
-            area_map = new google.maps.Map($mapDiv[0], {
+            maps[view_type] = new google.maps.Map($mapDiv[0], {
                 zoom: map_default_zoom,
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             });
@@ -395,7 +398,7 @@
             info_window = new google.maps.InfoWindow();
 
             setBoxes(json_results);
-            var bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : area_map.setZoom(2);
+            var bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
             if (bounds) {
                 var ne = bounds.getNorthEast();
                 var sw = bounds.getSouthWest();
@@ -404,19 +407,19 @@
                 document.getElementById("id_SWlat").value = sw.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 map_default_bounds = bounds;
-                area_map.fitBounds(map_default_bounds);
+                maps[view_type].fitBounds(map_default_bounds);
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
             }
 
-            var idle_listener = google.maps.event.addListener(area_map, "idle", function () {
-                area_map.setCenter(map_default_center);
-                area_map.setZoom(map_default_zoom);
+            var idle_listener = google.maps.event.addListener(maps[view_type], "idle", function () {
+                maps[view_type].setCenter(map_default_center);
+                maps[view_type].setZoom(map_default_zoom);
                 google.maps.event.removeListener(idle_listener);
             });
 
-            var bounds_listener = google.maps.event.addListener(area_map, 'bounds_changed', function(){
-                var bnds = area_map.getBounds();
+            var bounds_listener = google.maps.event.addListener(maps[view_type], 'bounds_changed', function(){
+                var bnds = maps[view_type].getBounds();
                 if (bnds) {
                     var ne = bnds.getNorthEast();
                     var sw = bnds.getSouthWest();
@@ -428,16 +431,16 @@
                 }
             });
 
-            area_map.enableKeyDragZoom({
+            maps[view_type].enableKeyDragZoom({
                 key: 'shift',
                 visualEnabled: true
             });
 
-            var dz = area_map.getDragZoomObject();
+            var dz = maps[view_type].getDragZoomObject();
 
             google.maps.event.addListener(dz, 'dragend', function (bnds) {
-                area_map.setCenter(bnds.getCenter());
-                area_map.setZoom(getBoundsZoomLevel(bnds, mapDim));
+                maps[view_type].setCenter(bnds.getCenter());
+                maps[view_type].setZoom(getBoundsZoomLevel(bnds, mapDim));
                 var ne = bnds.getNorthEast();
                 var sw = bnds.getSouthWest();
                 document.getElementById("id_NElng").value = ne.lng();
@@ -447,11 +450,11 @@
 
             });
 
-            var zoom_listener = google.maps.event.addListener(area_map, 'zoom_changed', function(){
+            var zoom_listener = google.maps.event.addListener(maps[view_type], 'zoom_changed', function(){
                 updateMapView();
             });
 
-            var drag_listener = google.maps.event.addListener(area_map, 'dragend', function(){
+            var drag_listener = google.maps.event.addListener(maps[view_type], 'dragend', function(){
                 updateMapView();
             });
 
@@ -463,10 +466,10 @@
 
             var geocoder = new google.maps.Geocoder();
             document.getElementById('geocoder-submit').addEventListener('click', function() {
-                geocodeAddress(geocoder, area_map, mapDim);
+                geocodeAddress(geocoder, maps[view_type], mapDim);
             });
 
-            // google.maps.event.addListener(area_map,'click',function(e){
+            // google.maps.event.addListener(maps[view_type],'click',function(e){
             //     var map_items_table = $('#map-items').DataTable();
             //     map_items_table.clear().draw();
             //     shade_rects.forEach(function(rect){
@@ -509,7 +512,7 @@
                     map_items_table.draw();
                 });
             });
-{#            markerCluster = new MarkerClusterer(area_map, markers, {#}
+{#            markers_cluster = new MarkerClusterer(maps[view_type], markers, {#}
 {#                styles:[{#}
 {#                    height: 55,#}
 {#                    width: 56,#}
@@ -557,7 +560,7 @@
                     fillOpacity: 0
                 });
 
-                shade_rects[i].setMap(area_map);
+                shade_rects[i].setMap(maps["area_map"]);
             }
         };
 
@@ -675,7 +678,7 @@
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
-            var bnds = area_map.getBounds();
+            var bnds = maps["area_map"].getBounds();
             if (bnds) {
                 for (var  i = 0; i < raw_box_results.length; i++ ) {
                     if (raw_box_results[i].coverage_type == 'point') {
@@ -709,8 +712,8 @@
             }
             shade_rects = [];
 
-            if (markerCluster) {
-                markerCluster.clearMarkers(markers);
+            if (markers_cluster) {
+                markers_cluster.clearMarkers(markers);
             }
             for (var i = 0; i < markers.length; i++) {
                 if (markers[i].getMap() != null) {
@@ -871,6 +874,7 @@
         };
 
         var generateLegend = function() {
+            var view_type = "area_map";
             //var map_legend = document.getElementById('discover-map-legend');
             var map_legends = document.getElementsByClassName('discover-map-legend');
             var geo_coder = document.getElementById('geocoder-panel');
@@ -879,10 +883,10 @@
             //var reset_zoom_button = document.getElementById('resetZoom');
 
             //point_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[0]);
-            area_map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[1]);
-            area_map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
+            maps[view_type].controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[1]);
+            maps[view_type].controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
             //point_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[0]);
-            area_map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[1]);
+            maps[view_type].controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[1]);
             var geocoder_content = [];
             var resetButton_content = [];
             var legend_table = "<table><tbody>";
@@ -919,7 +923,7 @@
 {#            var map_items_table = $('#map-items').DataTable();#}
 {#            map_items_table.clear().draw();#}
 {#            #}
-
+            var view_type = "area_map";
             var map_resources = [];
             buildMapItemsTableData(raw_box_results, map_resources, null);
             var map_items_table = $('#map-items').DataTable();
@@ -933,19 +937,19 @@
                 width: $mapDiv.width()
             };
 
-            var bounds = (box_center.length > 0) ? createBoundsForMarkers(box_center) : area_map.setZoom(2);
-            area_map.fitBounds(bounds);
+            var bounds = (box_center.length > 0) ? createBoundsForMarkers(box_center) : maps[view_type].setZoom(2);
+            maps[view_type].fitBounds(bounds);
             var zoom_level = getBoundsZoomLevel(bounds, mapDim);
             var reset_center = bounds.getCenter();
             if (bounds) {
-                area_map.fitBounds(bounds);
-                var listener = google.maps.event.addListener(area_map, "idle", function () {
-                    area_map.setZoom(zoom_level);
-                    area_map.setCenter(reset_center);
+                maps[view_type].fitBounds(bounds);
+                var listener = google.maps.event.addListener(maps[view_type], "idle", function () {
+                    maps[view_type].setZoom(zoom_level);
+                    maps[view_type].setCenter(reset_center);
                     google.maps.event.removeListener(listener);
                 });
             } else {
-                area_map.setZoom(map_default_zoom);
+                maps[view_type].setZoom(map_default_zoom);
             }
         };
 
@@ -1002,8 +1006,9 @@
         };
 
         var updateFacetingItems = function (request_url) {
+            var view_type = "area_map";
             $("#discover-list-loading-spinner").show();
-            if (area_map != null) {
+            if (maps[view_type] != null) {
                 $("#discover-map-loading-spinner").show();
                 $.when(updateMapFaceting(), updateListFaceting(request_url)).done(function(){
                     $("#discover-list-loading-spinner").hide();
@@ -1269,7 +1274,7 @@
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if (tabId == "map-area-view" && area_map == null) {
+                if (tabId == "map-area-view" && maps["area_map"] == null) {
                     var requestURL = "/searchjson/";
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
@@ -1302,7 +1307,7 @@
                                 json_results.push(item);
                                 raw_box_results.push(item);
                             }
-                            initAreaMap(json_results);
+                            initMap(json_results, "area_map");
                             setMapItemsList(json_results, null);
                             $("#resource-search").show();
                             $("#discover-map-loading-spinner").hide();
@@ -1312,8 +1317,8 @@
                             console.error("Ajax call for getting map data failed");
                         }
                     });
-                } else if (tabId == "map-point-view" && point_map == null) {
-                    point_map = new google.maps.Map(document.getElementById('discover-point-map'), {
+                } else if (tabId == "map-point-view" && maps["point_map"] == null) {
+                    maps["point_map"] = new google.maps.Map(document.getElementById('discover-point-map'), {
                         center: {lat: -34.397, lng: 150.644},
                         zoom: 8
                     });
