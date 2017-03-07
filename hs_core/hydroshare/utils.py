@@ -163,10 +163,27 @@ def is_federated(homepath):
     Returns:
     True is the selected file indicated by homepath is from a federated zone, False if otherwise
     """
-    irods_storage = IrodsStorage('federated')
-    # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not
-    # federated
-    return irods_storage.exists(homepath)
+    homepath = homepath.strip()
+    homepath_list = homepath.split('/')
+    # homepath is an iRODS logical path in the format of
+    # /irods_zone/home/irods_account_username/collection_relative_path, so homepath_list[1]
+    # is the irods_zone which we can use to form the fed_proxy_path to check whether
+    # fed_proxy_path exists to hold hydroshare resources in a federated zone
+    if homepath_list[1]:
+        fed_proxy_path = os.path.join(homepath_list[1], 'home',
+                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        fed_proxy_path = '/' + fed_proxy_path
+    else:
+        # the test path input is invalid, return False meaning it is not federated
+        return False
+    if settings.REMOTE_USE_IRODS:
+        irods_storage = IrodsStorage('federated')
+    else:
+        irods_storage = IrodsStorage()
+
+    # if the iRODS proxy user in hydroshare zone can list homepath and the federation zone proxy
+    # user path, it is federated; otherwise, it is not federated
+    return irods_storage.exists(homepath) and irods_storage.exists(fed_proxy_path)
 
 
 def get_federated_zone_home_path(filepath):
@@ -544,7 +561,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
+        create_bag_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
