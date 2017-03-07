@@ -39,7 +39,11 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/elements/$', views.resource_metadata_rest_api.MetadataElementsRetrieveUpdate.as_view(),
         name='get_update_science_metadata_elements'),
 
-    # DEPRECATED: use form above instead
+    # Update key-value metadata
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/custom/$', views.update_key_value_metadata_public,
+        name='update_custom_metadata'),
+
+                       # DEPRECATED: use form above instead
     url(r'^scimeta/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='DEPRECATED_get_update_science_metadata'),
 

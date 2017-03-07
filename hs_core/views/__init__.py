@@ -12,7 +12,7 @@ from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -168,9 +168,16 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     key/value data in request.POST is assigned to the resource.extra_metadata field
     """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    post_data = request.POST.copy()
-    resource_mode = post_data.pop('resource-mode', None)
-    res.extra_metadata = post_data.dict()
+
+    if(request.POST):
+        post_data = request.POST.copy()
+        resource_mode = post_data.pop('resource-mode', None)
+        res.extra_metadata = post_data.dict()
+    elif(request.data):
+        post_data = request.data.copy()
+        resource_mode = post_data.pop('resource-mode', None)
+        res.extra_metadata = post_data
+
     is_update_success = True
     err_message = ""
     try:
@@ -192,12 +199,24 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     if resource_mode is not None:
         request.session['resource-mode'] = 'edit'
 
-    if is_update_success:
-        messages.success(request, "Metadata update successful")
-    else:
-        messages.error(request, err_message)
+    if isinstance(request, HttpRequest):
+        if is_update_success:
+            messages.success(request, "Metadata update successful")
+        else:
+            messages.error(request, err_message)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    else:
+        if is_update_success:
+            return HttpResponse(status=200)
+        else:
+            return HttpResponse(status=400)
+
+
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    return update_key_value_metadata(request, pk)
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
