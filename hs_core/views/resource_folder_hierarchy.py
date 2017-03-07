@@ -338,7 +338,7 @@ def data_store_remove_folder(request):
     )
 
 
-def data_store_file_or_folder_move_or_rename(request):
+def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store. It is invoked by an AJAX call and returns json object that has the
@@ -347,7 +347,7 @@ def data_store_file_or_folder_move_or_rename(request):
     source_path, and target_path where source_path and target_path are the relative paths for the
     source and target file or folder under res_id collection/directory.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -360,8 +360,8 @@ def data_store_file_or_folder_move_or_rename(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    src_path = request.POST.get('source_path', None)
-    tgt_path = request.POST.get('target_path', None)
+    src_path = request.POST.get('source_path', request.data.get('source_path'))
+    tgt_path = request.POST.get('target_path', request.data.get('target_path'))
     if src_path is None or tgt_path is None:
         return HttpResponse('Bad request - src_path or tgt_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -384,3 +384,8 @@ def data_store_file_or_folder_move_or_rename(request):
         json.dumps(return_object),
         content_type='application/json'
     )
+
+
+@api_view(['POST'])
+def data_store_file_or_folder_move_or_rename_public(request, pk):
+    return data_store_file_or_folder_move_or_rename(request, res_id=pk)
