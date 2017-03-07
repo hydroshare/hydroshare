@@ -585,6 +585,11 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
+@api_view(['POST'])
+def create_new_version_resource_public(request, pk):
+    return create_new_version_resource(request, pk)
+
+
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
