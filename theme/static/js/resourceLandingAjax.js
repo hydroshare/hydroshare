@@ -562,14 +562,14 @@ function metadata_update_ajax_submit(form_id){
 }
 
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
-    $element_selection_dropdown = $('#' + element_id + '_code_choices');
+    var $element_selection_dropdown = $('#' + element_id + '_code_choices');
     if ($element_selection_dropdown.length && $element_selection_dropdown.attr('type') !== "hidden"){
         $('#' + form_id + ' :input').attr('readonly', 'readonly');
     }
 }
 
 function set_file_type_ajax_submit(url) {
-    $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File type was successful.\

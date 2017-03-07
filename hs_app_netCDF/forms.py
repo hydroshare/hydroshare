@@ -61,7 +61,7 @@ class OriginalCoverageForm(forms.Form):
         self.allow_edit = allow_edit
         self.fields['projection'].widget.attrs['readonly'] = True
         self.fields['datum'].widget.attrs['readonly'] = True
-        self.fields['projection_string_type'].widget.attrs['disabled'] = True
+        self.fields['projection_string_type'].widget.attrs['readonly'] = True
         self.fields['projection_string_text'].widget.attrs['readonly'] = True
 
     @property
@@ -173,7 +173,7 @@ class VariableForm(ModelForm):
             self.action = ""
         self.fields['name'].widget.attrs['readonly'] = True
         self.fields['shape'].widget.attrs['readonly'] = True
-        self.fields['type'].widget.attrs['disabled'] = True
+        self.fields['type'].widget.attrs['readonly'] = True
 
     @property
     def form_id(self):

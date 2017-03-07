@@ -451,6 +451,14 @@ function showFileTypeMetadata(){
          setFileTypeSpatialCoverageFormFields(logical_type);
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         if (logical_type === "NetCDFLogicalFile") {
+             // don't let the user open the Projection String Type dropdown list
+             // when editing Oroginal Coverage element
+             $("#id_projection_string_type_filetype").css('pointer-events', 'none');
+             // don't let the user open the Variable type dropdown list when editing
+             // Variable elements
+             $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
+         }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);
              $("#div_id_type_filetype input:radio").trigger("change");
