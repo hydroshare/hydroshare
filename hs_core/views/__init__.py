@@ -204,7 +204,6 @@ def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     post_data = request.data.copy()
-    resource_mode = post_data.pop('resource-mode', None)
     res.extra_metadata = post_data
 
     is_update_success = True
@@ -217,9 +216,6 @@ def update_key_value_metadata_public(request, pk):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
-
-    if resource_mode is not None:
-        request.session['resource-mode'] = 'edit'
 
     if is_update_success:
         return HttpResponse(status=200)
