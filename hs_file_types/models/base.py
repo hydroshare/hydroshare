@@ -78,7 +78,7 @@ class AbstractFileMetaData(models.Model):
             extra_metadata_div = div(cls="col-sm-12 content-block")
             with extra_metadata_div:
                 legend('Extended Metadata')
-                with table(cls="table table-striped funding-agencies-table"):
+                with table(cls="table table-striped funding-agencies-table", style="width: 100%"):
                     with tbody():
                         with tr(cls="header-row"):
                             th("Key")
