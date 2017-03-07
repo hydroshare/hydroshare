@@ -384,7 +384,13 @@
         var shade_rects = [];
 
         var initMap = function(json_results, view_type) {
-            var $mapDiv = $("#discover-area-map");
+            var map_view_option = "";
+            if (view_type == "point_map") {
+                map_view_option = "#discover-point-map";
+            } else {
+                map_view_option = "#discover-area-map";
+            }
+            var $mapDiv = $(map_view_option);
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
@@ -396,9 +402,15 @@
             });
 
             info_window = new google.maps.InfoWindow();
+            var bounds = null;
+            if (map_view_option == "point_map") {
+                setMarkers(json_results);
+                bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
+            } else {
+                setBoxes(json_results);
+                bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+            }
 
-            setBoxes(json_results);
-            var bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
             if (bounds) {
                 var ne = bounds.getNorthEast();
                 var sw = bounds.getSouthWest();
