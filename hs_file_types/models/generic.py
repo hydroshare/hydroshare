@@ -55,7 +55,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         template = Template(root_div.render())
         context_dict = dict()
         temp_cov_form = self.get_temporal_coverage_form()
-        spatial_cov_form = self.get_spatial_coverage_form()
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
         update_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/add-file-metadata/"
 
@@ -85,30 +85,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         context_dict["spatial_form"] = spatial_cov_form
         context = Context(context_dict)
         rendered_html = template.render(context)
-        # file level form field ids need to changed so that they are different from
-        # the ids used at the resource level for the same type of metadata elements
-        # Note: These string replacement operations need to be done in this particular
-        # order otherwise same element id will be replaced multiple times
-        rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
-        rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
-        rendered_html = rendered_html.replace("id_start", "id_start_filetype")
-        rendered_html = rendered_html.replace("id_end", "id_end_filetype")
-
-        for spatial_element_id in ('div_id_northlimit', 'div_id_southlimit', 'div_id_westlimit',
-                                   'div_id_eastlimit'):
-            rendered_html = rendered_html.replace(spatial_element_id,
-                                                  spatial_element_id + "_filetype", 1)
-        for spatial_element_id in ('div_id_type', 'div_id_north', 'div_id_east'):
-            rendered_html = rendered_html.replace(spatial_element_id,
-                                                  spatial_element_id + "_filetype", 1)
-
         return rendered_html
-
-    def get_spatial_coverage_form(self):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
-
-    def get_temporal_coverage_form(self):
-        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     @classmethod
     def validate_element_data(cls, request, element_name):

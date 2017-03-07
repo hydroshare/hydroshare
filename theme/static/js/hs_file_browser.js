@@ -448,7 +448,7 @@ function showFileTypeMetadata(){
          $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
-         setFileTypeSpatialCoverageFormFields();
+         setFileTypeSpatialCoverageFormFields(logical_type);
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
          if (logical_type === "GeoRasterLogicalFile"){
