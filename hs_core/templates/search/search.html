@@ -500,7 +500,7 @@
 
         var setMarkers = function(json_results) {
             var modified_points_data = [];
-            var view_type = "point_map";
+
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
@@ -520,7 +520,7 @@
             //         highlightOverlapping(e.latLng);
             //         var map_resources = [];
             //         buildMapItemsTableData(boxes_data, map_resources, e.latLng);
-            //         var map_items_table = $('#area-map-items').DataTable();
+
             //         map_items_table.clear();
             //         map_items_table.rows.add(map_resources);
             //         map_items_table.draw();
@@ -856,7 +856,7 @@
             google.maps.event.addListener(marker, 'click', function() {
                 // var map_resources = [];
                 // buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
-                // var map_items_table = $('#area-map-items').DataTable();
+
                 // map_items_table.clear();
                 // map_items_table.rows.add(map_resources);
                 // map_items_table.draw();
@@ -1027,18 +1027,7 @@
         var updateMapView = function(view_type) {
             var filtered_results = [];
             clientUpdateMarkers(filtered_results, view_type);
-            var map_resources = [];
-            if (view_type == "point_map") {
-                setMarkers(filtered_results);
-                buildMapItemsTableDataforMarkers(filtered_results, map_resources, null);
-                var map_items_table = $('#point-map-items').DataTable();
-                map_items_table.clear();
-                map_items_table.rows.add(map_resources);
-                map_items_table.draw();
-            } else {
-                setBoxes(filtered_results);
-                buildMapItemsTableData(filtered_results, map_resources, null);
-                var map_items_table = $('#area-map-items').DataTable();
+
                 map_items_table.clear();
                 map_items_table.rows.add(map_resources);
                 map_items_table.draw();
@@ -1403,7 +1392,7 @@
                                 raw_box_results.push(item);
                             }
                             initMap(json_box_results, "area_map");
-                            setMapItemsList(json_box_results, "area_map",null);
+
                             $("#resource-search").show();
                             $("#discover-map-loading-spinner").hide();
                         },
@@ -1434,7 +1423,7 @@
                                 raw_point_results.push(item);
                             }
                             initMap(json_point_results, "point_map");
-                            setMapItemsList(json_point_results, "point_map", null);
+
                             // $("#resource-search").show();
                             // $("#discover-map-loading-spinner").hide();
                         },
