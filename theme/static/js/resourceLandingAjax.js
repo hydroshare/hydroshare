@@ -969,6 +969,10 @@ function addFileTypeExtraMetadata(){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
             else {
                 $("#add-keyvalue-filetype-modal").modal('hide');
@@ -1009,6 +1013,10 @@ function updateFileTypeExtraMetadata(form_id){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
             else {
                 $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -1048,6 +1056,10 @@ function deleteFileTypeExtraMetadata(form_id){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
             else {
                 $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
