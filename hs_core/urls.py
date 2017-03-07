@@ -69,6 +69,10 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
         views.resource_folder_hierarchy.data_store_folder_unzip_public),
 
+    # public zip folder endpoint
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip/$',
+        views.resource_folder_hierarchy.data_store_folder_zip_public),
+
     # public move or rename
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
