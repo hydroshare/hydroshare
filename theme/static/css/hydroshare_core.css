@@ -3875,7 +3875,7 @@ div.group-add-photo {
 	border: 1px solid #DDD;
 }
 
-#geocoder-panel {
+#point-geocoder-panel {
 	z-index: 5;
 	padding: 5px;
 	text-align: center;
@@ -3890,7 +3890,26 @@ div.group-add-photo {
     font-size: 16px;
 }
 
-#geocoder-address {
+#point-geocoder-address {
+    width: 210px;
+}
+
+#area-geocoder-panel {
+	z-index: 5;
+	padding: 5px;
+	text-align: center;
+	font-family: 'Roboto','sans-serif';
+	padding-left: 10px;
+	background-color: rgba(255,255,255,0.75);
+	border: 1px solid #DDD;
+	border-radius: 4px;
+	width: 300px;
+    margin-left: 10px;
+    line-height: 30px;
+    font-size: 16px;
+}
+
+#area-geocoder-address {
     width: 210px;
 }
 

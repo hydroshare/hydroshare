@@ -317,6 +317,9 @@
                 </div>
 
                 <div id="map-point-view" class="tab-pane fade">
+
+                    <div id="point-geocoder-panel"></div>
+
                     <div id="discover-point-map"></div>
 
                     <div class="discover-map-legend"></div>
@@ -341,7 +344,7 @@
                                 {% endfor %}
                             </form>
 
-                            <div id="geocoder-panel"></div>
+                            <div id="area-geocoder-panel"></div>
 
                             <div id="discover-area-map"></div>
 
@@ -387,10 +390,16 @@
 
         var initMap = function(json_results, view_type) {
             var map_view_option = "";
+            var geocoder_address_id = "";
+            var geocoder_submit_id = "";
             if (view_type == "point_map") {
                 map_view_option = "#discover-point-map";
+                geocoder_address_id = "point-geocoder-address";
+                geocoder_submit_id = "point-geocoder-submit";
             } else {
                 map_view_option = "#discover-area-map";
+                geocoder_address_id = "area-geocoder-address";
+                geocoder_submit_id = "area-geocoder-submit";
             }
             var $mapDiv = $(map_view_option);
             var mapDim = {
@@ -476,15 +485,16 @@
 
             generateLegend(view_type);
 
-            if (view_type == "area_map") {
-                var input_address = document.getElementById('geocoder-address');
-                var autocomplete = new google.maps.places.Autocomplete(input_address);
+            //if (view_type == "area_map") {
 
-                var geocoder = new google.maps.Geocoder();
-                document.getElementById('geocoder-submit').addEventListener('click', function() {
-                    geocodeAddress(geocoder, maps[view_type], mapDim);
-                });
-            }
+            var input_address = document.getElementById(geocoder_address_id);
+            var autocomplete = new google.maps.places.Autocomplete(input_address);
+
+            var geocoder = new google.maps.Geocoder();
+            document.getElementById(geocoder_submit_id).addEventListener('click', function() {
+                geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
+            });
+            //}
 
 
             // google.maps.event.addListener(maps[view_type],'click',function(e){
@@ -959,28 +969,37 @@
         var generateLegend = function(view_type) {
             //var map_legend = document.getElementById('discover-map-legend');
             var map_legends = document.getElementsByClassName('discover-map-legend');
-            var geo_coder = document.getElementById('geocoder-panel');
-
+            var geo_coder = "";
             var reset_zoom_buttons = document.getElementsByClassName('resetZoom');
             //var reset_zoom_button = document.getElementById('resetZoom');
 
             if (view_type == "point_map") {
                 maps[view_type].controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[0]);
                 maps[view_type].controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[0]);
+                geo_coder = document.getElementById('point-geocoder-panel');
+
             } else {
                 maps[view_type].controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[1]);
                 maps[view_type].controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_buttons[1]);
+                geo_coder = document.getElementById('area-geocoder-panel');
+
             }
             maps[view_type].controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
-            var geocoder_content = [];
+            var point_geocoder_content = [];
+            var area_geocoder_content = [];
             var point_resetButton_content = [];
             var area_resetButton_content = [];
             var legend_table = "<table><tbody>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
-            geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
-            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
+
+            point_geocoder_content.push("<input id='point-geocoder-address' type='textbox' placeholder='Search Locations...'>");
+            point_geocoder_content.push("<a id='point-geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
+
+            area_geocoder_content.push("<input id='area-geocoder-address' type='textbox' placeholder='Search Locations...'>");
+            area_geocoder_content.push("<a id='area-geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
+
             point_resetButton_content.push("<a data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom(0)'>");
             point_resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
 
@@ -990,16 +1009,23 @@
             if (view_type == "point_map") {
                 map_legends[0].innerHTML = legend_table;
                 reset_zoom_buttons[0].innerHTML = point_resetButton_content.join('');
+                geo_coder.innerHTML = point_geocoder_content.join('');
             } else {
                 map_legends[1].innerHTML = legend_table;
                 reset_zoom_buttons[1].innerHTML = area_resetButton_content.join('');
-                geo_coder.innerHTML = geocoder_content.join('');
+                geo_coder.innerHTML = area_geocoder_content.join('');
             }
         };
 
-        var geocodeAddress = function(geocoder, resultsMap, mapDim) {
-            var address = document.getElementById('geocoder-address').value;
-            var view_type = "area_map";
+        var geocodeAddress = function(geocoder, resultsMap, mapDim, view_type) {
+            var geocoder_address_input = "";
+            if (view_type == "point_map") {
+                geocoder_address_input = "point-geocoder-address";
+            } else {
+                geocoder_address_input = "area-geocoder-address";
+            }
+            var address = document.getElementById(geocoder_address_input).value;
+            //var view_type = "area_map";
             geocoder.geocode({'address': address}, function(results, status) {
                 if (status === google.maps.GeocoderStatus.OK) {
                     resultsMap.setCenter(results[0].geometry.location);
