@@ -7,7 +7,7 @@ urlpatterns = patterns('',
      url(r'^resource/types/$', views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
 
-     # DEPRECATED: use form above instead 
+     # DEPRECATED: use from above instead
      url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
         name='DEPRECATED_list_resource_types'),
 
@@ -21,14 +21,14 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    # DEPRECATED: use form above instead 
+    # DEPRECATED: use from above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='DEPRECATED_update_access_rules'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/sysmeta/$', views.resource_rest_api.SystemMetadataRetrieve.as_view(),
         name='get_system_metadata'),
 
-    # DEPRECATED: use form above instead 
+    # DEPRECATED: use from above instead
     url(r'^sysmeta/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.SystemMetadataRetrieve.as_view(),
         name='DEPRECATED_get_system_metadata'),
 
@@ -43,7 +43,7 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/scimeta/custom/$', views.update_key_value_metadata_public,
         name='update_custom_metadata'),
 
-                       # DEPRECATED: use form above instead
+    # DEPRECATED: use from above instead
     url(r'^scimeta/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='DEPRECATED_get_update_science_metadata'),
 
