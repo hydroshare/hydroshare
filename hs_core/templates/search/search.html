@@ -378,6 +378,7 @@
         var maps = {};
         maps["point_map"] = null;
         maps["area_map"] = null;
+        var map_set = false;
         var map_default_bounds = null;
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
@@ -396,14 +397,17 @@
             var map_view_option = "";
             var geocoder_address_id = "";
             var geocoder_submit_id = "";
+            var the_other_view = "";
             if (view_type == "point_map") {
                 map_view_option = "#discover-point-map";
                 geocoder_address_id = "point-geocoder-address";
                 geocoder_submit_id = "point-geocoder-submit";
+                the_other_view = "area_map";
             } else {
                 map_view_option = "#discover-area-map";
                 geocoder_address_id = "area-geocoder-address";
                 geocoder_submit_id = "area-geocoder-submit";
+                the_other_view = "point_map";
             }
             var $mapDiv = $(map_view_option);
             var mapDim = {
@@ -417,33 +421,55 @@
             });
 
             info_window = new google.maps.InfoWindow();
-            var bounds = null;
             if (view_type == "point_map") {
                 setMarkers(json_results);
-
-                bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
             } else {
                 setBoxes(json_results);
-                bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
             }
+            if (map_set) {
+                maps[view_type].setCenter(current_map_center);
+                maps[view_type].setZoom(current_map_zoom);
+                maps[view_type].fitBounds(current_map_bounds);
+            } else {
+                var bounds = null;
+                if (view_type == "point_map") {
+                    //setMarkers(json_results);
+                    bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
+                } else {
+                    //setBoxes(json_results);
+                    bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+                }
 
-            if (bounds) {
-                var ne = bounds.getNorthEast();
-                var sw = bounds.getSouthWest();
-                document.getElementById("id_NElat").value = ne.lat();
-                document.getElementById("id_NElng").value = ne.lng();
-                document.getElementById("id_SWlat").value = sw.lat();
-                document.getElementById("id_SWlng").value = sw.lng();
-                map_default_bounds = bounds;
-                maps[view_type].fitBounds(map_default_bounds);
-                map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
-                map_default_center = map_default_bounds.getCenter();
+                if (bounds) {
+                    var ne = bounds.getNorthEast();
+                    var sw = bounds.getSouthWest();
+                    document.getElementById("id_NElat").value = ne.lat();
+                    document.getElementById("id_NElng").value = ne.lng();
+                    document.getElementById("id_SWlat").value = sw.lat();
+                    document.getElementById("id_SWlng").value = sw.lng();
+                    map_default_bounds = bounds;
+                    current_map_bounds = map_default_bounds;
+                    maps[view_type].fitBounds(map_default_bounds);
+                    map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
+                    current_map_zoom = map_default_zoom;
+                    map_default_center = map_default_bounds.getCenter();
+                    current_map_center = map_default_center;
+                }
             }
 
             var idle_listener = google.maps.event.addListener(maps[view_type], "idle", function () {
                 maps[view_type].setCenter(map_default_center);
                 maps[view_type].setZoom(map_default_zoom);
+                // current_map_center = maps[view_type].getCenter();
+                // current_map_bounds = maps[view_type].getBounds();
+                // current_map_zoom = maps[view_type].getZoom();
+                // if (map_set && maps[the_other_view] != null) {
+                //     maps[the_other_view].setCenter(current_map_center);
+                //     maps[the_other_view].setZoom(current_map_zoom);
+                //     maps[the_other_view].fitBounds(current_map_bounds);
+                // }
                 google.maps.event.removeListener(idle_listener);
+
             });
 
             var bounds_listener = google.maps.event.addListener(maps[view_type], 'bounds_changed', function(){
@@ -456,7 +482,16 @@
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
                     setLatLngLabels();
+                    // current_map_center = maps[view_type].getCenter();
+                    // current_map_bounds = maps[view_type].getBounds();
+                    // current_map_zoom = maps[view_type].getZoom();
+                    // if (map_set && maps[the_other_view] != null) {
+                    //     maps[the_other_view].setCenter(current_map_center);
+                    //     maps[the_other_view].setZoom(current_map_zoom);
+                    //     maps[the_other_view].fitBounds(current_map_bounds);
+                    // }
                 }
+
             });
 
             maps[view_type].enableKeyDragZoom({
@@ -479,17 +514,31 @@
             });
 
             var zoom_listener = google.maps.event.addListener(maps[view_type], 'zoom_changed', function(){
+                // current_map_center = maps[view_type].getCenter();
+                // current_map_bounds = maps[view_type].getBounds();
+                // current_map_zoom = maps[view_type].getZoom();
                 updateMapView(view_type);
+                // if (map_set && maps[the_other_view] != null) {
+                //     maps[the_other_view].setCenter(current_map_center);
+                //     maps[the_other_view].setZoom(current_map_zoom);
+                //     maps[the_other_view].fitBounds(current_map_bounds);
+                // }
             });
 
             var drag_listener = google.maps.event.addListener(maps[view_type], 'dragend', function(){
+                // current_map_center = maps[view_type].getCenter();
+                // current_map_bounds = maps[view_type].getBounds();
+                // current_map_zoom = maps[view_type].getZoom();
                 updateMapView(view_type);
+                // if (map_set && maps[the_other_view] != null) {
+                //     maps[the_other_view].setCenter(current_map_center);
+                //     maps[the_other_view].setZoom(current_map_zoom);
+                //     maps[the_other_view].fitBounds(current_map_bounds);
+                // }
             });
 
 
             generateLegend(view_type);
-
-            //if (view_type == "area_map") {
 
             var input_address = document.getElementById(geocoder_address_id);
             var autocomplete = new google.maps.places.Autocomplete(input_address);
@@ -498,8 +547,6 @@
             document.getElementById(geocoder_submit_id).addEventListener('click', function() {
                 geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
             });
-            //}
-
 
             // google.maps.event.addListener(maps[view_type],'click',function(e){
             //     var map_items_table = $('#area-map-items').DataTable();
@@ -1099,6 +1146,10 @@
             } else {
                 maps[view_type].setZoom(map_default_zoom);
             }
+            // current_map_center = reset_center;
+            // current_map_bounds = bounds;
+            // current_map_zoom = zoom_level;
+            // map_set = true;
         };
 
 
@@ -1121,7 +1172,10 @@
                 map_items_table.rows.add(map_resources);
                 map_items_table.draw();
             }
-
+            current_map_bounds = maps[view_type].getBounds();
+            current_map_center = maps[view_type].getCenter();
+            current_map_zoom = maps[view_type].getZoom();
+            map_set = true;
         };
 
 
@@ -1463,69 +1517,100 @@
                 var sw_lng = document.getElementById("id_SWlng").value;
                 var start_date = $("#id_start_date").val();
                 var end_date = $("#id_end_date").val();
-                if (tabId == "map-area-view" && maps["area_map"] == null) {
-                    $("#discover-area-map-loading-spinner").show();
-                    $.ajax({
-                        type: "GET",
-                        url: requestURL,
-                        data: {
-                            NElat: "",
-                            NElng: "",
-                            SWlat: "",
-                            SWlng: "",
-                            start_date: start_date,
-                            end_date: end_date,
-                            coverage_type: "box"
-                        },
-                        dataType: 'json',
-                        success: function (data) {
-                            var json_box_results = [];
-                            for (var j = 0; j < data.length; j++) {
-                                var item = $.parseJSON(data[j]);
-                                json_box_results.push(item);
-                                raw_box_results.push(item);
+                if (tabId == "map-area-view") {
+                    if(maps["area_map"] == null){
+                        $("#discover-area-map-loading-spinner").show();
+                        $.ajax({
+                            type: "GET",
+                            url: requestURL,
+                            data: {
+                                NElat: "",
+                                NElng: "",
+                                SWlat: "",
+                                SWlng: "",
+                                start_date: start_date,
+                                end_date: end_date,
+                                coverage_type: "box"
+                            },
+                            dataType: 'json',
+                            success: function (data) {
+                                var json_box_results = [];
+                                for (var j = 0; j < data.length; j++) {
+                                    var item = $.parseJSON(data[j]);
+                                    json_box_results.push(item);
+                                    raw_box_results.push(item);
+                                }
+                                initMap(json_box_results, "area_map");
+                                setMapItemsList(json_box_results, "area_map",null);
+                                $("#resource-search").show();
+                                $("#discover-area-map-loading-spinner").hide();
+                                if (maps["point_map"] == null) {
+                                    map_set = true;
+                                }
+                            },
+                            failure: function(data) {
+                                $("#discover-area-map-loading-spinner").hide();
+                                console.error("Ajax call for getting map data failed");
                             }
-                            initMap(json_box_results, "area_map");
-                            setMapItemsList(json_box_results, "area_map",null);
-                            $("#resource-search").show();
-                            $("#discover-area-map-loading-spinner").hide();
-                        },
-                        failure: function(data) {
-                            $("#discover-area-map-loading-spinner").hide();
-                            console.error("Ajax call for getting map data failed");
+                        });
+                    } else {
+                        if (maps["point_map"] != null && map_set) {
+
+                            var current_map_bounds1 = maps["point_map"].getBounds();
+                            var current_map_center1 = maps["point_map"].getCenter();
+                            var current_map_zoom1 = maps["point_map"].getZoom();
+                            maps["area_map"].fitBounds(current_map_bounds1);
+                            maps["area_map"].setCenter(current_map_center1);
+                            maps["area_map"].setZoom(current_map_zoom1);
+                            map_set = false;
                         }
-                    });
-                } else if (tabId == "map-point-view" && maps["point_map"] == null) {
-                    $("#discover-point-map-loading-spinner").show();
-                    $.ajax({
-                        type: "GET",
-                        url: requestURL,
-                        data: {
-                            NElat: "",
-                            NElng: "",
-                            SWlat: "",
-                            SWlng: "",
-                            start_date: start_date,
-                            end_date: end_date,
-                            coverage_type: "point"
-                        },
-                        dataType: 'json',
-                        success: function (data) {
-                            var json_point_results = [];
-                            for (var j = 0; j < data.length; j++) {
-                                var item = $.parseJSON(data[j]);
-                                json_point_results.push(item);
-                                raw_point_results.push(item);
+                    }
+                } else if (tabId == "map-point-view") {
+                    if (maps["point_map"] == null) {
+                        $("#discover-point-map-loading-spinner").show();
+                        $.ajax({
+                            type: "GET",
+                            url: requestURL,
+                            data: {
+                                NElat: "",
+                                NElng: "",
+                                SWlat: "",
+                                SWlng: "",
+                                start_date: start_date,
+                                end_date: end_date,
+                                coverage_type: "point"
+                            },
+                            dataType: 'json',
+                            success: function (data) {
+                                var json_point_results = [];
+                                for (var j = 0; j < data.length; j++) {
+                                    var item = $.parseJSON(data[j]);
+                                    json_point_results.push(item);
+                                    raw_point_results.push(item);
+                                }
+                                initMap(json_point_results, "point_map");
+                                setMapItemsList(json_point_results, "point_map", null);
+                                $("#discover-point-map-loading-spinner").hide();
+                                if (maps["area_map"] == null) {
+                                    map_set = true;
+                                }
+                            },
+                            failure: function(data) {
+                                $("#discover-point-map-loading-spinner").hide();
+                                console.error("Ajax call for getting map data failed");
                             }
-                            initMap(json_point_results, "point_map");
-                            setMapItemsList(json_point_results, "point_map", null);
-                            $("#discover-point-map-loading-spinner").hide();
-                        },
-                        failure: function(data) {
-                            $("#discover-point-map-loading-spinner").hide();
-                            console.error("Ajax call for getting map data failed");
+                        });
+                    } else {
+                        if (maps["area_map"] != null && map_set) {
+                            var current_map_bounds2 = maps["area_map"].getBounds();
+                            var current_map_center2 = maps["area_map"].getCenter();
+                            var current_map_zoom2 = maps["area_map"].getZoom();
+                            maps["point_map"].fitBounds(current_map_bounds2);
+                            maps["point_map"].setCenter(current_map_center2);
+                            maps["point_map"].setZoom(current_map_zoom2);
+                            map_set = false;
                         }
-                    });
+                    }
                 }
             });
 
