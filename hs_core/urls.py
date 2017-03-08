@@ -15,6 +15,9 @@ urlpatterns = patterns('',
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='DEPRECATED_list_resources'),
 
+    url(r'^resource/$', views.resource_rest_api.ResourceListCreate.as_view(),
+        name='list_create_resource'),
+
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 

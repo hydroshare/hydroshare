@@ -18,8 +18,7 @@ class TestPublicCopyResourceEndpoint(HSRESTTestCase):
         self.title = 'My Test resource'
         res = resource.create_resource(self.rtype,
                                        self.user,
-                                       self.title,
-                                       unpack_file=False)
+                                       self.title)
 
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
