@@ -1213,8 +1213,11 @@ class Coverage(AbstractMetaDataElement):
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
         if element is not None:
-            coverage_data_dict['start'] = element.value['start']
-            coverage_data_dict['end'] = element.value['end']
+            start_date = parser.parse(element.value['start'])
+            end_date = parser.parse(element.value['end'])
+            # change the date format to match with datepicker date format
+            coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
+            coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
 
         coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
                                              res_short_id=resource.short_id if resource else None,

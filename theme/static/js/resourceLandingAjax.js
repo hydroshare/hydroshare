@@ -1093,7 +1093,7 @@ function showMetadataFormSaveChangesButton(){
 function initializeDatePickers(){
     $(".dateinput").each(function () {
         $(this).datepicker({
-            format: 'mm-dd-yyyy',
+            format: 'mm/dd/yyyy',
             yearRange: "-1000:+1000",
             changeMonth: true,
             changeYear: true
