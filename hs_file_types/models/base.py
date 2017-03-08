@@ -657,6 +657,7 @@ class AbstractLogicalFile(models.Model):
         copy_of_logical_file = type(self).create()
         copy_of_logical_file.dataset_name = self.dataset_name
         copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
+        copy_of_logical_file.metadata.keywords = self.metadata.keywords
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.save()
         # copy the metadata elements

@@ -33,7 +33,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     def get_metadata_elements(self):
         elements = super(NetCDFFileMetaData, self).get_metadata_elements()
-        elements += [self.ori_coverage]
+        elements += [self.original_coverage]
         elements += list(self.variables.all())
         return elements
 
