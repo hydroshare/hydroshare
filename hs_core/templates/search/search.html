@@ -371,8 +371,6 @@
         var maps = {};
         maps["point_map"] = null;
         maps["area_map"] = null;
-        // var point_map = null;
-        // var maps[view_type] = null;
         var map_default_bounds = null;
         var map_default_zoom = 2;
         var map_default_center = new google.maps.LatLng(0, 0);
@@ -635,13 +633,13 @@
 
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
             resources_list.forEach(function(resource) {
-                var northlimit = parseFloat(resource.northlimit);
-                var southlimit = parseFloat(resource.southlimit);
-                var eastlimit = parseFloat(resource.eastlimit);
-                var westlimit = parseFloat(resource.westlimit);
-                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+                // var northlimit = parseFloat(resource.northlimit);
+                // var southlimit = parseFloat(resource.southlimit);
+                // var eastlimit = parseFloat(resource.eastlimit);
+                // var westlimit = parseFloat(resource.westlimit);
+                // var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                // var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+                // var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
                 var author_name = "";
                 if (resource.first_author_description) {
                     author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
@@ -692,21 +690,33 @@
                 }]
             });
             if (view_type == "area_map") {
-                setMapFunctions(mapItems);
+                setMapFunctions(mapItems, "area_map");
+            } else {
+                setMapFunctions(mapItems, "point_map");
             }
         };
 
-        var setMapFunctions = function (datatable) {
-            $('#area-map-items tbody').on('click', '[role="button"]', function () {
-                var data = datatable.row($(this).parents('tr')).data();
-                showBoxMarker(data[0], true);
-            });
-            $('#area-map-items tbody').on('hover', 'tr', function () {
-                var data = datatable.row(this).data();
-                if (data) {
-                    showBoxMarker(data[0], false);
-                }
-            });
+        var setMapFunctions = function (datatable, view_type) {
+            if (view_type == "area_map") {
+                $('#area-map-items tbody').on('click', '[role="button"]', function () {
+                    var data = datatable.row($(this).parents('tr')).data();
+                    showBoxMarker(data[0], true);
+                });
+                $('#area-map-items tbody').on('hover', 'tr', function () {
+                    var data = datatable.row(this).data();
+                    if (data) {
+                        showBoxMarker(data[0], false);
+                    }
+                });
+            } else {
+                $('#point-map-items tbody').on('click', '[role="button"]', function () {
+                    var data = datatable.row($(this).parents('tr')).data();
+                    //showBoxMarker(data[0], true);
+                    showPointMarker(data[0]);
+                    //console.log(data[0]);
+                });
+            }
+
         };
 
         var showBoxMarker = function(box, zoom_on_map) {
@@ -721,11 +731,20 @@
             );
 
             if (zoom_on_map) {
-                map.fitBounds(rectBounds);
+                maps["area_map"].fitBounds(rectBounds);
                 updateMapView(view_type);
             }
             findShadeRect(rectBounds);
         };
+
+        var showPointMarker = function(point) {
+            var bounds = new google.maps.LatLngBounds();
+            var north = parseFloat(point.north);
+            var east = parseFloat(point.east);
+            var lat_lng = new google.maps.LatLng(north, east);
+            bounds.extend(lat_lng);
+            maps["point_map"].fitBounds(bounds);
+        }
 
         var clientUpdateMarkers = function(filtered_results, view_type) {
             var coverage_type = "";
@@ -969,8 +988,8 @@
             } else {
                 map_legends[1].innerHTML = legend_table;
                 reset_zoom_buttons[1].innerHTML = resetButton_content.join('');
+                geo_coder.innerHTML = geocoder_content.join('');
             }
-            geo_coder.innerHTML = geocoder_content.join('');
         };
 
         var geocodeAddress = function(geocoder, resultsMap, mapDim) {
