@@ -601,7 +601,7 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = request.POST['t']
+    t = request.POST.get('t', request.data.get('t'))
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
@@ -613,9 +613,23 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if request.META.get('HTTP_REFERER', None):
+        request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
 
+    return HttpResponse(status=202)
+
+
+@api_view(['POST'])
+def set_resource_flag_public(request, pk):
+    # import sys
+    # sys.path.append('/pycharm-debug')
+    # import pydevd
+    # pydevd.settrace('10.20.1.9', port=21000, suspend=False)
+
+    http_request = request._request
+    http_request.data = request.data.copy()
+    return set_resource_flag(http_request, pk)
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""

@@ -18,6 +18,10 @@ urlpatterns = patterns('',
     url(r'^resource/$', views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
 
+    # Public endpoint for resource flags
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/flag/$', views.set_resource_flag_public,
+        name='public_set_resource_flag'),
+
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
