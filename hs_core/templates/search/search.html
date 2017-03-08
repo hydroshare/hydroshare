@@ -973,21 +973,26 @@
             }
             maps[view_type].controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
             var geocoder_content = [];
-            var resetButton_content = [];
+            var point_resetButton_content = [];
+            var area_resetButton_content = [];
             var legend_table = "<table><tbody>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
-            resetButton_content.push("<a data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
-            resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
+            point_resetButton_content.push("<a data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom(0)'>");
+            point_resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
+
+            area_resetButton_content.push("<a data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom(1)'>");
+            area_resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
+
             if (view_type == "point_map") {
                 map_legends[0].innerHTML = legend_table;
-                reset_zoom_buttons[0].innerHTML = resetButton_content.join('');
+                reset_zoom_buttons[0].innerHTML = point_resetButton_content.join('');
             } else {
                 map_legends[1].innerHTML = legend_table;
-                reset_zoom_buttons[1].innerHTML = resetButton_content.join('');
+                reset_zoom_buttons[1].innerHTML = area_resetButton_content.join('');
                 geo_coder.innerHTML = geocoder_content.join('');
             }
         };
@@ -1006,27 +1011,51 @@
             });
         };
 
-        var resetMapZoom = function() {
-            removeBoxes();
-            setBoxes(raw_box_results);
-{#            var map_items_table = $('#area-map-items').DataTable();#}
-{#            map_items_table.clear().draw();#}
-{#            #}
-            var view_type = "area_map";
+        var resetMapZoom = function(option) {
+            var view_type = "";
+            var datatableId = "";
+            var map_view_option = "";
             var map_resources = [];
-            buildMapItemsTableData(raw_box_results, map_resources, null);
-            var map_items_table = $('#area-map-items').DataTable();
+            if (option == 0) {
+                view_type = "point_map";
+                datatableId = "#point-map-items";
+                map_view_option = "#discover-point-map";
+                removeMarkers();
+                setMarkers(raw_point_results);
+                buildMapItemsTableDataforMarkers(raw_point_results, map_resources, null);
+
+            } else {
+                view_type = "area_map";
+                datatableId = "#area-map-items";
+                map_view_option = "#discover-area-map";
+                removeBoxes();
+                setBoxes(raw_box_results);
+// {#            var map_items_table = $('#area-map-items').DataTable();#}
+// {#            map_items_table.clear().draw();#}
+// {#            #}
+//              var view_type = "area_map";
+                buildMapItemsTableData(raw_box_results, map_resources, null);
+            }
+
+
+
+            var map_items_table = $(datatableId).DataTable();
             map_items_table.clear();
             map_items_table.rows.add(map_resources);
             map_items_table.draw();
 
-            var $mapDiv = $("#discover-area-map");
+            var $mapDiv = $(map_view_option);
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
             };
 
-            var bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+            var bounds = null;
+            if (view_type == "point_map") {
+                bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
+            } else {
+                bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+            }
             maps[view_type].fitBounds(bounds);
             var zoom_level = getBoundsZoomLevel(bounds, mapDim);
             var reset_center = bounds.getCenter();
