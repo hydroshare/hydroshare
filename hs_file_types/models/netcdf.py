@@ -171,7 +171,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                     strong("NetCDF file needs to be synced with metadata changes.")
                     input(id="metadata-dirty", type="hidden", value=self.is_dirty)
                     with form(action=form_action, method="post", id="update-netcdf-file"):
-                        button("Update NetCDf File", type="button", cls="btn btn-primary",
+                        button("Update NetCDF File", type="button", cls="btn btn-primary",
                                id="id-update-netcdf-file")
 
         return root_div
