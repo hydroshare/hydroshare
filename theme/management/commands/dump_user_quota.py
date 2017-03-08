@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 values = [
                     uq.user.id,
                     uq.user.username,
-                    uq.value,
+                    uq.allocated_value,
                     uq.unit,
                     uq.zone
                 ]
