@@ -317,6 +317,10 @@
                 </div>
 
                 <div id="map-point-view" class="tab-pane fade">
+                    <span id="discover-point-map-loading-spinner" class="discover-loading-icon icon-blue">
+                        <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                    </span>
+                    <br />
 
                     <div id="point-geocoder-panel"></div>
 
@@ -332,7 +336,7 @@
                 <div id="map-area-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
-                            <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
+                            <span id="discover-area-map-loading-spinner" class="discover-loading-icon icon-blue">
                                   <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
                             </span>
                             <br />
@@ -1158,19 +1162,24 @@
         };
 
         var updateFacetingItems = function (request_url) {
-            var view_type = "area_map";
             $("#discover-list-loading-spinner").show();
-            if (maps[view_type] != null) {
-                $("#discover-map-loading-spinner").show();
-                $.when(updateMapFaceting(view_type), updateListFaceting(request_url)).done(function(){
-                    $("#discover-list-loading-spinner").hide();
-                    $("#discover-map-loading-spinner").hide();
-                });
-            } else {
-                $.when(updateListFaceting(request_url)).done(function(){
-                    $("#discover-list-loading-spinner").hide();
+            if (maps["area_map"] != null) {
+                $("#discover-area-map-loading-spinner").show();
+                $.when(updateMapFaceting("area_map")).done(function(){
+                    $("#discover-area-map-loading-spinner").hide();
                 });
             }
+
+            if (maps["point_map"] != null) {
+                $("#discover-point-map-loading-spinner").show();
+                $.when(updateMapFaceting("point_map")).done(function(){
+                    $("#discover-point-map-loading-spinner").hide();
+                });
+            }
+
+            $.when(updateListFaceting(request_url)).done(function(){
+                $("#discover-list-loading-spinner").hide();
+            });
         };
 
         var updateListFaceting = function (request_url) {
@@ -1455,7 +1464,7 @@
                 var start_date = $("#id_start_date").val();
                 var end_date = $("#id_end_date").val();
                 if (tabId == "map-area-view" && maps["area_map"] == null) {
-                    $("#discover-map-loading-spinner").show();
+                    $("#discover-area-map-loading-spinner").show();
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -1479,14 +1488,15 @@
                             initMap(json_box_results, "area_map");
                             setMapItemsList(json_box_results, "area_map",null);
                             $("#resource-search").show();
-                            $("#discover-map-loading-spinner").hide();
+                            $("#discover-area-map-loading-spinner").hide();
                         },
                         failure: function(data) {
-                            $("#discover-map-loading-spinner").hide();
+                            $("#discover-area-map-loading-spinner").hide();
                             console.error("Ajax call for getting map data failed");
                         }
                     });
                 } else if (tabId == "map-point-view" && maps["point_map"] == null) {
+                    $("#discover-point-map-loading-spinner").show();
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -1509,11 +1519,10 @@
                             }
                             initMap(json_point_results, "point_map");
                             setMapItemsList(json_point_results, "point_map", null);
-                            // $("#resource-search").show();
-                            // $("#discover-map-loading-spinner").hide();
+                            $("#discover-point-map-loading-spinner").hide();
                         },
                         failure: function(data) {
-                            $("#discover-map-loading-spinner").hide();
+                            $("#discover-point-map-loading-spinner").hide();
                             console.error("Ajax call for getting map data failed");
                         }
                     });
