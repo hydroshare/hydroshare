@@ -207,12 +207,11 @@ def update_key_value_metadata_public(request, pk):
     res.extra_metadata = post_data
 
     is_update_success = True
-    err_message = ""
+
     try:
         res.save()
     except Error as ex:
         is_update_success = False
-        err_message = ex.message
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
