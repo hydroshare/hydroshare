@@ -622,11 +622,6 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def set_resource_flag_public(request, pk):
-    # import sys
-    # sys.path.append('/pycharm-debug')
-    # import pydevd
-    # pydevd.settrace('10.20.1.9', port=21000, suspend=False)
-
     http_request = request._request
     http_request.data = request.data.copy()
     return set_resource_flag(http_request, pk)
