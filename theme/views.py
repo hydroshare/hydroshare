@@ -169,9 +169,6 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
             else:
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
-                # create default UserQuota object for the new user
-                uq = UserQuota.objects.create(user=new_user)
-                uq.save()
                 return login_redirect(request)
 
     # remove the key 'response' from errors as the user would have no idea what it means
