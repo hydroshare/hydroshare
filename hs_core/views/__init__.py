@@ -543,7 +543,8 @@ def copy_resource(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def copy_resource_public(request, pk):
-    return copy_resource(request, pk)
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
