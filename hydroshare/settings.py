@@ -649,6 +649,7 @@ CSP_DICT = {
     ],
     "img-src" : [
         "self",
+        "data:",
         "*.datatables.net",
         "*.googleapis.com",
         "*.gstatic.com",
