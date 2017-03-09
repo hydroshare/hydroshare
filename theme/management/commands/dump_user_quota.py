@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "Output quota allocations for all users in HydroShare"
 
     def add_arguments(self, parser):
-        parser.add_argument('output_file_name_with_path')
+        parser.add_argument('output_file_name_with_path', help='output file name with path')
 
     def handle(self, *args, **options):
         with open(options['output_file_name_with_path'], 'w') as csvfile:
