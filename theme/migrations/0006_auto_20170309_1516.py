@@ -10,7 +10,7 @@ from theme.models import UserQuota
 def migrate_user_quotas(apps, schema_editor):
     # create a UserQuota record for each existing user with default quota allocation values
     for u in User.objects.all():
-        if not UserQuota.objects.filter(user=u).exists():
+        if not UserQuota.objects.filter(user=u).exists() and u.is_active and not u.is_superuser:
             uq = UserQuota.objects.create(user=u)
             uq.save()
 

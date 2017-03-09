@@ -18,7 +18,7 @@ class HomePageAdmin(PageAdmin):
 
 class QuotaAdmin(admin.ModelAdmin):
     list_display = ('user', 'allocated_value', 'used_value', 'unit', 'zone')
-
+    list_filter = ('zone',)
 
 admin.site.register(HomePage, HomePageAdmin)
 admin.site.register(SiteConfiguration, SingletonAdmin)

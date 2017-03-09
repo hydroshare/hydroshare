@@ -17,10 +17,15 @@ class Migration(migrations.Migration):
             name='UserQuota',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('value', models.BigIntegerField(default=10000)),
+                ('allocated_value', models.BigIntegerField(default=10000)),
+                ('used_value', models.BigIntegerField(default=0)),
                 ('unit', models.CharField(default=b'MB', max_length=10)),
                 ('zone', models.CharField(default=b'hydroshare_internal', max_length=100)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(related_name='quotas', to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'verbose_name': 'User quota',
+                'verbose_name_plural': 'User quotas',
+            },
         ),
     ]
