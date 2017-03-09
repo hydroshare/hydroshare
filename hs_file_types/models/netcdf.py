@@ -227,7 +227,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         if element_name == 'variable':
             form_data = {}
             for field_name in VariableValidationForm().fields:
-                matching_key = [key for key in request.POST if '-' + field_name in key][0]
+                try:
+                    # when the request comes from the UI, the variable attributes have a prefix of
+                    # '-'
+                    matching_key = [key for key in request.POST if '-' + field_name in key][0]
+                except IndexError:
+                    if field_name in request.POST:
+                        matching_key = field_name
+                    else:
+                        continue
                 form_data[field_name] = request.POST[matching_key]
             element_form = VariableValidationForm(form_data)
         elif element_name == 'originalcoverage':
