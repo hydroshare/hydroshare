@@ -13,6 +13,8 @@
 /hydroshare/static
 /log
 /nginx/config-files/hs-nginx.conf
+/nginx/.htpasswd
+/nginx/htpasswd
 /static
 celeryd.pid
 docker-compose.yml
