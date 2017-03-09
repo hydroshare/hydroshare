@@ -432,7 +432,7 @@ def create_resource(
 
     # set quotaUserName AVU on the newly created resource
     istorage = resource.get_irods_storage()
-    istorage.setAVU(resource, "quotaUserName", owner.username)
+    istorage.setAVU(resource.root_path, "quotaUserName", owner.username)
     return resource
 
 
