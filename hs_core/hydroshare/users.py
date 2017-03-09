@@ -238,19 +238,10 @@ def get_public_groups():
         return Group.objects.filter(gaccess__public=True)
 
 
-def get_resource_list(creator=None,
-        group=None, user=None, owner=None,
-        from_date=None, to_date=None,
-        start=None, count=None,
-        full_text_search=None,
-        published=False,
-        edit_permission=False,
-        public=False,
-        type=None,
-        author=None,
-        contributor=None,
-        subject=None,
-):
+def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
+                      to_date=None, start=None, count=None, full_text_search=None,
+                      published=False, edit_permission=False, public=False,
+                      type=None, author=None, contributor=None, subject=None):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -288,7 +279,8 @@ def get_resource_list(creator=None,
         type = list of resource type names, used for filtering
     """
 
-    if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
+    if not any((creator, group, user, owner, from_date, to_date, start,
+                count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     q = []
@@ -342,7 +334,7 @@ def get_resource_list(creator=None,
         q.append(Q(created__lte=to_date))
 
     if subject:
-        subjects = Subject.objects.filter(value__in=subject)
+        subjects = Subject.objects.filter(value__in=subject.split(','))
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()

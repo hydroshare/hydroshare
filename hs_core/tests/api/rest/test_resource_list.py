@@ -184,3 +184,28 @@ class TestResourceList(HSRESTTestCase):
         self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
         self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
+
+    def test_resource_list_by_keyword(self):
+        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
+        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
+
+        self.resources_to_delete.append(gen_res_one.short_id)
+        self.resources_to_delete.append(gen_res_two.short_id)
+
+        gen_res_one.metadata.create_element("subject", value="one")
+        gen_res_two.metadata.create_element("subject", value="other")
+
+        response = self.client.get('/hsapi/resource/', {'subject': 'one'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 1)
+
+        response = self.client.get('/hsapi/resource/', {'subject': 'other'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 1)
+
+        response = self.client.get('/hsapi/resource/', {'subject': 'both,other'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
