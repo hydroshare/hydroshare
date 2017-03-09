@@ -20,9 +20,8 @@ class TestCreateResourceVersion(HSRESTTestCase):
     def test_create_resource_version(self):
         version_url = "/hsapi/resource/%s/version/" % self.pid
         response = self.client.post(version_url, {}, format='json')
-        new_pid = response.url.split('/')[4]
-        self.resources_to_delete.append(new_pid)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.resources_to_delete.append(response.content)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_create_version_bad_resource(self):
         version_url = "/hsapi/resource/%s/version/" % "fafafa"

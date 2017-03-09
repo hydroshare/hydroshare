@@ -587,7 +587,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
 @api_view(['POST'])
 def create_new_version_resource_public(request, pk):
-    return create_new_version_resource(request, pk)
+    redirect = create_new_version_resource(request, pk)
+    return HttpResponse(redirect.url.split('/')[2], status=202)
 
 
 def publish(request, shortkey, *args, **kwargs):
