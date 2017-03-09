@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with open(options['input_file_name_with_path'], 'r') as csvfile:
-            freader = csv.reader(csvfile, delimiter=' ')
+            freader = csv.reader(csvfile)
             for row in freader:
                 try:
                     uid = int(row[input_fields.user_id])

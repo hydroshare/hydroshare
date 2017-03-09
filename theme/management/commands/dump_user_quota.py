@@ -11,17 +11,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with open(options['output_file_name_with_path'], 'w') as csvfile:
-            w = csv.writer(csvfile, delimiter=' ')
+            w = csv.writer(csvfile)
             fields = [
                 'User id',
                 'User name',
-                'User quota',
+                'Allocated quota value',
                 'Quota unit',
                 'Storage zone'
             ]
             w.writerow(fields)
 
-            for uq in UserQuota.objects.filter(user__is_active=True):
+            for uq in UserQuota.objects.filter(
+                    user__is_active=True).filter(user__is_superuser=False):
                 values = [
                     uq.user.id,
                     uq.user.username,
