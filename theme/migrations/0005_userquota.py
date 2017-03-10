@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='UserQuota',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('allocated_value', models.BigIntegerField(default=10000)),
+                ('allocated_value', models.BigIntegerField(default=20000)),
                 ('used_value', models.BigIntegerField(default=0)),
                 ('unit', models.CharField(default=b'MB', max_length=10)),
                 ('zone', models.CharField(default=b'hydroshare_internal', max_length=100)),

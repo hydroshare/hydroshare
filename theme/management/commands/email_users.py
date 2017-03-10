@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from theme.models import UserQuota
+from theme.models import UserQuota, QuotaMessage
 
 
 class Command(BaseCommand):
@@ -21,23 +21,17 @@ class Command(BaseCommand):
             if uqs:
                 msg_str = 'Dear ' + uname + ':\n\n'
 
-            is_first = True
             for uq in uqs:
-                if is_first:
-                    msg_str += 'Your have used {used}{unit} out of {allocated}{unit} ' \
-                               'allocated quota in {zone}'.format(used=uq.used_value,
-                                                                  unit=uq.unit,
-                                                                  allocated=uq.allocated_value,
-                                                                  zone=uq.zone)
-                    is_first = False
-                else:
-                    msg_str += ' and used {used}{unit} out of {allocated}{unit} allocated ' \
-                               'quota in {zone}'.format(used=uq.used_value,
-                                                        unit=uq.unit,
-                                                        allocated=uq.allocated_value,
-                                                        zone=uq.zone)
+                qmsg = QuotaMessage.objects.first()
+                msg_template_str = '{}{}\n\n'.format(qmsg.warning_content_prepend,
+                                                 qmsg.content)
+                msg_str += msg_template_str.format(used=uq.used_value,
+                                                   unit=uq.unit,
+                                                   allocated=uq.allocated_value,
+                                                   zone=uq.zone,
+                                                   percent=uq.used_value*100/uq.allocated_value)
             if msg_str:
-                msg_str += '.\n\nHydroShare Support'
+                msg_str += '\n\nHydroShare Support'
                 subject = 'Quota warning'
                 # send email for people monitoring and follow-up as needed
                 send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,

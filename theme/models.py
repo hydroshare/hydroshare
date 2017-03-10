@@ -110,6 +110,33 @@ class IconBox(Orderable):
         help_text="Optional, if provided clicking the box will go here.")
 
 
+class QuotaMessage(models.Model):
+    # warning_content_prepend will prepend the content to form a warning message to be emailed
+    # to the user and displayed when the user is logged in; enforce_content_prepend will prepend
+    # the content to form an enforcement message to inform users when they are over allocated quota
+    warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
+                                                       '{allocated}{unit} in zone {zone}. You '
+                                                       'currently have resources that consume '
+                                                       '{used}{unit}, {percent]% of your quota. '
+                                                       'Once your quota reaches 100% you will no '
+                                                       'longer be able to create new resources in '
+                                                       'HydroShare. ')
+    enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
+                                                       'was refused due to being over your '
+                                                       'HydroShare quota. Your quota for '
+                                                       'HydroShare resources is {allocated}{unit} '
+                                                       'in zone {zone}. You currently have '
+                                                       'resources that consume {used}{unit}, '
+                                                       '{percent]% of your quota. ')
+    content = models.TextField(default='To request additional quota, please contact '
+                                       'support@hydroshare.org. We will try accommodate reasonable '
+                                       'requests for additional quota. If you have a large quota '
+                                       'request you may need to contribute toward the costs of '
+                                       'providing the additional space you need. See '
+                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'quota/ for more information about the quota policy.')
+
+
 class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
