@@ -1107,7 +1107,7 @@ table.info-table {
 	background: #f5f5f5;
     border: 1px solid #DDD;
     padding: 32px;
-    max-height: 400px;
+    height: 300px;
     overflow: auto;
     resize: vertical;
 }
