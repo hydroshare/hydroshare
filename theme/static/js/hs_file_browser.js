@@ -109,7 +109,7 @@ function updateSelectionMenuContext() {
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
-    var maxSize = MAX_FILE_SIZE * 1000000; // convert MB to Bytes
+    var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {
         flagDisableRename = true; 
@@ -123,15 +123,16 @@ function updateSelectionMenuContext() {
             var size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
             if (size > maxSize) {
                 flagDisableDownload = true;
-                // Send error message here
             }
         }
+        $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
+
     }
     else if (selected.length == 1) {    // Unused for now
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
             flagDisableDownload = true;
-            // Send error message here
+            $("#fb-download-help").toggleClass("hidden", false);
         }
     }
     else {
@@ -142,6 +143,8 @@ function updateSelectionMenuContext() {
         flagDisableDelete = true;
         flagDisableDownload = true;
         flagDisableGetLink = true;
+
+        $("#fb-download-help").toggleClass("hidden", true);
     }
 
     if (selected.hasClass("fb-file")) {
