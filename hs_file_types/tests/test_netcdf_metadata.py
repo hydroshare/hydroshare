@@ -169,6 +169,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(keywords), len(netcdf_logical_file.metadata.keywords))
         for keyword in keywords:
             self.assertIn(keyword, netcdf_logical_file.metadata.keywords)
+
         # create OriginalCoverage element
         self.assertEqual(netcdf_logical_file.metadata.original_coverage, None)
         coverage_data = {'northlimit': '121.345', 'southlimit': '42.678', 'eastlimit': '123.789',
@@ -191,15 +192,34 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         with self.assertRaises(Exception):
             netcdf_logical_file.metadata.create_element('OriginalCoverage', value=coverage_data)
 
-        # trying to update 'north_limit' key with a non-numeric value should raise exception
+        # trying to update bounding box values with non-numeric values
+        # (e.g., 'north_limit' key with a non-numeric value) should raise exception
         coverage_data = {'northlimit': '121.345a', 'southlimit': '42.678', 'eastlimit': '123.789',
                          'westlimit': '40.789', 'units': 'meters'}
+        with self.assertRaises(ValidationError):
+            netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
+                                                        value=coverage_data)
+        # test creating spatial coverage
+        # there should not be any spatial coverage for the netcdf file type
+        self.assertEqual(netcdf_logical_file.metadata.spatial_coverage, None)
+        coverage_data = {'projection': 'WGS 84 EPSG:4326', 'northlimit': '41.87',
+                         'southlimit': '41.863',
+                         'eastlimit': '-111.505',
+                         'westlimit': '-111.511', 'units': 'meters'}
+        # create spatial coverage
+        netcdf_logical_file.metadata.create_element('Coverage', type="box", value=coverage_data)
+        spatial_coverage = netcdf_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_coverage.value['northlimit'], 41.87)
 
-        # TODO: modify the create() and update() of OriginalCoverage to check for numerical values
-        # of the bounding box limits then uncomment the following test
-        # with self.assertRaises(Exception):
-        #     netcdf_logical_file.metadata.update_element('OriginalCoverage', orig_coverage.id,
-        #                                                 value=coverage_data)
+        # test updating spatial coverage
+        coverage_data = {'projection': 'WGS 84 EPSG:4326', 'northlimit': '41.87706',
+                         'southlimit': '41.863',
+                         'eastlimit': '-111.505',
+                         'westlimit': '-111.511', 'units': 'meters'}
+        netcdf_logical_file.metadata.update_element('Coverage', element_id=spatial_coverage.id,
+                                                    type="box", value=coverage_data)
+        spatial_coverage = netcdf_logical_file.metadata.spatial_coverage
+        self.assertEqual(spatial_coverage.value['northlimit'], 41.87706)
 
         # create Variable element
         self.assertEqual(netcdf_logical_file.metadata.variables.count(), 0)

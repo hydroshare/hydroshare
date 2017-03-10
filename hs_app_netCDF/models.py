@@ -73,6 +73,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                    'westlimit', 'projection')}
 
+            cls._validate_bounding_box(value_dict)
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
                 del kwargs['value']
@@ -99,10 +100,19 @@ class OriginalCoverage(AbstractMetaDataElement):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
+            cls._validate_bounding_box(value_dict)
             value_json = json.dumps(value_dict)
             del kwargs['value']
             kwargs['_value'] = value_json
             super(OriginalCoverage, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def _validate_bounding_box(cls, box_dict):
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            try:
+                float(box_dict[limit])
+            except ValueError:
+                raise ValidationError("Bounding box data is not numeric")
 
     def add_to_xml_container(self, container):
         """Generates xml+rdf representation of the metadata element"""

@@ -195,11 +195,11 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         url_params = {'hs_file_type': 'NetCDFLogicalFile',
                       'file_type_id': logical_file.id,
-                      'element_name': 'coverage'
+                      'element_name': 'coverage',
+                      'element_id': logical_file.metadata.temporal_coverage.id
                       }
 
         # test updating temporal coverage
-        url_params['element_id'] = logical_file.metadata.temporal_coverage.id
         url = reverse('update_file_metadata', kwargs=url_params)
         request = self.factory.post(url, data={'start': '1/1/2011', 'end': '12/12/2016'})
         request.user = self.user
