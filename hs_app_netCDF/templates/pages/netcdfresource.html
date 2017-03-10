@@ -128,13 +128,16 @@
             {% for f in cm.files.all %}
                 {% if f.resource_file.name|slice:"-3:" == 'txt'%}
                     <div style="clear: both">
+                        <br>
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
-                        {% if f.resource_file.size <= 5000000 %}
-                            <textarea id="netcdf-header-info" readonly rows="15">{{ f.resource_file.read}}</textarea>
-                        {% else %}
-                            <textarea id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</textarea>
-                    {% endif %}
+                        <div class="hs-doc-preview">
+                            {% if f.resource_file.size <= 5000000 %}
+                                <pre id="netcdf-header-info">{{ f.resource_file.read}}</pre>
+                            {% else %}
+                                <pre id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</pre>
+                            {% endif %}
+                        </div>
                     </div>
 {#                    {% else %}#}
 {#                        {% if page.perms.change %}#}
