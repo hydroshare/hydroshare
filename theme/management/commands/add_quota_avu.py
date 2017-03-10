@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 
 from hs_core.models import BaseResource
 
+
 class Command(BaseCommand):
     help = "Add quotaUserName AVU to all resources in iRODS as needed"
 

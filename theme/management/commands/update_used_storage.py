@@ -29,5 +29,5 @@ class Command(BaseCommand):
                     uq = UserQuota.objects.filter(user__username=uname, zone=zone).first()
                     uq.used_value = used_val
                     uq.save()
-                except ValueError: # header row, continue
+                except ValueError:   # header row, continue
                     continue

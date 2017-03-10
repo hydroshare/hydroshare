@@ -28,14 +28,14 @@ class Command(BaseCommand):
                                'allocated quota in {zone}'.format(used=uq.used_value,
                                                                   unit=uq.unit,
                                                                   allocated=uq.allocated_value,
-                                                                  zone = uq.zone)
+                                                                  zone=uq.zone)
                     is_first = False
                 else:
                     msg_str += ' and used {used}{unit} out of {allocated}{unit} allocated ' \
                                'quota in {zone}'.format(used=uq.used_value,
                                                         unit=uq.unit,
                                                         allocated=uq.allocated_value,
-                                                        zone = uq.zone)
+                                                        zone=uq.zone)
             if msg_str:
                 msg_str += '.\n\nHydroShare Support'
                 subject = 'Quota warning'
