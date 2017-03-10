@@ -56,7 +56,6 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
 
-
     def tearDown(self):
         super(TestFileTypeViewFunctions, self).tearDown()
         if os.path.exists(self.temp_dir):
