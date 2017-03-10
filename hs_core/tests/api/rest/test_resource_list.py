@@ -205,7 +205,7 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
 
-        response = self.client.get('/hsapi/resource/', {'subject': 'both,other'}, format='json')
+        response = self.client.get('/hsapi/resource/', {'subject': 'one,other'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
