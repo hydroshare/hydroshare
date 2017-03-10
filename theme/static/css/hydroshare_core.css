@@ -4119,6 +4119,10 @@ form#covereage-search-fields {
 	color: rgb(0, 170, 163);
 }
 
+.fb-stack-netcdf {
+	color: #244960;
+}
+
 .fb-view-grid .fb-stack {
 	height: 32px;
 }
@@ -4140,6 +4144,16 @@ form#covereage-search-fields {
 }
 
 .fb-view-list .fb-stack-database .fa-database {
+	font-size: 10px;
+	top: -4px;
+}
+
+.fb-view-grid .fb-stack-netcdf .fa-th-large {
+	top: 7px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-netcdf .fa-th-large {
 	font-size: 10px;
 	top: -4px;
 }
