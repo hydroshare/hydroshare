@@ -199,6 +199,28 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    res.extra_metadata = post_data
+
+    is_update_success = True
+
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
+
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     """This function is normally for adding/creating new resource level metadata elements.
