@@ -30,7 +30,7 @@ from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.models import UserProfile, UserQuota
+from theme.models import UserProfile
 
 from .forms import SignupForm
 
