@@ -60,6 +60,12 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
                 "<i class='fa fa-database fa-stack-1x'></i>" +
                 "</span>";
         }
+        else if (fileTypeExt.toUpperCase() == "NC") {
+            iconTemplate = "<span class='fa-stack fb-stack fb-stack-netcdf'>" +
+                "<i class='fa fa-file-o fa-stack-2x '></i>" +
+                "<i class='fa fa-th-large fa-stack-1x'></i>" +
+                "</span>";
+        }
         else {
             // Default file icon for other file types
             iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
