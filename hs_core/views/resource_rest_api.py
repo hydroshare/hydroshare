@@ -303,6 +303,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     Request data payload parameters:
     :type   resource_type: str
     :type   title: str
+    :type   subject: str
     :type   edit_users: str
     :type   edit_groups: str
     :type   view_users: str
