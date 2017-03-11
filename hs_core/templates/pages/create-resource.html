@@ -493,7 +493,19 @@
                     myDropzone = this;
 
                     $("#btn-create-resource").click(function () {
-                        myDropzone.processQueue();
+                        var title = $("#txtTitle").val().trim();
+                        if (!title) {
+                            title = $("#txtTitle").attr("placeholder");
+                        }
+                        $("#form-title").val(title);
+
+                        if (myDropzone.files.length > 0) {
+                            myDropzone.processQueue();
+                        }
+                        else {
+                            $("#hsDropzone").submit();
+                        }
+
                     });
 
                     // The user dragged a file onto the Dropzone
@@ -519,7 +531,7 @@
                         $('[data-toggle="tooltip"]').tooltip();
 
 
-                        if (!myDropzone.options.uploadMultiple && this.files[1] != null) {
+                        if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
                             this.removeFile(this.files[0]);
                         }
                     });
