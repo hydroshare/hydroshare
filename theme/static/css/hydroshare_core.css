@@ -4512,38 +4512,27 @@ div#fb-file-operations-controls {
 }
 
 #resource-content .hs-dropzone-footer {
-
 	border: 1px solid #DDD;
 	border-top: 0;
-	padding: 4px;
-	margin-bottom: 10px;
+	padding: 10px;
 }
 
-#resource-content #dz-container .dz-error-message {
-    border: 1px solid black;
-    background-image: -webkit-linear-gradient(#ff5454, #ed0000);
-    background-image: linear-gradient(#ff5454, #ed0000);
-    color: #FFF;
-    width: 137px;
-    border-radius: 4px;
-    margin-top: 3px;
-    padding: 10px;
-    font-size: 12px;
-    position: relative;
+#resource-content .hs-dropzone-footer i {
+	margin-right: 8px;
+}
+
+#resource-content .dz-error-message {
 	display: none;
-}
-
-#resource-content #dz-container .dz-details.dz-error:hover .dz-error-message {
-	display: block;
-}
-
-#resource-content #dz-container .dz-error-message.arrow_box::before {
-	border-bottom-color: #000;
 }
 
 #resource-content #dz-container .dz-error-message.arrow_box::after {
 	border-bottom-color: #000;
 }
+
+#resource-content #dz-container .tooltip.top > .tooltip-inner {
+	background-color: #ff4646;
+}
+
 
 #resource-content #dz-container .dz-details.dz-error {
 	border: 3px solid rgba(237, 0, 0, 0.69);
@@ -4626,6 +4615,10 @@ div#fb-file-operations-controls {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	color: #555;
+}
+
+#file-types .badge {
+	margin-right: 4px;
 }
 
 #dropdown-resource-type .dropdown-menu > li > a {
