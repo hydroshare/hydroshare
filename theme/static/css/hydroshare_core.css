@@ -4517,7 +4517,15 @@ div#fb-file-operations-controls {
 	padding: 10px;
 }
 
-#resource-content .hs-dropzone-footer i {
+#resource-content .hs-dropzone-header {
+	border: 1px solid #DDD;
+	border-bottom: 0;
+	padding: 10px;
+	height: 55px;
+	line-height: 37px;
+}
+
+#resource-content .hs-dropzone-footer > i, #resource-content .hs-dropzone-header > i {
 	margin-right: 8px;
 }
 
@@ -4623,6 +4631,7 @@ div#fb-file-operations-controls {
 
 #dropdown-resource-type .dropdown-menu > li > a {
 	padding: 2px;
+	cursor: default;
 }
 
 #dropdown-resource-type .dropdown-menu .resource-type-icon {

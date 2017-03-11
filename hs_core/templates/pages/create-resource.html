@@ -201,6 +201,15 @@
                               action="/hsapi/_internal/create-resource/do/">
                             {% csrf_token %}
 
+                            <div class="hs-dropzone-header">
+                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                <span>Drop files below or click to upload.</span>
+                                <span class="btn btn-default pull-right">
+                                    <i class="fa fa-trash-o btn-remove" aria-hidden="true"></i>
+                                    <span id="btn-remove-all-files">&nbsp;&nbsp;Remove All Files</span>
+                                </span>
+                            </div>
+
                             <div class="hs-dropzone-wrapper">
                                 <div id="dz-container">
                                     <input id="form-title" type="hidden" name="title" value="Some Resource"/>
@@ -208,22 +217,19 @@
                                            value="GenericResource"/>
                                 </div>
                             </div>
+
                             <div class="hs-dropzone-footer">
-                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span>  Drop files above or click to upload.</span>
+                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                <span id="file-types">&nbsp;&nbsp;Any file type can be uploaded.</span>
                             </div>
                             <div class="hs-dropzone-footer">
                                  <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span id="file-types">  Any file type can be uploaded.</span>
-                            </div>
-                            <div class="hs-dropzone-footer">
-                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span id="file-multiple">  Multiple file upload is allowed.</span>
+                                <span id="file-multiple">&nbsp;&nbsp;Multiple file upload is allowed.</span>
                             </div>
 
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <hr>
+                                    <br>
                                     <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
 
                                     <div id="irods-browse">
@@ -311,10 +317,10 @@
                         </ul>
                     </div>
                 </div>
+                <hr>
             </div>
 
             <div class="col-xs-12">
-                <hr>
                 <span id="btn-create-resource" class="btn btn-primary">Create Resource</span>
             </div>
         </div>
@@ -463,99 +469,17 @@
 {#    </div>#}
 
     <script type="text/javascript">
-        var myDropzone;
-
         $(document).ready(function () {
             var json_response_file_types = {};
             var json_response_multiple_file = {};
             var selected_file = undefined;
+            var myDropzone;
+
             if (sessionStorage.signininfo) {
                 $("#sign-in-info").text(sessionStorage.signininfo);
                 $("#btn-select-irods-file").show();
                 $("#irods-sel-file").text("No file selected.");
             }
-
-            $('input:radio[name="copy-move"]').change(function () {
-                if ($(this).val() == 'move') {
-                    $("#copy-or-move").val('move');
-                    $("#file-move-warning").show();
-                }
-                else {
-                    $("#copy-or-move").val('copy');
-                    $("#file-move-warning").hide();
-                }
-            });
-
-            $('#dropdown-resource-type li a').click(function () {
-                $('#irods-sel-file').text("No file selected.");
-
-                if (selected_file != undefined) {
-                    selected_file.value = '';
-                }
-
-                $("#form-resource-type").val($(this).attr("data-value"));
-
-                var template = this.innerHTML;
-                $("#select-resource-type")[0].innerHTML = template;
-
-                // Get supported file types
-                $.ajax({
-                    type: "GET",
-                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/supported-file-types/",
-                    success: function (result) {
-                        json_response_file_types = JSON.parse(result);
-
-                        if (JSON.parse(json_response_file_types.file_types).length == 0) {
-                            $("#upload-content").hide();
-                        }
-                        else {
-                            $("#upload-content").show();
-
-                            var supported_file_types = JSON.parse(json_response_file_types.file_types);
-
-                            myDropzone.options.acceptedFiles = supported_file_types.toString();
-                            $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
-
-                            $("#file-types").empty();
-
-                            $("#file-types").append("<span>Only the following file types can be uploaded:</span><br>");
-                            if (supported_file_types != ".*") {
-                                for (var i = 0; i < supported_file_types.length; i++) {
-                                    $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
-                                }
-                            }
-                            else {
-                                $("#file-types").text("Any file type can be uploaded.")
-                            }
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        $("#file-types").text('Error in determining supported file types');
-                    }
-                });
-
-                // Get multiple files flag value
-                $.ajax({
-                    type: "GET",
-                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
-                    success: function (result) {
-                        {#                    console.log(result);#}
-                        json_response_multiple_file = JSON.parse(result);
-                        {#                    console.log(json_response_multiple_file);#}
-                        if (json_response_multiple_file.allow_multiple_file == true) {
-                            $("#file-multiple").text("Multiple file upload is allowed.");
-                            $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
-                        }
-                        else {
-                            $("#file-multiple").text("Only one file can be uploaded.");
-                            $(myDropzone.hiddenFileInput).removeAttr('multiple');
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
-                    }
-                })
-            });
 
             Dropzone.options.hsDropzone = {
                 previewTemplate: document.getElementById('preview-template').innerHTML,
@@ -594,6 +518,16 @@
                         template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
 
                         $('[data-toggle="tooltip"]').tooltip();
+
+
+                        if (!myDropzone.options.uploadMultiple && this.files[1] != null) {
+                            this.removeFile(this.files[0]);
+                        }
+                    });
+
+                    this.on("removedfile", function (file) {
+
+                        $('#hsDropzone .tooltip').remove();
                     });
 
                     this.on("error", function (file, error) {
@@ -611,8 +545,6 @@
                         $('[data-toggle="tooltip"]').tooltip();
                     });
 
-
-
                     this.on('sendingmultiple', function (data, xhr, formData) {
                         $("#upload-content").find("input[name]").each(function () {
                             formData.append($(this).attr("name"), $(this).val());
@@ -620,6 +552,99 @@
                     });
                 }
             };
+
+            $('input:radio[name="copy-move"]').change(function () {
+                if ($(this).val() == 'move') {
+                    $("#copy-or-move").val('move');
+                    $("#file-move-warning").show();
+                }
+                else {
+                    $("#copy-or-move").val('copy');
+                    $("#file-move-warning").hide();
+                }
+            });
+
+            $('#dropdown-resource-type li a').click(function () {
+{#                $('#irods-sel-file').text("No file selected.");#}
+
+                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+
+                if (selected_file != undefined) {
+                    selected_file.value = '';
+                }
+
+                $("#form-resource-type").val($(this).attr("data-value"));
+
+                var template = this.innerHTML;
+                $("#select-resource-type")[0].innerHTML = template;
+
+                // Get supported file types
+                $.ajax({
+                    type: "GET",
+                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/supported-file-types/",
+                    success: function (result) {
+                        json_response_file_types = JSON.parse(result);
+
+                        if (JSON.parse(json_response_file_types.file_types).length == 0) {
+                            $("#upload-content").hide();
+                        }
+                        else {
+                            $("#upload-content").show();
+
+                            var supported_file_types = JSON.parse(json_response_file_types.file_types);
+
+                            myDropzone.options.acceptedFiles = supported_file_types.toString();
+                            $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
+
+                            $("#file-types").empty();
+
+                            $("#file-types").append("<span>Only the following file types can be uploaded:</span><br>");
+                            if (supported_file_types != ".*") {
+                                for (var i = 0; i < supported_file_types.length; i++) {
+                                    $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
+                                }
+                            }
+                            else {
+                                $("#file-types").text("Any file type can be uploaded.");
+                                myDropzone.options.acceptedFiles = "";
+                                $(myDropzone.hiddenFileInput).removeAttr("accept");
+                            }
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#file-types").text('Error in determining supported file types');
+                        $(myDropzone.hiddenFileInput).removeAttr("accept");
+                    }
+                });
+
+                // Get multiple files flag value
+                $.ajax({
+                    type: "GET",
+                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
+                    success: function (result) {
+                        {#                    console.log(result);#}
+                        json_response_multiple_file = JSON.parse(result);
+                        {#                    console.log(json_response_multiple_file);#}
+                        if (json_response_multiple_file.allow_multiple_file == true) {
+                            $("#file-multiple").text("Multiple file upload is allowed.");
+                            myDropzone.options.uploadMultiple = true;
+                            $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
+                        }
+                        else {
+                            $("#file-multiple").text("Only one file can be uploaded.");
+                            myDropzone.options.uploadMultiple = false;
+                            $(myDropzone.hiddenFileInput).removeAttr('multiple');
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
+                    }
+                })
+            });
+
+            $("#btn-remove-all-files").click(function() {
+                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+            });
         });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
