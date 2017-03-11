@@ -4546,6 +4546,9 @@ div#fb-file-operations-controls {
 	background-color: #ff4646;
 }
 
+#resource-content #dz-container .tooltip-inner {
+	max-width: initial;
+}
 
 #resource-content #dz-container .dz-details.dz-error {
 	border: 3px solid rgba(237, 0, 0, 0.69);
