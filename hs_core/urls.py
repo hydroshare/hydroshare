@@ -21,6 +21,10 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
+    # Create new version of a resource
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/version/$', views.create_new_version_resource_public,
+        name='new_version_resource_public'),
+
     # public copy resource endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$', views.copy_resource_public, name='copy_resource_public'),
 
