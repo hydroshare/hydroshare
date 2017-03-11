@@ -4497,14 +4497,56 @@ div#fb-file-operations-controls {
 	z-index: 1031 !important;
 }
 
-#resource-content #dz-container {
-	border: 2px dashed #999;
+.hs-dropzone-wrapper {
 	height: 370px;
+	border: 1px solid #DDD;
+	overflow: auto;
+	resize: vertical;
+}
+
+#resource-content #dz-container {
 	cursor: pointer;
 	background-color: rgb(242, 242, 242);
 	padding: 12px;
-	overflow: auto;
-	resize: vertical;
+	min-height: 100%;
+}
+
+#resource-content .hs-dropzone-footer {
+
+	border: 1px solid #DDD;
+	border-top: 0;
+	padding: 4px;
+	margin-bottom: 10px;
+}
+
+#resource-content #dz-container .dz-error-message {
+    border: 1px solid black;
+    background-image: -webkit-linear-gradient(#ff5454, #ed0000);
+    background-image: linear-gradient(#ff5454, #ed0000);
+    color: #FFF;
+    width: 137px;
+    border-radius: 4px;
+    margin-top: 3px;
+    padding: 10px;
+    font-size: 12px;
+    position: relative;
+	display: none;
+}
+
+#resource-content #dz-container .dz-details.dz-error:hover .dz-error-message {
+	display: block;
+}
+
+#resource-content #dz-container .dz-error-message.arrow_box::before {
+	border-bottom-color: #000;
+}
+
+#resource-content #dz-container .dz-error-message.arrow_box::after {
+	border-bottom-color: #000;
+}
+
+#resource-content #dz-container .dz-details.dz-error {
+	border: 3px solid rgba(237, 0, 0, 0.69);
 }
 
 #resource-content #dz-container .dz-details-header {
@@ -4563,12 +4605,6 @@ div#fb-file-operations-controls {
     width: 100px;
 }
 
-#resource-content #dz-container .caption {
-    position: absolute;
-    left: calc(50% - 125px);
-    top: calc(50% - 110px);
-    z-index: -1;
-}
 
 #resource-content #dz-container .dz-details {
     display: inline-block;
@@ -4589,6 +4625,7 @@ div#fb-file-operations-controls {
 	margin-top: 8px;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	color: #555;
 }
 
 #dropdown-resource-type .dropdown-menu > li > a {

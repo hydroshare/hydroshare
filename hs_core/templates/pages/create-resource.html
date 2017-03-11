@@ -196,31 +196,33 @@
             <div id="upload-content" class="col-xs-12">
                 <div class="row">
                     <div class="col-xs-12 col-sm-8 col-md-9">
-                        <form id="hsDropzone" class="dropzone" role="form" method="POST" enctype="multipart/form-data"
+                        <form id="hsDropzone" class="dropzone" role="form" method="POST"
+                              enctype="multipart/form-data"
                               action="/hsapi/_internal/create-resource/do/">
                             {% csrf_token %}
-                            <div id="dz-container">
-                                <div class="caption">
-                                    <h2 class="text-center text-muted"><i class="fa fa-file-o" aria-hidden="true"></i>
-                                    </h2>
-                                    <h4 class="text-center text-muted"> Drop files here or click to upload.</h4>
+
+                            <div class="hs-dropzone-wrapper">
+                                <div id="dz-container">
+                                    <input id="form-title" type="hidden" name="title" value="Some Resource"/>
+                                    <input id="form-resource-type" type="hidden" name="resource-type"
+                                           value="GenericResource"/>
                                 </div>
-                                <input id="form-title" type="hidden" name="title" value="Some Resource"/>
-                                <input id="form-resource-type" type="hidden" name="resource-type"
-                                       value="GenericResource"/>
+                            </div>
+                            <div class="hs-dropzone-footer">
+                                <i class="fa fa-info-circle" aria-hidden="true"></i><span> Drop files above or click to upload.</span>
                             </div>
 
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <hr>
                                     <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
 
                                     <div id="irods-browse">
-                                                <span id="log-into-irods">
-                                                    <a id="btn-signin-irods" type="button" class="btn btn-default"
-                                                       data-toggle="modal"
-                                                       data-target="#irodsSignin"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
-                                                </span>
+                                            <span id="log-into-irods">
+                                                <a id="btn-signin-irods" type="button" class="btn btn-default"
+                                                   data-toggle="modal"
+                                                   data-target="#irodsSignin"><span
+                                                        class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
+                                            </span>
                                         <input type="hidden" id="irods-username" name="irods-username" value="">
                                         <input type="hidden" id="irods-password" name="irods-password" value="">
                                         <input type="hidden" id="irods-host" name="irods-host" value="">
@@ -229,18 +231,20 @@
                                         <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                                         <input type="hidden" id="irods_federated" name="irods_federated" value="">
                                         <span id="sign-in-info"></span>
-                                        <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form"
+                                        <a id="btn-select-irods-file" type="button"
+                                           class="btn btn-default hidden-form"
                                            data-toggle="modal" data-target="#irodsContent">
                                             Browse iRODS...
                                         </a>
                                         <span id="irods-sel-file"></span>
                                         <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
                                         <span id="irods-copy-move" class="hidden-form">
-                                                    <input type="radio" id='copy-radio' name="copy-move" value="copy"
-                                                           checked="checked"> Copy
-                                                    <input type="radio" id='move-radio' name="copy-move" value="move"> Move
-                                                </span>
-                                        <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of
+                                                <input type="radio" id='copy-radio' name="copy-move" value="copy"
+                                                       checked="checked"> Copy
+                                                <input type="radio" id='move-radio' name="copy-move" value="move"> Move
+                                            </span>
+                                        <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out
+                                            of
                                             iRODS</a>
                                     </div>
                                 </div>
@@ -251,18 +255,19 @@
                             <div class="dz-details shadow-md">
                                 <div class="dz-details-header">
                                     <div class="dz-size text-muted pull-left" data-dz-size></div>
-                                    <i class="fa fa-trash-o btn-remove pull-right" aria-hidden="true"></i>
+                                    <i class="fa fa-trash-o btn-remove pull-right" data-toggle="tooltip"
+                                       data-placement="bottom" title="Remove this file" aria-hidden="true"
+                                       data-dz-remove></i>
                                 </div>
 
                                 <i class="fa fa-file-o fa-2x" aria-hidden="true"></i>
-                                <div class="dz-filename" data-toggle="tooltip" data-placement="right"
-                               title="An arbitrary fil"><span data-dz-name></span></div>
+                                <div class="dz-error-message arrow_box arrow_box_top_center">
+                                    <span data-dz-errormessage></span>
+                                </div>
+                                <div class="dz-filename" data-toggle="tooltip" data-placement="bottom"
+                                     title="An arbitrary fil"><span data-dz-name></span></div>
                                 <img data-dz-thumbnail/>
                             </div>
-                            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                            <div class="dz-success-mark"><span>✔</span></div>
-                            <div class="dz-error-mark"><span>✘</span></div>
-                            <div class="dz-error-message"><span data-dz-errormessage></span></div>
                         </div>
 
                         <br>
@@ -303,8 +308,6 @@
                         </ul>
                     </div>
                 </div>
-
-
             </div>
 
             <div class="col-xs-12">
@@ -457,6 +460,8 @@
 {#    </div>#}
 
     <script type="text/javascript">
+        var myDropzone;
+
         $(document).ready(function () {
             var json_response_file_types = {};
             var json_response_multiple_file = {};
@@ -478,7 +483,6 @@
                 }
             });
 
-
             $('#dropdown-resource-type li a').click(function () {
                 $('#select-file').value = '';
                 $('#select-file').attr('value', '');
@@ -498,19 +502,29 @@
                     type: "GET",
                     url: "/hsapi/_internal/" + $(this).attr("data-value") + "/supported-file-types/",
                     success: function (result) {
-                        {#                    console.log(result);#}
+
                         json_response_file_types = JSON.parse(result);
-                        {#                    console.log(json_response_file_types.file_types);#}
-                        var supported_file_types = "Any file type can be uploaded.";
+
+{#                        var supported_file_types = "Any file type can be uploaded.";#}
+
                         if (JSON.parse(json_response_file_types.file_types).length == 0) {
                             $("#upload-content").hide();
                         }
                         else {
-                            if (JSON.parse(json_response_file_types.file_types)[0] != ".*") {
-                                supported_file_types = "Only the listed file types can be uploaded: " + json_response_file_types.file_types;
-                            }
                             $("#upload-content").show();
-                            $("#file-types").text(supported_file_types);
+
+                            var supported_file_types = JSON.parse(json_response_file_types.file_types);
+
+                            myDropzone.options.acceptedFiles = supported_file_types.toString();
+                            $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
+
+                            $("#file-types").empty();
+
+                            if (supported_file_types != ".*") {
+                                for (var i = 0; i < supported_file_types.length; i++) {
+                                    $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
+                                }
+                            }
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -576,7 +590,7 @@
                 }
             });
 
-            var myDropzone;
+
             Dropzone.options.hsDropzone = {
                 previewTemplate: document.getElementById('preview-template').innerHTML,
                 clickable: "#dz-container",
@@ -605,6 +619,21 @@
 
                     this.on("drop", function (event) {
                         $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
+
+                    });
+
+                    this.on("addedfile", function (file) {
+                        // Initialize tooltips
+                        var template = $(file.previewElement);
+                        template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+
+                        var error = template.find("data-dz-errormessage").text().trim();
+
+                        if (error) {
+                            template.addClass("dz-error");
+                        }
+
+                        $('[data-toggle="tooltip"]').tooltip();
                     });
 
                     this.on('sendingmultiple', function (data, xhr, formData) {
@@ -614,8 +643,6 @@
                     });
                 }
             };
-
-
         });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
