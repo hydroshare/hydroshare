@@ -1869,10 +1869,10 @@ class ResourceFile(models.Model):
     @property
     def can_set_file_type(self):
         # currently user can set file type only for files with extension
-        # tif or zip.
-        return self.extension in ('.tif', '.zip') and (self.logical_file is None or
-                                                       self.logical_file_type_name ==
-                                                       "GenericLogicalFile")
+        # tif, zip and nc.
+        return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
+                                                              self.logical_file_type_name ==
+                                                              "GenericLogicalFile")
 
     @property
     def size(self):
