@@ -6,7 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
 {% endblock %}
 
-{% block title %}Create resource{% endblock %}
+{% block meta_title %}Create resource{% endblock %}
 
 {% block main %}
     <div class="container">
@@ -280,9 +280,9 @@
                                 <div class="dz-error-message arrow_box arrow_box_top_center">
                                     <span data-dz-errormessage></span>
                                 </div>
+
                                 <div class="dz-filename" data-toggle="tooltip" data-placement="bottom"
-                                     title="An arbitrary fil"><span data-dz-name></span></div>
-                                <img data-dz-thumbnail/>
+                                     title=""><span data-dz-name></span></div>
                             </div>
                         </div>
 
@@ -489,6 +489,10 @@
                 autoProcessQueue: false,
                 uploadMultiple: true,
                 parallelUploads: 99,
+                createImageThumbnails: true,
+                thumbnailWidth: 20,
+                thumbnailHeight: 20,
+
                 init: function () {
                     myDropzone = this;
 
@@ -497,6 +501,7 @@
                         if (!title) {
                             title = $("#txtTitle").attr("placeholder");
                         }
+
                         $("#form-title").val(title);
 
                         if (myDropzone.files.length > 0) {
@@ -505,7 +510,6 @@
                         else {
                             $("#hsDropzone").submit();
                         }
-
                     });
 
                     // The user dragged a file onto the Dropzone
@@ -516,11 +520,6 @@
                     // The user dragged a file out of the Dropzone
                     this.on("dragleave", function (event) {
                         $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
-                    });
-
-                    this.on("drop", function (event) {
-                        $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
-
                     });
 
                     this.on("addedfile", function (file) {
