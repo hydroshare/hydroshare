@@ -1,3 +1,4 @@
+import os
 import copy
 
 from django.db import models
@@ -670,6 +671,35 @@ class AbstractLogicalFile(models.Model):
             copy_of_logical_file.metadata.create_element(element.term, **element_args)
 
         return copy_of_logical_file
+
+    @classmethod
+    def compute_file_type_folder(cls, resource, file_folder, file_name):
+        """
+        Computes the new folder path where the file type files will be stored
+        :param resource: an instance of BaseResource
+        :param file_folder: current file folder of the file which is being set to a specific file
+        type
+        :param file_name: name of the file (without extension) which is being set to a specific
+        file type
+        :return: computed new folder path
+        """
+        current_folder_path = 'data/contents'
+        if file_folder is not None:
+            current_folder_path = os.path.join(current_folder_path, file_folder)
+
+        new_folder_path = os.path.join(current_folder_path, file_name)
+
+        # To avoid folder creation failure when there is already matching
+        # directory path, first check that the folder does not exist
+        # If folder path exists then change the folder name by adding a number
+        # to the end
+        istorage = resource.get_irods_storage()
+        counter = 0
+        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
+            new_file_name = file_name + "_{}".format(counter)
+            new_folder_path = os.path.join(current_folder_path, new_file_name)
+            counter += 1
+        return new_folder_path
 
     def logical_delete(self, user, delete_res_files=True):
         """

@@ -522,7 +522,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 # create the ncdump text file
                 dump_file = create_header_info_txt_file(temp_file)
                 files_to_add_to_resource.append(dump_file)
-
+                file_folder = res_file.file_folder
                 with transaction.atomic():
                     # first delete the netcdf file that we retrieved from irods
                     # for setting it to netcdf file type
@@ -543,21 +543,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     logical_file.save()
 
                     try:
-                        # create a folder for the raster file type using the base file
+                        # create a folder for the netcdf file type using the base file
                         # name as the name for the new folder
-                        new_folder_path = 'data/contents/{}'.format(nc_file_name)
-                        # To avoid folder creation failure when there is already matching
-                        # directory path, first check that the folder does not exist
-                        # If folder path exists then change the folder name by adding a number
-                        # to the end
-                        istorage = resource.get_irods_storage()
-                        counter = 0
-                        new_file_name = nc_file_name
-                        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-                            new_file_name = nc_file_name + "_{}".format(counter)
-                            new_folder_path = 'data/contents/{}'.format(new_file_name)
-                            counter += 1
-
+                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                       nc_file_name)
                         fed_file_full_path = ''
                         if resource.resource_federation_path:
                             fed_file_full_path = os.path.join(resource.root_path,
@@ -566,12 +555,17 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
 
+                        new_folder_name = new_folder_path.split('/')[-1]
+                        if file_folder is None:
+                            upload_folder = new_folder_name
+                        else:
+                            upload_folder = os.path.join(file_folder, new_folder_name)
                         # add all new files to the resource
                         for f in files_to_add_to_resource:
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=new_file_name,
+                                resource, uploaded_file, folder=upload_folder,
                                 fed_res_file_name_or_path=fed_file_full_path
                             )
                             # make each resource file we added as part of the logical file
@@ -619,7 +613,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     log.info("NetCDF file type - metadata was saved to DB")
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
-                log.info(err_msg)
+                log.error(err_msg)
                 # remove temp dir
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
