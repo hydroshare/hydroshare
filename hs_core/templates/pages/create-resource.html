@@ -204,9 +204,9 @@
                             <div class="hs-dropzone-header">
                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                 <span>Drop files below or click to upload.</span>
-                                <span class="btn btn-default pull-right">
+                                <span id="btn-remove-all-files" class="btn btn-default pull-right">
                                     <i class="fa fa-trash-o btn-remove" aria-hidden="true"></i>
-                                    <span id="btn-remove-all-files">&nbsp;&nbsp;Remove All Files</span>
+                                    <span>&nbsp;&nbsp;Remove All Files</span>
                                 </span>
                             </div>
 
@@ -317,7 +317,6 @@
                         </ul>
                     </div>
                 </div>
-                <hr>
             </div>
 
             <div class="col-xs-12">
@@ -526,7 +525,6 @@
                     });
 
                     this.on("removedfile", function (file) {
-
                         $('#hsDropzone .tooltip').remove();
                     });
 

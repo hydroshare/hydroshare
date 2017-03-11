@@ -4504,6 +4504,11 @@ div#fb-file-operations-controls {
 	resize: vertical;
 }
 
+#btn-remove-all-files {
+	position: absolute;
+	right: 30px;
+}
+
 #resource-content #dz-container {
 	cursor: pointer;
 	background-color: rgb(242, 242, 242);
@@ -4550,6 +4555,10 @@ div#fb-file-operations-controls {
 	height: 24px;
     border-bottom: 1px solid #DDD;
     margin-bottom: 10px;
+}
+
+#resource-content #dz-container .dz-details-header .btn-remove {
+	font-size: 18px;
 }
 
 #resource-content #dz-container .fa-file-o {
