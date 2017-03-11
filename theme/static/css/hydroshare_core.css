@@ -4010,8 +4010,8 @@ form#covereage-search-fields {
 
 #fb-sort a {
 	cursor: pointer;
-	padding: 5px;
-	font-size: 14px;
+	padding: 8px;
+	font-size: 12px;
 }
 
 #fb-sort ul {
@@ -4499,8 +4499,26 @@ div#fb-file-operations-controls {
 
 #resource-content #dz-container {
 	border: 2px dashed #999;
-	height: 300px;
-    cursor: pointer;
+	height: 370px;
+	cursor: pointer;
+	background-color: rgb(242, 242, 242);
+	padding: 12px;
+	overflow: auto;
+	resize: vertical;
+}
+
+#resource-content #dz-container .dz-details-header {
+	height: 24px;
+    border-bottom: 1px solid #DDD;
+    margin-bottom: 10px;
+}
+
+#resource-content #dz-container .fa-file-o {
+	color: #007ab7;
+}
+
+#resource-content #dz-container .dz-details-header .fa-trash-o {
+	font-size: 18px;
 }
 
 #resource-content #dz-container.hs-dropzone-highlight {
@@ -4554,14 +4572,23 @@ div#fb-file-operations-controls {
 
 #resource-content #dz-container .dz-details {
     display: inline-block;
-    border: 1px solid #DDD;
     border-radius: 4px;
     margin: 5px;
     width: 150px;
-    height: 100px;
+    height: 150px;
     padding: 4px;
     text-align: center;
     overflow: hidden;
+	background-color: #FFF;
+}
+
+#resource-content #dz-container .dz-filename {
+	font-size: 12px;
+	max-height: 70px;
+	line-height: 16px;
+	margin-top: 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 #dropdown-resource-type .dropdown-menu > li > a {
@@ -4574,30 +4601,31 @@ div#fb-file-operations-controls {
 
 /* Tooltip */
 .tooltip > .tooltip-inner {
-	background-color: #73AD21;
+	background-color: #767676;
 	color: #FFFFFF;
-	border: 1px solid green;
+	border: 1px solid #535353;
 	font-size: 14px;
+	text-align: left;
 }
 
 /* Tooltip on top */
 .tooltip.top > .tooltip-arrow {
-	border-top: 5px solid green;
+	border-top: 5px solid #535353;
 }
 
 /* Tooltip on bottom */
 .tooltip.bottom > .tooltip-arrow {
-	border-bottom: 5px solid blue;
+	border-bottom: 5px solid #535353;
 }
 
 /* Tooltip on left */
 .tooltip.left > .tooltip-arrow {
-	border-left: 5px solid red;
+	border-left: 5px solid #535353;
 }
 
 /* Tooltip on right */
 .tooltip.right > .tooltip-arrow {
-	border-right: 5px solid black;
+	border-right: 5px solid #535353;
 }
 
 #dropdown-resource-type div.tooltip-inner {

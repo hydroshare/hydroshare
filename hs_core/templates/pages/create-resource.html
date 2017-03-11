@@ -211,46 +211,52 @@
                             </div>
 
                             <div class="row">
-                    <div class="col-xs-12">
-                        <hr>
-                        <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
+                                <div class="col-xs-12">
+                                    <hr>
+                                    <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
 
-                        <div id="irods-browse">
-                                    <span id="log-into-irods">
-                                        <a id="btn-signin-irods" type="button" class="btn btn-default"
-                                           data-toggle="modal"
-                                           data-target="#irodsSignin"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
-                                    </span>
-                            <input type="hidden" id="irods-username" name="irods-username" value="">
-                            <input type="hidden" id="irods-password" name="irods-password" value="">
-                            <input type="hidden" id="irods-host" name="irods-host" value="">
-                            <input type="hidden" id="irods-port" name="irods-port" value="">
-                            <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                            <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                            <input type="hidden" id="irods_federated" name="irods_federated" value="">
-                            <span id="sign-in-info"></span>
-                            <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form"
-                               data-toggle="modal" data-target="#irodsContent">
-                                Browse iRODS...
-                            </a>
-                            <span id="irods-sel-file"></span>
-                            <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
-                            <span id="irods-copy-move" class="hidden-form">
-                                        <input type="radio" id='copy-radio' name="copy-move" value="copy"
-                                               checked="checked"> Copy
-                                        <input type="radio" id='move-radio' name="copy-move" value="move"> Move
-                                    </span>
-                            <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of
-                                iRODS</a>
-                        </div>
-                    </div>
-                </div>
+                                    <div id="irods-browse">
+                                                <span id="log-into-irods">
+                                                    <a id="btn-signin-irods" type="button" class="btn btn-default"
+                                                       data-toggle="modal"
+                                                       data-target="#irodsSignin"><span class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
+                                                </span>
+                                        <input type="hidden" id="irods-username" name="irods-username" value="">
+                                        <input type="hidden" id="irods-password" name="irods-password" value="">
+                                        <input type="hidden" id="irods-host" name="irods-host" value="">
+                                        <input type="hidden" id="irods-port" name="irods-port" value="">
+                                        <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                                        <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
+                                        <input type="hidden" id="irods_federated" name="irods_federated" value="">
+                                        <span id="sign-in-info"></span>
+                                        <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form"
+                                           data-toggle="modal" data-target="#irodsContent">
+                                            Browse iRODS...
+                                        </a>
+                                        <span id="irods-sel-file"></span>
+                                        <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
+                                        <span id="irods-copy-move" class="hidden-form">
+                                                    <input type="radio" id='copy-radio' name="copy-move" value="copy"
+                                                           checked="checked"> Copy
+                                                    <input type="radio" id='move-radio' name="copy-move" value="move"> Move
+                                                </span>
+                                        <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of
+                                            iRODS</a>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
 
                         <div id="preview-template" class="dz-preview dz-file-preview" style="display: none;">
-                            <div class="dz-details">
-                                <div class="dz-filename"><span data-dz-name></span></div>
-                                <div class="dz-size" data-dz-size></div>
+                            <div class="dz-details shadow-md">
+                                <div class="dz-details-header">
+                                    <i class="fa fa-trash-o btn-remove pull-left" aria-hidden="true"></i>
+                                    <div class="dz-size text-muted pull-right" data-dz-size></div>
+                                </div>
+
+                                <i class="fa fa-file-o fa-2x" aria-hidden="true"></i>
+                                <div class="dz-filename" data-toggle="tooltip" data-placement="right"
+                               title="An arbitrary fil"><span data-dz-name></span></div>
                                 <img data-dz-thumbnail/>
                             </div>
                             <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
@@ -574,7 +580,7 @@
             Dropzone.options.hsDropzone = {
                 previewTemplate: document.getElementById('preview-template').innerHTML,
                 clickable: "#dz-container",
-                previewsContainer: "#dz-container",
+                previewsContainer: "#dz-container:not(.dz-details)",
                 paramName: "files", // The name that will be used to transfer the file
                 maxFilesize: 1024, // MB
                 autoProcessQueue: false,
