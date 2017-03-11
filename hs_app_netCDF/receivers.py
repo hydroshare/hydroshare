@@ -6,17 +6,23 @@ import shutil
 import netCDF4
 
 from django.dispatch import receiver
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile, UploadedFile
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
+from hs_core.models import Contributor, Creator
+
 from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
 from hs_app_netCDF.models import NetcdfResource
 import hs_file_types.nc_functions.nc_utils as nc_utils
 import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
+from hs_file_types.models.netcdf import create_header_info_txt_file, get_original_coverage_dict, \
+    add_variable_metadata, add_spatial_coverage_metadata, add_temporal_coverage_metadata, \
+    add_keywords_metadata, add_abstract_metadata, add_title_metadata, add_contributors_metadata, \
+    add_creators_metadata
 
 
 # receiver used to extract metadata after user click on "create resource"
@@ -59,35 +65,21 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 res_type_specific_meta = {}
 
             # add creator:
-            if res_dublin_core_meta.get('creator_name'):
-                name = res_dublin_core_meta['creator_name']
-                email = res_dublin_core_meta.get('creator_email', '')
-                url = res_dublin_core_meta.get('creator_url', '')
-                creator = {'creator': {'name': name, 'email': email, 'homepage': url}}
-                metadata.append(creator)
+            add_creators_metadata(metadata, res_dublin_core_meta,
+                                  Creator.objects.none())
 
             # add contributor:
-            if res_dublin_core_meta.get('contributor_name'):
-                name_list = res_dublin_core_meta['contributor_name'].split(',')
-                for name in name_list:
-                    contributor = {'contributor': {'name': name}}
-                    metadata.append(contributor)
+            add_contributors_metadata(metadata, res_dublin_core_meta,
+                                      Contributor.objects.none())
 
             # add title
-            if res_dublin_core_meta.get('title'):
-                res_title = {'title': {'value': res_dublin_core_meta['title']}}
-                metadata.append(res_title)
+            add_title_metadata(metadata, res_dublin_core_meta)
 
             # add description
-            if res_dublin_core_meta.get('description'):
-                description = {'description': {'abstract': res_dublin_core_meta['description']}}
-                metadata.append(description)
+            add_abstract_metadata(metadata, res_dublin_core_meta)
 
             # add keywords
-            if res_dublin_core_meta.get('subject'):
-                keywords = res_dublin_core_meta['subject'].split(',')
-                for keyword in keywords:
-                    metadata.append({'subject': {'value': keyword}})
+            add_keywords_metadata(metadata, res_dublin_core_meta, file_type=False)
 
             # add source
             if res_dublin_core_meta.get('source'):
@@ -101,14 +93,10 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 metadata.append(relation)
 
             # add coverage - period
-            if res_dublin_core_meta.get('period'):
-                period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-                metadata.append(period)
+            add_temporal_coverage_metadata(metadata, res_dublin_core_meta)
 
             # add coverage - box
-            if res_dublin_core_meta.get('box'):
-                box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-                metadata.append(box)
+            add_spatial_coverage_metadata(metadata, res_dublin_core_meta)
 
             # add rights
             if res_dublin_core_meta.get('rights'):
@@ -120,47 +108,17 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 metadata.append(rights)
 
             # Save extended meta to metadata variable
-            for var_name, var_meta in res_type_specific_meta.items():
-                meta_info = {}
-                for element, value in var_meta.items():
-                    if value != '':
-                        meta_info[element] = value
-                metadata.append({'variable': meta_info})
-
+            add_variable_metadata(metadata, res_type_specific_meta)
             # Save extended meta to original spatial coverage
-            if res_dublin_core_meta.get('original-box'):
-                if res_dublin_core_meta.get('projection-info'):
-                    ori_cov = {'originalcoverage': {
-                        'value': res_dublin_core_meta['original-box'],
-                        'projection_string_type': res_dublin_core_meta['projection-info']['type'],
-                        'projection_string_text': res_dublin_core_meta['projection-info']['text'],
-                        'datum': res_dublin_core_meta['projection-info']['datum']}
-                    }
-                else:
-                    ori_cov = {'originalcoverage': {'value': res_dublin_core_meta['original-box']}}
-
+            ori_cov = get_original_coverage_dict(res_dublin_core_meta)
+            if ori_cov:
                 metadata.append(ori_cov)
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
-            else:
-                dump_str = nc_dump.get_nc_dump_string(in_file_name)
-
-            if dump_str:
-                # refine dump_str first line
-                first_line = list('netcdf {0} '.format(nc_file_name))
-                first_line_index = dump_str.index('{')
-                dump_str_list = first_line + list(dump_str)[first_line_index:]
-                dump_str = "".join(dump_str_list)
-
-                # write dump_str to temporary file
-                io = StringIO.StringIO()
-                io.write(dump_str)
-                dump_file_name = nc_file_name + '_header_info.txt'
-                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                files.append(dump_file)
-
+            dump_file = create_header_info_txt_file(in_file_name)
+            dump_file_name = nc_file_name + '_header_info.txt'
+            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            files.append(uploaded_file)
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file ' \
@@ -201,6 +159,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res.metadata.ori_coverage.all().delete()
 
 
+# TODO: Pabitra: This signal handler needs to be refactored
 # receiver used after user clicks on "add file" for existing resource netcdf file
 @receiver(pre_add_files_to_resource, sender=NetcdfResource)
 def netcdf_pre_add_files_to_resource(sender, **kwargs):
