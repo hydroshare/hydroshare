@@ -25,7 +25,10 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/version/$', views.create_new_version_resource_public,
         name='new_version_resource_public'),
 
-    # DEPRECATED: use form above instead 
+    # public copy resource endpoint
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$', views.copy_resource_public, name='copy_resource_public'),
+
+    # DEPRECATED: use form above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
         name='DEPRECATED_update_access_rules'),
 
