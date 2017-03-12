@@ -55,8 +55,14 @@ def get_nc_meta_dict(nc_file_name):
     type_specific_meta = get_type_specific_meta(nc_dataset)
     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
     nc_dataset.close()
+    try:
+        res_dublin_core_meta = nc_meta_dict['dublin_core_meta']
+        res_type_specific_meta = nc_meta_dict['type_specific_meta']
+    except:
+        res_dublin_core_meta = {}
+        res_type_specific_meta = {}
 
-    return nc_meta_dict
+    return res_dublin_core_meta, res_type_specific_meta
 
 
 # Functions for dublin core meta

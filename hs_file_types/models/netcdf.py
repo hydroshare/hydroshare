@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import re
 
 from functools import partial, wraps
 import netCDF4
@@ -17,6 +18,7 @@ from dominate.tags import div, legend, form, button, p, textarea, strong, input
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
+from hs_core.models import Creator, Contributor
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -468,56 +470,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             nc_dataset = nc_utils.get_nc_dataset(temp_file)
             if isinstance(nc_dataset, netCDF4.Dataset):
                 # Extract the metadata from netcdf file
-                try:
-                    res_md_dict = nc_meta.get_nc_meta_dict(temp_file)
-                    res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                    res_type_specific_meta = res_md_dict['type_specific_meta']
-                except:
-                    res_dublin_core_meta = {}
-                    res_type_specific_meta = {}
-
-                # add creator:
-                add_creators_metadata(resource_metadata, res_dublin_core_meta,
-                                      resource.metadata.creators.all())
-
-                # add contributor:
-                add_contributors_metadata(resource_metadata, res_dublin_core_meta,
-                                          resource.metadata.contributors.all())
-
-                # add title
-                if resource.metadata.title.value.lower() == 'untitled resource':
-                    add_title_metadata(resource_metadata, res_dublin_core_meta)
-
-                # add description
-                if resource.metadata.description is None:
-                    add_abstract_metadata(resource_metadata, res_dublin_core_meta)
-
-                # add keywords
-                add_keywords_metadata(file_type_metadata, res_dublin_core_meta)
-
-                # add source element - we can't add this resource level metadata as there can be
-                # multiple netcdf files in composite resource
-
-                # add relation element - we can't add this resource level metadata as there can be
-                # multiple netcdf files in composite resource
-
-                # add coverage - period
-                add_temporal_coverage_metadata(file_type_metadata, res_dublin_core_meta)
-
-                # add coverage - box
-                add_spatial_coverage_metadata(file_type_metadata, res_dublin_core_meta)
-
-                # add rights
-                # After discussion with dtarb decided not to override the resource level
-                # rights metadata with netcdf extracted rights metadata
-
-                # Save extended meta to metadata variable
-                add_variable_metadata(file_type_metadata, res_type_specific_meta)
-
-                # Save extended meta to original spatial coverage
-                ori_cov = get_original_coverage_dict(res_dublin_core_meta)
-                if ori_cov:
-                    file_type_metadata.append(ori_cov)
+                res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
+                # populate resource_metadata and file_type_metadata lists with extracted metadata
+                add_metadata_to_list(resource_metadata, res_dublin_core_meta,
+                                     res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
                 dump_file = create_header_info_txt_file(temp_file)
@@ -620,27 +576,142 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 raise ValidationError(err_msg)
 
 
-# TODO: change the following method to take the additional parameter metadata_list like
-# the other helper functions
-def get_original_coverage_dict(dublin_core_meta_dict):
+def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_meta,
+                         file_meta_list=None, resource=None):
     """
-    Creates a dict that can be used to create an instance of OriginalCoverage element
-    :param dublin_core_meta_dict: a dict containing extracted dublin core metadata from a
-    netcdf file
-    :return: a dict
+    Helper function to populate metadata lists (*res_meta_list* and *file_meta_list*) with
+    extracted metadata from the NetCDF file. These metadata lists are then used for creating
+    metadata element objects by the caller.
+    :param res_meta_list: a list to store data to create metadata elements at the resource level
+    :param extracted_core_meta: a dict of extracted dublin core metadata
+    :param extracted_specific_meta: a dict of extracted metadata that is NetCDF specific
+    :param file_meta_list: a list to store data to create metadata elements at the file type level
+    (must be None when this helper function is used for NetCDF resource and must not be None
+    when used for NetCDF file type
+    :param resource: an instance of BaseResource (must be None when this helper function is used
+    for NteCDF resource and must not be None when used for NetCDF file type)
+    :return:
     """
+
+    # add title
+    if resource is not None and file_meta_list is not None:
+        # file type
+        if resource.metadata.title.value.lower() == 'untitled resource':
+            add_title_metadata(res_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_title_metadata(res_meta_list, extracted_core_meta)
+
+    # add abstract (Description element)
+    if resource is not None and file_meta_list is not None:
+        # file type
+        if resource.metadata.description is None:
+            add_abstract_metadata(res_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_abstract_metadata(res_meta_list, extracted_core_meta)
+
+    # add keywords
+    if file_meta_list is not None:
+        # file type
+        add_keywords_metadata(file_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_keywords_metadata(res_meta_list, extracted_core_meta, file_type=False)
+
+    # add creators:
+    if resource is not None:
+        # file type
+        add_creators_metadata(res_meta_list, extracted_core_meta,
+                              resource.metadata.creators.all())
+    else:
+        # resource type
+        add_creators_metadata(res_meta_list, extracted_core_meta,
+                              Creator.objects.none())
+
+    # add contributors:
+    if resource is not None:
+        # file type
+        add_contributors_metadata(res_meta_list, extracted_core_meta,
+                                  resource.metadata.creators.all())
+    else:
+        # resource type
+        add_contributors_metadata(res_meta_list, extracted_core_meta,
+                                  Contributor.objects.none())
+
+    # add source (applies only to NetCDF resource type)
+    if extracted_core_meta.get('source') and file_meta_list is None:
+        source = {'source': {'derived_from': extracted_core_meta['source']}}
+        res_meta_list.append(source)
+
+    # add relation (applies only to NetCDF resource type)
+    if extracted_core_meta.get('references') and file_meta_list is None:
+        relation = {'relation': {'type': 'cites',
+                                 'value': extracted_core_meta['references']}}
+        res_meta_list.append(relation)
+
+    # add rights (applies only to NetCDF resource type)
+    if extracted_core_meta.get('rights') and file_meta_list is None:
+        raw_info = extracted_core_meta.get('rights')
+        b = re.search("(?P<url>https?://[^\s]+)", raw_info)
+        url = b.group('url') if b else ''
+        statement = raw_info.replace(url, '') if url else raw_info
+        rights = {'rights': {'statement': statement, 'url': url}}
+        res_meta_list.append(rights)
+
+    # add coverage - period
+    if file_meta_list is not None:
+        # file type
+        add_temporal_coverage_metadata(file_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_temporal_coverage_metadata(res_meta_list, extracted_core_meta)
+
+    # add coverage - box
+    if file_meta_list is not None:
+        # file type
+        add_spatial_coverage_metadata(file_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_spatial_coverage_metadata(res_meta_list, extracted_core_meta)
+
+    # add variables
+    if file_meta_list is not None:
+        # file type
+        add_variable_metadata(file_meta_list, extracted_specific_meta)
+    else:
+        # resource type
+        add_variable_metadata(res_meta_list, extracted_specific_meta)
+
+    # add original spatial coverage
+    if file_meta_list is not None:
+        # file type
+        add_original_coverage_metadata(file_meta_list, extracted_core_meta)
+    else:
+        # resource type
+        add_original_coverage_metadata(res_meta_list, extracted_core_meta)
+
+
+def add_original_coverage_metadata(metadata_list, extracted_metadata):
+    """
+    Adds data for the original coverage element to the *metadata_list*
+    :param metadata_list: list to  which original coverage data needs to be added
+    :param extracted_metadata: a dict containing netcdf extracted metadata
+    :return:
+    """
+
     ori_cov = {}
-    if dublin_core_meta_dict.get('original-box'):
-        coverage_data = dublin_core_meta_dict['original-box']
+    if extracted_metadata.get('original-box'):
+        coverage_data = extracted_metadata['original-box']
         projection_string_type = ""
         projection_string_text = ""
         datum = ""
-        if dublin_core_meta_dict.get('projection-info'):
-            projection_string_type = dublin_core_meta_dict[
+        if extracted_metadata.get('projection-info'):
+            projection_string_type = extracted_metadata[
                 'projection-info']['type']
-            projection_string_text = dublin_core_meta_dict[
+            projection_string_text = extracted_metadata[
                 'projection-info']['text']
-            datum = dublin_core_meta_dict['projection-info']['datum']
+            datum = extracted_metadata['projection-info']['datum']
 
         ori_cov = {'originalcoverage':
                    {'value': coverage_data,
@@ -649,7 +720,8 @@ def get_original_coverage_dict(dublin_core_meta_dict):
                     'datum': datum
                     }
                    }
-    return ori_cov
+    if ori_cov:
+        metadata_list.append(ori_cov)
 
 
 def add_creators_metadata(metadata_list, extracted_metadata, existing_creators):

@@ -1,36 +1,27 @@
 import re
 import os
-import StringIO
 import shutil
 
 import netCDF4
 
 from django.dispatch import receiver
-from django.core.files.uploadedfile import InMemoryUploadedFile, UploadedFile
+from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
-from hs_core.models import Contributor, Creator
 
 from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
 from hs_app_netCDF.models import NetcdfResource
 import hs_file_types.nc_functions.nc_utils as nc_utils
-import hs_file_types.nc_functions.nc_dump as nc_dump
 import hs_file_types.nc_functions.nc_meta as nc_meta
-from hs_file_types.models.netcdf import create_header_info_txt_file, get_original_coverage_dict, \
-    add_variable_metadata, add_spatial_coverage_metadata, add_temporal_coverage_metadata, \
-    add_keywords_metadata, add_abstract_metadata, add_title_metadata, add_contributors_metadata, \
-    add_creators_metadata
+from hs_file_types.models.netcdf import create_header_info_txt_file, add_metadata_to_list
 
 
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=NetcdfResource)
 def netcdf_pre_create_resource(sender, **kwargs):
-    # Pabitra: Though there is some common code between netcdf file type and here as it relates
-    # metadata extraction, where some of the extracted metadata get stored is completely different.
-    # So refactoring won't be of much use here.
     files = kwargs['files']
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
@@ -56,63 +47,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
-            try:
-                res_md_dict = nc_meta.get_nc_meta_dict(in_file_name)
-                res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                res_type_specific_meta = res_md_dict['type_specific_meta']
-            except:
-                res_dublin_core_meta = {}
-                res_type_specific_meta = {}
-
-            # add creator:
-            add_creators_metadata(metadata, res_dublin_core_meta,
-                                  Creator.objects.none())
-
-            # add contributor:
-            add_contributors_metadata(metadata, res_dublin_core_meta,
-                                      Contributor.objects.none())
-
-            # add title
-            add_title_metadata(metadata, res_dublin_core_meta)
-
-            # add description
-            add_abstract_metadata(metadata, res_dublin_core_meta)
-
-            # add keywords
-            add_keywords_metadata(metadata, res_dublin_core_meta, file_type=False)
-
-            # add source
-            if res_dublin_core_meta.get('source'):
-                source = {'source': {'derived_from': res_dublin_core_meta['source']}}
-                metadata.append(source)
-
-            # add relation
-            if res_dublin_core_meta.get('references'):
-                relation = {'relation': {'type': 'cites',
-                                         'value': res_dublin_core_meta['references']}}
-                metadata.append(relation)
-
-            # add coverage - period
-            add_temporal_coverage_metadata(metadata, res_dublin_core_meta)
-
-            # add coverage - box
-            add_spatial_coverage_metadata(metadata, res_dublin_core_meta)
-
-            # add rights
-            if res_dublin_core_meta.get('rights'):
-                raw_info = res_dublin_core_meta.get('rights')
-                b = re.search("(?P<url>https?://[^\s]+)", raw_info)
-                url = b.group('url') if b else ''
-                statement = raw_info.replace(url, '') if url else raw_info
-                rights = {'rights': {'statement': statement, 'url': url}}
-                metadata.append(rights)
-
-            # Save extended meta to metadata variable
-            add_variable_metadata(metadata, res_type_specific_meta)
-            # Save extended meta to original spatial coverage
-            ori_cov = get_original_coverage_dict(res_dublin_core_meta)
-            if ori_cov:
-                metadata.append(ori_cov)
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(in_file_name)
+            # populate metadata list with extracted metadata
+            add_metadata_to_list(metadata, res_dublin_core_meta, res_type_specific_meta)
 
             # create the ncdump text file
             dump_file = create_header_info_txt_file(in_file_name)
@@ -159,7 +96,6 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res.metadata.ori_coverage.all().delete()
 
 
-# TODO: Pabitra: This signal handler needs to be refactored
 # receiver used after user clicks on "add file" for existing resource netcdf file
 @receiver(pre_add_files_to_resource, sender=NetcdfResource)
 def netcdf_pre_add_files_to_resource(sender, **kwargs):
@@ -200,15 +136,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             utils.resource_modified(nc_res, user, overwrite_bag=False)
 
             # extract metadata
-            try:
-                res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
-            except Exception:
-                res_dublin_core_meta = {}
-
-            try:
-                res_type_specific_meta = nc_meta.get_type_specific_meta(nc_dataset)
-            except Exception:
-                res_type_specific_meta = {}
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(in_file_name)
 
             # update title info
             if res_dublin_core_meta.get('title'):
@@ -317,24 +245,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
-            else:
-                dump_str = nc_dump.get_nc_dump_string(in_file_name)
-
-            if dump_str:
-                # refine dump_str first line
-                first_line = list('netcdf {0} '.format(nc_file_name))
-                first_line_index = dump_str.index('{')
-                dump_str_list = first_line + list(dump_str)[first_line_index:]
-                dump_str = "".join(dump_str_list)
-
-                # write dump_str to temporary file
-                io = StringIO.StringIO()
-                io.write(dump_str)
-                dump_file_name = nc_file_name + '_header_info.txt'
-                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                files.append(dump_file)
+            dump_file = create_header_info_txt_file(in_file_name)
+            dump_file_name = nc_file_name + '_header_info.txt'
+            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            files.append(uploaded_file)
 
         else:
             validate_files_dict['are_files_valid'] = False
