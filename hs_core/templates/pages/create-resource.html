@@ -219,12 +219,17 @@
                             </div>
 
                             <div class="hs-dropzone-footer">
-                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span id="file-types">&nbsp;&nbsp;Any file type can be uploaded.</span>
+                                <div id="file-types">
+                                    <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                    <span>Any file type can be uploaded.</span>
+                                </div>
                             </div>
+
                             <div class="hs-dropzone-footer">
-                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                <span id="file-multiple">&nbsp;&nbsp;Multiple file upload is allowed.</span>
+                                <div id="file-multiple">
+                                    <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                    <span>Multiple file upload is allowed.</span>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -607,20 +612,22 @@
 
                             $("#file-types").empty();
 
-                            $("#file-types").append("<span>Only the following file types can be uploaded:</span><br>");
                             if (supported_file_types != ".*") {
+                                $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i><span>Only the following file types can be uploaded:</span><br>");
                                 for (var i = 0; i < supported_file_types.length; i++) {
                                     $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
                                 }
                             }
                             else {
-                                $("#file-types").text("Any file type can be uploaded.");
+                                $("#file-types").append("<i class='fa fa-check-circle' aria-hidden='true'></i><span><span>Any file type can be uploaded.</span>");
+
                                 myDropzone.options.acceptedFiles = "";
                                 $(myDropzone.hiddenFileInput).removeAttr("accept");
                             }
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        $("#file-types").empty();
                         $("#file-types").text('Error in determining supported file types');
                         $(myDropzone.hiddenFileInput).removeAttr("accept");
                     }
@@ -631,16 +638,21 @@
                     type: "GET",
                     url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
                     success: function (result) {
-                        {#                    console.log(result);#}
+
                         json_response_multiple_file = JSON.parse(result);
-                        {#                    console.log(json_response_multiple_file);#}
+
+                        $("#file-multiple").empty();
                         if (json_response_multiple_file.allow_multiple_file == true) {
-                            $("#file-multiple").text("Multiple file upload is allowed.");
+
+
+                            $("#file-multiple").append("<i class='fa fa-check-circle' aria-hidden='true'></i>");
+                            $("#file-multiple").append("<span>Multiple file upload is allowed.</span>");
                             myDropzone.options.uploadMultiple = true;
                             $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
                         }
                         else {
-                            $("#file-multiple").text("Only one file can be uploaded.");
+                            $("#file-multiple").append("<i class='fa fa-info-circle' aria-hidden='true'></i>");
+                            $("#file-multiple").append("<span>Only one file can be uploaded.</span>");
                             myDropzone.options.uploadMultiple = false;
                             $(myDropzone.hiddenFileInput).removeAttr('multiple');
                         }
