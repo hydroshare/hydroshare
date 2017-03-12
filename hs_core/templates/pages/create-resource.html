@@ -538,6 +538,7 @@
                         if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
                             this.removeFile(this.files[0]);
                         }
+                        $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
                     });
 
                     this.on("removedfile", function (file) {
@@ -600,27 +601,35 @@
                         json_response_file_types = JSON.parse(result);
 
                         if (JSON.parse(json_response_file_types.file_types).length == 0) {
-                            $("#upload-content").hide();
+                            $("#upload-content").hide();    // No files needed
                         }
                         else {
                             $("#upload-content").show();
 
                             var supported_file_types = JSON.parse(json_response_file_types.file_types);
 
-                            myDropzone.options.acceptedFiles = supported_file_types.toString();
-                            $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
-
                             $("#file-types").empty();
 
                             if (supported_file_types != ".*") {
-                                $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i><span>Only the following file types can be uploaded:</span><br>");
+                                // Append message
+                                $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i>" +
+                                        "<span>Only the following file types can be uploaded:</span><br>");
+
+                                // Render badge for each file type
                                 for (var i = 0; i < supported_file_types.length; i++) {
                                     $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
                                 }
+
+                                // Set controls
+                                myDropzone.options.acceptedFiles = supported_file_types.toString();
+                                $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
                             }
                             else {
-                                $("#file-types").append("<i class='fa fa-check-circle' aria-hidden='true'></i><span><span>Any file type can be uploaded.</span>");
+                                // Append message
+                                $("#file-types").append("<i class='fa fa-check-circle' aria-hidden='true'></i>" +
+                                        "<span><span>Any file type can be uploaded.</span>");
 
+                                // Set controls
                                 myDropzone.options.acceptedFiles = "";
                                 $(myDropzone.hiddenFileInput).removeAttr("accept");
                             }
@@ -628,7 +637,13 @@
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         $("#file-types").empty();
-                        $("#file-types").text('Error in determining supported file types');
+
+                        // Append message
+                        $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i>" +
+                                        "<span>Error in determining supported file types</span><br>");
+
+                        // Set controls
+                        myDropzone.options.acceptedFiles = "";
                         $(myDropzone.hiddenFileInput).removeAttr("accept");
                     }
                 });
@@ -638,27 +653,38 @@
                     type: "GET",
                     url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
                     success: function (result) {
-
                         json_response_multiple_file = JSON.parse(result);
 
                         $("#file-multiple").empty();
                         if (json_response_multiple_file.allow_multiple_file == true) {
-
-
+                            // Append message
                             $("#file-multiple").append("<i class='fa fa-check-circle' aria-hidden='true'></i>");
                             $("#file-multiple").append("<span>Multiple file upload is allowed.</span>");
+
+                            // Set controls
                             myDropzone.options.uploadMultiple = true;
                             $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
                         }
                         else {
+                            // Append message
                             $("#file-multiple").append("<i class='fa fa-info-circle' aria-hidden='true'></i>");
                             $("#file-multiple").append("<span>Only one file can be uploaded.</span>");
+
+                            // Set controls
                             myDropzone.options.uploadMultiple = false;
                             $(myDropzone.hiddenFileInput).removeAttr('multiple');
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        $("#file-multiple").text('Error in determining if multiple file upload is allowed for this resource type');
+                        $("#file-multiple").empty();
+
+                        // Append message
+                        $("#file-multiple").append("<i class='fa fa-check-circle' aria-hidden='true'></i>");
+                        $("#file-multiple").append("<span>Error in determining if multiple file upload is allowed for this resource type.</span>");
+
+                        // Set controls
+                        myDropzone.options.uploadMultiple = true;
+                        $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
                     }
                 })
             });
@@ -669,5 +695,4 @@
         });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-
 {% endblock %}

@@ -4576,8 +4576,8 @@ div#fb-file-operations-controls {
 	font-size: 18px;
 }
 
-#resource-content #dz-container.hs-dropzone-highlight {
-	border: 1px solid #777;
+#resource-content .hs-dropzone-highlight #dz-container {
+	border: 2px dashed #777;
 }
 
 #resource-content .resource-title {
