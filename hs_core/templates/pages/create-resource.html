@@ -532,8 +532,7 @@
                         var template = $(file.previewElement);
                         template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
 
-                        template.find("dz-filename").tooltip();
-
+                        template.find("[data-toggle='tooltip']").tooltip();
 
                         if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
                             this.removeFile(this.files[0]);
