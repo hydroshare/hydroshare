@@ -25,7 +25,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
     fileIcons.PDF =
             "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
 
-    fileIcons.XLS = fileIcons.XLT = fileIcons.XML = fileIcons.CSV =
+    fileIcons.XLS = fileIcons.XLT = fileIcons.XML = fileIcons.CSV = fileIcons.XLSX =
             "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
 
     fileIcons.ZIP = fileIcons.ZIP = fileIcons.RAR5 =
@@ -69,18 +69,12 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
 
     var iconTemplate;
 
-    // if (fileName.lastIndexOf(".")) {
-        if (fileIcons[fileTypeExt.toUpperCase()]) {
-            iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
-        }
-        else {
-            iconTemplate = fileIcons.DEFAULT;
-        }
-    // }
-    // else {
-    //     // Default file icon in case of no file types
-    //     iconTemplate = fileIcons.DEFAULT;
-    // }
+    if (fileIcons[fileTypeExt.toUpperCase()]) {
+        iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
+    }
+    else {
+        iconTemplate = fileIcons.DEFAULT;
+    }
 
     if (logical_type.length > 0){
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Logical Type: " + logical_type;

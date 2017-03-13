@@ -486,7 +486,7 @@
             fileIcons.PDF =
                     "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
 
-            fileIcons.XLS = fileIcons.XLT = fileIcons.XML = fileIcons.CSV =
+            fileIcons.XLS = fileIcons.XLT = fileIcons.XML = fileIcons.CSV = fileIcons.XLSX =
                     "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
 
             fileIcons.ZIP = fileIcons.ZIP = fileIcons.RAR5 =
@@ -586,8 +586,13 @@
 
                         var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
 
-                        template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
-
+                        if (fileIcons[fileTypeExt]) {
+                            template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
+                        }
+                        else {
+                            template.find(".file-type-icon").append(fileIcons.DEFAULT);
+                        }
+                        
                         template.find("[data-toggle='tooltip']").tooltip();
 
                         if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
