@@ -330,10 +330,10 @@
 
                     <div class="resetZoom"></div>
                     <br />
-                    <table class="table-hover table-striped discover-map-table" id="point-map-items" style="width:100%; max-height:200px">
+                    <table class="table-hover table-striped" id="point-map-items" style="width:100%; max-height:200px">
                         <thead>
                             <tr>
-                                <th><input name="select_all" type="checkbox"></th>
+                                <th><input id="point_select_all" name="select_all" type="checkbox"></th>
                                 <th>Show on Map</th>
                                 <th>Resource Type</th>
                                 <th>Title</th>
@@ -365,10 +365,10 @@
 
                             <div class="resetZoom"></div>
                             <br />
-                            <table class="table-hover table-striped discover-map-table" id="area-map-items" style="width:100%; max-height:200px">
+                            <table class="table-hover table-striped" id="area-map-items" style="width:100%; max-height:200px">
                                 <thead>
                                     <tr>
-                                        <th><input name="select_all" type="checkbox"></th>
+                                        <th><input id="area_select_all" name="select_all" type="checkbox"></th>
                                         <th>Show on Map</th>
                                         <th>Resource Type</th>
                                         <th>Title</th>
@@ -410,7 +410,6 @@
         var markers_cluster = null;
         var info_window = null;
         var shade_rects = [];
-        var point_rows_selected = [];
 
         var initMap = function(json_results, view_type) {
             var map_view_option = "";
@@ -446,9 +445,9 @@
                 setBoxes(json_results);
             }
             if (map_set) {
+                maps[view_type].fitBounds(current_map_bounds);
                 maps[view_type].setCenter(current_map_center);
                 maps[view_type].setZoom(current_map_zoom);
-                maps[view_type].fitBounds(current_map_bounds);
             } else {
                 var bounds = null;
                 if (view_type == "point_map") {
@@ -477,8 +476,8 @@
             }
 
             var idle_listener = google.maps.event.addListener(maps[view_type], "idle", function () {
-                maps[view_type].setCenter(map_default_center);
-                maps[view_type].setZoom(map_default_zoom);
+                maps[view_type].setCenter(current_map_center);
+                maps[view_type].setZoom(current_map_zoom);
                 // current_map_center = maps[view_type].getCenter();
                 // current_map_bounds = maps[view_type].getBounds();
                 // current_map_zoom = maps[view_type].getZoom();
@@ -712,7 +711,6 @@
         };
 
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
-            var rowId = 0;
             resources_list.forEach(function(resource) {
                 // var northlimit = parseFloat(resource.northlimit);
                 // var southlimit = parseFloat(resource.southlimit);
@@ -722,15 +720,13 @@
                 // var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
                 // var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
                 var author_name = "";
-                rowId++;
-
                 if (resource.first_author_description) {
                     author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
                 } else {
                     author_name = resource.first_author;
                 }
                 var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
-                var map_resource = [rowId.toString(), resource, resource.resource_type, resource_title, author_name];
+                var map_resource = [resource, resource, resource.resource_type, resource_title, author_name];
                 map_resources.push(map_resource);
             });
         };
@@ -755,13 +751,7 @@
                 "language": {
                     "emptyTable": "Click on map to explore resource data."
                 },
-        //                 columnDefs: [ {
-        //     orderable: false,
-        //     className: 'select-checkbox',
-        //     targets:   0
-        // } ],
                 // columns: [
-                //     { title: "<input id='point_select_all_items' name='select_all' value='1' type='checkbox'>"},
                 //     { title: "Show on Map"},
                 //     { title: "Resource Type" },
                 //     { title: "Title" },
@@ -797,7 +787,6 @@
             if (view_type == "area_map") {
                 setMapFunctions(mapItems, "area_map");
             } else {
-
                 setMapFunctions(mapItems, "point_map");
             }
         };
@@ -808,12 +797,47 @@
                     var data = datatable.row($(this).parents('tr')).data();
                     showBoxMarker(data[0], true);
                 });
-                $('#area-map-items tbody').on('hover', 'tr', function () {
-                    var data = datatable.row(this).data();
-                    if (data) {
-                        showBoxMarker(data[0], false);
+                // $('#area-map-items tbody').on('hover', 'tr', function () {
+                //     var data = datatable.row(this).data();
+                //     if (data) {
+                //         showBoxMarker(data[0], false);
+                //     }
+                // });
+
+                $('#area-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
+                    var $row = $(this).closest('tr');
+
+                    //console.log($row);
+                    // Get row data
+                    var data = datatable.row($row).data();
+                    if (this.checked) {
+                        highlightOrHideBox(data[0], 0);
+                        //showBoxMarker(data[0], false);
+                    } else {
+                        highlightOrHideBox(data[0], 1);
                     }
+                    // Get row ID
+                    var rowId = data[0];
+
+                    // Update state of "Select all" control
+                    updateDataTableSelectAllCtrl(datatable);
+
+                    // Prevent click event from propagating to paren
+                    //e.stopPropagation();
                 });
+
+                // Handle click on "Select all" control
+                $('thead input[name="select_all"]', datatable.table().container()).on('click', function(e){
+                    console.log("select all");
+                    if(this.checked){
+                        $('#area-map-items tbody input[type="checkbox"]:not(:checked)').trigger('click');
+                    } else {
+                        $('#area-map-items tbody input[type="checkbox"]:checked').trigger('click');
+                    }
+                    updateDataTableSelectAllCtrl(datatable);
+                    // Prevent click event from propagating to parent
+                });
+
             } else {
                 $('#point-map-items tbody').on('click', '[role="button"]', function () {
                     var data = datatable.row($(this).parents('tr')).data();
@@ -821,12 +845,11 @@
                     showPointMarker(data[0]);
                     //console.log(data[0]);
                 });
-
                 // Handle click on checkbox
                 $('#point-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
                     var $row = $(this).closest('tr');
 
-                    console.log($row);
+                    //console.log($row);
                     // Get row data
                     var data = datatable.row($row).data();
 
@@ -853,7 +876,7 @@
                     // }
 
                     // Update state of "Select all" control
-                    updateDataTableSelectAllCtrl(datatable);
+                    updateDataTableSelectAllCtrl(datatable, view_type);
 
                     // Prevent click event from propagating to parent
                     //e.stopPropagation();
@@ -870,51 +893,79 @@
                     } else {
                         $('#point-map-items tbody input[type="checkbox"]:checked').trigger('click');
                     }
-                    updateDataTableSelectAllCtrl(datatable);
+                    updateDataTableSelectAllCtrl(datatable, view_type);
                     // Prevent click event from propagating to parent
                     //e.stopPropagation();
                 });
 
-                // Handle table draw event
-                datatable.on('draw', function(){
-                  // Update state of "Select all" control
-                    updateDataTableSelectAllCtrl(datatable);
-                });
             }
 
         };
 
-        function updateDataTableSelectAllCtrl(table){
-           var $table             = table.table().node();
-           var $chkbox_all        = $('tbody input[type="checkbox"]', $table);
-           var $chkbox_checked    = $('tbody input[type="checkbox"]:checked', $table);
-           //var chkbox_select_all  = $('thead input[name="select_all"]', $table).get(0);
-           var chkbox_select_all = $('thead input[name="select_all"]')[0];
-           // If none of the checkboxes are checked
-           if($chkbox_checked.length === 0){
+        var updateDataTableSelectAllCtrl = function(table, view_type) {
+            var $table             = table.table().node();
+            var $chkbox_all        = $('tbody input[type="checkbox"]', $table);
+            var $chkbox_checked    = $('tbody input[type="checkbox"]:checked', $table);
+            //var chkbox_select_all  = $('thead input[name="select_all"]', $table).get(0);
+
+            var select_all_id = "";
+            if (view_type == "point_map") {
+                select_all_id = "#point_select_all";
+            } else {
+                select_all_id = "#area_select_all";
+            }
+
+            var chkbox_select_all = $(select_all_id)[0];
+            //var chkbox_select_all  = $('thead input[name="select_all"]', $table);
+            // If none of the checkboxes are checked
+            if($chkbox_checked.length === 0){
                 chkbox_select_all.checked = false;
                 if('indeterminate' in chkbox_select_all){
                     chkbox_select_all.indeterminate = false;
                 }
 
             // If all of the checkboxes are checked
-           } else if ($chkbox_checked.length === $chkbox_all.length){
-               chkbox_select_all.checked = true;
-              if('indeterminate' in chkbox_select_all){
-                 chkbox_select_all.indeterminate = false;
-              }
+            } else if ($chkbox_checked.length === $chkbox_all.length){
+                chkbox_select_all.checked = true;
+                if('indeterminate' in chkbox_select_all){
+                    chkbox_select_all.indeterminate = false;
+                }
 
-           // If some of the checkboxes are checked
-           } else {
-              chkbox_select_all.checked = true;
-              if('indeterminate' in chkbox_select_all){
-                 chkbox_select_all.indeterminate = true;
-              }
-           }
-        }
+            // If some of the checkboxes are checked
+            } else {
+                chkbox_select_all.checked = true;
+                if('indeterminate' in chkbox_select_all){
+                    chkbox_select_all.indeterminate = true;
+                }
+            }
+        };
 
 
+        var highlightOrHideBox = function(box, option) {
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+            var view_type = "area_map";
+            var rectBounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(southlimit, westlimit),
+                    new google.maps.LatLng(northlimit, eastlimit)
+            );
 
+            var found = 0;
+            shade_rects.forEach(function(rect){
+                var shade_rect_bound = new google.maps.LatLngBounds();
+                calShadeRectBounds(rect, shade_rect_bound);
+                if (rectBounds.equals(shade_rect_bound) && found == 0) {
+                    if (option == 0) {
+                        rect.setOptions({fillOpacity: 0.35});
+                    } else {
+                        rect.setOptions({fillOpacity: 0});
+                    }
+                    found = 1;
+                }
+            });
+        };
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -1297,16 +1348,17 @@
                 setMarkers(filtered_results);
                 buildMapItemsTableDataforMarkers(filtered_results, map_resources, null);
                 var map_items_table = $('#point-map-items').DataTable();
-
+                map_items_table.clear();
+                map_items_table.rows.add(map_resources);
+                map_items_table.draw();
             } else {
                 setBoxes(filtered_results);
                 buildMapItemsTableData(filtered_results, map_resources, null);
                 var map_items_table = $('#area-map-items').DataTable();
-
+                map_items_table.clear();
+                map_items_table.rows.add(map_resources);
+                map_items_table.draw();
             }
-            // map_items_table.clear();
-            // map_items_table.rows.add(map_resources);
-            // map_items_table.draw();
             current_map_bounds = maps[view_type].getBounds();
             current_map_center = maps[view_type].getCenter();
             current_map_zoom = maps[view_type].getZoom();
@@ -1690,7 +1742,6 @@
                         });
                     } else {
                         if (maps["point_map"] != null && map_set) {
-
                             var current_map_bounds1 = maps["point_map"].getBounds();
                             var current_map_center1 = maps["point_map"].getCenter();
                             var current_map_zoom1 = maps["point_map"].getZoom();
