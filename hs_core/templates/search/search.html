@@ -814,11 +814,6 @@
                         showBoxMarker(data[0], false);
                     }
                 });
-                // $('#area-map-item tbody').on('click', 'tr', function () {
-                //     var data = datatable.row(this).data();
-                //     console.log(data[0]);
-                //     $(this).toggleClass('selected');
-                // });
             } else {
                 $('#point-map-items tbody').on('click', '[role="button"]', function () {
                     var data = datatable.row($(this).parents('tr')).data();
