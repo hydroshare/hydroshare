@@ -549,7 +549,7 @@ def copy_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         new_resource = hydroshare.create_empty_resource(shortkey, user, action='copy')
-        new_resource = hydroshare.copy_resource(res, new_resource, requesting_user=request.user)
+        new_resource = hydroshare.copy_resource(res, new_resource)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
@@ -910,9 +910,10 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
     return context
 
 

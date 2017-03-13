@@ -478,7 +478,7 @@ def create_empty_resource(pk, user, action='version'):
     return new_resource
 
 
-def copy_resource(ori_res, new_res, requesting_user=None):
+def copy_resource(ori_res, new_res):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object
     as a copy of the ori_res object
@@ -486,16 +486,12 @@ def copy_resource(ori_res, new_res, requesting_user=None):
         ori_res: the original resource that is to be copied.
         new_res: the new_res to be populated with metadata and content from the original resource
         as a copy of the original resource.
-        requesting_user: the requesting user which is needed to set quotaUserName AVU on target
-        resource collection. The default is None in which case the quotaUserName will just be
-        copied over from source resource collection
     Returns:
         the new resource copied from the original resource
     """
 
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private=True,
-                                       requesting_user=requesting_user)
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private=True)
 
     utils.copy_and_create_metadata(ori_res, new_res)
 
@@ -533,8 +529,7 @@ def create_new_version_resource(ori_res, new_res, user):
         set_to_private = True
 
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private,
-                                       requesting_user=user)
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     utils.copy_and_create_metadata(ori_res, new_res)

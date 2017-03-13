@@ -24,7 +24,7 @@ class Command(BaseCommand):
             for uq in uqs:
                 qmsg = QuotaMessage.objects.first()
                 msg_template_str = '{}{}\n\n'.format(qmsg.warning_content_prepend,
-                                                 qmsg.content)
+                                                     qmsg.content)
                 msg_str += msg_template_str.format(used=uq.used_value,
                                                    unit=uq.unit,
                                                    allocated=uq.allocated_value,

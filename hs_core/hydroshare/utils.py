@@ -433,17 +433,13 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     istorage.copyFiles(src_file, tgt_file)
 
 
-def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False,
-                                 requesting_user=None):
+def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     """
     Copy resource files and AVUs from source resource to target resource including both
     on iRODS storage and on Django database
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
     :param set_to_private: set target resource to private if True. The default is False.
-    :param requesting_user: the requesting user which is needed to set quotaUserName AVU on target
-        resource collection. Default is None in which case the quotaUserName AVU will just be
-        copied over from the source resource collection
     :return:
     """
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType', 'quotaUserName']
@@ -463,9 +459,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False,
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
-            elif avu_name == 'quotaUserName' and requesting_user:
-                istorage.setAVU(dest_coll, avu_name, requesting_user.username)
-            else:
+            # quotaUserName is already set as part of precursor action create_empty_resource()
+            # and should be retained rather than being copied over from the original resource
+            elif avu_name != 'quotaUserName':
                 istorage.setAVU(dest_coll, avu_name, value)
 
     # link copied resource files to Django resource model
