@@ -4500,6 +4500,11 @@ div#fb-file-operations-controls {
 	right:0;
 }
 
+.discover-map-table {
+	width:100%;
+	max-height:200px;
+}
+
 .ui-dialog {
 	-webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);

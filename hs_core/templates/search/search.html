@@ -330,7 +330,16 @@
 
                     <div class="resetZoom"></div>
                     <br />
-                    <table class="table-hover table-striped" id="point-map-items" style="width:100%; max-height:200px">
+                    <table class="table-hover table-striped discover-map-table" id="point-map-items" style="width:100%; max-height:200px">
+                        <thead>
+                            <tr>
+                                <th><input name="select_all" type="checkbox"></th>
+                                <th>Show on Map</th>
+                                <th>Resource Type</th>
+                                <th>Title</th>
+                                <th>First Author</th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
                 <div id="map-area-view" class="tab-pane fade">
@@ -356,7 +365,16 @@
 
                             <div class="resetZoom"></div>
                             <br />
-                            <table class="table-hover table-striped" id="area-map-items" style="width:100%; max-height:200px">
+                            <table class="table-hover table-striped discover-map-table" id="area-map-items" style="width:100%; max-height:200px">
+                                <thead>
+                                    <tr>
+                                        <th><input name="select_all" type="checkbox"></th>
+                                        <th>Show on Map</th>
+                                        <th>Resource Type</th>
+                                        <th>Title</th>
+                                        <th>First Author</th>
+                                    </tr>
+                                </thead>
                             </table>
                         </div>
                     </div>
@@ -392,6 +410,7 @@
         var markers_cluster = null;
         var info_window = null;
         var shade_rects = [];
+        var point_rows_selected = [];
 
         var initMap = function(json_results, view_type) {
             var map_view_option = "";
@@ -685,7 +704,7 @@
                         author_name = resource.first_author;
                     }
                     var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
-                    var map_resource = [resource, resource.resource_type, resource_title, author_name];
+                    var map_resource = [resource, resource, resource.resource_type, resource_title, author_name];
                     map_resources.push(map_resource);
                 }
             });
@@ -693,6 +712,7 @@
         };
 
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
+            var rowId = 0;
             resources_list.forEach(function(resource) {
                 // var northlimit = parseFloat(resource.northlimit);
                 // var southlimit = parseFloat(resource.southlimit);
@@ -702,13 +722,15 @@
                 // var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
                 // var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
                 var author_name = "";
+                rowId++;
+
                 if (resource.first_author_description) {
                     author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
                 } else {
                     author_name = resource.first_author;
                 }
                 var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
-                var map_resource = [resource, resource.resource_type, resource_title, author_name];
+                var map_resource = [rowId.toString(), resource, resource.resource_type, resource_title, author_name];
                 map_resources.push(map_resource);
             });
         };
@@ -733,26 +755,49 @@
                 "language": {
                     "emptyTable": "Click on map to explore resource data."
                 },
-                columns: [
-                    { title: "Show on Map"},
-                    { title: "Resource Type" },
-                    { title: "Title" },
-                    { title: "First Author" }
-                ],
-                "columnDefs": [ {
-                    "targets": [0],
+        //                 columnDefs: [ {
+        //     orderable: false,
+        //     className: 'select-checkbox',
+        //     targets:   0
+        // } ],
+                // columns: [
+                //     { title: "<input id='point_select_all_items' name='select_all' value='1' type='checkbox'>"},
+                //     { title: "Show on Map"},
+                //     { title: "Resource Type" },
+                //     { title: "Title" },
+                //     { title: "First Author" }
+                // ],
+                "columnDefs": [
+                {
+                    'targets': [0],
+                    'searchable':false,
+                    'orderable':false,
+                    'width':"1%",
+                    'data': null,
+                    'className': "dt-body-center",
+                    //"defaultContent" : '<input type="checkbox">',
+                    // 'defaultContent': function (data, type, full, meta){
+                    //     return '<input type="checkbox">';
+                    // }
+                    'render': function (data, type, full, meta){
+                        return '<input type="checkbox">';
+                    }
+                },
+                {
+                    "targets": [1],
                     "width": "90px",
                     "data": null,
                     "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
                 },
                 {
-                   "targets": [1],     // Resource type
+                   "targets": [2],     // Resource type
                     "width": "110px"
                 }]
             });
             if (view_type == "area_map") {
                 setMapFunctions(mapItems, "area_map");
             } else {
+
                 setMapFunctions(mapItems, "point_map");
             }
         };
@@ -776,9 +821,100 @@
                     showPointMarker(data[0]);
                     //console.log(data[0]);
                 });
+
+                // Handle click on checkbox
+                $('#point-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
+                    var $row = $(this).closest('tr');
+
+                    console.log($row);
+                    // Get row data
+                    var data = datatable.row($row).data();
+
+                    // Get row ID
+                    var rowId = data[0];
+
+                    // // Determine whether row ID is in the list of selected row IDs
+                    // var index = $.inArray(rowId, point_rows_selected);
+
+                    // // If checkbox is checked and row ID is not in list of selected row IDs
+                    // if(this.checked && index === -1){
+                    //     console.log("pushed");
+                    //     point_rows_selected.push(rowId);
+
+                    // // Otherwise, if checkbox is not checked and row ID is in list of selected row IDs
+                    // } else if (!this.checked && index !== -1){
+                    //     point_rows_selected.splice(index, 1);
+                    // }
+
+                    // if(this.checked){
+                    //     $row.addClass('selected');
+                    // } else {
+                    //     $row.removeClass('selected');
+                    // }
+
+                    // Update state of "Select all" control
+                    updateDataTableSelectAllCtrl(datatable);
+
+                    // Prevent click event from propagating to parent
+                    //e.stopPropagation();
+                });
+
+                // Handle click on table cells with checkboxes
+
+
+                // Handle click on "Select all" control
+                $('thead input[name="select_all"]', datatable.table().container()).on('click', function(e){
+                    console.log("select all");
+                    if(this.checked){
+                        $('#point-map-items tbody input[type="checkbox"]:not(:checked)').trigger('click');
+                    } else {
+                        $('#point-map-items tbody input[type="checkbox"]:checked').trigger('click');
+                    }
+                    updateDataTableSelectAllCtrl(datatable);
+                    // Prevent click event from propagating to parent
+                    //e.stopPropagation();
+                });
+
+                // Handle table draw event
+                datatable.on('draw', function(){
+                  // Update state of "Select all" control
+                    updateDataTableSelectAllCtrl(datatable);
+                });
             }
 
         };
+
+        function updateDataTableSelectAllCtrl(table){
+           var $table             = table.table().node();
+           var $chkbox_all        = $('tbody input[type="checkbox"]', $table);
+           var $chkbox_checked    = $('tbody input[type="checkbox"]:checked', $table);
+           //var chkbox_select_all  = $('thead input[name="select_all"]', $table).get(0);
+           var chkbox_select_all = $('thead input[name="select_all"]')[0];
+           // If none of the checkboxes are checked
+           if($chkbox_checked.length === 0){
+                chkbox_select_all.checked = false;
+                if('indeterminate' in chkbox_select_all){
+                    chkbox_select_all.indeterminate = false;
+                }
+
+            // If all of the checkboxes are checked
+           } else if ($chkbox_checked.length === $chkbox_all.length){
+               chkbox_select_all.checked = true;
+              if('indeterminate' in chkbox_select_all){
+                 chkbox_select_all.indeterminate = false;
+              }
+
+           // If some of the checkboxes are checked
+           } else {
+              chkbox_select_all.checked = true;
+              if('indeterminate' in chkbox_select_all){
+                 chkbox_select_all.indeterminate = true;
+              }
+           }
+        }
+
+
+
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -1161,17 +1297,16 @@
                 setMarkers(filtered_results);
                 buildMapItemsTableDataforMarkers(filtered_results, map_resources, null);
                 var map_items_table = $('#point-map-items').DataTable();
-                map_items_table.clear();
-                map_items_table.rows.add(map_resources);
-                map_items_table.draw();
+
             } else {
                 setBoxes(filtered_results);
                 buildMapItemsTableData(filtered_results, map_resources, null);
                 var map_items_table = $('#area-map-items').DataTable();
-                map_items_table.clear();
-                map_items_table.rows.add(map_resources);
-                map_items_table.draw();
+
             }
+            // map_items_table.clear();
+            // map_items_table.rows.add(map_resources);
+            // map_items_table.draw();
             current_map_bounds = maps[view_type].getBounds();
             current_map_center = maps[view_type].getCenter();
             current_map_zoom = maps[view_type].getZoom();
