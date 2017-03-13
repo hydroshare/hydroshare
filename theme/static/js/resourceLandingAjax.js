@@ -1101,9 +1101,14 @@ function initializeDatePickers(){
 
     // Set stored dates
     $(".dateinput").each(function () {
-        var dateString = $(this).attr("data-date").split("-");
+        var dateString;
+        if($(this).attr('data-date')){
+            dateString = $(this).attr("data-date").split("/");
+        }
+        else{
+            dateString = $(this).attr("value").split("/");
+        }
         var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
-
         $(this).datepicker("setDate", pickerDate);
     });
 }
