@@ -4648,7 +4648,8 @@ div#fb-file-operations-controls {
     margin: 5px;
     width: 150px;
     height: 150px;
-    padding: 4px;
+	border: 2px solid transparent;
+	padding: 4px;
     text-align: center;
     overflow: hidden;
 	background-color: #FFF;

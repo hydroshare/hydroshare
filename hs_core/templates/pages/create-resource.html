@@ -580,19 +580,18 @@
                     this.on("addedfile", function (file) {
                         // Initialize tooltips
                         var template = $(file.previewElement);
-                       template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+                        template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
 
+                        // Set file type icon
                         var fileName = template.find(".dz-filename").text();
-
                         var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
-
                         if (fileIcons[fileTypeExt]) {
                             template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
                         }
                         else {
                             template.find(".file-type-icon").append(fileIcons.DEFAULT);
                         }
-                        
+
                         template.find("[data-toggle='tooltip']").tooltip();
 
                         if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
@@ -606,8 +605,7 @@
                     });
 
                     this.on("error", function (file, error) {
-                       var template = $(file.previewElement);
-                        template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
+                        var template = $(file.previewElement);
 
                         var error = template.find("span[data-dz-errormessage]").text();
 
@@ -615,9 +613,8 @@
                             $(template).attr("data-toggle", "tooltip");
                             $(template).attr("data-placement", "top");
                             $(template).attr("title", error);
+                            template.tooltip();
                         }
-
-                        $('[data-toggle="tooltip"]').tooltip();
                     });
 
                     this.on('sendingmultiple', function (data, xhr, formData) {
