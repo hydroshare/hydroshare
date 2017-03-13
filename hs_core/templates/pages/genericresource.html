@@ -1291,9 +1291,10 @@
                 for (var x = 0; x < $("#lst-tags-filetype").find(".tag > span").length; x++) {
                     if ($($("#lst-tags-filetype").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
                         exists = true;
+                        break;
                     }
                 }
-                if (exists){
+                if (exists) {
                     $("#id-keywords-filetype-msg").show();
                 }
                 else {
@@ -1305,7 +1306,7 @@
                 }
             }
 
-            if(existsNewKeywords){
+            if(existsNewKeywords) {
                 filetype_keywords_update_ajax_submit();
                 $("#txt-keyword-filetype").val("");  // Clear text input
             }

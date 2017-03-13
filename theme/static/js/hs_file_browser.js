@@ -305,9 +305,9 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if ($(this).hasClass("fb-file")){
+            if ($(this).hasClass("fb-file")) {
                 // check if this is a left mouse button click
-                if(e.which == 1){
+                if(e.which == 1) {
                     showFileTypeMetadata();
                 }
             }
