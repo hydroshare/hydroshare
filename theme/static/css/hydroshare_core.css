@@ -4538,6 +4538,7 @@ div#fb-file-operations-controls {
 	background-color: rgb(242, 242, 242);
 	padding: 12px;
 	min-height: 100%;
+	border: 2px solid transparent;
 }
 
 #resource-content .hs-dropzone-footer {
@@ -4632,7 +4633,6 @@ div#fb-file-operations-controls {
 	box-shadow: 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12), 0 2px 4px -1px rgba(0,0,0,.2);
 }
 
-
 #resource-content .resource-type-name {
     display: inline-block;
 }
@@ -4640,7 +4640,6 @@ div#fb-file-operations-controls {
 #btn-next-step, #btn-previous-step {
     width: 100px;
 }
-
 
 #resource-content #dz-container .dz-details {
     display: inline-block;
