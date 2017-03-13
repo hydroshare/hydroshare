@@ -143,7 +143,13 @@ class UserQuota(models.Model):
     # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
     # categorized as hydroshare_internal in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quotas')
+    user = models.ForeignKey(User,
+                             editable=False,
+                             null=False,
+                             on_delete=models.CASCADE,
+                             related_name='quotas',
+                             related_query_name='quotas')
+
     allocated_value = models.BigIntegerField(default=20000)
     used_value = models.BigIntegerField(default=0)
     unit = models.CharField(max_length=10, default="MB")

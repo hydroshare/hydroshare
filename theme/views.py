@@ -16,6 +16,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils.http import int_to_base36
+from django.template.response import TemplateResponse
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -24,13 +25,14 @@ from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.models import UserProfile
+from theme.models import UserProfile, QuotaMessage
 
 from .forms import SignupForm
 
@@ -289,6 +291,34 @@ def send_verification_mail_for_email_update(request, user, new_email, verificati
     send_mail_template(subject, "email/%s" % verification_type,
                        settings.DEFAULT_FROM_EMAIL, new_email,
                        context=context)
+
+
+def login(request, template="accounts/account_login.html",
+          form_class=LoginForm, extra_context=None):
+    """
+    Login form - customized from Mezzanine login form so that quota warning message can be
+    displayed when the user is logged in.
+    """
+    form = form_class(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        login_msg = "Successfully logged in"
+        authenticated_user = form.save()
+        for uq in authenticated_user.quotas.all():
+            percent = uq.used_value*100/uq.allocated_value
+            if percent >= 90:
+                qmsg = QuotaMessage.objects.first()
+                msg_template_str = ' - {}{}'.format(qmsg.warning_content_prepend, qmsg.content)
+                login_msg += msg_template_str.format(used=uq.used_value,
+                                                     unit=uq.unit,
+                                                     allocated=uq.allocated_value,
+                                                     zone=uq.zone,
+                                                     percent=percent)
+        info(request, _(login_msg))
+        auth_login(request, authenticated_user)
+        return login_redirect(request)
+    context = {"form": form, "title": _("Log in")}
+    context.update(extra_context or {})
+    return TemplateResponse(request, template, context)
 
 
 def email_verify(request, new_email, uidb36=None, token=None):

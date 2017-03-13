@@ -196,27 +196,37 @@ def get_checksum(pk):
 def check_resource_files(files=()):
     """
     internally used method to check whether the uploaded files are within
-    the supported maximal size limit
+    the supported maximal size limit. Also returns sum size of all files for
+    quota check purpose if all files are within allowed size limit
 
     Parameters:
     files - list of Django File or UploadedFile objects to be attached to the resource
-    Returns:    True if files are supported; otherwise, returns False
+    Returns: (status, sum_size) tuple where status is True if files are within FILE_SIZE_LIMIT
+             and False if not, and sum_size is the size summation over all files if status is
+             True, and -1 if status is False
     """
+    sum = 0
     for file in files:
         if not isinstance(file, UploadedFile):
             # if file is already on the server, e.g., a file transferred directly from iRODS,
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
+            if hasattr(file, '_size'):
+                sum += file._size
+            else:
+                sum += os.stat(file).st_size
             continue
         if hasattr(file, '_size'):
+            sum += file._size
             if file._size > FILE_SIZE_LIMIT:
                 # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return False
+                return (False, -1)
         else:
+            sum += os.stat(file).st_size
             if os.stat(file).st_size > FILE_SIZE_LIMIT:
                 # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return False
-    return True
+                return (False, -1)
+    return (True, sum)
 
 
 def check_resource_type(resource_type):

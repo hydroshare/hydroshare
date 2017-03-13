@@ -29,6 +29,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+from theme.models import QuotaMessage
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,10 @@ class ResourceFileSizeException(Exception):
 
 
 class ResourceFileValidationException(Exception):
+    pass
+
+
+class QuotaException(Exception):
     pass
 
 
@@ -440,6 +445,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
     :param set_to_private: set target resource to private if True. The default is False.
+    :param requesting_user: the requesting user which is needed to set quotaUserName AVU on target
+        resource collection. Default is None in which case the quotaUserName AVU will just be
+        copied over from the source resource collection
     :return:
     """
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType', 'quotaUserName']
@@ -460,7 +468,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
             # quotaUserName is already set as part of precursor action create_empty_resource()
-            # and should be retained rather than being copied over from the original resource
+
             elif avu_name != 'quotaUserName':
                 istorage.setAVU(dest_coll, avu_name, value)
 
@@ -636,9 +644,11 @@ def raise_file_size_exception():
 
 def validate_resource_file_size(resource_files):
     from .resource import check_resource_files
-    valid = check_resource_files(resource_files)
+    (valid, size) = check_resource_files(resource_files)
     if not valid:
         raise_file_size_exception()
+    # if no exception, return the total size of all files
+    return size
 
 
 def validate_resource_file_type(resource_cls, files):
@@ -681,18 +691,35 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
+    resource_cls = check_resource_type(resource_type)
+    size = 0
+    if len(files) > 0:
+        size = validate_resource_file_size(files)
+        validate_resource_file_count(resource_cls, files)
+        validate_resource_file_type(resource_cls, files)
+
+    if requesting_user:
+        # validate it is within quota hard limit
+        uq = requesting_user.quotas.filter(zone='hydroshare_internal').first()
+        if uq:
+            used_size = uq.used_value + size
+            if used_size >= uq.allocated_value:
+                qmsg = QuotaMessage.objects.first()
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=used_size,
+                                                   unit=uq.unit,
+                                                   allocated=uq.allocated_value,
+                                                   zone=uq.zone,
+                                                   percent=uq.used_value * 100 / uq.allocated_value)
+                raise QuotaException(msg_str)
+
     if not resource_title:
         resource_title = 'Untitled resource'
     else:
         resource_title = resource_title.strip()
         if len(resource_title) == 0:
             resource_title = 'Untitled resource'
-
-    resource_cls = check_resource_type(resource_type)
-    if len(files) > 0:
-        validate_resource_file_size(files)
-        validate_resource_file_count(resource_cls, files)
-        validate_resource_file_type(resource_cls, files)
 
     if not metadata:
         metadata = []
@@ -826,9 +853,25 @@ def get_party_data_from_user(user):
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   fed_res_file_names='', **kwargs):
     resource_cls = resource.__class__
-    validate_resource_file_size(files)
-    validate_resource_file_type(resource_cls, files)
-    validate_resource_file_count(resource_cls, files, resource)
+    if len(files) > 0:
+        size = validate_resource_file_size(files)
+        if user:
+            # validate it is within quota hard limit
+            uq = user.quotas.filter(zone='hydroshare_internal').first()
+            if uq:
+                used_size = uq.used_value + size
+                if used_size >= uq.allocated_value:
+                    qmsg = QuotaMessage.objects.first()
+                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                         qmsg.content)
+                    msg_str = msg_template_str.format(used=used_size,
+                                                      unit=uq.unit,
+                                                      allocated=uq.allocated_value,
+                                                      zone=uq.zone,
+                                                      percent=uq.used_value * 100 / uq.allocated_value)
+                    raise QuotaException(msg_str)
+        validate_resource_file_type(resource_cls, files)
+        validate_resource_file_count(resource_cls, files, resource)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
