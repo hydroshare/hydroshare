@@ -21,60 +21,66 @@ function getFolderTemplateInstance(folderName) {
 function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_id, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
 
-    var iconTemplate;
+    var fileIcons = {};
+    fileIcons.PDF =
+            "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
 
-    if (fileName.lastIndexOf(".")) {
-        if (fileTypeExt.toUpperCase() == "PDF") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-pdf-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-zip-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-word-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-audio-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-movie-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-image-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "TXT") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-text-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-powerpoint-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
-            iconTemplate = "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "SQLITE") {
-            iconTemplate = "<span class='fa-stack fb-stack fb-stack-database'>" +
+    fileIcons.XLS = fileIcons.XLT = fileIcons.XML = fileIcons.CSV =
+            "<span class='fb-file-icon fa " + "fa-file-excel-o" + "'></span>";
+
+    fileIcons.ZIP = fileIcons.ZIP = fileIcons.RAR5 =
+            "<span class='fb-file-icon fa " + "fa-file-zip-o" + "'></span>";
+
+    fileIcons.DOC = fileIcons.DOCX =
+            "<span class='fb-file-icon fa " + "fa-file-word-o" + "'></span>";
+
+    fileIcons.MP3 = fileIcons.WAV = fileIcons.WMA =
+            "<span class='fb-file-icon fa " + "fa-file-audio-o" + "'></span>";
+
+    fileIcons.MP4 = fileIcons.MOV = fileIcons.WMV =
+            "<span class='fb-file-icon fa " + "fa-file-movie-o" + "'></span>";
+
+    fileIcons.PNG = fileIcons.JPG = fileIcons.JPEG = fileIcons.GIF = fileIcons.TIF = fileIcons.BMP =
+            "<span class='fb-file-icon fa " + "fa-file-image-o" + "'></span>";
+
+    fileIcons.TXT =
+            "<span class='fb-file-icon fa " + "fa-file-text-o" + "'></span>";
+
+    fileIcons.PPT = fileIcons.PPTX =
+            "<span class='fb-file-icon fa " + "fa-file-powerpoint-o" + "'></span>";
+
+    fileIcons.JS = fileIcons.PY = fileIcons.PHP = fileIcons.JAVA = fileIcons.CS =
+            "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
+
+    fileIcons.SQLITE =
+            "<span class='fa-stack fb-stack fb-stack-database'>" +
                 "<i class='fa fa-file-o fa-stack-2x '></i>" +
                 "<i class='fa fa-database fa-stack-1x'></i>" +
-                "</span>";
-        }
-        else if (fileTypeExt.toUpperCase() == "NC") {
-            iconTemplate = "<span class='fa-stack fb-stack fb-stack-netcdf'>" +
+            "</span>";
+
+    fileIcons.NC =
+            "<span class='fa-stack fb-stack fb-stack-netcdf'>" +
                 "<i class='fa fa-file-o fa-stack-2x '></i>" +
                 "<i class='fa fa-th-large fa-stack-1x'></i>" +
-                "</span>";
+            "</span>";
+
+    fileIcons.DEFAULT =
+            "<span class='fb-file-icon fa fa-file-o'></span>";
+
+    var iconTemplate;
+
+    // if (fileName.lastIndexOf(".")) {
+        if (fileIcons[fileTypeExt.toUpperCase()]) {
+            iconTemplate = fileIcons[fileTypeExt.toUpperCase()];
         }
         else {
-            // Default file icon for other file types
-            iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
+            iconTemplate = fileIcons.DEFAULT;
         }
-    }
-    else {
-        // Default file icon in case of no file types
-        iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
-    }
+    // }
+    // else {
+    //     // Default file icon in case of no file types
+    //     iconTemplate = fileIcons.DEFAULT;
+    // }
 
     if (logical_type.length > 0){
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Logical Type: " + logical_type;
