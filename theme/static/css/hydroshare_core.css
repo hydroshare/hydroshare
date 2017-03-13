@@ -4522,7 +4522,7 @@ div#fb-file-operations-controls {
 }
 
 .hs-dropzone-wrapper {
-	height: 325px;
+	height: 350px;
 	border: 1px solid #DDD;
 	overflow: auto;
 	resize: vertical;
