@@ -971,7 +971,7 @@ function addFileTypeExtraMetadata(){
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
                 BindKeyValueFileTypeClickHandlers();
-                
+
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
@@ -1129,14 +1129,21 @@ function initializeDatePickers(){
     // Set stored dates
     $(".dateinput").each(function () {
         var dateString;
+        var pickerDate = null;
         if($(this).attr('data-date')){
-            dateString = $(this).attr("data-date").split("/");
+            // resource temporal date picker
+            dateString = $(this).attr("data-date").split("-");
+            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
         }
         else{
-            dateString = $(this).attr("value").split("/");
+            // file type temporal date picker
+            if($(this).attr('value')){
+                pickerDate = new Date($(this).attr("value"));
+            }
         }
-        var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
-        $(this).datepicker("setDate", pickerDate);
+        if(pickerDate != null){
+            $(this).datepicker("setDate", pickerDate);
+        }
     });
 }
 
