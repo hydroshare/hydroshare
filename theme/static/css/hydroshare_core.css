@@ -4654,8 +4654,13 @@ div#fb-file-operations-controls {
 	background-color: #FFF;
 }
 
+#resource-content #dz-container .dz-size {
+	color: #478ecc;
+}
+
 #resource-content #dz-container .dz-filename {
 	font-size: 12px;
+	font-weight: bold;
 	max-height: 50px;
 	line-height: 16px;
 	margin-top: 5px;
