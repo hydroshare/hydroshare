@@ -4522,7 +4522,7 @@ div#fb-file-operations-controls {
 }
 
 .hs-dropzone-wrapper {
-	height: 370px;
+	height: 325px;
 	border: 1px solid #DDD;
 	overflow: auto;
 	resize: vertical;
@@ -4644,9 +4644,9 @@ div#fb-file-operations-controls {
 #resource-content #dz-container .dz-details {
     display: inline-block;
     border-radius: 4px;
-    margin: 5px;
-    width: 150px;
-    height: 150px;
+    margin: 10px;
+    width: 130px;
+    height: 130px;
 	border: 2px solid transparent;
 	padding: 4px;
     text-align: center;
@@ -4656,9 +4656,9 @@ div#fb-file-operations-controls {
 
 #resource-content #dz-container .dz-filename {
 	font-size: 12px;
-	max-height: 70px;
+	max-height: 50px;
 	line-height: 16px;
-	margin-top: 8px;
+	margin-top: 5px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	color: #555;
