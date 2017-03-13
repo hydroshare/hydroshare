@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -624,7 +625,13 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 def set_resource_flag_public(request, pk):
     http_request = request._request
     http_request.data = request.data.copy()
-    return set_resource_flag(http_request, pk)
+    response = set_resource_flag(http_request, pk)
+
+    messages = get_messages(request)
+    for message in messages:
+        if(message.tags == "error"):
+            return HttpResponse(message, status=400)
+    return response
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""
