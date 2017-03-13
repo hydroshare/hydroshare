@@ -970,6 +970,8 @@ function addFileTypeExtraMetadata(){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                BindKeyValueFileTypeClickHandlers();
+                
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
@@ -1018,6 +1020,7 @@ function updateFileTypeExtraMetadata(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
+                BindKeyValueFileTypeClickHandlers();
             }
             else {
                 $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -1061,6 +1064,7 @@ function deleteFileTypeExtraMetadata(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
+                BindKeyValueFileTypeClickHandlers();
             }
             else {
                 $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -1078,6 +1082,29 @@ function deleteFileTypeExtraMetadata(form_id){
     });
 }
 
+function BindKeyValueFileTypeClickHandlers(){
+    // bind key value add modal form OK button click event
+    var keyvalue_add_modal_form = $("#fileTypeMetaDataTab").find('#add-keyvalue-filetype-metadata');
+    keyvalue_add_modal_form.find("button.btn-primary").click(function () {
+        addFileTypeExtraMetadata();
+    });
+
+    // bind all key value edit modal forms OK button click event
+    $("#fileTypeMetaDataTab").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
+        var formId = $(this).attr('id');
+        $(this).find("button.btn-primary").click(function (){
+            updateFileTypeExtraMetadata(formId);
+        })
+    });
+
+    // bind all key value delete modal forms Delete button click event
+    $("#fileTypeMetaDataTab").find('[id^=delete-keyvalue-filetype-metadata]').each(function(){
+        var formId = $(this).attr('id');
+        $(this).find("button.btn-danger").click(function (){
+            deleteFileTypeExtraMetadata(formId);
+        })
+    });
+}
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
@@ -1202,4 +1229,23 @@ function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
     $("#id_end").val(temporalCoverage.end);
     $("#id-coverage-temporal").find("button.btn-primary").hide();
+}
+
+function setFileTypeMetadataFormsClickHandlers(){
+    $("#fileTypeMetaDataTab").find('form').each(function () {
+        var formId = $(this).attr('id');
+        if(formId === "add-keyvalue-filetype-metadata"){
+            $(this).find("button.btn-primary").click(function () {
+                addFileTypeExtraMetadata();
+          });
+        }
+        else {
+            if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype"){
+              $(this).find("button.btn-primary").click(function () {
+                metadata_update_ajax_submit(formId);
+              });
+            }
+        }
+    });
+    BindKeyValueFileTypeClickHandlers();
 }

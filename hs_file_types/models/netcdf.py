@@ -87,9 +87,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                          "col-md-2 col-xs-6"):
                                 button("Save changes", type="button",
                                        cls="btn btn-primary pull-right",
-                                       style="display: none;",
-                                       onclick="metadata_update_ajax_submit("
-                                               "'id-origcoverage-file-type'); return false;")
+                                       style="display: none;")
 
                 with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
                     with form(id="id-spatial-coverage-file-type",
@@ -101,9 +99,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                          "col-md-2 col-xs-6"):
                                 button("Save changes", type="button",
                                        cls="btn btn-primary pull-right",
-                                       style="display: none;",
-                                       onclick="metadata_update_ajax_submit("
-                                               "'id-spatial-coverage-file-type'); return false;")
+                                       style="display: none;")
 
             with div(cls="pull-left col-sm-12"):
                 # id has to be variables to get the vertical scrollbar
@@ -119,9 +115,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
                                                      "col-md-2 col-xs-6"):
                                             button("Save changes", type="button",
                                                    cls="btn btn-primary pull-right",
-                                                   style="display: none;",
-                                                   onclick="metadata_update_ajax_submit({{ "
-                                                           "form.form_id_button }}); return false;")
+                                                   style="display: none;")
                         div("{% endfor %}")
 
             self.get_ncdump_html()

@@ -449,6 +449,8 @@ function showFileTypeMetadata(){
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields(logical_type);
+         setFileTypeMetadataFormsClickHandlers();
+         
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
          if (logical_type === "NetCDFLogicalFile") {
