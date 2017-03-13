@@ -410,7 +410,7 @@ $(document).ready(function () {
         return txtArea || (e.keyCode || e.which || e.charCode || 0) !== 13;
     });
 
-    // Submit for citation
+    // Submit for metadata update forms
     $(".btn-form-submit").click(function () {
         var formID = $(this).closest("form").attr("id");
         metadata_update_ajax_submit(formID);
