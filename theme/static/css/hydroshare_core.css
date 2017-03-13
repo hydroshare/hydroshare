@@ -4161,7 +4161,7 @@ form#covereage-search-fields {
 }
 
 .fb-view-grid .fb-stack-netcdf .fa-th-large, .dz-details .fb-stack-netcdf .fa-th-large {
-	top: 7px;
+	margin-top: 6px;
 	font-size: 14px;
 }
 
