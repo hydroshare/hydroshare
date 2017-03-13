@@ -567,13 +567,19 @@
                 geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
             });
 
-            // google.maps.event.addListener(maps[view_type],'click',function(e){
-            //     var map_items_table = $('#area-map-items').DataTable();
-            //     map_items_table.clear().draw();
-            //     shade_rects.forEach(function(rect){
-            //         rect.setOptions({fillOpacity: 0});
+            // if (view_type == "area_map") {
+            //     google.maps.event.addListener(maps[view_type],'click',function(e){
+            //         var map_items_table = $('#area-map-items').DataTable();
+            //         map_items_table.clear().draw();
+            //         shade_rects.forEach(function(box){
+            //             var rect = box.rect;
+            //             if (!box.checked){
+            //                 rect.setOptions({fillOpacity: 0});
+            //             }
+            //         });
             //     });
-            // });
+            // }
+
         };
 
         var setMarkers = function(json_results) {
