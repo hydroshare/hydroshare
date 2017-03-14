@@ -1099,11 +1099,21 @@ table.info-table {
 
 #netcdf-header-info {
     margin-bottom: 20px;
-    border: 1px solid #ddd;
-    width: 100%;
-	padding: 10px;
+    padding: 32px;
+    background-color: #FFF;
+	-webkit-box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+	-moz-box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
 }
 
+.hs-doc-preview {
+	background: #f5f5f5;
+    border: 1px solid #DDD;
+    padding: 32px;
+    height: 300px;
+    overflow: auto;
+    resize: vertical;
+}
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
 	box-shadow: none;
 }
@@ -4126,6 +4136,10 @@ form#covereage-search-fields {
 	color: rgb(0, 170, 163);
 }
 
+.fb-stack-netcdf {
+	color: #244960;
+}
+
 .fb-view-grid .fb-stack {
 	height: 32px;
 }
@@ -4147,6 +4161,16 @@ form#covereage-search-fields {
 }
 
 .fb-view-list .fb-stack-database .fa-database {
+	font-size: 10px;
+	top: -4px;
+}
+
+.fb-view-grid .fb-stack-netcdf .fa-th-large {
+	top: 7px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-netcdf .fa-th-large {
 	font-size: 10px;
 	top: -4px;
 }

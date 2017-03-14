@@ -370,12 +370,18 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "hs_core.robots.RobotFilter",
     "hs_tracking.middleware.Tracking",
-    'security.middleware.XssProtectMiddleware',
-    'security.middleware.ContentSecurityPolicyMiddleware',
-    'security.middleware.ContentNoSniff',
-    'security.middleware.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware'
 )
+
+# security settings
+USE_SECURITY = False
+if USE_SECURITY:
+    MIDDLEWARE_CLASSES += (
+        'security.middleware.XssProtectMiddleware',
+        'security.middleware.ContentSecurityPolicyMiddleware',
+        'security.middleware.ContentNoSniff',
+        'security.middleware.XFrameOptionsMiddleware',
+        'django.middleware.security.SecurityMiddleware',
+    )
 
 # Store these package names here as they may change in the future since
 # at the moment we are using custom forks of them.
@@ -678,5 +684,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 
 # Cookie Stuff
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = USE_SECURITY
+CSRF_COOKIE_SECURE = USE_SECURITY

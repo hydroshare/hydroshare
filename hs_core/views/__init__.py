@@ -199,6 +199,28 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    res.extra_metadata = post_data
+
+    is_update_success = True
+
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
+
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     """This function is normally for adding/creating new resource level metadata elements.
@@ -521,6 +543,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         content_type="application/json"
         )
 
+
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -538,6 +561,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
     request.session['just_created'] = True
     request.session['just_copied'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
+@api_view(['POST'])
+def copy_resource_public(request, pk):
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
@@ -583,6 +612,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     # go to resource landing page
     request.session['just_created'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
+@api_view(['POST'])
+def create_new_version_resource_public(request, pk):
+    redirect = create_new_version_resource(request, pk)
+    return HttpResponse(redirect.url.split('/')[2], status=202)
 
 
 def publish(request, shortkey, *args, **kwargs):
