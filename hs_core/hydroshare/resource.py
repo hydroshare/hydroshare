@@ -212,20 +212,30 @@ def check_resource_files(files=()):
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
             if hasattr(file, '_size'):
-                sum += file._size
+                sum += int(file._size)
+            elif hasattr(file, 'size'):
+                sum += int(file.size)
             else:
-                sum += os.stat(file).st_size
+                try:
+                    size = os.stat(file).st_size
+                except (TypeError, OSError):
+                    size = 0
+                sum += size
             continue
-        if hasattr(file, '_size'):
-            sum += file._size
-            if file._size > FILE_SIZE_LIMIT:
-                # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return (False, -1)
+        if hasattr(file, '_size') and file._size is not None:
+            size = int(file._size)
+        elif hasattr(file, 'size') and file.size is not None:
+            size = int(file.size)
         else:
-            sum += os.stat(file).st_size
-            if os.stat(file).st_size > FILE_SIZE_LIMIT:
-                # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return (False, -1)
+            try:
+                size = int(os.stat(file.name).st_size)
+            except (TypeError, OSError):
+                size = 0
+        sum += size
+        if size > FILE_SIZE_LIMIT:
+            # file is greater than FILE_SIZE_LIMIT, which is not allowed
+            return (False, -1)
+
     return (True, sum)
 
 
