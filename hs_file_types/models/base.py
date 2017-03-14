@@ -275,8 +275,6 @@ class AbstractFileMetaData(models.Model):
             dc_format = etree.SubElement(rdf_dataFile_Description, '{%s}format' % NAMESPACES['dc'])
             dc_format.text = res_file.mime_type
 
-            # TODO: check if we should include the file size here
-
         self.add_keywords_to_xml_container(rdf_Description)
         self.add_extra_metadata_to_xml_container(rdf_Description)
         for coverage in self.coverages.all():
@@ -567,7 +565,7 @@ class AbstractLogicalFile(models.Model):
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
     # this will be used for hsterms:dataType in resourcemetadata.xml
-    # each specific logical type needs to rest this field
+    # each specific logical type needs to reset this field
     data_type = "Generic data"
 
     class Meta:

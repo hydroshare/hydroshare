@@ -48,6 +48,8 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
     @property
     def original_coverage(self):
+        # There can be at most only one instance of type OriginalCoverage associated
+        # with this metadata object
         return self.ori_coverage.all().first()
 
     def get_html(self):
@@ -192,8 +194,12 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         return variable_formset
 
     def get_ncdump_html(self):
-        # ncdump text from the txt file
-        # the generated html used both in view and edit mode
+        """
+        Generates html code to display the contents of the ncdump text file. The generated html
+        is used for netcdf file type metadata view and edit modes.
+        :return:
+        """
+
         nc_dump_div = div()
         nc_dump_res_file = None
         for f in self.logical_file.files.all():
@@ -300,6 +306,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         :return:
         """
 
+        log = logging.getLogger()
+
         nc_res_file = ''
         txt_res_file = ''
         for f in self.files.all():
@@ -312,7 +320,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 txt_res_file = f
                 break
         if not nc_res_file:
-            raise ValidationError("No netcdf file exists for this logical file.")
+            msg = "No netcdf file exists for this logical file."
+            log.exception(msg)
+            raise ValidationError(msg)
 
         # get the file from irods to temp dir
         temp_nc_file = utils.get_file_from_irods(nc_res_file)
@@ -403,8 +413,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             # close nc dataset
             nc_dataset.close()
         except Exception as ex:
-            # TODO: log the error here
-            print(ex.message)
+            log.exception(ex.message)
             if os.path.exists(temp_nc_file):
                 shutil.rmtree(os.path.dirname(temp_nc_file))
             raise ex

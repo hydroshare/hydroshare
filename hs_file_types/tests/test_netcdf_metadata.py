@@ -36,7 +36,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
-            title='Test Raster File Metadata'
+            title='Test NetCDF File Type Metadata'
         )
 
         self.temp_dir = tempfile.mkdtemp()
@@ -386,7 +386,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # extract metadata from the tif file
         NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
-        # test renaming of files that are associated with raster LFO - which should raise exception
+        # test renaming of files that are associated with netcdf LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 2)
         src_path = 'data/contents/netcdf_valid/netcdf_valid.nc'
         tgt_path = "data/contents/netcdf_valid/netcdf_valid_1.nc"
@@ -434,7 +434,7 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
 
-        # trying to set this invalid tif file to geo raster file type should raise
+        # trying to set this invalid tif file to NetCDF file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
             NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
