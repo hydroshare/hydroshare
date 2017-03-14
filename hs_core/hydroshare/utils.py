@@ -708,10 +708,10 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                 msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                      qmsg.content)
                 msg_str = msg_template_str.format(used=used_size,
-                                                   unit=uq.unit,
-                                                   allocated=uq.allocated_value,
-                                                   zone=uq.zone,
-                                                   percent=uq.used_value * 100 / uq.allocated_value)
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=uq.used_value * 100 / uq.allocated_value)
                 raise QuotaException(msg_str)
 
     if not resource_title:
@@ -864,11 +864,12 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                     qmsg = QuotaMessage.objects.first()
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
+                    percent_val = uq.used_value * 100 / uq.allocated_value
                     msg_str = msg_template_str.format(used=used_size,
                                                       unit=uq.unit,
                                                       allocated=uq.allocated_value,
                                                       zone=uq.zone,
-                                                      percent=uq.used_value * 100 / uq.allocated_value)
+                                                      percent=percent_val)
                     raise QuotaException(msg_str)
         validate_resource_file_type(resource_cls, files)
         validate_resource_file_count(resource_cls, files, resource)
