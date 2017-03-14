@@ -34,10 +34,10 @@ class TestPublicResourceFlagsEndpoint(HSRESTTestCase):
         self.rtype = 'GenericResource'
         self.title = 'My Test resource'
         res_two = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title,
-                                       files=(self.file_one,),
-                                       metadata=metadata_dict)
+                                           self.user,
+                                           self.title,
+                                           files=(self.file_one,),
+                                           metadata=metadata_dict)
 
         self.pid = res.short_id
         self.pid_two = res_two.short_id
