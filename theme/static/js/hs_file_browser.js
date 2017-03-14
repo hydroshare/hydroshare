@@ -8,6 +8,8 @@ var pathLogIndex = 0;
 var isDragging = false;
 var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
 
+const MAX_FILE_SIZE = 1024; // MB
+
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
@@ -87,7 +89,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
         "<span class='fb-logical-file-type' data-logical-file-type=" + logical_type + ">" + logical_type + "</span>" +
-        "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
+        "<span class='fb-file-size' data-file-size=" + fileSize + ">" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
 
 function formatBytes(bytes) {
@@ -113,6 +115,8 @@ function updateSelectionMenuContext() {
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
+    var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
+
     if (selected.length > 1) {
         flagDisableRename = true; 
         flagDisableOpen = true;
@@ -120,9 +124,22 @@ function updateSelectionMenuContext() {
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableGetLink = true;
+        
+        for (var i = 0; i < selected.length; i++) {
+            var size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
+            if (size > maxSize) {
+                flagDisableDownload = true;
+            }
+        }
+        $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
+
     }
     else if (selected.length == 1) {    // Unused for now
-
+        var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
+        if (size > maxSize) {
+            flagDisableDownload = true;
+            $("#fb-download-help").toggleClass("hidden", false);
+        }
     }
     else {
         flagDisableCut = true;
@@ -132,6 +149,8 @@ function updateSelectionMenuContext() {
         flagDisableDelete = true;
         flagDisableDownload = true;
         flagDisableGetLink = true;
+
+        $("#fb-download-help").toggleClass("hidden", true);
     }
 
     if (selected.hasClass("fb-file")) {
@@ -686,7 +705,7 @@ $(document).ready(function () {
             paramName: "files", // The name that will be used to transfer the file
             clickable: "#upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
-            maxFilesize: 1024, // MB
+            maxFilesize: MAX_FILE_SIZE, // MB
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
             autoProcessQueue: true,

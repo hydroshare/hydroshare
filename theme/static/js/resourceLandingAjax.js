@@ -1003,10 +1003,12 @@ function initializeDatePickers(){
 
     // Set stored dates
     $(".dateinput").each(function () {
-        var dateString = $(this).attr("data-date").split("-");
-        var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
-
-        $(this).datepicker("setDate", pickerDate);
+        var dateString = $(this).attr("data-date");
+        if (dateString) {
+            dateString = dateString.split("-");
+            var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
+            $(this).datepicker("setDate", pickerDate);
+        }
     });
 }
 
