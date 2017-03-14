@@ -1,7 +1,6 @@
 import os
 import tempfile
 import shutil
-from dateutil import parser
 
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
