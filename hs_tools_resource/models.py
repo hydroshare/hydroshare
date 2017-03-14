@@ -1,3 +1,7 @@
+import requests
+import base64
+import imghdr
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
@@ -230,9 +234,56 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
     value = models.CharField(max_length=1024, blank=True, default="")
+    data_url = models.TextField(blank=True, default="")
+
+    @classmethod
+    def _validate_tool_icon(cls, url):
+        try:
+            response = requests.get(url, verify=False)
+        except:
+            raise ValidationError("Failed to read data from given url.")
+        if response.status_code != 200:
+            raise ValidationError("Failed to read data from given url.")
+        image_size_mb = float(response.headers["content-length"])/1024.0/1024.0
+        if image_size_mb > 1:
+            raise ValidationError("Icon image size should be less than 1MB.")
+        image_type = imghdr.what(None, h=response.content)
+        if image_type not in ["png", "gif", "jpeg"]:
+            raise ValidationError("Supported icon image types are png, gif and jpeg")
+        base64_string = base64.b64encode(response.content)
+        data_url = "data:image/{image_type};base64,{base64_string}".\
+                   format(image_type=image_type, base64_string=base64_string)
+        return data_url
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'value' in kwargs:
+            url = kwargs["value"]
+            data_url = cls._validate_tool_icon(url)
+
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = url
+            new_meta_instance.data_url = data_url
+            new_meta_instance.save()
+            return new_meta_instance
+        else:
+            raise ValidationError("No value parameter was found in the **kwargs list")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = ToolIcon.objects.get(id=element_id)
+        if 'value' in kwargs:
+            url = kwargs["value"]
+            data_url = cls._validate_tool_icon(url)
+            meta_instance.value = url
+            meta_instance.data_url = data_url
+            meta_instance.save()
+        else:
+            raise ValidationError("No value parameter was found in the **kwargs list")
 
     class Meta:
-        # ToolVersion element is not repeatable
+        # ToolIcon element is not repeatable
         unique_together = ("content_type", "object_id")
 
 
