@@ -1234,7 +1234,9 @@ function updateResourceSpatialCoverage(spatialCoverage){
 // updates the UI temporal coverage elements
 function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
+    $("#id_start").attr('data-date', temporalCoverage.start);
     $("#id_end").val(temporalCoverage.end);
+    $("#id_end").attr('data-date', temporalCoverage.end);
     $("#id-coverage-temporal").find("button.btn-primary").hide();
 }
 
