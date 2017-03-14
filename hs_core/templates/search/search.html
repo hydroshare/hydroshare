@@ -825,13 +825,9 @@
                     var data = datatable.row($row).data();
                     if (this.checked) {
                         highlightOrHideBox(data[0], 0);
-                        //showBoxMarker(data[0], false);
                     } else {
                         highlightOrHideBox(data[0], 1);
                     }
-                    // Get row ID
-                    var rowId = data[0];
-
                     // Update state of "Select all" control
                     updateDataTableSelectAllCtrl(datatable);
 
@@ -841,7 +837,6 @@
 
                 // Handle click on "Select all" control
                 $('thead input[name="select_all"]', datatable.table().container()).on('click', function(e){
-                    console.log("select all");
                     if(this.checked){
                         $('#area-map-items tbody input[type="checkbox"]:not(:checked)').trigger('click');
                     } else {
@@ -907,8 +902,6 @@
                         $('#point-map-items tbody input[type="checkbox"]:checked').trigger('click');
                     }
                     updateDataTableSelectAllCtrl(datatable, view_type);
-                    // Prevent click event from propagating to parent
-                    //e.stopPropagation();
                 });
 
             }
@@ -972,7 +965,7 @@
                 calShadeRectBounds(rect, shade_rect_bound);
                 if (rectBounds.equals(shade_rect_bound) && found == 0) {
                     if (option == 0) {
-                        rect.setOptions({fillOpacity: 0.25});
+                        rect.setOptions({fillOpacity: 0.15});
                         box.checked = true;
                     } else {
                         rect.setOptions({fillOpacity: 0});
@@ -1133,7 +1126,7 @@
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: maps["point_map"],
-                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
                 position: latlng
             });
             markers.push(marker);
@@ -1150,7 +1143,7 @@
             });
         };
 
-        var createBoxResourceMarker = function (box) {
+        var createBoxResourceMarker = function(box) {
             var info_content = box.info_link;
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
@@ -1162,8 +1155,8 @@
             var latlng = new google.maps.LatLng(lat, lng);
 
             var box_center = new google.maps.Marker({
-                map: null,
-                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
+                map: isSmallArea(box)? maps["area_map"] : null,
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
                 position: latlng
             });
             box_centers.push(box_center);
@@ -1184,6 +1177,43 @@
             //     findShadeRect(rectBounds);
             // });
         };
+
+        var isSmallArea = function(box) {
+            var box_north = parseFloat(box.northlimit);
+            var box_south = parseFloat(box.southlimit);
+            var box_east = parseFloat(box.eastlimit);
+            var box_west = parseFloat(box.westlimit);
+            if (maps["area_map"].getBounds() == null) {
+                return false;
+            } else {
+                var map_view_bound = maps["area_map"].getBounds();
+                var map_north = map_view_bound.getNorthEast().lat();
+                var map_east = map_view_bound.getNorthEast().lng();
+                var map_south = map_view_bound.getSouthWest().lat();
+                var map_west = map_view_bound.getSouthWest().lng();
+                var box_coords = [
+                    {lat: box_north, lng: box_west},
+                    {lat: box_north, lng: box_east},
+                    {lat: box_south, lng: box_east},
+                    {lat: box_south, lng: box_west}
+                ];
+                var map_coords = [
+                    {lat: map_north, lng: map_west},
+                    {lat: map_north, lng: map_east},
+                    {lat: map_south, lng: map_east},
+                    {lat: map_south, lng: map_west}
+                ];
+
+                var box_area = google.maps.geometry.spherical.computeArea(box_coords);
+                var map_area = google.maps.geometry.spherical.computeArea(map_coords);
+                var ratio = box_area/map_area;
+                if (ratio < 0.01) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
 
         var createBoundsForMarkers = function(markers) {
             var bounds = new google.maps.LatLngBounds();
@@ -1245,8 +1275,8 @@
             var point_resetButton_content = [];
             var area_resetButton_content = [];
             var legend_table = "<table><tbody>";
-            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
-            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Point Coverage Locations</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Box Coverage Centers</td></tr>";
             legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
 
             point_geocoder_content.push("<input id='point-geocoder-address' type='textbox' placeholder='Search Locations...'>");
@@ -1528,7 +1558,7 @@
                 var shade_rect_bound = new google.maps.LatLngBounds();
                 calShadeRectBounds(rect, shade_rect_bound);
                 if (rectBounds.equals(shade_rect_bound) && found == 0) {
-                    rect.setOptions({fillOpacity: 0.25});
+                    rect.setOptions({fillOpacity: 0.15});
                     found = 1;
                 } else if (!box.checked) {
                     rect.setOptions({fillOpacity: 0});
