@@ -64,25 +64,7 @@
                         {% endif %}
                     </ul>
                 {%  endif %}
-                {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-                    {% if cm.check_content_files %}
-                        {% if cm.check_content_files == 'multiple_nam' %}
-                        <br>
-                        <span>The following condition(s) is(are) required to publish the resource or make the resource public or discoverable:<br>
-                            <ul>
-                                   <li>Only one .nam is allowed</li>
-                            </ul></span>
-                        {% else %}
-                            <br>
-                        <span>The following file(s) is(are) required to publish the resource or make the resource public or discoverable:<br>
-                            <ul>
-                               {% for f in cm.check_content_files %}
-                                   <li>{{ f }} </li>
-                               {% endfor %}
-                            </ul></span>
-                        {% endif %}
-                    {% endif %}
-                {%  elif not cm.has_required_content_files %}
+                {%  if not cm.has_required_content_files %}
                          <br>
                         <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
                 {% endif %}
@@ -100,6 +82,31 @@
             </div>
         </div>
     {% endif %}
+{% endif %}
+
+{# ======= Check MODFLOW Model Instance content files =======#}
+{% if cm.resource_type == "MODFLOWModelInstanceResource" %}
+    <div class="col-sm-12">
+        <div id="missing-metadata-or-file" class="alert persistent {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="false">&times;</span></button>
+
+            <br>
+            {% if cm.check_content_files == 'multiple_nam' %}
+                <span>The following conditions are recommended to have a complete resource before making the resource public or discoverable:<br>
+                    <ul>
+                        <li>Only one .nam or .mfn is allowed</li>
+                    </ul></span>
+            {% else %}
+                <span>The following files are recommended to have a complete resource before making the resource public or discoverable:<br>
+                    <ul>
+                        {% for f in cm.check_content_files %}
+                            <li>{{ f }} </li>
+                        {% endfor %}
+                    </ul></span>
+            {% endif %}
+        </div>
+    </div>
 {% endif %}
 
 {# ======= Title ======= #}
