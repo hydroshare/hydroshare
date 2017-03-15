@@ -445,9 +445,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
     :param set_to_private: set target resource to private if True. The default is False.
-    :param requesting_user: the requesting user which is needed to set quotaUserName AVU on target
-        resource collection. Default is None in which case the quotaUserName AVU will just be
-        copied over from the source resource collection
     :return:
     """
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType', 'quotaUserName']
