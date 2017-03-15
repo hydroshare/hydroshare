@@ -52,7 +52,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
             add_metadata_to_list(metadata, res_dublin_core_meta, res_type_specific_meta)
 
             # create the ncdump text file
-            dump_file = create_header_info_txt_file(in_file_name)
+            dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
             uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
             files.append(uploaded_file)
@@ -245,7 +245,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            dump_file = create_header_info_txt_file(in_file_name)
+            dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
             uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
             files.append(uploaded_file)

@@ -211,7 +211,9 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             with nc_dump_div:
                 legend("NetCDF Header Information")
                 p(nc_dump_res_file.full_path[33:])
-                textarea(nc_dump_res_file.resource_file.read(), readonly="", rows="15",
+                header_info = nc_dump_res_file.resource_file.read()
+                header_info = header_info.decode('utf-8')
+                textarea(header_info, readonly="", rows="15",
                          cls="input-xlarge", style="min-width: 100%")
 
         return nc_dump_div
@@ -419,7 +421,8 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             raise ex
 
         # create the ncdump text file
-        temp_text_file = create_header_info_txt_file(temp_nc_file)
+        nc_file_name = os.path.basename(temp_nc_file).split(".")[0]
+        temp_text_file = create_header_info_txt_file(temp_nc_file, nc_file_name)
 
         # push the updated nc file and the txt file to iRODS
         utils.replace_resource_file_on_irods(temp_nc_file, nc_res_file,
@@ -479,7 +482,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                      res_type_specific_meta, file_type_metadata, resource)
 
                 # create the ncdump text file
-                dump_file = create_header_info_txt_file(temp_file)
+                dump_file = create_header_info_txt_file(temp_file, nc_file_name)
                 files_to_add_to_resource.append(dump_file)
                 file_folder = res_file.file_folder
                 with transaction.atomic():
@@ -846,7 +849,7 @@ def add_keywords_metadata(metadata_list, extracted_metadata, file_type=True):
                 metadata_list.append({'subject': {'value': keyword}})
 
 
-def create_header_info_txt_file(nc_temp_file):
+def create_header_info_txt_file(nc_temp_file, nc_file_name):
     """
     Creates the header text file using the *nc_temp_file*
     :param nc_temp_file: the netcdf file copied from irods to django
@@ -860,7 +863,6 @@ def create_header_info_txt_file(nc_temp_file):
         dump_str = nc_dump.get_nc_dump_string(nc_temp_file)
 
     # file name without the extension
-    nc_file_name = os.path.basename(nc_temp_file).split(".")[0]
     temp_dir = os.path.dirname(nc_temp_file)
     dump_file_name = nc_file_name + '_header_info.txt'
     dump_file = os.path.join(temp_dir, dump_file_name)
