@@ -376,7 +376,7 @@ function bindFileBrowserItemEvents() {
                         top: ui.position.top,
                         left: ui.position.left
                     });
-                },
+                }
             }
         );
     }
@@ -391,7 +391,7 @@ function bindFileBrowserItemEvents() {
 
                 $("#fb-files-container li").removeClass("ui-last-selected");
                 $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
-            },
+            }
         });
 
     // Dismiss right click menu when mouse down outside of it
@@ -475,8 +475,16 @@ function showFileTypeMetadata(){
              }
          }
 
-        $("#div_id_type_filetype input:radio").trigger("change");
+         $("#div_id_type_filetype input:radio").trigger("change");
+
+         // Bind event handler for submit button
+         $("#fileTypeMetaDataTab .btn-form-submit").click(function () {
+             var formID = $(this).closest("form").attr("id");
+             metadata_update_ajax_submit(formID);
+         });
     });
+
+
 }
 
 function setBreadCrumbs(path) {
