@@ -861,27 +861,13 @@
                     // Get row data
                     var data = datatable.row($row).data();
 
-                    // Get row ID
-                    var rowId = data[0];
 
-                    // // Determine whether row ID is in the list of selected row IDs
-                    // var index = $.inArray(rowId, point_rows_selected);
-
-                    // // If checkbox is checked and row ID is not in list of selected row IDs
-                    // if(this.checked && index === -1){
-                    //     console.log("pushed");
-                    //     point_rows_selected.push(rowId);
-
-                    // // Otherwise, if checkbox is not checked and row ID is in list of selected row IDs
-                    // } else if (!this.checked && index !== -1){
-                    //     point_rows_selected.splice(index, 1);
-                    // }
-
-                    // if(this.checked){
-                    //     $row.addClass('selected');
-                    // } else {
-                    //     $row.removeClass('selected');
-                    // }
+                    var data = datatable.row($row).data();
+                    if (this.checked) {
+                        popMarkerWindow(data[0], 0);
+                    } else {
+                        popMarkerWindow(data[0], 1);
+                    }
 
                     // Update state of "Select all" control
                     updateDataTableSelectAllCtrl(datatable, view_type);
@@ -946,7 +932,6 @@
             }
         };
 
-
         var highlightOrHideBox = function(box, option) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
@@ -975,6 +960,26 @@
                 }
             });
         };
+
+        var popMarkerWindow = function(point, option) {
+            var lat = parseFloat(point.north);
+            var lng = parseFloat(point.east);
+            var point_latlng = new google.maps.LatLng(lat, lng);
+            for(var i = 0; i < markers.length; i++){
+                var marker_latlng = markers[i].getPosition();
+                if(point_latlng.equals(marker_latlng)) {
+                    //console.log("tiggered");
+                    //marker.trigger('click');
+                    if (option == 0){
+                        markers[i].infowindow.open(maps["point_map"], markers[i]);
+                    } else {
+                        markers[i].infowindow.close();
+                    }
+                    //google.maps.event.trigger(markers[i], 'click');
+                    break;
+                }
+            }
+        }
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -1129,6 +1134,9 @@
                 icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
                 position: latlng
             });
+            marker.infowindow = new google.maps.InfoWindow({
+                content: info_content
+            });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
                 // var map_resources = [];
@@ -1137,8 +1145,10 @@
                 // map_items_table.clear();
                 // map_items_table.rows.add(map_resources);
                 // map_items_table.draw();
-                info_window.setContent(info_content);
-                info_window.open(maps["point_map"], marker);
+                //info_window.setContent(info_content);
+                //info_window.open(maps["point_map"], marker);
+
+                marker.infowindow.open(maps["point_map"], marker);
 
             });
         };
@@ -1155,7 +1165,7 @@
             var latlng = new google.maps.LatLng(lat, lng);
 
             var box_center = new google.maps.Marker({
-                map: isSmallArea(box)? maps["area_map"] : null,
+                map: null,
                 icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
                 position: latlng
             });
@@ -1178,42 +1188,42 @@
             // });
         };
 
-        var isSmallArea = function(box) {
-            var box_north = parseFloat(box.northlimit);
-            var box_south = parseFloat(box.southlimit);
-            var box_east = parseFloat(box.eastlimit);
-            var box_west = parseFloat(box.westlimit);
-            if (maps["area_map"].getBounds() == null) {
-                return false;
-            } else {
-                var map_view_bound = maps["area_map"].getBounds();
-                var map_north = map_view_bound.getNorthEast().lat();
-                var map_east = map_view_bound.getNorthEast().lng();
-                var map_south = map_view_bound.getSouthWest().lat();
-                var map_west = map_view_bound.getSouthWest().lng();
-                var box_coords = [
-                    {lat: box_north, lng: box_west},
-                    {lat: box_north, lng: box_east},
-                    {lat: box_south, lng: box_east},
-                    {lat: box_south, lng: box_west}
-                ];
-                var map_coords = [
-                    {lat: map_north, lng: map_west},
-                    {lat: map_north, lng: map_east},
-                    {lat: map_south, lng: map_east},
-                    {lat: map_south, lng: map_west}
-                ];
+        // var isSmallArea = function(box) {
+        //     var box_north = parseFloat(box.northlimit);
+        //     var box_south = parseFloat(box.southlimit);
+        //     var box_east = parseFloat(box.eastlimit);
+        //     var box_west = parseFloat(box.westlimit);
+        //     if (maps["area_map"].getBounds() == null) {
+        //         return false;
+        //     } else {
+        //         var map_view_bound = maps["area_map"].getBounds();
+        //         var map_north = map_view_bound.getNorthEast().lat();
+        //         var map_east = map_view_bound.getNorthEast().lng();
+        //         var map_south = map_view_bound.getSouthWest().lat();
+        //         var map_west = map_view_bound.getSouthWest().lng();
+        //         var box_coords = [
+        //             {lat: box_north, lng: box_west},
+        //             {lat: box_north, lng: box_east},
+        //             {lat: box_south, lng: box_east},
+        //             {lat: box_south, lng: box_west}
+        //         ];
+        //         var map_coords = [
+        //             {lat: map_north, lng: map_west},
+        //             {lat: map_north, lng: map_east},
+        //             {lat: map_south, lng: map_east},
+        //             {lat: map_south, lng: map_west}
+        //         ];
 
-                var box_area = google.maps.geometry.spherical.computeArea(box_coords);
-                var map_area = google.maps.geometry.spherical.computeArea(map_coords);
-                var ratio = box_area/map_area;
-                if (ratio < 0.01) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
+        //         var box_area = google.maps.geometry.spherical.computeArea(box_coords);
+        //         var map_area = google.maps.geometry.spherical.computeArea(map_coords);
+        //         var ratio = box_area/map_area;
+        //         if (ratio < 0.01) {
+        //             return true;
+        //         } else {
+        //             return false;
+        //         }
+        //     }
+        // }
 
         var createBoundsForMarkers = function(markers) {
             var bounds = new google.maps.LatLngBounds();
@@ -1252,11 +1262,9 @@
         };
 
         var generateLegend = function(view_type) {
-            //var map_legend = document.getElementById('discover-map-legend');
             var map_legends = document.getElementsByClassName('discover-map-legend');
             var geo_coder = "";
             var reset_zoom_buttons = document.getElementsByClassName('resetZoom');
-            //var reset_zoom_button = document.getElementById('resetZoom');
 
             if (view_type == "point_map") {
                 maps[view_type].controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legends[0]);
