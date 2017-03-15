@@ -746,6 +746,8 @@ li.account p{
     border-bottom-left-radius: 4px;
 }
 
+#profile-menu #profile-menu-fullname { font-weight: bold; }
+
 #profile-menu > .dropdown-toggle:hover, #profile-menu > .dropdown-toggle:focus {
     background:none;
 }
