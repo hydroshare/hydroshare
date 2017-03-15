@@ -567,18 +567,28 @@
                 geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
             });
 
-            // if (view_type == "area_map") {
-            //     google.maps.event.addListener(maps[view_type],'click',function(e){
-            //         var map_items_table = $('#area-map-items').DataTable();
-            //         map_items_table.clear().draw();
-            //         shade_rects.forEach(function(box){
-            //             var rect = box.rect;
-            //             if (!box.checked){
-            //                 rect.setOptions({fillOpacity: 0});
-            //             }
-            //         });
-            //     });
-            // }
+            if (view_type == "area_map") {
+                google.maps.event.addListener(maps[view_type],'click',function(e){
+                    // var map_items_table = $('#area-map-items').DataTable();
+                    // map_items_table.clear().draw();
+                    shade_rects.forEach(function(box){
+                        var rect = box.rect;
+                        if (!box.checked){
+                            rect.setOptions({fillOpacity: 0});
+                        }
+                    });
+
+                    var filtered_results = [];
+                    clientUpdateMarkers(filtered_results, view_type);
+                    var map_resources = [];
+                    setBoxes(filtered_results);
+                    buildMapItemsTableData(filtered_results, map_resources, null);
+                    var map_items_table = $('#area-map-items').DataTable();
+                    map_items_table.clear();
+                    map_items_table.rows.add(map_resources);
+                    map_items_table.draw();
+                });
+            }
 
         };
 
@@ -669,7 +679,8 @@
                 var southlimit = parseFloat(box.southlimit);
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
-
+                // var info_content = '<a href="' + box.get_absolute_url + '">' + box.title + '</a>';
+                // if(i == 1) console.log(info_content);
                 var box_ne = new google.maps.LatLng(northlimit, eastlimit);
                 var box_sw = new google.maps.LatLng(southlimit, westlimit);
 
@@ -693,7 +704,6 @@
                 }
 
                 shade_rects[i].rect.setMap(maps["area_map"]);
-                //shade_rects[i].checked = false;
             }
         };
 
@@ -764,12 +774,6 @@
                 "language": {
                     "emptyTable": "Click on map to explore resource data."
                 },
-                // columns: [
-                //     { title: "Show on Map"},
-                //     { title: "Resource Type" },
-                //     { title: "Title" },
-                //     { title: "First Author" }
-                // ],
                 "columnDefs": [
                 {
                     'targets': [0],
@@ -778,10 +782,6 @@
                     'width':"1%",
                     'data': null,
                     'className': "dt-body-center",
-                    //"defaultContent" : '<input type="checkbox">',
-                    // 'defaultContent': function (data, type, full, meta){
-                    //     return '<input type="checkbox">';
-                    // }
                     'render': function (data, type, full, meta){
                         return '<input type="checkbox">';
                     }
@@ -968,14 +968,11 @@
             for(var i = 0; i < markers.length; i++){
                 var marker_latlng = markers[i].getPosition();
                 if(point_latlng.equals(marker_latlng)) {
-                    //console.log("tiggered");
-                    //marker.trigger('click');
                     if (option == 0){
                         markers[i].infowindow.open(maps["point_map"], markers[i]);
                     } else {
                         markers[i].infowindow.close();
                     }
-                    //google.maps.event.trigger(markers[i], 'click');
                     break;
                 }
             }
