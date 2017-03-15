@@ -416,17 +416,14 @@
             var map_view_option = "";
             var geocoder_address_id = "";
             var geocoder_submit_id = "";
-            var the_other_view = "";
             if (view_type == "point_map") {
                 map_view_option = "#discover-point-map";
                 geocoder_address_id = "point-geocoder-address";
                 geocoder_submit_id = "point-geocoder-submit";
-                the_other_view = "area_map";
             } else {
                 map_view_option = "#discover-area-map";
                 geocoder_address_id = "area-geocoder-address";
                 geocoder_submit_id = "area-geocoder-submit";
-                the_other_view = "point_map";
             }
             var $mapDiv = $(map_view_option);
             var mapDim = {
@@ -452,10 +449,8 @@
             } else {
                 var bounds = null;
                 if (view_type == "point_map") {
-                    //setMarkers(json_results);
                     bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
                 } else {
-                    //setBoxes(json_results);
                     bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
                 }
 
@@ -479,14 +474,6 @@
             var idle_listener = google.maps.event.addListener(maps[view_type], "idle", function () {
                 maps[view_type].setCenter(current_map_center);
                 maps[view_type].setZoom(current_map_zoom);
-                // current_map_center = maps[view_type].getCenter();
-                // current_map_bounds = maps[view_type].getBounds();
-                // current_map_zoom = maps[view_type].getZoom();
-                // if (map_set && maps[the_other_view] != null) {
-                //     maps[the_other_view].setCenter(current_map_center);
-                //     maps[the_other_view].setZoom(current_map_zoom);
-                //     maps[the_other_view].fitBounds(current_map_bounds);
-                // }
                 google.maps.event.removeListener(idle_listener);
 
             });
@@ -501,14 +488,6 @@
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
                     setLatLngLabels();
-                    // current_map_center = maps[view_type].getCenter();
-                    // current_map_bounds = maps[view_type].getBounds();
-                    // current_map_zoom = maps[view_type].getZoom();
-                    // if (map_set && maps[the_other_view] != null) {
-                    //     maps[the_other_view].setCenter(current_map_center);
-                    //     maps[the_other_view].setZoom(current_map_zoom);
-                    //     maps[the_other_view].fitBounds(current_map_bounds);
-                    // }
                 }
 
             });
@@ -533,27 +512,11 @@
             });
 
             var zoom_listener = google.maps.event.addListener(maps[view_type], 'zoom_changed', function(){
-                // current_map_center = maps[view_type].getCenter();
-                // current_map_bounds = maps[view_type].getBounds();
-                // current_map_zoom = maps[view_type].getZoom();
                 updateMapView(view_type);
-                // if (map_set && maps[the_other_view] != null) {
-                //     maps[the_other_view].setCenter(current_map_center);
-                //     maps[the_other_view].setZoom(current_map_zoom);
-                //     maps[the_other_view].fitBounds(current_map_bounds);
-                // }
             });
 
             var drag_listener = google.maps.event.addListener(maps[view_type], 'dragend', function(){
-                // current_map_center = maps[view_type].getCenter();
-                // current_map_bounds = maps[view_type].getBounds();
-                // current_map_zoom = maps[view_type].getZoom();
                 updateMapView(view_type);
-                // if (map_set && maps[the_other_view] != null) {
-                //     maps[the_other_view].setCenter(current_map_center);
-                //     maps[the_other_view].setZoom(current_map_zoom);
-                //     maps[the_other_view].fitBounds(current_map_bounds);
-                // }
             });
 
 
@@ -569,8 +532,6 @@
 
             if (view_type == "area_map") {
                 google.maps.event.addListener(maps[view_type],'click',function(e){
-                    // var map_items_table = $('#area-map-items').DataTable();
-                    // map_items_table.clear().draw();
                     shade_rects.forEach(function(box){
                         var rect = box.rect;
                         if (!box.checked){
@@ -603,23 +564,6 @@
             modified_points_data.forEach(function(point){
                 createPointResourceMarker(point);
             });
-
-            // modified_boxes_data.forEach(function(box){
-            //     createBoxResourceMarker (box);
-            // });
-            // drawShadeRectangles(boxes_data);
-
-            // shade_rects.forEach(function(rect){
-            //     google.maps.event.addListener(rect,'click',function(e){
-            //         highlightOverlapping(e.latLng);
-            //         var map_resources = [];
-            //         buildMapItemsTableData(boxes_data, map_resources, e.latLng);
-            //         var map_items_table = $('#area-map-items').DataTable();
-            //         map_items_table.clear();
-            //         map_items_table.rows.add(map_resources);
-            //         map_items_table.draw();
-            //     });
-            // });
             markers_cluster = new MarkerClusterer(maps[view_type], markers, {
                 styles:[{
                     height: 55,
@@ -679,8 +623,6 @@
                 var southlimit = parseFloat(box.southlimit);
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
-                // var info_content = '<a href="' + box.get_absolute_url + '">' + box.title + '</a>';
-                // if(i == 1) console.log(info_content);
                 var box_ne = new google.maps.LatLng(northlimit, eastlimit);
                 var box_sw = new google.maps.LatLng(southlimit, westlimit);
 
@@ -735,13 +677,6 @@
 
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
             resources_list.forEach(function(resource) {
-                // var northlimit = parseFloat(resource.northlimit);
-                // var southlimit = parseFloat(resource.southlimit);
-                // var eastlimit = parseFloat(resource.eastlimit);
-                // var westlimit = parseFloat(resource.westlimit);
-                // var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-                // var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                // var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
                 var author_name = "";
                 if (resource.first_author_description) {
                     author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
@@ -819,9 +754,6 @@
 
                 $('#area-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
                     var $row = $(this).closest('tr');
-
-                    //console.log($row);
-                    // Get row data
                     var data = datatable.row($row).data();
                     if (this.checked) {
                         highlightOrHideBox(data[0], 0);
@@ -830,9 +762,6 @@
                     }
                     // Update state of "Select all" control
                     updateDataTableSelectAllCtrl(datatable);
-
-                    // Prevent click event from propagating to paren
-                    //e.stopPropagation();
                 });
 
                 // Handle click on "Select all" control
@@ -843,24 +772,16 @@
                         $('#area-map-items tbody input[type="checkbox"]:checked').trigger('click');
                     }
                     updateDataTableSelectAllCtrl(datatable);
-                    // Prevent click event from propagating to parent
                 });
 
             } else {
                 $('#point-map-items tbody').on('click', '[role="button"]', function () {
                     var data = datatable.row($(this).parents('tr')).data();
-                    //showBoxMarker(data[0], true);
                     showPointMarker(data[0]);
-                    //console.log(data[0]);
                 });
                 // Handle click on checkbox
                 $('#point-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
                     var $row = $(this).closest('tr');
-
-                    //console.log($row);
-                    // Get row data
-                    var data = datatable.row($row).data();
-
 
                     var data = datatable.row($row).data();
                     if (this.checked) {
@@ -868,12 +789,9 @@
                     } else {
                         popMarkerWindow(data[0], 1);
                     }
-
                     // Update state of "Select all" control
                     updateDataTableSelectAllCtrl(datatable, view_type);
 
-                    // Prevent click event from propagating to parent
-                    //e.stopPropagation();
                 });
 
                 // Handle click on table cells with checkboxes
@@ -898,7 +816,6 @@
             var $table             = table.table().node();
             var $chkbox_all        = $('tbody input[type="checkbox"]', $table);
             var $chkbox_checked    = $('tbody input[type="checkbox"]:checked', $table);
-            //var chkbox_select_all  = $('thead input[name="select_all"]', $table).get(0);
 
             var select_all_id = "";
             if (view_type == "point_map") {
@@ -908,8 +825,6 @@
             }
 
             var chkbox_select_all = $(select_all_id)[0];
-            //var chkbox_select_all  = $('thead input[name="select_all"]', $table);
-            // If none of the checkboxes are checked
             if($chkbox_checked.length === 0){
                 chkbox_select_all.checked = false;
                 if('indeterminate' in chkbox_select_all){
@@ -1136,15 +1051,6 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
-                // var map_resources = [];
-                // buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
-                // var map_items_table = $('#area-map-items').DataTable();
-                // map_items_table.clear();
-                // map_items_table.rows.add(map_resources);
-                // map_items_table.draw();
-                //info_window.setContent(info_content);
-                //info_window.open(maps["point_map"], marker);
-
                 marker.infowindow.open(maps["point_map"], marker);
 
             });
@@ -1167,22 +1073,6 @@
                 position: latlng
             });
             box_centers.push(box_center);
-
-            // google.maps.event.addListener(box_center, 'click', function() {
-            //     var map_resources = [];
-            //     buildMapItemsTableDataforMarkers(box.resources_list, map_resources);
-            //     var map_items_table = $('#area-map-items').DataTable();
-            //     map_items_table.clear();
-            //     map_items_table.rows.add(map_resources);
-            //     map_items_table.draw();
-            //     info_window.setContent(info_content);
-            //     info_window.open(map, marker);
-            //     var rectBounds = new google.maps.LatLngBounds(
-            //             new google.maps.LatLng(southlimit, westlimit),
-            //             new google.maps.LatLng(northlimit, eastlimit)
-            //     );
-            //     findShadeRect(rectBounds);
-            // });
         };
 
         // var isSmallArea = function(box) {
@@ -1346,10 +1236,6 @@
                 map_view_option = "#discover-area-map";
                 removeBoxes();
                 setBoxes(raw_box_results);
-// {#            var map_items_table = $('#area-map-items').DataTable();#}
-// {#            map_items_table.clear().draw();#}
-// {#            #}
-//              var view_type = "area_map";
                 buildMapItemsTableData(raw_box_results, map_resources, null);
             }
 
@@ -1385,10 +1271,6 @@
             } else {
                 maps[view_type].setZoom(map_default_zoom);
             }
-            // current_map_center = reset_center;
-            // current_map_bounds = bounds;
-            // current_map_zoom = zoom_level;
-            // map_set = true;
         };
 
 
@@ -1417,8 +1299,6 @@
             map_set = true;
         };
 
-
-//------------------------------------------------------
         var updateListView = function (data) {
             var requestURL = "/search/";
 
