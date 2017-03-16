@@ -145,7 +145,9 @@ class Command(BaseCommand):
             'title',
             'resource type',
             'size',
-            'publication status'
+            'publication status',
+            'user type',
+            'user id'
         ]
         w.writerow(fields)
 
@@ -156,6 +158,8 @@ class Command(BaseCommand):
                 r.resource_type,
                 r.size,
                 r.raccess.sharing_status,
+                r.user.userprofile.user_type,
+                r.user_id
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 

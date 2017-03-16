@@ -303,6 +303,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     Request data payload parameters:
     :type   resource_type: str
     :type   title: str
+    :type   subject: str
     :type   edit_users: str
     :type   edit_groups: str
     :type   view_users: str
@@ -1067,9 +1068,11 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         try:
+            folder = request.POST.get('folder', None)
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           user=request.user,
+                                                                          folder=folder,
                                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:

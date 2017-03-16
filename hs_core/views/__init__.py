@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -32,7 +33,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
@@ -99,6 +100,12 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
+    file_folder = request.POST.get('file_folder', None)
+    if file_folder is not None:
+        if file_folder == "data/contents":
+            file_folder = None
+        elif file_folder.startswith("data/contents/"):
+            file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
@@ -113,8 +120,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponse(msg, status=500)
 
     try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
+                                                   user=request.user,
+                                                   extract_metadata=extract_metadata,
+                                                   folder=file_folder)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
@@ -190,6 +199,28 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    res.extra_metadata = post_data
+
+    is_update_success = True
+
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
@@ -444,12 +475,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
-
+    ajax_response_data = {'status': 'success'}
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        if request.is_ajax():
+            ajax_response_data['status'] = 'error'
+            ajax_response_data['message'] = ex.message
+            return JsonResponse(ajax_response_data)
+        else:
+            request.session['validation_error'] = ex.message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # if the deleted resource is part of any collection resource, then for each of those collection
     # create a CollectionDeletedResource object which can then be used to list collection deleted
@@ -468,7 +504,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
 
-    return HttpResponseRedirect('/my-resources/')
+    if request.is_ajax():
+        return JsonResponse(ajax_response_data)
+    else:
+        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
@@ -505,6 +544,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         content_type="application/json"
         )
 
+
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -522,6 +562,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
     request.session['just_created'] = True
     request.session['just_copied'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
+@api_view(['POST'])
+def copy_resource_public(request, pk):
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
@@ -569,6 +615,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
+@api_view(['POST'])
+def create_new_version_resource_public(request, pk):
+    redirect = create_new_version_resource(request, pk)
+    return HttpResponse(redirect.url.split('/')[2], status=202)
+
+
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
@@ -585,7 +637,7 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = request.POST['t']
+    t = resolve_request(request).get('t', None)
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
@@ -597,9 +649,24 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if request.META.get('HTTP_REFERER', None):
+        request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
 
+    return HttpResponse(status=202)
+
+
+@api_view(['POST'])
+def set_resource_flag_public(request, pk):
+    http_request = request._request
+    http_request.data = request.data.copy()
+    response = set_resource_flag(http_request, pk)
+
+    messages = get_messages(request)
+    for message in messages:
+        if(message.tags == "error"):
+            return HttpResponse(message, status=400)
+    return response
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""
@@ -816,6 +883,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
+    auto_approve = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -840,9 +908,11 @@ class GroupForm(forms.Form):
 class GroupCreateForm(GroupForm):
     def save(self, request):
         frm_data = self.cleaned_data
+
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
-                                                      purpose=frm_data['purpose'])
+                                                      purpose=frm_data['purpose'],
+                                                      auto_approve=frm_data['auto_approve'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -859,6 +929,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1126,20 +1197,33 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
-        membership_request = requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        membership_request = requesting_user.uaccess.create_group_membership_request(
+            group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request)
         else:
-            message = 'Group membership request was successful'
-            # send mail to all owners of the group
-            for grp_owner in group_to_join.gaccess.owners:
-                send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                          group=group_to_join, group_owner=grp_owner,
-                                          membership_request=membership_request)
-
+            message = 'You are now a member of this group'
+            # membership_request is None in case where group allows auto approval of membership
+            # request. no need send email notification to group owners for membership approval
+            if membership_request is not None:
+                message = 'Group membership request was successful'
+                # send mail to all owners of the group for approval of the request
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_membership',
+                                              group=group_to_join, group_owner=grp_owner,
+                                              membership_request=membership_request)
+            else:
+                # send mail to all owners of the group to let them know that someone has
+                # joined this group
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_auto_membership',
+                                              group=group_to_join,
+                                              group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, ex.message)
