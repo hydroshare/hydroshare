@@ -1425,6 +1425,7 @@
     </p>
 
     <h3>Composite Resource Type Description</h3>
+    <a name="Dataset"></a>
     <p>
         A Composite resource is a resource which can include multiple files without file format
         limitations. This resource is designed to support metadata and data functions at both file
@@ -1433,12 +1434,9 @@
         one logical object (e.g. multiple files for a shapefile)is in the format which represents
         a specific file type supported in HydroShare, the file will be supported with specific file
         type metadata and additional data functions established for that type
-        (e.g. metadata extraction from TIFF or NetCDF file).
-    </p>
-    <a name="Dataset"></a>
-    <p>
-        The resource level metadata will be the same as metadata of the generic resource type.
-        Each file within the resource will be associated with the following additional metadata terms:
+        (e.g. metadata extraction from TIFF or NetCDF file). The resource level metadata will be the
+        same as metadata of the generic resource type.Each file within the resource will be associated
+        with the following additional metadata terms:
     </p>
 
      <a name="dataType"></a>
@@ -1478,7 +1476,7 @@
     <h4>NetCDF file type</h4>
     <p>
         This file type includes additional terms that can be referred to
-        <a href="#netcdf_res">Multidimensional (NetCDF) Resource Type Description</a>
+        <a href="#netcdf_res">Multidimensional (NetCDF) Resource Type</a>
     </p>
 
 {% endblock %}
