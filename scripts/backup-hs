@@ -15,7 +15,7 @@ MEDIA_FILES=${HS_PATH}/media_files
 # backup database
 # database in postgis container
 echo "*** backing up database as ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ***"
-docker exec hydroshare /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
+docker exec -u postgres postgis pg_dumpall | dd status=none of="${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
 
 ### backup media files ###
 # hydroshare/static/media

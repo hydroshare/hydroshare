@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -32,7 +33,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
@@ -198,6 +199,28 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    res.extra_metadata = post_data
+
+    is_update_success = True
+
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
@@ -521,6 +544,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         content_type="application/json"
         )
 
+
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -538,6 +562,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
     request.session['just_created'] = True
     request.session['just_copied'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
+@api_view(['POST'])
+def copy_resource_public(request, pk):
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
@@ -585,6 +615,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
+@api_view(['POST'])
+def create_new_version_resource_public(request, pk):
+    redirect = create_new_version_resource(request, pk)
+    return HttpResponse(redirect.url.split('/')[2], status=202)
+
+
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
@@ -601,7 +637,7 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = request.POST['t']
+    t = resolve_request(request).get('t', None)
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
@@ -613,9 +649,24 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if request.META.get('HTTP_REFERER', None):
+        request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
 
+    return HttpResponse(status=202)
+
+
+@api_view(['POST'])
+def set_resource_flag_public(request, pk):
+    http_request = request._request
+    http_request.data = request.data.copy()
+    response = set_resource_flag(http_request, pk)
+
+    messages = get_messages(request)
+    for message in messages:
+        if(message.tags == "error"):
+            return HttpResponse(message, status=400)
+    return response
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""

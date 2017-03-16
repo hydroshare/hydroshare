@@ -420,7 +420,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if bag_modified == "true":
         # import here to avoid circular import issue
         from hs_core.tasks import create_bag_by_irods
-        create_bag_by_irods(res_id, istorage)
+        create_bag_by_irods(res_id)
 
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:
@@ -1062,3 +1062,13 @@ class ZipContents(object):
 
 def get_file_storage():
     return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+
+
+def resolve_request(request):
+    if request.POST:
+        return request.POST
+
+    if request.data:
+        return request.data
+
+    return {}
