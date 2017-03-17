@@ -959,6 +959,9 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
+    # Note: This view function must be called by ajax
+
+    ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
@@ -982,10 +985,12 @@ def create_resource(request, *args, **kwargs):
                                       zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
                 context = {'file_size_error': ex.message}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.message
+                # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
             except SessionException as ex:
                 context = {'resource_creation_error': ex.stderr}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.stderr
+                # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
 
@@ -995,16 +1000,20 @@ def create_resource(request, *args, **kwargs):
                                                                     page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
         context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except Exception as ex:
         context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
+    # TODO: (Pabitra) Not sure how we should be handling this when the call now comes as an ajax call
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
@@ -1028,11 +1037,15 @@ def create_resource(request, *args, **kwargs):
         utils.resource_post_create_actions(request=request, resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
+        ajax_response_data['message'] = ex.message
 
     # go to resource landing page
     request.session['just_created'] = True
-
-    return HttpResponseRedirect(resource.get_absolute_url())
+    if not ajax_response_data['message']:
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+    # return HttpResponseRedirect(resource.get_absolute_url())
+    return JsonResponse(ajax_response_data)
 
 
 @login_required
