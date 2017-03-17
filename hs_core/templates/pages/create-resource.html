@@ -544,14 +544,24 @@
                 autoProcessQueue: false,
                 uploadMultiple: true,
                 parallelUploads: 99,
-                createImageThumbnails: true,
-                thumbnailWidth: 20,
-                thumbnailHeight: 20,
+
+                success: function (file, response) {
+                    if (response.status == "success") {
+                        window.location = response['resource_url'];
+                    }
+                    else {
+                        console.log(response);
+                    }
+                },
+                error: function (file, response) {
+                    console.log(response);
+                },
 
                 init: function () {
                     myDropzone = this;
 
                     $("#btn-create-resource").click(function () {
+                        $("html").css("cursor", "progress");
                         var title = $("#txtTitle").val().trim();
                         if (!title) {
                             title = $("#txtTitle").attr("placeholder");
@@ -563,7 +573,21 @@
                             myDropzone.processQueue();
                         }
                         else {
-                            $("#hsDropzone").submit();
+                            var url = $("#hsDropzone").attr("action");
+                            var datastring = $("#hsDropzone").serialize();
+                            $.ajax({
+                                type: "POST",
+                                data: datastring,
+                                url: url,
+                                success: function (response) {
+                                    if (response.status == "success") {
+                                        window.location = response['resource_url'];
+                                    }
+                                },
+                                error: function (response) {
+                                    console.log(response);
+                                }
+                            });
                         }
                     });
 

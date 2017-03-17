@@ -1,28 +1,27 @@
 import re
 import os
-import StringIO
 import shutil
 
 import netCDF4
 
 from django.dispatch import receiver
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
+
 from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
 from hs_app_netCDF.models import NetcdfResource
-import nc_functions.nc_utils as nc_utils
-import nc_functions.nc_dump as nc_dump
-import nc_functions.nc_meta as nc_meta
+import hs_file_types.nc_functions.nc_utils as nc_utils
+import hs_file_types.nc_functions.nc_meta as nc_meta
+from hs_file_types.models.netcdf import create_header_info_txt_file, add_metadata_to_list
 
 
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=NetcdfResource)
 def netcdf_pre_create_resource(sender, **kwargs):
-
     files = kwargs['files']
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
@@ -48,117 +47,15 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
-            try:
-                res_md_dict = nc_meta.get_nc_meta_dict(in_file_name)
-                res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                res_type_specific_meta = res_md_dict['type_specific_meta']
-            except:
-                res_dublin_core_meta = {}
-                res_type_specific_meta = {}
-
-            # add creator:
-            if res_dublin_core_meta.get('creator_name'):
-                name = res_dublin_core_meta['creator_name']
-                email = res_dublin_core_meta.get('creator_email', '')
-                url = res_dublin_core_meta.get('creator_url', '')
-                creator = {'creator': {'name': name, 'email': email, 'homepage': url}}
-                metadata.append(creator)
-
-            # add contributor:
-            if res_dublin_core_meta.get('contributor_name'):
-                name_list = res_dublin_core_meta['contributor_name'].split(',')
-                for name in name_list:
-                    contributor = {'contributor': {'name': name}}
-                    metadata.append(contributor)
-
-            # add title
-            if res_dublin_core_meta.get('title'):
-                res_title = {'title': {'value': res_dublin_core_meta['title']}}
-                metadata.append(res_title)
-
-            # add description
-            if res_dublin_core_meta.get('description'):
-                description = {'description': {'abstract': res_dublin_core_meta['description']}}
-                metadata.append(description)
-
-            # add keywords
-            if res_dublin_core_meta.get('subject'):
-                keywords = res_dublin_core_meta['subject'].split(',')
-                for keyword in keywords:
-                    metadata.append({'subject': {'value': keyword}})
-
-            # add source
-            if res_dublin_core_meta.get('source'):
-                source = {'source': {'derived_from': res_dublin_core_meta['source']}}
-                metadata.append(source)
-
-            # add relation
-            if res_dublin_core_meta.get('references'):
-                relation = {'relation': {'type': 'cites',
-                                         'value': res_dublin_core_meta['references']}}
-                metadata.append(relation)
-
-            # add coverage - period
-            if res_dublin_core_meta.get('period'):
-                period = {'coverage': {'type': 'period', 'value': res_dublin_core_meta['period']}}
-                metadata.append(period)
-
-            # add coverage - box
-            if res_dublin_core_meta.get('box'):
-                box = {'coverage': {'type': 'box', 'value': res_dublin_core_meta['box']}}
-                metadata.append(box)
-
-            # add rights
-            if res_dublin_core_meta.get('rights'):
-                raw_info = res_dublin_core_meta.get('rights')
-                b = re.search("(?P<url>https?://[^\s]+)", raw_info)
-                url = b.group('url') if b else ''
-                statement = raw_info.replace(url, '') if url else raw_info
-                rights = {'rights': {'statement': statement, 'url': url}}
-                metadata.append(rights)
-
-            # Save extended meta to metadata variable
-            for var_name, var_meta in res_type_specific_meta.items():
-                meta_info = {}
-                for element, value in var_meta.items():
-                    if value != '':
-                        meta_info[element] = value
-                metadata.append({'variable': meta_info})
-
-            # Save extended meta to original spatial coverage
-            if res_dublin_core_meta.get('original-box'):
-                if res_dublin_core_meta.get('projection-info'):
-                    ori_cov = {'originalcoverage': {
-                        'value': res_dublin_core_meta['original-box'],
-                        'projection_string_type': res_dublin_core_meta['projection-info']['type'],
-                        'projection_string_text': res_dublin_core_meta['projection-info']['text'],
-                        'datum': res_dublin_core_meta['projection-info']['datum']}
-                    }
-                else:
-                    ori_cov = {'originalcoverage': {'value': res_dublin_core_meta['original-box']}}
-
-                metadata.append(ori_cov)
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(in_file_name)
+            # populate metadata list with extracted metadata
+            add_metadata_to_list(metadata, res_dublin_core_meta, res_type_specific_meta)
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
-            else:
-                dump_str = nc_dump.get_nc_dump_string(in_file_name)
-
-            if dump_str:
-                # refine dump_str first line
-                first_line = list('netcdf {0} '.format(nc_file_name))
-                first_line_index = dump_str.index('{')
-                dump_str_list = first_line + list(dump_str)[first_line_index:]
-                dump_str = "".join(dump_str_list)
-
-                # write dump_str to temporary file
-                io = StringIO.StringIO()
-                io.write(dump_str)
-                dump_file_name = nc_file_name + '_header_info.txt'
-                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                files.append(dump_file)
-
+            dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
+            dump_file_name = nc_file_name + '_header_info.txt'
+            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            files.append(uploaded_file)
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file ' \
@@ -239,15 +136,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             utils.resource_modified(nc_res, user, overwrite_bag=False)
 
             # extract metadata
-            try:
-                res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
-            except Exception:
-                res_dublin_core_meta = {}
-
-            try:
-                res_type_specific_meta = nc_meta.get_type_specific_meta(nc_dataset)
-            except Exception:
-                res_type_specific_meta = {}
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(in_file_name)
 
             # update title info
             if res_dublin_core_meta.get('title'):
@@ -356,24 +245,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                                                    value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
-            else:
-                dump_str = nc_dump.get_nc_dump_string(in_file_name)
-
-            if dump_str:
-                # refine dump_str first line
-                first_line = list('netcdf {0} '.format(nc_file_name))
-                first_line_index = dump_str.index('{')
-                dump_str_list = first_line + list(dump_str)[first_line_index:]
-                dump_str = "".join(dump_str_list)
-
-                # write dump_str to temporary file
-                io = StringIO.StringIO()
-                io.write(dump_str)
-                dump_file_name = nc_file_name + '_header_info.txt'
-                dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-                files.append(dump_file)
+            dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
+            dump_file_name = nc_file_name + '_header_info.txt'
+            uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
+            files.append(uploaded_file)
 
         else:
             validate_files_dict['are_files_valid'] = False
@@ -382,37 +257,6 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
         if fed_res_fnames and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
-
-# @receiver(post_add_files_to_resource, sender=NetcdfResource)
-# def netcdf_post_add_files_to_resource(sender, **kwargs):
-#     # Add ncdump text file to resource
-#     if sender is NetcdfResource:
-#         nc_res = kwargs['resource']
-#         nc_files = nc_res.files.all()
-#         if nc_files:
-#             nc_file = nc_res.files.all()[0]
-#             nc_file_name = nc_file.resource_file.path
-#
-#             # create InMemoryUploadedFile text file to store the dump info and add it to resource
-#             import nc_functions.nc_dump as nc_dump
-#             if nc_dump.get_nc_dump_string_by_ncdump(nc_file_name):
-#                 dump_str = nc_dump.get_nc_dump_string_by_ncdump(nc_file_name)
-#             else:
-#                 dump_str = nc_dump.get_nc_dump_string(nc_file_name)
-#             if dump_str:
-#                 from django.core.files.uploadedfile import InMemoryUploadedFile
-#                 import StringIO, os
-#                 io = StringIO.StringIO()
-#                 io.write(dump_str)
-#                 dump_file_name = '.'.join(os.path.basename(nc_file_name).split('.')[:-1])
-#                                  +'_header_info.txt'
-#                 dump_file = InMemoryUploadedFile(io, None, dump_file_name, 'text', io.len, None)
-#                 dump_file.seek(0)
-#                 hydroshare.add_resource_files(nc_res.short_id, dump_file)
-#                 # add file format for text file
-#                 file_format_type = utils.get_file_mime_type(dump_file_name)
-#                 if file_format_type not in [mime.value for mime in nc_res.metadata.formats.all()]:
-#                     nc_res.metadata.create_element('format', value=file_format_type)
 
 
 @receiver(pre_metadata_element_create, sender=NetcdfResource)
