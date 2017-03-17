@@ -148,7 +148,6 @@ preflight_hs() {
     echo "  - HS_LOG_FILES  :${HS_LOG_FILES}"
     echo "  - USE_NGINX     :${USE_NGINX}"
     echo "  - USE_SSL       :${USE_SSL}"
-    echo "  - USE_SECURITY  :${USE_SECURITY}"
     # Generate docker-compose.yml
     if [[ "$USE_LOCAL_IRODS" = true ]]; then
         cp -rf ${HS_PATH}/scripts/templates/docker-compose-local-irods.template ${HS_PATH}/docker-compose.yml
@@ -214,12 +213,6 @@ preflight_hs() {
     cp -rf ${HS_PATH}/scripts/templates/init-defaultworker.template ${HS_PATH}/init-defaultworker
     sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init-defaultworker
     sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init-defaultworker
-    # Check security settings
-    if [ "${USE_SECURITY,,}" = true ]; then
-        sed -i 's/\<USE_SECURITY = False\>/USE_SECURITY = True/g' ${HS_PATH}/hydroshare/settings.py
-    else
-        sed -i 's/\<USE_SECURITY = True\>/USE_SECURITY = False/g' ${HS_PATH}/hydroshare/settings.py
-    fi
 }
 
 loaddb_hs() {
