@@ -965,7 +965,8 @@ def create_resource(request, *args, **kwargs):
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
-    resource_files = request.FILES.getlist('files')
+    # resource_files = request.FILES.getlist('files')
+    resource_files = request.FILES.values()
     fed_res_file_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
