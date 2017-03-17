@@ -1105,3 +1105,13 @@ class ZipContents(object):
 
 def get_file_storage():
     return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+
+
+def resolve_request(request):
+    if request.POST:
+        return request.POST
+
+    if request.data:
+        return request.data
+
+    return {}

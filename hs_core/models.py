@@ -1209,20 +1209,24 @@ class Coverage(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
     @classmethod
-    def get_temporal_html_form(cls, resource, element=None):
+    def get_temporal_html_form(cls, resource, element=None, file_type=False):
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
         if element is not None:
-            coverage_data_dict['start'] = element.value['start']
-            coverage_data_dict['end'] = element.value['end']
+            start_date = parser.parse(element.value['start'])
+            end_date = parser.parse(element.value['end'])
+            # change the date format to match with datepicker date format
+            coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
+            coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
 
         coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
                                              res_short_id=resource.short_id if resource else None,
-                                             element_id=element.id if element else None)
+                                             element_id=element.id if element else None,
+                                             file_type=file_type)
         return coverage_form
 
     @classmethod
-    def get_spatial_html_form(cls, resource, element=None, allow_edit=True):
+    def get_spatial_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
         from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
         # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
@@ -1242,7 +1246,8 @@ class Coverage(AbstractMetaDataElement):
 
         coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                             res_short_id=resource.short_id if resource else None,
-                                            element_id=element.id if element else None)
+                                            element_id=element.id if element else None,
+                                            file_type=file_type)
         return coverage_form
 
 
@@ -1864,10 +1869,10 @@ class ResourceFile(models.Model):
     @property
     def can_set_file_type(self):
         # currently user can set file type only for files with extension
-        # tif or zip.
-        return self.extension in ('.tif', '.zip') and (self.logical_file is None or
-                                                       self.logical_file_type_name ==
-                                                       "GenericLogicalFile")
+        # tif, zip and nc.
+        return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
+                                                              self.logical_file_type_name ==
+                                                              "GenericLogicalFile")
 
     @property
     def size(self):

@@ -374,6 +374,12 @@ processor_for(RasterResource)(resource_processor)
 
 class GeoRasterMetaDataMixin(models.Model):
     """This class must be the first class in the multi-inheritance list of classes"""
+
+    # required non-repeatable cell information metadata elements
+    _cell_information = GenericRelation(CellInformation)
+    _band_information = GenericRelation(BandInformation)
+    _ori_coverage = GenericRelation(OriginalCoverage)
+
     class Meta:
         abstract = True
 
@@ -432,10 +438,6 @@ class GeoRasterMetaDataMixin(models.Model):
 
 
 class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
-    # required non-repeatable cell information metadata elements
-    _cell_information = GenericRelation(CellInformation)
-    _band_information = GenericRelation(BandInformation)
-    _ori_coverage = GenericRelation(OriginalCoverage)
 
     @property
     def resource(self):
