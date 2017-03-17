@@ -4010,7 +4010,8 @@ form#covereage-search-fields {
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
 	width: 100px;
 	height: 100px;
-	margin: 8px;
+	margin: 10px;
+	border: 1px solid transparent;
 	float: left;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -4047,7 +4048,6 @@ form#covereage-search-fields {
 .fb-folder:hover, .fb-file:hover, .fb-folder.ui-selected, .fb-file.ui-selected {
 	border: 1px solid #fcefa1 !important;
 	color: #363636;
-	padding: 9px;
 	z-index: 5;
 	box-shadow: 1px 1px 5px #ececec;
 	-webkit-box-shadow: 1px 1px 5px #ececec;
@@ -4078,7 +4078,7 @@ form#covereage-search-fields {
 .fb-folder.ui-selecting, .fb-file.ui-selecting {
 	border: 1px solid #fcefa1;
 	color: #363636;
-	padding: 9px;
+	/*padding: 9px;*/
 	background: #fbf9ee;
 }
 
@@ -4191,6 +4191,7 @@ ul#fb-files-container {
 
 .fb-file-name {
 	color: #555;
+	max-height: 50px;
 	font-size: 12px;
 	cursor: default;
 }
@@ -4305,7 +4306,6 @@ span.fb-control-square {
 #fb-files-container li.fb-cutting, #fb-files-container li.fb-drag-cutting {
 	border: 1px dashed #999 !important;
 	opacity: 0.75;
-	padding: 9px;
 	box-shadow: 1px 1px 5px #ececec;
 	-webkit-box-shadow: 1px 1px 5px #ececec;
 	-moz-box-shadow: 1px 1px 5px #ececec;
@@ -4366,6 +4366,9 @@ div.fb-upload-caption a {
 .fb-view-list > li {
 	float: initial;
 	width: 85%;
+	border: 1px solid transparent;
+	padding: 6px 0;
+	margin: 4px 0;
 }
 
 .fb-view-grid > li {
@@ -4439,6 +4442,10 @@ div#fb-inner-controls button, .file-browser-search {
 
 div#fb-file-operations-controls {
     font-size: 16px;
+}
+
+span.caption-file-type {
+    font-size: 12px;
 }
 
 #fb-file-operations-controls > button:not(.disabled):hover {
