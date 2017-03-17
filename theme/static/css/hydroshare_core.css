@@ -1567,6 +1567,12 @@ body > .main-container {
 	outline: none;
 }
 
+.btn-create-resource {
+    height: 40px;
+    line-height: 26px;
+    width: 180px;
+}
+
 .access-panel-title{
     color: #FFF;
     background-color: #337ab7;
@@ -4669,7 +4675,6 @@ span.caption-file-type {
 
 #resource-content #dz-container .dz-filename {
 	font-size: 12px;
-	font-weight: bold;
 	max-height: 50px;
 	line-height: 16px;
 	margin-top: 5px;

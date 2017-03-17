@@ -11,32 +11,46 @@
 {% block main %}
     <div class="container">
         <div id="resource-content" class="row">
-            {% block error %}
-                {% if validation_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <strong>Validation Error: {{ validation_error }}</strong>
-                    </div>
-                {% endif %}
-                {% if file_size_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <strong>Uploaded File Size Error: {{ file_size_error }}</strong>
-                    </div>
-                {% endif %}
-                {% if resource_creation_error %}
-                    <div class="alert alert-danger alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <strong>Failed to Create Resource: {{ resource_creation_error }}</strong>
-                    </div>
-                {% endif %}
-            {% endblock %}
+
+            <div class="col-xs-12">
+                {% block error %}
+                    {% if validation_error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <strong>Validation Error: {{ validation_error }}</strong>
+                        </div>
+                    {% endif %}
+                    {% if file_size_error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <strong>Uploaded File Size Error: {{ file_size_error }}</strong>
+                        </div>
+                    {% endif %}
+                    {% if resource_creation_error %}
+                        <div class="alert alert-danger alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                            <strong>Failed to Create Resource: {{ resource_creation_error }}</strong>
+                        </div>
+                    {% endif %}
+                {% endblock %}
+
+                <div class="alert alert-info">
+                    <p>When you click Create Resource, the files will be uploaded to the HydroShare server. Click
+                        <strong><a href="https://pages.hydroshare.org/sharing-and-privacy/formally-publishing-resources/"
+                           target="_blank">here</a></strong>
+                        to learn more about next steps to share and formally publish your data.</p>
+                </div>
+            </div>
 
             <div class="col-xs-12">
                 <h2 class="page-title">Create Resource</h2>
+            </div>
+
+            <div class="col-xs-12 height-fix">
+                <span class="btn btn-primary btn-create-resource pull-right">Create Resource</span>
             </div>
 
             <div class="col-xs-12">
@@ -328,7 +342,7 @@
             </div>
 
             <div class="col-xs-12">
-                <span id="btn-create-resource" class="btn btn-primary">Create Resource</span>
+                <span class="btn btn-primary btn-create-resource pull-right">Create Resource</span>
             </div>
         </div>
     </div>
@@ -560,8 +574,8 @@
                 init: function () {
                     myDropzone = this;
 
-                    $("#btn-create-resource").click(function () {
-                        $("html").css("cursor", "progress");
+                    $(".btn-create-resource").click(function () {
+                        $("html, #dz-container").css("cursor", "progress");
                         var title = $("#txtTitle").val().trim();
                         if (!title) {
                             title = $("#txtTitle").attr("placeholder");
