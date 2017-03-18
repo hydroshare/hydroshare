@@ -300,7 +300,7 @@
                                 </span>
 
                                 <div class="dz-error-message arrow_box arrow_box_top_center">
-                                    <span data-dz-errormessage></span>
+                                    <span class="dz-error-message" data-dz-errormessage></span>
                                 </div>
 
                                 <div class="dz-filename" data-toggle="tooltip" data-placement="bottom"
@@ -644,15 +644,11 @@
 
                     this.on("error", function (file, error) {
                         var template = $(file.previewElement);
-
-                        var error = template.find("span[data-dz-errormessage]").text();
-
-                        if (error) {
-                            $(template).attr("data-toggle", "tooltip");
-                            $(template).attr("data-placement", "top");
-                            $(template).attr("title", error);
-                            template.tooltip();
-                        }
+                        $(template).addClass("dz-error");
+                        $(template).attr("data-toggle", "tooltip");
+                        $(template).attr("data-placement", "top");
+                        $(template).attr("title", error);
+                        template.tooltip();
                     });
 
                     this.on('sendingmultiple', function (data, xhr, formData) {
