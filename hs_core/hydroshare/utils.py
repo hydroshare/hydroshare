@@ -398,7 +398,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         if not res.resource_federation_path:
             istorage.set_fed_zone_session()
         src_file = res.bag_path
-        # TODO: property of user
         # TODO: allow setting destination path
         tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
             userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
@@ -998,3 +997,13 @@ class ZipContents(object):
 
 def get_file_storage():
     return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+
+
+def resolve_request(request):
+    if request.POST:
+        return request.POST
+
+    if request.data:
+        return request.data
+
+    return {}

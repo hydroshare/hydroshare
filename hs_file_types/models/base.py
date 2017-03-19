@@ -1,3 +1,4 @@
+import os
 import copy
 
 from django.db import models
@@ -6,10 +7,10 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.forms.models import model_to_dict
 
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import HStoreField, ArrayField
 
 from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
-    textarea, h4, input
+    textarea, h4, input, ul, li, p
 
 from lxml import etree
 
@@ -24,9 +25,17 @@ class AbstractFileMetaData(models.Model):
     coverages = GenericRelation(Coverage)
     # kye/value metadata
     extra_metadata = HStoreField(default={})
+    # keywords
+    keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
+    # to track if any metadata element has been modified to trigger file update
+    is_dirty = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def get_metadata_model_classes(cls):
+        return {'coverage': Coverage}
 
     def get_metadata_elements(self):
         """returns a list of all metadata elements (instances of AbstractMetaDataElement)
@@ -37,6 +46,7 @@ class AbstractFileMetaData(models.Model):
     def delete_all_elements(self):
         self.coverages.all().delete()
         self.extra_metadata = {}
+        self.keywords = []
         self.save()
 
     def get_html(self):
@@ -44,6 +54,7 @@ class AbstractFileMetaData(models.Model):
         Subclass must override to include additional html for additional metadata it supports.
         """
 
+        root_div = div()
         dataset_name_div = div()
         if self.logical_file.dataset_name:
             with dataset_name_div:
@@ -52,13 +63,23 @@ class AbstractFileMetaData(models.Model):
                         with tr():
                             th("Title", cls="text-muted")
                             td(self.logical_file.dataset_name)
+        keywords_div = div()
+        if self.keywords:
+            keywords_div = div(cls="col-sm-12 content-block")
+            with keywords_div:
+                legend('Keywords')
+                with div(cls="tags"):
+                    with ul(id="list-keywords-file-type", cls="tag-list custom-well"):
+                        for kw in self.keywords:
+                            with li():
+                                a(kw, cls="tag")
 
+        extra_metadata_div = div()
         if self.extra_metadata:
-            root_div = div(cls="col-sm-12 content-block")
-            root_div.add(dataset_name_div)
-            with root_div:
+            extra_metadata_div = div(cls="col-sm-12 content-block")
+            with extra_metadata_div:
                 legend('Extended Metadata')
-                with table(cls="table table-striped funding-agencies-table"):
+                with table(cls="table table-striped funding-agencies-table", style="width: 100%"):
                     with tbody():
                         with tr(cls="header-row"):
                             th("Key")
@@ -68,9 +89,14 @@ class AbstractFileMetaData(models.Model):
                                 td(k)
                                 td(v)
 
-            return root_div.render()
-        else:
-            return dataset_name_div.render()
+        if self.logical_file.dataset_name:
+            root_div.add(dataset_name_div)
+        if self.keywords:
+            root_div.add(keywords_div)
+        if self.extra_metadata:
+            root_div.add(extra_metadata_div)
+
+        return root_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
         """generates html forms for all the metadata elements associated with this logical file
@@ -80,6 +106,53 @@ class AbstractFileMetaData(models.Model):
         """
         root_div = div()
 
+        with root_div:
+            if datatset_name_form:
+                self._get_dataset_name_form()
+
+            keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
+            action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
+            action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+            delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
+            delete_action = delete_action.format(self.logical_file.__class__.__name__,
+                                                 self.logical_file.id)
+            with keywords_div:
+                legend("Keywords")
+                with form(id="id-keywords-filetype", action=action, method="post",
+                          enctype="multipart/form-data"):
+
+                    input(id="id-delete-keyword-filetype-action", type="hidden",
+                          value=delete_action)
+                    with div(cls="tags"):
+                        with div(id="add-keyword-wrapper", cls="input-group"):
+                            input(id="txt-keyword-filetype", cls="form-control",
+                                  placeholder="keyword",
+                                  type="text", name="keywords")
+                            with span(cls="input-group-btn"):
+                                a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
+                                  type="button")
+                    with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
+                        for kw in self.keywords:
+                            with li(cls="tag"):
+                                span(kw)
+                                with a():
+                                    span(cls="glyphicon glyphicon-remove-circle icon-remove")
+                p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
+                  cls="text-danger small", style="display: none;")
+
+            self.get_extra_metadata_html_form()
+            self.get_temporal_coverage_html_form()
+        return root_div
+
+    def get_spatial_coverage_form(self, allow_edit=False):
+        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
+                                              allow_edit=allow_edit, file_type=True)
+
+    def get_temporal_coverage_form(self):
+        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage,
+                                               file_type=True)
+
+    def get_extra_metadata_html_form(self):
         def get_add_keyvalue_button():
             add_key_value_btn = a(cls="btn btn-success", type="button", data_toggle="modal",
                                   data_target="#add-keyvalue-filetype-modal",
@@ -89,15 +162,14 @@ class AbstractFileMetaData(models.Model):
                     span("Add Key/Value", cls="button-label")
             return add_key_value_btn
 
-        with root_div:
-            if datatset_name_form:
-                self._get_dataset_name_form()
-            if self.extra_metadata:
-                root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
-                with root_div_extra:
+        if self.extra_metadata:
+            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            with root_div_extra:
+                with div(cls="col-lg-12 content-block"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
-                    with table(cls="table table-striped funding-agencies-table"):
+                    with table(cls="table table-striped funding-agencies-table",
+                               style="width: 100%"):
                         with tbody():
                             with tr(cls="header-row"):
                                 th("Key")
@@ -123,14 +195,32 @@ class AbstractFileMetaData(models.Model):
                     self._get_add_key_value_modal_form()
                     self._get_edit_key_value_modal_forms()
                     self._get_delete_key_value_modal_forms()
-                return root_div
-            else:
-                root_div_extra = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
-                with root_div_extra:
+            return root_div_extra
+        else:
+            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            with root_div_extra:
+                with div(cls="col-lg-12 content-block"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     self._get_add_key_value_modal_form()
-                return root_div
+            return root_div_extra
+
+    def get_temporal_coverage_html_form(self):
+        # Note: When using this form layout the context variable 'temp_form' must be
+        # set prior to calling the template.render(context)
+        root_div = div(cls="row", id="temporal-coverage-filetype")
+        with root_div:
+            with div(cls="col-lg-6 col-xs-12"):
+                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy temp_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;")
+        return root_div
 
     def has_all_required_elements(self):
         return True
@@ -185,8 +275,7 @@ class AbstractFileMetaData(models.Model):
             dc_format = etree.SubElement(rdf_dataFile_Description, '{%s}format' % NAMESPACES['dc'])
             dc_format.text = res_file.mime_type
 
-            # TODO: check if we should include the file size here
-
+        self.add_keywords_to_xml_container(rdf_Description)
         self.add_extra_metadata_to_xml_container(rdf_Description)
         for coverage in self.coverages.all():
             coverage.add_to_xml_container(rdf_Description)
@@ -207,6 +296,14 @@ class AbstractFileMetaData(models.Model):
             hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
                                              '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
             hsterms_value.text = value
+
+    def add_keywords_to_xml_container(self, container):
+        """Generates xml+rdf representation of the all the keywords associated
+        with an instance of the logical file type"""
+
+        for kw in self.keywords:
+            dc_subject = etree.SubElement(container, '{%s}subject' % CoreMetaData.NAMESPACES['dc'])
+            dc_subject.text = kw
 
     def create_element(self, element_model_name, **kwargs):
         # had to import here to avoid circular import
@@ -229,6 +326,8 @@ class AbstractFileMetaData(models.Model):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
+        self.is_dirty = True
+        self.save()
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
@@ -237,18 +336,20 @@ class AbstractFileMetaData(models.Model):
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
         model_type.model_class().remove(element_id)
+        self.is_dirty = True
+        self.save()
 
     def _get_metadata_element_model_type(self, element_model_name):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
-                                  "supported metadata elements."
-                                  % element_model_name)
+                                  "supported metadata elements for %s."
+                                  % element_model_name, type(self))
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
         try:
-            model_type = ContentType.objects.get(app_label='hs_geo_raster_resource',
+            model_type = ContentType.objects.get(app_label=self.model_app_label,
                                                  model=element_model_name)
         except ObjectDoesNotExist:
             try:
@@ -292,8 +393,8 @@ class AbstractFileMetaData(models.Model):
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right",
-                               onclick="metadata_update_ajax_submit('filetype-dataset-name'); "
-                                       "return false;", style="display: none;", type="button")
+                               style="display: none;", type="button")
+
         return root_div
 
     def _get_add_key_value_modal_form(self):
@@ -333,8 +434,8 @@ class AbstractFileMetaData(models.Model):
                         with div(cls="modal-footer"):
                             button("Cancel", type="button", cls="btn btn-default",
                                    data_dismiss="modal")
-                            button("OK", type="button", cls="btn btn-primary",
-                                   onclick="addFileTypeExtraMetadata(); return true;")
+                            button("OK", type="button", cls="btn btn-primary")
+
         return modal_div
 
     def _get_edit_key_value_modal_forms(self):
@@ -398,9 +499,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("OK", type="button", cls="btn btn-primary",
-                                           onclick="updateFileTypeExtraMetadata('{}'); "
-                                                   "return true;".format(form_id))
+                                    button("OK", type="button", cls="btn btn-primary")
+
             return root_div
 
     def _get_delete_key_value_modal_forms(self):
@@ -451,9 +551,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("Delete", type="button", cls="btn btn-danger",
-                                           onclick="deleteFileTypeExtraMetadata('{}'); "
-                                                   "return true;".format(form_id))
+                                    button("Delete", type="button", cls="btn btn-danger")
+
         return root_div
 
 
@@ -466,7 +565,7 @@ class AbstractLogicalFile(models.Model):
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
     # this will be used for hsterms:dataType in resourcemetadata.xml
-    # each specific logical type needs to rest this field
+    # each specific logical type needs to reset this field
     data_type = "Generic data"
 
     class Meta:
@@ -553,6 +652,7 @@ class AbstractLogicalFile(models.Model):
         copy_of_logical_file = type(self).create()
         copy_of_logical_file.dataset_name = self.dataset_name
         copy_of_logical_file.metadata.extra_metadata = copy.deepcopy(self.metadata.extra_metadata)
+        copy_of_logical_file.metadata.keywords = self.metadata.keywords
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.save()
         # copy the metadata elements
@@ -565,6 +665,35 @@ class AbstractLogicalFile(models.Model):
             copy_of_logical_file.metadata.create_element(element.term, **element_args)
 
         return copy_of_logical_file
+
+    @classmethod
+    def compute_file_type_folder(cls, resource, file_folder, file_name):
+        """
+        Computes the new folder path where the file type files will be stored
+        :param resource: an instance of BaseResource
+        :param file_folder: current file folder of the file which is being set to a specific file
+        type
+        :param file_name: name of the file (without extension) which is being set to a specific
+        file type
+        :return: computed new folder path
+        """
+        current_folder_path = 'data/contents'
+        if file_folder is not None:
+            current_folder_path = os.path.join(current_folder_path, file_folder)
+
+        new_folder_path = os.path.join(current_folder_path, file_name)
+
+        # To avoid folder creation failure when there is already matching
+        # directory path, first check that the folder does not exist
+        # If folder path exists then change the folder name by adding a number
+        # to the end
+        istorage = resource.get_irods_storage()
+        counter = 0
+        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
+            new_file_name = file_name + "_{}".format(counter)
+            new_folder_path = os.path.join(current_folder_path, new_file_name)
+            counter += 1
+        return new_folder_path
 
     def logical_delete(self, user, delete_res_files=True):
         """

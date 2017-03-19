@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 from django_irods.icommands import SessionException
 
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
-    get_resource_file_url
+    get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
 from hs_core.models import ResourceFile
@@ -101,7 +101,7 @@ def data_store_structure(request):
     )
 
 
-def data_store_folder_zip(request):
+def data_store_folder_zip(request, res_id=None):
     """
     Zip requested files and folders into a zip file in hydroshareZone or any federated zone
     used for HydroShare resource backend store. It is invoked by an AJAX call and returns
@@ -113,7 +113,7 @@ def data_store_folder_zip(request):
     and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
     whether original files will be deleted after zipping.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -126,7 +126,7 @@ def data_store_folder_zip(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    input_coll_path = request.POST.get('input_coll_path', None)
+    input_coll_path = resolve_request(request).get('input_coll_path', None)
     if input_coll_path is None:
         return HttpResponse('Bad request - input_coll_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -134,7 +134,7 @@ def data_store_folder_zip(request):
     if not input_coll_path:
         return HttpResponse('Bad request - input_coll_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    output_zip_fname = request.POST.get('output_zip_file_name', None)
+    output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
         return HttpResponse('Bad request - output_zip_fname is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -142,7 +142,7 @@ def data_store_folder_zip(request):
     if not output_zip_fname:
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
-    remove_original = request.POST.get('remove_original_after_zip', None)
+    remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
     if remove_original:
         remove_original = str(remove_original).strip().lower()
@@ -165,6 +165,11 @@ def data_store_folder_zip(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+@api_view(['POST'])
+def data_store_folder_zip_public(request, pk):
+    return data_store_folder_zip(request, res_id=pk)
 
 
 def data_store_folder_unzip(request, **kwargs):
@@ -331,7 +336,7 @@ def data_store_remove_folder(request):
     )
 
 
-def data_store_file_or_folder_move_or_rename(request):
+def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store. It is invoked by an AJAX call and returns json object that has the
@@ -340,7 +345,7 @@ def data_store_file_or_folder_move_or_rename(request):
     source_path, and target_path where source_path and target_path are the relative paths for the
     source and target file or folder under res_id collection/directory.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -353,8 +358,8 @@ def data_store_file_or_folder_move_or_rename(request):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    src_path = request.POST.get('source_path', None)
-    tgt_path = request.POST.get('target_path', None)
+    src_path = resolve_request(request).get('source_path', None)
+    tgt_path = resolve_request(request).get('target_path', None)
     if src_path is None or tgt_path is None:
         return HttpResponse('Bad request - src_path or tgt_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -377,3 +382,8 @@ def data_store_file_or_folder_move_or_rename(request):
         json.dumps(return_object),
         content_type='application/json'
     )
+
+
+@api_view(['POST'])
+def data_store_file_or_folder_move_or_rename_public(request, pk):
+    return data_store_file_or_folder_move_or_rename(request, res_id=pk)

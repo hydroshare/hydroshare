@@ -258,6 +258,11 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # since 'copy' is used for fed_copy_or_move when adding the file to the resource
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
 
+        # test replication of this resource to user zone
+        hydroshare.replicate_resource_bag_to_user_zone(self.user, res.short_id)
+        self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
+                        msg='replicated resource bag is not in the user zone')
+
         # test resource deletion
         resource.delete_resource(res.short_id)
         self.assertEquals(BaseResource.objects.all().count(), 0,

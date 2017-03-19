@@ -147,6 +147,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Set Geo Raster File Type</span>
                         </li>
+                        <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set NetCDF File Type</span>
+                        </li>
                     {%  endif %}
                 </ul>
 
@@ -214,23 +218,6 @@
                             </div>
                         </div>
                         {# ======= Modal window ends =======#}
-
-                        {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                            <div id="fb-alerts">
-                                <div class="alert alert-warning alert-dismissible" role="alert">
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-
-                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Uploading</strong>
-                                    <ul>
-                                        <li><span id="file-types"></span></li>
-                                        <li><span id="file-multiple"></span></li>
-                                        {% block upload_message %}{% endblock %}
-                                    </ul>
-                                </div>
-                            </div>
-                        {% endif %}
 
                         <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents"
                              {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
@@ -399,6 +386,11 @@
                                                             title="Set Geo Raster File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
+                                                    <button id="fb-set-netcdf-file-type"
+                                                            class="disabled"
+                                                            title="Set NetCDF File Type">
+                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                    </button>
                                                  {% endif %}
 
                                                 {% if page.perms.change and metadata_form %}
@@ -475,6 +467,33 @@
                                 </div>
                             {% endif %}
                         </div>
+
+                        {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
+                            <div id="fb-alerts">
+                                <div id="fb-download-help" class="alert alert-danger hidden" role="alert">
+                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large Files</strong>
+                                    <ul>
+                                        <li><span>To learn how to download files larger than 1 GB see <a
+                                                href="https://pages.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
+                                                target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="alert alert-warning alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+
+                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Uploading</strong>
+                                    <ul>
+                                        <li><span id="file-types"></span></li>
+                                        <li><span id="file-multiple"></span></li>
+                                        {% block upload_message %}{% endblock %}
+                                    </ul>
+                                </div>
+                            </div>
+                        {% endif %}
 
                         {% if page.perms.change and metadata_form %}
                             {% if file_type_error %}
@@ -1268,6 +1287,47 @@
             }
 
             $("#id-subject").find("#id_value").val(keywords);
+        }
+
+        // function for adding keywords associated with file type
+        function onAddKeywordFileType(event) {
+            var keyword = $("#txt-keyword-filetype").val();
+            keyword = keyword.split(",");
+            var existsNewKeywords = false;
+            for (var i = 0; i < keyword.length; i++) {
+                keyword[i] = keyword[i].trim(); // Remove leading and trailing whitespace
+                var exists = false;
+                // Check if the keyword already exists
+                for (var x = 0; x < $("#lst-tags-filetype").find(".tag > span").length; x++) {
+                    if ($($("#lst-tags-filetype").find(".tag > span")[x]).text().toLowerCase() == keyword[i].toLowerCase()) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (exists) {
+                    $("#id-keywords-filetype-msg").show();
+                }
+                else {
+                    $("#id-keywords-filetype-msg").hide();
+                }
+                // If does not exist, add it
+                if (!exists && keyword[i] != "" && keyword[i].length <= 100) {
+                    existsNewKeywords = true;
+                }
+            }
+
+            if(existsNewKeywords) {
+                filetype_keywords_update_ajax_submit();
+                $("#txt-keyword-filetype").val("");  // Clear text input
+            }
+        }
+
+        // function for deleteing keywords associated with file type
+        function onRemoveKeywordFileType(event) {
+            var tag = $(event.target).closest(".tag");
+            var keyword = tag.find('span').text();
+            filetype_keyword_delete_ajax_submit(keyword, tag);
+            $("#id-keywords-filetype-msg").hide();
         }
 
         function customAlert(msg, duration) {
