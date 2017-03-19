@@ -490,7 +490,17 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
 
-        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
+        post_creation_error_msg = ''
+        try:
+            hydroshare.utils.resource_post_create_actions(request=request, resource=resource,
+                                                          user=request.user,
+                                                          metadata=metadata, **kwargs)
+        except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            post_creation_error_msg = ex.message
+
+        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
+                         'message': post_creation_error_msg}
+
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
