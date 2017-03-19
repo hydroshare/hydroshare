@@ -3,7 +3,7 @@ from django.contrib.auth.models import User, Group
 
 
 class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
-    search_fields=['username','first_name','last_name']
+    search_fields = ['username', 'first_name', 'last_name']
     
     def choices_for_request(self):
         self.choices = self.choices.filter(is_active=True)
