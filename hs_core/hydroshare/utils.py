@@ -524,8 +524,7 @@ def copy_and_create_metadata(src_res, dest_res):
 
     # create Identifier element that is specific to the new resource
     dest_res.metadata.create_element('identifier', name='hydroShareIdentifier',
-                                     url='{0}/resource/{1}'.format(current_site_url(),
-                                                                   dest_res.short_id))
+                                     url=current_site_url(dest_res.get_absolute_url()))
 
     # create date element that is specific to the new resource
     dest_res.metadata.create_element('date', type='created', start_date=dest_res.created)
@@ -594,7 +593,7 @@ def get_profile(user):
     return user.userprofile
 
 
-def current_site_url():
+def current_site_url(location=''):
     """Returns fully qualified URL (no trailing slash) for the current site."""
     from django.contrib.sites.models import Site
     current_site = Site.objects.get_current()
@@ -603,6 +602,9 @@ def current_site_url():
     url = '%s://%s' % (protocol, current_site.domain)
     if port:
         url += ':%s' % port
+    if location:
+        url += location
+    url = url.rstrip('/')
     return url
 
 
@@ -778,8 +780,7 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
         metadata.append({'rights': {'statement': statement, 'url': url}})
 
     metadata.append({'identifier': {'name': 'hydroShareIdentifier',
-                                    'url': '{0}/resource/{1}'.format(current_site_url(),
-                                                                     resource.short_id)}})
+                                    'url': current_site_url(resource.get_absolute_url())}})
 
     # remove if there exists the 'type' element as system generates this element
     # remove if there exists 'format' elements - since format elements are system generated based
