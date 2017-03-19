@@ -1643,13 +1643,24 @@ body > .main-container {
 }
 
 #citation-text {
-    display: inline-block;
-    width: 100%;
-    min-height: 30px;
-    background: #EEE;
-    border: 1px solid #cccccc;
-    border-radius: 0px;
-    padding: 4px;
+	display: inline-block;
+	width: calc(100% - 65px);
+	min-height: 30px;
+	background: #EEE;
+	border: 1px solid #CCC;
+	border-radius: 0;
+	padding: 4px;
+	cursor: default;
+	line-height: 24px;
+}
+
+.clipboard-copy {
+	border-radius: 0;
+	margin-left: -1px;
+}
+
+.flex {
+	display: flex;
 }
 
 #citation-text a, .rights-url a{
@@ -4133,6 +4144,12 @@ form#covereage-search-fields {
 
 .fb-stack-netcdf {
 	color: #244960;
+}
+
+.fa-stack-clone .fa-asterisk {
+	font-size: 14px;
+	right: -36px;
+	top: -8px;
 }
 
 .fb-view-grid .fb-stack {

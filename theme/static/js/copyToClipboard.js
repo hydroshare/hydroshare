@@ -10,6 +10,8 @@ $(document).ready(function () {
 });
 
 function copyToClipboard(elem, event) {
+    var tempScrollTop = $(window).scrollTop();  // Save current scroll position
+
     // create hidden text element, if it doesn't already exist
     var targetId = "_hiddenCopyText_";
     var isInput = elem.tagName === "INPUT" || elem.tagName === "TEXTAREA";
@@ -61,6 +63,8 @@ function copyToClipboard(elem, event) {
     if (!isInput) {
         target.remove();
     }
+
+    $(window).scrollTop(tempScrollTop);  // Restore scroll position
 
     return succeed;
 }
