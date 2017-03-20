@@ -1,7 +1,6 @@
 import autocomplete_light
 from django.contrib.auth.models import User, Group
 
-
 class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields = ['username', 'first_name', 'last_name']
     split_words = True
