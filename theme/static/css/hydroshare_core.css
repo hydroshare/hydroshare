@@ -895,42 +895,6 @@ li.account p{
 	margin-right: 60px;
 }
 
-/* Text colors */
-
-.text-green {
-	color: #72a53b;
-}
-.text-blue {
-	color: #00B4FF;
-}
-.text-red {
-	color: #E74C3C;
-}
-.text-turquoise {
-	color: #1ABC9C;
-}
-.text-amethyst {
-	color: #9B59B6;
-}
-
-/* Background colors */
-
-.bg-green {
-	background-color: #72a53b;
-}
-.bg-blue {
-	background-color: #00B4FF;
-}
-.bg-red {
-	background-color: #E74C3C;
-}
-.bg-turquoise {
-	background-color: #1ABC9C;
-}
-.bg-amethyst {
-	background-color: #9B59B6;
-}
-
 /* ===== Scroll to Top ===== */
 
 .scrolltotop {
