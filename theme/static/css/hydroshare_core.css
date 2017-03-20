@@ -4607,6 +4607,11 @@ span.caption-file-type {
 #resource-content #dz-container .dz-details-header .btn-remove {
 	font-size: 18px;
 }
+
+div#resource-content {
+    min-height: 600px;
+}
+
 .dz-details .fa-file-o {
 	font-size: 32px;
 }
