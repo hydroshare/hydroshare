@@ -691,20 +691,24 @@ def validate_user_quota(user, size):
     """
     if user:
         # validate it is within quota hard limit
-        uq = user.quotas.filter(zone='hydroshare_internal').first()
-        if uq:
-            used_size = uq.used_value + size
-            if used_size >= uq.allocated_value:
-                qmsg = QuotaMessage.objects.first()
-                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                     qmsg.content)
-                percent_val = uq.used_value * 100 / uq.allocated_value
-                msg_str = msg_template_str.format(used=used_size,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=percent_val)
-                raise QuotaException(msg_str)
+        if user.quotas.filter(zone='hydroshare_internal').exists():
+            uq = user.quotas.filter(zone='hydroshare_internal').first()
+            if uq:
+                used_size = uq.used_value + size
+                if used_size >= uq.allocated_value:
+                    qmsg = QuotaMessage.objects.first()
+                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                         qmsg.content)
+                    percent_val = uq.used_value * 100.0 / uq.allocated_value
+                    msg_str = msg_template_str.format(used=used_size,
+                                                      unit=uq.unit,
+                                                      allocated=uq.allocated_value,
+                                                      zone=uq.zone,
+                                                      percent=percent_val,
+                                                      grace_period=qmsg.grace_period,
+                                                      soft_limit_percent=qmsg.soft_limit_percent)
+
+                    raise QuotaException(msg_str)
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,

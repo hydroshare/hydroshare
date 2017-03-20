@@ -117,17 +117,24 @@ class QuotaMessage(models.Model):
     warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
                                                        '{allocated}{unit} in zone {zone}. You '
                                                        'currently have resources that consume '
-                                                       '{used}{unit}, {percent]% of your quota. '
-                                                       'Once your quota reaches 100% you will no '
+                                                       '{used}{unit}, {percent]% of your quota '
+                                                       'which has reached the soft quota limit. '
+                                                       'You have a grace period of {grace_period} '
+                                                       'days to take actions to get your quota '
+                                                       'below the soft quota limit '
+                                                       '({soft_limit_percent}). Otherwise, when '
+                                                       'your grace period is over, you will no '
                                                        'longer be able to create new resources in '
                                                        'HydroShare. ')
     enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
-                                                       'was refused due to being over your '
-                                                       'HydroShare quota. Your quota for '
-                                                       'HydroShare resources is {allocated}{unit} '
-                                                       'in zone {zone}. You currently have '
-                                                       'resources that consume {used}{unit}, '
-                                                       '{percent]% of your quota. ')
+                                                       'was refused because you are over '
+                                                       '{soft_limit_percent} of your '
+                                                       'quota and your grace period of '
+                                                       '{grace_period} days have passed. Your '
+                                                       'quota for HydroShare resources is '
+                                                       '{allocated}{unit} in zone {zone}. You '
+                                                       'currently have resources that consume '
+                                                       '{used}{unit}, {percent]% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
                                        'support@hydroshare.org. We will try accommodate reasonable '
                                        'requests for additional quota. If you have a large quota '
@@ -136,7 +143,9 @@ class QuotaMessage(models.Model):
                                        'https://pages.hydroshare.org/about-hydroshare/policies/'
                                        'quota/ for more information about the quota policy.')
     # quota soft limit percent value for starting to show quota usage warning. Default is 90%
-    soft_limit_percent = models.IntegerField(default=90)
+    soft_limit_percent = models.IntegerField(default=80)
+    # grace period
+    grace_period = models.IntegerField(default=7)
 
 
 class UserQuota(models.Model):
@@ -156,6 +165,10 @@ class UserQuota(models.Model):
     used_value = models.BigIntegerField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare_internal")
+    # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
+    # soft quota limit and thus grace period has not started. When grace period is 0, quota
+    # enforcement takes place
+    remaining_grace_period = models.IntegerField(default=-1)
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")

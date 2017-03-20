@@ -1,7 +1,7 @@
 import csv
 from collections import namedtuple
 from django.core.management.base import BaseCommand
-from theme.models import UserQuota
+from theme.models import UserQuota, QuotaMessage
 
 INPUT_FIELDS = namedtuple('FIELDS', 'user_name used_value storage_zone')
 input_fields = INPUT_FIELDS(0, 1, 2)
@@ -21,6 +21,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with open(options['input_file_name_with_path'], 'r') as csvfile:
             freader = csv.reader(csvfile)
+            if not QuotaMessage.objects.exists():
+                QuotaMessage.objects.create()
+            qmsg = QuotaMessage.objects.first()
             for row in freader:
                 try:
                     uname = int(row[input_fields.user_name])
@@ -28,6 +31,18 @@ class Command(BaseCommand):
                     zone = row[input_fields.storage_zone]
                     uq = UserQuota.objects.filter(user__username=uname, zone=zone).first()
                     uq.used_value = used_val
+                    used_percent = used_val*100.0/uq.allocated_value
+                    if used_percent >= qmsg.soft_limit_percent:
+                        if uq.remaining_grace_period < 0:
+                            # triggers grace period counting
+                            uq.remaining_grace_period = qmsg.grace_period
+                        else:
+                            # reduce remaining_grace_period by one day
+                            uq.remaining_grace_period -= 1
+                    else:
+                        if uq.remaining_grace_period >= 0:
+                            # turn grace period off now that the user is below quota soft limit
+                            uq.remaining_grace_period = -1
                     uq.save()
                 except ValueError:   # header row, continue
                     continue

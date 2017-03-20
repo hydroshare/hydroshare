@@ -12,6 +12,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with open(options['output_file_name_with_path'], 'w') as csvfile:
             w = csv.writer(csvfile)
+            if not QuotaMessage.objects.exists():
+                QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
             fields = [
                 'User id',

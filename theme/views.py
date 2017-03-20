@@ -308,7 +308,7 @@ def login(request, template="accounts/account_login.html",
         qmsg = QuotaMessage.objects.first()
         soft_limit = qmsg.soft_limit_percent
         for uq in authenticated_user.quotas.all():
-            percent = uq.used_value*100/uq.allocated_value
+            percent = uq.used_value*100.0/uq.allocated_value
             if percent >= soft_limit:
                 qmsg = QuotaMessage.objects.first()
                 msg_template_str = ' - {}{}'.format(qmsg.warning_content_prepend, qmsg.content)
@@ -316,7 +316,9 @@ def login(request, template="accounts/account_login.html",
                                                      unit=uq.unit,
                                                      allocated=uq.allocated_value,
                                                      zone=uq.zone,
-                                                     percent=percent)
+                                                     percent=percent,
+                                                     grace_period=qmsg.grace_period,
+                                                     soft_limit_percent=qmsg.soft_limit_percent)
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)
