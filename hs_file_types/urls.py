@@ -34,9 +34,23 @@ urlpatterns = patterns(
         name="delete_file_keyvalue_metadata"),
 
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/'
+        r'add-file-keyword-metadata/$',
+        views.add_keyword_metadata,
+        name="add_file_keyword_metadata"),
+
+    url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/'
+        r'delete-file-keyword-metadata/$',
+        views.delete_keyword_metadata,
+        name="delete_file_keyword_metadata"),
+
+    url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/'
         r'update-filetype-dataset-name/$',
         views.update_dataset_name,
         name="update_filetype_datatset_name"),
+
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/update-netcdf-file/$',
+        views.update_netcdf_file,
+        name="update_netcdf_file"),
 
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<metadata_mode>[a-z]+)/'
         r'get-file-metadata/$', views.get_metadata, name="get_file_metadata"),

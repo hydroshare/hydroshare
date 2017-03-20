@@ -120,9 +120,9 @@
                                             {% endif %}
                                         </div>
                                         <div class="col-sm-8">
-                                            <div><strong>{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</strong></div>
+                                            <div id="profile-menu-fullname">{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</div>
                                             {% if request.user.email %}
-                                                <div class="text-muted">{{ request.user.email }}</div>
+                                                <div id="profile-menu-email" class="text-muted">{{ request.user.email }}</div>
                                             {% endif %}
                                         </div>
                                     </div>

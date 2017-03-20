@@ -16,9 +16,10 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet
         # is the order these fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         form_field_names = ['projection', 'datum', 'projection_string', 'units', 'northlimit',
                             'westlimit', 'southlimit', 'eastlimit']
-        crispy_form_fields = get_crispy_form_fields(form_field_names)
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id,
@@ -47,9 +48,11 @@ class OriginalCoverageSpatialForm(forms.Form):
                             widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='OriginalCoverage')
+                                                 element_name='OriginalCoverage',
+                                                 file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.delete_modal_form = None

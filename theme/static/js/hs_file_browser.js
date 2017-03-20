@@ -112,6 +112,7 @@ function updateSelectionMenuContext() {
     var flagDisableCut = false;
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
+    var flagDisableSetNetCDFFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -123,6 +124,7 @@ function updateSelectionMenuContext() {
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableSetNetCDFFileType = true;
         flagDisableGetLink = true;
         
         for (var i = 0; i < selected.length; i++) {
@@ -180,7 +182,11 @@ function updateSelectionMenuContext() {
             flagDisableSetGeoRasterFileType = true;
         }
 
-        if(logicalFileType === "GeoRasterLogicalFile"){
+        if (fileExt.toUpperCase() != "NC"  || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetNetCDFFileType = true;
+        }
+
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
@@ -189,7 +195,7 @@ function updateSelectionMenuContext() {
     }
 
     var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    if (logicalFileType === "GeoRasterLogicalFile"){
+    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
             flagDisableCreateFolder = true;
         }
     // Show Create folder toolbar option
@@ -216,6 +222,10 @@ function updateSelectionMenuContext() {
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
     $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+
+    // set NetCDF file type
+    menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
+    $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -320,8 +330,11 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if ($(this).hasClass("fb-file")){
-                showFileTypeMetadata();
+            if ($(this).hasClass("fb-file")) {
+                // check if this is a left mouse button click
+                if(e.which == 1) {
+                    showFileTypeMetadata();
+                }
             }
             else{
                 $("#fileTypeMetaDataTab").html(file_metadata_alert);
@@ -455,11 +468,24 @@ function showFileTypeMetadata(){
          var json_response = JSON.parse(result);
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+         $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+         $(".icon-remove").click(onRemoveKeywordFileType);
+         $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
-         setFileTypeSpatialCoverageFormFields();
+         setFileTypeSpatialCoverageFormFields(logical_type);
+         setFileTypeMetadataFormsClickHandlers();
+         
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
+         if (logical_type === "NetCDFLogicalFile") {
+             // don't let the user open the Projection String Type dropdown list
+             // when editing Oroginal Coverage element
+             $("#id_projection_string_type_filetype").css('pointer-events', 'none');
+             // don't let the user open the Variable type dropdown list when editing
+             // Variable elements
+             $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
+         }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);
              $("#div_id_type_filetype input:radio").trigger("change");
@@ -1215,18 +1241,13 @@ $(document).ready(function () {
 
     // set geo raster file type method
      $("#btn-set-geo-file-type").click(function () {
-         var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
-         var resID = $("#hs-file-browser").attr("data-res-id");
-         var url = "/hsapi/_internal/" + resID + "/" + file_id + "/GeoRaster/set-file-type/";
-         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-         var calls = [];
-         calls.push(set_file_type_ajax_submit(url));
-         // Wait for the asynchronous calls to finish to get new folder structure
-         $.when.apply($, calls).done(function () {
-            refreshFileBrowser();
-            $("#fileTypeMetaDataTab").html(file_metadata_alert);
-         });
+         setFileType("GeoRaster");
       });
+
+    // set NetCDF file type method
+     $("#btn-set-netcdf-file-type").click(function () {
+         setFileType("NetCDF");
+     });
 
     // show file type metadata
     $("#btn-show-file-metadata").click(function () {
@@ -1243,6 +1264,7 @@ $(document).ready(function () {
              var json_response = JSON.parse(result);
              $("#fileTypeMetaDataTab").html(json_response.metadata);
              $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+             $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
              showMetadataFormSaveChangesButton();
              initializeDatePickers();
 
@@ -1325,6 +1347,20 @@ $(document).ready(function () {
 var cookieName = "page_scroll";
 var expdays = 365;
 
+// used for setting various file types within composite resource
+function setFileType(fileType){
+    var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    var calls = [];
+    calls.push(set_file_type_ajax_submit(url));
+    // Wait for the asynchronous calls to finish to get new folder structure
+    $.when.apply($, calls).done(function () {
+       refreshFileBrowser();
+       $("#fileTypeMetaDataTab").html(file_metadata_alert);
+    });
+}
 // Used to set the previous scroll position after refresh
 function setCookie(name, value, expires, path, domain, secure) {
     if (!expires) {
