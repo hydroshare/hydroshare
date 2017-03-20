@@ -117,7 +117,7 @@ class QuotaMessage(models.Model):
     warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
                                                        '{allocated}{unit} in zone {zone}. You '
                                                        'currently have resources that consume '
-                                                       '{used}{unit}, {percent]% of your quota '
+                                                       '{used}{unit}, {percent}% of your quota '
                                                        'which has reached the soft quota limit. '
                                                        'You have a grace period of {grace_period} '
                                                        'days to take actions to get your quota '
@@ -134,7 +134,7 @@ class QuotaMessage(models.Model):
                                                        'quota for HydroShare resources is '
                                                        '{allocated}{unit} in zone {zone}. You '
                                                        'currently have resources that consume '
-                                                       '{used}{unit}, {percent]% of your quota. ')
+                                                       '{used}{unit}, {percent}% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
                                        'support@hydroshare.org. We will try accommodate reasonable '
                                        'requests for additional quota. If you have a large quota '
