@@ -234,7 +234,7 @@ def data_store_folder_unzip(request, **kwargs):
     if not zip_with_rel_path.startswith('data/contents/'):
         return HttpResponse('Bad request - zip_with_rel_path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
-    if zip_with_rel_path.find('/../') or zip_with_rel_path.endswith('/..'):
+    if zip_with_rel_path.find('/../') >= 0 or zip_with_rel_path.endswith('/..'):
         return HttpResponse('Bad request - zip_with_rel_path must not contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
