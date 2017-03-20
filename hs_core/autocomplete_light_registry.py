@@ -4,7 +4,8 @@ from django.contrib.auth.models import User, Group
 
 class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields = ['username', 'first_name', 'last_name']
-    
+    split_words = True
+
     def choices_for_request(self):
         self.choices = self.choices.filter(is_active=True)
         return super(UserAutocomplete, self).choices_for_request()
