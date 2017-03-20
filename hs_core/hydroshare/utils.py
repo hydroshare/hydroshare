@@ -641,7 +641,7 @@ def raise_file_size_exception():
 
 def validate_resource_file_size(resource_files):
     from .resource import check_resource_files
-    (valid, size) = check_resource_files(resource_files)
+    valid, size = check_resource_files(resource_files)
     if not valid:
         raise_file_size_exception()
     # if no exception, return the total size of all files
@@ -682,6 +682,31 @@ def validate_resource_file_count(resource_cls, files, resource=None):
                 raise ResourceFileValidationException(err_msg)
 
 
+def validate_user_quota(user, size):
+    """
+    validate to make sure the user is not over quota with the newly added size
+    :param user: the user to be validated
+    :param size: the newly added file size to add on top of the user's used quota to be validated
+    :return: raise exception for the over quota case
+    """
+    if user:
+        # validate it is within quota hard limit
+        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        if uq:
+            used_size = uq.used_value + size
+            if used_size >= uq.allocated_value:
+                qmsg = QuotaMessage.objects.first()
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                percent_val = uq.used_value * 100 / uq.allocated_value
+                msg_str = msg_template_str.format(used=used_size,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=percent_val)
+                raise QuotaException(msg_str)
+
+
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), fed_res_file_names='', metadata=None,
                                 requesting_user=None, **kwargs):
@@ -695,21 +720,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
         validate_resource_file_count(resource_cls, files)
         validate_resource_file_type(resource_cls, files)
 
-    if requesting_user:
-        # validate it is within quota hard limit
-        uq = requesting_user.quotas.filter(zone='hydroshare_internal').first()
-        if uq:
-            used_size = uq.used_value + size
-            if used_size >= uq.allocated_value:
-                qmsg = QuotaMessage.objects.first()
-                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                     qmsg.content)
-                msg_str = msg_template_str.format(used=used_size,
-                                                  unit=uq.unit,
-                                                  allocated=uq.allocated_value,
-                                                  zone=uq.zone,
-                                                  percent=uq.used_value * 100 / uq.allocated_value)
-                raise QuotaException(msg_str)
+    # validate it is within quota hard limit
+    validate_user_quota(requesting_user, size)
 
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -852,22 +864,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
-        if user:
-            # validate it is within quota hard limit
-            uq = user.quotas.filter(zone='hydroshare_internal').first()
-            if uq:
-                used_size = uq.used_value + size
-                if used_size >= uq.allocated_value:
-                    qmsg = QuotaMessage.objects.first()
-                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                         qmsg.content)
-                    percent_val = uq.used_value * 100 / uq.allocated_value
-                    msg_str = msg_template_str.format(used=used_size,
-                                                      unit=uq.unit,
-                                                      allocated=uq.allocated_value,
-                                                      zone=uq.zone,
-                                                      percent=percent_val)
-                    raise QuotaException(msg_str)
+        validate_user_quota(user, size)
         validate_resource_file_type(resource_cls, files)
         validate_resource_file_count(resource_cls, files, resource)
 

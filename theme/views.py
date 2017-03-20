@@ -303,6 +303,8 @@ def login(request, template="accounts/account_login.html",
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
         qmsg = QuotaMessage.objects.first()
         soft_limit = qmsg.soft_limit_percent
         for uq in authenticated_user.quotas.all():

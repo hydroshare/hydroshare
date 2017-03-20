@@ -152,14 +152,14 @@ class UserQuota(models.Model):
                              related_name='quotas',
                              related_query_name='quotas')
 
-    allocated_value = models.BigIntegerField(default=20000)
+    allocated_value = models.BigIntegerField(default=20)
     used_value = models.BigIntegerField(default=0)
-    unit = models.CharField(max_length=10, default="MB")
+    unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare_internal")
     class Meta:
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
-
+        unique_together = ('user', 'zone')
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)

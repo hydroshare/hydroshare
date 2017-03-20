@@ -234,9 +234,9 @@ def check_resource_files(files=()):
         sum += size
         if size > FILE_SIZE_LIMIT:
             # file is greater than FILE_SIZE_LIMIT, which is not allowed
-            return (False, -1)
+            return False, -1
 
-    return (True, sum)
+    return True, sum
 
 
 def check_resource_type(resource_type):
