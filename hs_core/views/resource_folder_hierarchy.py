@@ -49,9 +49,19 @@ def data_store_structure(request):
     if not store_path:
         return HttpResponse('Bad request - store_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    if not store_path.startswith('data/contents'):
+        return HttpResponse('Bad request - store_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if store_path.find('/../') >= 0 or store_path.endswith('/..'):
+        return HttpResponse('Bad request - store_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     # this is federated if warranted, automatically, by choosing an appropriate session.
     istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
+        # This implies that the path starts with data/contents
         res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
         rel_path = store_path
     else:
@@ -134,6 +144,15 @@ def data_store_folder_zip(request, res_id=None):
     if not input_coll_path:
         return HttpResponse('Bad request - input_coll_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    if not input_coll_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - input_coll_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if input_coll_path.find('/../') >= 0 or input_coll_path.endswith('/..'):
+        return HttpResponse('Bad request - input_coll_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
         return HttpResponse('Bad request - output_zip_fname is not included',
@@ -142,6 +161,11 @@ def data_store_folder_zip(request, res_id=None):
     if not output_zip_fname:
         return HttpResponse('Bad request - output_zip_fname cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    if output_zip_fname.find('/') >= 0:
+        return HttpResponse('Bad request - output_zip_fname cannot contain /',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
     if remove_original:
@@ -200,10 +224,20 @@ def data_store_folder_unzip(request, **kwargs):
     if zip_with_rel_path is None:
         return HttpResponse('Bad request - zip_with_rel_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
+
     zip_with_rel_path = str(zip_with_rel_path).strip()
     if not zip_with_rel_path:
         return HttpResponse('Bad request - zip_with_rel_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    # security checks deny illicit requests
+    if not zip_with_rel_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - zip_with_rel_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if zip_with_rel_path.find('/../') or zip_with_rel_path.endswith('/..'):
+        return HttpResponse('Bad request - zip_with_rel_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     remove_original = request.POST.get('remove_original_zip', None)
     bool_remove_original = True
     if remove_original:
@@ -278,6 +312,14 @@ def data_store_create_folder(request):
         return HttpResponse('Bad request - folder_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    if not folder_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - folder_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
+        return HttpResponse('Bad request - folder_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     try:
         create_folder(res_id, folder_path)
     except SessionException as ex:
@@ -322,6 +364,14 @@ def data_store_remove_folder(request):
     folder_path = str(folder_path).strip()
     if not folder_path:
         return HttpResponse('Bad request - folder_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not folder_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - folder_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
+        return HttpResponse('Bad request - folder_path must not contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
@@ -369,12 +419,20 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO: check file path for legality, including lack of '/../' that can be abused.
-    if __debug__:
-        assert(src_path.startswith('data/contents/'))
-        assert(not src_path.contains('/../'))
-        assert(tgt_path.startswith('data/contents/'))
-        assert(not tgt_path.contains('/../'))
+    if not src_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - src_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+        return HttpResponse('Bad request - src_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not tgt_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
+        return HttpResponse('Bad request - tgt_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
