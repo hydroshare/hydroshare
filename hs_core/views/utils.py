@@ -353,12 +353,14 @@ def get_my_resources_list(request):
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
     # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                         via_group=True)
     # remove obsoleted resources from the editable_resources
     editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
     # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                         via_group=True)
     # remove obsoleted resources from the viewable_resources
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
