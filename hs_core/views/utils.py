@@ -595,6 +595,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     """
     if __debug__:
         assert(input_coll_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     res_coll_input = os.path.join(resource.root_path, input_coll_path)
@@ -644,6 +645,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     """
     if __debug__:
         assert(zip_with_rel_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     zip_with_full_path = os.path.join(resource.root_path, zip_with_rel_path)
@@ -674,6 +676,7 @@ def create_folder(res_id, folder_path):
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -695,6 +698,7 @@ def remove_folder(user, res_id, folder_path):
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)
@@ -724,6 +728,7 @@ def list_folder(res_id, folder_path):
     """
     if __debug__:
         assert(folder_path.startswith("data/contents/"))
+
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
     coll_path = os.path.join(resource.root_path, folder_path)

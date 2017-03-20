@@ -369,6 +369,13 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    # TODO: check file path for legality, including lack of '/../' that can be abused.
+    if __debug__:
+        assert(src_path.startswith('data/contents/'))
+        assert(not src_path.contains('/../'))
+        assert(tgt_path.startswith('data/contents/'))
+        assert(not tgt_path.contains('/../'))
+
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
