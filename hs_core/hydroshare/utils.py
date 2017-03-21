@@ -449,7 +449,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     :param set_to_private: set target resource to private if True. The default is False.
     :return:
     """
-    avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType', 'quotaUserName']
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
     istorage = src_res.get_irods_storage()
@@ -461,14 +460,15 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
         dest_coll = dest_res_id + '/'
 
     istorage.copyFiles(src_coll, dest_coll)
+
+    istorage.setAVU(dest_coll, 'bag_modified', 'True')
+    avu_list = ['isPublic', 'metadata_dirty', 'resourceType']
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
-            # quotaUserName is already set as part of precursor action create_empty_resource()
-
-            elif avu_name != 'quotaUserName':
+            else:
                 istorage.setAVU(dest_coll, avu_name, value)
 
     # link copied resource files to Django resource model
