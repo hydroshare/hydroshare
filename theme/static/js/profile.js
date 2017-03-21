@@ -149,6 +149,7 @@ function irods_status_info(alert_type, status, title) {
 
 function create_irods_account() {
     var url = $("#url-create-irods-account").val();
+
     $.ajax({
         url: url,
         type: "POST",
@@ -166,16 +167,17 @@ function create_irods_account() {
             if(json.error) {
                 $('#create-irods-account-dialog').modal('hide');
                 var irodsContainer = $("#irods-account-container");
-                irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
+                irodsContainer.append(irods_status_info('alert-danger', json.error, 'Failure'));
             }
         },
         error: function(xhr, errmsg, err) {
             err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
             $('#create-irods-account-dialog').modal('hide');
             var irodsContainer = $("#irods-account-container");
-            irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
+            irodsContainer.append(irods_status_info('alert-danger', err_info, 'Failure'));
         }
     });
+    return false;
 }
 
 function delete_irods_account() {
