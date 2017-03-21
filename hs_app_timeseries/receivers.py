@@ -130,8 +130,12 @@ def post_create_resource_handler(sender, **kwargs):
         # check if the uploaded file is a sqlite file or csv file
         file_ext = utils.get_resource_file_name_and_extension(res_file)[2]
         if file_ext == '.sqlite':
+            # metadata can exist at this point if a timeseries resource is created
+            # using REST API since the API caller can pass metadata information. Before
+            # metadata can be extracted from the sqlite file and populated to database, existing
+            # metadata needs to be deleted.
             _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                          delete_existing_metadata=False)
+                                          delete_existing_metadata=True)
         elif file_ext == '.csv':
             _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                        delete_existing_metadata=False)
