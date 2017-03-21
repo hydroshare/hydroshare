@@ -461,14 +461,25 @@ function showFileTypeMetadata(){
      resource_mode = resource_mode.toLowerCase();
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
      var calls = [];
      calls.push(get_file_type_metadata_ajax_submit(url));
+
      // Wait for the asynchronous calls to finish to get new folder structure
      $.when.apply($, calls).done(function (result) {
          var json_response = JSON.parse(result);
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+
+         $("#txt-keyword-filetype").keypress(function (e) {
+             e.which = e.which || e.keyCode;
+             if (e.which == 13) {
+                 onAddKeywordFileType();
+                 return false;
+             }
+         });
+
          $(".icon-remove").click(onRemoveKeywordFileType);
          $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          showMetadataFormSaveChangesButton();
@@ -1254,30 +1265,6 @@ $(document).ready(function () {
          setFileType("NetCDF");
      });
 
-    // show file type metadata
-    $("#btn-show-file-metadata").click(function () {
-         var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-         var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-         var resource_mode = $("#resource-mode").val();
-         resource_mode = resource_mode.toLowerCase();
-         var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
-         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-         var calls = [];
-         calls.push(get_file_type_metadata_ajax_submit(url));
-         // Wait for the asynchronous calls to finish to get new folder structure
-         $.when.apply($, calls).done(function (result) {
-             var json_response = JSON.parse(result);
-             $("#fileTypeMetaDataTab").html(json_response.metadata);
-             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-             $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
-             showMetadataFormSaveChangesButton();
-             initializeDatePickers();
-
-             $("html, body").animate({
-                 scrollTop: $("#fileTypeMetaDataTab").offset().top + 500
-             }, 1000);
-         });
-      });
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {
