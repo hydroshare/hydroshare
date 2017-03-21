@@ -55,7 +55,7 @@ class AbstractFileMetaData(models.Model):
         """
 
         root_div = div()
-        dataset_name_div = div()
+        dataset_name_div = div(cls="col-xs-12")
         if self.logical_file.dataset_name:
             with dataset_name_div:
                 with table(cls='custom-table'):
@@ -163,9 +163,8 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            root_div_extra = div(cls="col-xs-12", id="filetype-extra-metadata")
             with root_div_extra:
-                with div(cls="col-lg-12 content-block"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     with table(cls="table table-striped funding-agencies-table",
@@ -208,18 +207,17 @@ class AbstractFileMetaData(models.Model):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(cls="row", id="temporal-coverage-filetype")
+        root_div = div(cls="col-lg-6 col-xs-12", id="temporal-coverage-filetype")
         with root_div:
-            with div(cls="col-lg-6 col-xs-12"):
-                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy temp_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+            with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                      method="post", enctype="multipart/form-data"):
+                div("{% crispy temp_form %}")
+                with div(cls="row", style="margin-top:10px;"):
+                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                 "col-md-2 col-xs-6"):
+                        button("Save changes", type="button",
+                               cls="btn btn-primary pull-right",
+                               style="display: none;")
         return root_div
 
     def has_all_required_elements(self):
@@ -376,7 +374,7 @@ class AbstractFileMetaData(models.Model):
     def _get_dataset_name_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-filetype-dataset-name/"
         form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-        root_div = div(cls="col-sm-12 col-xs-12")
+        root_div = div(cls="col-xs-12")
         dataset_name = self.logical_file.dataset_name if self.logical_file.dataset_name else ""
         with root_div:
             with form(action=form_action, id="filetype-dataset-name",
