@@ -143,14 +143,15 @@
                 </div>
             </form>
             {% block modal %}
+                {{ block.super }}
                 {% include "irods_signin.html" %}
                 {% include "irods_upload_create.html" %}
             {% endblock %}
         </div>
     </div>
 
-{% block extra_js %}
-    {{ block.super }}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/create-resource.js"></script>
-{% endblock %}
+    {% block extra_js %}
+        {{ block.super }}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/create-resource.js"></script>
+    {% endblock %}
 {% endblock %}
