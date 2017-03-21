@@ -509,7 +509,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # name as the name for the new folder
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        nc_file_name)
-                        # Alva: This does nothing at all. 
+                        # Alva: This does nothing at all.
                         # fed_file_full_path = ''
                         # if resource.resource_federation_path:
                         #     fed_file_full_path = os.path.join(resource.root_path,
@@ -531,7 +531,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                 resource, uploaded_file, folder=upload_folder
                             )
 
-                            # Alva: this argument does nothing. 
+                            # Alva: this argument does nothing.
                             # fed_res_file_name_or_path=fed_file_full_path
 
                             # make each resource file we added part of the logical file
