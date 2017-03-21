@@ -186,17 +186,16 @@ function delete_irods_account() {
         data: {},
         success: function(json) {
             if(json.success) {
-                $('#delete-irods-account-dialog').modal('hide');
                 var irodsContainer = $("#irods-account-container");
                 irodsContainer.empty();
                 irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
                 irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
             }
             if(json.error) {
-                $('#delete-irods-account-dialog').modal('hide');
                 var irodsContainer = $("#irods-account-container");
                 irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
             }
+            $('#delete-irods-account-dialog').modal('hide');
         },
         error: function(xhr, errmsg, err) {
             err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
