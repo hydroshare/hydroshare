@@ -32,14 +32,14 @@ class Command(BaseCommand):
                     uq = UserQuota.objects.filter(user__username=uname, zone=zone).first()
                     uq.used_value = used_val
                     used_percent = used_val*100.0/uq.allocated_value
-                    if used_percent >= qmsg.soft_limit_percent:
+                    if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
                         if uq.remaining_grace_period < 0:
                             # triggers grace period counting
                             uq.remaining_grace_period = qmsg.grace_period
                         else:
                             # reduce remaining_grace_period by one day
                             uq.remaining_grace_period -= 1
-                    else:
+                    elif used_percent < 100:
                         if uq.remaining_grace_period >= 0:
                             # turn grace period off now that the user is below quota soft limit
                             uq.remaining_grace_period = -1

@@ -32,7 +32,8 @@ from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.models import UserProfile, QuotaMessage
+from theme.models import UserProfile
+from theme.utils import get_quota_message
 
 from .forms import SignupForm
 
@@ -303,22 +304,7 @@ def login(request, template="accounts/account_login.html",
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        if not QuotaMessage.objects.exists():
-            QuotaMessage.objects.create()
-        qmsg = QuotaMessage.objects.first()
-        soft_limit = qmsg.soft_limit_percent
-        for uq in authenticated_user.quotas.all():
-            percent = uq.used_value*100.0/uq.allocated_value
-            if percent >= soft_limit:
-                qmsg = QuotaMessage.objects.first()
-                msg_template_str = ' - {}{}'.format(qmsg.warning_content_prepend, qmsg.content)
-                login_msg += msg_template_str.format(used=uq.used_value,
-                                                     unit=uq.unit,
-                                                     allocated=uq.allocated_value,
-                                                     zone=uq.zone,
-                                                     percent=percent,
-                                                     grace_period=qmsg.grace_period,
-                                                     soft_limit_percent=qmsg.soft_limit_percent)
+        login_msg += get_quota_message(authenticated_user)
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)

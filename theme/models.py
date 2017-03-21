@@ -111,40 +111,47 @@ class IconBox(Orderable):
 
 
 class QuotaMessage(models.Model):
-    # warning_content_prepend will prepend the content to form a warning message to be emailed
-    # to the user and displayed when the user is logged in; enforce_content_prepend will prepend
-    # the content to form an enforcement message to inform users when they are over allocated quota
+    # warning_content_prepend prepends the content to form a warning message to be emailed to the
+    # user and displayed when the user is logged in; grace_period_cotent_prepend prepends the
+    # content when over quota within grace period and less than 125% of hard limit quota;
+    # enforce_content_prepend prepends the content to form an enforcement message to inform users
+    # after grace period or when they are over hard limit quota
     warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
-                                                       '{allocated}{unit} in zone {zone}. You '
+                                                       '{allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
-                                                       '{used}{unit}, {percent}% of your quota '
-                                                       'which has reached the soft quota limit. '
-                                                       'You have a grace period of {grace_period} '
-                                                       'days to take actions to get your quota '
-                                                       'below the soft quota limit '
-                                                       '({soft_limit_percent}). Otherwise, when '
-                                                       'your grace period is over, you will no '
+                                                       '{used}{unit}, {percent}% of your quota. '
+                                                       'Once your quota reaches 100% you will no '
                                                        'longer be able to create new resources in '
                                                        'HydroShare. ')
+    grace_period_content_prepend = models.TextField(default='You have exceeded your HydroShare '
+                                                            'quota. Your quota for HydroShare '
+                                                            'resources is {allocated}{unit} in '
+                                                            '{zone} zone. You currently have '
+                                                            'resources that consume {used}{unit}, '
+                                                            '{percent}% of your quota. You have a '
+                                                            'grace period until {cut_off_date} to '
+                                                            'reduce your use to below your quota, '
+                                                            'or to acquire additional quota, after '
+                                                            'which you will no longer be able to '
+                                                            'create new resources in HydroShare. ')
     enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
-                                                       'was refused because you are over '
-                                                       '{soft_limit_percent} of your '
-                                                       'quota and your grace period of '
-                                                       '{grace_period} days have passed. Your '
-                                                       'quota for HydroShare resources is '
-                                                       '{allocated}{unit} in zone {zone}. You '
+                                                       'was refused because you have exceeded your '
+                                                       'quota. Your quota for HydroShare resources '
+                                                       'is {allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
-                                       'support@hydroshare.org. We will try accommodate reasonable '
-                                       'requests for additional quota. If you have a large quota '
-                                       'request you may need to contribute toward the costs of '
-                                       'providing the additional space you need. See '
+                                       'support@hydroshare.org. We will try to accommodate '
+                                       'reasonable requests for additional quota. If you have a '
+                                       'large quota request you may need to contribute toward the '
+                                       'costs of providing the additional space you need. See '
                                        'https://pages.hydroshare.org/about-hydroshare/policies/'
                                        'quota/ for more information about the quota policy.')
-    # quota soft limit percent value for starting to show quota usage warning. Default is 90%
+    # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
-    # grace period
+    # quota hard limit percent value for hard quota enforcement. Default is 125%
+    hard_limit_percent = models.IntegerField(default=125)
+    # grace period, default is 7 days
     grace_period = models.IntegerField(default=7)
 
 

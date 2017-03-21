@@ -19,6 +19,8 @@ from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from mezzanine.conf import settings
 
@@ -588,8 +590,6 @@ def set_dirty_bag_flag(resource):
 
 
 def _validate_email(email):
-    from django.core.validators import validate_email
-    from django.core.exceptions import ValidationError
     try:
         validate_email(email)
         return True
@@ -682,11 +682,37 @@ def validate_resource_file_count(resource_cls, files, resource=None):
                 raise ResourceFileValidationException(err_msg)
 
 
+def convert_file_size_to_unit(size, unit):
+    """
+    Convert file size to unit for quota comparison
+    :param size: in byte unit
+    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :return: the size converted to the pass-in unit
+    """
+    unit = unit.lower()
+    kbsize = size / 1000.0
+    if unit == 'kb':
+        return kbsize
+    mbsize = kbsize / 1000.0
+    if unit == 'mb':
+        return mbsize
+    gbsize = mbsize / 1000.0
+    if unit == 'gb':
+        return gbsize
+    tbsize = gbsize / 1000.0
+    if unit == 'tb':
+        return tbsize
+
+    raise ValidationError('Pass-in unit for file size conversion must be '
+                              'one of KB, MB, GB, or TB')
+
+
 def validate_user_quota(user, size):
     """
     validate to make sure the user is not over quota with the newly added size
     :param user: the user to be validated
-    :param size: the newly added file size to add on top of the user's used quota to be validated
+    :param size: the newly added file size to add on top of the user's used quota to be validated.
+                 size input parameter should be in byte unit
     :return: raise exception for the over quota case
     """
     if user:
@@ -694,20 +720,20 @@ def validate_user_quota(user, size):
         if user.quotas.filter(zone='hydroshare_internal').exists():
             uq = user.quotas.filter(zone='hydroshare_internal').first()
             if uq:
-                used_size = uq.used_value + size
-                if used_size >= uq.allocated_value:
-                    qmsg = QuotaMessage.objects.first()
+                if not QuotaMessage.objects.exists():
+                    QuotaMessage.objects.create()
+                qmsg = QuotaMessage.objects.first()
+                hard_limit = qmsg.hard_limit_percent
+                used_size = round(uq.used_value + convert_file_size_to_unit(size, uq.unit))
+                used_percent = round(used_size*100.0/uq.allocated_value)
+                if used_percent >= hard_limit or uq.remaining_grace_period == 0:
                     msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                          qmsg.content)
-                    percent_val = uq.used_value * 100.0 / uq.allocated_value
                     msg_str = msg_template_str.format(used=used_size,
                                                       unit=uq.unit,
                                                       allocated=uq.allocated_value,
                                                       zone=uq.zone,
-                                                      percent=percent_val,
-                                                      grace_period=qmsg.grace_period,
-                                                      soft_limit_percent=qmsg.soft_limit_percent)
-
+                                                      percent=used_percent)
                     raise QuotaException(msg_str)
 
 

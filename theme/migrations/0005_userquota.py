@@ -39,12 +39,15 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True,
                                         primary_key=True)),
                 ('warning_content_prepend', models.TextField(
-                    default=b'Your quota for HydroShare resources is {allocated}{unit} in zone {zone}. You currently have resources that consume {used}{unit}, {percent}% of your quota which has reached the soft quota limit. You have a grace period of {grace_period} days to take actions to get your quota below the soft quota limit ({soft_limit_percent}). Otherwise, when your grace period is over, you will no longer be able to create new resources in HydroShare. ')),
+                    default=b'Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in HydroShare. ')),
+                ('grace_period_content_prepend', models.TextField(
+                    default=b'You have exceeded your HydroShare quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in HydroShare. ')),
                 ('enforce_content_prepend', models.TextField(
-                    default=b'Your action to add content to HydroShare was refused because you are over {soft_limit_percent} of your quota and your grace period of {grace_period} days have passed. Your quota for HydroShare resources is {allocated}{unit} in zone {zone}. You currently have resources that consume {used}{unit}, {percent}% of your quota. ')),
+                    default=b'Your action to add content to HydroShare was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. ')),
                 ('content', models.TextField(
                     default=b'To request additional quota, please contact support@hydroshare.org. We will try accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://pages.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.')),
                 ('soft_limit_percent', models.IntegerField(default=80)),
+                ('hard_limit_percent', models.IntegerField(default=125)),
                 ('grace_period', models.IntegerField(default=7)),
             ],
         ),
