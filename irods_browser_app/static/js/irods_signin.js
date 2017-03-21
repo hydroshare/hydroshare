@@ -33,6 +33,8 @@ $('#btn-signin-irods').on('click',function() {
 
 $('#btn-signout-irods').on('click', function() {
     $("#sign-in-info").text('');
+    $("#sign-in-info").removeClass();
+    $("#sign-in-info").addClass("hidden");
     sessionStorage.IRODS_signininfo = '';
     $("#irods-sel-file").text('');
     $("#btn-select-irods-file").hide();
@@ -55,6 +57,8 @@ function irods_login() {
         success: function(json) {
             if(json.irods_loggedin) {
                 var signInStr = "Signed in as " + json.user;
+                $("#sign-in-info").removeClass();
+                $("#sign-in-info").addClass("alert alert-info");
                 $("#sign-in-info").text(signInStr);
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
@@ -72,6 +76,8 @@ function irods_login() {
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
+                $("#sign-in-info").removeClass();
+                $("#sign-in-info").addClass("alert alert-danger");
                 sessionStorage.IRODS_signininfo = '';
                 $("#btn-select-irods-file").hide();
                 $("#irods-sel-file").text('');
@@ -88,6 +94,8 @@ function irods_login() {
             sessionStorage.IRODS_host = '';
             sessionStorage.IRODS_zone = '';
             $("#sign-in-info").text('iRODS login failed');
+            $("#sign-in-info").removeClass();
+            $("#sign-in-info").addClass("alert alert-danger");
             $("#btn-select-irods-file").hide();
             $("#irods-sel-file").text('');
             $('#irodsSignin').modal('hide');
