@@ -13,7 +13,6 @@ from functools import partial, wraps
 from django.db import models, transaction
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.fields import GenericRelation
 from django.forms.models import formset_factory
 from django.template import Template, Context
 
@@ -21,7 +20,6 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.models import Coverage
 from hs_core.forms import CoverageTemporalForm
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
@@ -33,9 +31,18 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
-    _cell_information = GenericRelation(CellInformation)
-    _band_information = GenericRelation(BandInformation)
-    _ori_coverage = GenericRelation(OriginalCoverage)
+    # the metadata element models used for this file type are from the raster resource type app
+    # use the 'model_app_label' attribute with ContentType, do dynamically find the right element
+    # model class from element name (string)
+    model_app_label = 'hs_geo_raster_resource'
+
+    @classmethod
+    def get_metadata_model_classes(cls):
+        metadata_model_classes = super(GeoRasterFileMetaData, cls).get_metadata_model_classes()
+        metadata_model_classes['originalcoverage'] = OriginalCoverage
+        metadata_model_classes['bandinformation'] = BandInformation
+        metadata_model_classes['cellinformation'] = CellInformation
+        return metadata_model_classes
 
     def get_metadata_elements(self):
         elements = super(GeoRasterFileMetaData, self).get_metadata_elements()
@@ -44,7 +51,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return elements
 
     def get_html(self):
-        """overrides the base class function"""
+        """overrides the base class function to generate html needed to display metadata
+        in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
         html_string += self.spatial_coverage.get_html()
@@ -62,24 +70,11 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return template.render(context)
 
     def get_html_forms(self, datatset_name_form=True):
-        """overrides the base class function"""
+        """overrides the base class function to generate html needed for metadata editing"""
 
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            with div(cls="well", id="variables"):
-                with div(cls="col-lg-6 col-xs-12"):
-                    with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
-                              method="post", enctype="multipart/form-data"):
-                        div("{% crispy temp_form %}")
-                        with div(cls="row", style="margin-top:10px;"):
-                            with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                         "col-md-2 col-xs-6"):
-                                button("Save changes", type="button",
-                                       cls="btn btn-primary pull-right",
-                                       style="display: none;",
-                                       onclick="metadata_update_ajax_submit("
-                                               "'id-coverage_temporal-file-type'); return false;")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
@@ -126,30 +121,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
         context = Context(context_dict)
         rendered_html = template.render(context)
-
-        # file level form field ids need to changed so that they are different from
-        # the ids used at the resource level for the same type of metadata elements
-        # Note: These string replacement operations need to be done in this particular
-        # order otherwise same element id will be replaced multiple times
-        rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
-        rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
-        rendered_html = rendered_html.replace("id_start", "id_start_filetype")
-        rendered_html = rendered_html.replace("id_end", "id_end_filetype")
-        for spatial_element_id in ('div_id_northlimit', 'div_id_southlimit', 'div_id_westlimit',
-                                   'div_id_eastlimit'):
-            rendered_html = rendered_html.replace(spatial_element_id,
-                                                  spatial_element_id + "_filetype", 1)
-        for spatial_element_id in ('div_id_type', 'div_id_north', 'div_id_east'):
-            rendered_html = rendered_html.replace(spatial_element_id,
-                                                  spatial_element_id + "_filetype", 1)
         return rendered_html
-
-    def get_spatial_coverage_form(self):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
-                                              allow_edit=False)
-
-    def get_temporal_coverage_form(self):
-        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     def get_cellinfo_form(self):
         return self.cellInformation.get_html_form(resource=None)
@@ -269,6 +241,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         file_name = utils.get_resource_file_name_and_extension(res_file)[1]
         # file name without the extension
         file_name = file_name.split(".")[0]
+        file_folder = res_file.file_folder
 
         if res_file is not None and res_file.has_generic_logical_file:
             # get the file from irods to temp dir
@@ -297,18 +270,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                     try:
                         # create a folder for the raster file type using the base file name as the
                         # name for the new folder
-                        new_folder_path = 'data/contents/{}'.format(file_name)
-                        # To avoid folder creation failure when there is already matching
-                        # directory path, first check that the folder does not exist
-                        # If folder path exists then change the folder name by adding a number
-                        # to the end
-                        istorage = resource.get_irods_storage()
-                        counter = 0
-                        new_file_name = file_name
-                        while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
-                            new_file_name = file_name + "_{}".format(counter)
-                            new_folder_path = 'data/contents/{}'.format(new_file_name)
-                            counter += 1
+                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                       file_name)
 
                         fed_file_full_path = ''
                         if resource.resource_federation_path:
@@ -317,12 +280,18 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
 
+                        new_folder_name = new_folder_path.split('/')[-1]
+                        if file_folder is None:
+                            upload_folder = new_folder_name
+                        else:
+                            upload_folder = os.path.join(file_folder, new_folder_name)
+
                         # add all new files to the resource
                         for f in files_to_add_to_resource:
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=new_file_name,
+                                resource, uploaded_file, folder=upload_folder,
                                 fed_res_file_name_or_path=fed_file_full_path
                                 )
                             # make each resource file we added as part of the logical file

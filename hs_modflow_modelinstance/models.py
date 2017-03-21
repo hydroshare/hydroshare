@@ -6,8 +6,6 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
 
-import os
-
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     AbstractMetaDataElement
 
@@ -589,26 +587,13 @@ class MODFLOWModelInstanceResource(BaseResource):
         md = MODFLOWModelInstanceMetaData()
         return self._get_metadata(md)
 
-    def has_required_content_files(self):
-        if self.files.all().count() >= 1:
-            nam_files, reqd_files, existing_files = self.find_content_files()
-            if nam_files != 1:
-                return False
-            else:
-                for f in reqd_files:
-                    if f not in existing_files:
-                        return False
-                else:
-                    return True
-        else:
-            return False
-
     def check_content_files(self):
         """
-        like 'has_required_content_files()' this method checks that one and only .nam exists, but
-        unlike 'has_required_content_files()' this method returns which files are missing so that
-        more information can be returned to the user via the interface
-        :return: -['nam'] if there are no files or if there are files but no .nam file
+        like 'has_required_content_files()' this method checks that one and only of .nam or .mfn
+         exists, but unlike 'has_required_content_files()' this method returns which files are
+         missing so that more information can be returned to the user via the interface
+        :return: -['.nam or .mfn'] if there are no files or if there are files but no .nam or .mfn
+                    file
                  -'multiple_nam' if more than one .nam file has been uploaded
                  -missing_files, a list of file names that are included in the .nam file but have
                  not been uploaded by the user
@@ -617,7 +602,7 @@ class MODFLOWModelInstanceResource(BaseResource):
         if self.files.all().count() >= 1:
             nam_files, reqd_files, existing_files = self.find_content_files()
             if not nam_files:
-                return ['.nam']
+                return ['.nam or .mfn']
             else:
                 if nam_files > 1:
                     return 'multiple_nam'
@@ -627,13 +612,13 @@ class MODFLOWModelInstanceResource(BaseResource):
                             missing_files.append(f)
                     return missing_files
         else:
-            return ['.nam']
+            return ['.nam or .mfn ']
 
     def find_content_files(self):
         """
-        loops through uploaded files to count the .nam files, creates a list of required files
-        (file names listed in the .nam file needed to run the model), and a list of existing file
-        names
+        loops through uploaded files to count the .nam and/or .mfn files, creates a list of required
+         files (file names listed in the .nam or .mfn file needed to run the model), and a list of
+         existing file names
         :return: -nam_file_count, (int), the number of .nam files uploaded
                  -reqd_files, (list of strings), the files listed in the .nam file that should be
                  included for the model to run
@@ -643,9 +628,9 @@ class MODFLOWModelInstanceResource(BaseResource):
         existing_files = []
         reqd_files = []
         for res_file in self.files.all():
-                ext = os.path.splitext(res_file.resource_file.name)[-1]
-                existing_files.append(res_file.resource_file.name.split("/")[-1])
-                if ext == '.nam':
+                ext = res_file.extension
+                existing_files.append(res_file.file_name)
+                if ext == '.nam' or ext == '.mfn':
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
                     for row in name_file:

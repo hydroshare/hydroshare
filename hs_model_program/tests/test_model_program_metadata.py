@@ -35,11 +35,18 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.temp_dir = tempfile.mkdtemp()
+
         self.file_name = "MP.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Program resource files")
         self.text_file_obj = open(temp_text_file, 'r')
+
+        self.file_name_2 = "MP.csv"
+        temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
+        text_file_2 = open(temp_text_file_2, 'w')
+        text_file_2.write("Model,Program,resource,file")
+        self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
         super(TestModelProgramMetaData, self).tearDown()
@@ -68,7 +75,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resModelProgram.metadata.program, None)
 
         # Upload any other file type should pass both the file pre add check post add check
-        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=True)
 
