@@ -508,6 +508,11 @@ function showFileTypeMetadata(){
              var formID = $(this).closest("form").attr("id");
              metadata_update_ajax_submit(formID);
          });
+
+         $("#btn-confirm-add-metadata").click(function () {
+             addFileTypeExtraMetadata();
+             return true;
+         });
     });
 
 

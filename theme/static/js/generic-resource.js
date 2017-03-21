@@ -730,12 +730,6 @@ $(document).ready(function () {
     $("#save-extra-meta-btn").click(saveExtraMetadata);
 
     // TODO: TESTING
-    $("#btn-confirm-add-metadata").click(function () {
-        addFileTypeExtraMetadata();
-        return true;
-    });
-
-    // TODO: TESTING
     $("#btn-confirm-edit-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");
         updateFileTypeExtraMetadata(formID);
