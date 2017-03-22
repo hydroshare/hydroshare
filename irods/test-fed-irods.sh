@@ -7,4 +7,4 @@
 ./use-local-irods.sh --persist
 (cd ..; ./hsctl rebuild --db)
 sleep 30
-(cd ..; ./hsctl managepy test |& tee OUTPUT)
+(cd ..; ./hsctl managepy test)
