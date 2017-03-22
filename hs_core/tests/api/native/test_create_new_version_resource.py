@@ -148,7 +148,7 @@ class TestNewVersionResource(TestCase):
         self.assertIn('hydroShareIdentifier',
                       [id.name for id in new_res_generic.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found for new versioned resource.")
-        id_url = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                          new_res_generic.short_id)
         self.assertIn(id_url, [id.url for id in new_res_generic.metadata.identifiers.all()],
                       msg="Identifier url was not found for new versioned resource.")
@@ -159,7 +159,7 @@ class TestNewVersionResource(TestCase):
                            msg="New versioned resource does has relation element.")
         self.assertIn('isVersionOf', [rel.type for rel in new_res_generic.metadata.relations.all()],
                       msg="No relation element of type 'isVersionOf' for new versioned resource")
-        version_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                 self.res_generic.short_id)
         self.assertIn(version_value,
                       [rel.value for rel in new_res_generic.metadata.relations.all()],
@@ -168,7 +168,7 @@ class TestNewVersionResource(TestCase):
         self.assertIn('isReplacedBy',
                       [rel.type for rel in self.res_generic.metadata.relations.all()],
                       msg="No relation element of type 'isReplacedBy' for the original resource")
-        version_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                 new_res_generic.short_id)
         self.assertIn(version_value,
                       [rel.value for rel in self.res_generic.metadata.relations.all()],
@@ -264,7 +264,7 @@ class TestNewVersionResource(TestCase):
         self.assertIn('hydroShareIdentifier',
                       [id.name for id in new_res_raster.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found for new versioned resource.")
-        id_url = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                          new_res_raster.short_id)
         self.assertIn(id_url, [id.url for id in new_res_raster.metadata.identifiers.all()],
                       msg="Identifier url was not found for new versioned resource.")
@@ -275,7 +275,7 @@ class TestNewVersionResource(TestCase):
                            msg="New versioned resource does has relation element.")
         self.assertIn('isVersionOf', [rel.type for rel in new_res_raster.metadata.relations.all()],
                       msg="No relation element of type 'isVersionOf' for new versioned resource")
-        version_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                 self.res_raster.short_id)
         self.assertIn(version_value, [rel.value for rel in new_res_raster.metadata.relations.all()],
                       msg="The original resource identifier is not set as value "
@@ -283,7 +283,7 @@ class TestNewVersionResource(TestCase):
         self.assertIn('isReplacedBy',
                       [rel.type for rel in self.res_raster.metadata.relations.all()],
                       msg="No relation element of type 'isReplacedBy' for the original resource")
-        version_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        version_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                 new_res_raster.short_id)
         self.assertIn(version_value,
                       [rel.value for rel in self.res_raster.metadata.relations.all()],
