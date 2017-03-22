@@ -1,6 +1,8 @@
-
 from django.http import HttpResponse
+
 from hs_model_program.models import ModelProgramResource
+from hs_core.hydroshare.utils import current_site_url
+
 import json
 import datetime
 
@@ -36,7 +38,7 @@ def get_model_metadata(request):
                 software_version=mpmeta.modelVersion,
                 software_language=mpmeta.modelProgramLanguage,
                 operating_sys=mpmeta.modelOperatingSystem,
-                url = protocol+"://"+request.get_host()+"/resource/"+resource_id+"/",
+                url = current_site_url(obj.get_absolute_url()),
                 modelEngine = mpmeta.modelEngine.split(';'),
                 modelSoftware=mpmeta.modelSoftware.split(';'),
                 modelDocumentation=mpmeta.modelDocumentation.split(';'),

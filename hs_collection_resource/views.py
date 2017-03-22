@@ -4,11 +4,11 @@ from dateutil import parser
 from django.http import JsonResponse
 from django.db import transaction
 
+from hs_core.hydroshare.utils import current_site_url, get_resource_by_shortkey, resource_modified
+from hs_core.models import BaseResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
-from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
-    update_collection_list_csv
+from .utils import add_or_remove_relation_metadata, update_collection_list_csv
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -92,7 +92,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                 collection_res_obj.resources.remove(res_obj_remove)
 
                 # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
+                res_remove = BaseResource.objects.get(short_id=res_id_remove)
+                value = current_site_url(res_remove.get_absolute_url())
                 add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
                                                 relation_type=hasPart, relation_value=value,
                                                 set_res_modified=False)
@@ -130,7 +131,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                 collection_res_obj.resources.add(res_obj_add)
 
                 # change "Relation" metadata in collection
-                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
+                res_remove = BaseResource.objects.get(short_id=res_id_add)
+                value = current_site_url(res_remove.get_absolute_url())
                 add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                                 relation_type=hasPart, relation_value=value,
                                                 set_res_modified=False)
@@ -180,8 +182,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             # handle "Relation" metadata
             hasPart = "hasPart"
             for deleted_res_log in collection_res.deleted_resources:
-                relation_value = RES_LANDING_PAGE_URL_TEMPLATE.format(deleted_res_log.resource_id)
-
+                relation_value = deleted_res_log.resource_url
                 add_or_remove_relation_metadata(add=False,
                                                 target_res_obj=collection_res,
                                                 relation_type=hasPart,
@@ -202,6 +203,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         logger.error("Failed to update collection for "
                      "deleted resources.Collection resource ID: {}. "
                      "Error:{} ".format(shortkey, ex.message))
+        logger.error(ex)
 
         ajax_response_data = {'status': "error", 'message': ex.message}
     finally:

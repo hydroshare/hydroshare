@@ -7,13 +7,14 @@ from django.contrib.auth.models import Group
 from hs_core.hydroshare import create_resource, create_account, \
      create_empty_resource, create_new_version_resource, \
      update_science_metadata, copy_resource
-from hs_core.testing import MockIRODSTestCaseMixin
-from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.utils import current_site_url
+from hs_core.testing import MockIRODSTestCaseMixin
 
+from hs_access_control.models import PrivilegeCodes
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
 from hs_collection_resource.views import _update_collection_coverages
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE, update_collection_list_csv
+from hs_collection_resource.utils import update_collection_list_csv
 
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -870,15 +871,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         hasPart = "hasPart"
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = current_site_url(self.resGen1.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = current_site_url(self.resGen2.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = current_site_url(self.resGen3.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 
@@ -891,18 +892,20 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 2)
 
         # should be 2 hasPart metadata
+        for r in self.resCollection.metadata.relations.all():
+            print(r)
         self.assertEqual(self.resCollection.metadata.relations.count(), 2)
 
         # check self.resGen1.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen1.short_id)
+        value = current_site_url(self.resGen1.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
         # check self.resGen2.short_id -- should be 0
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen2.short_id)
+        value = current_site_url(self.resGen2.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
         # check self.resGen3.short_id
-        value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
+        value = current_site_url(self.resGen3.get_absolute_url())
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
 

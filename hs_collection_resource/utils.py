@@ -10,7 +10,6 @@ from hs_core.hydroshare.utils import resource_modified, current_site_url
 from hs_core.hydroshare.resource import delete_resource_file_only, add_resource_files
 
 logger = logging.getLogger(__name__)
-RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
 CSV_FULL_NAME_TEMPLATE = "collection_list_{0}.csv"
 DELETED_RES_STRING = "Resource Deleted"
 
@@ -78,7 +77,7 @@ def update_collection_list_csv(collection_obj):
                 csv_data_row = [res.metadata.title,
                                 res.resource_type,
                                 res.short_id,
-                                RES_LANDING_PAGE_URL_TEMPLATE.format(res.short_id),
+                                current_site_url(res.get_absolute_url()),
                                 _get_owners_string(list(res.raccess.owners.all())),
                                 _get_sharing_status_string(res)
                                 ]
