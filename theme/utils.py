@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from theme.models import QuotaMessage
 
+
 def get_quota_message(user):
     """
     get quota warning, grace period, or enforcement message to email users and display

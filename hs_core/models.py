@@ -1962,6 +1962,22 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
+    def set_quota_holder(self, holder):
+        # set quota holder of the resource to holder which is a User instance in HydroShare
+        istorage = self.get_irods_storage()
+        istorage.setAVU(self.root_path, "quotaUserName", holder.username)
+
+    def get_quota_holder(self):
+        # get quota holder of the resource
+        # return User instance of the quota holder for the resource or None if it does not exist
+        istorage = self.get_irods_storage()
+        uname = istorage.getAVU(self.root_path, "quotaUserName")
+        ufilter = User.objects.filter(username=uname)
+        if ufilter.exists():
+            return ufilter.first()
+        else:
+            return None
+
     @property
     def root_path(self):
         """

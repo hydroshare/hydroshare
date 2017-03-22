@@ -157,6 +157,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     allow_copy = can_user_copy_resource(content_model, user)
 
+    qholder = content_model.get_quota_holder()
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
@@ -205,6 +207,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             content_model.metadata.description else None
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
@@ -238,6 +241,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
+                   'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections
         }
 
@@ -426,6 +430,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
+               'quota_holder': qholder,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and

@@ -451,9 +451,9 @@ def create_resource(
         if create_bag:
             hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path)
 
-    # set quotaUserName AVU on the newly created resource
-    istorage = resource.get_irods_storage()
-    istorage.setAVU(resource.root_path, "quotaUserName", owner.username)
+    # set quota of this resource to this creator
+    resource.set_quota_holder(owner)
+
     return resource
 
 

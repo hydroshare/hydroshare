@@ -86,6 +86,22 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
+def change_quota_holder(request, shortkey):
+    new_holder_uname = request.POST.get('new_holder_username', '')
+    if not new_holder_uname:
+        return HttpResponse('Bad request', status=400)
+    ufilter = User.objects.filter(username=new_holder_uname)
+    if not ufilter.exists():
+        return HttpResponse('Bad request', status=400)
+    new_holder_u = ufilter.first()
+    res = utils.get_resource_by_shortkey(shortkey)
+    if not new_holder_u.uaccess.owns_resource(res):
+        return HttpResponse('Permission denied - quota holder must be an owner of the resource',
+                            status=403)
+    res.set_quota_holder(new_holder_u)
+    return HttpResponse(status=200)
+
+
 def add_files_to_resource(request, shortkey, *args, **kwargs):
     """
     This view function is called by AJAX in the folder implementation
