@@ -144,9 +144,15 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         orig_cov_form.action = temp_action
 
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        update_action = update_action.format(self.logical_file.id, "coverage",
-                                             self.spatial_coverage.id)
-        spatial_cov_form.action = update_action
+        if self.spatial_coverage:
+            temp_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.spatial_coverage.id)
+        else:
+            # TODO: JS code needs change to properly display the coverage form
+            # also needs to test creation of coverage (spatial)
+            temp_action = create_action.format(self.logical_file.id, "coverage")
+
+        spatial_cov_form.action = temp_action
         context_dict = dict()
         context_dict["temp_form"] = temp_cov_form
         context_dict["orig_coverage_form"] = orig_cov_form
