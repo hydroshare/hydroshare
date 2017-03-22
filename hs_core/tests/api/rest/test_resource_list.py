@@ -60,7 +60,7 @@ class TestResourceList(HSRESTTestCase):
         self.resources_to_delete.append(app_pid)
 
         # pattern for end of all URLS
-        res_tail = '/' + os.path.join('resource', '{res_id}') + '/'
+        res_tail = '/' + os.path.join('resource', '{res_id}')
 
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -135,7 +135,7 @@ class TestResourceList(HSRESTTestCase):
         self.resources_to_delete.append(app_pid)
 
         # pattern for end of all URLS
-        res_tail = '/' + os.path.join('resource', '{res_id}') + '/'
+        res_tail = '/' + os.path.join('resource', '{res_id}')
 
         response = self.client.get('/hsapi/resource/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

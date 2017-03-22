@@ -32,6 +32,6 @@ class TestResourceMetadata(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['resource_type'], self.rtype)
         self.assertEqual(content['resource_title'], self.title)
-        res_tail = '/' + os.path.join('resource', self.pid) + '/'
+        res_tail = '/' + os.path.join('resource', self.pid)
         self.assertTrue(content['resource_url'].startswith('http://'))
         self.assertTrue(content['resource_url'].endswith(res_tail))
