@@ -461,13 +461,15 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
 
     istorage.copyFiles(src_coll, dest_coll)
 
-    istorage.setAVU(dest_coll, 'bag_modified', 'True')
-    avu_list = ['isPublic', 'metadata_dirty', 'resourceType']
+    avu_list = ['isPublic', 'metadata_dirty', 'resourceType', 'bag_modified']
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
+            elif avu_name == 'bag_modified':
+                # bag_modified AVU needs to be set to true for copied resource
+                istorage.setAVU(dest_coll, avu_name, 'true')
             else:
                 istorage.setAVU(dest_coll, avu_name, value)
 
