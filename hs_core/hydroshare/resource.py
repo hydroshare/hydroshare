@@ -719,7 +719,6 @@ def delete_resource(pk):
     if res.metadata.relations.all().filter(type='isVersionOf').exists():
         is_version_of_res_link = \
             res.metadata.relations.all().filter(type='isVersionOf').first().value
-        print(is_version_of_res_link)
         idx = is_version_of_res_link.rindex('/')
         if idx == -1:
             obsolete_res_id = is_version_of_res_link
