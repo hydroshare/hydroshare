@@ -188,7 +188,7 @@ class TestCopyResource(TestCase):
         self.assertIn('hydroShareIdentifier',
                       [id.name for id in new_res_generic.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found for new copied resource.")
-        id_url = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                          new_res_generic.short_id)
         self.assertIn(id_url, [id.url for id in new_res_generic.metadata.identifiers.all()],
                       msg="Identifier url was not found for new copied resource.")
@@ -198,7 +198,7 @@ class TestCopyResource(TestCase):
         self.assertGreater(new_res_generic.metadata.sources.all().count(), 0,
                            msg="New copied resource does not has source element.")
 
-        derived_from_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        derived_from_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                      self.res_generic.short_id)
         self.assertIn(derived_from_value,
                       [src.derived_from for src in new_res_generic.metadata.sources.all()],
@@ -283,7 +283,7 @@ class TestCopyResource(TestCase):
         self.assertIn('hydroShareIdentifier',
                       [id.name for id in new_res_raster.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found for new copied resource.")
-        id_url = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                          new_res_raster.short_id)
         self.assertIn(id_url, [id.url for id in new_res_raster.metadata.identifiers.all()],
                       msg="Identifier url was not found for new copied resource.")
@@ -293,7 +293,7 @@ class TestCopyResource(TestCase):
         self.assertEqual(new_res_raster.metadata.sources.all().count(), 1,
                          msg="New copied resource does not has source element.")
 
-        derived_from_value = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(),
+        derived_from_value = '{}/resource/{}'.format(hydroshare.utils.current_site_url(),
                                                      self.res_raster.short_id)
         self.assertIn(derived_from_value,
                       [src.derived_from for src in new_res_raster.metadata.sources.all()],

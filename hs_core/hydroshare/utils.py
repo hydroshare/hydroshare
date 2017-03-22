@@ -7,6 +7,7 @@ import logging
 import shutil
 import string
 import copy
+import re
 from uuid import uuid4
 import errno
 
@@ -604,6 +605,7 @@ def current_site_url(location=''):
         url += ':%s' % port
     if location:
         url += location
+    location.rstrip('/')
     return url
 
 
