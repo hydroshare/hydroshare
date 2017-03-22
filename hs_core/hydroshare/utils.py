@@ -605,7 +605,7 @@ def current_site_url(location=''):
         url += ':%s' % port
     if location:
         url += location
-    location.rstrip('/')
+    url = url.rstrip('/')
     return url
 
 
