@@ -874,7 +874,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                          msg="Number of identifier elements not equal to 1.")
         self.assertIn('hydroShareIdentifier', [id.name for id in self.res.metadata.identifiers.all()],
                       msg="hydroShareIdentifier name was not found.")
-        id_url = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
+        id_url = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(), self.res.short_id)
         self.assertIn(id_url, [id.url for id in self.res.metadata.identifiers.all()],
                       msg="Identifier url was not found.")
 
@@ -1497,7 +1497,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         self.assertNotEqual(container, None, msg="Root 'Description' element was not found.")
         #res_uri = 'http://hydroshare.org/resource/%s' % self.res.short_id
-        res_uri = '{}/resource/{}'.format(hydroshare.utils.current_site_url(), self.res.short_id)
+        res_uri = '{}/resource/{}/'.format(hydroshare.utils.current_site_url(), self.res.short_id)
 
         self.assertEqual(container.get('{%s}about' % self.res.metadata.NAMESPACES['rdf']), res_uri,
                          msg="'Description' element attribute value did not match.")
