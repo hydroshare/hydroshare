@@ -273,7 +273,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        file_name)
 
-                        # Alva: This does nothing. 
+                        # Alva: This does nothing.
                         # fed_file_full_path = ''
                         # if resource.resource_federation_path:
                         #     fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
@@ -293,7 +293,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
                                 resource, uploaded_file, folder=upload_folder)
-                            # Alva: This does nothing. 
+                            # Alva: This does nothing.
                             # fed_res_file_name_or_path=fed_file_full_path)
 
                             # make each resource file we added as part of the logical file
