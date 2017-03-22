@@ -1,0 +1,22 @@
+<div class="col-sm-12 content-block">
+    <h3>Storage</h3>
+    <h5>The quota holder of this resource is:
+        {% if quota_holder|default_if_none:'' %}
+            {% if quota_holder.first_name %}
+                <a href='/user/{{ quota_holder.pk }}/'
+                           target="_blank">{{ quota_holder.first_name }} {{ quota_holder.last_name }}</a>
+            {% else %}
+                <a href='/user/{{ quota_holder.pk }}/'
+                           target="_blank">{{ quota_holder.username }}</a>
+            {% endif %}
+        {% endif %}
+    </h5>
+</div>
+{% if metadata_form %}
+    <div class="col-sm-12 content-block">
+        <a id="btn-change-quota-holder" type="button" class="btn btn-success row-selector" data-toggle="modal"
+           data-target="#change_quota_holder">
+            <span class="glyphicon glyphicon-plus"><span class="button-label"> Change Quota Holder</span></span>
+        </a>
+    </div>
+{% endif %}
