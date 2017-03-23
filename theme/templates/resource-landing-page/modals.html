@@ -1464,7 +1464,7 @@
 
                             {# Owners with full permissions to do anything on this resource #}
                             {% for u in owners %}
-                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
+                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user or u.pk == quota_holder.pk %}class="hide-actions"{% endif %}>
                                 <td>
                                     <div class="user-scope">
 
