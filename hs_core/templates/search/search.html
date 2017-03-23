@@ -594,7 +594,6 @@
             shade_rects.forEach(function(box){
                 var rect = box.rect;
                 google.maps.event.addListener(rect,'click',function(e){
-                    console.log("click");
                     highlightOverlapping(e.latLng);
                     var map_resources = [];
                     buildMapItemsTableData(boxes_data, map_resources, e.latLng);
@@ -604,6 +603,32 @@
                     map_items_table.draw();
                 });
             });
+            shade_rects.forEach(function(box) {
+                    var rect = box.rect;
+                    if (isSmallArea(rect)) {
+                  //      console.log(box);
+                        // var northlimit = parseFloat(box.northlimit);
+                        // var southlimit = parseFloat(box.southlimit);
+                        // var eastlimit = parseFloat(box.eastlimit);
+                        // var westlimit = parseFloat(box.westlimit);
+                        // //var counter = box.counter.toString();
+                        // var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+                        // var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+                        // var latlng = new google.maps.LatLng(lat, lng);
+
+                        var rect_bounds = new google.maps.LatLngBounds()
+                        rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
+                        var latlng = rect_bounds.getCenter();
+                        var box_center = new google.maps.Marker({
+                            map: maps["area_map"],
+                            icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png',
+                            position: latlng
+                        });
+                        small_box_markers.push(box_center);
+
+                        rect.setMap(null);
+                    }
+                });
         };
 
         var highlightOverlapping = function(position) {
@@ -1326,32 +1351,32 @@
                 map_items_table.rows.add(map_resources);
                 map_items_table.draw();
 
-                shade_rects.forEach(function(box) {
-                    var rect = box.rect;
-                    if (isSmallArea(rect)) {
-                  //      console.log(box);
-                        // var northlimit = parseFloat(box.northlimit);
-                        // var southlimit = parseFloat(box.southlimit);
-                        // var eastlimit = parseFloat(box.eastlimit);
-                        // var westlimit = parseFloat(box.westlimit);
-                        // //var counter = box.counter.toString();
-                        // var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-                        // var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-                        // var latlng = new google.maps.LatLng(lat, lng);
+                // shade_rects.forEach(function(box) {
+                //     var rect = box.rect;
+                //     if (isSmallArea(rect)) {
+                //   //      console.log(box);
+                //         // var northlimit = parseFloat(box.northlimit);
+                //         // var southlimit = parseFloat(box.southlimit);
+                //         // var eastlimit = parseFloat(box.eastlimit);
+                //         // var westlimit = parseFloat(box.westlimit);
+                //         // //var counter = box.counter.toString();
+                //         // var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+                //         // var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+                //         // var latlng = new google.maps.LatLng(lat, lng);
 
-                        var rect_bounds = new google.maps.LatLngBounds()
-                        rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
-                        var latlng = rect_bounds.getCenter();
-                        var box_center = new google.maps.Marker({
-                            map: maps["area_map"],
-                            icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png',
-                            position: latlng
-                        });
-                        small_box_markers.push(box_center);
+                //         var rect_bounds = new google.maps.LatLngBounds()
+                //         rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
+                //         var latlng = rect_bounds.getCenter();
+                //         var box_center = new google.maps.Marker({
+                //             map: maps["area_map"],
+                //             icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png',
+                //             position: latlng
+                //         });
+                //         small_box_markers.push(box_center);
 
-                        rect.setMap(null);
-                    }
-                });
+                //         rect.setMap(null);
+                //     }
+                // });
 
             }
             current_map_bounds = maps[view_type].getBounds();
