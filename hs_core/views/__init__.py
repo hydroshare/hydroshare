@@ -13,7 +13,8 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
+    HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -89,17 +90,17 @@ def verify(request, *args, **kwargs):
 def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
     if not new_holder_uname:
-        return HttpResponse('Bad request', status=400)
+        return HttpResponseBadRequest()
     ufilter = User.objects.filter(username=new_holder_uname)
     if not ufilter.exists():
-        return HttpResponse('Bad request', status=400)
+        return HttpResponseBadRequest()
     new_holder_u = ufilter.first()
     res = utils.get_resource_by_shortkey(shortkey)
     if not new_holder_u.uaccess.owns_resource(res):
-        return HttpResponse('Permission denied - quota holder must be an owner of the resource',
-                            status=403)
+        return HttpResponseForbidden()
+
     res.set_quota_holder(new_holder_u)
-    return HttpResponse(status=200)
+    return HttpResponseRedirect(res.get_absolute_url())
 
 
 def add_files_to_resource(request, shortkey, *args, **kwargs):

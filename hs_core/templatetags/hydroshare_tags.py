@@ -72,6 +72,22 @@ def best_name(content):
 
 
 @register.filter
+def display_name(user):
+    """
+    take a User instance and return the full name of the user regardless of whether the user
+    is authenticated or not. This filter is used by changing quota holders.
+    """
+
+    if user.first_name:
+        content = "{fn} {ln} ({un})".format(fn=user.first_name, ln=user.last_name,
+                                         un=user.username)
+    else:
+        content = user.username
+
+    return content
+
+
+@register.filter
 def clean_pagination_url(content):
     if "?q=" not in content:
         content += "?q="

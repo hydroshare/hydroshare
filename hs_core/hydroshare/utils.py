@@ -705,8 +705,7 @@ def convert_file_size_to_unit(size, unit):
     if unit == 'tb':
         return tbsize
 
-    raise ValidationError('Pass-in unit for file size conversion must be '
-                              'one of KB, MB, GB, or TB')
+    raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, or TB')
 
 
 def validate_user_quota(user, size):

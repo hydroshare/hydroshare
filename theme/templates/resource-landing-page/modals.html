@@ -1901,10 +1901,10 @@
                                                                                class="control-label requiredField">
                                 Owners<span class="asteriskField">*</span></label>
 
-                                <div class="controls"><select class="form-control input-sm select" id="id_type" name="type">
+                                <div class="controls"><select class="form-control input-sm select" id="new_holder_username" name="new_holder_username">
                                     {% for owner in owners %}
                                         {% if owner.username != quota_holder.username %}
-                                            <option value={{ owner.username }}>{{ owner.username }}</option>
+                                            <option value={{ owner.username }}>{{ owner|display_name }}</option>
                                         {% endif %}
                                     {% endfor %}
                                 </select></div>
