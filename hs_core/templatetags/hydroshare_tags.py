@@ -80,7 +80,7 @@ def display_name(user):
 
     if user.first_name:
         content = "{fn} {ln} ({un})".format(fn=user.first_name, ln=user.last_name,
-                                         un=user.username)
+                                            un=user.username)
     else:
         content = user.username
 
