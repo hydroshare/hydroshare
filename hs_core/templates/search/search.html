@@ -593,7 +593,7 @@
 
             shade_rects.forEach(function(box){
                 var rect = box.rect;
-                google.maps.event.addListener(rect,'clcik',function(e){
+                google.maps.event.addListener(rect,'click',function(e){
                     console.log("click");
                     highlightOverlapping(e.latLng);
                     var map_resources = [];
@@ -650,6 +650,7 @@
                 };
 
                 shade_rects[i].rect.setMap(maps["area_map"]);
+
             }
         };
 
