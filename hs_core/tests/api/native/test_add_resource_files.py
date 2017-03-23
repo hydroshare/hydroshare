@@ -7,6 +7,7 @@ from hs_core.hydroshare.resource import add_resource_files, create_resource
 from hs_core.hydroshare.users import create_account
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.hydroshare.utils import QuotaException
 
 
 class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
@@ -81,4 +82,21 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertTrue(self.n1 in file_list, "file 1 has not been added")
         self.assertTrue(self.n2 in file_list, "file 2 has not been added")
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
+        res.delete()
+
+    def test_add_files_over_quota(self):
+        # create a resource
+        res = create_resource(resource_type='GenericResource',
+                              owner=self.user,
+                              title='Test Resource',
+                              metadata=[],)
+
+        uquota = self.user.quotas.first()
+        # make user's quota over hard limit 125%
+        uquota.used_value = uquota.allocated_value * 1.3
+
+        # add files should raise quota exception now that the quota holder is over hard limit
+        add_resource_files(res.short_id, self.myfile1, self.myfile2, self.myfile3)
+        self.assertRaises(QuotaException)
+
         res.delete()
