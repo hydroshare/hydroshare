@@ -9,5 +9,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources = BaseResource.objects.all()
         for res in resources:
-            istorage = res.get_irods_storage()
-            istorage.setAVU(res.root_path, "quotaUserName", res.creator.username)
+            # if quota_holder is not set for the resource, set it to resource's creator
+            if not res.get_quota_holder():
+                res.set_quota_holder(res.creator)
