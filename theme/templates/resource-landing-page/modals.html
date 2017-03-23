@@ -1415,6 +1415,7 @@
                                         <span data-col="name" class="user-name"></span>
                                         <span class="text-muted you-flag">(You)</span>
                                         <br>
+
                                         <span data-col="user-name"
                                               class="user-username-content"></span>
                                     </div>
@@ -1478,6 +1479,9 @@
                                               class="user-name">{{ u|best_name }}</span>
                                         {% if u.pk == current_user.pk %}
                                             <span class="text-muted you-flag">(You)</span>
+                                        {% endif %}
+                                        {% if u.pk == quota_holder.pk %}
+                                            <span class="text-muted you-flag">(quota holder)</span>
                                         {% endif %}
                                         <br>
                                         <span data-col="user-name"
