@@ -7,13 +7,13 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.views import copy_resource
+from hs_core.views import create_new_version_resource
 from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestCopyResource(MockIRODSTestCaseMixin, TestCase):
+class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
-        super(TestCopyResource, self).setUp()
+        super(TestCreateResourceVersion, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.username = 'john'
         self.password = 'jhmypassword'
@@ -34,18 +34,18 @@ class TestCopyResource(MockIRODSTestCaseMixin, TestCase):
 
         self.factory = RequestFactory()
 
-    def test_copy_resource(self):
-        # here we are testing the copy_resource view function
+    def test_create_resource_version(self):
+        # here we are testing the create_new_version_resource view function
 
         # we should have 1 resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
         url_params = {'shortkey': self.gen_res.short_id}
-        url = reverse('copy_resource', kwargs=url_params)
+        url = reverse('create_resource_version', kwargs=url_params)
         request = self.factory.post(url, data={})
         request.user = self.user
 
         self._add_session_to_request(request)
-        response = copy_resource(request, shortkey=self.gen_res.short_id)
+        response = create_new_version_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         res_id = response.url.split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
