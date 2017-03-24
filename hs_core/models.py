@@ -20,7 +20,7 @@ from django.utils.timezone import now
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, PermissionDenied
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -1964,6 +1964,8 @@ class BaseResource(Page, AbstractResource):
 
     def set_quota_holder(self, holder):
         # set quota holder of the resource to holder which is a User instance in HydroShare
+        if not holder.uaccess.owns_resource(self):
+            raise PermissionDenied("Only owners can be set as quota holder for the resource")
         istorage = self.get_irods_storage()
         istorage.setAVU(self.root_path, "quotaUserName", holder.username)
 
@@ -1973,7 +1975,7 @@ class BaseResource(Page, AbstractResource):
         istorage = self.get_irods_storage()
         try:
             uname = istorage.getAVU(self.root_path, "quotaUserName")
-        except SessionException as ex:
+        except SessionException:
             # quotaUserName AVU does not exist, return None
             return None
 

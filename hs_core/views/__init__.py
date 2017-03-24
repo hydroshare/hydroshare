@@ -96,10 +96,11 @@ def change_quota_holder(request, shortkey):
         return HttpResponseBadRequest()
     new_holder_u = ufilter.first()
     res = utils.get_resource_by_shortkey(shortkey)
-    if not new_holder_u.uaccess.owns_resource(res):
+    try:
+        res.set_quota_holder(new_holder_u)
+    except PermissionDenied:
         return HttpResponseForbidden()
 
-    res.set_quota_holder(new_holder_u)
     return HttpResponseRedirect(res.get_absolute_url())
 
 
