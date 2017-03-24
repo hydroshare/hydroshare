@@ -51,7 +51,7 @@ class mp_form_helper(BaseFormHelper):
             HTML('<hr style="border:0">'),
             HTML('</div>'),
             HTML('<div class="col-sm-6 col-xs-12">'),
-            HTML('<legend>Model Program Information</legend>'),
+            HTML('<legend>General Information</legend>'),
             Field('modelVersion', css_class=field_width),
             Field('modelReleaseDate', css_class=field_width, style="display:none"),
             HTML('<input type="text" class="'+field_width+'" id="modelReleaseDate_picker">'),
@@ -61,7 +61,7 @@ class mp_form_helper(BaseFormHelper):
             Field('modelWebsite', css_class=field_width),
             HTML('</div>'),
         )
-        super(mp_form_helper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='  ',  *args, **kwargs)
+        super(mp_form_helper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Model Program Metadata',  *args, **kwargs)
 
 
 class mp_form(ModelForm):
