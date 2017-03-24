@@ -7,13 +7,6 @@ from hs_model_program.models import ModelProgramResource
 from hs_model_program.forms import *
 from urlparse import urlparse
 
-@receiver(pre_create_resource, sender=ModelProgramResource)
-def mp_pre_trigger(sender, **kwargs):
-    metadata = kwargs['metadata']
-    extended_metadata = {}
-    metadata.append({'mpmetadata': extended_metadata})
-    return metadata
-
 
 @receiver(pre_metadata_element_create, sender=ModelProgramResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -40,9 +33,11 @@ def mp_pre_update_handler(sender, **kwargs):
     if element_form.is_valid():
         cleaned_form = element_form.cleaned_data
         # make sure urls contain scheme (otherwise links on landing page will not work)
-        if (not bool(urlparse(cleaned_form['modelWebsite']).scheme) and bool(urlparse(cleaned_form['modelWebsite']).path)):
+        if (not bool(urlparse(cleaned_form['modelWebsite']).scheme) and
+                bool(urlparse(cleaned_form['modelWebsite']).path)):
             cleaned_form['modelWebsite'] = 'http://'+cleaned_form['modelWebsite']
-        if (not bool(urlparse(cleaned_form['modelCodeRepository']).scheme) and bool(urlparse(cleaned_form['modelCodeRepository']).path)):
+        if (not bool(urlparse(cleaned_form['modelCodeRepository']).scheme) and
+                bool(urlparse(cleaned_form['modelCodeRepository']).path)):
             cleaned_form['modelCodeRepository'] = 'http://'+cleaned_form['modelCodeRepository']
         return {'is_valid': True, 'element_data_dict': cleaned_form}
     else:
