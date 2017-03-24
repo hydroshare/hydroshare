@@ -2865,8 +2865,10 @@ class UserAccess(models.Model):
                 and not this_user == self.user:
             raise PermissionDenied("You do not have permission to remove this sharing setting")
 
-        if this_resource.get_quota_holder() == this_user:
-            raise PermissionDenied("Cannot remove this resource's quota holder from ownership")
+            qholder = this_resource.get_quota_holder()
+            if qholder:
+                if qholder == this_user:
+                    raise PermissionDenied("Cannot remove this resource's quota holder from ownership")
 
         # if this_user is not an OWNER, or there is another OWNER, OK.
         if not UserResourcePrivilege.objects.filter(resource=this_resource,
