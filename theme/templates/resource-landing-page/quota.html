@@ -12,7 +12,7 @@
         {% endif %}
     </h5>
 </div>
-{% if metadata_form %}
+{% if metadata_form and owners|length > 1 %}
     <div class="col-sm-12 content-block">
         <a id="btn-change-quota-holder" type="button" class="btn btn-success row-selector" data-toggle="modal"
            data-target="#change_quota_holder">

@@ -20,12 +20,23 @@ class Command(BaseCommand):
                     # be the owner of the resource. Hence, add resource creator to owner list if
                     # creator is not already in the owner list
                     if not res.creator.uaccess.owns_resource(res):
-                        first_owner = res.raccess.owners[0]
-                        first_owner.uaccess.share_resource_with_user(res, res.creator,
-                                                                     PrivilegeCodes.OWNER)
+                        first_owner = res.raccess.owners.first()
+                        if first_owner:
+                            first_owner.uaccess.share_resource_with_user(res, res.creator,
+                                                                         PrivilegeCodes.OWNER)
+                        else:
+                            # this resource has no owner, which should never be allowed and never
+                            # happen
+                            print res.short_id + ' does not have an owner'
+                            continue
                     res.set_quota_holder(res.creator)
             except SessionException:
                 # this is needed for migration testing where some resources copied from www
                 # for testing do not exist in the iRODS backend, hence need to skip these
                 # test artifects
+                continue
+            except AttributeError:
+                # when federation is not set up correctly, istorage does not have a session
+                # attribute, hence raise AttributeError - ignore for testing and it should not
+                # happen in production where federation is set up properly
                 continue
