@@ -51,7 +51,8 @@ class TestGroupCRUD(TestCase):
 
         request = self.factory.post(url, data=post_data)
         request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count() + 1)
+        expected_new_group_id = Group.objects.all().order_by("-id").first().id + 1
+        request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = create_user_group(request)
@@ -75,12 +76,13 @@ class TestGroupCRUD(TestCase):
 
         request = self.factory.post(url, data=post_data)
         request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        expected_new_group_id = Group.objects.all().order_by("-id").first().id + 1
+        request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id -1)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = create_user_group(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertNotEqual(response['Location'], '/group/{}'.format(Group.objects.count() + 1))
+        self.assertNotEqual(response['Location'], '/group/{}'.format(expected_new_group_id))
         flag_messages = get_messages(request)
         err_messages = [m for m in flag_messages if m.tags == 'error']
         self.assertNotEqual(len(err_messages), 0)
@@ -108,7 +110,7 @@ class TestGroupCRUD(TestCase):
 
         request = self.factory.post(url, data=post_data)
         request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
@@ -141,7 +143,7 @@ class TestGroupCRUD(TestCase):
 
         request = self.factory.post(url, data=post_data)
         request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
@@ -173,20 +175,18 @@ class TestGroupCRUD(TestCase):
         url = reverse('delete_user_group', kwargs={'group_id': new_group.id})
 
         request = self.factory.post(url, data=post_data)
-        # mike does not have permission to delete this group - delete should fail
-        request.user = self.mike
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        request.user = self.john
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
         flag_messages = get_messages(request)
-        err_messages = [m for m in flag_messages if m.tags == 'error']
-        self.assertNotEqual(len(err_messages), 0)
+        success_messages = [m for m in flag_messages if m.tags == 'success']
+        self.assertNotEqual(len(success_messages), 0)
         new_group.gaccess.refresh_from_db()
-        # group should still be active
-        self.assertEqual(new_group.gaccess.active, True)
+        self.assertEqual(new_group.gaccess.active, False)
 
     def test_delete_group_failure(self):
         # here we are testing the delete_user_group view function
@@ -208,18 +208,20 @@ class TestGroupCRUD(TestCase):
         url = reverse('delete_user_group', kwargs={'group_id': new_group.id})
 
         request = self.factory.post(url, data=post_data)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        # mike does not have permission to delete this group - delete should fail
+        request.user = self.mike
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
         flag_messages = get_messages(request)
-        success_messages = [m for m in flag_messages if m.tags == 'success']
-        self.assertNotEqual(len(success_messages), 0)
+        err_messages = [m for m in flag_messages if m.tags == 'error']
+        self.assertNotEqual(len(err_messages), 0)
         new_group.gaccess.refresh_from_db()
-        self.assertEqual(new_group.gaccess.active, False)
+        # group should still be active
+        self.assertEqual(new_group.gaccess.active, True)
 
     def test_restore_group(self):
         # here we are testing the restore_user_group view function
@@ -245,7 +247,7 @@ class TestGroupCRUD(TestCase):
 
         request = self.factory.post(url, data=post_data)
         request.user = self.john
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
@@ -283,7 +285,7 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         # mike does not have permission over new_group - restore should fail
         request.user = self.mike
-        request.META['HTTP_REFERER'] = '/group/{}'.format(Group.objects.count())
+        request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
