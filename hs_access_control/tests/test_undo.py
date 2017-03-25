@@ -1666,8 +1666,10 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         bikes.set_quota_holder(george, alva)
         george.uaccess.unshare(resource=bikes, user=george)
         alva.uaccess.share(resource=bikes, user=george, privilege=PrivilegeCodes.OWNER)
+        # alva transfer quota holder back to george in order to unshare himself
+        bikes.set_quota_holder(alva, george)
         alva.uaccess.unshare(resource=bikes, user=alva)
-        # now alva is grantor for george, but george is single owner
 
+        # now alva is grantor for george, but george is single owner also quota holder
         with self.assertRaises(PermissionDenied):
             alva.uaccess.undo_share(resource=bikes, user=george)
