@@ -77,7 +77,7 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.john
         expected_new_group_id = Group.objects.all().order_by("-id").first().id + 1
-        request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id -1)
+        request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id - 1)
         self._set_request_message_attributes(request)
         self._add_session_to_request(request)
         response = create_user_group(request)
