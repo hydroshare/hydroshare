@@ -3001,7 +3001,7 @@ class UserAccess(models.Model):
         Users who can be removed fall into three catagories
 
         a) self is admin: everyone.
-        b) self is resource owner: everyone.
+        b) self is resource owner: everyone except resource's quota holder.
         c) self is beneficiary: self only
         """
         if __debug__:  # during testing only, check argument types and preconditions
@@ -3011,7 +3011,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-
+        qholder = this_resource.get_quota_holder()
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
@@ -3022,6 +3022,8 @@ class UserAccess(models.Model):
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)
                 return access_resource.view_users.exclude(pk__in=users_to_exclude)
+            elif qholder:
+                return access_resource.view_users.exclude(id=qholder.id)
             else:
                 return access_resource.view_users
 

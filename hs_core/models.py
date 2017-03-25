@@ -1962,12 +1962,13 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
-    def set_quota_holder(self, holder):
-        # set quota holder of the resource to holder which is a User instance in HydroShare
-        if not holder.uaccess.owns_resource(self):
-            raise PermissionDenied("Only owners can be set as quota holder for the resource")
+    def set_quota_holder(self, setter, new_holder):
+        # set quota holder of the resource to new_holder who must be an owner
+        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        if not setter.uaccess.owns_resource(self) or not new_holder.uaccess.owns_resource(self):
+            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
         istorage = self.get_irods_storage()
-        istorage.setAVU(self.root_path, "quotaUserName", holder.username)
+        istorage.setAVU(self.root_path, "quotaUserName", new_holder.username)
 
     def get_quota_holder(self):
         # get quota holder of the resource

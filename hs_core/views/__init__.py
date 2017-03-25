@@ -97,7 +97,7 @@ def change_quota_holder(request, shortkey):
     new_holder_u = ufilter.first()
     res = utils.get_resource_by_shortkey(shortkey)
     try:
-        res.set_quota_holder(new_holder_u)
+        res.set_quota_holder(request.user, new_holder_u)
     except PermissionDenied:
         return HttpResponseForbidden()
 

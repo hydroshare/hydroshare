@@ -29,7 +29,7 @@ class Command(BaseCommand):
                             # happen
                             print res.short_id + ' does not have an owner'
                             continue
-                    res.set_quota_holder(res.creator)
+                    res.set_quota_holder(res.creator, res.creator)
             except SessionException:
                 # this is needed for migration testing where some resources copied from www
                 # for testing do not exist in the iRODS backend, hence need to skip these

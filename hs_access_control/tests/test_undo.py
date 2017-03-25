@@ -60,7 +60,7 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        # george creates a entity 'bikes'
+        # george creates a entity 'bikes', so george is the quota holder initially
         self.bikes = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.george,
@@ -1661,6 +1661,9 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
 
         # set up a subtle single-owner botch.
         george.uaccess.share(resource=bikes, user=alva, privilege=PrivilegeCodes.OWNER)
+        # transfer quota holder from george to alva since quota holder cannot be removed from
+        # ownership
+        bikes.set_quota_holder(george, alva)
         george.uaccess.unshare(resource=bikes, user=george)
         alva.uaccess.share(resource=bikes, user=george, privilege=PrivilegeCodes.OWNER)
         alva.uaccess.unshare(resource=bikes, user=alva)
