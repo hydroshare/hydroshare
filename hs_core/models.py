@@ -32,7 +32,7 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
-from irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1764,6 +1764,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     def supports_delete_folder_on_zip(self, original_folder):
         """if resource allows the original folder to be deleted upon zipping of that folder"""
         return True
+
+    @property
+    def can_be_copied(self):
+        """
+        Check whether resource copy is permitted or not
+        :param res: resource object to check for whether copy is allowed
+        :param user: the requesting user to check for whether copy is allowed
+        :return: return True if the resource can be copied; otherwise, return False
+        """
+        if (res.metadata.rights.statement == "This resource is shared under the Creative "
+                                             "Commons Attribution-NoDerivs CC BY-ND." or
+            res.metadata.rights.statement == "This resource is shared under the Creative "
+                                             "Commons Attribution-NoCommercial-NoDerivs "
+                                             "CC BY-NC-ND."):
+            return False
+        else: 
+            return True
 
     class Meta:
         abstract = True

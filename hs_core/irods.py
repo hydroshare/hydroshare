@@ -47,7 +47,7 @@ class ResourceIRODSMixin(models.Model):
         :param folder_path: the relative path for the folder to be removed under res_id collection.
         :return:
         """
-        from hs_core.hydroshare.utils import resource_modified 
+        from hs_core.hydroshare.utils import resource_modified
 
         if __debug__:  # no more
             assert(not folder_path.startswith("data/contents/"))

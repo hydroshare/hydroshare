@@ -74,6 +74,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     :return: None, but the downloaded file from the iRODS will be appended to res_files list for
     uploading
     """
+    # TODO: This is not a federated session 
     irods_storage = IrodsStorage()
     irods_storage.set_user_session(username=username, password=password, host=host, port=port,
                                    zone=zone)
@@ -143,15 +144,10 @@ def can_user_copy_resource(res, user):
     if not user.is_authenticated():
         return False
 
-    if not user.uaccess.owns_resource(res) and \
-            (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoDerivs CC BY-ND." or
-             res.metadata.rights.statement == "This resource is shared under the Creative "
-                                              "Commons Attribution-NoCommercial-NoDerivs "
-                                              "CC BY-NC-ND."):
+    if not user.uaccess.owns_resource(res) and not res.can_be_copied:
         return False
-
-    return True
+    else: 
+        return True
 
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
