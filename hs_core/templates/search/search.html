@@ -538,22 +538,10 @@
                         var rect = box.rect;
                         if (box.checked){
                             rect.setOptions({fillOpacity: 0});
-                            //rect.trigger("click");
                         }
                     });
 
-                    //var filtered_results = [];
                     updateMapView(view_type);
-                    // var map_resources = [];
-                    // setBoxes(filtered_results);
-                    // buildMapItemsTableData(filtered_results, map_resources, null);
-                    // var map_items_table = $('#area-map-items').DataTable();
-                    // map_items_table.clear();
-                    // map_items_table.rows.add(map_resources);
-                    // map_items_table.draw();
-                    //updateDataTableSelectAllCtrl(map_items_table, view_type);
-
-                    //$('thead input[name="select_all"]', map_items_table.table().container()).trigger("click");
                 });
             }
 
@@ -632,40 +620,9 @@
                 } else {
                     $(node_data).find("input[type=checkbox]:checked").trigger("click");
                 }
-                // } else {
-                //     $(node_data).find("input[type=checkbox]:checked").trigger("click");
-                // }
 
             });
 
-
-            // shade_rects.forEach(function(box){
-            //     var rect = box.rect;
-            //     var rect_bound = new google.maps.LatLngBounds();
-            //     calShadeRectBounds(rect, rect_bound);
-
-            //     var map_items_table = $('#area-map-items').DataTable();
-
-            //     if (rect_bound.contains(position)) {
-
-            //         map_items_table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
-            //             var data = this.data();
-            //             if(data[0] == box.rect_id && !box.checked) {
-            //                 var node_data = this.node();
-            //                 $(node_data).find("input[type=checkbox]").trigger("click");
-            //             }
-            //         });
-
-            //     } else {
-            //         map_items_table.rows().every( function ( rowIdx, tableLoop, rowLoop ) {
-            //             var data = this.data();
-            //             if(box.checked){
-            //                 var node_data = this.node();
-            //                 $(node_data).find("input[type=checkbox]").trigger("click");
-            //             }
-            //         });
-            //     }
-            // });
         };
 
         var drawShadeRectangles = function(boxes) {
@@ -901,17 +858,6 @@
         };
 
         var highlightOrHideBox = function(target, option) {
-            // var northlimit = parseFloat(target.northlimit);
-            // var southlimit = parseFloat(target.southlimit);
-            // var eastlimit = parseFloat(target.eastlimit);
-            // var westlimit = parseFloat(target.westlimit);
-            // var view_type = "area_map";
-            // var rectBounds = new google.maps.LatLngBounds(
-            //         new google.maps.LatLng(southlimit, westlimit),
-            //         new google.maps.LatLng(northlimit, eastlimit)
-            // );
-
-            // var found = 0;
             shade_rects.forEach(function(box) {
                 var rect = box.rect;
                 if (box.rect_id == target.short_id) {
@@ -924,21 +870,6 @@
                     }
                 }
             });
-            // shade_rects.forEach(function(box){
-            //     var rect = box.rect;
-            //     var shade_rect_bound = new google.maps.LatLngBounds();
-            //     calShadeRectBounds(rect, shade_rect_bound);
-            //     if (rectBounds.equals(shade_rect_bound) && found == 0) {
-            //         if (option == 0) {
-            //             rect.setOptions({fillOpacity: 0.15});
-            //             box.checked = true;
-            //         } else {
-            //             rect.setOptions({fillOpacity: 0});
-            //             box.checked = false;
-            //         }
-            //         found = 1;
-            //     }
-            // });
         };
 
         var popMarkerWindow = function(point, option) {
@@ -1140,12 +1071,6 @@
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
-
-            // var box_center = new google.maps.Marker({
-            //     map: null,
-            //     icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
-            //     position: latlng
-            // });
             var box_center = {
                 position: latlng,
             };
@@ -1153,23 +1078,11 @@
         };
 
         var isSmallArea = function(rect) {
-            // var box_north = parseFloat(box.northlimit);
-            // var box_south = parseFloat(box.southlimit);
-            // var box_east = parseFloat(box.eastlimit);
-            // var box_west = parseFloat(box.westlimit);
             var map_view_bound = current_map_bounds;
             var map_north = map_view_bound.getNorthEast().lat();
             var map_east = map_view_bound.getNorthEast().lng();
             var map_south = map_view_bound.getSouthWest().lat();
             var map_west = map_view_bound.getSouthWest().lng();
-
-            //console.log(map_north);
-            // var box_coords = [
-            //     new google.maps.LatLng(box_north, box_west),
-            //     new google.maps.LatLng(box_north, box_east),
-            //     new google.maps.LatLng(box_south, box_east),
-            //     new google.maps.LatLng(box_south, box_west),
-            // ];
             var map_coords = [
                 new google.maps.LatLng(map_north, map_west),
                 new google.maps.LatLng(map_north, map_east),
@@ -1378,16 +1291,6 @@
                 shade_rects.forEach(function(box) {
                     var rect = box.rect;
                     if (isSmallArea(rect)) {
-                  //      console.log(box);
-                        // var northlimit = parseFloat(box.northlimit);
-                        // var southlimit = parseFloat(box.southlimit);
-                        // var eastlimit = parseFloat(box.eastlimit);
-                        // var westlimit = parseFloat(box.westlimit);
-                        // //var counter = box.counter.toString();
-                        // var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-                        // var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-                        // var latlng = new google.maps.LatLng(lat, lng);
-
                         var rect_bounds = new google.maps.LatLngBounds()
                         rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
                         var latlng = rect_bounds.getCenter();
