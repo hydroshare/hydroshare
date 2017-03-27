@@ -692,6 +692,10 @@ def convert_file_size_to_unit(size, unit):
     :return: the size converted to the pass-in unit
     """
     unit = unit.lower()
+    if unit != 'kb' and unit != 'mb' and unit != 'gb' and unit != 'tb':
+        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+                              'or TB')
+
     kbsize = size / 1000.0
     if unit == 'kb':
         return kbsize
@@ -705,8 +709,6 @@ def convert_file_size_to_unit(size, unit):
     if unit == 'tb':
         return tbsize
 
-    raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, or TB')
-
 
 def validate_user_quota(user, size):
     """
@@ -718,24 +720,23 @@ def validate_user_quota(user, size):
     """
     if user:
         # validate it is within quota hard limit
-        if user.quotas.filter(zone='hydroshare_internal').exists():
-            uq = user.quotas.filter(zone='hydroshare_internal').first()
-            if uq:
-                if not QuotaMessage.objects.exists():
-                    QuotaMessage.objects.create()
-                qmsg = QuotaMessage.objects.first()
-                hard_limit = qmsg.hard_limit_percent
-                used_size = round(uq.used_value + convert_file_size_to_unit(size, uq.unit))
-                used_percent = round(used_size*100.0/uq.allocated_value)
-                if used_percent >= hard_limit or uq.remaining_grace_period == 0:
-                    msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
-                                                         qmsg.content)
-                    msg_str = msg_template_str.format(used=used_size,
-                                                      unit=uq.unit,
-                                                      allocated=uq.allocated_value,
-                                                      zone=uq.zone,
-                                                      percent=used_percent)
-                    raise QuotaException(msg_str)
+        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        if uq:
+            if not QuotaMessage.objects.exists():
+                QuotaMessage.objects.create()
+            qmsg = QuotaMessage.objects.first()
+            hard_limit = qmsg.hard_limit_percent
+            used_size = round(uq.used_value + convert_file_size_to_unit(size, uq.unit))
+            used_percent = round(used_size*100.0/uq.allocated_value)
+            if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=used_size,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=used_percent)
+                raise QuotaException(msg_str)
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,

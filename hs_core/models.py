@@ -1981,11 +1981,7 @@ class BaseResource(Page, AbstractResource):
             return None
 
         if uname:
-            ufilter = User.objects.filter(username=uname)
-            if ufilter.exists():
-                return ufilter.first()
-            else:
-                return None
+            return User.objects.filter(username=uname).first()
         else:
             # quotaUserName AVU does not exist, return None
             return None

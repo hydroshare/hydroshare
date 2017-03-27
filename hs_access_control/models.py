@@ -2604,6 +2604,7 @@ class UserAccess(models.Model):
         #   Owner
         #   Permission for self
         # cannot downgrade privilege just by having sharing privilege.
+        # also note the quota holder cannot be downgraded from owner privilege
 
         # grantor is assumed to have total privilege
         grantor_priv = access_resource.get_effective_privilege(self.user)
@@ -2637,12 +2638,16 @@ class UserAccess(models.Model):
         else:
             raise PermissionDenied("User must own resource or have sharing privilege")
 
-        # regardless of privilege, cannot remove last owner
+        # regardless of privilege, cannot remove last owner or quota holder
         if user is not None:
-            if grantee_priv == PrivilegeCodes.OWNER \
-                    and this_privilege != PrivilegeCodes.OWNER \
-                    and access_resource.owners.count() == 1:
-                raise PermissionDenied("Cannot remove sole owner of resource")
+            if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
+                if access_resource.owners.count() == 1:
+                    raise PermissionDenied("Cannot remove sole owner of resource")
+                qholder = access_resource.get_quota_holder()
+                if qholder:
+                    if qholder == user:
+                        raise PermissionDenied("Cannot remove this resource's quota holder from "
+                                               "ownership")
 
         return True
 
