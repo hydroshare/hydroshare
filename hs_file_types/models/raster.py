@@ -55,8 +55,11 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
-        html_string += self.spatial_coverage.get_html()
-        html_string += self.originalCoverage.get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalCoverage:
+            html_string += self.originalCoverage.get_html()
+
         html_string += self.cellInformation.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
@@ -75,10 +78,12 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy coverage_form %}")
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy orig_coverage_form %}")
+            if self.spatial_coverage:
+                with div(cls="col-lg-6 col-xs-12"):
+                    div("{% crispy coverage_form %}")
+            if self.originalCoverage:
+                with div(cls="col-lg-6 col-xs-12"):
+                    div("{% crispy orig_coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy cellinfo_form %}")
 
@@ -102,8 +107,10 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         template = Template(root_div.render())
         context_dict = dict()
-        context_dict["coverage_form"] = self.get_spatial_coverage_form()
-        context_dict["orig_coverage_form"] = self.get_original_coverage_form()
+        if self.spatial_coverage:
+            context_dict["coverage_form"] = self.get_spatial_coverage_form()
+        if self.originalCoverage:
+            context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
         temp_cov_form = self.get_temporal_coverage_form()
 
@@ -432,9 +439,12 @@ def extract_metadata(temp_vrt_file_path):
         metadata.append(box)
 
     # Save extended meta spatial reference
-    ori_cov = {'OriginalCoverage': {
-        'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}}
-    metadata.append(ori_cov)
+    orig_cov_info = res_md_dict['spatial_coverage_info']['original_coverage_info']
+    # TODO: (Pabitra) Check with Tian if this check of northlimit is sufficient to decide whether
+    # to create original coverage element or not (the example Honduras.tf file has all values null)
+    if orig_cov_info['northlimit'] is not None:
+        ori_cov = {'OriginalCoverage': {'value': orig_cov_info}}
+        metadata.append(ori_cov)
 
     # Save extended meta cell info
     res_md_dict['cell_info']['name'] = os.path.basename(temp_vrt_file_path)
