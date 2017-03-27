@@ -1847,7 +1847,7 @@ class FedStorage(IrodsStorage):
 
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 
-class ResourceFile(models.Model, ResourceFileIRODSMixin):
+class ResourceFile(ResourceFileIRODSMixin, models.Model):
     """
     Represent a file in a resource.
     """
@@ -2217,48 +2217,6 @@ class ResourceFile(models.Model, ResourceFileIRODSMixin):
                                             resource_file=get_resource_file_path(resource,
                                                                                  file,
                                                                                  folder))
-
-    # TODO: move to BaseResource as instance method
-    @classmethod
-    def list_folder(cls, resource, folder):
-        """
-        List a given folder
-
-        :param resource: resource for which to list the folder
-        :param folder: folder listed as either short_path or fully qualified path
-        """
-        if folder is None:
-            folder = resource.file_path
-        elif not folder.startswith(resource.file_path):
-            folder = os.path.join(resource.file_path, folder)
-        if resource.resource_federation_path:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                fed_resource_file__startswith=folder)
-        else:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                resource_file__startswith=folder)
-
-    # TODO: move to BaseResource as instance method
-    # @classmethod
-    # def create_folder(cls, resource, folder):
-    #     """ create a folder for a resource """
-    #     # avoid import loop
-    #     from hs_core.views.utils import create_folder
-    #     _path_is_allowed(folder)
-    #     # TODO: move code from location used below to here
-    #     create_folder(resource.short_id, os.path.join('data', 'contents', folder))
-
-    # # TODO: move to BaseResource as instance method
-    # @classmethod
-    # def remove_folder(cls, resource, folder, user):
-    #     """ remove a folder for a resource """
-    #     # avoid import loop
-    #     from hs_core.views.utils import remove_folder
-    #     _path_is_allowed(folder)
-    #     # TODO: move code from location used below to here
-    #     remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
     @property
     def has_logical_file(self):

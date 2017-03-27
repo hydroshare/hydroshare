@@ -13,7 +13,7 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
     get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    move_or_rename_file_or_folder, get_coverage_data_dict
+    get_coverage_data_dict
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
@@ -386,6 +386,13 @@ def data_store_remove_folder(request):
     )
 
 
+def _extract_short_path(folder):
+    """ Extract short path of the folder in question, without data/contents' """
+    if not folder.startswith('data/contents/'):
+        return DRF_ValidationError("folder should start with data/contents/")
+    return folder[len('data/contents/'):]
+
+
 def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
@@ -435,7 +442,20 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
+        src_short_path = _extract_short_path(src_path)
+    except DRF_ValidationError:
+        return HttpResponse('Bad request -- src_path must start with data/contents',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        tgt_short_path = _extract_short_path(tgt_path)
+    except DRF_ValidationError:
+        return HttpResponse('Bad request -- tgt_path must start with data/contents',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # now try to move the file
+    try:
+        resource.move_or_rename_file_or_folder(user, src_short_path, tgt_short_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:

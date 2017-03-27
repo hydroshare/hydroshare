@@ -1,4 +1,9 @@
-# Various iRODS functions required by resources. 
+import os
+from django.db import models
+from django.core.exceptions import ValidationError, SuspiciousFileOperation
+
+# Various iRODS functions required by resources.
+
 
 def irods_path_is_allowed(path):
     """ paths containing '/../' are suspicious """
@@ -9,17 +14,17 @@ def irods_path_is_allowed(path):
     if '/./' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
-class ResourceIRODSMixin(models.Model): 
 
-    class Meta: 
-        abstract = True 
+class ResourceIRODSMixin(models.Model):
 
+    class Meta:
+        abstract = True
 
     def create_folder(self, folder_path):
         """
-        create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-        resource backend store.
-        :param folder_path: relative path for the new folder to be created under resource 
+        create a sub-folder/sub-collection in hydroshareZone or any federated zone used for
+        HydroShare resource backend store.
+        :param folder_path: relative path for the new folder to be created under resource
         collection/directory
         :return:
         """
@@ -34,16 +39,17 @@ class ResourceIRODSMixin(models.Model):
 
         istorage.session.run("imkdir", None, '-p', coll_path)
 
-
     def remove_folder(self, user, folder_path):
         """
-        remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-        resource backend store.
+        remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for
+        HydroShare resource backend store.
         :param user: requesting user
         :param folder_path: the relative path for the folder to be removed under res_id collection.
         :return:
         """
-        if __debug__:  # no more 
+        from hs_core.hydroshare.utils import resource_modified 
+
+        if __debug__:  # no more
             assert(not folder_path.startswith("data/contents/"))
 
         istorage = self.get_irods_storage()
@@ -60,13 +66,12 @@ class ResourceIRODSMixin(models.Model):
                 self.raccess.discoverable = False
                 self.raccess.save()
 
-        hydroshare.utils.resource_modified(self, user, overwrite_bag=False)
-
+        resource_modified(self, user, overwrite_bag=False)
 
     def list_folder(self, folder_path):
         """
-        list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-        resource backend store.
+        list a sub-folder/sub-collection in hydroshareZone or any federated zone used for
+        HydroShare resource backend store.
         :param user: requesting user
         :param folder_path: the relative path for the folder to be listed under res_id collection.
         :return:
@@ -88,11 +93,14 @@ class ResourceIRODSMixin(models.Model):
         :param tgt_path: the relative paths for the target file or folder under resource collection
         :param validate_move_rename: if True, then only ask resource type to check if this action is
                 allowed. Sometimes resource types internally want to take this action but disallow
-                this action by a user. In that case resource types set this parameter to False to allow
-                this action.
+                this action by a user. In that case resource types set this parameter to False to
+                allow this action.
         :return:
 
         """
+        from hs_core.hydroshare.utils import resource_modified
+        from hs_core.views import rename_irods_file_or_folder_in_django
+
         if __debug__:
             assert(not src_path.startswith("data/contents/"))
             assert(not tgt_path.startswith("data/contents/"))
@@ -112,7 +120,7 @@ class ResourceIRODSMixin(models.Model):
             tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
         if validate_move_rename:
-            # this must raise ValidationError if move/rename is not allowed by specific resource type
+            # raise ValidationError if move/rename is not allowed by specific resource type
             if not self.supports_rename_path(src_full_path, tgt_full_path):
                 raise ValidationError("File/folder move/rename is not allowed.")
 
@@ -120,8 +128,8 @@ class ResourceIRODSMixin(models.Model):
 
         rename_irods_file_or_folder_in_django(self, src_full_path, tgt_full_path)
 
-        hydroshare.utils.resource_modified(self, user, overwrite_bag=False)
+        resource_modified(self, user, overwrite_bag=False)
 
 
-class ResourceFileIRODSMixin(models.Model): 
-    pass 
+class ResourceFileIRODSMixin(models.Model):
+    pass

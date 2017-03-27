@@ -5,6 +5,7 @@ import subprocess
 import zipfile
 
 import xml.etree.ElementTree as ET
+
 import gdal
 from gdalconst import GA_ReadOnly
 
@@ -229,9 +230,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             :return:
             """
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
-
         log = logging.getLogger()
 
         # get the file from irods
@@ -279,7 +277,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         #     fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
 
                         log.info("Folder created:{}".format(new_folder_path))
-                        create_folder(resource.short_id, new_folder_path)
+                        resource.create_folder(new_folder_path)
 
                         new_folder_name = new_folder_path.split('/')[-1]
                         if file_folder is None:

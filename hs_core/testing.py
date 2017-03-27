@@ -1,11 +1,11 @@
-from dateutil import parser
+import os
 
+from dateutil import parser
 from django.conf import settings
 
 from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
-from hs_core.views.utils import move_or_rename_file_or_folder, zip_folder, \
-    unzip_file
+from hs_core.views.utils import zip_folder, unzip_file
 from hs_core.views.utils import run_ssh_command
 from theme.models import UserProfile
 from django_irods.icommands import SessionException
@@ -122,16 +122,16 @@ class TestCaseCommonUtilities(object):
         self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')
 
         # rename the third file in file_name_list
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[2],
-                                      'data/contents/new_' + file_name_list[2])
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[2],
+                                          'new_' + file_name_list[2])
         # move the first two files in file_name_list to the new folder
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[0],
-                                      'data/contents/sub_test_dir/' + file_name_list[0])
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[1],
-                                      'data/contents/sub_test_dir/' + file_name_list[1])
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[0],
+                                          os.path.join('sub_test_dir', file_name_list[0]))
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[1],
+                                          os.path.join('sub_test_dir', file_name_list[1]))
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)
@@ -180,9 +180,10 @@ class TestCaseCommonUtilities(object):
         res.create_folder('sub_test_dir')
 
         # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[0],
-                                      'data/contents/sub_test_dir/' + file_name_list[0])
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[0],
+                                          os.path.join('sub_test_dir', file_name_list[0]))
+
         # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
         with self.assertRaises(SessionException):
@@ -219,8 +220,7 @@ class TestCaseCommonUtilities(object):
                       msg='resource does not contain unzipped file new_' + file_name_list[2])
 
         # rename a folder
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir', 'data/contents/sub_dir')
+        res.move_or_rename_file_or_folder(user, 'sub_test_dir', 'sub_dir')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
             updated_res_file_names.append(rf.short_path)

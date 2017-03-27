@@ -47,9 +47,8 @@ class ResourceFolders(APIView):
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        relpath = os.path.join('data', 'contents', pathname)
         try:
-            contents = view_utils.list_folder(pk, relpath)
+            contents = resource.list_folder(pathname)
         except SessionException:
             return Response("Cannot list path", status=status.HTTP_404_NOT_FOUND)
 
