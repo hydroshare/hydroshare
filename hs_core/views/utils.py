@@ -665,133 +665,132 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
-def create_folder(res_id, folder_path):
-    """
-    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-    resource backend store.
-    :param res_id: resource uuid
-    :param folder_path: relative path for the new folder to be created under
-    res_id collection/directory
-    :return:
-    """
-    if __debug__:
-        assert(folder_path.startswith("data/contents/"))
-
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
-    coll_path = os.path.join(resource.root_path, folder_path)
-
-    if not resource.supports_folder_creation(coll_path):
-        raise ValidationError("Folder creation is not allowed here.")
-
-    istorage.session.run("imkdir", None, '-p', coll_path)
-
-
-def remove_folder(user, res_id, folder_path):
-    """
-    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-    resource backend store.
-    :param user: requesting user
-    :param res_id: resource uuid
-    :param folder_path: the relative path for the folder to be removed under res_id collection.
-    :return:
-    """
-    if __debug__:
-        assert(folder_path.startswith("data/contents/"))
-
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
-    coll_path = os.path.join(resource.root_path, folder_path)
-
-    # TODO: Pabitra - resource should check here if folder can be removed
-    istorage.delete(coll_path)
-
-    remove_irods_folder_in_django(resource, istorage, coll_path, user)
-
-    if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public_or_discoverable:
-            resource.raccess.public = False
-            resource.raccess.discoverable = False
-            resource.raccess.save()
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
-
-
-def list_folder(res_id, folder_path):
-    """
-    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
-    resource backend store.
-    :param user: requesting user
-    :param res_id: resource uuid
-    :param folder_path: the relative path for the folder to be listed under res_id collection.
-    :return:
-    """
-    if __debug__:
-        assert(folder_path.startswith("data/contents/"))
-
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
-    coll_path = os.path.join(resource.root_path, folder_path)
-
-    return istorage.listdir(coll_path)
-
-
-# TODO: modify this to take short paths not including data/contents
-def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
-    """
-    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
-    resource backend store.
-    :param user: requesting user
-    :param res_id: resource uuid
-    :param src_path: the relative paths for the source file or folder under res_id collection
-    :param tgt_path: the relative paths for the target file or folder under res_id collection
-    :param validate_move_rename: if True, then only ask resource type to check if this action is
-            allowed. Sometimes resource types internally want to take this action but disallow
-            this action by a user. In that case resource types set this parameter to False to allow
-            this action.
-    :return:
-
-    Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
-    """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
-
-    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
-    istorage = resource.get_irods_storage()
-    src_full_path = os.path.join(resource.root_path, src_path)
-    tgt_full_path = os.path.join(resource.root_path, tgt_path)
-
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
-
-    # ensure the target_full_path contains the file name to be moved or renamed to
-    # if we are moving to a directory, put the filename into the request.
-    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
-        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
-
-    if validate_move_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
-        if not resource.supports_rename_path(src_full_path, tgt_full_path):
-            raise ValidationError("File/folder move/rename is not allowed.")
-
-    istorage.moveFile(src_full_path, tgt_full_path)
-
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
-
-    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
-
-
-def irods_path_is_allowed(path):
-    """ paths containing '/../' are suspicious """
-    if path == "":
-        raise ValidationError("Empty file paths are not allowed")
-    if '/../' in path:
-        raise SuspiciousFileOperation("File paths cannot contain '/../'")
-    if '/./' in path:
-        raise SuspiciousFileOperation("File paths cannot contain '/./'")
+# def create_folder(res_id, folder_path):
+#     """
+#     create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+#     resource backend store.
+#     :param res_id: resource uuid
+#     :param folder_path: relative path for the new folder to be created under
+#     res_id collection/directory
+#     :return:
+#     """
+#     if __debug__:
+#         assert(folder_path.startswith("data/contents/"))
+# 
+#     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+#     istorage = resource.get_irods_storage()
+#     coll_path = os.path.join(resource.root_path, folder_path)
+# 
+#     if not resource.supports_folder_creation(coll_path):
+#         raise ValidationError("Folder creation is not allowed here.")
+# 
+#     istorage.session.run("imkdir", None, '-p', coll_path)
+# 
+# 
+# def remove_folder(user, res_id, folder_path):
+#     """
+#     remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+#     resource backend store.
+#     :param user: requesting user
+#     :param res_id: resource uuid
+#     :param folder_path: the relative path for the folder to be removed under res_id collection.
+#     :return:
+#     """
+#     if __debug__:
+#         assert(folder_path.startswith("data/contents/"))
+# 
+#     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+#     istorage = resource.get_irods_storage()
+#     coll_path = os.path.join(resource.root_path, folder_path)
+# 
+#     # TODO: Pabitra - resource should check here if folder can be removed
+#     istorage.delete(coll_path)
+# 
+#     remove_irods_folder_in_django(resource, istorage, coll_path, user)
+# 
+#     if resource.raccess.public or resource.raccess.discoverable:
+#         if not resource.can_be_public_or_discoverable:
+#             resource.raccess.public = False
+#             resource.raccess.discoverable = False
+#             resource.raccess.save()
+# 
+#     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+# 
+# 
+# def list_folder(res_id, folder_path):
+#     """
+#     list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+#     resource backend store.
+#     :param user: requesting user
+#     :param res_id: resource uuid
+#     :param folder_path: the relative path for the folder to be listed under res_id collection.
+#     :return:
+#     """
+#     if __debug__:
+#         assert(folder_path.startswith("data/contents/"))
+# 
+#     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+#     istorage = resource.get_irods_storage()
+#     coll_path = os.path.join(resource.root_path, folder_path)
+# 
+#     return istorage.listdir(coll_path)
+# 
+# 
+# def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
+#     """
+#     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+#     resource backend store.
+#     :param user: requesting user
+#     :param res_id: resource uuid
+#     :param src_path: the relative paths for the source file or folder under res_id collection
+#     :param tgt_path: the relative paths for the target file or folder under res_id collection
+#     :param validate_move_rename: if True, then only ask resource type to check if this action is
+#             allowed. Sometimes resource types internally want to take this action but disallow
+#             this action by a user. In that case resource types set this parameter to False to allow
+#             this action.
+#     :return:
+# 
+#     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
+#     """
+#     if __debug__:
+#         assert(src_path.startswith("data/contents/"))
+#         assert(tgt_path.startswith("data/contents/"))
+# 
+#     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+#     istorage = resource.get_irods_storage()
+#     src_full_path = os.path.join(resource.root_path, src_path)
+#     tgt_full_path = os.path.join(resource.root_path, tgt_path)
+# 
+#     tgt_file_name = os.path.basename(tgt_full_path)
+#     tgt_file_dir = os.path.dirname(tgt_full_path)
+#     src_file_name = os.path.basename(src_full_path)
+#     src_file_dir = os.path.dirname(src_full_path)
+# 
+#     # ensure the target_full_path contains the file name to be moved or renamed to
+#     # if we are moving to a directory, put the filename into the request.
+#     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
+#         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
+# 
+#     if validate_move_rename:
+#         # this must raise ValidationError if move/rename is not allowed by specific resource type
+#         if not resource.supports_rename_path(src_full_path, tgt_full_path):
+#             raise ValidationError("File/folder move/rename is not allowed.")
+# 
+#     istorage.moveFile(src_full_path, tgt_full_path)
+# 
+#     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+# 
+#     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+# 
+# 
+# def irods_path_is_allowed(path):
+#     """ paths containing '/../' are suspicious """
+#     if path == "":
+#         raise ValidationError("Empty file paths are not allowed")
+#     if '/../' in path:
+#         raise SuspiciousFileOperation("File paths cannot contain '/../'")
+#     if '/./' in path:
+#         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
 def get_coverage_data_dict(resource, coverage_type='spatial'):

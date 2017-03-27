@@ -32,6 +32,7 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
+from irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1375,7 +1376,7 @@ class ResourceManager(PageManager):
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin):
+class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     All hydroshare objects inherit from this mixin.  It defines things that must
     be present to be considered a hydroshare resource.  Additionally, all
@@ -1844,10 +1845,9 @@ class FedStorage(IrodsStorage):
         super(FedStorage, self).__init__("federated")
 
 
-# TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 
-class ResourceFile(models.Model):
+class ResourceFile(models.Model, ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
@@ -2241,24 +2241,24 @@ class ResourceFile(models.Model):
                 resource_file__startswith=folder)
 
     # TODO: move to BaseResource as instance method
-    @classmethod
-    def create_folder(cls, resource, folder):
-        """ create a folder for a resource """
-        # avoid import loop
-        from hs_core.views.utils import create_folder
-        _path_is_allowed(folder)
-        # TODO: move code from location used below to here
-        create_folder(resource.short_id, os.path.join('data', 'contents', folder))
+    # @classmethod
+    # def create_folder(cls, resource, folder):
+    #     """ create a folder for a resource """
+    #     # avoid import loop
+    #     from hs_core.views.utils import create_folder
+    #     _path_is_allowed(folder)
+    #     # TODO: move code from location used below to here
+    #     create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
-    # TODO: move to BaseResource as instance method
-    @classmethod
-    def remove_folder(cls, resource, folder, user):
-        """ remove a folder for a resource """
-        # avoid import loop
-        from hs_core.views.utils import remove_folder
-        _path_is_allowed(folder)
-        # TODO: move code from location used below to here
-        remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
+    # # TODO: move to BaseResource as instance method
+    # @classmethod
+    # def remove_folder(cls, resource, folder, user):
+    #     """ remove a folder for a resource """
+    #     # avoid import loop
+    #     from hs_core.views.utils import remove_folder
+    #     _path_is_allowed(folder)
+    #     # TODO: move code from location used below to here
+    #     remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
     @property
     def has_logical_file(self):

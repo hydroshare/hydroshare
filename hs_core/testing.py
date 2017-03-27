@@ -4,8 +4,8 @@ from django.conf import settings
 
 from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
-    unzip_file, remove_folder
+from hs_core.views.utils import move_or_rename_file_or_folder, zip_folder, \
+    unzip_file
 from hs_core.views.utils import run_ssh_command
 from theme.models import UserProfile
 from django_irods.icommands import SessionException
@@ -115,7 +115,7 @@ class TestCaseCommonUtilities(object):
         # create a folder, if folder is created successfully, no exception is raised, otherwise,
         # an iRODS exception will be raised which will be caught by the test runner and mark as
         # a test failure
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
+        res.create_folder('sub_test_dir')
         istorage = res.get_irods_storage()
         res_path = res.file_path
         store = istorage.listdir(res_path)
@@ -177,8 +177,7 @@ class TestCaseCommonUtilities(object):
             # TODO: Why isn't this a method of resource?
             add_resource_files(res.short_id, self.test_file_1)
 
-        # TODO: use ResourceFile.create_folder, which doesn't require data/contents prefix
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
+        res.create_folder('sub_test_dir')
 
         # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
         move_or_rename_file_or_folder(user, res.short_id,
@@ -198,7 +197,7 @@ class TestCaseCommonUtilities(object):
         # TODO: this causes a multiple delete because the paths are valid now.
         istorage = res.get_irods_storage()
 
-        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        res.remove_folder(user, 'sub_test_dir')
 
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()
@@ -240,8 +239,7 @@ class TestCaseCommonUtilities(object):
                           ' in the new folder after renaming')
 
         # remove a folder
-        # TODO: utilize ResourceFile.remove_folder instead. Takes a short path.
-        remove_folder(user, res.short_id, 'data/contents/sub_dir')
+        res.remove_folder(user, 'sub_dir')
         # Now resource only contains one file
         self.assertEqual(res.files.all().count(), 1, msg="resource file count didn't match")
         updated_res_file_names = []

@@ -13,7 +13,7 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
     get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
+    move_or_rename_file_or_folder, get_coverage_data_dict
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
@@ -321,7 +321,7 @@ def data_store_create_folder(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        create_folder(res_id, folder_path)
+        resource.create_folder(folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
@@ -375,7 +375,7 @@ def data_store_remove_folder(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        remove_folder(user, res_id, folder_path)
+        resource.remove_folder(user, folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

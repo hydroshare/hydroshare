@@ -112,7 +112,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        ResourceFile.create_folder(self.res, 'foo')
+        self.res.create_folder('foo')
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
@@ -251,7 +251,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        ResourceFile.create_folder(self.res, 'foo')
+        self.res.create_folder('foo')
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
