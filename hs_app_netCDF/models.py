@@ -345,6 +345,7 @@ class NetcdfResource(BaseResource):
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True
 
+
 processor_for(NetcdfResource)(resource_processor)
 
 
