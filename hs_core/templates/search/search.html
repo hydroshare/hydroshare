@@ -532,18 +532,20 @@
                 geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
             });
 
-            if (view_type == "area_map") {
-                google.maps.event.addListener(maps[view_type],'click',function(e){
+
+            google.maps.event.addListener(maps[view_type],'click',function(e){
+                if (view_type == "area_map") {
                     shade_rects.forEach(function(box){
                         var rect = box.rect;
                         if (box.checked){
                             rect.setOptions({fillOpacity: 0});
                         }
                     });
+                }
+                updateMapView(view_type);
 
-                    updateMapView(view_type);
-                });
-            }
+            });
+
 
         };
 
@@ -598,9 +600,6 @@
         };
 
         var highlightOverlapping = function(position) {
-
-
-
             var map_items_table = $('#area-map-items').DataTable();
             map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                 var data = this.data();
@@ -796,9 +795,9 @@
 
                     var data = datatable.row($row).data();
                     if (this.checked) {
-                        popMarkerWindow(data[1], 0);
+                        popMarkerWindow(data[0], 0);
                     } else {
-                        popMarkerWindow(data[1], 1);
+                        popMarkerWindow(data[0], 1);
                     }
                     // Update state of "Select all" control
                     updateDataTableSelectAllCtrl(datatable, view_type);
@@ -872,13 +871,13 @@
             });
         };
 
-        var popMarkerWindow = function(point, option) {
-            var lat = parseFloat(point.north);
-            var lng = parseFloat(point.east);
-            var point_latlng = new google.maps.LatLng(lat, lng);
+        var popMarkerWindow = function(point_id, option) {
+            // var lat = parseFloat(point.north);
+            // var lng = parseFloat(point.east);
+            // var point_latlng = new google.maps.LatLng(lat, lng);
             for(var i = 0; i < markers.length; i++){
-                var marker_latlng = markers[i].getPosition();
-                if(point_latlng.equals(marker_latlng)) {
+                //var marker_latlng = markers[i].getPosition();
+                if(markers[i].short_id == point_id) {
                     if (option == 0){
                         markers[i].info_window.open(maps["point_map"], markers[i]);
                     } else {
@@ -1046,17 +1045,37 @@
             var lng = parseFloat(point.east);
             var counter = point.counter.toString();
             var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: maps["point_map"],
-                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
-                position: latlng
-            });
+            var marker =  new google.maps.Marker({
+                            map: maps["point_map"],
+                            icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
+                            position: latlng,
+                            short_id: point.short_id
+                        });
+
             marker.info_window = new google.maps.InfoWindow({
                 content: info_content
             });
+
             markers.push(marker);
+
             google.maps.event.addListener(marker, 'click', function() {
                 marker.info_window.open(maps["point_map"], marker);
+
+                var map_items_table = $('#point-map-items').DataTable();
+
+                map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    var resource_id = data[0];
+                    var node_data = this.node();
+                    if (resource_id == marker.short_id) {
+                        $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                    }
+                    // } else {
+                    //     $(node_data).find("input[type=checkbox]:checked").trigger("click");
+                    // }
+
+                });
+
 
             });
         };
@@ -1739,9 +1758,6 @@
                                     var item = $.parseJSON(data[j]);
                                     json_point_results.push(item);
                                     raw_point_results.push(item);
-                                    if (j == 0) {
-                                        console.log("id: " + item.short_id);
-                                    }
                                 }
                                 initMap(json_point_results, "point_map");
                                 setMapItemsList(json_point_results, "point_map", null);
