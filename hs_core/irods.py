@@ -2,19 +2,8 @@ import os
 from django.db import models
 from django.core.exceptions import ValidationError, SuspiciousFileOperation
 
+
 # Various iRODS functions required by resources.
-
-
-def irods_path_is_allowed(path):
-    """ paths containing '/../' are suspicious """
-    if path == "":
-        raise ValidationError("Empty file paths are not allowed")
-    if '/../' in path:
-        raise SuspiciousFileOperation("File paths cannot contain '/../'")
-    if '/./' in path:
-        raise SuspiciousFileOperation("File paths cannot contain '/./'")
-
-
 class ResourceIRODSMixin(models.Model):
 
     class Meta:
@@ -99,7 +88,7 @@ class ResourceIRODSMixin(models.Model):
 
         """
         from hs_core.hydroshare.utils import resource_modified
-        from hs_core.views import rename_irods_file_or_folder_in_django
+        from hs_core.views.utils import rename_irods_file_or_folder_in_django
 
         if __debug__:
             assert(not src_path.startswith("data/contents/"))
@@ -132,4 +121,5 @@ class ResourceIRODSMixin(models.Model):
 
 
 class ResourceFileIRODSMixin(models.Model):
-    pass
+    class Meta:
+        abstract = True

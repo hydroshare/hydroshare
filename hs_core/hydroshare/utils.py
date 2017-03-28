@@ -281,7 +281,7 @@ def get_file_from_irods(res_file):
     return copied_file
 
 
-# TODO: should be ResourceFile.replace
+# TODO: Cohesion: move to ResourceIRODSMixin.replace_resource_file_on_irods
 def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
     Replaces the specified resource file with file (new_file) by copying to iRODS
@@ -303,6 +303,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
 
 
 # TODO: should be inside ResourceFile, and federation logic should be transparent.
+# TODO: Cohesion: move to @property ResourceFile.filename_and_extension
 def get_resource_file_name_and_extension(res_file):
     """
     Gets the full file name with path, file base name, and extension of the specified resource file
@@ -317,7 +318,7 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, f_basename, file_ext
 
 
-# TODO: should be ResourceFile.url
+# TODO: cohesion: move to @property Resourcefile.url
 def get_resource_file_url(res_file):
     """
     Gets the download url of the specified resource file
@@ -334,7 +335,7 @@ def get_resource_file_url(res_file):
     return f_url
 
 
-# TODO: should be classmethod of ResourceFile
+# TODO: Cohesion: move to AbstractResource.get_resource_files_by_extension
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
     for res_file in resource.files.all():
@@ -344,6 +345,7 @@ def get_resource_files_by_extension(resource, file_extension):
     return matching_files
 
 
+# TODO: cohesion: move to AbstractResource.get_resource_file_by_name
 def get_resource_file_by_name(resource, file_name):
     for res_file in resource.files.all():
         _, fl_name, _ = get_resource_file_name_and_extension(res_file)
@@ -352,6 +354,7 @@ def get_resource_file_by_name(resource, file_name):
     return None
 
 
+# TODO: cohesion: move to AbstractResource.get_resource_file_by_id
 def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
 
@@ -406,6 +409,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
+# TODO: Cohesion: move to ClassMethod of ResourceIRODSMixin
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     """
     Copy resource files and AVUs from source resource to target resource including both
@@ -461,6 +465,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
         tgt_res.resources = src_res.resources.all()
 
 
+# TODO: Cohesion: move to ClassMethod of AbstractResource
 def copy_and_create_metadata(src_res, dest_res):
     """
     Copy metadata from source resource to target resource except identifier, publisher, and date
@@ -501,7 +506,7 @@ def copy_and_create_metadata(src_res, dest_res):
     dest_res.save()
 
 
-# TODO: should be BaseResource.mark_as_modified.
+# TODO: Cohesion: move to ResourceIRODSMixin.resource_modified
 def resource_modified(resource, by_user=None, overwrite_bag=True):
     """
     Set an AVU flag that forces the bag to be recreated before fetch.
@@ -528,7 +533,7 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     set_dirty_bag_flag(resource)
 
 
-# TODO: should be part of BaseResource
+# TODO: Cohesion: move to ResourceIRODSMixin.set_dirty_bag_flag
 def set_dirty_bag_flag(resource):
     """
     Set bag_modified=true AVU pair for the modified resource in iRODS
@@ -696,6 +701,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     return page_url_dict, resource_title,  metadata, fed_res_path
 
 
+# TODO: Cohesion: move to AbstractResource.resource_post_create_actions
 def resource_post_create_actions(resource, user, metadata,  **kwargs):
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
@@ -792,7 +798,7 @@ def get_party_data_from_user(user):
     return party_data
 
 
-# TODO: make this part of resource api. resource --> self.
+# TODO: Cohesion: move to AbstractResource.resource_file_add_pre_process
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
                                   source_names=[], **kwargs):
     if __debug__:
@@ -812,6 +818,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 
 # TODO: make this part of resource api. resource --> self.
+# TODO: Cohesion: move to AbstractResource.resource_file_add_process
 def resource_file_add_process(resource, files, user, extract_metadata=False,
                               source_names=[], **kwargs):
 
@@ -837,7 +844,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     return resource_file_objects
 
 
-# TODO: move this to BaseResource
+# TODO: Cohesion: move to AbstractResource.create_empty_contents_directory
 def create_empty_contents_directory(resource):
     res_contents_dir = resource.file_path
     istorage = resource.get_irods_storage()
@@ -845,6 +852,7 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
+# TODO: Cohesion: move to AbstractResource.add_file_to_resource
 def add_file_to_resource(resource, f, folder=None, source_name='',
                          move=False):
     """
@@ -995,6 +1003,7 @@ class ZipContents(object):
             shutil.rmtree(temp_dir)
 
 
+# TODO: DEPRECATED. Always IRODS.
 def get_file_storage():
     return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
 

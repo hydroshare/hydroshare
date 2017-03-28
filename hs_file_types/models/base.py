@@ -677,11 +677,14 @@ class AbstractLogicalFile(models.Model):
         file type
         :return: computed new folder path
         """
-        current_folder_path = 'data/contents'
+        current_folder_path = None
         if file_folder is not None:
             current_folder_path = os.path.join(current_folder_path, file_folder)
 
-        new_folder_path = os.path.join(current_folder_path, file_name)
+        if current_folder_path is not None: 
+            new_folder_path = os.path.join(current_folder_path, file_name)
+        else: 
+            new_folder_path = file_name
 
         # To avoid folder creation failure when there is already matching
         # directory path, first check that the folder does not exist
@@ -689,6 +692,7 @@ class AbstractLogicalFile(models.Model):
         # to the end
         istorage = resource.get_irods_storage()
         counter = 0
+        # TODO: this is a bit dangerous; it descends into directories without limit
         while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
             new_file_name = file_name + "_{}".format(counter)
             new_folder_path = os.path.join(current_folder_path, new_file_name)

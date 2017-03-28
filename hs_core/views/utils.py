@@ -134,6 +134,7 @@ def run_script_to_update_hyrax_input_files(shortkey):
                     exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
+# TODO: Cohesion: move to resource.can_be_copied_by_user
 def can_user_copy_resource(res, user):
     """
     Check whether resource copy is permitted or not
@@ -446,6 +447,7 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
+# TODO: Cohesion: move to ResourceIRODSMixin:link_irods_file_to_django(resource, filepath) 
 def link_irods_file_to_django(resource, filepath, size=0):
     """
     Link a newly created irods file to Django resource model
@@ -475,6 +477,7 @@ def link_irods_file_to_django(resource, filepath, size=0):
             resource.set_default_logical_file()
 
 
+# TODO: Cohesion: move to ResourceIRODSMixin:link_irods_folder_to_django(resource, foldername) 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
@@ -506,6 +509,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
                                         istorage, os.path.join(foldername, folder), exclude)
 
 
+# TODO: Cohesion: move to ResourceIRODSMixin.rename_irods_file_or_folder_in_django
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     """
     Rename file in Django DB after the file is renamed in Django side
@@ -539,6 +543,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             fobj.set_storage_path(new_path)
 
 
+# TODO: Cohesion: move to ResourceIRODSMixin.remove_irods_folder_in_django
 def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
@@ -575,6 +580,7 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
 
 
 # TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible.
+# TODO: Cohesion: move to ResourceIRODSMixin.zip_folder(user, input_path, output_name, bool_remove) 
 def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
     """
     Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for HydroShare
@@ -626,6 +632,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     return output_zip_fname, output_zip_size
 
 
+# TODO: Cohesion: move to ResourceIRODSMixin.unzip_file(...) 
 def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
@@ -660,14 +667,14 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
-# def irods_path_is_allowed(path):
-#     """ paths containing '/../' are suspicious """
-#     if path == "":
-#         raise ValidationError("Empty file paths are not allowed")
-#     if '/../' in path:
-#         raise SuspiciousFileOperation("File paths cannot contain '/../'")
-#     if '/./' in path:
-#         raise SuspiciousFileOperation("File paths cannot contain '/./'")
+def irods_path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if '/../' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
 def get_coverage_data_dict(resource, coverage_type='spatial'):

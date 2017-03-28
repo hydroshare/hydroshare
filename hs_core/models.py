@@ -1773,11 +1773,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         :param user: the requesting user to check for whether copy is allowed
         :return: return True if the resource can be copied; otherwise, return False
         """
-        if (res.metadata.rights.statement == "This resource is shared under the Creative "
-                                             "Commons Attribution-NoDerivs CC BY-ND." or
-            res.metadata.rights.statement == "This resource is shared under the Creative "
-                                             "Commons Attribution-NoCommercial-NoDerivs "
-                                             "CC BY-NC-ND."):
+        if (self.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoDerivs CC BY-ND." or
+            self.metadata.rights.statement == "This resource is shared under the Creative "
+                                              "Commons Attribution-NoCommercial-NoDerivs "
+                                              "CC BY-NC-ND."):
             return False
         else: 
             return True

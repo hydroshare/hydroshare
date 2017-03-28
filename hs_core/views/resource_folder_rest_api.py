@@ -9,7 +9,7 @@ from django.core.exceptions import SuspiciousFileOperation
 
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
-from hs_core.irods import irods_path_is_allowed
+from hs_core.views.utils import irods_path_is_allowed
 
 from django_irods.icommands import SessionException
 
