@@ -21,6 +21,7 @@ class SiteFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
+        field_map_coordinates = 'form-control input-sm'
         common_layout = Layout(
                             Field('selected_series_id', css_class=field_width, type="hidden"),
                             Field('available_sites', css_class=field_width, type="hidden"),
@@ -44,12 +45,12 @@ class SiteFormHelper(BaseFormHelper):
                                   title="A controlled vocabulary term that describes the type of "
                                         "data collection site (e.g., 'Stream').\n"
                                         "Select 'Other...' to specify a new site type term."),
-                            Field('latitude', css_class=field_width,
+                            Field('latitude', css_class=field_map_coordinates,
                                   title="The latitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., 43.1111)."),
-                            Field('longitude', css_class=field_width,
+                                        "WGS84 datum (e.g., 43.1111).", data_map_item="latitude"),
+                            Field('longitude', css_class=field_map_coordinates,
                                   title="The longitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., -111.2334)."),
+                                        "WGS84 datum (e.g., -111.2334).", data_map_item="longitude"),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=show_site_code_selection,
@@ -789,7 +790,7 @@ UTCOffSetLayout = HTML("""
 
 TimeSeriesMetaDataLayout = HTML("""
 <div class="form-group col-sm-6 col-xs-12 time-series-forms">
-     <div id="site">
+     <div id="site" class="hs-coordinates-picker" data-coordinates-type="point">
          {% load crispy_forms_tags %}
          {% crispy site_form %}
          <hr style="border:0">
