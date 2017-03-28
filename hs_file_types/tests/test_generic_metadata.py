@@ -11,7 +11,6 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions
-from hs_core.views.utils import move_or_rename_file_or_folder
 
 from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 
@@ -152,17 +151,15 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
         self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file.txt')
         # test rename of file is allowed
-        src_path = 'data/contents/generic_file.txt'
-        tgt_path = "data/contents/generic_file_1.txt"
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                      tgt_path)
+        src_path = 'generic_file.txt'
+        tgt_path = "generic_file_1.txt"
+        self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertEqual(os.path.basename(res_file.resource_file.name), 'generic_file_1.txt')
         # test moving the file to a new folder is allowed
-        src_path = 'data/contents/generic_file_1.txt'
-        tgt_path = "data/contents/test_folder/generic_file_1.txt"
-        move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                      tgt_path)
+        src_path = 'generic_file_1.txt'
+        tgt_path = "test_folder/generic_file_1.txt"
+        self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         res_file = self.composite_resource.files.first()
         self.assertTrue(res_file.resource_file.name.endswith(tgt_path))
 

@@ -15,7 +15,6 @@ from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
-from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
 from utils import assert_raster_file_type_metadata
@@ -562,8 +561,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertNotEqual(BandInformation.objects.count(), 0)
 
         # delete the folder for the logical file
-        folder_path = "data/contents/small_logan"
-        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        folder_path = "small_logan"
+        self.composite_resource.remove_folder(self.user, folder_path)
         # there should no content files
         self.assertEqual(self.composite_resource.files.count(), 0)
 
@@ -589,27 +588,23 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         # test renaming of files that are associated with raster LFO - which should raise exception
         self.assertEqual(self.composite_resource.files.count(), 2)
-        src_path = 'data/contents/small_logan/small_logan.tif'
-        tgt_path = "data/contents/small_logan/small_logan_1.tif"
+        src_path = 'small_logan/small_logan.tif'
+        tgt_path = "small_logan/small_logan_1.tif"
         with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        src_path = 'data/contents/small_logan/small_logan.vrt'
-        tgt_path = "data/contents/small_logan/small_logan_1.vrt"
+            self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
+        src_path = 'small_logan/small_logan.vrt'
+        tgt_path = "small_logan/small_logan_1.vrt"
         with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
+            self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         # test moving the files associated with geo raster LFO
-        src_path = 'data/contents/small_logan/small_logan.tif'
-        tgt_path = "data/contents/big_logan/small_logan.tif"
+        src_path = 'small_logan/small_logan.tif'
+        tgt_path = "big_logan/small_logan.tif"
         with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
-        src_path = 'data/contents/small_logan/small_logan.vrt'
-        tgt_path = "data/contents/big_logan/small_logan.vrt"
+            self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
+        src_path = 'small_logan/small_logan.vrt'
+        tgt_path = "big_logan/small_logan.vrt"
         with self.assertRaises(DRF_ValidationError):
-            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
-                                          tgt_path)
+            self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
 
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.raster_file_obj,

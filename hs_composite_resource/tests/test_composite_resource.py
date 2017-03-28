@@ -719,8 +719,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
                                                                            self.generic_file_name))
 
         # test rename folder
-        src_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/'
-        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder-1/'
+        src_full_path = os.path.join(self.composite_resource.file_path, 'my-new-folder/')
+        tgt_full_path = os.path.join(self.composite_resource.file_path, 'my-new-folder-1/')
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
@@ -735,7 +735,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
         tif_res_file = hydroshare.utils.get_resource_files_by_extension(
             self.composite_resource, '.tif')[0]
-        self.assertTrue(tif_res_file.resource_file.name.endswith(
+        self.assertTrue(tif_res_file.storage_path.endswith(
             "/data/contents/small_logan/small_logan.tif"))
 
         # test renaming of any files that are part of GeoRasterLogicalFile is not allowed

@@ -36,6 +36,7 @@ class ResourceIRODSMixin(models.Model):
         :param folder_path: the relative path for the folder to be removed under res_id collection.
         :return:
         """
+        from hs_core.views.utils import remove_irods_folder_in_django
         from hs_core.hydroshare.utils import resource_modified
 
         if __debug__:  # no more
@@ -47,7 +48,7 @@ class ResourceIRODSMixin(models.Model):
         # TODO: Pabitra - resource should check here if folder can be removed
         istorage.delete(coll_path)
 
-        self.remove_irods_folder_in_django(istorage, coll_path, user)
+        remove_irods_folder_in_django(istorage, coll_path, user)
 
         if self.raccess.public or self.raccess.discoverable:
             if not self.can_be_public_or_discoverable:
