@@ -515,10 +515,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     :return:
     """
 
-    def update_file_folder(resource_file):
-        # updates the file_folder attribute of the newly created resource_file object
+    def set_file_folder(resource_file):
+        # sets the file_folder attribute of the newly created resource_file object
         file_root_path = os.path.join(resource.root_path, 'data/contents/')
-        file_folder = res_file.dir_path[len(file_root_path):]
+        file_folder = resource_file.dir_path[len(file_root_path):]
         resource_file.file_folder = file_folder
         resource_file.save()
 
@@ -558,7 +558,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
-            update_file_folder(res_file)
+            set_file_folder(res_file)
 
             # if the file we deleted was part a logical file then we have to make the
             # recreated resource file part of the logical file object
@@ -580,7 +580,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
-                update_file_folder(res_file)
+                set_file_folder(res_file)
                 # make the recreated resource file part of the logical file
                 if logical_file is not None:
                     logical_file.add_resource_file(res_file)
