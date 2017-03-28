@@ -426,31 +426,24 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
         return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    if not src_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - src_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-        return HttpResponse('Bad request - src_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - tgt_path must start with data/contents/',
-                            status=status.HTTP_400_BAD_REQUEST)
-
-    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Bad request - tgt_path cannot contain /../',
-                            status=status.HTTP_400_BAD_REQUEST)
-
     try:
         src_short_path = _extract_short_path(src_path)
     except DRF_ValidationError:
-        return HttpResponse('Bad request -- src_path must start with data/contents',
+        return HttpResponse('Bad request -- src_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+        return HttpResponse('Bad request - src_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
         tgt_short_path = _extract_short_path(tgt_path)
     except DRF_ValidationError:
-        return HttpResponse('Bad request -- tgt_path must start with data/contents',
+        return HttpResponse('Bad request -- tgt_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
+        return HttpResponse('Bad request - tgt_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     # now try to move the file

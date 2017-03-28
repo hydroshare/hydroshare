@@ -48,7 +48,7 @@ class ResourceIRODSMixin(models.Model):
         # TODO: Pabitra - resource should check here if folder can be removed
         istorage.delete(coll_path)
 
-        remove_irods_folder_in_django(istorage, coll_path, user)
+        remove_irods_folder_in_django(self, istorage, coll_path, user)
 
         if self.raccess.public or self.raccess.discoverable:
             if not self.can_be_public_or_discoverable:
