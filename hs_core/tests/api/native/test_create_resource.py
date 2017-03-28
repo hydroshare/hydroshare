@@ -182,8 +182,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # number of creators at this point should be 2 as created based on supplied
         # metadata and the user creating the resource won't be added as the creator
-        self.assertEqual(res.metadata.creators.all().count(), 3,
-                         msg='Number of creators not equal to 3')
+        self.assertEqual(res.metadata.creators.all().count(), 2,
+                         msg='Number of creators not equal to 2')
         self.assertIn('John Smith', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'John Smith' was not found")
         self.assertIn('Lisa Molley', [cr.name for cr in res.metadata.creators.all()],
