@@ -20,7 +20,7 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.forms import CoverageTemporalForm
+from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
@@ -78,9 +78,18 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            if self.spatial_coverage:
-                with div(cls="col-lg-6 col-xs-12"):
+            with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
+                with form(id="id-spatial-coverage-file-type",
+                          action="{{ coverage_form.action }}",
+                          method="post", enctype="multipart/form-data"):
                     div("{% crispy coverage_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;")
+
             if self.originalCoverage:
                 with div(cls="col-lg-6 col-xs-12"):
                     div("{% crispy orig_coverage_form %}")
@@ -107,8 +116,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         template = Template(root_div.render())
         context_dict = dict()
-        if self.spatial_coverage:
-            context_dict["coverage_form"] = self.get_spatial_coverage_form()
+
         if self.originalCoverage:
             context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
@@ -116,14 +124,24 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
-        if self.temporal_coverage:
-            temp_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.temporal_coverage.id)
-            temp_cov_form.action = temp_action
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
+        if self.spatial_coverage:
+            form_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.spatial_coverage.id)
         else:
-            temp_action = create_action.format(self.logical_file.id, "coverage")
-            temp_cov_form.action = temp_action
+            form_action = create_action.format(self.logical_file.id, "coverage")
 
+        spatial_cov_form.action = form_action
+
+        if self.temporal_coverage:
+            form_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.temporal_coverage.id)
+            temp_cov_form.action = form_action
+        else:
+            form_action = create_action.format(self.logical_file.id, "coverage")
+            temp_cov_form.action = form_action
+
+        context_dict["coverage_form"] = spatial_cov_form
         context_dict["temp_form"] = temp_cov_form
         context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
         context = Context(context_dict)
@@ -167,7 +185,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                 matching_key = [key for key in request.POST if '-' + field_name in key][0]
                 form_data[field_name] = request.POST[matching_key]
             element_form = BandInfoValidationForm(form_data)
-
+        elif element_name == 'coverage' and 'start' not in request.POST:
+            element_form = CoverageSpatialForm(data=request.POST)
         else:
             # element_name must be coverage
             # here we are assuming temporal coverage
@@ -440,8 +459,9 @@ def extract_metadata(temp_vrt_file_path):
 
     # Save extended meta spatial reference
     orig_cov_info = res_md_dict['spatial_coverage_info']['original_coverage_info']
-    # TODO: (Pabitra) Check with Tian if this check of northlimit is sufficient to decide whether
-    # to create original coverage element or not (the example Honduras.tf file has all values null)
+
+    # Here the assumption is that if there is no value for the 'northlimit' then there is no value
+    # for the bounding box
     if orig_cov_info['northlimit'] is not None:
         ori_cov = {'OriginalCoverage': {'value': orig_cov_info}}
         metadata.append(ori_cov)

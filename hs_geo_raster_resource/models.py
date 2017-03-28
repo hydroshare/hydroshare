@@ -65,6 +65,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                 if value_item not in value_arg_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more "
                                           "bounding box limits or 'units' is missing.")
+                    # TODO: Pabitra - validate also the values of the bounding box
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
