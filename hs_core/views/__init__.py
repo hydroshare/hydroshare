@@ -27,6 +27,8 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
+
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
@@ -91,13 +93,26 @@ def change_quota_holder(request, shortkey):
     new_holder_uname = request.POST.get('new_holder_username', '')
     if not new_holder_uname:
         return HttpResponseBadRequest()
-    ufilter = User.objects.filter(username=new_holder_uname)
-    if not ufilter.exists():
+    new_holder_u = User.objects.filter(username=new_holder_uname).first()
+    if not new_holder_u:
         return HttpResponseBadRequest()
-    new_holder_u = ufilter.first()
+
     res = utils.get_resource_by_shortkey(shortkey)
     try:
         res.set_quota_holder(request.user, new_holder_u)
+
+        # send notification to the new quota holder
+        context = {
+            "request": request,
+            "user": request.user,
+            "new_quota_holder": new_holder_u,
+            "resource_uuid": res.short_id,
+        }
+        subject_template_name = "email/quota_holder_change_subject.txt"
+        subject = subject_template(subject_template_name, context)
+        send_mail_template(subject, "email/quota_holder_change",
+                           settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
+                           context=context)
     except PermissionDenied:
         return HttpResponseForbidden()
 
