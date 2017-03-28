@@ -1365,8 +1365,9 @@ function setFileType(fileType){
     calls.push(set_file_type_ajax_submit(url));
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function () {
-       refreshFileBrowser();
        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+       // page refresh is needed to show any extracted metadata used at the resource level
+       location.reload(true);
     });
 }
 // Used to set the previous scroll position after refresh
