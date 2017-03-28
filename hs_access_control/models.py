@@ -2643,7 +2643,7 @@ class UserAccess(models.Model):
             if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
                 if access_resource.owners.count() == 1:
                     raise PermissionDenied("Cannot remove sole owner of resource")
-                qholder = access_resource.get_quota_holder()
+                qholder = this_resource.get_quota_holder()
                 if qholder:
                     if qholder == user:
                         raise PermissionDenied("Cannot remove this resource's quota holder from "
