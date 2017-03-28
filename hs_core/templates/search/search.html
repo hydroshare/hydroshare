@@ -570,7 +570,7 @@
         };
 
         var setBoxes = function(json_results) {
-            var modified_points_data = [];
+
             var modified_boxes_data = [];
             var boxes_data = [];
             for (var i = 0; i < json_results.length; i++ ) {
@@ -1095,8 +1095,7 @@
             };
             box_centers.push(box_center);
         };
-
-        var isSmallArea = function(rect) {
+        var isSmallRect = function(rect) {
             var map_view_bound = current_map_bounds;
             var map_north = map_view_bound.getNorthEast().lat();
             var map_east = map_view_bound.getNorthEast().lng();
@@ -1110,6 +1109,40 @@
             ];
 
             var box_area = google.maps.geometry.spherical.computeArea(rect.getPath());
+            //console.log(box_area);
+            var map_area = google.maps.geometry.spherical.computeArea(map_coords);
+            var ratio = box_area/map_area;
+            if (ratio < 0.001) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        var isSmallArea = function(box) {
+            var map_view_bound = current_map_bounds;
+            var map_north = map_view_bound.getNorthEast().lat();
+            var map_east = map_view_bound.getNorthEast().lng();
+            var map_south = map_view_bound.getSouthWest().lat();
+            var map_west = map_view_bound.getSouthWest().lng();
+            var map_coords = [
+                new google.maps.LatLng(map_north, map_west),
+                new google.maps.LatLng(map_north, map_east),
+                new google.maps.LatLng(map_south, map_east),
+                new google.maps.LatLng(map_south, map_west)
+            ];
+
+            var box_north = parseFloat(box.northlimit);
+            var box_south = parseFloat(box.southlimit);
+            var box_east = parseFloat(box.eastlimit);
+            var box_west = parseFloat(box.westlimit);
+            var box_coords = [
+                new google.maps.LatLng(box_north, box_west),
+                new google.maps.LatLng(box_north, box_east),
+                new google.maps.LatLng(box_south, box_east),
+                new google.maps.LatLng(box_south, box_west)
+            ];
+
+            var box_area = google.maps.geometry.spherical.computeArea(box_coords);
             //console.log(box_area);
             var map_area = google.maps.geometry.spherical.computeArea(map_coords);
             var ratio = box_area/map_area;
@@ -1306,20 +1339,73 @@
                 map_items_table.clear();
                 map_items_table.rows.add(map_resources);
                 map_items_table.draw();
+                // check small
+                var modified_boxes_data = [];
+                var boxes_data = [];
+                for (var i = 0; i < filtered_results.length; i++ ) {
+                    if (filtered_results[i].coverage_type == 'box') {
+                        checkDuplicateBoxResults(modified_boxes_data, filtered_results[i]);
+                    }
+                }
 
-                shade_rects.forEach(function(box) {
-                    var rect = box.rect;
-                    if (isSmallArea(rect)) {
-                        var rect_bounds = new google.maps.LatLngBounds()
-                        rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
-                        var latlng = rect_bounds.getCenter();
+                modified_boxes_data.forEach(function(box) {
+                    var info_content = box.info_link;
+                    var northlimit = parseFloat(box.northlimit);
+                    var southlimit = parseFloat(box.southlimit);
+                    var eastlimit = parseFloat(box.eastlimit);
+                    var westlimit = parseFloat(box.westlimit);
+                    var counter = box.counter.toString();
+
+                    if (isSmallArea(box)) {
+                        //var rect_bounds = new google.maps.LatLngBounds()
+                        //rect.getPath().forEach(function(element,index){rect_bounds.extend(element)})
+                        var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+                        var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+                        var latlng = new google.maps.LatLng(lat, lng);
                         var box_center = new google.maps.Marker({
                             map: maps["area_map"],
-                            icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png',
+                            icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
                             position: latlng
                         });
                         small_box_markers.push(box_center);
 
+                        //rect.setMap(null);
+                    }
+                });
+            // var info_content = point.info_link;
+            // var lat = parseFloat(point.north);
+            // var lng = parseFloat(point.east);
+            // var counter = point.counter.toString();
+            // var latlng = new google.maps.LatLng(lat, lng);
+            // var marker =  new google.maps.Marker({
+            //                 map: maps["point_map"],
+            //                 icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
+            //                 position: latlng,
+            //                 short_id: point.short_id
+            //             });
+
+            // marker.info_window = new google.maps.InfoWindow({
+            //     content: info_content
+            // });
+
+// var info_content = box.info_link;
+//             var northlimit = parseFloat(box.northlimit);
+//             var southlimit = parseFloat(box.southlimit);
+//             var eastlimit = parseFloat(box.eastlimit);
+//             var westlimit = parseFloat(box.westlimit);
+//             var counter = box.counter.toString();
+//             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+//             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+//             var latlng = new google.maps.LatLng(lat, lng);
+//             var box_center = {
+//                 position: latlng,
+//             };
+//             box_centers.push(box_center);
+
+
+                shade_rects.forEach(function(box) {
+                    var rect = box.rect;
+                    if (isSmallRect(rect)) {
                         rect.setMap(null);
                     }
                 });
