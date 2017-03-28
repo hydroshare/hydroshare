@@ -7,8 +7,6 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
-from rest_framework.exceptions import ValidationError as DRF_ValidationError
-
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
@@ -368,20 +366,20 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.count(), 2)
         src_path = 'netcdf_valid/netcdf_valid.nc'
         tgt_path = "netcdf_valid/netcdf_valid_1.nc"
-        with self.assertRaises(DRF_ValidationError):
+        with self.assertRaises(ValidationError):
             self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         src_path = 'netcdf_valid/netcdf_valid_header_info.txt'
         tgt_path = 'netcdf_valid/netcdf_valid_header_info_1.txt'
-        with self.assertRaises(DRF_ValidationError):
+        with self.assertRaises(ValidationError):
             self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         # test moving the files associated with netcdf LFO
         src_path = 'netcdf_valid/netcdf_valid.nc'
         tgt_path = 'netcdf_valid_1/netcdf_valid.nc'
-        with self.assertRaises(DRF_ValidationError):
+        with self.assertRaises(ValidationError):
             self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
         src_path = 'netcdf_valid/netcdf_valid_header_info.txt'
         tgt_path = 'netcdf_valid_1/netcdf_valid_header_info.txt'
-        with self.assertRaises(DRF_ValidationError):
+        with self.assertRaises(ValidationError):
             self.composite_resource.move_or_rename_file_or_folder(self.user, src_path, tgt_path)
 
         self.composite_resource.delete()

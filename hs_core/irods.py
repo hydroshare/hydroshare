@@ -116,7 +116,7 @@ class ResourceIRODSMixin(models.Model):
 
         istorage.moveFile(src_full_path, tgt_full_path)
 
-        rename_irods_file_or_folder_in_django(self, src_full_path, tgt_full_path)
+        rename_irods_file_or_folder_in_django(self, src_path, tgt_path)
 
         resource_modified(self, user, overwrite_bag=False)
 
