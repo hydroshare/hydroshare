@@ -21,7 +21,6 @@ class SiteFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
-        field_map_coordinates = 'form-control input-sm'
         common_layout = Layout(
                             Field('selected_series_id', css_class=field_width, type="hidden"),
                             Field('available_sites', css_class=field_width, type="hidden"),
@@ -45,10 +44,10 @@ class SiteFormHelper(BaseFormHelper):
                                   title="A controlled vocabulary term that describes the type of "
                                         "data collection site (e.g., 'Stream').\n"
                                         "Select 'Other...' to specify a new site type term."),
-                            Field('latitude', css_class=field_map_coordinates,
+                            Field('latitude', css_class=field_width,
                                   title="The latitude coordinate of the site location using the "
                                         "WGS84 datum (e.g., 43.1111).", data_map_item="latitude"),
-                            Field('longitude', css_class=field_map_coordinates,
+                            Field('longitude', css_class=field_width,
                                   title="The longitude coordinate of the site location using the "
                                         "WGS84 datum (e.g., -111.2334).", data_map_item="longitude"),
                      )
