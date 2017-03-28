@@ -35,6 +35,7 @@ class ResourceFolders(APIView):
                 raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 

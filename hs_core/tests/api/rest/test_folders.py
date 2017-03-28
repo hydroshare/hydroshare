@@ -2,8 +2,6 @@ import json
 from rest_framework import status
 from hs_core.models import ResourceFile
 from hs_core.models import get_path
-
-
 from .base import HSRESTTestCase
 
 

@@ -42,7 +42,7 @@ class ResourceIRODSMixin(models.Model):
             assert(not folder_path.startswith("data/contents/"))
 
         istorage = self.get_irods_storage()
-        coll_path = os.path.join(self.root_path, folder_path)
+        coll_path = os.path.join(self.file_path, folder_path)
 
         # TODO: Pabitra - resource should check here if folder can be removed
         istorage.delete(coll_path)
@@ -69,7 +69,7 @@ class ResourceIRODSMixin(models.Model):
             assert(not folder_path.startswith("data/contents/"))
 
         istorage = self.get_irods_storage()
-        coll_path = os.path.join(self.root_path, folder_path)
+        coll_path = os.path.join(self.file_path, folder_path)
 
         return istorage.listdir(coll_path)
 
