@@ -236,6 +236,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return False
 
     @property
+    def supports_resource_file_add(self):
+        """doesn't allow a resource file to be added"""
+        return False
+
+    @property
     def supports_resource_file_rename(self):
         """resource files that are part of this logical file can't be renamed"""
         return False

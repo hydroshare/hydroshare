@@ -148,8 +148,6 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
             temp_action = update_action.format(self.logical_file.id, "coverage",
                                                self.spatial_coverage.id)
         else:
-            # TODO: JS code needs change to properly display the coverage form
-            # also needs to test creation of coverage (spatial)
             temp_action = create_action.format(self.logical_file.id, "coverage")
 
         spatial_cov_form.action = temp_action
@@ -296,6 +294,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @property
     def supports_resource_file_move(self):
         """resource files that are part of this logical file can't be moved"""
+        return False
+
+    @property
+    def supports_resource_file_add(self):
+        """doesn't allow a resource file to be added"""
         return False
 
     @property
