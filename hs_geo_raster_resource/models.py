@@ -142,7 +142,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if element is not None:
             ori_coverage_data_dict['projection'] = element.value.get('projection', None)
             ori_coverage_data_dict['datum'] = element.value.get('datum', None)
-            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string', None)
+            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string',
+                                                                            None)
             ori_coverage_data_dict['units'] = element.value['units']
             ori_coverage_data_dict['northlimit'] = element.value['northlimit']
             ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
