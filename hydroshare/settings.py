@@ -331,6 +331,11 @@ APPS_TO_NOT_RUN = (
     'autocomplete_light',
     'widget_tweaks',
     'oauth2_provider',
+    'debug_toolbar',
+    'corsheaders',
+    'security',
+    'django_comments',
+    'haystack'
     # etc...
 )
 
