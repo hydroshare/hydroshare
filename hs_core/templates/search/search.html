@@ -1,4 +1,4 @@
- {% extends "base.html" %}
+{% extends "base.html" %}
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
@@ -741,7 +741,7 @@
                 },
                 {
                     "targets": [1],
-                    "width": "90px",
+                    "width": "50px",
                     "data": null,
                     "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
                 },
@@ -910,9 +910,22 @@
             if (zoom_on_map) {
                 maps["area_map"].fitBounds(rectBounds);
                 updateMapView(view_type);
+
+                var map_items_table = $('#area-map-items').DataTable();
+                map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    var resource_id = data[0];
+                    var node_data = this.node();
+                    if (box.short_id == resource_id) {
+                        $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                    }
+
+                });
+            } else {
+
+                findShadeRectById(box);
             }
             //console.log(box);
-            findShadeRectById(box);
             //findShadeRect(rectBounds);
         };
 
@@ -1081,32 +1094,28 @@
                     if (resource_id == marker.short_id) {
                         $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
                     }
-                    // } else {
-                    //     $(node_data).find("input[type=checkbox]:checked").trigger("click");
-                    // }
 
                 });
 
 
             });
+
+            google.maps.event.addListener(marker.info_window,'closeclick',function(){
+                var map_items_table = $('#point-map-items').DataTable();
+
+                map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    var resource_id = data[0];
+                    var node_data = this.node();
+                    if (resource_id == marker.short_id) {
+                        $(node_data).find("input[type=checkbox]:checked").trigger("click");
+                    }
+
+                });
+            });
         };
 
         var createBoxResourceMarker = function(box) {
-            // var info_content = box.info_link;
-            // var northlimit = parseFloat(box.northlimit);
-            // var southlimit = parseFloat(box.southlimit);
-            // var eastlimit = parseFloat(box.eastlimit);
-            // var westlimit = parseFloat(box.westlimit);
-            // var counter = box.counter.toString();
-            // var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-            // var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-            // var latlng = new google.maps.LatLng(lat, lng);
-            // var box_center = {
-            //     position: latlng,
-            // };
-            // box_centers.push(box_center);
-
-
 
             var info_content = box.info_link;
             var northlimit = parseFloat(box.northlimit);
@@ -1117,6 +1126,11 @@
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
+            var resources_ids = [];
+            box.resources_list.forEach(function(resource){
+                resources_ids.push(resource.short_id);
+            });
+
 
             var box_center = new google.maps.Marker({
                 map: maps["area_map"],
@@ -1125,21 +1139,38 @@
             });
             box_centers.push(box_center);
 
-            // google.maps.event.addListener(box_center, 'click', function() {
-            //     var map_resources = [];
-            //     buildMapItemsTableDataforMarkers(box.resources_list, map_resources);
-            //     var map_items_table = $('#map-items').DataTable();
-            //     map_items_table.clear();
-            //     map_items_table.rows.add(map_resources);
-            //     map_items_table.draw();
-            //     info_window.setContent(info_content);
-            //     info_window.open(map, marker);
-            //     var rectBounds = new google.maps.LatLngBounds(
-            //             new google.maps.LatLng(southlimit, westlimit),
-            //             new google.maps.LatLng(northlimit, eastlimit)
-            //     );
-            //     findShadeRect(rectBounds);
-            // });
+            box_center.info_window = new google.maps.InfoWindow({
+                content: info_content
+            });
+
+
+            var map_items_table = $('#area-map-items').DataTable();
+            google.maps.event.addListener(box_center, 'click', function() {
+                box_center.info_window.open(maps["area_map"], box_center);
+
+                map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    var resource_id = data[0];
+                    var node_data = this.node();
+                    if (resources_ids.indexOf(resource_id) > -1) {
+                        $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                    }
+
+                });
+            });
+
+            google.maps.event.addListener(box_center.info_window,'closeclick',function(){
+
+                map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                    var data = this.data();
+                    var resource_id = data[0];
+                    var node_data = this.node();
+                    if (resources_ids.indexOf(resource_id) > -1) {
+                        $(node_data).find("input[type=checkbox]:checked").trigger("click");
+                    }
+
+                });
+            });
 
 
         };
