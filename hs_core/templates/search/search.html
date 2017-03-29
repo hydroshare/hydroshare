@@ -653,7 +653,7 @@
                     rect: new google.maps.Polygon({
                             paths: [rectCoords],
                             strokeColor: '#FF0000',
-                            strokeOpacity: 0.15,
+                            strokeOpacity: 0.25,
                             strokeWeight: 2,
                             fillColor: '#FF0000',
                             fillOpacity: 0
@@ -1150,8 +1150,11 @@
 
             var map_items_table = $('#area-map-items').DataTable();
             google.maps.event.addListener(box_center, 'click', function() {
-                box_center.info_window.open(maps["area_map"], box_center);
+                var resources_bound = createBoundsForResources(box.resources_list);
+                maps["area_map"].fitBounds(resources_bound);
+                updateMapView("area_map");
 
+                box_center.info_window.open(maps["area_map"], box_center);
                 map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                     var data = this.data();
                     var resource_id = data[0];
@@ -1179,7 +1182,26 @@
 
         };
 
+        var createBoundsForResources = function (resources_list) {
+            var bounds = new google.maps.LatLngBounds();
 
+            resources_list.forEach(function(resource){
+                var northlimit = parseFloat(resource.northlimit);
+                var southlimit = parseFloat(resource.southlimit);
+                var eastlimit = parseFloat(resource.eastlimit);
+                var westlimit = parseFloat(resource.westlimit);
+                var ne = new google.maps.LatLng(northlimit, eastlimit);
+                bounds.extend(ne);
+                var nw = new google.maps.LatLng(northlimit, westlimit);
+                bounds.extend(nw);
+                var se = new google.maps.LatLng(southlimit, eastlimit);
+                bounds.extend(se);
+                var sw = new google.maps.LatLng(southlimit, westlimit);
+                bounds.extend(sw);
+
+            });
+            return bounds;
+        };
         // var isSmallRect = function(rect) {
         //     var map_view_bound = current_map_bounds;
         //     var map_north = map_view_bound.getNorthEast().lat();
@@ -1240,15 +1262,9 @@
 
         var createBoundsForMarkers = function(markers, view_type) {
             var bounds = new google.maps.LatLngBounds();
-            if (view_type == "point_map") {
-                $.each(markers, function() {
-                    bounds.extend(this.getPosition());
-                });
-            } else {
-                $.each(markers, function() {
-                    bounds.extend(this.position);
-                });
-            }
+            $.each(markers, function() {
+                bounds.extend(this.getPosition());
+            });
             return bounds;
         };
 
