@@ -168,7 +168,7 @@
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
                 <li><a href="#map-point-view"><i class="glyphicon glyphicon-map-marker"></i> Site</a></li>
-                <li><a href="#map-area-view"><i class="glyphicon glyphicon-map-marker"></i> Area</a></li>
+                <li><a href="#map-area-view"><i class="glyphicon glyphicon-unchecked"></i> Area</a></li>
             </ul>
 
             <div class="tab-content">
@@ -412,7 +412,6 @@
         var box_centers_cluster = null;
         var info_window = null;
         var shade_rects = [];
-
 
         var initMap = function(json_results, view_type) {
             var map_view_option = "";
@@ -777,8 +776,10 @@
                 $('#area-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
                     var $row = $(this).closest('tr');
                     var data = datatable.row($row).data();
+                    //console.log(datatable.row($row).index());
                     if (this.checked) {
                         highlightOrHideBox(data[1], 0);
+                        //datatable.row(datatable.row($row).index()).scrollTo();
                     } else {
                         highlightOrHideBox(data[1], 1);
                     }
@@ -874,9 +875,36 @@
                 if (box.rect_id == target.short_id) {
                     if (option == 0) {
                         rect.setOptions({fillOpacity: 0.15});
+                        //if (!markers_info_open) {
+                        // var info_content = '<a target="_blank" href="' + target.get_absolute_url + '">' + target.title + '</a>';
+                        // rect.info_window = new google.maps.InfoWindow({
+                        //     content: info_content
+                        // });
+
+                        // rect.info_window.open(maps["area_map"], rect);
+                        // rect.info_window.setPosition(rect.getPath().getAt(0));
+
+                        // google.maps.event.addListener(rect.info_window,'closeclick',function(){
+                        //     var map_items_table = $('#area-map-items').DataTable();
+
+                        //     map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                        //         var data = this.data();
+                        //         var resource_id = data[0];
+                        //         var node_data = this.node();
+                        //         if (resource_id == box.rect_id) {
+                        //             $(node_data).find("input[type=checkbox]:checked").trigger("click");
+                        //         }
+
+                        //     });
+                        // });
+                        //}
+
                         box.checked = true;
                     } else {
                         rect.setOptions({fillOpacity: 0});
+                        // if (rect.info_window != null) {
+                        //     rect.info_window.close(maps["area_map"], rect);
+                        // }
                         box.checked = false;
                     }
                 }
@@ -1025,7 +1053,7 @@
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
+                    item.info_link = item.info_link + '<br />' + '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title +'</a>';
                     item.counter++;
                     item.resources_list.push(test);
                     existed = true;
@@ -1034,7 +1062,7 @@
             if (!existed) {
                 test.resources_list = [];
                 test.resources_list.push(test);
-                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
             }
@@ -1052,7 +1080,7 @@
                 var lng_diff = Math.abs(test_lng - item_lng);
 
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
                     item.resources_list.push(test);
                     existed = true;
@@ -1061,7 +1089,7 @@
             if (!existed) {
                 test.resources_list = [];
                 test.resources_list.push(test);
-                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_boxes_data.push(test);
             }
@@ -1149,11 +1177,11 @@
 
 
             var map_items_table = $('#area-map-items').DataTable();
+
             google.maps.event.addListener(box_center, 'click', function() {
                 var resources_bound = createBoundsForResources(box.resources_list);
                 maps["area_map"].fitBounds(resources_bound);
                 updateMapView("area_map");
-
                 box_center.info_window.open(maps["area_map"], box_center);
                 map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                     var data = this.data();
@@ -1167,7 +1195,6 @@
             });
 
             google.maps.event.addListener(box_center.info_window,'closeclick',function(){
-
                 map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                     var data = this.data();
                     var resource_id = data[0];
@@ -1657,20 +1684,6 @@
                 }
             });
         };
-        // var findShadeRect = function(rectBounds) {
-        //     var found = 0;
-        //     shade_rects.forEach(function(box){
-        //         var rect = box.rect;
-        //         var shade_rect_bound = new google.maps.LatLngBounds();
-        //         calShadeRectBounds(rect, shade_rect_bound);
-        //         if (rectBounds.equals(shade_rect_bound) && found == 0) {
-        //             rect.setOptions({fillOpacity: 0.15});
-        //             found = 1;
-        //         } else if (!box.checked) {
-        //             rect.setOptions({fillOpacity: 0});
-        //         }
-        //     });
-        // };
 
         var setLatLngLabels = function() {
             var ne_lat = parseFloat(document.getElementById("id_NElat").value).toFixed(3) + '°';
