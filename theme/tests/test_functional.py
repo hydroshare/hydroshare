@@ -1,5 +1,3 @@
-import signal
-
 from django.contrib.auth.models import Group
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import override_settings
@@ -36,9 +34,6 @@ class FunctionalTestsCases(object):
         super(FunctionalTestsCases, self).setUp()
 
     def tearDown(self):
-        self.driver.close()
-        # see Selenium bug: https://github.com/seleniumhq/selenium/issues/767
-        self.driver.service.process.send_signal(signal.SIGTERM)
         self.driver.quit()
         super(FunctionalTestsCases, self).tearDown()
 
