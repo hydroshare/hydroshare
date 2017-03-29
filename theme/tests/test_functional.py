@@ -47,8 +47,8 @@ class FunctionalTestsCases(object):
         out, err = processes.communicate()
         for line in out.splitlines():
             if 'phantomjs' in line:
-            pid = int(line.split(None, 1)[0])
-            os.kill(pid, signal.SIGKILL)
+                pid = int(line.split(None, 1)[0])
+                os.kill(pid, signal.SIGKILL)
 
         super(FunctionalTestsCases, self).tearDown()
 
