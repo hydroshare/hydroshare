@@ -653,7 +653,7 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
     if resource is not None:
         # file type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
-                                  resource.metadata.creators.all())
+                                  resource.metadata.contributors.all())
     else:
         # resource type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
