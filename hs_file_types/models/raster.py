@@ -90,9 +90,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                    cls="btn btn-primary pull-right",
                                    style="display: none;")
 
-            if self.originalCoverage:
-                with div(cls="col-lg-6 col-xs-12"):
-                    div("{% crispy orig_coverage_form %}")
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy orig_coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy cellinfo_form %}")
 
@@ -117,8 +116,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         template = Template(root_div.render())
         context_dict = dict()
 
-        if self.originalCoverage:
-            context_dict["orig_coverage_form"] = self.get_original_coverage_form()
+        context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
         temp_cov_form = self.get_temporal_coverage_form()
 
@@ -152,7 +150,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return self.cellInformation.get_html_form(resource=None)
 
     def get_original_coverage_form(self):
-        return self.originalCoverage.get_html_form(resource=None)
+        return OriginalCoverage.get_html_form(resource=None, element=self.originalCoverage,
+                                              file_type=True, allow_edit=False)
 
     def get_bandinfo_formset(self):
         BandInfoFormSetEdit = formset_factory(
