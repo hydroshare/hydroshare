@@ -1,5 +1,6 @@
 import os
 import subprocess
+import signal
 
 from django.contrib.auth.models import Group
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
