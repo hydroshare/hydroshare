@@ -39,7 +39,8 @@ logger = logging.getLogger(__name__)
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
         bag_url = current_site_url(AbstractResource.bag_url(r.short_id))
-        science_metadata_url = current_site_url(reverse('get_update_science_metadata', args=[r.short_id]))
+        science_metadata_url = current_site_url(reverse('get_update_science_metadata',
+                                                        args=[r.short_id]))
         resource_map_url = current_site_url(reverse('get_resource_map', args=[r.short_id]))
         resource_url = current_site_url(r.get_absolute_url())
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
@@ -269,10 +270,10 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
 
             # if res is RefTimeSeriesResource
             bag_url = current_site_url(reverse('rest_download_refts_resource_bag',
-                                         kwargs={'shortkey': pk}))
+                                               kwargs={'shortkey': pk}))
         else:
             bag_url = current_site_url(reverse('rest_download',
-                                         kwargs={'path': 'bags/{}.zip'.format(pk)}))
+                                               kwargs={'path': 'bags/{}.zip'.format(pk)}))
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
