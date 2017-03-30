@@ -692,7 +692,7 @@ def convert_file_size_to_unit(size, unit):
     :return: the size converted to the pass-in unit
     """
     unit = unit.lower()
-    if unit != 'kb' and unit != 'mb' and unit != 'gb' and unit != 'tb':
+    if unit not in ('kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
 
