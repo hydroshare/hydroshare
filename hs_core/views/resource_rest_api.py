@@ -274,9 +274,6 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         else:
             bag_url = current_site_url(reverse('rest_download',
                                                kwargs={'path': 'bags/{}.zip'.format(pk)}))
-        else:
-            bag_url = current_site_url(reverse('rest_download',
-                                               kwargs={'path': 'bags/{}.zip'.format(pk)}))
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
