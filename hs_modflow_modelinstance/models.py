@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
@@ -707,6 +707,38 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         elements.append('ModelInput')
         elements.append('GeneralElements')
         return elements
+
+    def update(self, metadata):
+        # overriding the base class update method
+        super(MODFLOWModelInstanceMetaData, self).update(metadata)
+        attribute_mappings = {'studyarea': 'study_area',
+                              'griddimensions': 'grid_dimensions',
+                              'stressperiod': 'stress_period',
+                              'groundwaterflow': 'ground_water_flow',
+                              'boundarycondition': 'boundary_condition',
+                              'modelcalibration': 'model_calibration',
+                              'generalelements': 'general_elements',
+                              'modeloutput': 'model_output', 'executedby': 'executed_by' }
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in ('studyarea', 'griddimensions', 'stressperiod', 'groundwaterflow',
+                                 'boundarycondition', 'modelcalibration', 'generalelements',
+                                 'modeloutput', 'executedby'):
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        element_property_name = attribute_mappings[element_name]
+                        element = getattr(self, element_property_name, None)
+                        if element:
+                            self.update_element(element_id=element.id,
+                                                element_model_name=element_name,
+                                                **dict_item[element_name])
+                        else:
+                            self.create_element(element_model_name=element_name,
+                                                **dict_item[element_name])
+
+            # update possibly only one repeatable element 'modelinput'
+            self.update_repeatable_element(element_name='modelinput', metadata=metadata,
+                                           property_name='model_inputs')
 
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements

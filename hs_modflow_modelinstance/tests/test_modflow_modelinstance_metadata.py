@@ -1283,3 +1283,74 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be GeneralElements metadata objects
         self.assertFalse(GeneralElements.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the MODFLOWModelInstanceMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEqual(self.res.metadata.model_output, None)
+        self.assertEqual(self.res.metadata.executed_by, None)
+        self.assertEqual(self.res.metadata.study_area, None)
+        self.assertEqual(self.res.metadata.grid_dimensions, None)
+        self.assertEqual(self.res.metadata.stress_period, None)
+        self.assertEqual(self.res.metadata.ground_water_flow, None)
+        self.assertEqual(self.res.metadata.boundary_condition, None)
+        self.assertEqual(self.res.metadata.model_calibration, None)
+        self.assertEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertEqual(self.res.metadata.general_elements, None)
+
+        # create modeloutput element using the update()
+        self.res.metadata.update([{'modeloutput': {'includes_output': False}}])
+        self.assertNotEqual(self.res.metadata.model_output, None)
+
+        self.res.metadata.update([{'modeloutput': {'includes_output': True}}])
+        self.assertEqual(self.res.metadata.model_output.includes_output, True)
+
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.res.metadata.creators.count(), 1)
+        self.res.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                  {'creator': {'name': 'Third Creator'}}])
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.res.metadata.creators.count(), 2)
+
+        # test multiple updates in a single call to update()
+        metadata = list()
+        metadata.append({'executedby': {'model_name': self.resGenModelProgram.short_id}})
+        metadata.append({'studyarea': {'totalLength': 'a', 'totalWidth': 'b',
+                                       'maximumElevation': 'c', 'minimumElevation': 'd'}})
+        metadata.append({'griddimensions': {'numberOfLayers': 'a', 'typeOfRows': 'Regular',
+                                            'numberOfRows': 'c', 'typeOfColumns': 'Irregular',
+                                            'numberOfColumns': 'e'}})
+        metadata.append({'stressperiod': {'stressPeriodType': 'Steady', 'steadyStateValue': 'a',
+                                          'transientStateValueType': 'Daily',
+                                          'transientStateValue': 'b'}})
+        metadata.append({'groundwaterflow': {'flowPackage': 'BCF6',
+                                             'flowParameter': 'Transmissivity'}})
+        metadata.append({'boundarycondition': {'specified_head_boundary_packages': ['FHB'],
+                                               'specified_flux_boundary_packages': ['RCH'],
+                                               'head_dependent_flux_boundary_packages': ['GHB'],
+                                               'other_specified_head_boundary_packages': 'JMS',
+                                               'other_head_dependent_flux_boundary_packages':
+                                                   'JLG'}})
+        metadata.append({'modelinput': {'inputType': 'a', 'inputSourceName': 'b',
+                                        'inputSourceURL': 'http://www.RVOB.com'}})
+        metadata.append({'generalelements': {'modelParameter': 'BCF6', 'modelSolver': 'DE4',
+                                             'output_control_package': ['LMT6'],
+                                             'subsidencePackage': 'SUB'}})
+        metadata.append({'modelcalibration': {'calibratedParameter': 'a', 'observationType': 'b',
+                                              'observationProcessPackage': 'RVOB',
+                                              'calibrationMethod': 'c'}})
+        self.res.metadata.update(metadata)
+        # check that there are extended metadata elements at this point
+        self.assertNotEqual(self.res.metadata.model_output, None)
+        self.assertNotEqual(self.res.metadata.executed_by, None)
+        self.assertNotEqual(self.res.metadata.study_area, None)
+        self.assertNotEqual(self.res.metadata.grid_dimensions, None)
+        self.assertNotEqual(self.res.metadata.stress_period, None)
+        self.assertNotEqual(self.res.metadata.ground_water_flow, None)
+        self.assertNotEqual(self.res.metadata.boundary_condition, None)
+        self.assertNotEqual(self.res.metadata.model_calibration, None)
+        self.assertNotEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertNotEqual(self.res.metadata.general_elements, None)
