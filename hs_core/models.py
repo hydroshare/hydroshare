@@ -2295,17 +2295,8 @@ class CoreMetaData(models.Model):
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
-                for dict_item in metadata:
-                    if element_name in dict_item:
-                        element = getattr(self, element_name, None)
-                        if element:
-                            self.update_element(element_id=element.id,
-                                                element_model_name=element_name,
-                                                **dict_item[element_name])
-                        else:
-                            self.create_element(element_model_name=element_name,
-                                                **dict_item[element_name])
-
+                self.update_non_repeatable_element(element_name, metadata)
+                
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
                 self.update_repeatable_element(element_name=element_name, metadata=metadata)
@@ -2676,6 +2667,21 @@ class CoreMetaData(models.Model):
     def _is_valid_element(self, element_name):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
+
+    def update_non_repeatable_element(self, element_name, metadata, property_name=None):
+        for dict_item in metadata:
+            if element_name in dict_item:
+                if property_name is None:
+                    element = getattr(self, element_name, None)
+                else:
+                    element = getattr(self, property_name, None)
+                if element:
+                    self.update_element(element_id=element.id,
+                                        element_model_name=element_name,
+                                        **dict_item[element_name])
+                else:
+                    self.create_element(element_model_name=element_name,
+                                        **dict_item[element_name])
 
     def update_repeatable_element(self, element_name, metadata, property_name=None):
         """

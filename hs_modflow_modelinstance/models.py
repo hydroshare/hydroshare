@@ -718,23 +718,12 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                               'boundarycondition': 'boundary_condition',
                               'modelcalibration': 'model_calibration',
                               'generalelements': 'general_elements',
-                              'modeloutput': 'model_output', 'executedby': 'executed_by' }
+                              'modeloutput': 'model_output', 'executedby': 'executed_by'}
         with transaction.atomic():
             # update/create non-repeatable element
-            for element_name in ('studyarea', 'griddimensions', 'stressperiod', 'groundwaterflow',
-                                 'boundarycondition', 'modelcalibration', 'generalelements',
-                                 'modeloutput', 'executedby'):
-                for dict_item in metadata:
-                    if element_name in dict_item:
-                        element_property_name = attribute_mappings[element_name]
-                        element = getattr(self, element_property_name, None)
-                        if element:
-                            self.update_element(element_id=element.id,
-                                                element_model_name=element_name,
-                                                **dict_item[element_name])
-                        else:
-                            self.create_element(element_model_name=element_name,
-                                                **dict_item[element_name])
+            for element_name in attribute_mappings.keys():
+                element_property_name = attribute_mappings[element_name]
+                self.update_non_repeatable_element(element_name, metadata, element_property_name)
 
             # update possibly only one repeatable element 'modelinput'
             self.update_repeatable_element(element_name='modelinput', metadata=metadata,
