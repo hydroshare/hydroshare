@@ -400,3 +400,34 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # resource specific metadata
         # there should be no Model Output metadata objects
         self.assertFalse(MpMetadata.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the ModelProgramMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resModelProgram.metadata.program, None)
+        # create Model program metadata
+        release_date = '2016-10-24 21:05:00.315907+00:00'
+        model_program_data = {'mpmetadata': {'modelVersion': '5.1.011',
+                                             'modelProgramLanguage': 'Fortran',
+                                             'modelOperatingSystem': 'Windows',
+                                             'modelReleaseDate': release_date,
+                                             'modelWebsite': 'http://www.hydroshare.org',
+                                             'modelCodeRepository': 'http://www.github.com',
+                                             'modelReleaseNotes': 'releaseNote.pdf',
+                                             'modelDocumentation': 'manual.pdf',
+                                             'modelSoftware': 'utilities.exe',
+                                             'modelEngine': 'sourceCode.zip'}}
+
+        self.resModelProgram.metadata.update([model_program_data])
+        # check that there is extended metadata elements at this point
+        self.assertNotEqual(self.resModelProgram.metadata.program, None)
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.resModelProgram.metadata.creators.count(), 1)
+        self.resModelProgram.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                              {'creator': {'name': 'Third Creator'}},
+                                              {'mpmetadata': {'modelVersion': '5.1.012'}}])
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.resModelProgram.metadata.creators.count(), 2)

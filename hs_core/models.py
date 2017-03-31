@@ -2296,7 +2296,6 @@ class CoreMetaData(models.Model):
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
                 self.update_non_repeatable_element(element_name, metadata)
-                
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
                 self.update_repeatable_element(element_name=element_name, metadata=metadata)
