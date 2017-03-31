@@ -9,6 +9,7 @@ from django.core.exceptions import SuspiciousFileOperation
 
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
+from hs_core.views.utils import irods_path_is_allowed
 
 from django_irods.icommands import SessionException
 
@@ -34,6 +35,7 @@ class ResourceFolders(APIView):
                 raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
+
         if not authorized:
             return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
@@ -42,13 +44,12 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        relpath = os.path.join('data', 'contents', pathname)
         try:
-            contents = view_utils.list_folder(pk, relpath)
+            contents = resource.list_folder(pathname)
         except SessionException:
             return Response("Cannot list path", status=status.HTTP_404_NOT_FOUND)
 
@@ -77,14 +78,14 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
         # relativise the path
-        relpath = os.path.join('data', 'contents', pathname)
+        relpath = os.path.join(pathname)
         try:
-            view_utils.create_folder(pk, relpath)
+            resource.create_folder(relpath)
         except SessionException:
             raise ValidationError("Cannot create folder")
         return Response(data={'resource_id': pk, 'path': pathname},
@@ -109,14 +110,12 @@ class ResourceFolders(APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         try:
-            view_utils.irods_path_is_allowed(pathname)  # check for hacking attempts
+            irods_path_is_allowed(pathname)  # check for hacking attempts
         except (ValidationError, SuspiciousFileOperation) as ex:
             return Response(ex.message, status=status.HTTP_400_BAD_REQUEST)
 
-        # relativise the path
-        relpath = os.path.join('data', 'contents', pathname)
         try:
-            view_utils.remove_folder(request.user, pk, relpath)
+            resource.remove_folder(request.user, pathname)
         except SessionException:
             return Response("Cannot remove folder", status=status.HTTP_400_BAD_REQUEST)
 

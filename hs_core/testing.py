@@ -1,12 +1,11 @@
 import os
-from dateutil import parser
 
+from dateutil import parser
 from django.conf import settings
 
 from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
-    unzip_file, remove_folder
+from hs_core.views.utils import zip_folder, unzip_file
 from hs_core.views.utils import run_ssh_command
 from theme.models import UserProfile
 from django_irods.icommands import SessionException
@@ -20,7 +19,7 @@ class MockIRODSTestCaseMixin(object):
         if settings.IRODS_HOST != 'data.local.org':
             from mock import patch
             self.irods_patchers = (
-                patch("hs_core.hydroshare.hs_bagit.delete_bag"),
+                patch("hs_core.hydroshare.hs_bagit.delete_files_and_bag"),
                 patch("hs_core.hydroshare.hs_bagit.create_bag"),
                 patch("hs_core.hydroshare.hs_bagit.create_bag_files"),
                 patch("hs_core.tasks.create_bag_by_irods"),
@@ -107,7 +106,7 @@ class TestCaseCommonUtilities(object):
         self.user: owner of the resource
         self.file_name_list: a list of three file names that have been added to the res object
         self.test_file_1 needs to be present for the calling object for doing regular folder
-        operations without involving federated zone so that the same opened file can be readded
+        operations without involving federated zone so that the same opened file can be re-added
         to the resource for testing the case where zipping cannot overwrite existing file
         """
         user = self.user
@@ -116,52 +115,41 @@ class TestCaseCommonUtilities(object):
         # create a folder, if folder is created successfully, no exception is raised, otherwise,
         # an iRODS exception will be raised which will be caught by the test runner and mark as
         # a test failure
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
+        res.create_folder('sub_test_dir')
         istorage = res.get_irods_storage()
-        if res.resource_federation_path:
-            res_path = os.path.join(res.resource_federation_path, res.short_id, 'data', 'contents')
-            store = istorage.listdir(res_path)
-        else:
-            store = istorage.listdir(res.short_id + '/data/contents')
-        self.assertIn('sub_test_dir', store[0], msg='resource does not contain sub folder created')
+        res_path = res.file_path
+        store = istorage.listdir(res_path)
+        self.assertIn('sub_test_dir', store[0], msg='resource does not contain created sub-folder')
 
         # rename the third file in file_name_list
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[2],
-                                      'data/contents/new_' + file_name_list[2])
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[2],
+                                          'new_' + file_name_list[2])
         # move the first two files in file_name_list to the new folder
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[0],
-                                      'data/contents/sub_test_dir/' + file_name_list[0])
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[1],
-                                      'data/contents/sub_test_dir/' + file_name_list[1])
-
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[0],
+                                          os.path.join('sub_test_dir', file_name_list[0]))
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[1],
+                                          os.path.join('sub_test_dir', file_name_list[1]))
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
-            if res.resource_federation_path:
-                updated_res_file_names.append(rf.fed_resource_file_name_or_path)
-            else:
-                updated_res_file_names.append(rf.resource_file.name)
+            updated_res_file_names.append(rf.short_path)
 
-        if res.resource_federation_path:
-            path_prefix = 'data/contents/'
-        else:
-            path_prefix = res.short_id + '/data/contents/'
-        self.assertIn(path_prefix + 'new_' + file_name_list[2], updated_res_file_names,
+        self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg="resource does not contain the updated file new_" + file_name_list[2])
-        self.assertNotIn(path_prefix + file_name_list[2], updated_res_file_names,
+        self.assertNotIn(file_name_list[2], updated_res_file_names,
                          msg='resource still contains the old file ' + file_name_list[2] +
                              ' after renaming')
-        self.assertIn(path_prefix + 'sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] + ' moved to a folder')
-        self.assertNotIn(path_prefix + file_name_list[0], updated_res_file_names,
+        self.assertNotIn(file_name_list[0], updated_res_file_names,
                          msg='resource still contains the old ' + file_name_list[0] +
                              'after moving to a folder')
-        self.assertIn(path_prefix + 'sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[1] +
                           'moved to a new folder')
-        self.assertNotIn(path_prefix + file_name_list[1], updated_res_file_names,
+        self.assertNotIn(file_name_list[1], updated_res_file_names,
                          msg='resource still contains the old ' + file_name_list[1] +
                              ' after moving to a folder')
 
@@ -180,17 +168,22 @@ class TestCaseCommonUtilities(object):
         if res.resource_federation_path:
             fed_test_file1_full_path = '/{zone}/home/{uname}/{fname}'.format(
                 zone=settings.HS_USER_IRODS_ZONE, uname=user.username, fname=file_name_list[0])
-            add_resource_files(res.short_id, fed_res_file_names=[fed_test_file1_full_path],
-                               fed_copy_or_move='copy',
-                               fed_zone_home_path=res.resource_federation_path)
+            # TODO: why isn't this a method of resource?
+            # TODO: Why do we repeat the resource_federation_path?
+            add_resource_files(res.short_id, source_names=[fed_test_file1_full_path],
+                               move=False)
 
         else:
+            # TODO: Why isn't this a method of resource?
             add_resource_files(res.short_id, self.test_file_1)
 
-        create_folder(res.short_id, 'data/contents/sub_test_dir')
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/' + file_name_list[0],
-                                      'data/contents/sub_test_dir/' + file_name_list[0])
+        res.create_folder('sub_test_dir')
+
+        # TODO: use ResourceFile.rename, which doesn't require data/contents prefix
+        res.move_or_rename_file_or_folder(user,
+                                          file_name_list[0],
+                                          os.path.join('sub_test_dir', file_name_list[0]))
+
         # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
         with self.assertRaises(SessionException):
@@ -201,8 +194,12 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(file_cnt, 3, msg="resource file count didn't match - " +
                                           str(file_cnt) + " != 3")
 
-        # test unzipping the file succeeds now after deleting the existing file
-        remove_folder(user, res.short_id, 'data/contents/sub_test_dir')
+        # test unzipping the file succeeds now after deleting the existing folder
+        # TODO: this causes a multiple delete because the paths are valid now.
+        istorage = res.get_irods_storage()
+
+        res.remove_folder(user, 'sub_test_dir')
+
         # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
         file_cnt = res.files.all().count()
         self.assertEqual(file_cnt, 2, msg="resource file count didn't match - " +
@@ -212,52 +209,45 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(res.files.all().count(), 3, msg="resource file count didn't match")
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
-            if res.resource_federation_path:
-                updated_res_file_names.append(rf.fed_resource_file_name_or_path)
-            else:
-                updated_res_file_names.append(rf.resource_file.name)
-        self.assertNotIn(path_prefix + 'sub_test_dir.zip', updated_res_file_names,
+            updated_res_file_names.append(rf.short_path)
+        self.assertNotIn('sub_test_dir.zip', updated_res_file_names,
                          msg="resource still contains the zip file after unzipping")
-        self.assertIn(path_prefix + 'sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[0])
-        self.assertIn(path_prefix + 'sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain unzipped file ' + file_name_list[1])
-        self.assertIn(path_prefix + 'new_' + file_name_list[2], updated_res_file_names,
+        self.assertIn('new_' + file_name_list[2], updated_res_file_names,
                       msg='resource does not contain unzipped file new_' + file_name_list[2])
 
         # rename a folder
-        move_or_rename_file_or_folder(user, res.short_id,
-                                      'data/contents/sub_test_dir', 'data/contents/sub_dir')
+        res.move_or_rename_file_or_folder(user, 'sub_test_dir', 'sub_dir')
         updated_res_file_names = []
         for rf in ResourceFile.objects.filter(object_id=res.id):
-            if res.resource_federation_path:
-                updated_res_file_names.append(rf.fed_resource_file_name_or_path)
-            else:
-                updated_res_file_names.append(rf.resource_file.name)
+            updated_res_file_names.append(rf.short_path)
 
-        self.assertNotIn(path_prefix + 'sub_test_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/' + file_name_list[0], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[0] +
                              ' in the old folder after renaming')
-        self.assertIn(path_prefix + 'sub_dir/' + file_name_list[0], updated_res_file_names,
+        self.assertIn('sub_dir/' + file_name_list[0], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[0] +
                           ' in the new folder after renaming')
-        self.assertNotIn(path_prefix + 'sub_test_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertNotIn('sub_test_dir/' + file_name_list[1], updated_res_file_names,
                          msg='resource still contains ' + file_name_list[1] +
                              ' in the old folder after renaming')
-        self.assertIn(path_prefix + 'sub_dir/' + file_name_list[1], updated_res_file_names,
+        self.assertIn('sub_dir/' + file_name_list[1], updated_res_file_names,
                       msg='resource does not contain ' + file_name_list[1] +
                           ' in the new folder after renaming')
 
         # remove a folder
-        remove_folder(user, res.short_id, 'data/contents/sub_dir')
+        res.remove_folder(user, 'sub_dir')
         # Now resource only contains one file
         self.assertEqual(res.files.all().count(), 1, msg="resource file count didn't match")
-        if res.resource_federation_path:
-            res_fname = ResourceFile.objects.filter(
-                object_id=res.id)[0].fed_resource_file_name_or_path
-        else:
-            res_fname = ResourceFile.objects.filter(object_id=res.id)[0].resource_file.name
-        self.assertEqual(res_fname, path_prefix + 'new_' + file_name_list[2])
+        updated_res_file_names = []
+        for rf in ResourceFile.objects.filter(object_id=res.id):
+            updated_res_file_names.append(rf.short_path)
+
+        self.assertEqual(len(updated_res_file_names), 1)
+        self.assertEqual(updated_res_file_names[0], 'new_' + file_name_list[2])
 
     def raster_metadata_extraction(self):
         """

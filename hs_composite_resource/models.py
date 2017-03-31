@@ -63,12 +63,16 @@ class CompositeResource(BaseResource):
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
 
+        if __debug__:
+            assert(folder_full_path.startswith(self.file_path))
+
+        # determine containing folder
         if "/" in folder_full_path:
-            path_to_check = folder_full_path[:folder_full_path.rfind("/")]
+            path_to_check, _ = os.path.split(folder_full_path)
         else:
             path_to_check = folder_full_path
 
-        if not path_to_check.endswith("/data/contents"):
+        if path_to_check != self.file_path:
             res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
                              res_file_obj.dir_path == path_to_check]
 
@@ -81,6 +85,10 @@ class CompositeResource(BaseResource):
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed"""
+
+        if __debug__:
+            assert(src_full_path.startswith(self.file_path))
+            assert(tgt_full_path.startswith(self.file_path))
 
         istorage = self.get_irods_storage()
         tgt_file_dir = os.path.dirname(tgt_full_path)
@@ -128,13 +136,18 @@ class CompositeResource(BaseResource):
         """check if the given folder can be zipped or not"""
 
         # find all the resource files in the folder to be zipped
-        if self.resource_federation_path:
+        # this is being passed both qualified and unqualified paths!
+        full_path = folder_to_zip
+        if not full_path.startswith(self.file_path):
+            full_path = os.path.join(self.file_path, full_path)
+
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=folder_to_zip).all()
+                fed_resource_file__startswith=full_path).all()
         else:
             res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=folder_to_zip).all()
+                                                 resource_file__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:
@@ -147,13 +160,23 @@ class CompositeResource(BaseResource):
         """check if the specified folder can be deleted at the end of zipping that folder"""
 
         # find all the resource files in the folder to be deleted
-        if self.resource_federation_path:
+        # this is being passed both qualified and unqualified paths!
+        full_path = original_folder
+        if not full_path.startswith(self.file_path):
+            full_path = os.path.join(self.file_path, full_path)
+
+        print("supports delete: full path is {}".format(full_path))
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=original_folder).all()
+                fed_resource_file__startswith=full_path).all()
         else:
-            res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=original_folder).all()
+            res_file_objects = self.files.filter(
+                object_id=self.id,
+                resource_file__startswith=full_path).all()
+        print("res_file_objects = ")
+        for f in res_file_objects:
+            print("   path={}".format(f.storage_path))
 
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped
