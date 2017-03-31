@@ -336,6 +336,10 @@ APPS_TO_NOT_RUN = (
     'security',
     'django_comments',
     'haystack'
+    'test_without_migrations',
+    'robots',
+    'heartbeat',
+    'filebrowser_safe'
     # etc...
 )
 
