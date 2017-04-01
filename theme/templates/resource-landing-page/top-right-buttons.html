@@ -59,7 +59,7 @@
                             <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="Create a new version of this resource"
-                                      class="glyphicon glyphicon-plus-sign icon-button icon-blue"></span>
+                                      class="fa fa-clone icon-button icon-blue"></span>
                             </a>
                         {% endif %}
                     </form>
@@ -70,13 +70,14 @@
                             <a disabled>
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="You cannot copy because the license for this resource does not permit copying"
-                                      class="glyphicon glyphicon-import icon-button text-muted"></span>
+                                      class="fa fa-copy icon-button text-muted"></span>
                             </a>
                         {% else %}
                             <a id="copy-resource" data-toggle="modal" data-target="#copy-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom"
                                       title="Copy this resource"
-                                      class="glyphicon glyphicon-import icon-button icon-blue"></span>
+                                      class="fa fa-copy icon-button icon-blue">
+                                </span>
                             </a>
                         {% endif %}
                     {% endif %}
