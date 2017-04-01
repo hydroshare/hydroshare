@@ -969,73 +969,42 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.published = False
         self.res.raccess.save()
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.res.short_id, 'publisher', name='HydroShare',
-                                             url="http://hydroshare.org")
+            resource.create_metadata_element(self.res.short_id, 'publisher', name=publisher_CUAHSI,
+                                             url=url_CUAHSI)
 
         # publisher element can be added when the resource is published
         self.res.raccess.published = True
         self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
-        self.assertEqual(self.res.metadata.publisher.url, "http://usgs.gov",
+
+        # try to add a Publisher that is not CUAHSI - should raise exception
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.res.short_id, 'publisher', name="BYU",
+                                             url="https://www.byu.edu")
+
+        # add CUAHSI as publisher
+        resource.create_metadata_element(self.res.short_id, 'publisher', name=publisher_CUAHSI,
+                                         url=url_CUAHSI)
+        self.assertEqual(self.res.metadata.publisher.url, url_CUAHSI,
                          msg="Resource publisher url did not match.")
-        self.assertEqual(self.res.metadata.publisher.name, "USGS", msg="Resource publisher name did not match.")
+        self.assertEqual(self.res.metadata.publisher.name, publisher_CUAHSI,
+                         msg="Resource publisher name did not match.")
 
         # a 2nd publisher element can't be created - should raise exception
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.res.short_id, 'publisher', name='USU', url="http://usu.edu")
+            resource.create_metadata_element(self.res.short_id, 'publisher', name=publisher_CUAHSI,
+                                             url=url_CUAHSI)
 
         # test that updating publisher element raises exception
         with self.assertRaises(Exception):
-            resource.update_metadata_element(self.res.short_id, 'publisher', self.res.metadata.publisher.id,
+            resource.update_metadata_element(self.res.short_id, 'publisher',
+                                             self.res.metadata.publisher.id,
                                              name='USU', url="http://usu.edu")
 
-        # Test that when a resource has one or more content files, the publisher has to be CUASHI
-        # publisher name 'CUAHSI' only and publisher url to 'https://www.cuahsi.org' only.
-        # create a different resource
-        res_with_files = hydroshare.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='Generic resource with files',
-        )
-
-        # check the resource is not published
-        self.assertFalse(res_with_files.raccess.published)
-
-        res_with_files.raccess.published = True
-        res_with_files.raccess.save()
-
-        # trying to make CUAHSI as the publisher for a resource that has no content files should raise exception
-        with self.assertRaises(Exception):
-            resource.create_metadata_element(res_with_files.short_id, 'publisher', name=publisher_CUAHSI,
-                                             url=url_CUAHSI)
-
-        # create a file
-        original_file_name = 'original.txt'
-        original_file = open(original_file_name, 'w')
-        original_file.write("original text")
-        original_file.close()
-
-        original_file = open(original_file_name, 'r')
-        # add the file to the resource
-        hydroshare.add_resource_files(res_with_files.short_id, original_file)
-
-        # trying to set publisher someone other than CUAHSI for a resource that has content files
-        # should raise exception
-        with self.assertRaises(Exception):
-            resource.create_metadata_element(res_with_files.short_id, 'publisher', name='USU', url="http://usu.edu")
-
-        # only 'CUAHSI" can be set as the publisher for a resource that has content files
-        resource.create_metadata_element(res_with_files.short_id, 'publisher', name=publisher_CUAHSI,
-                                         url=url_CUAHSI)
-
-        self.assertEqual(res_with_files.metadata.publisher.name, publisher_CUAHSI,
-                         msg="Resource publisher name did not match.")
-        self.assertEqual(res_with_files.metadata.publisher.url, url_CUAHSI,
-                         msg="Resource publisher url did not match.")
 
         # trying to delete the publisher should raise exception
         with self.assertRaises(Exception):
-            resource.delete_metadata_element(res_with_files.short_id, 'publisher', self.res.metadata.publisher.id)
+            resource.delete_metadata_element(self.res.short_id, 'publisher',
+                                             self.res.metadata.publisher.id)
 
     def test_relation(self):
         # at this point there should not be any relation elements
@@ -1546,11 +1515,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.create_metadata_element(self.res.short_id,'relation', type='isPartOf',
                                 value='http://hydroshare.org/resource/001')
 
-        # add publisher element
-        self.res.raccess.published = True
-        self.res.raccess.save()
-        resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
-
         # add funding agency element
         resource.create_metadata_element(self.res.short_id, 'fundingagency', agency_name='NSF',
                                          award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
@@ -1569,8 +1533,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Relation metadata objects
         self.assertTrue(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be Publisher metadata objects
-        self.assertTrue(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Title metadata objects
         self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Description (Abstract) metadata objects
@@ -1606,8 +1568,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Relation metadata objects
         self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be Publisher metadata objects
-        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Title metadata objects
         self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Description (Abstract) metadata objects
