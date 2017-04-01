@@ -46,10 +46,12 @@ class SiteFormHelper(BaseFormHelper):
                                         "Select 'Other...' to specify a new site type term."),
                             Field('latitude', css_class=field_width,
                                   title="The latitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., 43.1111).", data_map_item="latitude"),
+                                        "WGS84 datum (e.g., 43.1111).",
+                                  data_map_item="latitude"),
                             Field('longitude', css_class=field_width,
                                   title="The longitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., -111.2334).", data_map_item="longitude"),
+                                        "WGS84 datum (e.g., -111.2334).",
+                                  data_map_item="longitude"),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=show_site_code_selection,

@@ -69,6 +69,18 @@
                 {% include "resource-landing-page/citation.html" with resource_mode="view" %}
             {% endif %}
 
+            <div id="test-dynamic" data-coordinates-type="point">
+                <input data-map-item="latitude">
+                <input data-map-item="longitude">
+            </div>
+
+            <div id="test-dynamic-2" data-coordinates-type="rectangle">
+                <input data-map-item="northlimit">
+                <input data-map-item="eastlimit">
+                <input data-map-item="southlimit">
+                <input data-map-item="westlimit">
+            </div>
+
             {# ======= Coverage ======= #}
             {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                 {% include "resource-landing-page/coverage.html" %}

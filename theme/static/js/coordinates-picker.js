@@ -2,12 +2,88 @@
  * Created by Mauriel on 3/28/2017.
  */
 
-$(document).ready(function () {
-    var coordinatesPicker;
-    var allOverlays = [];
-    var drawingManager;
-    var currentInstance;   // Keeps track of the instance to work with
+var coordinatesPicker;
+var currentInstance;   // Keeps track of the instance to work with
+var allOverlays = [];
+var drawingManager;
 
+(function( $ ){
+    $.fn.coordinatesPicker = function () {
+        // If component already initiated, return
+        if ($(this).hasClass("has-coordinates-picker")) {
+            return this;
+        }
+
+        var items = $(this).find("input[data-map-item]");
+
+        items.each(function () {
+            var item = $(this);
+
+            // Wrap the element and append a button next to it to trigger the map modal
+            // The button adapts to the size of the input (bootstrap classes: input-sm and input-lg)
+            if (item.hasClass("input-sm")) {
+                item.wrap('<div class="input-group input-group-sm"></div>');
+            }
+            else if (item.hasClass("input-sm")) {
+                item.wrap('<div class="input-group input-group-lg"></div>');
+            }
+            else {
+                item.wrap('<div class="input-group"></div>');
+            }
+
+            item.parent().append('<span class="input-group-btn btn-choose-coordinates" title="Choose coordinates">' +
+                '<span class="btn btn-default" type="button">' +
+                '<i class="fa fa-map-marker" aria-hidden="true"></i>' +
+                '</span>' +
+                '</span>');
+
+            item.toggleClass("form-control", true);
+
+            // Map trigger event handler
+            item.parent().find(".btn-choose-coordinates").click(function () {
+                currentInstance = item.closest("[data-coordinates-type]");
+                var type = currentInstance.attr("data-coordinates-type");
+
+                // Set the type of controls
+                if (type == "point") {
+                    drawingManager.drawingControlOptions.drawingModes = [
+                        google.maps.drawing.OverlayType.MARKER
+                    ];
+                    drawingManager.drawingMode = null;  // Set the default hand control
+                    drawingManager.setMap(coordinatesPicker);
+                }
+                else if (type == "rectangle") {
+                    drawingManager.drawingControlOptions.drawingModes = [
+                        google.maps.drawing.OverlayType.RECTANGLE
+                    ];
+                    drawingManager.drawingMode = null;  // Set the default hand control
+                    drawingManager.setMap(coordinatesPicker);
+                }
+
+                // Delete previous drawings
+                for (var i = 0; i < allOverlays.length; i++) {
+                    allOverlays[i].overlay.setMap(null);
+                }
+
+                allOverlays = [];
+
+                // Set default behavior. It is overridden once coordinates are selected.
+                $("#btn-confirm-coordinates").unbind("click");
+                $("#btn-confirm-coordinates").click(function () {
+                    $('#coordinates-picker-modal').modal('hide')
+                });
+
+                $("#coordinates-picker-modal").modal("show");
+            });
+        });
+
+        $(this).addClass("has-coordinates-picker");
+
+        return this;
+    };
+})( jQuery );
+
+$(document).ready(function () {
     $('#coordinates-picker-modal').on('shown.bs.modal', function () {
         google.maps.event.trigger(coordinatesPicker, 'resize');
     });
@@ -101,62 +177,6 @@ $(document).ready(function () {
 
     $(".hs-coordinates-picker").each(function() {
         const instance = $(this);
-        var items = instance.find("input[data-map-item]");
-
-        items.each(function () {
-            var item = $(this);
-            // Wrap the element and append a button next to it to trigger the map modal
-            // The button adapts to the size of the input (bootstrap classes: input-sm and input-lg)
-            if (item.hasClass("input-sm")) {
-                item.wrap('<div class="input-group input-group-sm"></div>');
-            }
-            else if (item.hasClass("input-sm")) {
-                item.wrap('<div class="input-group input-group-lg"></div>');
-            }
-            else {
-                item.wrap('<div class="input-group"></div>');
-            }
-
-            item.parent().append('<span class="input-group-btn btn-choose-coordinates" title="Choose coordinates">' +
-                                        '<span class="btn btn-default" type="button">' +
-                                        '<i class="fa fa-map-marker" aria-hidden="true"></i>' +
-                                        '</span>' +
-                                    '</span>')
-        });
-
-        // Map trigger event handler
-        $(this).find(".btn-choose-coordinates").click(function () {
-            currentInstance = instance;
-            var type = currentInstance.attr("data-coordinates-type");
-
-            // Set the type of controls
-            if (type == "point") {
-                drawingManager.drawingControlOptions.drawingModes = [
-                    google.maps.drawing.OverlayType.MARKER
-                ];
-                drawingManager.setMap(coordinatesPicker);
-            }
-            else if (type == "rectangle") {
-                drawingManager.drawingControlOptions.drawingModes = [
-                    google.maps.drawing.OverlayType.RECTANGLE
-                ];
-                drawingManager.setMap(coordinatesPicker);
-            }
-
-            // Delete previous drawings
-            for (var i = 0; i < allOverlays.length; i++) {
-                allOverlays[i].overlay.setMap(null);
-            }
-
-            allOverlays = [];
-
-            // Set default behavior. It is overridden once coordinates are selected.
-            $("#btn-confirm-coordinates").unbind("click");
-            $("#btn-confirm-coordinates").click(function () {
-                $('#coordinates-picker-modal').modal('hide')
-            });
-
-            $("#coordinates-picker-modal").modal("show");
-        });
+        instance.coordinatesPicker();
     })
 });
