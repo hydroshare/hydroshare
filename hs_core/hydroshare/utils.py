@@ -802,15 +802,8 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 
     # only add the resource creator as the creator for metadata if there is not already
     # creator data in the metadata object
-    creator_data_exists = False
-    for element in metadata:
-        # here k is the name of the element
-        # v is a dict of all element attributes/field names and field values
-        k, v = element.items()[0]
-        if k.lower() == 'creator':
-            creator_data_exists = True
-            break
-    if not creator_data_exists:
+    metadata_keys = [element.keys()[0].lower() for element in metadata]
+    if 'creator' not in metadata_keys:
         creator_data = get_party_data_from_user(resource.creator)
         metadata.append({'creator': creator_data})
 

@@ -466,7 +466,7 @@ function showFileTypeMetadata(){
      // Wait for the asynchronous calls to finish to get new folder structure
      $.when.apply($, calls).done(function (result) {
          var json_response = JSON.parse(result);
-         if(json_response.status === 'error'){
+         if(json_response.status === 'error') {
              var error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
                                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                                     '<span aria-hidden="true">&times;</span></button>' +
