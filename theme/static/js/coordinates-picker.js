@@ -24,7 +24,7 @@ var drawingManager;
             if (item.hasClass("input-sm")) {
                 item.wrap('<div class="input-group input-group-sm"></div>');
             }
-            else if (item.hasClass("input-sm")) {
+            else if (item.hasClass("input-lg")) {
                 item.wrap('<div class="input-group input-group-lg"></div>');
             }
             else {
