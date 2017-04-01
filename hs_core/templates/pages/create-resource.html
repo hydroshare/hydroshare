@@ -539,7 +539,7 @@
                 maxFilesize: 1024, // MB
                 autoProcessQueue: false,
                 uploadMultiple: true,
-                parallelUploads: 99,
+                parallelUploads: 99, // arbitrary large number for parallel uploads
 
                 success: function (file, response) {
                     if (response.status == "success") {
@@ -558,6 +558,10 @@
 
                     $(".btn-create-resource").click(function () {
                         $("html, #dz-container").css("cursor", "progress");
+
+                        // Delete invalid files from queue before uploading
+                        $(".dz-error .btn-remove").trigger("click");
+
                         var title = $("#txtTitle").val().trim();
                         if (!title) {
                             title = $("#txtTitle").attr("placeholder");
