@@ -113,7 +113,8 @@
                                     <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                                     <input type="hidden" id="irods_federated" name="irods_federated" value="">
                                     <span id="sign-in-info"></span>
-                                    <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form" data-toggle="modal" data-target="#irodsContent">
+                                    <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form"
+                                       data-toggle="modal" data-target="#irodsContent">
                                         Browse iRODS...
                                     </a>
                                     <span id="irods-sel-file"></span>
@@ -143,7 +144,6 @@
                 </div>
             </form>
             {% block modal %}
-                {{ block.super }}
                 {% include "irods_signin.html" %}
                 {% include "irods_upload_create.html" %}
             {% endblock %}
