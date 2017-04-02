@@ -95,7 +95,7 @@ $(document).ready(function() {
         // Regular expression to find FTP, HTTP(S) and email URLs.
         var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
 
-        var matchArray
+        var matchArray;
         // Extract the url
         while( (matchArray = regexToken.exec(oriCitationText)) !== null ){
             if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {

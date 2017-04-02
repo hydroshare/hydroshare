@@ -1010,10 +1010,6 @@ span.remove{
     top: 0;
 }
 
-.form-control{
-    margin-bottom:8px;
-}
-
 .no-padding{
     padding:0;
 }
@@ -1148,8 +1144,8 @@ span.remove {
 	margin: 1px;
 }
 
-.form-control{
-    margin-bottom:8px;
+.form-control, .controls .input-group .form-control {
+	margin-bottom: 8px;
 }
 
 .no-padding{
@@ -1646,13 +1642,24 @@ body > .main-container {
 }
 
 #citation-text {
-    display: inline-block;
-    width: 100%;
-    min-height: 30px;
-    background: #EEE;
-    border: 1px solid #cccccc;
-    border-radius: 0px;
-    padding: 4px;
+	display: inline-block;
+	width: calc(100% - 65px);
+	min-height: 30px;
+	background: #EEE;
+	border: 1px solid #CCC;
+	border-radius: 0;
+	padding: 4px;
+	cursor: default;
+	line-height: 24px;
+}
+
+.clipboard-copy {
+	border-radius: 0;
+	margin-left: -1px;
+}
+
+.flex {
+	display: flex;
 }
 
 #citation-text a, .rights-url a{
@@ -4517,4 +4524,18 @@ div#fb-file-operations-controls {
 
 .ui-widget-overlay {
 	z-index: 1031 !important;
+}
+
+/*Coordinates picker styling*/
+#picker-map-container {
+	height: 300px;
+	margin: 0 1px;
+}
+
+#coordinates-picker-modal .modal-footer {
+	margin-top: 0;
+}
+
+.btn-choose-coordinates {
+	vertical-align: top;
 }

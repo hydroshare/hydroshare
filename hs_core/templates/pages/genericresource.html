@@ -147,11 +147,11 @@
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geo Raster File Type</span>
+                            <span>Set Geographic Raster File Type</span>
                         </li>
                         <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set NetCDF File Type</span>
+                            <span>Set Multidimensional Data File Type</span>
                         </li>
                     {%  endif %}
                 </ul>
@@ -385,12 +385,12 @@
                                                 {% if page.perms.change and resource_edit_mode %}
                                                     <button id="fb-set-geo-file-type"
                                                             class="disabled"
-                                                            title="Set Geo Raster File Type">
+                                                            title="Set Geographic Raster File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                     <button id="fb-set-netcdf-file-type"
                                                             class="disabled"
-                                                            title="Set NetCDF File Type">
+                                                            title="Set Multidimensional Data File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                  {% endif %}
@@ -1079,7 +1079,9 @@
                                 <div class="tab-pane" id="extraMetaTab">
                                     {% if metadata_form %}
                                         <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
+                                           <span class="glyphicon glyphicon-plus">
+                                               <span class="button-label"> Add new entry...</span>
+                                           </span>
                                         </a>
                                     {% endif %}
                                     <table id="extraMetaTable" class="table-hover table-striped" width="100%">
@@ -1152,6 +1154,7 @@
 
                 {%  block modal %}
                     {% include "resource-landing-page/modals.html" %}
+                    {% include "resource-landing-page/coordinates_picker.html" %}
                 {%  endblock %}
             </div>
     {% endwith %}

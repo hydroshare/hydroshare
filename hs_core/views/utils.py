@@ -352,13 +352,19 @@ def get_my_resources_list(request):
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+
+    # get a list of resources with effective CHANGE privilege (should include resources that the
+    # user has access to via group
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                         via_group=True)
     # remove obsoleted resources from the editable_resources
     editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+
+    # get a list of resources with effective VIEW privilege (should include resources that the
+    # user has access via group
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                         via_group=True)
     # remove obsoleted resources from the viewable_resources
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
@@ -514,6 +520,14 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     :param tgt_name: the file or folder full path name to be renamed to
     :return:
     """
+
+    def set_file_folder(resource_file):
+        # sets the file_folder attribute of the newly created resource_file object
+        file_root_path = os.path.join(resource.root_path, 'data/contents/')
+        file_folder = resource_file.dir_path[len(file_root_path):]
+        resource_file.file_folder = file_folder
+        resource_file.save()
+
     if resource.resource_federation_path:
         res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                    fed_resource_file_name_or_path=src_name)
@@ -550,6 +564,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+            set_file_folder(res_file)
+
             # if the file we deleted was part a logical file then we have to make the
             # recreated resource file part of the logical file object
             if logical_file is not None:
@@ -570,6 +586,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
+                set_file_folder(res_file)
                 # make the recreated resource file part of the logical file
                 if logical_file is not None:
                     logical_file.add_resource_file(res_file)

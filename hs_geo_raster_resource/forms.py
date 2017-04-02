@@ -62,7 +62,6 @@ class OriginalCoverageSpatialForm(forms.Form):
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         # modify the form's cleaned_data dictionary

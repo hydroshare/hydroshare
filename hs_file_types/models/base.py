@@ -605,6 +605,11 @@ class AbstractLogicalFile(models.Model):
         return True
 
     @property
+    def supports_resource_file_add(self):
+        """allows a resource file to be added"""
+        return True
+
+    @property
     def supports_resource_file_rename(self):
         """allows a resource file that is part of this logical file type to be renamed"""
         return True
