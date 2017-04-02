@@ -1635,8 +1635,8 @@ body > .main-container {
 }
 
 #btn-download-all, #btn-select-irods-file, #rep-res-bag {
-    margin-bottom:5px;
-    max-width:100%;
+	margin: 10px 0;
+	max-width: 100%;
 }
 
 #btn-download-all > span {

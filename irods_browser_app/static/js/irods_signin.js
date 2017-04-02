@@ -75,8 +75,7 @@ function irods_login() {
                 sessionStorage.IRODS_zone = json.zone;
             }
             else {
-                $("#sign-in-info").text('iRODS login failed');
-                $("#sign-in-name").text('');
+                $("#sign-in-name").text('iRODS login failed');
                 $("#sign-in-info").removeClass();
                 $("#sign-in-info").addClass("alert alert-danger");
                 sessionStorage.IRODS_signininfo = '';
@@ -94,8 +93,7 @@ function irods_login() {
             sessionStorage.IRODS_port = '1247';
             sessionStorage.IRODS_host = '';
             sessionStorage.IRODS_zone = '';
-            $("#sign-in-info").text('iRODS login failed');
-            $("#sign-in-name").text('');
+            $("#sign-in-name").text('iRODS login failed');
             $("#sign-in-info").removeClass();
             $("#sign-in-info").addClass("alert alert-danger");
             $("#btn-select-irods-file").hide();
