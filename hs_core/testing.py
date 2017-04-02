@@ -371,8 +371,8 @@ class TestCaseCommonUtilities(object):
         # there should be one relation element
         self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
 
-        # there should be 2 creator
-        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
+        # there should be 1 creator
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
 
         # there should be one contributor
         self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)

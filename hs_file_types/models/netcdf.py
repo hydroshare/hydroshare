@@ -144,9 +144,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         orig_cov_form.action = temp_action
 
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        update_action = update_action.format(self.logical_file.id, "coverage",
-                                             self.spatial_coverage.id)
-        spatial_cov_form.action = update_action
+        if self.spatial_coverage:
+            temp_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.spatial_coverage.id)
+        else:
+            temp_action = create_action.format(self.logical_file.id, "coverage")
+
+        spatial_cov_form.action = temp_action
         context_dict = dict()
         context_dict["temp_form"] = temp_cov_form
         context_dict["orig_coverage_form"] = orig_cov_form
@@ -290,6 +294,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @property
     def supports_resource_file_move(self):
         """resource files that are part of this logical file can't be moved"""
+        return False
+
+    @property
+    def supports_resource_file_add(self):
+        """doesn't allow a resource file to be added"""
         return False
 
     @property
@@ -573,6 +582,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         else:
                             logical_file.metadata.create_element(k, **v)
                     log.info("NetCDF file type - metadata was saved to DB")
+                    # set resource to private if logical file is missing required metadata
+                    if not logical_file.metadata.has_all_required_elements():
+                        resource.raccess.public = False
+                        resource.raccess.discoverable = False
+                        resource.raccess.save()
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
                 log.error(err_msg)
@@ -639,7 +653,7 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
     if resource is not None:
         # file type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
-                                  resource.metadata.creators.all())
+                                  resource.metadata.contributors.all())
     else:
         # resource type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
