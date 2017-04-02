@@ -32,7 +32,7 @@ $('#btn-signin-irods').on('click',function() {
 });
 
 $('#btn-signout-irods').on('click', function() {
-    $("#sign-in-info").text('');
+    $("#sign-in-name").text('');
     $("#sign-in-info").removeClass();
     $("#sign-in-info").addClass("hidden");
     sessionStorage.IRODS_signininfo = '';
