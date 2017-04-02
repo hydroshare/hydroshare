@@ -453,19 +453,44 @@
                                         files smaller than 1GB in size by dragging & dropping, or click <a
                                                 id="upload-toggle" class="dz-clickable">here</a> to select them.
                                     </span>
-                                    <a id="btn-select-irods-file" type="button"
-                                       class="btn btn-success row-selector hidden-form" data-toggle="modal"
-                                       data-target="#irodsContent">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
-                                    </a>
 
-                                    <span id="log-into-irods">To add files from an iRODS server,
-                                    <a id="btn-signin-irods" type="button" class="btn-link"
-                                       data-toggle="modal"
-                                       data-target="#irodsSignin">Log in to iRODS</a></span>
-                                    <span id="sign-in-info"></span>
-                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of
-                                        iRODS</a>
+                                    <hr>
+
+                                    <div id="log-into-irods">
+                                        <a id="btn-signin-irods" type="button" class="btn btn-info"
+                                           data-toggle="modal"
+                                           data-target="#irodsSignin">
+                                            <span class="glyphicon glyphicon-log-in"></span>
+                                            &nbsp;&nbsp;Log in to iRODS to add files from an iRODS server...
+                                        </a>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-8">
+                                            <div>
+                                                <a id="btn-select-irods-file" type="button"
+                                                   class="btn btn-success row-selector hidden-form" data-toggle="modal"
+                                                   data-target="#irodsContent">
+                                                    <span class="glyphicon glyphicon-plus"><span class="button-label">
+                                                        Add files from iRODS...</span></span>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-12 col-sm-4">
+                                            <div id="sign-in-info">
+                                                <div id="sign-in-name"></div>
+                                                <br>
+                                                <a id="btn-signout-irods" type="button"
+                                                   class="btn btn-default hidden-form">
+                                                <span class="glyphicon glyphicon-log-out"></span>
+                                                    &nbsp;&nbsp;Log out of iRODS
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
                                 </div>
                             {% endif %}
                         </div>

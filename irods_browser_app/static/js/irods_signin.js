@@ -58,8 +58,8 @@ function irods_login() {
             if(json.irods_loggedin) {
                 var signInStr = "Signed in as " + json.user;
                 $("#sign-in-info").removeClass();
-                $("#sign-in-info").addClass("alert alert-info");
-                $("#sign-in-info").text(signInStr);
+                $("#sign-in-info").addClass("alert alert-info text-center");
+                $("#sign-in-name").text(signInStr);
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
                 $("#log-into-irods").hide();
@@ -76,6 +76,7 @@ function irods_login() {
             }
             else {
                 $("#sign-in-info").text('iRODS login failed');
+                $("#sign-in-name").text('');
                 $("#sign-in-info").removeClass();
                 $("#sign-in-info").addClass("alert alert-danger");
                 sessionStorage.IRODS_signininfo = '';
@@ -94,6 +95,7 @@ function irods_login() {
             sessionStorage.IRODS_host = '';
             sessionStorage.IRODS_zone = '';
             $("#sign-in-info").text('iRODS login failed');
+            $("#sign-in-name").text('');
             $("#sign-in-info").removeClass();
             $("#sign-in-info").addClass("alert alert-danger");
             $("#btn-select-irods-file").hide();

@@ -96,14 +96,18 @@
 }
 
 #sign-in-info {
-   margin-right: 10px;
+    margin: 0;
 }
 
-#irods-sel-file, #btn-signout-irods {
+#irods-sel-file {
     margin-left: 10px;
     margin-right: 10px;
 }
 
 #irods-browse {
     margin-top: 6px;
+}
+
+#btn-signout-irods {
+    margin-top: 10px;
 }
