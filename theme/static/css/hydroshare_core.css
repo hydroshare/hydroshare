@@ -974,10 +974,6 @@ span.remove{
     top: 0;
 }
 
-.form-control{
-    margin-bottom:8px;
-}
-
 .no-padding{
     padding:0;
 }
@@ -1109,8 +1105,8 @@ span.remove {
 	margin: 1px;
 }
 
-.form-control{
-    margin-bottom:8px;
+.form-control, .controls .input-group .form-control {
+	margin-bottom: 8px;
 }
 
 .no-padding{
@@ -4724,4 +4720,18 @@ div#resource-content {
 
 #dropdown-resource-type div.tooltip-inner {
     width: 350px;
+}
+
+/*Coordinates picker styling*/
+#picker-map-container {
+	height: 300px;
+	margin: 0 1px;
+}
+
+#coordinates-picker-modal .modal-footer {
+	margin-top: 0;
+}
+
+.btn-choose-coordinates {
+	vertical-align: top;
 }

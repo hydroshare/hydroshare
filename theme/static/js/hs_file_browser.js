@@ -422,6 +422,22 @@ function showFileTypeMetadata(){
      // Wait for the asynchronous calls to finish to get new folder structure
      $.when.apply($, calls).done(function (result) {
          var json_response = JSON.parse(result);
+         if(json_response.status === 'error') {
+             var error_html = '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                    '<span aria-hidden="true">&times;</span></button>' +
+                                '<div>' +
+                                    '<strong>File Type Metadata Error</strong>'+
+                                '</div>'+
+                                '<div>'+
+                                    '<span>' + json_response.message + '</span>' +
+                                '</div>'+
+                            '</div>';
+             $("#fileTypeMetaDataTab").html(error_html);
+             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+             return;
+         }
+
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
@@ -1305,8 +1321,9 @@ function setFileType(fileType){
     calls.push(set_file_type_ajax_submit(url));
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function () {
-       refreshFileBrowser();
        $("#fileTypeMetaDataTab").html(file_metadata_alert);
+       // page refresh is needed to show any extracted metadata used at the resource level
+       window.location = window.location.href;
     });
 }
 // Used to set the previous scroll position after refresh
