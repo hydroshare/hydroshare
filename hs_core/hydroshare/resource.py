@@ -452,7 +452,7 @@ def create_resource(
             hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path)
 
     # set quota of this resource to this creator
-    resource.set_quota_holder(owner, owner)
+    resource.raccess.set_quota_holder(owner, owner)
 
     return resource
 

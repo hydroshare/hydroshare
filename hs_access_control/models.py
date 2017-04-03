@@ -47,6 +47,7 @@ from django.db import transaction
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
 
 ######################################
 # Access control subsystem
@@ -2643,7 +2644,7 @@ class UserAccess(models.Model):
             if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
                 if access_resource.owners.count() == 1:
                     raise PermissionDenied("Cannot remove sole owner of resource")
-                qholder = this_resource.get_quota_holder()
+                qholder = access_resource.get_quota_holder()
                 if qholder:
                     if qholder == user:
                         raise PermissionDenied("Cannot remove this resource's quota holder from "
@@ -2870,7 +2871,7 @@ class UserAccess(models.Model):
                 and not this_user == self.user:
             raise PermissionDenied("You do not have permission to remove this sharing setting")
 
-        qholder = this_resource.get_quota_holder()
+        qholder = this_resource.raccess.get_quota_holder()
         if qholder:
             if qholder == this_user:
                 raise PermissionDenied("Cannot remove this resource's quota holder from "
@@ -3016,7 +3017,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-        qholder = this_resource.get_quota_holder()
+        qholder = access_resource.get_quota_holder()
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
@@ -3810,6 +3811,31 @@ class ResourceAccess(models.Model):
         return User.objects.filter(is_active=True,
                                    u2urp__privilege=PrivilegeCodes.OWNER,
                                    u2urp__resource=self.resource)
+
+    def set_quota_holder(self, setter, new_holder):
+        # set quota holder of the resource to new_holder who must be an owner
+        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        if not setter.uaccess.owns_resource(self.resource) or \
+                not new_holder.uaccess.owns_resource(self.resource):
+            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        istorage = self.resource.get_irods_storage()
+        istorage.setAVU(self.resource.root_path, "quotaUserName", new_holder.username)
+
+    def get_quota_holder(self):
+        # get quota holder of the resource
+        # return User instance of the quota holder for the resource or None if it does not exist
+        istorage = self.resource.get_irods_storage()
+        try:
+            uname = istorage.getAVU(self.resource.root_path, "quotaUserName")
+        except SessionException:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+        if uname:
+            return User.objects.filter(username=uname).first()
+        else:
+            # quotaUserName AVU does not exist, return None
+            return None
 
     def get_users_with_explicit_access(self, this_privilege, include_user_granted_access=True,
                                        include_group_granted_access=True):

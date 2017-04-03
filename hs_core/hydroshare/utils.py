@@ -896,7 +896,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     resource_cls = resource.__class__
     if len(files) > 0:
         size = validate_resource_file_size(files)
-        validate_user_quota(resource.get_quota_holder(), size)
+        validate_user_quota(resource.raccess.get_quota_holder(), size)
         validate_resource_file_type(resource_cls, files)
         validate_resource_file_count(resource_cls, files, resource)
 
