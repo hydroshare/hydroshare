@@ -119,33 +119,10 @@ $(document).ready(function() {
 
     $("#keywords").remove();
 
+	// Make URLs inside text clickable
 	$(".url-clickable").each(function () {
 		$(this).urlClickable();
 	});
-
-    // if ($("#citation-text").length > 0){
-    //     // Make links in citation clickable
-    //     //===================
-    //     var oriCitationText = $("#citation-text").text();
-    //     var newCitationText = oriCitationText;
-    //     var citationUrl;
-    //
-    //     // Regular expression to find FTP, HTTP(S) and email URLs.
-    //     var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
-    //
-    //     var matchArray;
-    //     // Extract the url
-    //     while( (matchArray = regexToken.exec(oriCitationText)) !== null ){
-    //         if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
-    //             citationUrl = matchArray[0].slice(0, -1);
-    //         }
-    //         else
-    //             citationUrl = matchArray[0];
-    //
-    //         newCitationText = newCitationText.replace(citationUrl, "<a href=\"" + citationUrl + "\" target=\"_blank\">" + citationUrl + "</a>")
-    //     }
-    //     $("#citation-text").html(newCitationText);
-    // }
 
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
