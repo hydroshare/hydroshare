@@ -1094,7 +1094,7 @@
                                                     <td>
                                                         {{ extra_meta_name }}
                                                     </td>
-                                                    <td>
+                                                    <td class="url-clickable">
                                                         {{ extra_meta_value }}
                                                     </td>
                                                     {% if metadata_form %}
@@ -1390,15 +1390,15 @@
             }
 
             if (edit_extra_meta_row_id == "") {
-                // add new
+                // Add new
                 var new_row_id_0_base = findMaxRowID(t) + 1;
                 var edit_icon_str = '<span onclick="showAddEditExtraMetaPopup(true,' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-edit btn-inline-favorite"></span>';
                 var remove_icon_str = '<span onclick="removeExtraMetadataFromTable(' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-remove btn-inline-favorite"></span>';
-                var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
-                $(row_ele).attr( 'id', new_row_id_0_base);
+                var row_ele = t.row.add([extra_meta_name, extra_meta_value, edit_icon_str + " " + remove_icon_str]).node();
+                $(row_ele).attr('id', new_row_id_0_base);
             }
             else {
-                // edit existing
+                // Edit existing
                 var row_to_edit = t.row("#" + edit_extra_meta_row_id);
                 var updated_data_array = row_to_edit.data();
                 updated_data_array[0] = extra_meta_name;
@@ -1406,6 +1406,10 @@
                 row_to_edit.data(updated_data_array);
             }
             t.rows().invalidate().draw();
+            $("#extraMetaTable").find("td:nth-child(2)").each(function() {
+                $(this).urlClickable();
+            });
+
             $('#extraMetaDialog').modal('hide');
             $('#save-extra-meta-btn').show();
         }

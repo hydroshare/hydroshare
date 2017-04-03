@@ -1,3 +1,37 @@
+(function ( $ ) {
+	$.fn.urlClickable = function () {
+		var item = $(this);
+
+		if (item.hasClass("isUrlClickable")) {
+			return this;
+		}
+
+		// Make links in citation clickable
+		//===================
+		var originalText = item.text().trim();
+		var newText = originalText;
+		var url;
+
+		// Regular expression to find FTP, HTTP(S) and email URLs.
+		var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
+
+		var matchArray;
+		// Extract the url
+		while ((matchArray = regexToken.exec(originalText)) !== null) {
+			if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
+				url = matchArray[0].slice(0, -1);
+			}
+			else
+				url = matchArray[0];
+
+			newText = newText.replace(url, "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>")
+		}
+		$(this).html(newText);
+
+		item.toggleClass("isUrlClickable", true);
+	}
+})( jQuery );
+
 
 $(document).ready(function() {
 	// Search box toggle
@@ -87,29 +121,33 @@ $(document).ready(function() {
 
     $("#keywords").remove();
 
-    if ($("#citation-text").length > 0){
-        // Make links in citation clickable
-        //===================
-        var oriCitationText = $("#citation-text").text();
-        var newCitationText = oriCitationText;
-        var citationUrl;
+	$(".url-clickable").each(function () {
+		$(this).urlClickable();
+	});
 
-        // Regular expression to find FTP, HTTP(S) and email URLs.
-        var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
-
-        var matchArray;
-        // Extract the url
-        while( (matchArray = regexToken.exec(oriCitationText)) !== null ){
-            if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
-                citationUrl = matchArray[0].slice(0, -1);
-            }
-            else
-                citationUrl = matchArray[0];
-
-            newCitationText = newCitationText.replace(citationUrl, "<a href=\"" + citationUrl + "\" target=\"_blank\">" + citationUrl + "</a>")
-        }
-        $("#citation-text").html(newCitationText);
-    }
+    // if ($("#citation-text").length > 0){
+    //     // Make links in citation clickable
+    //     //===================
+    //     var oriCitationText = $("#citation-text").text();
+    //     var newCitationText = oriCitationText;
+    //     var citationUrl;
+    //
+    //     // Regular expression to find FTP, HTTP(S) and email URLs.
+    //     var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
+    //
+    //     var matchArray;
+    //     // Extract the url
+    //     while( (matchArray = regexToken.exec(oriCitationText)) !== null ){
+    //         if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
+    //             citationUrl = matchArray[0].slice(0, -1);
+    //         }
+    //         else
+    //             citationUrl = matchArray[0];
+    //
+    //         newCitationText = newCitationText.replace(citationUrl, "<a href=\"" + citationUrl + "\" target=\"_blank\">" + citationUrl + "</a>")
+    //     }
+    //     $("#citation-text").html(newCitationText);
+    // }
 
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
