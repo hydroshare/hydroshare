@@ -8,10 +8,6 @@
     opacity: 0.7;
 }
 
-#irodsContent .modal-lg {
-    width: 570px;
-}
-
 #irodsContent .form-signin {
     max-width: 865px;
     padding: 5px;
@@ -21,30 +17,13 @@
     color: #357ebd;
 }
 
-#irodsContent .modal-body {
-    height: 342px;
-}
-
-#irodsContent #irods_structure {
-    width: 517px;
-    height: 300px;
-    padding: 10px;
-    float: left;
-    box-shadow: 1px 1px 3px 1px #000;
-}
-
-#irodsContent #irods_structure #viewing input {
-    padding-left: 10px;
-    padding-right: 10px;
-    border-radius: 10px;
-    margin-left: 5px;
-    width: 420px;
-}
-
 #irodsContent #irods_structure #file_struct {
     margin-top: 10px;
-    height: 244px;
-    overflow: scroll;
+    height: 250px;
+    overflow: auto;
+    resize: vertical;
+    border: 1px solid #DDD;
+    padding: 4px;
 }
 
 
@@ -96,7 +75,7 @@
 }
 
 #sign-in-info {
-    margin: 0;
+    margin: 20px 0;
 }
 
 #irods-sel-file {

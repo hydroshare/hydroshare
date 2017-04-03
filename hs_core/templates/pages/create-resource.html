@@ -249,7 +249,7 @@
                                                data-target="#irodsSignin"><span
                                                     class="glyphicon glyphicon-log-in"></span>&nbsp;&nbsp;Log in to iRODS...</a>
                                         </div>
-                                         <br>
+                                        <br>
                                         <input type="hidden" id="irods-username" name="irods-username" value="">
                                         <input type="hidden" id="irods-password" name="irods-password" value="">
                                         <input type="hidden" id="irods-host" name="irods-host" value="">
@@ -257,8 +257,6 @@
                                         <input type="hidden" id="irods-zone" name="irods-zone" value="">
                                         <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                                         <input type="hidden" id="irods_federated" name="irods_federated" value="">
-
-                                        <div class="alert alert-danger hidden" id="sign-in-info"></div>
 
                                         <a id="btn-select-irods-file" type="button"
                                            class="btn btn-success hidden-form"
@@ -288,7 +286,13 @@
                                             </span>
                                         </span>
 
-                                        <div>
+                                        <br>
+
+                                        <div class="alert alert-danger hidden" id="sign-in-info">
+                                            <div id="sign-in-name"></div>
+                                        </div>
+
+                                        <div id="irdos-signout">
                                             <a id="btn-signout-irods" type="button"
                                                class="btn btn-default hidden-form">
                                                 <span class="glyphicon glyphicon-log-out"></span>&nbsp;&nbsp;Log out of

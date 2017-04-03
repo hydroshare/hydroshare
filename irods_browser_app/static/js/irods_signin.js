@@ -58,7 +58,7 @@ function irods_login() {
             if(json.irods_loggedin) {
                 var signInStr = "Signed in as " + json.user;
                 $("#sign-in-info").removeClass();
-                $("#sign-in-info").addClass("alert alert-info text-center");
+                $("#sign-in-info").addClass("alert alert-info");
                 $("#sign-in-name").text(signInStr);
                 $("#irods_content_label").text(json.user);
                 $('#root_store').val(json.datastore);
