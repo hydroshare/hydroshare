@@ -1111,6 +1111,7 @@
                                     </table>
 
                                     {% if metadata_form %}
+                                        <br>
                                         <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
                                     {% endif %}
                             </div>
@@ -1357,7 +1358,7 @@
                 var t = $('#extraMetaTable').DataTable();
                 var row_to_edit = t.row("#" + row_id_str);
                 var oldname = row_to_edit.data()[0];
-                var oldvalue = row_to_edit.data()[1];
+                var oldvalue = $("<div/>").html(row_to_edit.data()[1]).text();
                 $("#edit_extra_meta_row_id").val(row_id_str);
                 $("#old_extra_meta_name").val(oldname);
                 $("#extra_meta_name_input").val(oldname);
@@ -1451,7 +1452,7 @@
             var t = $('#extraMetaTable').DataTable();
             t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
                 var extra_meta_name = this.data()[0].trim();
-                var extra_meta_value = this.data()[1].trim();
+                var extra_meta_value = $("<div/>").html(this.data()[1]).text();
                 json_obj[extra_meta_name] = extra_meta_value;
             });
 

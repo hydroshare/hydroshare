@@ -2,7 +2,7 @@
 	$.fn.urlClickable = function () {
 		var item = $(this);
 
-		if (item.hasClass("isUrlClickable")) {
+		if (item.find(".isUrlClickable").length) {
 			return this;
 		}
 
@@ -24,11 +24,9 @@
 			else
 				url = matchArray[0];
 
-			newText = newText.replace(url, "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>")
+			newText = newText.replace(url, "<span class='isUrlClickable'><a href=\"" + url + "\" target=\"_blank\">" + url + "</a></span>")
 		}
 		$(this).html(newText);
-
-		item.toggleClass("isUrlClickable", true);
 	}
 })( jQuery );
 
