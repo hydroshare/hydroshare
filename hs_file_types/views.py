@@ -482,12 +482,15 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     if json_response is not None:
         return json_response
 
-    if metadata_mode == 'view':
-        metadata = logical_file.metadata.get_html()
-    else:
-        metadata = logical_file.metadata.get_html_forms()
+    try:
+        if metadata_mode == 'view':
+            metadata = logical_file.metadata.get_html()
+        else:
+            metadata = logical_file.metadata.get_html_forms()
+        ajax_response_data = {'status': 'success', 'metadata': metadata}
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'message': ex.message}
 
-    ajax_response_data = {'status': 'success', 'metadata': metadata}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

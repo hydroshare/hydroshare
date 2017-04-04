@@ -145,11 +145,11 @@
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geo Raster File Type</span>
+                            <span>Set Geographic Raster File Type</span>
                         </li>
                         <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set NetCDF File Type</span>
+                            <span>Set Multidimensional Data File Type</span>
                         </li>
                         <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
@@ -387,12 +387,12 @@
                                                 {% if page.perms.change and resource_edit_mode %}
                                                     <button id="fb-set-geo-file-type"
                                                             class="disabled"
-                                                            title="Set Geo Raster File Type">
+                                                            title="Set Geographic Raster File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                     <button id="fb-set-netcdf-file-type"
                                                             class="disabled"
-                                                            title="Set NetCDF File Type">
+                                                            title="Set Multidimensional Data File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                     <button id="fb-set-refts-file-type"
@@ -1150,6 +1150,7 @@
 
                 {%  block modal %}
                     {% include "resource-landing-page/modals.html" %}
+                    {% include "resource-landing-page/coordinates_picker.html" %}
                 {%  endblock %}
             </div>
         </div>
