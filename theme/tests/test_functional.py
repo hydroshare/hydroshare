@@ -95,14 +95,15 @@ class FunctionalTestsCases(object):
         create_new_lnk = self.driver.find_element_by_link_text('Create new')
         create_new_lnk.click()
 
+        # TODO: ADAPT TEST BELOW TO CHECK UPLOADING THROUGH DROPZONE JS
         # complete new resource form
         title_field = self.driver.find_element_by_name('title')
-        file_field = self.driver.find_element_by_name('files')
+        # file_field = self.driver.find_element_by_name('files')
         submit_btn = self.driver.find_element_by_xpath("//button[@type='submit']")
 
         self.assertTrue(title_field.is_displayed())
         title_field.send_keys(RESOURCE_TITLE)
-        file_field.send_keys(UPLOAD_FILE_PATH + ',', keys.Keys.ENTER)
+        # file_field.send_keys(UPLOAD_FILE_PATH + ',', keys.Keys.ENTER)
         submit_btn.click()
 
         # check results
