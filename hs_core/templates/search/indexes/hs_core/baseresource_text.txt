@@ -142,6 +142,10 @@
         {{ comment }}
     {% endif %} 
 {% endfor %}
+
+{% if object.metadata.geometryinformation.geometryType  %}
+    {{ object.metadata.geometryinformation.geometryType }}
+{% endif %}
 {% if object.body %} 
     {{ object.body }}
 {% endif %} 

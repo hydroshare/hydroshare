@@ -1,5 +1,6 @@
 from haystack import indexes
 from hs_core.models import BaseResource
+from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from django.db.models import Q
 from datetime import datetime
 
@@ -50,6 +51,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     editors_logins = indexes.MultiValueField(faceted=True)
     editors_names = indexes.MultiValueField(faceted=True)
     editors_count = indexes.IntegerField(faceted=True)
+    # non-core metadata
+    geometry_type = indexes.CharField(faceted=True)
 
     def get_model(self):
         return BaseResource
@@ -356,3 +359,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return obj.raccess.edit_users.all().count()
         else:
             return 0
+
+    def prepare_geometry_type(self, obj):
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, GeographicFeatureMetaData):
+                return obj.metadata.geometryinformation.all().first().geometryType
+            else:
+                return 'none'
+        else:
+            return 'none'
