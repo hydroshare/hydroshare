@@ -2,6 +2,7 @@ import os
 import shutil
 import json
 import logging
+from dateutil import parser
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -18,29 +19,32 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
+    # the metadata element models are from the hs_core app
+    model_app_label = 'hs_core'
     # field to store the content of the json file (the file that is part
-    # of the logical file type
+    # of the RefTimeseriesLogicalFile type
     json_file_content = models.TextField()
 
     @property
     def title(self):
         json_data_dict = self._json_to_dict()
-        return json_data_dict['title']
+        return json_data_dict['timeSeriesLayerResource']['title']
 
     @property
     def abstract(self):
         json_data_dict = self._json_to_dict()
-        return json_data_dict['abstract']
+        return json_data_dict['timeSeriesLayerResource']['abstract']
 
     @property
-    def keywords(self):
+    def key_words(self):
+        # had to name this property as key_words since the parent class has a model field keywords
         json_data_dict = self._json_to_dict()
-        return json_data_dict['keywords']
+        return json_data_dict['timeSeriesLayerResource']['keyWords']
 
     @property
     def serieses(self):
         json_data_dict = self._json_to_dict()
-        return json_data_dict['REFTS']
+        return json_data_dict['timeSeriesLayerResource']['REFTS']
 
     # TODO: other properties to go here
 
@@ -108,6 +112,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         with json_file_content_div:
             legend("Reference Timeseries JSON File Content")
             p(json_res_file.full_path[33:])
+            # header_info = json.dumps(self.json_file_content, indent=4, sort_keys=True,
+            #                          separators=(',', ': '))
             header_info = self.json_file_content
             header_info = header_info.decode('utf-8')
             textarea(header_info, readonly="", rows="15",
@@ -138,18 +144,18 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        """only .json.rfts file can be set to this logical file group"""
-        return [".json.rfts"]
+        """only .json.refts file can be set to this logical file group"""
+        return [".json.refts"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        """file type allowed in this logical file group is: .json.rfts"""
-        return [".json.rfts"]
+        """file type allowed in this logical file group is: .json.refts"""
+        return [".json.refts"]
 
     @classmethod
     def create(cls):
         # this custom method MUST be used to create an instance of this class
-        rf_ts_metadata = RefTimeseriesFileMetaData.objects.create()
+        rf_ts_metadata = RefTimeseriesFileMetaData.objects.create(json_file_content="No data")
         return cls.objects.create(metadata=rf_ts_metadata)
 
     @classmethod
@@ -162,9 +168,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
             :return:
             """
 
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
-
         log = logging.getLogger()
 
         # get the file from irods
@@ -173,22 +176,21 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         if res_file is None:
             raise ValidationError("File not found.")
 
-        if res_file.extension != '.rfts':
+        if res_file.extension != '.refts':
             raise ValidationError("Not a Ref Timeseries file.")
 
-        # base file name (no path included)
-        # file_name = res_file.file_name
-        # file name without the extension
-        # json_file_name = file_name.split(".")[0]
         files_to_add_to_resource = []
         if res_file.has_generic_logical_file:
+            # TODO: validate the temp_file (json file)
+            json_file_content = _validate_json_file(res_file)
+            if not json_file_content:
+                raise ValidationError("Not a valid Ref Timeseries file.")
+
             # get the file from irods to temp dir
             temp_file = utils.get_file_from_irods(res_file)
-            # TODO: validate the temp_file (json file)
             temp_dir = os.path.dirname(temp_file)
             files_to_add_to_resource.append(temp_file)
             file_folder = res_file.file_folder
-            json_file_content = res_file.resource_file.read()
             with transaction.atomic():
                 # first delete the json file that we retrieved from irods
                 # for setting it to reftimeseries file type
@@ -200,13 +202,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
                 logical_file.metadata.json_file_content = json_file_content
                 logical_file.metadata.save()
-                # TODO: add the keywords to resource (if these keywords not already exists)
-                # by parsing data from the logical_file.metadata.kewords
 
-                # TODO: create coverage metadata elements (temporal and spatial) at file level
-                # by parsing data from the logical_file.metadata.series
-                logical_file.dataset_name = logical_file.metadata.title
-                logical_file.save()
                 try:
                     # add the json file back to the resource
                     uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
@@ -220,9 +216,13 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                         resource, uploaded_file, folder=file_folder,
                         fed_res_file_name_or_path=fed_file_full_path
                     )
-                    # make each resource file we added as part of the logical file
+                    # make the resource file we added as part of the logical file
                     logical_file.add_resource_file(new_res_file)
-
+                    logical_file.metadata.save()
+                    logical_file.dataset_name = logical_file.metadata.title
+                    logical_file.save()
+                    # extract metadata
+                    _extract_metadata(resource, logical_file)
                     log.info("RefTimeseries file type - json file was added to the resource.")
                 except Exception as ex:
                     msg = "RefTimeseries file type. Error when setting file type. Error:{}"
@@ -242,3 +242,67 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
             err_msg = "Selected file is not part of a GenericLogical file."
             log.error(err_msg)
             raise ValidationError(err_msg)
+
+
+def _extract_metadata(resource, logical_file):
+    # add resource level title if necessary
+    if resource.metadata.title.value == 'Untitled resource':
+        resource.metadata.title.value = logical_file.metadata.title
+        resource.metadata.title.save()
+
+    # add resource level abstract id necessary
+    if resource.metadata.description is None:
+        resource.metadata.create_element('description', abstract=logical_file.metadata.abstract)
+    # add resource level keywords
+    resource_keywords = [kw.value.lower() for kw in resource.metadata.subjects.all()]
+    for kw in logical_file.metadata.key_words:
+        if kw.lower() not in resource_keywords:
+            resource.metadata.create_element('subject', value=kw)
+
+    # add to the file level metadata
+    logical_file.metadata.keywords = logical_file.metadata.key_words
+    logical_file.metadata.save()
+
+    # add file level temporal coverage
+    start_date = min([parser.parse(series['beginDate']) for series in
+                     logical_file.metadata.serieses])
+    end_date = max([parser.parse(series['endDate']) for series in
+                    logical_file.metadata.serieses])
+    value_dict = {'start': start_date.isoformat(), 'end': end_date.isoformat()}
+    logical_file.metadata.create_element('coverage', type='period', value=value_dict)
+
+    # add file level spatial coverage
+    # check if we have single site or multiple sites
+    sites = set([series['siteCode'] for series in logical_file.metadata.serieses])
+    if len(sites) == 1:
+        series = logical_file.metadata.serieses[0]
+        value_dict = {'east': series['location']['longitude'],
+                      'north': series['location']['latitude'],
+                      'projection': 'Unknown',
+                      'units': "Decimal degrees"}
+        logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+    else:
+        bbox = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
+                'projection': 'Unknown', 'units': "Decimal degrees"}
+        for series in logical_file.metadata.serieses:
+            latitude = float(series['location']['latitude'])
+            if bbox['northlimit'] < latitude:
+                bbox['northlimit'] = latitude
+            if bbox['southlimit'] > latitude:
+                bbox['southlimit'] = latitude
+
+            longitude = float(series['location']['longitude'])
+            if bbox['eastlimit'] < longitude:
+                bbox['eastlimit'] = longitude
+
+            if bbox['westlimit'] > longitude:
+                bbox['westlimit'] = longitude
+        logical_file.metadata.create_element('coverage', type='box', value=bbox)
+
+def _validate_json_file(res_json_file):
+    json_file_content = res_json_file.resource_file.read()
+    try:
+        json.loads(json_file_content)
+    except:
+        json_file_content = ''
+    return json_file_content

@@ -113,6 +113,7 @@ function updateSelectionMenuContext() {
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
     var flagDisableSetNetCDFFileType = false;
+    var flagDisableSetRefTimeseriesFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -125,6 +126,7 @@ function updateSelectionMenuContext() {
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetNetCDFFileType = true;
+        flagDisableSetRefTimeseriesFileType = true;
         flagDisableGetLink = true;
         
         for (var i = 0; i < selected.length; i++) {
@@ -186,11 +188,18 @@ function updateSelectionMenuContext() {
             flagDisableSetNetCDFFileType = true;
         }
 
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
+        if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetRefTimeseriesFileType = true;
+        }
+
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile") {
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
             flagDisablePaste = true;
+        }
+        else if(logicalFileType === "RefTimeseriesLogicalFile") {
+            flagDisableRename = true;
         }
     }
 
@@ -1239,6 +1248,11 @@ $(document).ready(function () {
     // set NetCDF file type method
      $("#btn-set-netcdf-file-type").click(function () {
          setFileType("NetCDF");
+     });
+
+    // set RefTimeseries file type method
+     $("#btn-set-refts-file-type").click(function () {
+         setFileType("RefTimeseries");
      });
 
     // show file type metadata
