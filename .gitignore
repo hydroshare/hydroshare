@@ -25,3 +25,4 @@ run-server
 schema.xml
 *.sublime-*
 .pycharm_helpers
+celerybeat.pid

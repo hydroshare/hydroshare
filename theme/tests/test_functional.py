@@ -38,7 +38,6 @@ class FunctionalTestsCases(object):
         super(FunctionalTestsCases, self).setUp()
 
     def tearDown(self):
-        self.driver.close()
         self.driver.quit()
 
         # Selenium does not clean up phantomjs processes, so we are left to take care of it.
