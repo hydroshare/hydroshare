@@ -57,12 +57,21 @@
                 <div id="dropdown-resource-type" class="dropdown">
                     <div id="select-resource-type" class="resource-type selected-type" data-toggle="dropdown"
                          aria-haspopup="true" aria-expanded="true">
-                        <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                             alt="Generic Resource Icon" class="resource-type-icon"/>
-                        <div class="resource-type-name">&nbsp;Generic</div>
+                        <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                             alt="Composite Resource Icon" class="resource-type-icon"/>
+                        <div class="resource-type-name">&nbsp;Composite</div>
                     </div>
 
                     <ul class="dropdown-menu shadow-md" aria-labelledby="select-resource-type">
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="TODO"
+                               data-value="CompositeResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                     alt="Composite Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Composite</div>
+                            </a>
+                        </li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="An arbitrary file or collection of files that are logically grouped together as a resource."
@@ -79,15 +88,6 @@
                                 <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                      alt="Collection Resource Icon" class="resource-type-icon"/>
                                 <div class="resource-type-name">&nbsp;Collection</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="TODO"
-                               data-value="CompositeResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                     alt="Composite Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Composite</div>
                             </a>
                         </li>
                         <li>
@@ -217,9 +217,10 @@
 
                             <div class="hs-dropzone-wrapper">
                                 <div id="dz-container">
-                                    <input id="form-title" type="hidden" name="title" value="Some Resource"/>
+                                    <input id="form-title" type="hidden" name="title" value=""/>
+                                    {# Defaults to CompositeResource #}
                                     <input id="form-resource-type" type="hidden" name="resource-type"
-                                           value="GenericResource"/>
+                                           value="CompositeResource"/>
                                 </div>
                             </div>
 
