@@ -8,23 +8,42 @@
 
         var originalText = item.text().trim();
         var newText = originalText;
-        var url;
 
         // Regular expression to find FTP, HTTP(S) and email URLs.
         var regexToken = /(((ftp|https?):\/\/)[\-\w@:%_\+.~#?,&\/\/=]+)|((mailto:)?[_.\w-]+@([\w][\w\-]+\.)+[a-zA-Z]{2,3})/g;
 
+        // Extract all URL occurrences
         var matchArray;
-        // Extract the url
+        var urls = [];
+
         while ((matchArray = regexToken.exec(originalText)) !== null) {
             if (matchArray[0].slice(-1) === "." || matchArray[0].slice(-1) === ",") {
-                url = matchArray[0].slice(0, -1);
+                urls.push(matchArray[0].slice(0, -1))
             }
-            else
-                url = matchArray[0];
-
-            newText = newText.replace(url, "<span class='isUrlClickable'>" +
-                "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a></span>")
+            else {
+                urls.push(matchArray[0]);
+            }
         }
+
+        // Get a list of unique URLs
+        var uniqueUrls = [];
+        $.each(urls, function (i, el) {
+            if ($.inArray(el, uniqueUrls) === -1) {
+                uniqueUrls.push(el);
+            }
+        });
+
+        // Replace all URLs for links
+        for (var i = 0; i < uniqueUrls.length; i++) {
+            var currentUrl = uniqueUrls[i];
+
+            var replacedString = "<span class='isUrlClickable'>" +
+                "<a href=\"" + currentUrl + "\" target=\"_blank\">" + currentUrl + "</a></span>";
+
+            var regex = new RegExp(currentUrl, "g");
+            newText = newText.replace(regex, replacedString);
+        }
+
         $(this).html(newText);
 
         return item;
@@ -42,15 +61,12 @@ $(document).ready(function () {
 
     // Smooth scrolling for UI elements page
     // =====================================
-    $(document).ready(function () {
-        $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
-            var anchor = $(this);
-            $('html, body').stop().animate({
-                scrollTop: $(anchor.attr('href')).offset().top
-            }, 1000);
-            e.preventDefault();
-        });
-        return false;
+    $('a[href*=#buttons],a[href*=#panels], a[href*=#info-boards], a[href*=#navs], a[href*=#alerts], a[href*=#thumbnails], a[href*=#social], a[href*=#section-header],a[href*=#page-tip], a[href*=#block-header]').bind("click", function (e) {
+        var anchor = $(this);
+        $('html, body').stop().animate({
+            scrollTop: $(anchor.attr('href')).offset().top
+        }, 1000);
+        e.preventDefault();
     });
 
     // 404 error page
