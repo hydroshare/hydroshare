@@ -862,7 +862,7 @@
                                             {% for source in sources %}
                                                 <div class="row">
                                                     <div class="col-sm-4"><strong>Derived From:</strong></div>
-                                                    <div class="col-sm-8">{{ source.derived_from }}</div>
+                                                    <div class="col-sm-8 url-clickable">{{ source.derived_from }}</div>
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
@@ -874,7 +874,7 @@
                                                 {% if  relation.type|lower != "haspart"%}
                                                     <div class="row">
                                                         <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
+                                                        <div class="col-sm-8 url-clickable">{{ relation.value }}</div>
                                                     </div>
                                                 {% endif %}
                                             {% endfor %}
@@ -887,7 +887,7 @@
                                                 {% for source in source_formset.initial %}
                                                     <tr>
                                                         <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details">{{ source.derived_from }}</td>
+                                                        <td class="dataset-details url-clickable">{{ source.derived_from }}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
                                                                class="glyphicon glyphicon-pencil icon-button icon-blue"
@@ -922,7 +922,7 @@
                                                     {% if  relation.type|lower != "haspart"%}
                                                         <tr>
                                                             <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
+                                                            <td class="dataset-details url-clickable">{{ relation.value }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
                                                                    class="glyphicon glyphicon-pencil icon-button icon-blue"
