@@ -515,6 +515,12 @@
 
             var zoom_listener = google.maps.event.addListener(maps[view_type], 'zoom_changed', function(){
                 updateMapView(view_type);
+                if (box_centers.length > 0) {
+                    for (var i = 0; i < box_centers.length; i++) {
+                        box_centers[i].info_window.close();
+                    }
+                }
+
             });
 
             var drag_listener = google.maps.event.addListener(maps[view_type], 'dragend', function(){
@@ -746,12 +752,12 @@
             if (view_type == "area_map") {
                 $('#area-map-items tbody').on('click', '[role="button"]', function () {
                     var data = datatable.row($(this).parents('tr')).data();
-                    showBoxMarker(data[1], true);
+                    showBoxOnMap(data[1], true);
                 });
                 $('#area-map-items tbody').on('hover', 'tr', function () {
                     var data = datatable.row(this).data();
                     if (data) {
-                        showBoxMarker(data[1], false);
+                        showBoxOnMap(data[1], false);
                     }
                 });
 
@@ -876,7 +882,7 @@
             }
         }
 
-        var showBoxMarker = function(box, zoom_on_map) {
+        var showBoxOnMap = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
@@ -1125,19 +1131,25 @@
             var map_items_table = $('#area-map-items').DataTable();
 
             google.maps.event.addListener(box_center, 'click', function() {
-                createBoundsForResources(box.resources_list);
+                //createBoundsForResources(box.resources_list);
                 //updateMapView("area_map");
-
-                box_center.info_window.open(maps["area_map"], box_center);
+                var found = false;
                 map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                     var data = this.data();
                     var resource_id = data[0];
                     var node_data = this.node();
                     if (resources_ids.indexOf(resource_id) > -1) {
-                        $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                        if (!found) {
+                            $(node_data).find('[role="button"]').trigger("click");
+                            found = true;
+                        } else {
+                            $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                        }
                     }
 
                 });
+
+                box_center.info_window.open(maps["area_map"], box_center);
 
             });
 
