@@ -515,12 +515,6 @@
 
             var zoom_listener = google.maps.event.addListener(maps[view_type], 'zoom_changed', function(){
                 updateMapView(view_type);
-                if (box_centers.length > 0) {
-                    for (var i = 0; i < box_centers.length; i++) {
-                        box_centers[i].info_window.close();
-                    }
-                }
-
             });
 
             var drag_listener = google.maps.event.addListener(maps[view_type], 'dragend', function(){
@@ -580,8 +574,14 @@
             modified_boxes_data.forEach(function(box){
                 createBoxResourceMarker (box);
             });
-
             drawShadeRectangles(boxes_data);
+
+            shade_rects.forEach(function(box){
+                var rect = box.rect;
+                google.maps.event.addListener(rect,'click',function(e){
+                    highlightOverlapping(e.latLng);
+                });
+            });
 
             box_centers_cluster = new MarkerClusterer(maps["area_map"], box_centers, {
                 styles:[{
@@ -590,6 +590,31 @@
                     url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
                 }]
             });
+        };
+
+        var highlightOverlapping = function(position) {
+            var map_items_table = $('#area-map-items').DataTable();
+            map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+                var data = this.data();
+                var resource = data[1];
+
+                var node_data = this.node();
+                var northlimit = parseFloat(resource.northlimit);
+                var southlimit = parseFloat(resource.southlimit);
+                var eastlimit = parseFloat(resource.eastlimit);
+                var westlimit = parseFloat(resource.westlimit);
+                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+
+                if (resource_bound.contains(position)) {
+                    $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+                } else {
+                    $(node_data).find("input[type=checkbox]:checked").trigger("click");
+                }
+
+            });
+
         };
 
         var drawShadeRectangles = function(boxes) {
@@ -623,37 +648,10 @@
                 };
 
                 shade_rects[i].rect.setMap(maps["area_map"]);
-                google.maps.event.addListener(shade_rects[i].rect,'click',function(e){
-                    highlightOverlapping(e.latLng);
-                });
 
             }
         };
 
-        var highlightOverlapping = function(position) {
-            var map_items_table = $('#area-map-items').DataTable();
-            map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
-                var data = this.data();
-                var resource = data[1];
-
-                var node_data = this.node();
-                var northlimit = parseFloat(resource.northlimit);
-                var southlimit = parseFloat(resource.southlimit);
-                var eastlimit = parseFloat(resource.eastlimit);
-                var westlimit = parseFloat(resource.westlimit);
-                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
-
-                if (resource_bound.contains(position)) {
-                    $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
-                } else {
-                    $(node_data).find("input[type=checkbox]:checked").trigger("click");
-                }
-
-            });
-
-        };
 
         var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
             box_resources.forEach(function(resource) {
@@ -804,6 +802,9 @@
                     updateDataTableSelectAllCtrl(datatable, view_type);
 
                 });
+
+                // Handle click on table cells with checkboxes
+
 
                 // Handle click on "Select all" control
                 $('thead input[name="select_all"]', datatable.table().container()).on('click', function(e){
@@ -1110,7 +1111,6 @@
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
             var resources_ids = [];
-
             box.resources_list.forEach(function(resource){
                 resources_ids.push(resource.short_id);
             });
@@ -1131,25 +1131,19 @@
             var map_items_table = $('#area-map-items').DataTable();
 
             google.maps.event.addListener(box_center, 'click', function() {
-                //createBoundsForResources(box.resources_list);
-                //updateMapView("area_map");
-                var found = false;
+                createBoundsForResources(box.resources_list);
+                updateMapView("area_map");
+
+                box_center.info_window.open(maps["area_map"], box_center);
                 map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
                     var data = this.data();
                     var resource_id = data[0];
                     var node_data = this.node();
                     if (resources_ids.indexOf(resource_id) > -1) {
-                        if (!found) {
-                            $(node_data).find('[role="button"]').trigger("click");
-                            found = true;
-                        } else {
-                            $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
-                        }
+                        $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
                     }
 
                 });
-
-                box_center.info_window.open(maps["area_map"], box_center);
 
             });
 
@@ -1279,7 +1273,6 @@
                 geocoder_address_input = "area-geocoder-address";
             }
             var address = document.getElementById(geocoder_address_input).value;
-            //var view_type = "area_map";
             geocoder.geocode({'address': address}, function(results, status) {
                 if (status === google.maps.GeocoderStatus.OK) {
                     resultsMap.setCenter(results[0].geometry.location);
