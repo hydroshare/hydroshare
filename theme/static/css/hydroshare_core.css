@@ -957,7 +957,6 @@ li.account p{
 
 .contact-table {
 	table-layout: fixed;
-	border: 1px solid #DDD;
 }
 
 .contact-table .drag-indicator > i {
@@ -972,6 +971,34 @@ li.account p{
     width: calc(20% - 20px);
 }
 
+.hs-table {
+	border: 1px solid #DDD;
+	border-collapse: collapse !important;
+}
+
+.hs-table tr {
+	border: 1px solid #DDD;
+	background: #FFF;
+}
+
+.hs-table td, .hs-table th {
+	padding: 10px 18px !important;
+}
+
+.hs-table thead tr {
+    border-bottom: 1px solid #DDD;
+}
+
+.hs-table thead tr th {
+	background-color: #F1F1F1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.contact-table-view td {
+	width: 25%;
+}
+
 .contact-table td {
 	width: 20%;
 	border-top: 0 !important;
@@ -979,24 +1006,6 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
-.contact-table tr {
-	border: 1px solid #DDD;
-	background: #FFF;
-}
-
-.contact-table-view td {
-	width: 25%;
-}
-
-#contactTab table .header-row {
-    border-bottom: 1px solid #DDD;
-}
-
-#contactTab table .header-row th {
-	background-color: #F1F1F1;
-	text-overflow: ellipsis;
-	overflow: hidden;
-}
 
 #txt-abstract{
     height: 155px;
@@ -1727,8 +1736,6 @@ a.tag:hover {
 }
 
 .tab-elements {
-    overflow-x:auto;
-    overflow-y:hidden;
     margin-top: 20px;
     border:0;
 }
@@ -3801,10 +3808,6 @@ div.group-add-photo {
 
 #btn-add-funding-agency {
     margin-bottom: 20px;
-}
-
-.funding-agencies-table {
-    border: 1px solid #DDD;
 }
 
 #collection-table_wrapper {
