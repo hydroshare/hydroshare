@@ -642,7 +642,7 @@
                                         </small>
                                     </div>
                                     <br>
-                                    <table class="table contact-table contact-table-view">
+                                    <table class="table hs-table contact-table contact-table-view">
                                         <thead>
                                         <tr class="header-row">
                                             <th>Name</th>
@@ -678,7 +678,7 @@
                                             </small>
                                         </div>
                                         <br>
-                                        <table class="table contact-table contact-table-view">
+                                        <table class="table hs-table contact-table contact-table-view">
                                             <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
@@ -714,7 +714,7 @@
                                         </div>
                                         <br>
 
-                                        <table id="authors-table" class="contact-table table">
+                                        <table id="authors-table" class="hs-table contact-table table">
                                             <thead>
                                             <tr class="header-row">
                                                 <th class="drag-indicator"></th>
@@ -808,7 +808,7 @@
                                         </div>
                                         <br>
 
-                                        <table class="contact-table table">
+                                        <table class="hs-table contact-table table">
                                             <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
@@ -1074,11 +1074,17 @@
                             {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                 <div class="tab-pane" id="extraMetaTab">
                                     {% if metadata_form %}
-                                        <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
-                                                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
-                                        </a>
+                                        <div>
+                                            <a type="button" class="btn btn-success"
+                                               onclick="showAddEditExtraMetaPopup(false, '')">
+                                            <span class="glyphicon glyphicon-plus">
+                                                <span class="button-label"> Add new entry...</span>
+                                            </span>
+                                            </a>
+                                        </div>
+                                        <br>
                                     {% endif %}
-                                    <table id="extraMetaTable" class="table-hover table-striped" width="100%">
+                                    <table id="extraMetaTable" class="hs-table table" width="100%">
                                         <thead>
                                         <tr>
                                             <th>Name</th>
@@ -1358,7 +1364,7 @@
                 var t = $('#extraMetaTable').DataTable();
                 var row_to_edit = t.row("#" + row_id_str);
                 var oldname = row_to_edit.data()[0];
-                var oldvalue = $("<div/>").html(row_to_edit.data()[1]).text();
+                var oldvalue = $("<div/>").html(row_to_edit.data()[1].trim()).text();
                 $("#edit_extra_meta_row_id").val(row_id_str);
                 $("#old_extra_meta_name").val(oldname);
                 $("#extra_meta_name_input").val(oldname);
@@ -1452,7 +1458,7 @@
             var t = $('#extraMetaTable').DataTable();
             t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
                 var extra_meta_name = this.data()[0].trim();
-                var extra_meta_value = $("<div/>").html(this.data()[1]).text();
+                var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
                 json_obj[extra_meta_name] = extra_meta_value;
             });
 
