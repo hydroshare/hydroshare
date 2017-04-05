@@ -881,7 +881,7 @@
                                         {% endif %}
                                     {% else %}
                                         <div>
-                                            <table class="table" style="margin-bottom: 0;">
+                                            <table class="table hs-table" style="margin-bottom: 0;">
                                                 <tbody>
                                                 <legend>Sources</legend>
                                                 {% for source in source_formset.initial %}
@@ -905,16 +905,17 @@
                                                 {% endfor %}
                                                 </tbody>
                                             </table>
+                                            <br>
                                             <a id="add-source" class="btn btn-success" data-toggle="modal"
                                                data-target="#add-source-dialog"><i
-                                                    class="fa fa-plus"></i> Add source</a>
+                                                    class="fa fa-plus"></i> Add Source</a>
                                         <span data-toggle="tooltip" data-placement="auto"
                                               title='If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
                                               class="glyphicon glyphicon-info-sign text-muted"></span>
                                         </div>
                                         <hr style="border: 0;">
                                         <div>
-                                            <table class="table" style="margin-bottom: 0;">
+                                            <table class="table hs-table">
                                                 <tbody>
                                                 <legend>Relations</legend>
                                                 {% for relation in relation_formset.initial %}
@@ -942,7 +943,9 @@
                                             </table>
 
                                             <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
+                                               data-target="#add-relation-dialog">
+                                                <i class="fa fa-plus"></i> Add Relation</a>
+
                                             <span data-toggle="tooltip" data-placement="auto"
                                                   title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
                                                   class="glyphicon glyphicon-info-sign text-muted"></span>
@@ -1077,9 +1080,7 @@
                                         <div>
                                             <a type="button" class="btn btn-success"
                                                onclick="showAddEditExtraMetaPopup(false, '')">
-                                            <span class="glyphicon glyphicon-plus">
-                                                <span class="button-label"> Add new entry...</span>
-                                            </span>
+                                                <i class="fa fa-plus"></i> Add New Entry
                                             </a>
                                         </div>
                                         <br>
