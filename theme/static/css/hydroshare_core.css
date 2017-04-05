@@ -1727,8 +1727,6 @@ a.tag:hover {
 }
 
 .tab-elements {
-    overflow-x:auto;
-    overflow-y:hidden;
     margin-top: 20px;
     border:0;
 }
