@@ -85,6 +85,43 @@ class Variable(object):
         return root_div.render(pretty=True)
 
 
+class RefWebService(object):
+    """represents a web service for timeseries data"""
+    def __init__(self, url, service_type, reference_type, return_type):
+        self.url = url
+        self.service_type = service_type
+        self.reference_type = reference_type
+        self.return_type = return_type
+
+    def get_html(self):
+        """generates html code for viewing web service related data"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                # strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('URL')
+                            td(self.url)
+                        with tr():
+                            get_th('Service Type')
+                            td(self.service_type)
+                        with tr():
+                            get_th('Return Type')
+                            td(self.return_type)
+                        with tr():
+                            get_th('Reference Type')
+                            td(self.reference_type)
+
+        return root_div.render(pretty=True)
+
+
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
     # the metadata element models are from the hs_core app
     model_app_label = 'hs_core'
@@ -138,6 +175,19 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 variable_codes.append(variable.code)
         return variables
 
+    @property
+    def web_services(self):
+        services = []
+        urls = []
+        for series in self.serieses:
+            if series['url'] not in urls:
+                service = RefWebService(url=series['url'], service_type=series['serviceType'],
+                                        reference_type=series['refType'],
+                                        return_type=series['returnType'])
+                services.append(service)
+                urls.append(service.url)
+        return services
+
     # TODO: other properties to go here
 
     def get_html(self):
@@ -166,6 +216,11 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         for variable in self.variables:
             html_string += variable.get_html()
 
+        service_legend = legend("Web Services", cls="pull-left", style="margin-top:20px;")
+        html_string += service_legend.render()
+        for service in self.web_services:
+            html_string += service.get_html()
+
         # TODO: once the above html for sites work do the same for variables
 
         html_string += self.get_json_file_data_html().render()
@@ -191,6 +246,19 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                                    style="display: none;",
                                    onclick="metadata_update_ajax_submit("
                                            "'id-coverage-spatial-filetype');")
+
+            legend("Sites", cls="pull-left", style="margin-top:20px;")
+            for site in self.sites:
+                site.get_html()
+
+            legend("Variables", cls="pull-left", style="margin-top:20px;")
+            for variable in self.variables:
+                variable.get_html()
+
+            legend("Web Services", cls="pull-left", style="margin-top:20px;")
+            for service in self.web_services:
+                service.get_html()
+
             self.get_json_file_data_html()
 
         template = Template(root_div.render())
