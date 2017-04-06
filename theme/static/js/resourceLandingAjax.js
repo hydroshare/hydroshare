@@ -1157,7 +1157,9 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
-        $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+        if (logical_type !== "RefTimeseriesLogicalFile"){
+            $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+        }
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
