@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, form, button, h4, p, textarea, legend, strong, table, tbody, tr, \
+from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
     th, td
 
 from hs_core.hydroshare.resource import delete_resource_file
@@ -577,6 +577,7 @@ def _extract_metadata(resource, logical_file):
             if bbox['westlimit'] > longitude:
                 bbox['westlimit'] = longitude
         logical_file.metadata.create_element('coverage', type='box', value=bbox)
+
 
 def _validate_json_file(res_json_file):
     json_file_content = res_json_file.resource_file.read()
