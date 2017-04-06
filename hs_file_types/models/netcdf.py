@@ -790,6 +790,8 @@ def create_header_info_txt_file(nc_temp_file, nc_file_name):
 
 def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     log = logging.getLogger()
+    # check the instance type
+    file_type = isinstance(instance, NetCDFLogicalFile)
 
     # get the file from irods to temp dir
     temp_nc_file = utils.get_file_from_irods(nc_res_file)
@@ -798,14 +800,16 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
     try:
         # update title
         if hasattr(nc_dataset, 'title'):
-            if nc_dataset.title != instance.dataset_name:
-                delattr(nc_dataset, 'title')
-                nc_dataset.title = instance.dataset_name
+            if file_type:
+                if nc_dataset.title != instance.dataset_name:
+                    delattr(nc_dataset, 'title')
+                    nc_dataset.title = instance.dataset_name
         else:
-            nc_dataset.title = instance.dataset_name
+            if file_type:
+                nc_dataset.title = instance.dataset_name
 
         # update keywords
-        if instance.metadata.keywords:
+        if file_type and instance.metadata.keywords:
             if hasattr(nc_dataset, 'keywords'):
                 delattr(nc_dataset, 'keywords')
             nc_dataset.keywords = ', '.join(instance.metadata.keywords)
