@@ -1,6 +1,9 @@
 from haystack import indexes
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
+from hs_app_netCDF.models import NetcdfMetaData
+from ref_ts.models import RefTSMetadata
+from hs_app_timeseries.models import TimeSeriesMetaData
 from django.db.models import Q
 from datetime import datetime
 
@@ -53,6 +56,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     editors_count = indexes.IntegerField(faceted=True)
     # non-core metadata
     geometry_type = indexes.CharField(faceted=True)
+    field_name = indexes.CharField()
+    field_type = indexes.CharField()
+    field_type_code = indexes.CharField()
+    variables = indexes.MultiValueField(faceted=True)
+    sites = indexes.MultiValueField()
+    methods = indexes.MultiValueField()
 
     def get_model(self):
         return BaseResource
@@ -368,3 +377,47 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return 'none'
         else:
             return 'none'
+
+    def prepare_field_name(self, obj):
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, GeographicFeatureMetaData):
+                return obj.metadata.fieldinformation.all().first().fieldName
+            else:
+                return 'none'
+        else:
+            return 'none'
+
+    def prepare_field_type(self, obj):
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, GeographicFeatureMetaData):
+                return obj.metadata.fieldinformation.all().first().fieldType
+            else:
+                return 'none'
+        else:
+            return 'none'
+
+    def prepare_field_type_code(self, obj):
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, GeographicFeatureMetaData):
+                return obj.metadata.fieldinformation.all().first().fieldTypeCode
+            else:
+                return 'none'
+        else:
+            return 'none'
+
+
+    def prepare_variables(self, obj):
+        variables = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, NetcdfMetaData):
+                for variable in obj.metadata.variables.all():
+                    variables.append(variable.name)
+            elif isinstance(obj.metadata, RefTSMetadata):
+                for variable in obj.metadata.variables.all():
+                    variables.append(variable.name)
+            elif isinstance(obj.metadata, TimeSeriesMetaData):
+                for variable in obj.metadata.variables.all():
+                    variables.append(variable.variable_name)
+        return variables
+
+

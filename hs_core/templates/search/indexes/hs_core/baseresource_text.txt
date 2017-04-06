@@ -142,9 +142,17 @@
         {{ comment }}
     {% endif %} 
 {% endfor %}
-
 {% if object.metadata.geometryinformation.geometryType  %}
     {{ object.metadata.geometryinformation.geometryType }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldName  %}
+    {{ object.metadata.fieldinformation.fieldName }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldType  %}
+    {{ object.metadata.fieldinformation.fieldType }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldTypeCode  %}
+    {{ object.metadata.fieldinformation.fieldTypeCode }}
 {% endif %}
 {% if object.body %} 
     {{ object.body }}
