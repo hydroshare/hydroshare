@@ -236,6 +236,10 @@ function updateSelectionMenuContext() {
     menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
     $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
 
+    // set RefTimeseries file type
+    menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
+    $("#fb-set-refts-file-type").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
+
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
     $("#fb-rename").toggleClass("disabled", flagDisableRename);
