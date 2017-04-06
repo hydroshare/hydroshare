@@ -4,18 +4,56 @@ import json
 import logging
 from dateutil import parser
 
+from django.utils import timezone
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, form, button, h4, p, textarea, legend
+from dominate.tags import div, form, button, h4, p, textarea, legend, strong, table, tbody, tr, \
+    th, td
 
-from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
 
 from base import AbstractFileMetaData, AbstractLogicalFile
+
+
+class Site(object):
+    """represents a site for timeseries data"""
+    def __init__(self, name, code, latitude, longitude):
+        self.name = name
+        self.code = code
+        self.latitude = latitude
+        self.longitude = longitude
+
+    def get_html(self):
+        """generates html code for viewing site related data"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                # strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Name')
+                            td(self.name)
+                        with tr():
+                            get_th('Code')
+                            td(self.code)
+                        with tr():
+                            get_th('Latitude')
+                            td(self.latitude)
+                        with tr():
+                            get_th('Longitude')
+                            td(self.longitude)
+
+        return root_div.render(pretty=True)
 
 
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
@@ -46,6 +84,20 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         json_data_dict = self._json_to_dict()
         return json_data_dict['timeSeriesLayerResource']['REFTS']
 
+    @property
+    def sites(self):
+        sites = []
+        site_codes = []
+        for series in self.serieses:
+            if series['siteCode'] not in site_codes:
+                site = Site(name=series['site'], code=series['siteCode'],
+                            latitude=series['location']['latitude'],
+                            longitude=series['location']['longitude']
+                            )
+                sites.append(site)
+                site_codes.append(site.code)
+        return sites
+
     # TODO: other properties to go here
 
     def get_html(self):
@@ -64,12 +116,19 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             if self.spatial_coverage:
                 html_string += self.spatial_coverage.get_html()
 
+        site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
+        html_string += site_legend.render()
+        for site in self.sites:
+            html_string += site.get_html()
+
+        # TODO: once the above html for sites work do the same for variables
+
         html_string += self.get_json_file_data_html().render()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
@@ -115,7 +174,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             # header_info = json.dumps(self.json_file_content, indent=4, sort_keys=True,
             #                          separators=(',', ': '))
             header_info = self.json_file_content
-            header_info = header_info.decode('utf-8')
+            if isinstance(header_info, str):
+                header_info = unicode(header_info, 'utf-8')
+
             textarea(header_info, readonly="", rows="15",
                      cls="input-xlarge", style="min-width: 100%")
 
@@ -247,8 +308,8 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
     if resource.metadata.title.value == 'Untitled resource':
-        resource.metadata.title.value = logical_file.metadata.title
-        resource.metadata.title.save()
+        resource.metadata.update_element('title', resource.metadata.title.id,
+                                         value=logical_file.metadata.title)
 
     # add resource level abstract id necessary
     if resource.metadata.description is None:
@@ -268,6 +329,10 @@ def _extract_metadata(resource, logical_file):
                      logical_file.metadata.serieses])
     end_date = max([parser.parse(series['endDate']) for series in
                     logical_file.metadata.serieses])
+    if timezone.is_aware(start_date):
+        start_date = timezone.make_naive(start_date)
+    if timezone.is_aware(end_date):
+        end_date = timezone.make_naive(end_date)
     value_dict = {'start': start_date.isoformat(), 'end': end_date.isoformat()}
     logical_file.metadata.create_element('coverage', type='period', value=value_dict)
 
