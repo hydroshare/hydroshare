@@ -21,10 +21,10 @@ class HsBagitException(Exception):
 
 def delete_files_and_bag(resource):
     """
-    delete the resource bag
+    delete the resource bag and all resource files.
 
     Parameters:
-    :param resource: the resource to delete the bag for.
+    :param resource: the resource to delete the bag and files for.
     :return: none
     """
     istorage = resource.get_irods_storage()

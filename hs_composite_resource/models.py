@@ -165,7 +165,6 @@ class CompositeResource(BaseResource):
         if not full_path.startswith(self.file_path):
             full_path = os.path.join(self.file_path, full_path)
 
-        print("supports delete: full path is {}".format(full_path))
         if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
@@ -174,9 +173,6 @@ class CompositeResource(BaseResource):
             res_file_objects = self.files.filter(
                 object_id=self.id,
                 resource_file__startswith=full_path).all()
-        print("res_file_objects = ")
-        for f in res_file_objects:
-            print("   path={}".format(f.storage_path))
 
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped

@@ -553,7 +553,7 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     :user  user who initiated the folder delete operation
     :return:
     """
-    # TODO: Istorage parameter is redundant; derived from resource
+    # TODO: Istorage parameter is redundant; derived from resource; can be deleted. 
     if resource and istorage and folderpath:
         if not folderpath.endswith('/'):
             folderpath += '/'
@@ -658,7 +658,6 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
-    # TODO: why was the zipfile part of the django ResourceFile's?
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
 

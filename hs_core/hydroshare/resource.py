@@ -367,7 +367,7 @@ def create_resource(
             fed_zone_home_path = fed_res_path
             resource.save()
 
-        # TODO: this option should be eliminated. Require explicit zone path
+        # TODO: It would be safer to require an explicit zone path rather than harvesting file path
         elif len(source_names) > 0:
             fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
             resource.resource_federation_path = fed_zone_home_path
@@ -610,7 +610,6 @@ def add_resource_files(pk, *files, **kwargs):
         ret.append(utils.add_file_to_resource(resource, f, folder=folder))
 
     if len(source_names) > 0:
-        # TODO: eliminate string option; always pass a list. File names can contain ','!
         for ifname in source_names:
             ret.append(utils.add_file_to_resource(resource, None,
                                                   folder=folder,
@@ -785,7 +784,7 @@ def filter_condition(filename_or_id, fl):
         return fl.short_path == filename_or_id
 
 
-# TODO: Remove option for file id to disamiguate between duplicates.
+# TODO: Remove option for file id, not needed since names are unique. 
 # TODO: Test that short_path deletes properly.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
