@@ -28,15 +28,33 @@ def update_resource_coverage_element(resource):
                   'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
 
     if len(spatial_coverages) > 1:
-        cov_type = 'box'
-        for sp_cov in spatial_coverages:
-            if sp_cov.type == "box":
-                box_limits = bbox_limits['box']
-                set_coverage_data(bbox_value, sp_cov, box_limits)
+        # check if one of the coverage is of type box
+        if any(sp_cov.type == 'box' for sp_cov in spatial_coverages):
+            cov_type = 'box'
+        else:
+            # check if the coverages represent different locations
+            unique_lats = set([sp_cov.value['north'] for sp_cov in spatial_coverages])
+            unique_lons = set([sp_cov.value['east'] for sp_cov in spatial_coverages])
+            if len(unique_lats) == 1 and len(unique_lons) == 1:
+                cov_type = 'point'
             else:
-                # point type coverage
-                box_limits = bbox_limits['point']
-                set_coverage_data(bbox_value, sp_cov, box_limits)
+                cov_type = 'box'
+        if cov_type == 'point':
+            sp_cov = spatial_coverages[0]
+            bbox_value = dict()
+            bbox_value['projection'] = 'WGS 84 EPSG:4326'
+            bbox_value['units'] = 'Decimal degrees'
+            bbox_value['north'] = sp_cov.value['north']
+            bbox_value['east'] = sp_cov.value['east']
+        else:
+            for sp_cov in spatial_coverages:
+                if sp_cov.type == "box":
+                    box_limits = bbox_limits['box']
+                    set_coverage_data(bbox_value, sp_cov, box_limits)
+                else:
+                    # point type coverage
+                    box_limits = bbox_limits['point']
+                    set_coverage_data(bbox_value, sp_cov, box_limits)
 
     elif len(spatial_coverages) == 1:
         sp_cov = spatial_coverages[0]
