@@ -335,114 +335,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             log.exception(msg)
             raise ValidationError(msg)
 
-        # get the file from irods to temp dir
-        temp_nc_file = utils.get_file_from_irods(nc_res_file)
-        nc_dataset = netCDF4.Dataset(temp_nc_file, 'a')
-        try:
-            # update title
-            if hasattr(nc_dataset, 'title'):
-                if nc_dataset.title != self.dataset_name:
-                    delattr(nc_dataset, 'title')
-                    nc_dataset.title = self.dataset_name
-            else:
-                nc_dataset.title = self.dataset_name
-
-            # update keywords
-            if self.metadata.keywords:
-                if hasattr(nc_dataset, 'keywords'):
-                    delattr(nc_dataset, 'keywords')
-                nc_dataset.keywords = ', '.join(self.metadata.keywords)
-
-            # update key/value metadata
-            if self.metadata.extra_metadata:
-                if hasattr(nc_dataset, 'hs_extra_metadata'):
-                    delattr(nc_dataset, 'hs_extra_metadata')
-                extra_metadata = []
-                for k, v in self.metadata.extra_metadata.items():
-                    extra_metadata.append("{}:{}".format(k, v))
-                nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
-
-            # update temporal coverage
-            if self.metadata.temporal_coverage:
-                for attr_name in ['time_coverage_start', 'time_coverage_end']:
-                    if hasattr(nc_dataset, attr_name):
-                        delattr(nc_dataset, attr_name)
-                nc_dataset.time_coverage_start = self.metadata.temporal_coverage.value['start']
-                nc_dataset.time_coverage_end = self.metadata.temporal_coverage.value['end']
-
-            # update spatial coverage
-            if self.metadata.spatial_coverage:
-                for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
-                                  'geospatial_lon_max']:
-                    # clean up old info
-                    if hasattr(nc_dataset, attr_name):
-                        delattr(nc_dataset, attr_name)
-
-                spatial_coverage = self.metadata.spatial_coverage
-                nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
-                nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
-                nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
-                nc_dataset.geospatial_lon_max = spatial_coverage.value['eastlimit']
-
-            # update variables
-            if self.metadata.variables.all():
-                dataset_variables = nc_dataset.variables
-                for variable in self.metadata.variables.all():
-                    if variable.name in dataset_variables.keys():
-                        dataset_variable = dataset_variables[variable.name]
-                        if variable.unit != 'Unknown':
-                            # clean up old info
-                            if hasattr(dataset_variable, 'units'):
-                                delattr(dataset_variable, 'units')
-                                dataset_variable.setncattr('units', variable.unit)
-                        if variable.descriptive_name:
-                            # clean up old info
-                            if hasattr(dataset_variable, 'long_name'):
-                                delattr(dataset_variable, 'long_name')
-                            dataset_variable.setncattr('long_name', variable.descriptive_name)
-                        if variable.method:
-                            # clean up old info
-                            if hasattr(dataset_variable, 'comment'):
-                                delattr(dataset_variable, 'comment')
-                            dataset_variable.setncattr('comment', variable.method)
-                        if variable.missing_value:
-                            if hasattr(dataset_variable, 'missing_value'):
-                                missing_value = dataset_variable.missing_value
-                                delattr(dataset_variable, 'missing_value')
-                            else:
-                                missing_value = ''
-                            try:
-                                dt = np.dtype(dataset_variable.datatype.name)
-                                missing_value = np.fromstring(variable.missing_value + ' ',
-                                                              dtype=dt.type, sep=" ")
-                            except:
-                                pass
-
-                            if missing_value:
-                                dataset_variable.setncattr('missing_value', missing_value)
-
-            # close nc dataset
-            nc_dataset.close()
-        except Exception as ex:
-            log.exception(ex.message)
-            if os.path.exists(temp_nc_file):
-                shutil.rmtree(os.path.dirname(temp_nc_file))
-            raise ex
-
-        # create the ncdump text file
-        nc_file_name = os.path.basename(temp_nc_file).split(".")[0]
-        temp_text_file = create_header_info_txt_file(temp_nc_file, nc_file_name)
-
-        # push the updated nc file and the txt file to iRODS
-        utils.replace_resource_file_on_irods(temp_nc_file, nc_res_file,
-                                             user)
-        utils.replace_resource_file_on_irods(temp_text_file, txt_res_file,
-                                             user)
-        self.metadata.is_dirty = False
-        self.metadata.save()
-        # cleanup the temp dir
-        if os.path.exists(temp_nc_file):
-            shutil.rmtree(os.path.dirname(temp_nc_file))
+        netcdf_file_update(self, nc_res_file, txt_res_file,user)
 
     @classmethod
     def set_file_type(cls, resource, file_id, user):
@@ -893,3 +786,117 @@ def create_header_info_txt_file(nc_temp_file, nc_file_name):
             dump_file_obj.write("")
 
     return dump_file
+
+
+def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
+    log = logging.getLogger()
+
+    # get the file from irods to temp dir
+    temp_nc_file = utils.get_file_from_irods(nc_res_file)
+    nc_dataset = netCDF4.Dataset(temp_nc_file, 'a')
+
+    try:
+        # update title
+        if hasattr(nc_dataset, 'title'):
+            if nc_dataset.title != instance.dataset_name:
+                delattr(nc_dataset, 'title')
+                nc_dataset.title = instance.dataset_name
+        else:
+            nc_dataset.title = instance.dataset_name
+
+        # update keywords
+        if instance.metadata.keywords:
+            if hasattr(nc_dataset, 'keywords'):
+                delattr(nc_dataset, 'keywords')
+            nc_dataset.keywords = ', '.join(instance.metadata.keywords)
+
+        # update key/value metadata
+        if instance.metadata.extra_metadata:
+            if hasattr(nc_dataset, 'hs_extra_metadata'):
+                delattr(nc_dataset, 'hs_extra_metadata')
+            extra_metadata = []
+            for k, v in instance.metadata.extra_metadata.items():
+                extra_metadata.append("{}:{}".format(k, v))
+            nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
+
+        # update temporal coverage
+        if instance.metadata.temporal_coverage:
+            for attr_name in ['time_coverage_start', 'time_coverage_end']:
+                if hasattr(nc_dataset, attr_name):
+                    delattr(nc_dataset, attr_name)
+            nc_dataset.time_coverage_start = instance.metadata.temporal_coverage.value['start']
+            nc_dataset.time_coverage_end = instance.metadata.temporal_coverage.value['end']
+
+        # update spatial coverage
+        if instance.metadata.spatial_coverage:
+            for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
+                              'geospatial_lon_max']:
+                # clean up old info
+                if hasattr(nc_dataset, attr_name):
+                    delattr(nc_dataset, attr_name)
+
+            spatial_coverage = instance.metadata.spatial_coverage
+            nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
+            nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
+            nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
+            nc_dataset.geospatial_lon_max = spatial_coverage.value['eastlimit']
+
+        # update variables
+        if instance.metadata.variables.all():
+            dataset_variables = nc_dataset.variables
+            for variable in instance.metadata.variables.all():
+                if variable.name in dataset_variables.keys():
+                    dataset_variable = dataset_variables[variable.name]
+                    if variable.unit != 'Unknown':
+                        # clean up old info
+                        if hasattr(dataset_variable, 'units'):
+                            delattr(dataset_variable, 'units')
+                            dataset_variable.setncattr('units', variable.unit)
+                    if variable.descriptive_name:
+                        # clean up old info
+                        if hasattr(dataset_variable, 'long_name'):
+                            delattr(dataset_variable, 'long_name')
+                        dataset_variable.setncattr('long_name', variable.descriptive_name)
+                    if variable.method:
+                        # clean up old info
+                        if hasattr(dataset_variable, 'comment'):
+                            delattr(dataset_variable, 'comment')
+                        dataset_variable.setncattr('comment', variable.method)
+                    if variable.missing_value:
+                        if hasattr(dataset_variable, 'missing_value'):
+                            missing_value = dataset_variable.missing_value
+                            delattr(dataset_variable, 'missing_value')
+                        else:
+                            missing_value = ''
+                        try:
+                            dt = np.dtype(dataset_variable.datatype.name)
+                            missing_value = np.fromstring(variable.missing_value + ' ',
+                                                          dtype=dt.type, sep=" ")
+                        except:
+                            pass
+
+                        if missing_value:
+                            dataset_variable.setncattr('missing_value', missing_value)
+        # TODO: update contributor, creator and the license, source, reference information for netcdf resource type
+        # close nc dataset
+        nc_dataset.close()
+    except Exception as ex:
+        log.exception(ex.message)
+        if os.path.exists(temp_nc_file):
+            shutil.rmtree(os.path.dirname(temp_nc_file))
+        raise ex
+
+    # create the ncdump text file
+    nc_file_name = os.path.basename(temp_nc_file).split(".")[0]
+    temp_text_file = create_header_info_txt_file(temp_nc_file, nc_file_name)
+
+    # push the updated nc file and the txt file to iRODS
+    utils.replace_resource_file_on_irods(temp_nc_file, nc_res_file,
+                                         user)
+    utils.replace_resource_file_on_irods(temp_text_file, txt_res_file,
+                                         user)
+    instance.metadata.is_dirty = False
+    instance.metadata.save()
+    # cleanup the temp dir
+    if os.path.exists(temp_nc_file):
+        shutil.rmtree(os.path.dirname(temp_nc_file))
