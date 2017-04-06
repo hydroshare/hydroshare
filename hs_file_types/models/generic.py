@@ -32,7 +32,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")

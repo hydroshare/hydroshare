@@ -98,16 +98,16 @@ class AbstractFileMetaData(models.Model):
 
         return root_div.render()
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True):
         """generates html forms for all the metadata elements associated with this logical file
         type
-        :param datatset_name_form If True then a form for editing dataset_name (title) attribute is
+        :param dataset_name_form If True then a form for editing dataset_name (title) attribute is
         included
         """
         root_div = div()
 
         with root_div:
-            if datatset_name_form:
+            if dataset_name_form:
                 self._get_dataset_name_form()
 
             keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
