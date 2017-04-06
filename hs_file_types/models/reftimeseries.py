@@ -56,6 +56,35 @@ class Site(object):
         return root_div.render(pretty=True)
 
 
+class Variable(object):
+    """represents a variable for timeseries data"""
+    def __init__(self, name, code):
+        self.name = name
+        self.code = code
+
+    def get_html(self):
+        """generates html code for viewing variable related data"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                # strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Name')
+                            td(self.name)
+                        with tr():
+                            get_th('Code')
+                            td(self.code)
+
+        return root_div.render(pretty=True)
+
+
 class RefTimeseriesFileMetaData(AbstractFileMetaData):
     # the metadata element models are from the hs_core app
     model_app_label = 'hs_core'
@@ -98,6 +127,17 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 site_codes.append(site.code)
         return sites
 
+    @property
+    def variables(self):
+        variables = []
+        variable_codes = []
+        for series in self.serieses:
+            if series['variableCode'] not in variable_codes:
+                variable = Variable(name=series['variable'], code=series['variableCode'])
+                variables.append(variable)
+                variable_codes.append(variable.code)
+        return variables
+
     # TODO: other properties to go here
 
     def get_html(self):
@@ -120,6 +160,11 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         html_string += site_legend.render()
         for site in self.sites:
             html_string += site.get_html()
+
+        variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
+        html_string += variable_legend.render()
+        for variable in self.variables:
+            html_string += variable.get_html()
 
         # TODO: once the above html for sites work do the same for variables
 
