@@ -19,6 +19,76 @@ from hs_core.hydroshare import utils
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
+class TimeSeries(object):
+    """represents a one timeseries metadata"""
+    def __init__(self, site_name, site_code, latitude, longitude, variable_name, variable_code,
+                 url, service_type, reference_type, return_type, start_date, end_date):
+        self.site_name = site_name
+        self.site_code = site_code
+        self.latitude = latitude
+        self.longitude = longitude
+        self.variable_name = variable_name
+        self.variable_code = variable_code
+        self.url = url
+        self.service_type = service_type
+        self.reference_type = reference_type
+        self.return_type = return_type
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def get_html(self):
+        """generates html code for viewing site related data"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                # strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Site Name')
+                            td(self.site_name)
+                        with tr():
+                            get_th('Site Code')
+                            td(self.site_code)
+                        with tr():
+                            get_th('Latitude')
+                            td(self.latitude)
+                        with tr():
+                            get_th('Longitude')
+                            td(self.longitude)
+                        with tr():
+                            get_th('Variable Name')
+                            td(self.variable_name)
+                        with tr():
+                            get_th('Variable Code')
+                            td(self.variable_code)
+                        with tr():
+                            get_th('URL')
+                            td(self.url)
+                        with tr():
+                            get_th('Service Type')
+                            td(self.service_type)
+                        with tr():
+                            get_th('Return Type')
+                            td(self.return_type)
+                        with tr():
+                            get_th('Reference Type')
+                            td(self.reference_type)
+                        with tr():
+                            get_th('Begin Date')
+                            td(self.start_date)
+                        with tr():
+                            get_th('End Date')
+                            td(self.end_date)
+
+        return root_div.render(pretty=True)
+
+
 class Site(object):
     """represents a site for timeseries data"""
     def __init__(self, name, code, latitude, longitude):
@@ -151,6 +221,30 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         return json_data_dict['timeSeriesLayerResource']['REFTS']
 
     @property
+    def time_serieses(self):
+        ts_serieses = []
+        for series in self.serieses:
+            st_date = parser.parse(series['beginDate'])
+            st_date = st_date.strftime('%m-%d-%Y')
+            end_date = parser.parse(series['endDate'])
+            end_date = end_date.strftime('%m-%d-%Y')
+            ts_series = TimeSeries(site_name=series['site'],
+                                   site_code=series['siteCode'],
+                                   latitude=series['location']['latitude'],
+                                   longitude=series['location']['longitude'],
+                                   variable_name=series['variable'],
+                                   variable_code=series['variableCode'],
+                                   url=series['url'],
+                                   service_type=series['serviceType'],
+                                   reference_type=series['refType'],
+                                   return_type=series['returnType'],
+                                   start_date=st_date,
+                                   end_date=end_date
+                                   )
+            ts_serieses.append(ts_series)
+        return ts_serieses
+
+    @property
     def sites(self):
         sites = []
         site_codes = []
@@ -206,22 +300,25 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             if self.spatial_coverage:
                 html_string += self.spatial_coverage.get_html()
 
-        site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
-        html_string += site_legend.render()
-        for site in self.sites:
-            html_string += site.get_html()
+        ts_legend = legend("Time Serieses", cls="pull-left", style="margin-top:20px;")
+        html_string += ts_legend.render()
+        for series in self.time_serieses:
+            html_string += series.get_html()
 
-        variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
-        html_string += variable_legend.render()
-        for variable in self.variables:
-            html_string += variable.get_html()
-
-        service_legend = legend("Web Services", cls="pull-left", style="margin-top:20px;")
-        html_string += service_legend.render()
-        for service in self.web_services:
-            html_string += service.get_html()
-
-        # TODO: once the above html for sites work do the same for variables
+        # site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
+        # html_string += site_legend.render()
+        # for site in self.sites:
+        #     html_string += site.get_html()
+        #
+        # variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
+        # html_string += variable_legend.render()
+        # for variable in self.variables:
+        #     html_string += variable.get_html()
+        #
+        # service_legend = legend("Web Services", cls="pull-left", style="margin-top:20px;")
+        # html_string += service_legend.render()
+        # for service in self.web_services:
+        #     html_string += service.get_html()
 
         html_string += self.get_json_file_data_html().render()
         template = Template(html_string)
@@ -247,17 +344,21 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                                    onclick="metadata_update_ajax_submit("
                                            "'id-coverage-spatial-filetype');")
 
-            legend("Sites", cls="pull-left", style="margin-top:20px;")
-            for site in self.sites:
-                site.get_html()
+            legend("Time Serieses", cls="pull-left", style="margin-top:20px;")
+            for series in self.time_serieses:
+                series.get_html()
 
-            legend("Variables", cls="pull-left", style="margin-top:20px;")
-            for variable in self.variables:
-                variable.get_html()
-
-            legend("Web Services", cls="pull-left", style="margin-top:20px;")
-            for service in self.web_services:
-                service.get_html()
+            # legend("Sites", cls="pull-left", style="margin-top:20px;")
+            # for site in self.sites:
+            #     site.get_html()
+            #
+            # legend("Variables", cls="pull-left", style="margin-top:20px;")
+            # for variable in self.variables:
+            #     variable.get_html()
+            #
+            # legend("Web Services", cls="pull-left", style="margin-top:20px;")
+            # for service in self.web_services:
+            #     service.get_html()
 
             self.get_json_file_data_html()
 
