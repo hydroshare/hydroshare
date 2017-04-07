@@ -515,6 +515,12 @@ function showFileTypeMetadata(){
              // Variable elements
              $("[id ^=id_Variable-][id $=-type]").css('pointer-events', 'none');
          }
+         if (logical_type === "RefTimeseriesLogicalFile"){
+             var $startDateElement = $("#id_start_filetype");
+             var $endDateElement = $("#id_end_filetype");
+             $startDateElement.css('pointer-events', 'none');
+             $endDateElement.css('pointer-events', 'none');
+         }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);
              $("#div_id_type_filetype input:radio").trigger("change");
