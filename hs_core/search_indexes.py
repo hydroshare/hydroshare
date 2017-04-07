@@ -59,9 +59,20 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     field_name = indexes.CharField()
     field_type = indexes.CharField()
     field_type_code = indexes.CharField()
-    variables = indexes.MultiValueField(faceted=True)
+    variable_names = indexes.MultiValueField(faceted=True)
+    variable_types = indexes.MultiValueField()
+    variable_shapes = indexes.MultiValueField()
+    variable_descriptive_names = indexes.MultiValueField()
+    variable_speciations = indexes.MultiValueField()
     sites = indexes.MultiValueField()
     methods = indexes.MultiValueField()
+    quality_levels = indexes.MultiValueField()
+    data_sources = indexes.MultiValueField()
+    series_names = indexes.MultiValueField()
+    sample_mediums = indexes.MultiValueField(faceted=True)
+    units_names = indexes.MultiValueField(faceted=True)
+    units_types = indexes.MultiValueField(faceted=True)
+    aggregation_statistics = indexes.MultiValueField(faceted=True)
 
     def get_model(self):
         return BaseResource
@@ -406,18 +417,137 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
 
-    def prepare_variables(self, obj):
-        variables = []
+    def prepare_variable_names(self, obj):
+        variable_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variables.append(variable.name)
+                    variable_names.append(variable.name)
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    variables.append(variable.name)
+                    variable_names.append(variable.name)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
+                for variable in obj.metadata.variables:
+                    variable_names.append(variable.variable_name)
+        return variable_names
+
+    def prepare_variable_types(self, obj):
+        variable_types = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variables.append(variable.variable_name)
-        return variables
+                    variable_types.append(variable.type)
+            elif isinstance(obj.metadata, RefTSMetadata):
+                for variable in obj.metadata.variables.all():
+                    variable_types.append(variable.data_type)
+            elif isinstance(obj.metadata, TimeSeriesMetaData):
+                for variable in obj.metadata.variables:
+                    variable_types.append(variable.variable_type)
+        return variable_types
+
+    def prepare_variable_shapes(self, obj):
+        variable_shapes = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, NetcdfMetaData):
+                for variable in obj.metadata.variables.all():
+                    variable_shapes.append(variable.shape)
+        return variable_shapes
+
+    def prepare_variable_descriptive_names(self, obj):
+        variable_descriptive_names = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, NetcdfMetaData):
+                for variable in obj.metadata.variables.all():
+                    variable_descriptive_names.append(variable.descriptive_name)
+        return variable_descriptive_names
+
+    def prepare_variable_speciations(self, obj):
+        variable_speciations = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for variable in obj.metadata.variables:
+                    variable_speciations.append(variable.speciation)
+        return variable_speciations
+
+    def prepare_sites(self, obj):
+        sites = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, RefTSMetadata):
+                for site in obj.metadata.sites.all():
+                    sites.append(site.name)
+            elif isinstance(obj.metadata, TimeSeriesMetaData):
+                for site in obj.metadata.sites:
+                    sites.append(site.site_name)
+        return sites
+
+    def prepare_methods(self, obj):
+        methods = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, RefTSMetadata):
+                for method in obj.metadata.methods.all():
+                    methods.append(method.description)
+            elif isinstance(obj.metadata, TimeSeriesMetaData):
+                for method in obj.metadata.methods:
+                    methods.append(method.method_description)
+        return methods
 
 
+    def prepare_quality_levels(self, obj):
+        quality_levels = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, RefTSMetadata):
+                for quality_level in obj.metadata.quality_levels.all():
+                    quality_levels.append(quality_level.code)
+        return quality_levels
+
+    def prepare_data_sources(self, obj):
+        data_sources = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, RefTSMetadata):
+                for data_source in obj.metadata.datasources.all():
+                    data_sources.append(data_source.code)
+        return data_sources
+
+    def prepare_series_names(self, obj):
+        series_names = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for series_name in obj.metadata.methods:
+                    series_names.append(series_name)
+        return series_names
+
+
+    def prepare_sample_mediums(self, obj):
+        sample_mediums = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for time_series_result in obj.metadata.time_series_results:
+                    sample_mediums.append(time_series_result.sample_medium)
+            elif isinstance(obj.metadata, RefTSMetadata):
+                for variable in obj.metadata.variables.all():
+                    sample_mediums.append(variable.sample_medium)
+        return sample_mediums
+
+    def prepare_units_names(self, obj):
+        units_names = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for time_series_result in obj.metadata.time_series_results:
+                    units_names.append(time_series_result.units_name)
+        return units_names
+
+    def prepare_units_types(self, obj):
+        units_types = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for time_series_result in obj.metadata.time_series_results:
+                    units_types.append(time_series_result.units_type)
+        return units_types
+
+    def prepare_aggregation_statistics(self, obj):
+        aggregation_statistics = []
+        if hasattr(obj, 'metadata'):
+            if isinstance(obj.metadata, TimeSeriesMetaData):
+                for time_series_result in obj.metadata.time_series_results:
+                    aggregation_statistics.append(time_series_result.aggregation_statistics)
+        return aggregation_statistics
