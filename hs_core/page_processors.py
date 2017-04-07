@@ -1,3 +1,4 @@
+from dateutil import parser
 from functools import partial, wraps
 
 from django.core.exceptions import PermissionDenied
@@ -163,8 +164,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
             temporal_coverage = temporal_coverages[0]
-            temporal_coverage_data_dict['start_date'] = temporal_coverage.value['start']
-            temporal_coverage_data_dict['end_date'] = temporal_coverage.value['end']
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_data_dict['start_date'] = start_date.strftime('%m-%d-%Y')
+            temporal_coverage_data_dict['end_date'] = end_date.strftime('%m-%d-%Y')
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         else:
             temporal_coverage_data_dict = None
@@ -350,8 +353,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     temporal_coverage_data_dict = {}
     if len(temporal_coverages) > 0:
         temporal_coverage = temporal_coverages[0]
-        temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
-        temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
+        start_date = parser.parse(temporal_coverage.value['start'])
+        end_date = parser.parse(temporal_coverage.value['end'])
+        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:
