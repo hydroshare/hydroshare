@@ -3,6 +3,7 @@ import shutil
 import json
 import logging
 from dateutil import parser
+import jsonschema
 
 from django.utils import timezone
 from django.db import models, transaction
@@ -582,7 +583,62 @@ def _extract_metadata(resource, logical_file):
 def _validate_json_file(res_json_file):
     json_file_content = res_json_file.resource_file.read()
     try:
-        json.loads(json_file_content)
+        json_data = json.loads(json_file_content)
+        # validate json_data based on the schema
+        jsonschema.validate(json_data, TS_SCHEMA)
+
+        # test that there is no duplicate time series data
+        ts_serieses = json_data['timeSeriesLayerResource']['REFTS']
+        locations = []
+        for item in ts_serieses:
+            # remove the inner dictionary item with key of 'location'
+            if 'location' in item.keys():
+                locations.append(item.pop('location'))
+
+        ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
+        if len(ts_serieses) != len(ts_unique_serieses):
+            raise Exception("Duplicate time series found")
+        if not locations:
+            raise Exception("Invalid reference time series file")
     except:
         json_file_content = ''
     return json_file_content
+
+TS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "timeSeriesLayerResource": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "abstract": {"type": "string"},
+                "fileVersion": {"type": "number"},
+                "keyWords": {"type": "array"},
+                "symbol": {"type": "string"},
+                "REFTS": {
+                    "type": "array",
+                    "properties": {
+                        "beginDate": {"type": "string"},
+                        "endDate": {"type": "string"},
+                        "location": {
+                            "type": "object",
+                            "properties": {
+                                "latitude": {"type": "number"},
+                                "longitude": {"type": "number"},
+                                "netWorkName": {"type": "string"},
+                                "refType": {"type": "string"},
+                                "returnType": {"type": "string"},
+                                "serviceType": {"type": "string"},
+                                "site": {"type": "string"},
+                                "siteCode": {"type": "string"},
+                                "url": {"type": "string"},
+                                "variable": {"type": "string"},
+                                "variableCode": {"type": "string"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
