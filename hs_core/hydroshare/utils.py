@@ -771,8 +771,12 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
     metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
     metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
 
-    creator_data = get_party_data_from_user(resource.creator)
-    metadata.append({'creator': creator_data})
+    # only add the resource creator as the creator for metadata if there is not already
+    # creator data in the metadata object
+    metadata_keys = [element.keys()[0].lower() for element in metadata]
+    if 'creator' not in metadata_keys:
+        creator_data = get_party_data_from_user(resource.creator)
+        metadata.append({'creator': creator_data})
 
 
 def get_party_data_from_user(user):

@@ -957,7 +957,6 @@ li.account p{
 
 .contact-table {
 	table-layout: fixed;
-	border: 1px solid #DDD;
 }
 
 .contact-table .drag-indicator > i {
@@ -972,6 +971,34 @@ li.account p{
     width: calc(20% - 20px);
 }
 
+.hs-table {
+	border: 1px solid #DDD;
+	border-collapse: collapse !important;
+}
+
+.hs-table tr {
+	border: 1px solid #DDD;
+	background: #FFF;
+}
+
+.hs-table td, .hs-table th {
+	padding: 10px 18px !important;
+}
+
+.hs-table thead tr {
+    border-bottom: 1px solid #DDD;
+}
+
+.hs-table thead tr th {
+	background-color: #F1F1F1;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.contact-table-view td {
+	width: 25%;
+}
+
 .contact-table td {
 	width: 20%;
 	border-top: 0 !important;
@@ -979,24 +1006,6 @@ li.account p{
 	text-overflow: ellipsis;
 }
 
-.contact-table tr {
-	border: 1px solid #DDD;
-	background: #FFF;
-}
-
-.contact-table-view td {
-	width: 25%;
-}
-
-#contactTab table .header-row {
-    border-bottom: 1px solid #DDD;
-}
-
-#contactTab table .header-row th {
-	background-color: #F1F1F1;
-	text-overflow: ellipsis;
-	overflow: hidden;
-}
 
 #txt-abstract{
     height: 155px;
@@ -1008,10 +1017,6 @@ span.remove{
     height: 100% !important;
     background: #EEE;
     top: 0;
-}
-
-.form-control{
-    margin-bottom:8px;
 }
 
 .no-padding{
@@ -1145,8 +1150,8 @@ span.remove {
 	margin: 1px;
 }
 
-.form-control{
-    margin-bottom:8px;
+.form-control, .controls .input-group .form-control {
+	margin-bottom: 8px;
 }
 
 .no-padding{
@@ -1643,13 +1648,24 @@ body > .main-container {
 }
 
 #citation-text {
-    display: inline-block;
-    width: 100%;
-    min-height: 30px;
-    background: #EEE;
-    border: 1px solid #cccccc;
-    border-radius: 0px;
-    padding: 4px;
+	display: inline-block;
+	width: calc(100% - 65px);
+	min-height: 30px;
+	background: #EEE;
+	border: 1px solid #CCC;
+	border-radius: 0;
+	padding: 4px;
+	cursor: default;
+	line-height: 24px;
+}
+
+.clipboard-copy {
+	border-radius: 0;
+	margin-left: -1px;
+}
+
+.flex {
+	display: flex;
 }
 
 #citation-text a, .rights-url a{
@@ -1720,8 +1736,6 @@ a.tag:hover {
 }
 
 .tab-elements {
-    overflow-x:auto;
-    overflow-y:hidden;
     margin-top: 20px;
     border:0;
 }
@@ -3796,10 +3810,6 @@ div.group-add-photo {
     margin-bottom: 20px;
 }
 
-.funding-agencies-table {
-    border: 1px solid #DDD;
-}
-
 #collection-table_wrapper {
     margin-bottom: 20px;
 }
@@ -4510,4 +4520,18 @@ div#fb-file-operations-controls {
 
 .ui-widget-overlay {
 	z-index: 1031 !important;
+}
+
+/*Coordinates picker styling*/
+#picker-map-container {
+	height: 300px;
+	margin: 0 1px;
+}
+
+#coordinates-picker-modal .modal-footer {
+	margin-top: 0;
+}
+
+.btn-choose-coordinates {
+	vertical-align: top;
 }

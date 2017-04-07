@@ -1162,7 +1162,7 @@ class Coverage(AbstractMetaDataElement):
 
         with root_div:
             if self.type == 'box' or self.type == 'point':
-                legend('Original Coverage')
+                legend('Spatial Coverage')
                 with table(cls='custom-table'):
                     with tbody():
                         with tr():
@@ -1229,8 +1229,7 @@ class Coverage(AbstractMetaDataElement):
     def get_spatial_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
         from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
-        # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
-        # coverage_data_dict['units'] = 'Decimal degrees'
+
         if element is not None:
             coverage_data_dict['type'] = element.type
             coverage_data_dict['name'] = element.value.get('name', "")

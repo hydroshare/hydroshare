@@ -132,6 +132,28 @@ class CompositeResource(BaseResource):
             # allow moving stuff there
             return check_directory()
 
+    def can_add_files(self, target_full_path):
+        """
+        checks if file(s) can be uploaded to the specified *target_full_path*
+        :param target_full_path: full folder path name where file needs to be uploaded to
+        :return: True or False
+        """
+        istorage = self.get_irods_storage()
+        if istorage.exists(target_full_path):
+            path_to_check = target_full_path
+        else:
+            return False
+
+        if not path_to_check.endswith("data/contents"):
+            # it is not the base directory - it must be a directory under base dir
+            res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
+                             res_file_obj.dir_path == path_to_check]
+
+            for res_file_obj in res_file_objs:
+                if not res_file_obj.logical_file.supports_resource_file_add:
+                    return False
+        return True
+
     def supports_zip(self, folder_to_zip):
         """check if the given folder can be zipped or not"""
 

@@ -96,8 +96,8 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # there should be abstract element
         self.assertNotEqual(self.resNetcdf.metadata.description, None)
 
-        # there should be 2 creator element
-        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
+        # there should be 1 creator element (based on the extracted metadata)
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
 
         # there should be 1 contributor element
         self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)

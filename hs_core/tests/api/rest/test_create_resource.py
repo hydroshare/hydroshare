@@ -193,8 +193,10 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEqual(contributor.phone, con_phone)
         self.assertEqual(contributor.homepage, con_homepage)
 
-        # there should be 2 creators
-        self.assertEqual(resource.metadata.creators.all().count(), 2)
+        # there should be 1 creator (based on the metadata we provided for one creator)
+        # system automatically adds the user who creates the resource as the creator
+        # only in the case where not metadata for creator is provided.
+        self.assertEqual(resource.metadata.creators.all().count(), 1)
         creator = resource.metadata.creators.filter(name=cr_name).first()
         self.assertEqual(creator.name, cr_name)
         self.assertEqual(creator.organization, cr_org)

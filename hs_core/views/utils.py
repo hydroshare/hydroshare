@@ -352,13 +352,19 @@ def get_my_resources_list(request):
     # remove obsoleted resources from the owned_resources
     owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+
+    # get a list of resources with effective CHANGE privilege (should include resources that the
+    # user has access to via group
+    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE,
+                                                                         via_group=True)
     # remove obsoleted resources from the editable_resources
     editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+
+    # get a list of resources with effective VIEW privilege (should include resources that the
+    # user has access via group
+    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
+                                                                         via_group=True)
     # remove obsoleted resources from the viewable_resources
     viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
         type='isReplacedBy').values('object_id'))
@@ -521,7 +527,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
     Note: the need to copy and recreate the file object was made unnecessary
     by the ResourceFile.set_storage_path routine, which always sets that
-    correctly. Thus it is possible to move without copying.
+    correctly. Thus it is possible to move without copying. Thus, logical file
+    relationships are preserved and no longer need adjustment. 
     """
     # checks src_name as a side effect.
     folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,

@@ -109,7 +109,8 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata)
+                                            extract_metadata=extract_metadata,
+                                            folder=file_folder)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         msg = 'file_size_error: ' + ex.message
