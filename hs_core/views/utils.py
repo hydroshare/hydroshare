@@ -528,7 +528,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     Note: the need to copy and recreate the file object was made unnecessary
     by the ResourceFile.set_storage_path routine, which always sets that
     correctly. Thus it is possible to move without copying. Thus, logical file
-    relationships are preserved and no longer need adjustment. 
+    relationships are preserved and no longer need adjustment.
     """
     # checks src_name as a side effect.
     folder, base = ResourceFile.resource_path_is_acceptable(resource, src_name,
@@ -560,7 +560,7 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     :user  user who initiated the folder delete operation
     :return:
     """
-    # TODO: Istorage parameter is redundant; derived from resource; can be deleted. 
+    # TODO: Istorage parameter is redundant; derived from resource; can be deleted.
     if resource and istorage and folderpath:
         if not folderpath.endswith('/'):
             folderpath += '/'

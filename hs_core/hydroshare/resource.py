@@ -784,7 +784,7 @@ def filter_condition(filename_or_id, fl):
         return fl.short_path == filename_or_id
 
 
-# TODO: Remove option for file id, not needed since names are unique. 
+# TODO: Remove option for file id, not needed since names are unique.
 # TODO: Test that short_path deletes properly.
 def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """

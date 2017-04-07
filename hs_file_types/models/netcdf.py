@@ -540,9 +540,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                                 resource, uploaded_file, folder=upload_folder
                             )
 
-                            # Alva: this argument does nothing.
-                            # fed_res_file_name_or_path=fed_file_full_path
-
                             # make each resource file we added part of the logical file
                             logical_file.add_resource_file(new_res_file)
 
