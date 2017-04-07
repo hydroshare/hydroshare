@@ -1133,7 +1133,7 @@ function initializeDatePickers(){
         if($(this).attr('data-date')){
             // resource temporal date picker
             dateString = $(this).attr("data-date").split("-");
-            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
+            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2].substring(0, 2));
         }
         else{
             // file type temporal date picker
