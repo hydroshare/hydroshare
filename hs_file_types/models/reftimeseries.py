@@ -3,6 +3,7 @@ import shutil
 import json
 import logging
 from dateutil import parser
+from urllib2 import Request, urlopen, URLError
 import jsonschema
 
 from django.utils import timezone
@@ -458,9 +459,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         files_to_add_to_resource = []
         if res_file.has_generic_logical_file:
             # TODO: validate the temp_file (json file)
-            json_file_content = _validate_json_file(res_file)
-            if not json_file_content:
-                raise ValidationError("Not a valid Ref Timeseries file.")
+            try:
+                json_file_content = _validate_json_file(res_file)
+            except Exception as ex:
+                raise ValidationError(ex.message)
 
             # get the file from irods to temp dir
             temp_file = utils.get_file_from_irods(res_file)
@@ -584,25 +586,55 @@ def _validate_json_file(res_json_file):
     json_file_content = res_json_file.resource_file.read()
     try:
         json_data = json.loads(json_file_content)
+    except:
+        raise Exception("Not a json file")
+    try:
         # validate json_data based on the schema
         jsonschema.validate(json_data, TS_SCHEMA)
+    except Exception:
+        raise Exception("Not a valid reference time series json file")
 
-        # test that there is no duplicate time series data
-        ts_serieses = json_data['timeSeriesLayerResource']['REFTS']
-        locations = []
-        for item in ts_serieses:
-            # remove the inner dictionary item with key of 'location'
-            if 'location' in item.keys():
-                locations.append(item.pop('location'))
+    # test that there is no duplicate time series data
+    ts_serieses = json_data['timeSeriesLayerResource']['REFTS']
+    locations = []
+    for item in ts_serieses:
+        # remove the inner dictionary item with key of 'location'
+        if 'location' in item.keys():
+            locations.append(item.pop('location'))
 
-        ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
-        if len(ts_serieses) != len(ts_unique_serieses):
-            raise Exception("Duplicate time series found")
-        if not locations:
-            raise Exception("Invalid reference time series file")
-    except:
-        json_file_content = ''
+    ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
+    if len(ts_serieses) != len(ts_unique_serieses):
+        raise Exception("Duplicate time series found")
+    if not locations:
+        raise Exception("Not a valid reference time series json file")
+    _validate_json_data(ts_serieses)
     return json_file_content
+
+
+def _validate_json_data(series_data):
+    # 1. here we need to test that the date values are actually date type data
+    # the beginDate <= endDate
+    # 2. the url is valid and live
+
+    err_msg = "Invalid json file. {}"
+    for series in series_data:
+        try:
+            start_date = parser.parse(series['beginDate'])
+            end_date = parser.parse(series['endDate'])
+        except Exception:
+            raise Exception(err_msg.format("Invalid date values"))
+
+        if timezone.is_aware(start_date):
+            start_date = timezone.make_naive(start_date)
+        if timezone.is_aware(end_date):
+            end_date = timezone.make_naive(end_date)
+        if start_date > end_date:
+            raise Exception(err_msg.format("Invalid date values"))
+        req = Request(series['url'])
+        try:
+            urlopen(req)
+        except URLError:
+            raise Exception(err_msg.format("Invalid URL found"))
 
 TS_SCHEMA = {
     "type": "object",
@@ -613,7 +645,10 @@ TS_SCHEMA = {
                 "title": {"type": "string"},
                 "abstract": {"type": "string"},
                 "fileVersion": {"type": "number"},
-                "keyWords": {"type": "array"},
+                "keyWords": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
                 "symbol": {"type": "string"},
                 "REFTS": {
                     "type": "array",
@@ -623,22 +658,26 @@ TS_SCHEMA = {
                         "location": {
                             "type": "object",
                             "properties": {
-                                "latitude": {"type": "number"},
-                                "longitude": {"type": "number"},
-                                "netWorkName": {"type": "string"},
-                                "refType": {"type": "string"},
-                                "returnType": {"type": "string"},
-                                "serviceType": {"type": "string"},
-                                "site": {"type": "string"},
-                                "siteCode": {"type": "string"},
-                                "url": {"type": "string"},
-                                "variable": {"type": "string"},
-                                "variableCode": {"type": "string"}
-                            }
-                        }
-                    }
+                                "latitude": {"type": "number", "minimum": -90, "maximum": 90},
+                                "longitude": {"type": "number", "minimum": -180, "maximum": 180},
+                            },
+                        },
+                        "netWorkName": {"type": "string"},
+                        "refType": {"type": "string"},
+                        "returnType": {"type": "string"},
+                        "serviceType": {"type": "string"},
+                        "site": {"type": "string"},
+                        "siteCode": {"type": "string"},
+                        "url": {"type": "string"},
+                        "variable": {"type": "string"},
+                        "variableCode": {"type": "string"}
+                    },
+                    "required": ["beginDate", "endDate", "location", "netWorkName", "refType",
+                                 "returnType", "serviceType", "site", "siteCode", "url",
+                                 "variable", "variableCode"]
                 }
-            }
+            },
+            "required": ["title", "abstract", "fileVersion", "keyWords", "symbol", "REFTS"]
         }
     }
 }
