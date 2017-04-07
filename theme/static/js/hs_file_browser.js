@@ -469,7 +469,7 @@ function showFileTypeMetadata(){
      if (logical_file_id.length == 0){
          return;
      }
-     var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+     var logical_type = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
      var resource_mode = $("#resource-mode").val();
      resource_mode = resource_mode.toLowerCase();
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
