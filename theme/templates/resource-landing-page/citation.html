@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
-                <div id="citation-text">{{ citation }}</div>
+                <div id="citation-text" class="url-clickable">{{ citation }}</div>
 
                 <button class="btn btn-default clipboard-copy" data-target="citation-text"
                         type="button">
@@ -169,7 +169,7 @@
                 </div>
 
                 {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
-                    <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
+                    <div class="label-public">Note that making the resource public may take a little extra time to update
                             Hyrax server in order to provide OPeNDAP service for this resource. </div>
                 {% endif %}
 
