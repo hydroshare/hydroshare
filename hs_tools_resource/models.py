@@ -5,6 +5,7 @@ import imghdr
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -240,12 +241,13 @@ class ToolIcon(AbstractMetaDataElement):
     def _validate_tool_icon(cls, url):
         try:
             response = requests.get(url, verify=False)
-        except:
+        except Exception:
             raise ValidationError("Failed to read data from given url.")
         if response.status_code != 200:
-            raise ValidationError("Failed to read data from given url.")
-        image_size_mb = float(response.headers["content-length"])/1024.0/1024.0
-        if image_size_mb > 1:
+            raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
+                               fromat(response.status_code))
+        image_size_mb = float(response.headers["content-length"])
+        if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
         image_type = imghdr.what(None, h=response.content)
         if image_type not in ["png", "gif", "jpeg"]:
