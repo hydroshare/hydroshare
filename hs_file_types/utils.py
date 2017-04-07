@@ -105,6 +105,10 @@ def update_resource_coverage_element(resource):
                 date_data[key] = coverage_element.value[key]
 
     for temp_cov in temporal_coverages:
+        start_date = parser.parse(temp_cov.value['start'])
+        end_date = parser.parse(temp_cov.value['end'])
+        temp_cov.value['start'] = start_date.strftime('%m/%d/%Y')
+        temp_cov.value['end'] = end_date.strftime('%m/%d/%Y')
         set_date_value(date_data, temp_cov, 'start')
         set_date_value(date_data, temp_cov, 'end')
 
