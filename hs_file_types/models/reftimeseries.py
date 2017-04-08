@@ -296,6 +296,12 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 h4("No file level metadata exists for the selected file.")
             html_string = root_div.render()
         else:
+            abstract_div = div(cls="col-xs-12 content-block")
+            with abstract_div:
+                legend("Abstract")
+                p(self.abstract)
+
+            html_string += abstract_div.render()
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
 
@@ -307,6 +313,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         for series in self.time_serieses:
             html_string += series.get_html()
 
+        # TODO: delete these commented code
         # site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
         # html_string += site_legend.render()
         # for site in self.sites:
@@ -327,12 +334,17 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, dataset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
-            super(RefTimeseriesFileMetaData, self).get_html_forms()
+            super(RefTimeseriesFileMetaData, self).get_html_forms(temporal_coverage=False)
+            abstract_div = div(cls="col-xs-12 content-block")
+            with abstract_div:
+                legend("Abstract")
+                p(self.abstract)
+            self.get_temporal_coverage_html_form()
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
                           method="post", enctype="multipart/form-data"):
@@ -350,6 +362,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             for series in self.time_serieses:
                 series.get_html()
 
+            # TODO: delete these commented code
             # legend("Sites", cls="pull-left", style="margin-top:20px;")
             # for site in self.sites:
             #     site.get_html()

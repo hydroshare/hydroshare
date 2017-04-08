@@ -55,14 +55,12 @@ class AbstractFileMetaData(models.Model):
         """
 
         root_div = div()
-        dataset_name_div = div()
+        dataset_name_div = div(cls="col-xs-12 content-block")
         if self.logical_file.dataset_name:
             with dataset_name_div:
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            th("Title", cls="text-muted")
-                            td(self.logical_file.dataset_name)
+                legend("Title")
+                p(self.logical_file.dataset_name)
+
         keywords_div = div()
         if self.keywords:
             keywords_div = div(cls="col-sm-12 content-block")
@@ -98,7 +96,7 @@ class AbstractFileMetaData(models.Model):
 
         return root_div.render()
 
-    def get_html_forms(self, dataset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """generates html forms for all the metadata elements associated with this logical file
         type
         :param dataset_name_form If True then a form for editing dataset_name (title) attribute is
@@ -141,7 +139,8 @@ class AbstractFileMetaData(models.Model):
                   cls="text-danger small", style="display: none;")
 
             self.get_extra_metadata_html_form()
-            self.get_temporal_coverage_html_form()
+            if temporal_coverage:
+                self.get_temporal_coverage_html_form()
         return root_div
 
     def get_spatial_coverage_form(self, allow_edit=False):
@@ -163,9 +162,9 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
-                with div(cls="col-lg-12 content-block"):
+                with div(cls="col-lg-12"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     with table(cls="table table-striped funding-agencies-table",
@@ -197,9 +196,9 @@ class AbstractFileMetaData(models.Model):
                     self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
-            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            root_div_extra = div(id="filetype-extra-metadata")
             with root_div_extra:
-                with div(cls="col-lg-12 content-block"):
+                with div(cls="col-lg-12"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     self._get_add_key_value_modal_form()
@@ -208,7 +207,7 @@ class AbstractFileMetaData(models.Model):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(cls="row", id="temporal-coverage-filetype")
+        root_div = div(id="temporal-coverage-filetype")
         with root_div:
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
