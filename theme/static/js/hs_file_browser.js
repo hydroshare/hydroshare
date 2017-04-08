@@ -1388,10 +1388,14 @@ function setFileType(fileType){
     var calls = [];
     calls.push(set_file_type_ajax_submit(url));
     // Wait for the asynchronous calls to finish to get new folder structure
-    $.when.apply($, calls).done(function () {
+    $.when.apply($, calls).done(function (result) {
+       $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+       var json_response = JSON.parse(result);
        $("#fileTypeMetaDataTab").html(file_metadata_alert);
        // page refresh is needed to show any extracted metadata used at the resource level
-       window.location = window.location.href;
+       if (json_response.status === 'success'){
+            window.location = window.location.href;
+       }
     });
 }
 // Used to set the previous scroll position after refresh
