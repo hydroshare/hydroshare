@@ -1,11 +1,7 @@
 import os
-import tempfile
 import shutil
 
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
-from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -13,10 +9,10 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.models import BaseResource, ResourceFile
 from hs_core.views import create_resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
+class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCreateResourceViewFunctions, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -32,10 +28,6 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.factory = RequestFactory()
-
-        self.temp_dir = tempfile.mkdtemp()
-
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
@@ -48,11 +40,6 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
         shutil.copy(self.netcdf_bad_file, target_temp_bad_netcdf_file)
         self.netcdf_bad_file_obj = open(target_temp_bad_netcdf_file, 'r')
 
-    def tearDown(self):
-        super(TestCreateResourceViewFunctions, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
-
     def test_create_resource(self):
         # here we are testing the create_resource view function
 
@@ -64,8 +51,8 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
         request.user = self.user
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -84,8 +71,8 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
         request.user = self.user
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -112,24 +99,11 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, TestCase):
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
         request.user = self.user
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # this should take back to create_resource.html page as resource was not created
         self.assertIn('<!doctype html>', response.content)
         self.assertEqual(BaseResource.objects.count(), 0)
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()
