@@ -1,18 +1,16 @@
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
-from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
+from hs_core.testing import ViewTestCase
 from hs_core import hydroshare
 from hs_core.views import create_user_group, update_user_group, delete_user_group, \
     restore_user_group
 
 
-class TestGroupCRUD(TestCase):
+class TestGroupCRUD(ViewTestCase):
 
     def setUp(self):
         super(TestGroupCRUD, self).setUp()
@@ -38,7 +36,6 @@ class TestGroupCRUD(TestCase):
             password='mkmypassword',
             groups=[]
         )
-        self.factory = RequestFactory()
 
     def test_create_group(self):
         # here we are testing the create_user_group view function
@@ -53,8 +50,8 @@ class TestGroupCRUD(TestCase):
         request.user = self.john
         expected_new_group_id = Group.objects.all().order_by("-id").first().id + 1
         request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = create_user_group(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -78,8 +75,8 @@ class TestGroupCRUD(TestCase):
         request.user = self.john
         expected_new_group_id = Group.objects.all().order_by("-id").first().id + 1
         request.META['HTTP_REFERER'] = '/group/{}'.format(expected_new_group_id - 1)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = create_user_group(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertNotEqual(response['Location'], '/group/{}'.format(expected_new_group_id))
@@ -111,8 +108,8 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -144,8 +141,8 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = update_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -177,8 +174,8 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -211,8 +208,8 @@ class TestGroupCRUD(TestCase):
         # mike does not have permission to delete this group - delete should fail
         request.user = self.mike
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = delete_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -248,8 +245,8 @@ class TestGroupCRUD(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -286,8 +283,8 @@ class TestGroupCRUD(TestCase):
         # mike does not have permission over new_group - restore should fail
         request.user = self.mike
         request.META['HTTP_REFERER'] = '/group/{}'.format(new_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = restore_user_group(request, group_id=new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -297,16 +294,3 @@ class TestGroupCRUD(TestCase):
         new_group.gaccess.refresh_from_db()
         # group should still be inactive
         self.assertEqual(new_group.gaccess.active, False)
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()

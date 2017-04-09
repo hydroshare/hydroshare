@@ -1,19 +1,16 @@
 import json
 
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
-from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import add_metadata_element, update_metadata_element, delete_metadata_element
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
+class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCRUDMetadata, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -34,8 +31,6 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
             title='Generic Resource Key/Value Metadata Testing'
         )
 
-        self.factory = RequestFactory()
-
     def test_CRUD_metadata(self):
         # here we are testing the add_metadata_element view function
 
@@ -50,7 +45,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self._set_request_message_attributes(request)
+        self.set_request_message_attributes(request)
         response = add_metadata_element(request, shortkey=self.gen_res.short_id,
                                         element_name='subject')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -75,7 +70,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self._set_request_message_attributes(request)
+        self.set_request_message_attributes(request)
         response = update_metadata_element(request, shortkey=self.gen_res.short_id,
                                            element_name='title', element_id=title_element.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -96,7 +91,7 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self._set_request_message_attributes(request)
+        self.set_request_message_attributes(request)
         response = add_metadata_element(request, shortkey=self.gen_res.short_id,
                                         element_name='contributor')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -117,8 +112,8 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
 
         request.META['HTTP_REFERER'] = 'some-url'
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = delete_metadata_element(request, shortkey=self.gen_res.short_id,
                                            element_name='contributor', element_id=contributor.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -128,16 +123,3 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.gen_res.metadata.contributors.count(), 0)
 
         hydroshare.delete_resource(self.gen_res.short_id)
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()

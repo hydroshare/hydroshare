@@ -1,7 +1,12 @@
 import os
 from dateutil import parser
+import tempfile
+import  shutil
 
 from django.conf import settings
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.test import TestCase, RequestFactory
 
 from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
@@ -626,3 +631,30 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
         # there should not be any UTCOffset element
         self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
+
+
+class ViewTestCase(TestCase):
+    def setUp(self):
+        super(ViewTestCase, self).setUp()
+        self.factory = RequestFactory()
+        self.temp_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        super(ViewTestCase, self).tearDown()
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+
+    @staticmethod
+    def set_request_message_attributes(request):
+        # the following 3 lines are for preventing error in unit test due to the view being
+        # tested uses messaging middleware
+        setattr(request, 'session', 'session')
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
+
+    @staticmethod
+    def add_session_to_request(request):
+        """Annotate a request object with a session"""
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        request.session.save()

@@ -1,18 +1,16 @@
 import json
 
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
-from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import update_key_value_metadata
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, TestCase):
+class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestUpdateKeyValueMetadata, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -33,8 +31,6 @@ class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, TestCase):
             title='Generic Resource Key/Value Metadata Testing'
         )
 
-        self.factory = RequestFactory()
-
     def test_update_key_value_metadata(self):
         # here we are testing the update_key_value_metadata view function
 
@@ -49,7 +45,7 @@ class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self._set_request_message_attributes(request)
+        self.set_request_message_attributes(request)
         response = update_key_value_metadata(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content)
@@ -66,7 +62,7 @@ class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, TestCase):
         request.user = self.user
         # make it a ajax request
         request.META['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest'
-        self._set_request_message_attributes(request)
+        self.set_request_message_attributes(request)
         response = update_key_value_metadata(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_dict = json.loads(response.content)
@@ -75,10 +71,3 @@ class TestUpdateKeyValueMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.gen_res.extra_metadata, post_data)
 
         hydroshare.delete_resource(self.gen_res.short_id)
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)

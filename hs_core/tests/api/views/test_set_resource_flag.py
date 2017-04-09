@@ -1,24 +1,18 @@
 import os
-import tempfile
-import shutil
 
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.contrib.messages.storage.fallback import FallbackStorage
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.core.urlresolvers import reverse
 from django.core.files.uploadedfile import UploadedFile
 
-
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import set_resource_flag
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
+class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestSetResourceFlag, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -38,7 +32,6 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
             owner=self.user,
             title='Generic Resource Set Flag Testing-1'
         )
-        self.temp_dir = tempfile.mkdtemp()
 
         # Make a text file
         self.txt_file_name = 'text.txt'
@@ -60,13 +53,6 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
             metadata=metadata_dict
         )
 
-        self.factory = RequestFactory()
-
-    def tearDown(self):
-        super(TestSetResourceFlag, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
-
     def test_set_resource_flag_make_public(self):
         # here we are testing the set_resource_flag view function to make a resource public
 
@@ -81,8 +67,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         # check that the resource is still not public
         self.gen_res_one.raccess.refresh_from_db()
@@ -100,8 +86,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_two.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -130,8 +116,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -158,8 +144,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         # check that the resource is still not discoverable
         self.gen_res_one.raccess.refresh_from_db()
@@ -177,8 +163,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_two.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -208,8 +194,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -238,8 +224,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -264,8 +250,8 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.user
 
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = set_resource_flag(request, shortkey=self.gen_res_one.short_id)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         flag_messages = get_messages(request)
@@ -277,16 +263,3 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, TestCase):
         # clean up
         hydroshare.delete_resource(self.gen_res_one.short_id)
         hydroshare.delete_resource(self.gen_res_two.short_id)
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()

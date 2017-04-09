@@ -1,19 +1,17 @@
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
-from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
+from hs_core.testing import ViewTestCase
 from hs_core import hydroshare
 from hs_core.views import share_group_with_user, unshare_group_with_user, \
     make_group_membership_request, act_on_group_membership_request
 from hs_access_control.models import PrivilegeCodes
 
 
-class TestShareGroup(TestCase):
+class TestShareGroup(ViewTestCase):
 
     def setUp(self):
         super(TestShareGroup, self).setUp()
@@ -56,8 +54,6 @@ class TestShareGroup(TestCase):
             description="This is to test group access to user",
             purpose="Testing user access to group")
 
-        self.factory = RequestFactory()
-
     def test_share_group(self):
         # here we are testing share_group_with_user view function
 
@@ -95,8 +91,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = self.mike
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = share_group_with_user(request, group_id=self.test_group.id,
                                          privilege=privilege, user_id=self.mike.id)
@@ -126,8 +122,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = unshare_group_with_user(request, group_id=self.test_group.id,
                                            user_id=self.mike.id)
@@ -157,8 +153,8 @@ class TestShareGroup(TestCase):
         # let mike try to remove john
         request.user = self.mike
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = unshare_group_with_user(request, group_id=self.test_group.id,
                                            user_id=self.john.id)
@@ -194,8 +190,8 @@ class TestShareGroup(TestCase):
         # lisa is not the owner of the group - invitation should fail
         request.user = self.lisa
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = make_group_membership_request(request, group_id=self.test_group.id,
                                                  user_id=self.mike.id)
@@ -236,8 +232,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = self.mike
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
         response = make_group_membership_request(request, group_id=self.test_group.id)
 
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -369,8 +365,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = self.john
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = share_group_with_user(request, group_id=self.test_group.id,
                                          privilege=privilege, user_id=self.mike.id)
@@ -399,8 +395,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = user
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         if user_id is not None:
             response = make_group_membership_request(request, group_id=self.test_group.id,
@@ -423,8 +419,8 @@ class TestShareGroup(TestCase):
         request = self.factory.post(url, data={})
         request.user = acting_user
         request.META['HTTP_REFERER'] = '/group/{}'.format(self.test_group.id)
-        self._set_request_message_attributes(request)
-        self._add_session_to_request(request)
+        self.set_request_message_attributes(request)
+        self.add_session_to_request(request)
 
         response = act_on_group_membership_request(request,
                                                    membership_request_id=membership_request.id,
@@ -436,16 +432,3 @@ class TestShareGroup(TestCase):
         session_messages = [m for m in flag_messages if m.tags == tag]
         self.assertNotEqual(len(session_messages), 0)
         self.test_group.gaccess.refresh_from_db()
-
-    def _set_request_message_attributes(self, request):
-        # the following 3 lines are for preventing error in unit test due to the view being
-        # tested uses messaging middleware
-        setattr(request, 'session', 'session')
-        messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()

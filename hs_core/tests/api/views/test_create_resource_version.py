@@ -1,5 +1,3 @@
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -8,10 +6,10 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.views import create_new_version_resource
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
+class TestCreateResourceVersion(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCreateResourceVersion, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -32,8 +30,6 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
             title='Generic Resource Key/Value Metadata Testing'
         )
 
-        self.factory = RequestFactory()
-
     def test_create_resource_version(self):
         # here we are testing the create_new_version_resource view function
 
@@ -44,7 +40,7 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url, data={})
         request.user = self.user
 
-        self._add_session_to_request(request)
+        self.add_session_to_request(request)
         response = create_new_version_resource(request, shortkey=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         res_id = response.url.split('/')[2]
@@ -55,9 +51,3 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
         # clean up
         hydroshare.delete_resource(res_id)
         hydroshare.delete_resource(self.gen_res.short_id)
-
-    def _add_session_to_request(self, request):
-        """Annotate a request object with a session"""
-        middleware = SessionMiddleware()
-        middleware.process_request(request)
-        request.session.save()
