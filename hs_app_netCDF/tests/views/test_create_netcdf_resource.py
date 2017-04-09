@@ -106,4 +106,5 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # this should take back to create_resource.html page as resource was not created
         self.assertIn('<!doctype html>', response.content)
+        self.assertIn('create-resource', response.content)
         self.assertEqual(BaseResource.objects.count(), 0)
