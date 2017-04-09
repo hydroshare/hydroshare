@@ -46,7 +46,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         # test with no file upload
         post_data = {'resource-type': 'NetcdfResource',
                      'title': 'Test NetCDF Resource Creation',
-                     'irods_federated': 'true'
+                     'irods_federated': 'false'
                      }
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
@@ -65,7 +65,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(ResourceFile.objects.count(), 0)
         post_data = {'resource-type': 'NetcdfResource',
                      'title': 'Test NetCDF Resource Creation',
-                     'irods_federated': 'true',
+                     'irods_federated': 'false',
                      'files': (self.netcdf_file_name, open(self.netcdf_file))
                      }
         url = reverse('create_resource')
@@ -92,7 +92,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         # is also not created
         post_data = {'resource-type': 'NetcdfResource',
                      'title': 'Test NetCDF Resource Creation',
-                     'irods_federated': 'true',
+                     'irods_federated': 'false',
                      'files': (self.netcdf_bad_file_name,
                                open(self.netcdf_bad_file))
                      }
