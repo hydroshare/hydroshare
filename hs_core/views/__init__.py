@@ -976,18 +976,20 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
+    """ Create resource via REST API """
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
     resource_files = request.FILES.getlist('files')
-    fed_res_file_names=[]
+    source_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there. 
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
         if federated:
-            fed_res_file_names = irods_fnames.split(',')
+            source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -1007,20 +1009,28 @@ def create_resource(request, *args, **kwargs):
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
-                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
+        page_url_dict, res_title, metadata, fed_res_path = \
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, 
+                                                         files=resource_files,
+                                                         resource_title=res_title, 
+                                                         source_names=source_names,
+                                                         page_redirect_url_key=url_key, 
+                                                         requesting_user=request.user, 
+                                                         **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, 
+                                  context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
         context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, 
+                                  context_instance=RequestContext(request))
 
     except Exception as ex:
         context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context, 
+                                  context_instance=RequestContext(request))
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
@@ -1031,15 +1041,16 @@ def create_resource(request, *args, **kwargs):
             title=res_title,
             metadata=metadata,
             files=resource_files,
-            fed_res_file_names=fed_res_file_names,
-            fed_res_path = fed_res_path[0] if len(fed_res_path) == 1 else '',
-            fed_copy_or_move=fed_copy_or_move,
+            source_names=source_names,
+            # TODO: should probably be resource_federation_path like it is set to. 
+            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
+            move=(fed_copy_or_move == 'move'), 
             content=res_title
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
-                                           metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, 
+                                           user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 

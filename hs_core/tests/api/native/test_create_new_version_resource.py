@@ -102,6 +102,10 @@ class TestNewVersionResource(TestCase):
         self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
         self.res_generic.save()
 
+        # print("res_generic.files are:")
+        # for f in self.res_generic.files.all():
+        #     print(f.storage_path)
+
         new_res_generic = hydroshare.create_empty_resource(self.res_generic.short_id,
                                                            self.owner)
         # test to make sure the new versioned empty resource has no content files
@@ -114,9 +118,16 @@ class TestNewVersionResource(TestCase):
         self.assertTrue(isinstance(new_res_generic, GenericResource))
 
         # test the new versioned resource has the correct content file with correct path copied over
+
+        # print("new_res_generic.files are:")
+        # for f in new_res_generic.files.all():
+        #     print(f.storage_path)
+
         self.assertEqual(new_res_generic.files.all().count(), 2)
+
         # add each file of resource to list
         new_res_file_list = []
+        # TODO: revise for new file handling
         for f in new_res_generic.files.all():
             new_res_file_list.append(f.resource_file.name)
         for f in self.res_generic.files.all():
