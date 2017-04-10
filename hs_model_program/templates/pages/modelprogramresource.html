@@ -27,7 +27,7 @@
                                         <th class="text-muted">Computational Engine {}</th>
                                     {% endif %}
                                     <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
