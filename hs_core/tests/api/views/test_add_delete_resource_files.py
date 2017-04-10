@@ -44,6 +44,10 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
         txt.write("Hello World-2\n")
         txt.close()
 
+    def tearDown(self):
+        ViewTestCase.tearDown(self)
+        MockIRODSTestCaseMixin.tearDown(self)
+
     def test_add_files(self):
         # here we are testing add_files_to_resource view function
 
