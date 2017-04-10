@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
-    th, td
+    th, td, a
 
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
@@ -38,7 +38,7 @@ class TimeSeries(object):
         self.start_date = start_date
         self.end_date = end_date
 
-    def get_html(self):
+    def get_html(self, site_number):
         """generates html code for viewing site related data"""
 
         root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
@@ -47,48 +47,53 @@ class TimeSeries(object):
             return th(heading_name, cls="text-muted")
 
         with root_div:
-            with div(cls="custom-well"):
-                # strong(self.name)
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            get_th('Site Name')
-                            td(self.site_name)
-                        with tr():
-                            get_th('Site Code')
-                            td(self.site_code)
-                        with tr():
-                            get_th('Latitude')
-                            td(self.latitude)
-                        with tr():
-                            get_th('Longitude')
-                            td(self.longitude)
-                        with tr():
-                            get_th('Variable Name')
-                            td(self.variable_name)
-                        with tr():
-                            get_th('Variable Code')
-                            td(self.variable_code)
-                        with tr():
-                            get_th('URL')
-                            td(self.url)
-                        with tr():
-                            get_th('Service Type')
-                            td(self.service_type)
-                        with tr():
-                            get_th('Return Type')
-                            td(self.return_type)
-                        with tr():
-                            get_th('Reference Type')
-                            td(self.reference_type)
-                        with tr():
-                            get_th('Begin Date')
-                            td(self.start_date)
-                        with tr():
-                            get_th('End Date')
-                            td(self.end_date)
+            with div(cls="custom-well panel panel-default"):
+                with div(cls="panel-heading"):
+                    with h4(cls="panel-title"):
+                        a(self.site_name, data_toggle="collapse", data_parent="#accordion",
+                          href="#collapse{}".format(site_number))
+                with div(id="collapse{}".format(site_number), cls="panel-collapse collapse"):
+                    with div(cls="panel-body"):
+                        with table(cls='custom-table'):
+                            with tbody():
+                                with tr():
+                                    get_th('Site Name')
+                                    td(self.site_name)
+                                with tr():
+                                    get_th('Site Code')
+                                    td(self.site_code)
+                                with tr():
+                                    get_th('Latitude')
+                                    td(self.latitude)
+                                with tr():
+                                    get_th('Longitude')
+                                    td(self.longitude)
+                                with tr():
+                                    get_th('Variable Name')
+                                    td(self.variable_name)
+                                with tr():
+                                    get_th('Variable Code')
+                                    td(self.variable_code)
+                                with tr():
+                                    get_th('URL')
+                                    td(self.url)
+                                with tr():
+                                    get_th('Service Type')
+                                    td(self.service_type)
+                                with tr():
+                                    get_th('Return Type')
+                                    td(self.return_type)
+                                with tr():
+                                    get_th('Reference Type')
+                                    td(self.reference_type)
+                                with tr():
+                                    get_th('Begin Date')
+                                    td(self.start_date)
+                                with tr():
+                                    get_th('End Date')
+                                    td(self.end_date)
 
-        return root_div.render(pretty=True)
+        return root_div
 
 
 class Site(object):
@@ -308,10 +313,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             if self.spatial_coverage:
                 html_string += self.spatial_coverage.get_html()
 
-        ts_legend = legend("Time Serieses", cls="pull-left", style="margin-top:20px;")
-        html_string += ts_legend.render()
-        for series in self.time_serieses:
-            html_string += series.get_html()
+        html_string += self.get_ts_series_html().render()
 
         # TODO: delete these commented code
         # site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
@@ -333,6 +335,20 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         template = Template(html_string)
         context = Context({})
         return template.render(context)
+
+    def get_ts_series_html(self):
+        """Generates html for all time series """
+
+        root_div = div(cls="col-xs-12")
+        with root_div:
+            legend("Reference Time Series", cls="pull-left", style="margin-top:20px;")
+            panel_group_div = div(cls="panel-group", id="accordion")
+            panel_group_div.add(p("Note: Time series are listed below by site name. "
+                                  "Click on a site name to see details.", cls="col-xs-12"))
+            for index, series in enumerate(self.time_serieses):
+                panel_group_div.add(series.get_html(index + 1))
+
+        return root_div
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """overrides the base class function"""
@@ -358,9 +374,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                                    onclick="metadata_update_ajax_submit("
                                            "'id-coverage-spatial-filetype');")
 
-            legend("Time Serieses", cls="pull-left", style="margin-top:20px;")
-            for series in self.time_serieses:
-                series.get_html()
+            self.get_ts_series_html()
 
             # TODO: delete these commented code
             # legend("Sites", cls="pull-left", style="margin-top:20px;")
@@ -396,9 +410,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """
 
         json_res_file = self.logical_file.files.first()
-        json_file_content_div = div(style="clear: both", cls="col-xs-12")
+        json_file_content_div = div(style="clear:both;", cls="col-xs-12 content-block")
         with json_file_content_div:
-            legend("Reference Timeseries JSON File Content")
+            legend("Reference Time Series JSON File Content", style="margin-top:20px;")
             p(json_res_file.full_path[33:])
             # header_info = json.dumps(self.json_file_content, indent=4, sort_keys=True,
             #                          separators=(',', ': '))
