@@ -1,17 +1,17 @@
 import os
+import shutil
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 
 from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import add_files_to_resource, delete_file, delete_multiple_files
-from hs_core.testing import MockIRODSTestCaseMixin, ViewTestUtil
+from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, TestCase, ViewTestUtil):
+class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestAddDeleteResourceFiles, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -31,7 +31,7 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, TestCase, ViewTestUtil)
             owner=self.user,
             title='Generic Resource Key/Value Metadata Testing'
         )
-        ViewTestUtil.setUp(self)
+
         # Make a text file
         self.txt_file_name_1 = 'text-1.txt'
         self.txt_file_path_1 = os.path.join(self.temp_dir, self.txt_file_name_1)
@@ -46,7 +46,8 @@ class TestAddDeleteResourceFiles(MockIRODSTestCaseMixin, TestCase, ViewTestUtil)
         txt.close()
 
     def tearDown(self):
-        ViewTestUtil.tearDown(self)
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
         super(TestAddDeleteResourceFiles, self).tearDown()
 
     def test_add_files(self):
