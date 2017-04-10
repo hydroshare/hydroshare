@@ -241,8 +241,8 @@ class ToolIcon(AbstractMetaDataElement):
     def _validate_tool_icon(cls, url):
         try:
             response = requests.get(url, verify=False)
-        except Exception:
-            raise ValidationError("Failed to read data from given url.")
+        except Exception as ex:
+            raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
                                fromat(response.status_code))
