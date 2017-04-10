@@ -633,6 +633,31 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
 
 
+class ViewTestUtil(object):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.temp_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+
+    @staticmethod
+    def set_request_message_attributes(request):
+        # the following 3 lines are for preventing error in unit test due to the view being
+        # tested uses messaging middleware
+        setattr(request, 'session', 'session')
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
+
+    @staticmethod
+    def add_session_to_request(request):
+        """Annotate a request object with a session"""
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        request.session.save()
+
+
 class ViewTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
