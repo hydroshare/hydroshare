@@ -1,7 +1,6 @@
 import os
 from dateutil import parser
 import tempfile
-import shutil
 
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -638,11 +637,6 @@ class ViewTestCase(TestCase):
         self.factory = RequestFactory()
         self.temp_dir = tempfile.mkdtemp()
         super(ViewTestCase, self).setUp()
-
-    # def tearDown(self):
-    #     if os.path.exists(self.temp_dir):
-    #         shutil.rmtree(self.temp_dir)
-    #     super(ViewTestCase, self).tearDown()
 
     @staticmethod
     def set_request_message_attributes(request):

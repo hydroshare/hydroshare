@@ -1,3 +1,5 @@
+import os
+import shutil
 import json
 
 from django.contrib.auth.models import Group
@@ -11,9 +13,9 @@ from hs_core.views import delete_resource
 from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 
 
-class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
+class TestDeleteResource(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
-        super(TestCRUDMetadata, self).setUp()
+        super(TestDeleteResource, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.username = 'john'
         self.password = 'jhmypassword'
@@ -29,8 +31,13 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
         self.gen_res = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.user,
-            title='Generic Resource Key/Value Metadata Testing'
+            title='Generic Resource Delete Testing'
         )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestDeleteResource, self).tearDown()
 
     def test_delete_resource(self):
         # here we are testing the delete_resource view function

@@ -1,3 +1,5 @@
+import os
+import shutil
 import json
 
 from django.contrib.auth.models import Group
@@ -30,6 +32,11 @@ class TestCRUDMetadata(MockIRODSTestCaseMixin, ViewTestCase):
             owner=self.user,
             title='Generic Resource Key/Value Metadata Testing'
         )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestCRUDMetadata, self).tearDown()
 
     def test_CRUD_metadata(self):
         # here we are testing the add_metadata_element view function

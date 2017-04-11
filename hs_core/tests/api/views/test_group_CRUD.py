@@ -1,3 +1,6 @@
+import os
+import shutil
+
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.core.urlresolvers import reverse
@@ -36,6 +39,11 @@ class TestGroupCRUD(ViewTestCase):
             password='mkmypassword',
             groups=[]
         )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestGroupCRUD, self).tearDown()
 
     def test_create_group(self):
         # here we are testing the create_user_group view function

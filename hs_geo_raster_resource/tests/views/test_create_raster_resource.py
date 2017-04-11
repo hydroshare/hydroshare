@@ -41,6 +41,11 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         shutil.copy(self.raster_bad_tif_file, target_temp_raster_bad_tif_file)
         self.raster_bad_tif_file_obj = open(target_temp_raster_bad_tif_file, 'r')
 
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestCreateResourceViewFunctions, self).tearDown()
+
     def test_create_resource(self):
         # here we are testing the create_resource view function
 

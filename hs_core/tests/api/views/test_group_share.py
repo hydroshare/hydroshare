@@ -1,3 +1,6 @@
+import os
+import shutil
+
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.core.urlresolvers import reverse
@@ -53,6 +56,11 @@ class TestShareGroup(ViewTestCase):
             title='Test Group',
             description="This is to test group access to user",
             purpose="Testing user access to group")
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestShareGroup, self).tearDown()
 
     def test_share_group(self):
         # here we are testing share_group_with_user view function

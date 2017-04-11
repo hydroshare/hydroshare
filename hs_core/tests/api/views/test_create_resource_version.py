@@ -1,3 +1,6 @@
+import os
+import shutil
+
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -29,6 +32,11 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, ViewTestCase):
             owner=self.user,
             title='Generic Resource Key/Value Metadata Testing'
         )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestCreateResourceVersion, self).tearDown()
 
     def test_create_resource_version(self):
         # here we are testing the create_new_version_resource view function

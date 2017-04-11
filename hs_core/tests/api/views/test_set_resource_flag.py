@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
@@ -52,6 +53,11 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
             files=files,
             metadata=metadata_dict
         )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestSetResourceFlag, self).tearDown()
 
     def test_set_resource_flag_make_public(self):
         # here we are testing the set_resource_flag view function to make a resource public

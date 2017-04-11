@@ -1,3 +1,5 @@
+import os
+import shutil
 import json
 from mock import patch
 
@@ -54,6 +56,11 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
                                                    title='Test Resource',
                                                    metadata=[]
                                                    )
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestGroup, self).tearDown()
 
     def test_create_group(self):
         # TODO: test with picture file upload for the group

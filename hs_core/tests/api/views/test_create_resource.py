@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -33,6 +34,11 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         txt = open(self.txt_file_path, 'w')
         txt.write("Hello World\n")
         txt.close()
+
+    def tearDown(self):
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
+        super(TestCreateResourceViewFunctions, self).tearDown()
 
     def test_create_resource(self):
         # here we are testing the create_resource view function
