@@ -50,6 +50,30 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
                                                             self.refts_duplicate_series_file_name)
         shutil.copy(self.refts_duplicate_series_file, tgt_temp_refts_duplicate_series_file)
 
+        self.refts_invalid_url_file_name = 'refts_invalid_urls.json.refts'
+        self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_url_file_name)
+
+        tgt_temp_refts_invalid_urls_file = os.path.join(self.temp_dir,
+                                                        self.refts_invalid_url_file_name)
+        shutil.copy(self.refts_invalid_url_file, tgt_temp_refts_invalid_urls_file)
+
+        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.json.refts'
+        self.refts_invalid_dates_1_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_dates_1_file_name)
+
+        tgt_temp_refts_invalid_dates_1_file = os.path.join(self.temp_dir,
+                                                           self.refts_invalid_dates_1_file_name)
+        shutil.copy(self.refts_invalid_dates_1_file, tgt_temp_refts_invalid_dates_1_file)
+
+        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.json.refts'
+        self.refts_invalid_dates_2_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_dates_2_file_name)
+
+        tgt_temp_refts_invalid_dates_2_file = os.path.join(self.temp_dir,
+                                                           self.refts_invalid_dates_2_file_name)
+        shutil.copy(self.refts_invalid_dates_2_file, tgt_temp_refts_invalid_dates_2_file)
+
     def tearDown(self):
         super(RefTimeseriesFileTypeMetaDataTest, self).tearDown()
         if os.path.exists(self.temp_dir):
@@ -213,7 +237,7 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.assertEqual(self.composite_resource.metadata.title.value, res_title)
         # test that the abstract has not changed
         self.assertEqual(self.composite_resource.metadata.description.abstract, "Some abstract")
-        # resource keywords should have been updated
+        # resource keywords should have been updated (with one keyword added from the json file)
         keywords = [kw.value for kw in self.composite_resource.metadata.subjects.all()]
         self.assertEqual(keywords, ["key-word-1", "CUAHSI", "Time Series"])
 
@@ -223,6 +247,32 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         self.refts_file_obj = open(self.refts_duplicate_series_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_urls(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        self.refts_file_obj = open(self.refts_invalid_url_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_date_value(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # beginDate has an invalid date value
+        self.refts_file_obj = open(self.refts_invalid_dates_1_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_date_order(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # beginDate > endDate
+        self.refts_file_obj = open(self.refts_invalid_dates_2_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
         self.composite_resource.delete()
