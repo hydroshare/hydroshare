@@ -66,9 +66,9 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='Federated Composite Resource Raster File Type Testing',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
-            fed_copy_or_move='copy',
+            move=False,
             metadata=[]
         )
 
@@ -86,8 +86,9 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        fed_file_path = "data/contents/{}".format(self.raster_file_name)
-        self.assertEqual(res_file.fed_resource_file_name_or_path, fed_file_path)
+        fed_file_path = "{}/data/contents/{}".format(self.composite_resource.root_path,
+                                                     self.raster_file_name)
+        self.assertEqual(res_file.storage_path, fed_file_path)
 
         # set the tif file to GeoRasterFile type
         GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)

@@ -518,10 +518,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # name as the name for the new folder
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        nc_file_name)
-                        fed_file_full_path = ''
-                        if resource.resource_federation_path:
-                            fed_file_full_path = os.path.join(resource.root_path,
-                                                              new_folder_path)
+                        # Alva: This does nothing at all.
+                        # fed_file_full_path = ''
+                        # if resource.resource_federation_path:
+                        #     fed_file_full_path = os.path.join(resource.root_path,
+                        #                                       new_folder_path)
 
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
@@ -536,10 +537,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder,
-                                fed_res_file_name_or_path=fed_file_full_path
+                                resource, uploaded_file, folder=upload_folder
                             )
-                            # make each resource file we added as part of the logical file
+
+                            # make each resource file we added part of the logical file
                             logical_file.add_resource_file(new_res_file)
 
                         log.info("NetCDF file type - new files were added to the resource.")
