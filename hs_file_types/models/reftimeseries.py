@@ -425,17 +425,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         return json_file_content_div
 
-    def get_series_html(self):
-        """
-        generate html code for displaying data about each time series - should be
-        used for for view and edit mode
-        :return:
-        """
-
-        for series in self.serieses:
-            # TODO: generate html for the series
-            pass
-
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
 
@@ -485,7 +474,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
         files_to_add_to_resource = []
         if res_file.has_generic_logical_file:
-            # TODO: validate the temp_file (json file)
             try:
                 json_file_content = _validate_json_file(res_file)
             except Exception as ex:
@@ -512,14 +500,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     # add the json file back to the resource
                     uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
                                                  name=os.path.basename(temp_file))
-                    fed_file_full_path = ''
-                    if resource.resource_federation_path:
-                        fed_file_full_path = os.path.join(resource.root_path,
-                                                          file_folder)
 
                     new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=file_folder,
-                        fed_res_file_name_or_path=fed_file_full_path
+                        resource, uploaded_file, folder=file_folder
                     )
                     # make the resource file we added as part of the logical file
                     logical_file.add_resource_file(new_res_file)

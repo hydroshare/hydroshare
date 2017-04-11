@@ -828,6 +828,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
+            # Pabitra: better to use f.delete() here and get rid of the
+            # delete_resource_file_only() util function
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django
