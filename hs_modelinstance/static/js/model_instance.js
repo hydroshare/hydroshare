@@ -6,7 +6,7 @@ var mp_old_id = '';
   Initialize the view on document ready
  */
 $(document).ready(function(){
-
+    is_executed_by();
     // proceed only if selectbox_ exists (i.e. edit page)
     if ($('[id^=selectbox_]').length > 0) {
 
@@ -123,7 +123,7 @@ function show_model_details() {
     // call django view to get model program metadata
     $.ajax({
         type: "GET",
-        url: '/hsapi/_internal/get-model-metadata/',
+        url: '/hsapi/_internal/is-executed-by/',
         data: {resource_id:shortid},
         success: function (data) {
 
@@ -188,3 +188,24 @@ function show_model_details() {
 $(document).bind("submit-success", function(event){
     mp_old_id = $('[id^=selectbox_]').parent().find("option:selected").val();
 });
+
+function is_executed_by() {
+    var url = document.URL;
+    var url_array = url.split('/');
+    var shortid = url_array[url_array.length - 2];
+    console.log(shortid);
+    var is_executed_by = false;
+     $.ajax({
+        type: "GET",
+        url: '/hsapi/_internal/is-executed-by/',
+        data: {resource_id: shortid},
+        success: function (data) {
+            // get the multiselect items
+            console.log(data);
+        },
+        error: function (data) {
+            show_error();
+        }
+    });
+
+}
