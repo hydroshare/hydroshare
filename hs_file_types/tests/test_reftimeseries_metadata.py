@@ -74,6 +74,14 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
                                                            self.refts_invalid_dates_2_file_name)
         shutil.copy(self.refts_invalid_dates_2_file, tgt_temp_refts_invalid_dates_2_file)
 
+        self.refts_missing_key_file_name = 'refts_missing_key.json.refts'
+        self.refts_missing_key_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_key_file_name)
+
+        tgt_temp_refts_missing_key_file = os.path.join(self.temp_dir,
+                                                       self.refts_missing_key_file_name)
+        shutil.copy(self.refts_missing_key_file, tgt_temp_refts_missing_key_file)
+
     def tearDown(self):
         super(RefTimeseriesFileTypeMetaDataTest, self).tearDown()
         if os.path.exists(self.temp_dir):
@@ -120,7 +128,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # test keywords - resource level keywords should have been updated with data from the json
         # file
         keywords = [kw.value for kw in self.composite_resource.metadata.subjects.all()]
-        self.assertEqual(keywords, ["Time Series", "CUAHSI"])
+        for kw in keywords:
+            self.assertIn(kw, ["Time Series", "CUAHSI"])
 
         # test coverage metadata
         box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
@@ -142,7 +151,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.dataset_name, res_title)
-        self.assertEqual(logical_file.metadata.keywords, ["Time Series", "CUAHSI"])
+        for kw in logical_file.metadata.keywords:
+            self.assertIn(kw, ["Time Series", "CUAHSI"])
         box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
         self.assertEqual(box_coverage.value['projection'], 'Unknown')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
@@ -239,7 +249,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.assertEqual(self.composite_resource.metadata.description.abstract, "Some abstract")
         # resource keywords should have been updated (with one keyword added from the json file)
         keywords = [kw.value for kw in self.composite_resource.metadata.subjects.all()]
-        self.assertEqual(keywords, ["key-word-1", "CUAHSI", "Time Series"])
+        for kw in keywords:
+            self.assertIn(kw, ["key-word-1", "CUAHSI", "Time Series"])
 
         self.composite_resource.delete()
 
@@ -273,6 +284,17 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # to RefTimeseries file type which should fail
         # beginDate > endDate
         self.refts_file_obj = open(self.refts_invalid_dates_2_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_missing_key(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # key 'site' is missing
+        # Note we don't need to test for missing of any other required keys as we
+        # don't want to unit test the jsonschema module
+        self.refts_file_obj = open(self.refts_missing_key_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
         self.composite_resource.delete()
