@@ -463,14 +463,14 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
         log = logging.getLogger()
 
-        # get the file from irods
+        # get the the selected resource file object
         res_file = utils.get_resource_file_by_id(resource, file_id)
 
         if res_file is None:
             raise ValidationError("File not found.")
 
         if res_file.extension != '.refts':
-            raise ValidationError("Not a Ref Timeseries file.")
+            raise ValidationError("Not a Ref Time Series file.")
 
         files_to_add_to_resource = []
         if res_file.has_generic_logical_file:
@@ -593,7 +593,10 @@ def _extract_metadata(resource, logical_file):
 
 
 def _validate_json_file(res_json_file):
-    json_file_content = res_json_file.resource_file.read()
+    if res_json_file.resource_file:
+        json_file_content = res_json_file.resource_file.read()
+    else:
+        json_file_content = res_json_file.fed_resource_file.read()
     try:
         json_data = json.loads(json_file_content)
     except:
