@@ -52,6 +52,8 @@
                                                 &nbsp; Filter by Variable
                                             {% elif key ==  'sample_mediums'%}
                                                 &nbsp; Filter by Sample Medium
+                                            {% elif key ==  'units_names'%}
+                                                &nbsp; Filter by Units Name
                                             {% endif %}
                                             <span class="glyphicon glyphicon-minus pull-left" >
 
@@ -1068,7 +1070,8 @@
         };
 
         var reorderDivs = function() {
-            var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'variable_names', 'sample_mediums', 'availability'];
+            var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names',
+                'variable_names', 'sample_mediums', 'units_names', 'availability'];
             var div_ordering = [];
             faceted_fields.forEach(function(field) {
                 var faceting_div = "faceting-"+field;
