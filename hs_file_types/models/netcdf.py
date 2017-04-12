@@ -580,6 +580,12 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         if k == 'subject':
                             logical_file.metadata.keywords = v
                             logical_file.metadata.save()
+                            # update resource level keywords
+                            resource_keywords = [subject.value.lower() for subject in
+                                                 resource.metadata.subjects.all()]
+                            for kw in logical_file.metadata.keywords:
+                                if kw.lower() not in resource_keywords:
+                                    resource.metadata.create_element('subject', value=kw)
                         else:
                             logical_file.metadata.create_element(k, **v)
                     log.info("NetCDF file type - metadata was saved to DB")
