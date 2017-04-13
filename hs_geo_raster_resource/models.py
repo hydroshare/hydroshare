@@ -414,7 +414,7 @@ class GeoRasterMetaDataMixin(models.Model):
         missing_required_elements = super(GeoRasterMetaDataMixin,
                                           self).get_required_missing_elements()
         if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage: Box')
+            missing_required_elements.append('Spatial Coverage')
         if not self.cellInformation:
             missing_required_elements.append('Cell Information')
         if not self.bandInformations:

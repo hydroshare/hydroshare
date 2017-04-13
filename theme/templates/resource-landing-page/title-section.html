@@ -84,6 +84,37 @@
     {% endif %}
 {% endif %}
 
+{# ======= Missing file level metadata notification =======#}
+{% if cm.resource_type == "CompositeResource" %}
+    {% if file_type_missing_metadata %}
+        <div class="col-sm-12">
+            <div id="missing-metadata-file-type" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+                <span>The following file level metadata are still required to
+                      make the resource public or discoverable:</span>
+                {% for item in file_type_missing_metadata %}
+                    <ul>
+                        <li>File path: {{ item.file_path }}
+                            <ul>
+                                {% for element in item.missing_elements %}
+                                    <li>{{ element }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </ul>
+                {% endfor %}
+
+                {% if not metadata_form %}
+                    <hr>
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
     {% if cm.check_content_files %}

@@ -229,6 +229,9 @@ class AbstractFileMetaData(models.Model):
     def get_supported_element_names(cls):
         return ['Coverage']
 
+    def get_required_missing_elements(self):
+        return []
+
     @property
     def has_metadata(self):
         if not self.coverages.all() and not self.extra_metadata \
