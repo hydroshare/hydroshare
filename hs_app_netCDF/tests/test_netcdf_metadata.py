@@ -108,23 +108,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource
         # throws error open the file from the fixed file location
-        files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(
-            resource_type='NetcdfResource',
-            resource_title='Snow water equivalent estimation at TWDEF site '
-                           'from Oct 2009 to June 2010',
-            page_redirect_url_key=None,
-            files=files,
-            metadata=None,)
-
-        self.resNetcdf = hydroshare.create_resource(
-            'NetcdfResource',
-            self.user,
-            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
-            files=files,
-            metadata=metadata
-            )
-
+        self._create_netcdf_resource()
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
 
     def test_metadata_extraction_on_content_file_add(self):
@@ -168,7 +152,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
                                         extract_metadata=False)
 
-        super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
+        super(TestNetcdfMetaData, self).netcdf_metadata_extraction(expected_creators_count=2)
 
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
@@ -451,6 +435,94 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                         extract_metadata=False)
 
         self._test_metadata_extraction_wkt_crs()
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the NetcdfMetaData class
+
+        # update of resource specific metadata should fail when the resource does not have content
+        # files
+        self.assertEqual(self.resNetcdf.files.all().count(), 0)
+        value = {"northlimit": '12', "projection": "transverse_mercator",
+                 "units": "meter", "southlimit": '10',
+                 "eastlimit": '23', "westlimit": '2'}
+        metadata = []
+        metadata.append({'originalcoverage': {'value': value}})
+        with self.assertRaises(ValidationError):
+            self.resNetcdf.metadata.update(metadata)
+
+        metadata = []
+        metadata.append({'variable': {'name': 'SWE', 'type': 'Float',
+                                      'shape': 'y,x,time', 'unit': 'm',
+                                      'missing_value': '-9999',
+                                      'descriptive_name': 'Snow water equivalent',
+                                      'method': 'model simulation of UEB'
+                                      }
+                         })
+        with self.assertRaises(ValidationError):
+            self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.delete()
+        # create netcdf resource with uploaded valid netcdf file
+        self._create_netcdf_resource()
+        # there should be 2 files in the resource
+        self.assertEqual(self.resNetcdf.files.all().count(), 2)
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'],
+                         '4.63515e+06')
+
+        # projection should be ignored by the update
+        value = {"northlimit": '12', "projection": "transverse_mercator-new",
+                 "units": "meter", "southlimit": '10',
+                 "eastlimit": '23', "westlimit": '2'}
+        metadata = []
+        metadata.append({'originalcoverage': {'value': value}})
+        self.resNetcdf.metadata.update(metadata)
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '12')
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
+                            "transverse_mercator-new")
+        # 'datum', 'projection_string_type', 'projection_string_text' should be ignored
+        value = {"northlimit": '15', "projection": "transverse_mercator-new",
+                 "units": "meter", "southlimit": '10',
+                 "eastlimit": '23', "westlimit": '2'}
+        metadata = []
+        metadata.append({'originalcoverage': {'value': value, 'datum': 'some datum',
+                                              'projection_string_type': 'some proj string type',
+                                              'projection_string_text': 'some prog string text'
+                                              }
+                         })
+
+        self.resNetcdf.metadata.update(metadata)
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
+        self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '15')
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
+                            "transverse_mercator-new")
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.datum, 'some datum')
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.projection_string_type,
+                            'some proj string type')
+        self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.projection_string_text,
+                            'some proj string text')
+
+        # TODO: test updating variable data
+
+        self.resNetcdf.delete()
+
+    def _create_netcdf_resource(self):
+        files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='NetcdfResource',
+            resource_title='Snow water equivalent estimation at TWDEF site '
+                           'from Oct 2009 to June 2010',
+            page_redirect_url_key=None,
+            files=files,
+            metadata=None)
+
+        self.resNetcdf = hydroshare.create_resource(
+            'NetcdfResource',
+            self.user,
+            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
+            files=files,
+            metadata=metadata
+        )
 
     def _test_metadata_extraction_wkt_crs(self, create_res_mode=True):
 

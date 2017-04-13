@@ -330,7 +330,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(band_info.maximumValue, '3031.44311523')
         self.assertEqual(band_info.minimumValue, '1358.33459473')
 
-    def netcdf_metadata_extraction(self):
+    def netcdf_metadata_extraction(self, expected_creators_count=1):
         """
         This is a common test utility function to be called by both regular netcdf metadata
         extraction testing and federated zone netCDF metadata extraction testing.
@@ -363,8 +363,8 @@ class TestCaseCommonUtilities(object):
         # there should be one relation element
         self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
 
-        # there should be 1 creator
-        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
+        # there should be creators equal to expected_creators_count
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), expected_creators_count)
 
         # there should be one contributor
         self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)
