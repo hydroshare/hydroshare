@@ -11,24 +11,29 @@
                 {# Add the view mode html code below #}
                 {% if mpmetadata %}
                     {########################}
-                    {#       DATA FILES     #}
+                    {#       CONTENT FILES     #}
                     {########################}
-                    <legend>Data files</legend>
+
+                    {% if mpmetadata.get_engine_list.items|first|first or mpmetadata.get_software_list.items|first|first or mpmetadata.get_releasenotes_list.items|first|first or mpmetadata.get_documentation_list.items|first|first %}
+                    <legend>Content files</legend>
                     <table class="custom-table">
                         <tbody>
+                        {% if mpmetadata.get_engine_list.items|first|first %}
                             {% for name, path in mpmetadata.get_engine_list.items %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
                                         <th></th>
                                     {% else %}
-                                        <th class="text-muted">Computational Engine</th>
+                                        <th class="text-muted">Computational Engine {}</th>
                                     {% endif %}
                                     <td><a id="permalink"
                                            href="http://{{ request.get_host }}/resource/{{ path }}"
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
+                        {% endif %}
 
+                        {% if mpmetadata.get_software_list.items|first|first %}
                             {% for name, path in mpmetadata.get_software_list.items %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -41,7 +46,9 @@
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
+                        {% endif %}
 
+                        {% if mpmetadata.get_documentation_list.items|first|first %}
                             {% for name, path in mpmetadata.get_documentation_list.items %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -54,8 +61,10 @@
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
+                        {% endif %}
 
 
+                        {% if mpmetadata.get_releasenotes_list.items|first|first %}
                             {% for name, path in mpmetadata.get_releasenotes_list.items %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -70,43 +79,32 @@
                                     </td>
                                 </tr>
                             {% endfor %}
+                        {% endif %}
                         </tbody>
                     </table>
                     <hr style="border:0">
 
-                    {########################}
-                    {#   MODEL  METADATA  #}
-                    {########################}
-                    <legend>General</legend>
-                    <table class="custom-table">
-                        <tbody>
-                            <tr>
-                                <th class="text-muted">Release Date </th>
-                                <td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-muted">Website </th>
-                                <td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <hr style="border:0"/>
+                {% endif %}
 
                     {########################}
                     {#  SOFTWARE  METADATA  #}
                     {########################}
+                {% if mpmetadata.modelProgramLanguage or mpmedata.modelOperatingSystem or mpmetadata.modelCodeRepository or mpmetadata.modelReleaseDate or mpmetadata.modelVersion or mpmetadata.modelWebsite%}
                     <legend>Software</legend>
                     <table class="custom-table">
                         <tbody>
-                            <tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>
-                            <tr><th class="text-muted">Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>
-                            <tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>
-                            <tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>
+                           {% if mpmetadata.modelProgramLanguage %}<tr><th class="text-muted">Programming Language </th><td>{{ mpmetadata.modelProgramLanguage }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelOperatingSystem %}<tr><th class="text-muted">Operating System </th><td>{{ mpmetadata.modelOperatingSystem }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelCodeRepository %}<tr><th class="text-muted">Software Repository </th><td><a target="_blank" href="{{ mpmetadata.modelCodeRepository }}">{{ mpmetadata.modelCodeRepository }}</a></td></tr>{% endif %}
+                           {% if mpmetadata.modelReleaseDate %}<tr><th class="text-muted">Release Date </th><td>{{ mpmetadata.modelReleaseDate |date:"SHORT_DATE_FORMAT" }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelVersion %}<tr><th class="text-muted">Version </th><td>{{ mpmetadata.modelVersion }}</td></tr>{% endif %}
+                           {% if mpmetadata.modelWebsite %}<tr><th class="text-muted">Website </th><td><a href="{{ mpmetadata.modelWebsite }}" target="_blank">{{ mpmetadata.modelWebsite }}</a></td></tr>{% endif %}
                         </tbody>
                     </table>
                     <hr style="border:0"/>
-
                 {% endif %}
+                {% endif %}
+
             </div>
         </div>
     {% endif %}

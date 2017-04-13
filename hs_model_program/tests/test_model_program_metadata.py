@@ -40,16 +40,20 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Program resource files")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'r')
 
         self.file_name_2 = "MP.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
-        text_file_2 = open(temp_text_file_2, 'w')
-        text_file_2.write("Model,Program,resource,file")
+        text_file = open(temp_text_file_2, 'w')
+        text_file.write("Model,Program,resource,file")
+        text_file.close()
         self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
         super(TestModelProgramMetaData, self).tearDown()
+        # for f in self.resModelProgram.files.all():
+        #     resource.delete_resource_file(self.resModelProgram.short_id, f.short_path, self.user)
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -60,13 +64,13 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should not be any content file
         self.assertEquals(self.resModelProgram.files.all().count(), 0)
 
-        # Upload any file type should pass both the file pre add check post add check
+        # Upload any file type should pass both the file pre add check and post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
+                                        user=self.user, extract_metadata=False)
 
         # there should one content file
         self.assertEquals(self.resModelProgram.files.all().count(), 1)
@@ -74,13 +78,13 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # check that there are no extended metadata elements at this point
         self.assertEquals(self.resModelProgram.metadata.program, None)
 
-        # Upload any other file type should pass both the file pre add check post add check
+        # Uploading any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=True)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, user=self.user,
-                                        extract_metadata=True)
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
+                                        user=self.user, extract_metadata=True)
 
         # there should two content files
         self.assertEquals(self.resModelProgram.files.all().count(), 2)
@@ -202,8 +206,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
+                                        user=self.user, extract_metadata=False)
 
         self.assertFalse(self.resModelProgram.can_be_public_or_discoverable)
 
@@ -259,8 +263,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
+                                        user=self.user, extract_metadata=False)
 
         self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
         self.resModelProgram.metadata.create_element('Subject', value="test subject")
@@ -283,8 +287,12 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be one format element
         self.assertEquals(self.resModelProgram.metadata.formats.all().count(), 1)
 
-        # delete content file that we added above
+        # the short path should just consist of the file name.
+        self.assertEquals(self.resModelProgram.files.all()[0].short_path, self.file_name)
+
+        # delete content file that we added above; note that file name is a short_path
         hydroshare.delete_resource_file(self.resModelProgram.short_id, self.file_name, self.user)
+
         # there should no content file
         self.assertEquals(self.resModelProgram.files.all().count(), 0)
 
@@ -305,8 +313,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resModelProgram, files=files,
                                             user=self.user, extract_metadata=False)
 
-        utils.resource_file_add_process(resource=self.resModelProgram, files=files, user=self.user,
-                                        extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resModelProgram, files=files,
+                                        user=self.user, extract_metadata=False)
 
         self.resModelProgram.metadata.create_element('Description', abstract="test abstract")
         self.resModelProgram.metadata.create_element('Subject', value="test subject")

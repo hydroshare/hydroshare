@@ -56,12 +56,14 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model SWAT Instance resource files")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'r')
 
-        self.file_name_2 = "MIR2.txt"
+        self.file_name_2 = "MIR.csv"
         temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
-        text_file_2 = open(temp_text_file_2, 'w')
-        text_file_2.write("Model SWAT Instance resource files")
+        text_file = open(temp_text_file_2, 'w')
+        text_file.write("Model,SWAT,Instance,resource,files")
+        text_file.close()
         self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
@@ -703,6 +705,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # there should be one format element
         self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 1)
+
+        # file name should be the short path to the object
+        self.assertEquals(self.resSWATModelInstance.files.all()[0].short_path, self.file_name)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name,

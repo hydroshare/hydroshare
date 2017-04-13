@@ -145,11 +145,11 @@
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geo Raster File Type</span>
+                            <span>Set Geographic Raster File Type</span>
                         </li>
                         <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set NetCDF File Type</span>
+                            <span>Set Multidimensional Data File Type</span>
                         </li>
                     {%  endif %}
                 </ul>
@@ -383,12 +383,12 @@
                                                 {% if page.perms.change and resource_edit_mode %}
                                                     <button id="fb-set-geo-file-type"
                                                             class="disabled"
-                                                            title="Set Geo Raster File Type">
+                                                            title="Set Geographic Raster File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                     <button id="fb-set-netcdf-file-type"
                                                             class="disabled"
-                                                            title="Set NetCDF File Type">
+                                                            title="Set Multidimensional Data File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                     </button>
                                                  {% endif %}
@@ -512,7 +512,7 @@
                         {% if user_zone_account_exist %}
                             <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
                                 <span class="glyphicon">
-                                   <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
+                                   <span title='Copy Resource Bag to iRODS User Zone' class="button-label">Copy Resource Bag to iRODS User Zone</span>
                                 </span>
                             </a>
                         {% endif %}
@@ -642,7 +642,7 @@
                                         </small>
                                     </div>
                                     <br>
-                                    <table class="table contact-table contact-table-view">
+                                    <table class="table hs-table contact-table contact-table-view">
                                         <thead>
                                         <tr class="header-row">
                                             <th>Name</th>
@@ -678,7 +678,7 @@
                                             </small>
                                         </div>
                                         <br>
-                                        <table class="table contact-table contact-table-view">
+                                        <table class="table hs-table contact-table contact-table-view">
                                             <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
@@ -714,7 +714,7 @@
                                         </div>
                                         <br>
 
-                                        <table id="authors-table" class="contact-table table">
+                                        <table id="authors-table" class="hs-table contact-table table">
                                             <thead>
                                             <tr class="header-row">
                                                 <th class="drag-indicator"></th>
@@ -808,7 +808,7 @@
                                         </div>
                                         <br>
 
-                                        <table class="contact-table table">
+                                        <table class="hs-table contact-table table">
                                             <thead>
                                             <tr class="header-row">
                                                 <th>Name</th>
@@ -862,7 +862,7 @@
                                             {% for source in sources %}
                                                 <div class="row">
                                                     <div class="col-sm-4"><strong>Derived From:</strong></div>
-                                                    <div class="col-sm-8">{{ source.derived_from }}</div>
+                                                    <div class="col-sm-8 url-clickable">{{ source.derived_from }}</div>
                                                 </div>
                                             {% endfor %}
                                         {% endif %}
@@ -874,20 +874,20 @@
                                                 {% if  relation.type|lower != "haspart"%}
                                                     <div class="row">
                                                         <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
+                                                        <div class="col-sm-8 url-clickable">{{ relation.value }}</div>
                                                     </div>
                                                 {% endif %}
                                             {% endfor %}
                                         {% endif %}
                                     {% else %}
                                         <div>
-                                            <table class="table" style="margin-bottom: 0;">
+                                            <table class="table hs-table" style="margin-bottom: 0;">
                                                 <tbody>
                                                 <legend>Sources</legend>
                                                 {% for source in source_formset.initial %}
                                                     <tr>
                                                         <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details">{{ source.derived_from }}</td>
+                                                        <td class="dataset-details url-clickable">{{ source.derived_from }}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
                                                                class="glyphicon glyphicon-pencil icon-button icon-blue"
@@ -905,23 +905,24 @@
                                                 {% endfor %}
                                                 </tbody>
                                             </table>
+                                            <br>
                                             <a id="add-source" class="btn btn-success" data-toggle="modal"
                                                data-target="#add-source-dialog"><i
-                                                    class="fa fa-plus"></i> Add source</a>
+                                                    class="fa fa-plus"></i> Add Source</a>
                                         <span data-toggle="tooltip" data-placement="auto"
                                               title='If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
                                               class="glyphicon glyphicon-info-sign text-muted"></span>
                                         </div>
                                         <hr style="border: 0;">
                                         <div>
-                                            <table class="table" style="margin-bottom: 0;">
+                                            <table class="table hs-table">
                                                 <tbody>
                                                 <legend>Relations</legend>
                                                 {% for relation in relation_formset.initial %}
                                                     {% if  relation.type|lower != "haspart"%}
                                                         <tr>
                                                             <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
+                                                            <td class="dataset-details url-clickable">{{ relation.value }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
                                                                    class="glyphicon glyphicon-pencil icon-button icon-blue"
@@ -942,7 +943,9 @@
                                             </table>
 
                                             <a id="add-relation" class="btn btn-success" data-toggle="modal"
-                                               data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
+                                               data-target="#add-relation-dialog">
+                                                <i class="fa fa-plus"></i> Add Relation</a>
+
                                             <span data-toggle="tooltip" data-placement="auto"
                                                   title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
                                                   class="glyphicon glyphicon-info-sign text-muted"></span>
@@ -1074,11 +1077,15 @@
                             {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                 <div class="tab-pane" id="extraMetaTab">
                                     {% if metadata_form %}
-                                        <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
-                                                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
-                                        </a>
+                                        <div>
+                                            <a type="button" class="btn btn-success"
+                                               onclick="showAddEditExtraMetaPopup(false, '')">
+                                                <i class="fa fa-plus"></i> Add New Entry
+                                            </a>
+                                        </div>
+                                        <br>
                                     {% endif %}
-                                    <table id="extraMetaTable" class="table-hover table-striped" width="100%">
+                                    <table id="extraMetaTable" class="hs-table table" width="100%">
                                         <thead>
                                         <tr>
                                             <th>Name</th>
@@ -1094,7 +1101,7 @@
                                                     <td>
                                                         {{ extra_meta_name }}
                                                     </td>
-                                                    <td>
+                                                    <td class="url-clickable">
                                                         {{ extra_meta_value }}
                                                     </td>
                                                     {% if metadata_form %}
@@ -1111,6 +1118,7 @@
                                     </table>
 
                                     {% if metadata_form %}
+                                        <br>
                                         <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
                                     {% endif %}
                             </div>
@@ -1141,6 +1149,7 @@
 
                 {%  block modal %}
                     {% include "resource-landing-page/modals.html" %}
+                    {% include "resource-landing-page/coordinates_picker.html" %}
                 {%  endblock %}
             </div>
         </div>
@@ -1356,7 +1365,7 @@
                 var t = $('#extraMetaTable').DataTable();
                 var row_to_edit = t.row("#" + row_id_str);
                 var oldname = row_to_edit.data()[0];
-                var oldvalue = row_to_edit.data()[1];
+                var oldvalue = $("<div/>").html(row_to_edit.data()[1].trim()).text();
                 $("#edit_extra_meta_row_id").val(row_id_str);
                 $("#old_extra_meta_name").val(oldname);
                 $("#extra_meta_name_input").val(oldname);
@@ -1389,15 +1398,15 @@
             }
 
             if (edit_extra_meta_row_id == "") {
-                // add new
+                // Add new
                 var new_row_id_0_base = findMaxRowID(t) + 1;
                 var edit_icon_str = '<span onclick="showAddEditExtraMetaPopup(true,' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-edit btn-inline-favorite"></span>';
                 var remove_icon_str = '<span onclick="removeExtraMetadataFromTable(' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-remove btn-inline-favorite"></span>';
-                var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
-                $(row_ele).attr( 'id', new_row_id_0_base);
+                var row_ele = t.row.add([extra_meta_name, extra_meta_value, edit_icon_str + " " + remove_icon_str]).node();
+                $(row_ele).attr('id', new_row_id_0_base);
             }
             else {
-                // edit existing
+                // Edit existing
                 var row_to_edit = t.row("#" + edit_extra_meta_row_id);
                 var updated_data_array = row_to_edit.data();
                 updated_data_array[0] = extra_meta_name;
@@ -1405,6 +1414,10 @@
                 row_to_edit.data(updated_data_array);
             }
             t.rows().invalidate().draw();
+            $("#extraMetaTable").find("td:nth-child(2)").each(function() {
+                $(this).urlClickable();
+            });
+
             $('#extraMetaDialog').modal('hide');
             $('#save-extra-meta-btn').show();
         }
@@ -1446,7 +1459,7 @@
             var t = $('#extraMetaTable').DataTable();
             t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
                 var extra_meta_name = this.data()[0].trim();
-                var extra_meta_value = this.data()[1].trim();
+                var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
                 json_obj[extra_meta_name] = extra_meta_value;
             });
 
