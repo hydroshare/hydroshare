@@ -450,7 +450,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         with self.assertRaises(ValidationError):
             self.resNetcdf.metadata.update(metadata)
 
-        metadata = []
+        del metadata[:]
         metadata.append({'variable': {'name': 'SWE', 'type': 'Float',
                                       'shape': 'y,x,time', 'unit': 'm',
                                       'missing_value': '-9999',
@@ -473,7 +473,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         value = {"northlimit": '12', "projection": "transverse_mercator-new",
                  "units": "meter", "southlimit": '10',
                  "eastlimit": '23', "westlimit": '2'}
-        metadata = []
+
+        del metadata[:]
         metadata.append({'originalcoverage': {'value': value}})
         self.resNetcdf.metadata.update(metadata)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
@@ -484,7 +485,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         value = {"northlimit": '15', "projection": "transverse_mercator-new",
                  "units": "meter", "southlimit": '10',
                  "eastlimit": '23', "westlimit": '2'}
-        metadata = []
+        del metadata[:]
         metadata.append({'originalcoverage': {'value': value, 'datum': 'some datum',
                                               'projection_string_type': 'some proj string type',
                                               'projection_string_text': 'some prog string text'
@@ -502,8 +503,94 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.projection_string_text,
                             'some proj string text')
 
-        # TODO: test updating variable data
+        # test updating variable data
+        self.assertEqual(self.resNetcdf.metadata.variables.count(), 5)
+        # there should one variable with name SWE
+        self.assertEqual(self.resNetcdf.metadata.variables.filter(name='SWE').count(), 1)
+        swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
+        self.assertEqual(swe_variable.unit, 'm')
+        # test that we can update the SWE variable by changing the unit to feet
+        del metadata[:]
+        metadata.append({'variable': {'name': 'SWE', 'type': 'Float',
+                                      'shape': 'y,x,time', 'unit': 'feet',
+                                      'missing_value': '-9999',
+                                      'descriptive_name': 'Snow water equivalent',
+                                      'method': 'model simulation of UEB'
+                                      }
+                         })
 
+        self.resNetcdf.metadata.update(metadata)
+        swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
+        self.assertEqual(swe_variable.unit, 'feet')
+        # test that update of variable should fail if update is made for non-existing variable
+        # (SWE1)
+        del metadata[:]
+        metadata.append({'variable': {'name': 'SWE1', 'type': 'Float',
+                                      'shape': 'y,x,time', 'unit': 'm',
+                                      'missing_value': '-9999',
+                                      'descriptive_name': 'Snow water equivalent',
+                                      'method': 'model simulation of UEB'
+                                      }
+                         })
+
+        with self.assertRaises(ValidationError):
+            self.resNetcdf.metadata.update(metadata)
+
+        # there should no variable with name SWE1
+        self.assertEqual(self.resNetcdf.metadata.variables.filter(name='SWE1').count(), 0)
+        swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
+        self.assertEqual(swe_variable.unit, 'feet')
+
+        # test updating multiple variables
+        x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
+        self.assertEqual(x_variable.unit, 'Meter')
+        del metadata[:]
+        metadata.append({'variable': {'name': 'SWE',
+                                      'unit': 'm',
+                                      'missing_value': '-9999',
+                                      'descriptive_name': 'Snow water equivalent',
+                                      'method': 'model simulation of UEB'
+                                      }
+                         })
+        metadata.append({'variable': {'name': 'x', 'unit': 'Feet'}})
+
+        self.resNetcdf.metadata.update(metadata)
+        swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
+        self.assertEqual(swe_variable.unit, 'm')
+        x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
+        self.assertEqual(x_variable.unit, 'Feet')
+        # test that is is not possible update variable attributes: type and shape
+        x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
+        self.assertEqual(x_variable.type, 'Float')
+        self.assertEqual(x_variable.shape, 'x')
+
+        del metadata[:]
+        metadata.append({'variable': {'name': 'x', 'type': 'Double', 'shape': 'y'}})
+        self.resNetcdf.metadata.update(metadata)
+        x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
+        self.assertEqual(x_variable.type, 'Float')
+        self.assertEqual(x_variable.shape, 'x')
+
+        # test updating core metadata with resource specific metadata
+
+        # there should be 1 creator
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
+        # there should be 1 contributor
+        self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)
+        del metadata[:]
+        metadata.append({'creator': {'name': 'creator one'}})
+        metadata.append({'creator': {'name': 'creator two'}})
+        metadata.append({'contributor': {'name': 'contributor one'}})
+        metadata.append({'contributor': {'name': 'contributor two'}})
+        metadata.append({'variable': {'name': 'x', 'unit': 'Meter'}})
+        self.resNetcdf.metadata.update(metadata)
+        x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
+        self.assertEqual(x_variable.unit, 'Meter')
+        # there should be 2 creators (the previous creator gets deleted as part of the update)
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
+        # there should be 2 contributors (the previous contributor gets deleted as part
+        # of the update)
+        self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 2)
         self.resNetcdf.delete()
 
     def _create_netcdf_resource(self):
