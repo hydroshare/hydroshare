@@ -66,7 +66,6 @@ $(document).ready(function() {
 
 	// Lost password form
 	//===================
-
 	$('.pwd-lost > .pwd-lost-q > a').on('click', function() {
 		$(".pwd-lost > .pwd-lost-q").toggleClass("show hidden");
 		$(".pwd-lost > .pwd-lost-f").toggleClass("hidden show");
