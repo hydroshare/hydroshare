@@ -382,7 +382,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_geometry_type(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                return obj.metadata.geometryinformation.all().first().geometryType
+                geometry_info = obj.metadata.geometryinformation.all().first()
+                if geometry_info is not None:
+                    return geometry_info.geometryType
+                else:
+                    return 'none'
             else:
                 return 'none'
         else:
@@ -391,7 +395,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_name(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                return obj.metadata.fieldinformation.all().first().fieldName
+                field_info = obj.metadata.fieldinformation.all().first()
+                if field_info is not None:
+                    return field_info.fieldName
+                else:
+                    return 'none'
             else:
                 return 'none'
         else:
@@ -400,7 +408,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_type(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                return obj.metadata.fieldinformation.all().first().fieldType
+                field_info = obj.metadata.fieldinformation.all().first()
+                if field_info is not None:
+                    return field_info.fieldType
+                else:
+                    return 'none'
             else:
                 return 'none'
         else:
@@ -409,12 +421,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_type_code(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                return obj.metadata.fieldinformation.all().first().fieldTypeCode
+                field_info = obj.metadata.fieldinformation.all().first()
+                if field_info is not None:
+                    return field_info.fieldTypeCode
+                else:
+                    return 'none'
             else:
                 return 'none'
         else:
             return 'none'
-
 
     def prepare_variable_names(self, obj):
         variable_names = []
@@ -426,7 +441,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for variable in obj.metadata.variables.all():
                     variable_names.append(variable.name)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables.all():
+                for variable in obj.metadata.variables:
                     variable_names.append(variable.variable_name)
         return variable_names
 
@@ -440,7 +455,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for variable in obj.metadata.variables.all():
                     variable_types.append(variable.data_type)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables.all():
+                for variable in obj.metadata.variables:
                     variable_types.append(variable.variable_type)
         return variable_types
 
@@ -464,7 +479,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         variable_speciations = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables.all():
+                for variable in obj.metadata.variables:
                     variable_speciations.append(variable.speciation)
         return variable_speciations
 
@@ -475,7 +490,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for site in obj.metadata.sites.all():
                     sites.append(site.name)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for site in obj.metadata.sites.all():
+                for site in obj.metadata.sites:
                     sites.append(site.site_name)
         return sites
 
@@ -486,10 +501,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for method in obj.metadata.methods.all():
                     methods.append(method.description)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for method in obj.metadata.methods.all():
+                for method in obj.metadata.methods:
                     methods.append(method.method_description)
         return methods
-
 
     def prepare_quality_levels(self, obj):
         quality_levels = []
@@ -511,7 +525,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         sample_mediums = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results.all():
+                for time_series_result in obj.metadata.time_series_results:
                     sample_mediums.append(time_series_result.sample_medium)
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
@@ -522,7 +536,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         units_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results.all():
+                for time_series_result in obj.metadata.time_series_results:
                     units_names.append(time_series_result.units_name)
         return units_names
 
@@ -530,7 +544,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         units_types = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results.all():
+                for time_series_result in obj.metadata.time_series_results:
                     units_types.append(time_series_result.units_type)
         return units_types
 
@@ -538,6 +552,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         aggregation_statistics = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results.all():
+                for time_series_result in obj.metadata.time_series_results:
                     aggregation_statistics.append(time_series_result.aggregation_statistics)
         return aggregation_statistics
