@@ -16,11 +16,11 @@ class TestResourceMap(ResMapTestCase):
 
         self.rtype = 'GenericResource'
         self.title = 'My Test resource'
-        res = resource.create_resource(self.rtype,
-                                       self.user,
-                                       self.title)
+        self.res = resource.create_resource(self.rtype,
+                                            self.user,
+                                            self.title)
 
-        self.pid = res.short_id
+        self.pid = self.res.short_id
         self.resources_to_delete.append(self.pid)
         self.tmp_dir = tempfile.mkdtemp()
 
@@ -87,8 +87,7 @@ class TestResourceMap(ResMapTestCase):
         content = json.loads(response.content)
         self.assertEquals(content['resource_id'], self.pid)
 
-        # download the resource map and
-        # Make sure the new file appears in the resource map
+        # download the resource map and # make sure the new file appears
         response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
