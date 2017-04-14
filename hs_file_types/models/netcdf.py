@@ -335,7 +335,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
             log.exception(msg)
             raise ValidationError(msg)
 
-        netcdf_file_update(self, nc_res_file, txt_res_file,user)
+        netcdf_file_update(self, nc_res_file, txt_res_file, user)
 
     @classmethod
     def set_file_type(cls, resource, file_id, user):
@@ -799,47 +799,58 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
     try:
         # update title
-        if hasattr(nc_dataset, 'title'):
-            if file_type:
-                if nc_dataset.title != instance.dataset_name:
-                    delattr(nc_dataset, 'title')
-                    nc_dataset.title = instance.dataset_name
-        else:
-            if file_type:
-                nc_dataset.title = instance.dataset_name
+        title = instance.dataset_name if file_type else instance.metadata.title.value
+
+        if title != 'Untitled resource':
+            if hasattr(nc_dataset, 'title'):
+                delattr(nc_dataset, 'title')
+            nc_dataset.title = title
 
         # update keywords
-        if file_type and instance.metadata.keywords:
-            if hasattr(nc_dataset, 'keywords'):
-                delattr(nc_dataset, 'keywords')
-            nc_dataset.keywords = ', '.join(instance.metadata.keywords)
+        keywords = instance.metadata.keywords if file_type \
+            else [item.value for item in instance.metadata.subjects.all()]
+
+        if hasattr(nc_dataset, 'keywords'):
+            delattr(nc_dataset, 'keywords')
+
+        if keywords:
+            nc_dataset.keywords = ', '.join(keywords)
 
         # update key/value metadata
-        if instance.metadata.extra_metadata:
-            if hasattr(nc_dataset, 'hs_extra_metadata'):
-                delattr(nc_dataset, 'hs_extra_metadata')
+        extra_metadata_dict = instance.metadata.extra_metadata if file_type \
+            else instance.extra_metadata
+
+        if hasattr(nc_dataset, 'hs_extra_metadata'):
+            delattr(nc_dataset, 'hs_extra_metadata')
+
+        if extra_metadata_dict:
             extra_metadata = []
-            for k, v in instance.metadata.extra_metadata.items():
+            for k, v in extra_metadata_dict.items():
                 extra_metadata.append("{}:{}".format(k, v))
             nc_dataset.hs_extra_metadata = ', '.join(extra_metadata)
 
         # update temporal coverage
-        if instance.metadata.temporal_coverage:
-            for attr_name in ['time_coverage_start', 'time_coverage_end']:
-                if hasattr(nc_dataset, attr_name):
-                    delattr(nc_dataset, attr_name)
-            nc_dataset.time_coverage_start = instance.metadata.temporal_coverage.value['start']
-            nc_dataset.time_coverage_end = instance.metadata.temporal_coverage.value['end']
+        temporal_coverage = instance.metadata.temporal_coverage if file_type \
+            else instance.metadata.coverages.all().filter(type='period').first()
+
+        for attr_name in ['time_coverage_start', 'time_coverage_end']:
+            if hasattr(nc_dataset, attr_name):
+                delattr(nc_dataset, attr_name)
+
+        if temporal_coverage:
+            nc_dataset.time_coverage_start = temporal_coverage.value['start']
+            nc_dataset.time_coverage_end = temporal_coverage.value['end']
 
         # update spatial coverage
-        if instance.metadata.spatial_coverage:
-            for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
-                              'geospatial_lon_max']:
-                # clean up old info
-                if hasattr(nc_dataset, attr_name):
-                    delattr(nc_dataset, attr_name)
+        spatial_coverage = instance.metadata.spatial_coverage if file_type \
+            else instance.metadata.coverages.all().filter(type='box').first()
 
-            spatial_coverage = instance.metadata.spatial_coverage
+        for attr_name in ['geospatial_lat_min', 'geospatial_lat_max', 'geospatial_lon_min',
+                          'geospatial_lon_max']:
+            if hasattr(nc_dataset, attr_name):
+                delattr(nc_dataset, attr_name)
+
+        if spatial_coverage:
             nc_dataset.geospatial_lat_min = spatial_coverage.value['southlimit']
             nc_dataset.geospatial_lat_max = spatial_coverage.value['northlimit']
             nc_dataset.geospatial_lon_min = spatial_coverage.value['westlimit']
@@ -851,21 +862,26 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             for variable in instance.metadata.variables.all():
                 if variable.name in dataset_variables.keys():
                     dataset_variable = dataset_variables[variable.name]
+
+                    # update units
+                    if hasattr(dataset_variable, 'units'):
+                        delattr(dataset_variable, 'units')
                     if variable.unit != 'Unknown':
-                        # clean up old info
-                        if hasattr(dataset_variable, 'units'):
-                            delattr(dataset_variable, 'units')
-                            dataset_variable.setncattr('units', variable.unit)
+                        dataset_variable.setncattr('units', variable.unit)
+
+                    # update long_name
+                    if hasattr(dataset_variable, 'long_name'):
+                        delattr(dataset_variable, 'long_name')
                     if variable.descriptive_name:
-                        # clean up old info
-                        if hasattr(dataset_variable, 'long_name'):
-                            delattr(dataset_variable, 'long_name')
                         dataset_variable.setncattr('long_name', variable.descriptive_name)
+
+                    # update method
+                    if hasattr(dataset_variable, 'comment'):
+                        delattr(dataset_variable, 'comment')
                     if variable.method:
-                        # clean up old info
-                        if hasattr(dataset_variable, 'comment'):
-                            delattr(dataset_variable, 'comment')
                         dataset_variable.setncattr('comment', variable.method)
+
+                    # update missing value
                     if variable.missing_value:
                         if hasattr(dataset_variable, 'missing_value'):
                             missing_value = dataset_variable.missing_value
@@ -881,9 +897,68 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
                         if missing_value:
                             dataset_variable.setncattr('missing_value', missing_value)
-        # TODO: update contributor, creator and the license, source, reference information for netcdf resource type
+
+        # Update metadata element that only apply to netCDF resource
+        if not file_type:
+
+            # update summary
+            if hasattr(nc_dataset, 'summary'):
+                delattr(nc_dataset, 'summary')
+            if instance.metadata.description:
+                nc_dataset.summary = instance.metadata.description.abstract
+
+            # update contributor
+            if hasattr(nc_dataset, 'contributor_name'):
+                delattr(nc_dataset, 'contributor_name')
+
+            if instance.metadata.contributors.all():
+                res_contri_name = []
+                for contributor in instance.metadata.contributors.all():
+                    res_contri_name.append(contributor.name)
+
+                nc_dataset.contributor_name = ', '.join(res_contri_name)
+
+            # update creator
+            for attr_name in ['creator_name', 'creator_email', 'creator_url']:
+                if hasattr(nc_dataset, attr_name):
+                    delattr(nc_dataset, attr_name)
+            if instance.metadata.creators.all().filter(order=1):
+                creator = instance.metadata.creators.all().filter(order=1).first()
+                nc_dataset.creator_name = creator.name
+                if creator.email:
+                    nc_dataset.creator_email = creator.email
+                if creator.description or creator.homepage:
+                    nc_dataset.creator_url = creator.homepage if creator.homepage \
+                        else 'https://www.hydroshare.org' + creator.description
+
+            # update license
+            if hasattr(nc_dataset, 'license'):
+                delattr(nc_dataset, 'license')
+            if instance.metadata.rights:
+                nc_dataset.license = "{0} {1}".format(instance.metadata.rights.statement,
+                                                      instance.metadata.rights.url)
+
+            # update reference
+            if hasattr(nc_dataset, 'references'):
+                delattr(nc_dataset, 'references')
+            if instance.metadata.relations.all().filter(type='cites'):
+                res_meta_ref = []
+                for reference in instance.metadata.relations.all().filter(type='cites'):
+                    res_meta_ref.append(reference.value)
+                nc_dataset.references = ' \n'.join(res_meta_ref)
+
+            # update source
+            if hasattr(nc_dataset, 'source'):
+                delattr(nc_dataset, 'source')
+            if instance.metadata.sources.all():
+                res_meta_source = []
+                for source in instance.metadata.sources.all():
+                    res_meta_source.append(source.derived_from)
+                nc_dataset.source = ' \n'.join(res_meta_source)
+
         # close nc dataset
         nc_dataset.close()
+
     except Exception as ex:
         log.exception(ex.message)
         if os.path.exists(temp_nc_file):
@@ -899,8 +974,11 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                                          user)
     utils.replace_resource_file_on_irods(temp_text_file, txt_res_file,
                                          user)
-    instance.metadata.is_dirty = False
-    instance.metadata.save()
+
+    metadata = instance.metadata
+    metadata.is_dirty = False
+    metadata.save()
+
     # cleanup the temp dir
     if os.path.exists(temp_nc_file):
         shutil.rmtree(os.path.dirname(temp_nc_file))

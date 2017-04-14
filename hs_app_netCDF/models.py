@@ -7,12 +7,12 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
-    add_metadata_element_to_xml
+    add_metadata_element_to_xml, get_resource_files_by_extension
 
 
 # Define original spatial coverage metadata info
@@ -341,6 +341,17 @@ class NetcdfResource(BaseResource):
                 break
         return hs_term_dict
 
+    def update_netcdf_file(self, user):
+        if not self.metadata.is_dirty:
+            return
+
+        nc_res_file = get_resource_files_by_extension(self, ".nc")
+        txt_res_file = get_resource_files_by_extension(self, ".txt")
+
+        from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
+        if nc_res_file and txt_res_file:
+            netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
+
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True
@@ -398,10 +409,18 @@ class NetCDFMetaDataMixin(models.Model):
 
 # define the netcdf metadata
 class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
+    is_dirty = models.BooleanField(default=False)
 
     @property
     def resource(self):
         return NetcdfResource.objects.filter(object_id=self.id).first()
+
+    def set_dirty(self, flag):
+        """
+        Overriding the base class method
+        """
+        self.is_dirty = flag
+        self.save()
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
@@ -423,3 +442,60 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             ori_cov_obj.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def update_element(self, element_model_name, element_id, **kwargs):
+        super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
+        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
+        if nc_res_file and element_model_name in ['variable', 'title', 'description',
+                                                  'rights', 'source', 'coverage', 'relation',
+                                                  'creator', 'contributor']:
+
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs['type'] == 'cites':
+                self.is_dirty = True
+
+            self.save()
+
+    def create_element(self, element_model_name, **kwargs):
+        super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
+        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
+
+        if nc_res_file and element_model_name in ['description', 'subject', 'source', 'coverage',
+                                                  'creator', 'contributor']:
+
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs['type'] == 'cites':
+                self.is_dirty = True
+
+            self.save()
+
+    def delete_element(self, element_model_name, element_id):
+        super(NetcdfMetaData, self).delete_element(element_model_name, element_id)
+        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
+        if nc_res_file and element_model_name in ['source', 'contributor', 'creator', 'relation']:
+            self.is_dirty = True
+            self.save()
+
+    def get_update_netcdf_file_html_form(self):
+        form_action = "/hsapi/_internal/netcdf_update/{}/".\
+            format(self.resource.short_id)
+        style = "display:none;"
+        if self.is_dirty:
+            style = "margin-bottom:10px"
+        root_div = div(id="netcdf-file-update", cls="row", style=style)
+
+        with root_div:
+            with div(cls="col-sm-12"):
+                with div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    strong("NetCDF file needs to be synced with metadata changes.")
+
+                    input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
+                    with form(action=form_action, method="post", id="update-netcdf-file",):
+                        div('{% csrf_token %}')
+                        button("Update NetCDF File", type="submit", cls="btn btn-primary",
+                               id="id-update-netcdf-file",
+                               )
+
+        return root_div

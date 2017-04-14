@@ -171,7 +171,13 @@
 {{ block.super }}
 
 {# put resource specific js below #}
-<script type="text/javascript">
+<script>
+    $(document).ready(function() {
+        if (($("#metadata-dirty").val() === "True")) {
+            $("#netcdf-file-update").show();
+        }
+    })
+
     // original coverage meta check
     function check_ori_meta_status(){
         var form_action = $("form[id='id-originalcoverage']").attr('action');
@@ -187,7 +193,7 @@
             $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
             $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
         }
-    };
+    }
 
 
 </script>
