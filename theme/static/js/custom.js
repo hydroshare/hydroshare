@@ -51,7 +51,6 @@ $(document).ready(function() {
 
 	// Profile - Status Update 
 	// =======================
-
 	$('#update-status').on('click', function() {
 		$(".user-status > p").toggleClass("show hidden");
 		$(".user-status > form").toggleClass("hidden show");
