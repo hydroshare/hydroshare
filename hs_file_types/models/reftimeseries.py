@@ -5,6 +5,7 @@ import logging
 from dateutil import parser
 from urllib2 import Request, urlopen, URLError
 import jsonschema
+from lxml import etree
 
 from django.utils import timezone
 from django.db import models, transaction
@@ -17,14 +18,17 @@ from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbo
 
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
+from hs_core.models import CoreMetaData
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class TimeSeries(object):
     """represents a one timeseries metadata"""
-    def __init__(self, site_name, site_code, latitude, longitude, variable_name, variable_code,
-                 url, service_type, reference_type, return_type, start_date, end_date):
+    def __init__(self, network_name, site_name, site_code, latitude, longitude, variable_name,
+                 variable_code, url, service_type, reference_type, return_type, start_date,
+                 end_date):
+        self.network_name = network_name
         self.site_name = site_name
         self.site_code = site_code
         self.latitude = latitude
@@ -56,6 +60,9 @@ class TimeSeries(object):
                     with div(cls="panel-body"):
                         with table(cls='custom-table'):
                             with tbody():
+                                with tr():
+                                    get_th('Network Name')
+                                    td(self.network_name)
                                 with tr():
                                     get_th('Site Name')
                                     td(self.site_name)
@@ -94,6 +101,58 @@ class TimeSeries(object):
                                     td(self.end_date)
 
         return root_div
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        ref_ts_result = etree.SubElement(container, '{%s}referencedTimeSeriesResult'
+                                         % NAMESPACES['hsterms'])
+        rdf_description = etree.SubElement(ref_ts_result, '{%s}Description' % NAMESPACES['rdf'])
+
+        # encode web service data
+        hs_network_name = etree.SubElement(rdf_description, '{%s}networkName'
+                                           % NAMESPACES['hsterms'])
+        hs_network_name.text = self.network_name
+        hs_ref_type = etree.SubElement(rdf_description, '{%s}refType' % NAMESPACES['hsterms'])
+        hs_ref_type.text = self.reference_type
+        hs_retrun_type = etree.SubElement(rdf_description, '{%s}returnType' % NAMESPACES['hsterms'])
+        hs_retrun_type.text = self.return_type
+        hs_service_type = etree.SubElement(rdf_description, '{%s}serviceType'
+                                           % NAMESPACES['hsterms'])
+        hs_service_type.text = self.reference_type
+        hs_wsdl_url = etree.SubElement(rdf_description, '{%s}wsdlURL' % NAMESPACES['hsterms'])
+        hs_wsdl_url.text = self.url
+
+        # encode date (duration) data
+        hs_begin_date = etree.SubElement(rdf_description, '{%s}beginDate' % NAMESPACES['hsterms'])
+        st_date = parser.parse(self.start_date)
+        hs_begin_date.text = st_date.isoformat()
+        hs_end_date = etree.SubElement(rdf_description, '{%s}endDate' % NAMESPACES['hsterms'])
+        end_date = parser.parse(self.end_date)
+        hs_end_date.text = end_date.isoformat()
+
+        # encode site data
+        hs_site = etree.SubElement(rdf_description, '{%s}site' % NAMESPACES['hsterms'])
+        hs_site_desc = etree.SubElement(hs_site, '{%s}Description' % NAMESPACES['rdf'])
+        hs_site_code = etree.SubElement(hs_site_desc, '{%s}siteCode' % NAMESPACES['hsterms'])
+        hs_site_code.text = self.site_code
+        hs_site_name = etree.SubElement(hs_site_desc, '{%s}siteName' % NAMESPACES['hsterms'])
+        hs_site_name.text = self.site_name
+        hs_site_lat = etree.SubElement(hs_site_desc, '{%s}Latitude' % NAMESPACES['hsterms'])
+        hs_site_lat.text = str(self.latitude)
+        hs_site_lon = etree.SubElement(hs_site_desc, '{%s}Longitude' % NAMESPACES['hsterms'])
+        hs_site_lon.text = str(self.longitude)
+
+        # encode variable data
+        hs_variable = etree.SubElement(rdf_description, '{%s}variable' % NAMESPACES['hsterms'])
+        hs_variable_desc = etree.SubElement(hs_variable, '{%s}Description' % NAMESPACES['rdf'])
+        hs_variable_code = etree.SubElement(hs_variable_desc, '{%s}variableCode'
+                                            % NAMESPACES['hsterms'])
+        hs_variable_code.text = self.variable_code
+        hs_variable_name = etree.SubElement(hs_variable_desc, '{%s}variableName'
+                                            % NAMESPACES['hsterms'])
+        hs_variable_name.text = self.variable_name
 
 
 class Site(object):
@@ -235,7 +294,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             st_date = st_date.strftime('%m-%d-%Y')
             end_date = parser.parse(series['endDate'])
             end_date = end_date.strftime('%m-%d-%Y')
-            ts_series = TimeSeries(site_name=series['site'],
+            ts_series = TimeSeries(network_name=series['networkName'],
+                                   site_name=series['site'],
                                    site_code=series['siteCode'],
                                    latitude=series['location']['latitude'],
                                    longitude=series['location']['longitude'],
@@ -425,6 +485,14 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         return json_file_content_div
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all metadata elements associated with this
+        logical file type instance"""
+
+        container_to_add_to = super(RefTimeseriesFileMetaData, self).add_to_xml_container(container)
+        for series in self.time_serieses:
+            series.add_to_xml_container(container_to_add_to)
+
     def _json_to_dict(self):
         return json.loads(self.json_file_content)
 
@@ -433,7 +501,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
     metadata = models.OneToOneField(RefTimeseriesFileMetaData, related_name="logical_file")
-    data_type = "Reference timeseries data"
+    data_type = "referenceTimeseriesData"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

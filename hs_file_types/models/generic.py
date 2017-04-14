@@ -117,7 +117,7 @@ class GenericLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
-    data_type = "Generic data"
+    data_type = "genericData"
 
     @classmethod
     def create(cls):

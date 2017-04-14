@@ -273,7 +273,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
 
 class NetCDFLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
-    data_type = "NetCDF data"
+    data_type = "netCDFData"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

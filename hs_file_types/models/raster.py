@@ -211,7 +211,7 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
-    data_type = "Geo Raster data"
+    data_type = "geoRasterData"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
