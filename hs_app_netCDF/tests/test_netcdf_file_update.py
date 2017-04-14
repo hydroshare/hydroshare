@@ -85,7 +85,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         # check file update request
         url = reverse("update_netcdf_resfile", kwargs={'resource_id': self.resNetcdf.short_id})
-        print url
         request = self.factory.post(url)
         request.user = self.john
         self._set_request_message_attributes(request)
