@@ -2,7 +2,6 @@
 * Created by Mauriel on 3/9/2017.
 */
 
-
 function onRoleSelect(event) {
     var el = $(event.target);
     $("#selected_role").text(el.text());
@@ -229,7 +228,7 @@ function addEditExtraMeta2Table() {
     }
 
     if (edit_extra_meta_row_id == "") {
-        // add new
+        // Add new
         var new_row_id_0_base = findMaxRowID(t) + 1;
         var edit_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-edit-icon glyphicon glyphicon-edit btn-inline-favorite"></span>';
         var remove_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-remove-icon glyphicon glyphicon-remove btn-inline-favorite"></span>';
@@ -237,15 +236,18 @@ function addEditExtraMeta2Table() {
         $(row_ele).attr( 'id', new_row_id_0_base);
     }
     else {
-        // edit existing
+        // Edit existing
         var row_to_edit = t.row("#" + edit_extra_meta_row_id);
         var updated_data_array = row_to_edit.data();
         updated_data_array[0] = extra_meta_name;
         updated_data_array[1] = extra_meta_value;
         row_to_edit.data(updated_data_array);
     }
-
     t.rows().invalidate().draw();
+    $("#extraMetaTable").find("td:nth-child(2)").each(function() {
+        $(this).urlClickable();
+    });
+
     $('#extraMetaDialog').modal('hide');
     $('#save-extra-meta-btn').show();
 
@@ -298,7 +300,7 @@ function saveExtraMetadata()
     var t = $('#extraMetaTable').DataTable();
     t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
         var extra_meta_name = this.data()[0].trim();
-        var extra_meta_value = this.data()[1].trim();
+        var extra_meta_value = $("<div/>").html(this.data()[1].trim()).text();
         json_obj[extra_meta_name] = extra_meta_value;
     });
 
@@ -538,7 +540,7 @@ $(document).ready(function () {
     });
 
     $("#list-roles a").click(onRoleSelect);
-    $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
+    $("#add-access-form #id_user-autocomplete").attr("placeholder", "Search by name or username");
     $("#id_group-autocomplete").attr("placeholder", "Search by group name");
 
     var file_types = $("#supported-file-types").attr('value');
@@ -709,33 +711,27 @@ $(document).ready(function () {
         }
     });
 
-    // TODO: TESTING
     $("#btn-add-new-entry").click(function() {
         showAddEditExtraMetaPopup(false, '');
     });
 
-    // TODO: TESTING
     $(".btn-edit-extra-metadata").click(function () {
         var loopCounter = $(this).attr("data-loop-counter");
         showAddEditExtraMetaPopup(true, loopCounter);
     });
 
-    // TODO: TESTING
     $(".btn-remove-extra-metadata").click(function () {
         var loopCounter = $(this).attr("data-loop-counter");
         removeExtraMetadataFromTable(loopCounter);
     });
 
-    // TODO: TESTING
     $("#save-extra-meta-btn").click(saveExtraMetadata);
 
-    // TODO: TESTING
     $("#btn-confirm-edit-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");
         updateFileTypeExtraMetadata(formID);
     });
 
-    // TODO: TESTING
     $("#btn-delete-key-value").click(function () {
         var formID = $(this).closest("form").attr("id");
         deleteFileTypeExtraMetadata(formID);

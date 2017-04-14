@@ -1,6 +1,7 @@
 /**
 * Created by Mauriel on 3/9/2017.
 */
+
 function rep_res_to_irods_user_zone_ajax_submit(res_id) {
     setPointerEvents(false);
     $.ajax({
@@ -29,7 +30,7 @@ function rep_res_to_irods_user_zone_ajax_submit(res_id) {
 
 $(document).ready(function() {
     var resID = $("#resID").val();
-    // TODO: TESTING
+
     $("#btn-replicate").click(function() {
         rep_res_to_irods_user_zone_ajax_submit(resID);
     });
@@ -38,7 +39,6 @@ $(document).ready(function() {
         get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)
     });
 
-    // TODO: TESTING
     $("#btn-confirm-extended-metadata").click(function () {
         addEditExtraMeta2Table();
     });
