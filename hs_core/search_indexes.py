@@ -426,7 +426,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for variable in obj.metadata.variables.all():
                     variable_names.append(variable.name)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
+                for variable in obj.metadata.variables.all():
                     variable_names.append(variable.variable_name)
         return variable_names
 
@@ -440,7 +440,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for variable in obj.metadata.variables.all():
                     variable_types.append(variable.data_type)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
+                for variable in obj.metadata.variables.all():
                     variable_types.append(variable.variable_type)
         return variable_types
 
@@ -464,7 +464,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         variable_speciations = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for variable in obj.metadata.variables:
+                for variable in obj.metadata.variables.all():
                     variable_speciations.append(variable.speciation)
         return variable_speciations
 
@@ -475,7 +475,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for site in obj.metadata.sites.all():
                     sites.append(site.name)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for site in obj.metadata.sites:
+                for site in obj.metadata.sites.all():
                     sites.append(site.site_name)
         return sites
 
@@ -486,7 +486,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for method in obj.metadata.methods.all():
                     methods.append(method.description)
             elif isinstance(obj.metadata, TimeSeriesMetaData):
-                for method in obj.metadata.methods:
+                for method in obj.metadata.methods.all():
                     methods.append(method.method_description)
         return methods
 
@@ -511,7 +511,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         sample_mediums = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
+                for time_series_result in obj.metadata.time_series_results.all():
                     sample_mediums.append(time_series_result.sample_medium)
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
@@ -522,7 +522,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         units_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
+                for time_series_result in obj.metadata.time_series_results.all():
                     units_names.append(time_series_result.units_name)
         return units_names
 
@@ -530,7 +530,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         units_types = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
+                for time_series_result in obj.metadata.time_series_results.all():
                     units_types.append(time_series_result.units_type)
         return units_types
 
@@ -538,6 +538,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         aggregation_statistics = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
-                for time_series_result in obj.metadata.time_series_results:
+                for time_series_result in obj.metadata.time_series_results.all():
                     aggregation_statistics.append(time_series_result.aggregation_statistics)
         return aggregation_statistics
