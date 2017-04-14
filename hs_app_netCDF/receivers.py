@@ -284,7 +284,10 @@ def netcdf_post_add_files_to_resource(sender, **kwargs):
 
     for f in resource.files.all():
         if f.extension == ".txt":
-            nc_text = f.resource_file.read()
+            if f.resource_file:
+                nc_text = f.resource_file.read()
+            else:
+                nc_text = f.fed_resource_file.read()
             break
 
     if 'title = ' not in nc_text and metadata.title != 'Untitled Resource':

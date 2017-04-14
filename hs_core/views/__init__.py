@@ -183,6 +183,8 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
+        res_metadata = res.metadata
+        res_metadata.set_dirty(True)
 
     if request.is_ajax():
         if is_update_success:
@@ -1049,8 +1051,8 @@ def create_resource(request, *args, **kwargs):
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, 
-                                           user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
+                                           metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 

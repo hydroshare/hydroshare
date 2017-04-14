@@ -419,8 +419,10 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         """
         Overriding the base class method
         """
-        self.is_dirty = flag
-        self.save()
+        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
+        if nc_res_file:
+            self.is_dirty = flag
+            self.save()
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
