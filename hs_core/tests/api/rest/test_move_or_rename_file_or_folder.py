@@ -53,20 +53,20 @@ class TestPublicRenameEndpoint(HSRESTTestCase):
         unzip_url = "/hsapi/resource/%s/functions/move-or-rename/" % self.pid
         response = self.client.post(unzip_url, {
             "source_path": " ",
-            "target_path": "foo"
+            "target_path": "data/contents/foo"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = self.client.post(unzip_url, {
-            "source_path": "foo",
+            "source_path": "data/contents/foo",
             "target_path": " "
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = self.client.post(unzip_url, {
-            "target_path": "foo"
+            "target_path": "data/contents/foo"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response = self.client.post(unzip_url, {
-            "source_path": "foo"
+            "source_path": "data/contents/foo"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -74,6 +74,6 @@ class TestPublicRenameEndpoint(HSRESTTestCase):
         unzip_url = "/hsapi/resource/%s/functions/move-or-rename/" % self.pid
         response = self.client.post(unzip_url, {
             "source_path": "data/contents/foo",
-            "target_path": "bar"
+            "target_path": "data/contents/bar"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
