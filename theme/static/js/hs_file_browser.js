@@ -550,8 +550,6 @@ function showFileTypeMetadata(){
              return true;
          });
     });
-
-
 }
 
 function setBreadCrumbs(path) {
