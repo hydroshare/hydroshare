@@ -1215,8 +1215,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Tr
 
         # now uploading a sqlite file should delete the above uploaded csv file
         # first delete the existing sqlite file before we can upload a sqlite file
-        hydroshare.delete_resource_file(self.resTimeSeries.short_id, 'ODM2.sqlite',
-                                        self.user)
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, 'ODM2.sqlite', self.user)
 
         self._upload_valid_sqlite_file()
         # at this point the resource should have one content file

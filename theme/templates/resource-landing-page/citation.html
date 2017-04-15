@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="flex">
-                <div id="citation-text">{{ citation }}</div>
+                <div id="citation-text" class="url-clickable">{{ citation }}</div>
 
                 <button class="btn btn-default clipboard-copy" data-target="citation-text"
                         type="button">
@@ -96,15 +96,14 @@
                                             </div>
                                         </div>
 
-                                        <button type="button" class="btn btn-primary pull-right"
-                                                onclick="metadata_update_ajax_submit('id-rights'); return false;"
-                                                style="display: none;">Save changes
-                                        </button>
-                                    </div>
-                                </fieldset>
-                            </form>
-                        </div>
-                    {% endif %}
+                                <button type="button" class="btn btn-primary pull-right btn-form-submit"
+                                        style="display: none;">Save changes
+                                </button>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            {% endif %}
         </div>
 
         <div id="sharing-status" class="col-xs-12">

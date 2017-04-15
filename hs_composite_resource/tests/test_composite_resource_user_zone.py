@@ -110,7 +110,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             fname=self.raster_file_name)
         res_upload_files = []
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  fed_res_file_names=[fed_test_file_full_path], user=self.user)
+                                  source_names=[fed_test_file_full_path], user=self.user)
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
@@ -172,8 +172,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='Federated Composite Resource Testing',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
-            fed_copy_or_move='copy',
+            move=False,
             metadata=[]
         )

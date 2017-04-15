@@ -645,4 +645,8 @@
         });
     </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+    {% block extra_js %}
+        {{ block.super }}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/create-resource.js"></script>
+    {% endblock %}
 {% endblock %}
