@@ -148,6 +148,9 @@ function updateSelectionMenuContext() {
             flagDisableDownload = true;
             $("#fb-download-help").toggleClass("hidden", false);
         }
+        else {
+            $("#fb-download-help").toggleClass("hidden", true);
+        }
     }
     else {
         flagDisableCut = true;
