@@ -599,6 +599,15 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
             log.error(err_msg)
             raise ValidationError(err_msg)
 
+    def get_copy(self):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(RefTimeseriesLogicalFile, self).get_copy()
+        copy_of_logical_file.metadata.json_file_content = self.metadata.json_file_content
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.save()
+        return copy_of_logical_file
+
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
