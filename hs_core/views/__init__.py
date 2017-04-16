@@ -536,7 +536,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     try:
         utils.replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
+            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
         )
     except SessionException as ex:
@@ -982,16 +982,16 @@ def create_resource(request, *args, **kwargs):
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
-    # resource_files = request.FILES.getlist('files')
     resource_files = request.FILES.values()
-    fed_res_file_names=[]
+    source_names = []
     irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower()=='true'
+    federated = request.POST.get("irods_federated").lower() == 'true'
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
         if federated:
-            fed_res_file_names = irods_fnames.split(',')
+            source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -1000,38 +1000,35 @@ def create_resource(request, *args, **kwargs):
             zone = request.POST.get("irods-zone")
             try:
                 upload_from_irods(username=user, password=password, host=host, port=port,
-                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
-                context = {'file_size_error': ex.message}
                 ajax_response_data['message'] = ex.message
-                # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+
             except SessionException as ex:
-                context = {'resource_creation_error': ex.stderr}
                 ajax_response_data['message'] = ex.stderr
-                # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
-                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
+        page_url_dict, res_title, metadata, fed_res_path = \
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+                                                         files=resource_files,
+                                                         resource_title=res_title,
+                                                         source_names=source_names,
+                                                         page_redirect_url_key=url_key,
+                                                         requesting_user=request.user,
+                                                         **kwargs)
     except utils.ResourceFileSizeException as ex:
-        context = {'file_size_error': ex.message}
         ajax_response_data['message'] = ex.message
-        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
-        context = {'validation_error': ex.message}
         ajax_response_data['message'] = ex.message
-        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     except Exception as ex:
-        context = {'resource_creation_error': ex.message}
         ajax_response_data['message'] = ex.message
-        # return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
-    # TODO: (Pabitra) Not sure how we should be handling this when the call now comes as an ajax call
+    # TODO: (Pabitra) Not sure how we should be handling this when the call now comes as an
+    # ajax call
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
@@ -1041,25 +1038,25 @@ def create_resource(request, *args, **kwargs):
             title=res_title,
             metadata=metadata,
             files=resource_files,
-            fed_res_file_names=fed_res_file_names,
+            source_names=source_names,
+            # TODO: should probably be resource_federation_path like it is set to.
             fed_res_path = fed_res_path[0] if len(fed_res_path) == 1 else '',
-            fed_copy_or_move=fed_copy_or_move,
+            move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
-                                           metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource,
+                                           user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
         ajax_response_data['message'] = ex.message
 
-    # go to resource landing page
     request.session['just_created'] = True
     if not ajax_response_data['message']:
         ajax_response_data['status'] = 'success'
         ajax_response_data['resource_url'] = resource.get_absolute_url()
-    # return HttpResponseRedirect(resource.get_absolute_url())
+
     return JsonResponse(ajax_response_data)
 
 
