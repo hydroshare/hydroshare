@@ -1540,6 +1540,10 @@ body > .main-container {
 	width: 100%;
 }
 
+#btn-add-new-entry {
+	margin-bottom: 20px;
+}
+
 #invite-to-group .btn-add-access {
 	height: 34px;
 	width: 135px;
