@@ -74,7 +74,7 @@ function updateSelectionMenuContext() {
 
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
-    if (selected.length > 1) {
+    if (selected.length > 1) {          // Multiple files selected
         flagDisableRename = true; 
         flagDisableOpen = true;
         flagDisablePaste = true;
@@ -90,16 +90,15 @@ function updateSelectionMenuContext() {
             }
         }
         $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
-
     }
-    else if (selected.length == 1) {    // Unused for now
+    else if (selected.length == 1) {    // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
         if (size > maxSize) {
             flagDisableDownload = true;
             $("#fb-download-help").toggleClass("hidden", false);
         }
     }
-    else {
+    else {                              // No files selected
         flagDisableCut = true;
         flagDisableRename = true;
         flagDisableUnzip = true;
@@ -1308,6 +1307,8 @@ $(document).ready(function () {
             submitBtn.trigger('click');
         }
     });
+
+    updateSelectionMenuContext();
 });
 
 var cookieName = "page_scroll";
