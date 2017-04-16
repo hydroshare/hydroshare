@@ -107,6 +107,8 @@ function updateSelectionMenuContext() {
         flagDisableDelete = true;
         flagDisableDownload = true;
         flagDisableGetLink = true;
+        flagDisableSetNetCDFFileType = true;
+        flagDisableSetGeoRasterFileType = true;
 
         $("#fb-download-help").toggleClass("hidden", true);
     }
