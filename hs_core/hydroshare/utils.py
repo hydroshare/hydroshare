@@ -423,21 +423,21 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
 
-    # This makes an exact copy of all physical files. 
+    # This makes an exact copy of all physical files.
     src_files = os.path.join(src_res.root_path, 'data')
     dest_files = os.path.join(tgt_res.root_path, 'data')
     istorage.copyFiles(src_files, dest_files)
 
     for avu_name in avu_list:
         value = istorage.getAVU(src_res.root_path, avu_name)
-        if avu_name == 'isPublic' 
+        if avu_name == 'isPublic':
             if set_to_private:
                 istorage.setAVU(tgt_res.root_path, avu_name, 'False')
-            else: 
+            else:
                 istorage.setAVU(tgt_res.root_path, avu_name, value)
-        else: 
+        else:
             istorage.setAVU(tgt_res.root_path, avu_name, value)
-        
+
     # link copied resource files to Django resource model
     files = src_res.files.all()
 
