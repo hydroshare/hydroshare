@@ -29,6 +29,10 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
             password=self.password,
             groups=[]
         )
+
+        # create corresponding irods account in user zone
+        super(TestReplicateBagToUserZone, self).create_irods_user_in_user_zone()
+
         self.gen_res = hydroshare.create_resource(
             resource_type='GenericResource',
             owner=self.user,
