@@ -419,8 +419,8 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
         """
         Overriding the base class method
         """
-        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
-        if nc_res_file:
+
+        if self.resource.files.all():
             self.is_dirty = flag
             self.save()
 
@@ -447,36 +447,37 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
     def update_element(self, element_model_name, element_id, **kwargs):
         super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
-        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
-        if nc_res_file and element_model_name in ['variable', 'title', 'description',
-                                                  'rights', 'source', 'coverage', 'relation',
-                                                  'creator', 'contributor']:
+        if self.resource.files.all() and element_model_name in ['variable', 'title', 'description',
+                                                                'rights', 'source', 'coverage',
+                                                                'relation', 'creator',
+                                                                'contributor']:
 
             if element_model_name != 'relation':
                 self.is_dirty = True
-            elif kwargs['type'] == 'cites':
+            elif kwargs.get('type', None) == 'cites':
                 self.is_dirty = True
 
             self.save()
 
     def create_element(self, element_model_name, **kwargs):
-        super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
-        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
-
-        if nc_res_file and element_model_name in ['description', 'subject', 'source', 'coverage',
-                                                  'creator', 'contributor']:
+        element = super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
+        if self.resource.files.all() and element_model_name in ['description', 'subject', 'source',
+                                                                'coverage', 'relation', 'creator',
+                                                                'contributor']:
 
             if element_model_name != 'relation':
                 self.is_dirty = True
-            elif kwargs['type'] == 'cites':
+            elif kwargs.get('type', None) == 'cites':
                 self.is_dirty = True
 
             self.save()
 
+        return element
+
     def delete_element(self, element_model_name, element_id):
         super(NetcdfMetaData, self).delete_element(element_model_name, element_id)
-        nc_res_file = get_resource_files_by_extension(self.resource, ".txt")
-        if nc_res_file and element_model_name in ['source', 'contributor', 'creator', 'relation']:
+        if self.resource.files.all() and element_model_name in ['source', 'contributor', 'creator',
+                                                                'relation']:
             self.is_dirty = True
             self.save()
 

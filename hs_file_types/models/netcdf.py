@@ -912,9 +912,10 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             if hasattr(nc_dataset, 'contributor_name'):
                 delattr(nc_dataset, 'contributor_name')
 
-            if instance.metadata.contributors.all():
+            contributor_list = instance.metadata.contributors.all()
+            if contributor_list:
                 res_contri_name = []
-                for contributor in instance.metadata.contributors.all():
+                for contributor in contributor_list:
                     res_contri_name.append(contributor.name)
 
                 nc_dataset.contributor_name = ', '.join(res_contri_name)
@@ -923,8 +924,9 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             for attr_name in ['creator_name', 'creator_email', 'creator_url']:
                 if hasattr(nc_dataset, attr_name):
                     delattr(nc_dataset, attr_name)
-            if instance.metadata.creators.all().filter(order=1):
-                creator = instance.metadata.creators.all().filter(order=1).first()
+
+            creator = instance.metadata.creators.all().filter(order=1)
+            if creator:
                 nc_dataset.creator_name = creator.name
                 if creator.email:
                     nc_dataset.creator_email = creator.email
@@ -942,18 +944,22 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
             # update reference
             if hasattr(nc_dataset, 'references'):
                 delattr(nc_dataset, 'references')
-            if instance.metadata.relations.all().filter(type='cites'):
+
+            reference_list = instance.metadata.relations.all().filter(type='cites')
+            if reference_list:
                 res_meta_ref = []
-                for reference in instance.metadata.relations.all().filter(type='cites'):
+                for reference in reference_list:
                     res_meta_ref.append(reference.value)
                 nc_dataset.references = ' \n'.join(res_meta_ref)
 
             # update source
             if hasattr(nc_dataset, 'source'):
                 delattr(nc_dataset, 'source')
-            if instance.metadata.sources.all():
+
+            source_list = instance.metadata.sources.all()
+            if source_list:
                 res_meta_source = []
-                for source in instance.metadata.sources.all():
+                for source in source_list:
                     res_meta_source.append(source.derived_from)
                 nc_dataset.source = ' \n'.join(res_meta_source)
 

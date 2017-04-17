@@ -82,7 +82,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     metadata = nc_res.metadata
     metadata.is_dirty = False
-    metadata. save()
+    metadata.save()
 
     del_file = kwargs['file']
     del_file_ext = utils.get_resource_file_name_and_extension(del_file)[2]
@@ -290,9 +290,9 @@ def netcdf_post_add_files_to_resource(sender, **kwargs):
                 nc_text = f.fed_resource_file.read()
             break
 
-    if 'title = ' not in nc_text and metadata.title != 'Untitled Resource':
+    if 'title = ' not in nc_text and metadata.title.value != 'Untitled resource':
         metadata.is_dirty = True
-    elif 'summary = ' not in nc_text and metadata.description.abstract:
+    elif 'summary = ' not in nc_text and metadata.description:
         metadata.is_dirty = True
     elif 'keywords' not in nc_text and metadata.subjects.all():
         metadata.is_dirty = True

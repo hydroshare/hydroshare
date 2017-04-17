@@ -108,27 +108,6 @@ def landing_page(request, page):
 
         # netcdf file update notification in editing mode
         UpdateNetcdfLayout = HTML(content_model.metadata.get_update_netcdf_file_html_form())
-        # UpdateNetcdfLayout = Layout(HTML("""
-        # <div id="netcdf-file-update" class="row"
-        #   {% if not cm.metadata.is_dirty %}style="display:none;
-        #     "{% endif %} style="margin-bottom:10px" >
-        #     <div class="col-sm-12">
-        #         <div class="alert alert-warning alert-dismissible" role="alert">
-        #             <strong>NetCDF file needs to be synced with metadata changes.</strong>
-        #             <input id="metadata-dirty" type="hidden" value="{{ cm.metadata.is_dirty }}">
-        #             <form action="/multidimres/netcdf/update/{{ cm.short_id }}/" method="post"
-        #             enctype="multipart/form-data">
-        #                 {% csrf_token %}
-        #                 <input name="resource-mode" type="hidden" value="edit">
-        #                 <button type="button" class="btn btn-primary" onclick="this.form.submit();
-        #                 return false;">Update NetCDF File</button>
-        #             </form>
-        #         </div>
-        #     </div>
-        # </div>
-        # """
-        #                          )
-        #                     )
 
         # get the context from hs_core
         ext_md_layout = Layout(
@@ -136,20 +115,10 @@ def landing_page(request, page):
             HTML(
                 """
                     <div class="row">
-                    <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
-                    {% load crispy_forms_tags %}
-                    {% crispy original_coverage_form %}
-                    </div>
-                    <div class="col-md-10">
-                        <input style="margin-bottom:40px;"
-                        class="btn-danger btn btn-md"
-                        onclick="check_ori_meta_status()" type="button"
-                        data-toggle="modal"
-                        data-target="#delete-original-coverage-element-dialog"
-                        value="Delete Spatial Reference">
-                    </div>
-                    <hr style="border: 0;">
-                    {% crispy original_coverage_form.delete_modal_form %}
+                        <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
+                        {% load crispy_forms_tags %}
+                        {% crispy original_coverage_form %}
+                        </div>
                     </div>
                 """
             ),
