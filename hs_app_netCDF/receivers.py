@@ -25,7 +25,10 @@ def netcdf_pre_create_resource(sender, **kwargs):
     files = kwargs['files']
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     file_selected = False
     in_file_name = ''
@@ -34,9 +37,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
         nc_file_name = os.path.splitext(files[0].name)[0]
-    elif fed_res_fnames:
-        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        nc_file_name = os.path.splitext(os.path.basename(source_names[0]))[0]
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -61,7 +64,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
             validate_files_dict['message'] = 'Please check if the uploaded file ' \
                                              'is in valid NetCDF format.'
 
-        if fed_res_fnames and in_file_name:
+        if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
 
 
@@ -102,7 +105,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     if len(files) > 1:
         # file number validation
@@ -116,9 +122,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
         nc_file_name = os.path.splitext(files[0].name)[0]
-    elif fed_res_fnames:
-        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        nc_file_name = os.path.splitext(os.path.basename(source_names[0]))[0]
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -255,7 +261,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             validate_files_dict['message'] = 'Please check if the uploaded file is in ' \
                                              'valid NetCDF format.'
 
-        if fed_res_fnames and in_file_name:
+        if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
 
 
