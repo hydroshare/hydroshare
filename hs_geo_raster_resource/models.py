@@ -130,25 +130,29 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         rdf_coverage_value.text = cov_value
 
-    def get_html_form(self, resource):
-        """Generates html form code for this metadata element so that this element can be edited"""
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
 
         from .forms import OriginalCoverageSpatialForm
 
-        ori_coverage_data_dict = dict()
-        ori_coverage_data_dict['projection'] = self.value.get('projection', None)
-        ori_coverage_data_dict['datum'] = self.value.get('datum', None)
-        ori_coverage_data_dict['projection_string'] = self.value.get('projection_string', None)
-        ori_coverage_data_dict['units'] = self.value['units']
-        ori_coverage_data_dict['northlimit'] = self.value['northlimit']
-        ori_coverage_data_dict['eastlimit'] = self.value['eastlimit']
-        ori_coverage_data_dict['southlimit'] = self.value['southlimit']
-        ori_coverage_data_dict['westlimit'] = self.value['westlimit']
+        ori_coverage_data_dict = {}
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.value.get('datum', None)
+            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string',
+                                                                            None)
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
 
         originalcov_form = OriginalCoverageSpatialForm(
-            initial=ori_coverage_data_dict,
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
             res_short_id=resource.short_id if resource else None,
-            element_id=self.id if self else None)
+            element_id=element.id if element else None, file_type=file_type)
 
         return originalcov_form
 
@@ -410,7 +414,7 @@ class GeoRasterMetaDataMixin(models.Model):
         missing_required_elements = super(GeoRasterMetaDataMixin,
                                           self).get_required_missing_elements()
         if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage: Box')
+            missing_required_elements.append('Spatial Coverage')
         if not self.cellInformation:
             missing_required_elements.append('Cell Information')
         if not self.bandInformations:

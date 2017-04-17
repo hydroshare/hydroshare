@@ -292,24 +292,23 @@ function share_resource_ajax_submit(form_id) {
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
 
-
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-                rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick", "unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
-                // Set form urls, ids, and onclick methods
+                rowTemplate.find(".remove-user-form .btn-remove-row").attr("data-arg", "form-remove-user-" + share_with);
+                // Set form urls, ids
                 rowTemplate.find(".share-form-view").attr('action', viewUrl);
                 rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
                 rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
-                rowTemplate.find(".share-form-view a").attr("onclick", "change_share_permission_ajax_submit('share-view-" + share_with + "')");
+                rowTemplate.find(".share-form-view a").attr("data-arg", "share-view-" + share_with);
                 rowTemplate.find(".share-form-edit").attr('action', changeUrl);
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
-                rowTemplate.find(".share-form-edit a").attr("onclick", "change_share_permission_ajax_submit('share-edit-" + share_with + "')");
+                rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                     rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                    rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                    rowTemplate.find(".share-form-owner a").attr("data-arg", "share-owner-" + share_with);
                 }
                 else {
                     rowTemplate.find(".share-form-owner").parent().remove();
@@ -361,6 +360,17 @@ function share_resource_ajax_submit(form_id) {
                 }
                 $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
+                // Rebind events
+                $(".btn-unshare-resource").click(function () {
+                    var formID = $(this).closest("form").attr("id");
+                    unshare_resource_ajax_submit(formID);
+                });
+
+                $(".btn-change-share-permission").click(function () {
+                    var arg = $(this).attr("data-arg");
+                    change_share_permission_ajax_submit(arg);
+                });
+
                 updateActionsState(json_response.current_user_privilege);
             }
             else if (json_response.status == "error") {
@@ -373,7 +383,6 @@ function share_resource_ajax_submit(form_id) {
             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
             setPointerEvents(true);
         }
-
     });
     //don't submit the form
     return false;
@@ -702,7 +711,7 @@ function update_netcdf_file_ajax_submit() {
 
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
-    var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
+    var entry = $(obj).closest("div[data-hs-user-type]").find("#id_user-deck > .hilight");
     if (entry.length < 1) {
         entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
         is_group = true;
@@ -1157,6 +1166,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+        $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type

@@ -376,7 +376,7 @@ def create_irods_account(request):
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message}),
+                    dumps({"error": ex.message + ' - iRODS server failed to create this iRODS account.'}),
                     content_type = "application/json"
             )
     else:

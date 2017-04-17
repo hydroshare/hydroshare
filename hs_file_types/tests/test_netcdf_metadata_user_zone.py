@@ -1,3 +1,5 @@
+import os
+
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.conf import settings
@@ -67,9 +69,9 @@ class NetCDFFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title=res_title,
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
-            fed_copy_or_move='copy',
+            move=False,
             metadata=[]
         )
 
@@ -88,7 +90,7 @@ class NetCDFFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         fed_file_path = "data/contents/{}".format(self.netcdf_file_name)
-        self.assertEqual(res_file.fed_resource_file_name_or_path, fed_file_path)
+        self.assertEqual(os.path.join('data', 'contents', res_file.short_path), fed_file_path)
 
         # set the tif file to NetCDF file type
         NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)

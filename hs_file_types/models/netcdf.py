@@ -56,8 +56,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         """overrides the base class function"""
 
         html_string = super(NetCDFFileMetaData, self).get_html()
-        html_string += self.spatial_coverage.get_html()
-        html_string += self.originalCoverage.get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalCoverage:
+            html_string += self.originalCoverage.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
         variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
@@ -144,9 +146,13 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         orig_cov_form.action = temp_action
 
         spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
-        update_action = update_action.format(self.logical_file.id, "coverage",
-                                             self.spatial_coverage.id)
-        spatial_cov_form.action = update_action
+        if self.spatial_coverage:
+            temp_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.spatial_coverage.id)
+        else:
+            temp_action = create_action.format(self.logical_file.id, "coverage")
+
+        spatial_cov_form.action = temp_action
         context_dict = dict()
         context_dict["temp_form"] = temp_cov_form
         context_dict["orig_coverage_form"] = orig_cov_form
@@ -290,6 +296,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @property
     def supports_resource_file_move(self):
         """resource files that are part of this logical file can't be moved"""
+        return False
+
+    @property
+    def supports_resource_file_add(self):
+        """doesn't allow a resource file to be added"""
         return False
 
     @property
@@ -509,10 +520,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         # name as the name for the new folder
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        nc_file_name)
-                        fed_file_full_path = ''
-                        if resource.resource_federation_path:
-                            fed_file_full_path = os.path.join(resource.root_path,
-                                                              new_folder_path)
+                        # Alva: This does nothing at all.
+                        # fed_file_full_path = ''
+                        # if resource.resource_federation_path:
+                        #     fed_file_full_path = os.path.join(resource.root_path,
+                        #                                       new_folder_path)
 
                         create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
@@ -527,10 +539,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder,
-                                fed_res_file_name_or_path=fed_file_full_path
+                                resource, uploaded_file, folder=upload_folder
                             )
-                            # make each resource file we added as part of the logical file
+
+                            # make each resource file we added part of the logical file
                             logical_file.add_resource_file(new_res_file)
 
                         log.info("NetCDF file type - new files were added to the resource.")
@@ -573,6 +585,11 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         else:
                             logical_file.metadata.create_element(k, **v)
                     log.info("NetCDF file type - metadata was saved to DB")
+                    # set resource to private if logical file is missing required metadata
+                    if not logical_file.metadata.has_all_required_elements():
+                        resource.raccess.public = False
+                        resource.raccess.discoverable = False
+                        resource.raccess.save()
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
                 log.error(err_msg)
@@ -639,7 +656,7 @@ def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_
     if resource is not None:
         # file type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
-                                  resource.metadata.creators.all())
+                                  resource.metadata.contributors.all())
     else:
         # resource type
         add_contributors_metadata(res_meta_list, extracted_core_meta,
