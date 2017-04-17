@@ -422,27 +422,21 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
-    src_coll = os.path.join(src_res.root_path, 'data')
-    dest_coll = os.path.join(tgt_res.root_path, 'data')
+
     # This makes an exact copy of all physical files. 
-    # TODO: This is in error for bags 
-    # However, the evidence is that the metadata_dirty flag should be set to True 
-    # so that the bag will be regenerated, because inherently the copy is a 
-    # different resource and has a different resource id!
-    istorage.copyFiles(src_coll, dest_coll)
+    src_files = os.path.join(src_res.root_path, 'data')
+    dest_files = os.path.join(tgt_res.root_path, 'data')
+    istorage.copyFiles(src_files, dest_files)
 
     for avu_name in avu_list:
-        value = istorage.getAVU(src_coll, avu_name)
+        value = istorage.getAVU(src_res.root_path, avu_name)
         if avu_name == 'isPublic' 
             if set_to_private:
-                istorage.setAVU(dest_coll, avu_name, 'False')
+                istorage.setAVU(tgt_res.root_path, avu_name, 'False')
             else: 
-                istorage.setAVU(dest_coll, avu_name, value)
-        elif avu_name == 'metadata_dirty':
-            # force bag to be recreated
-            istorage.setAVU(dest_coll, avu_name, 'False')
+                istorage.setAVU(tgt_res.root_path, avu_name, value)
         else: 
-            istorage.setAVU(dest_coll, avu_name, value)
+            istorage.setAVU(tgt_res.root_path, avu_name, value)
         
     # link copied resource files to Django resource model
     files = src_res.files.all()
@@ -453,12 +447,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     for src_logical_file in src_logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy()
 
-    # TODO: This is now in error because we already copied the file to the resource. 
-    # TODO: We need to create the resource file with a pointer to the existing storage.
-    # TODO: Or, we need to allow this copy to suffice rather than the above copy. 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
-        # this form of ResourceFile.create creates a reference to an existing file in iRODS
         new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
 
         # if the original file is part of a logical file, then
