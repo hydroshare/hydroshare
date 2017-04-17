@@ -1537,12 +1537,14 @@
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if u.can_undo %}
                                     <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
                                           action="" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
+                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">
@@ -1619,12 +1621,14 @@
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if u.can_undo %}
                                     <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
                                           action="" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
+                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">
@@ -1820,12 +1824,14 @@
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if u.can_undo %}
                                     <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
                                           action="" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
+                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">

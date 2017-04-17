@@ -28,6 +28,22 @@ function rep_res_to_irods_user_zone_ajax_submit(res_id) {
     });
 }
 
+// These event bindings will work even for elements created dynamically
+$(document).on('click', '.btn-unshare-resource', function () {
+    var formID = $(this).closest("form").attr("id");
+    unshare_resource_ajax_submit(formID);
+});
+
+$(document).on('click', '.btn-undo-share', function () {
+    var formID = $(this).closest("form").attr("id");
+    undo_share_ajax_submit(formID);
+});
+
+$(document).on("click", ".btn-change-share-permission", function () {
+    var arg = $(this).attr("data-arg");
+    change_share_permission_ajax_submit(arg);
+});
+
 $(document).ready(function() {
     var resID = $("#resID").val();
 
@@ -48,13 +64,4 @@ $(document).ready(function() {
         share_resource_ajax_submit(formID);
     });
 
-    $(".btn-unshare-resource").click(function() {
-        var formID = $(this).closest("form").attr("id");
-        unshare_resource_ajax_submit(formID);
-    });
-
-    $(".btn-change-share-permission").click(function() {
-        var arg = $(this).attr("data-arg");
-        change_share_permission_ajax_submit(arg);
-    });
 });

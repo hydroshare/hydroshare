@@ -128,6 +128,60 @@ function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permissi
     //don't submit the form
     return false;
 }
+
+function undo_share_ajax_submit(form_id) {
+    $form = $('#' + form_id);
+    var datastring = $form.serialize();
+    var url = $form.attr('action');
+    setPointerEvents(false);
+    $form.parent().closest("tr").addClass("loading");
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            var json_response;
+
+            try {
+                json_response = JSON.parse(result);
+            }
+            catch (err) {
+                console.log(err.message);
+                // Remove previous alerts
+                $("#div-invite-people").find(".label-danger").remove();
+
+                // Append new error message
+                $("#div-invite-people").append("<span class='label label-danger'>" +
+                    "<strong>Error: </strong>Failed to undo action.</span>");
+
+                $form.parent().closest("tr").removeClass("loading");
+                setPointerEvents(true);
+                return;
+            }
+
+            if (json_response.status == "success") {
+
+            }
+            else {
+                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                $form.parent().closest("tr").removeClass("loading");
+            }
+            $form.parent().closest("tr").removeClass("loading");
+            setPointerEvents(true);
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
+            setPointerEvents(true);
+        }
+    });
+    //don't submit the form
+    return false;
+}
+
 function showWaitDialog(){
     // display wait for the process to complete dialog
     return $("#wait-to-complete").dialog({
@@ -291,10 +345,14 @@ function share_resource_ajax_submit(form_id) {
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
+                var undoUrl = "";   // TODO: COMPUTE THIS URL
 
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-                rowTemplate.find(".remove-user-form .btn-remove-row").attr("data-arg", "form-remove-user-" + share_with);
+
+                rowTemplate.find(".undo-share-form").attr('action', undoUrl);
+                rowTemplate.find(".undo-share-form").attr('id', 'form-undo-share-' + share_with);
+
                 // Set form urls, ids
                 rowTemplate.find(".share-form-view").attr('action', viewUrl);
                 rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
@@ -359,17 +417,6 @@ function share_resource_ajax_submit(form_id) {
                     rowTemplate.find(".share-form-owner").parent().addClass("active");
                 }
                 $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
-
-                // Rebind events
-                $(".btn-unshare-resource").click(function () {
-                    var formID = $(this).closest("form").attr("id");
-                    unshare_resource_ajax_submit(formID);
-                });
-
-                $(".btn-change-share-permission").click(function () {
-                    var arg = $(this).attr("data-arg");
-                    change_share_permission_ajax_submit(arg);
-                });
 
                 updateActionsState(json_response.current_user_privilege);
             }
