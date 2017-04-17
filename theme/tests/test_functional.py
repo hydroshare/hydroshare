@@ -1,14 +1,71 @@
-from django.contrib.auth.models import Group
+import time
+import os
+from uuid import uuid4
+
+from django.contrib.auth.models import User, Group, Permission
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import override_settings
 
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common import desired_capabilities, keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.command import Command
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
+
+
+def create_driver(platform='desktop', driver_name='phantomjs'):
+    if platform is 'desktop':
+        user_agent = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) '
+                      'AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/27.0.1453.93 Safari/537.36')
+        driver_kwargs = {'width': 800,
+                         'height': 1000}
+    elif platform is 'mobile':
+        user_agent = ('Mozilla/5.0 (iPhone; CPU iPhone OS 5_0 like Mac OS X) '
+                      'AppleWebKit/534.46 (KHTML, like Gecko) '
+                      'Version/5.1 Mobile/9A334 Safari/7534.48.3')
+        driver_kwargs = {'width': 640,
+                         'height': 1136}
+    else:
+        raise ValueError('Unknown platform')
+
+    if driver_name is 'phantomjs':
+        dcap = dict(desired_capabilities.DesiredCapabilities.PHANTOMJS)
+        dcap["phantomjs.page.settings.userAgent"] = user_agent
+        driver = webdriver.PhantomJS(desired_capabilities=dcap)
+        driver.implicitly_wait(10)
+    elif driver_name is 'firefox':
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("general.useragent.override", user_agent)
+        cap = webdriver.common.desired_capabilities.DesiredCapabilities.FIREFOX
+        cap['marionette'] = True
+        driver = webdriver.Firefox(profile,
+                                   capabilities=cap)
+        driver.implicitly_wait(20)
+    else:
+        raise ValueError('Unknown driver')
+
+    driver.set_window_size(**driver_kwargs)
+
+    return driver
+
+
+def upload_file(driver, file_field, local_upload_path):
+    # TODO: Temporary workaround for PhantomJS bug.
+    #   See: https://github.com/ariya/phantomjs/issues/10993
+
+    if type(driver) == webdriver.PhantomJS:
+        driver.execute_script("return arguments[0].multiple = false", file_field)
+        file_field.send_keys(local_upload_path)
+    elif type(driver) == webdriver.Firefox or type(driver) == webdriver.FirefoxProfile:
+        file_field._execute(Command.SEND_KEYS_TO_ELEMENT, {'value': list(os.path.abspath(local_upload_path))})
+    else:
+        raise ValueError('Unkonwn driver')
 
 
 class FunctionalTestsCases(object):
@@ -20,25 +77,68 @@ class FunctionalTestsCases(object):
     fixtures = ['theme/tests/fixtures.json']
 
     def setUp(self):
-        self.user_password = "Users_Cats_FirstName"
-        group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        self.user = hydroshare.create_account(
-            'user30@example.com',
-            username='user30',
-            first_name='User_FirstName',
-            last_name='User_LastName',
-            password=self.user_password,
-            groups=[group]
-        )
-        self.user.save()
         super(FunctionalTestsCases, self).setUp()
 
+        self.driver = None
+        self.user_password = "Users_Cats_FirstName"
+        if not User.objects.filter(email='user30@example.com'):
+            group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+
+            # Permissions model level permissions are required for some actions because of legacy Mezzanine
+            # It also relies on the magic "Hydroshare Author" group which is not created via a migration :/
+            hs_perms = Permission.objects.filter(content_type__app_label__startswith="hs_")
+
+            group.permissions.add(*list(hs_perms))
+            self.user = hydroshare.create_account(
+                'user30@example.com',
+                username='user30',
+                first_name='User_FirstName',
+                last_name='User_LastName',
+                password=self.user_password,
+                groups=[group]
+            )
+            self.user.save()
+        else:
+            self.user = User.objects.get(email='user30@example.com')
+
     def tearDown(self):
+        self.driver.save_screenshot('tests-debug-teardown.png')
         self.driver.quit()
         super(FunctionalTestsCases, self).tearDown()
 
+    def wait_and_click(self, css_selector, except_fail=True):
+        elem = False
+        try:
+            WebDriverWait(self.driver, 5).until(
+                expected_conditions.element_to_be_clickable(
+                    (By.CSS_SELECTOR, css_selector)
+                )
+            )
+            elem = self.driver.find_element_by_css_selector(css_selector)
+            elem.click()
+        except TimeoutException as e:
+            self.driver.save_screenshot('clickable' + css_selector.replace(' ', '') + '.png')
+            if except_fail:
+                self.fail(css_selector + " not clickable within timeout")
+        return elem
+
+    def wait_for_visible(self, css_selector, except_fail=True):
+        elem = False
+        try:
+            WebDriverWait(self.driver, 5).until(
+                expected_conditions.visibility_of_element_located(
+                    (By.CSS_SELECTOR, css_selector)
+                )
+            )
+            elem = self.driver.find_element_by_css_selector(css_selector)
+        except TimeoutException:
+            self.driver.save_screenshot('visible' + css_selector.replace(' ', '') + '.png')
+            if except_fail:
+                self.fail(css_selector + " not visible within timeout")
+        return elem
+
     def _login_helper(self, login_name, user_password):
-        # home page: click to login
+        # home page: click to login. Uses generic xpath for Mobile & Desktop
         for e in self.driver.find_elements_by_xpath("//a[contains(text(),'Sign In')]"):
             if e.is_displayed():
                 e.click()
@@ -50,18 +150,54 @@ class FunctionalTestsCases(object):
         submit = self.driver.find_element_by_xpath("//input[@type='submit']")
 
         username_field.send_keys(login_name, keys.Keys.TAB)
-        self.assertEquals(self.driver.switch_to.active_element, password_field)
         password_field.send_keys(user_password, keys.Keys.TAB)
-        self.assertEquals(self.driver.switch_to.active_element, submit)
         submit.send_keys(keys.Keys.ENTER)
+        home_page_tag = self.driver.find_element_by_class_name('home-page-block-title')
+        self.assertTrue(home_page_tag.is_displayed())
 
     def _logout_helper(self):
+        self.driver.get(self.live_server_url)
         xpath_query = "//li[@id='profile-menu']/a[@class='dropdown-toggle']"
         dropdown = self.driver.find_element_by_xpath(xpath_query)
         dropdown.click()
         signout = dropdown.find_element_by_xpath("//a[@id='signout-menu']")
         signout.click()
         self.driver.delete_all_cookies()
+
+    def _create_resource_helper(self, upload_file_path, resource_title=None):
+        if not resource_title:
+            resource_title = str(uuid4())
+        upload_file_path = os.path.abspath(upload_file_path)
+
+        # load my resources & click create new
+        my_resources = self.driver.find_element_by_xpath("//a[contains(text(),'My Resources')]")
+        try:
+            WebDriverWait(self.driver, 5).until(expected_conditions.visibility_of(my_resources))
+        except TimeoutException:
+            self.driver.save_screenshot('myresources-not-found.png')
+            self.fail('My resources link not visible')
+        my_resources.click()
+
+        try:
+            WebDriverWait(self.driver, 10).until(
+                expected_conditions.presence_of_element_located(
+                    (By.LINK_TEXT, "Create new")
+                )
+            )
+        except TimeoutException:
+            self.driver.save_screenshot('create-new-not-found.png')
+            self.fail('Create new resource link not available')
+
+        self.driver.find_element_by_link_text('Create new').click()
+
+        # complete new resource form
+        self.driver.find_element_by_name('title').send_keys(resource_title)
+        file_field = self.driver.find_element_by_name('files')
+        upload_file(self.driver, file_field, upload_file_path)
+        self.driver.find_element_by_xpath("//button[@type='submit']").click()
+        resource_detail_page_tag = self.driver.find_element_by_id('resource-title')
+        self.assertTrue(resource_detail_page_tag.is_displayed())
+        return resource_title
 
     def test_register_account(self):
         for e in self.driver.find_elements_by_xpath("//a[contains(text(),'Sign In')]"):
@@ -85,39 +221,22 @@ class FunctionalTestsCases(object):
         self._logout_helper()
 
     def test_create_resource(self):
-        RESOURCE_TITLE = 'Selenium resource creation test'
-        UPLOAD_FILE_PATH = '/hydroshare/manage.py'
         self._login_helper(self.user.email, self.user_password)
+        resource_title = self._create_resource_helper('./manage.py')
 
-        # load my resources & click create new
-        my_res_lnk = self.driver.find_element_by_xpath("//a[contains(text(),'My Resources')]")
-        my_res_lnk.click()
-        create_new_lnk = self.driver.find_element_by_link_text('Create new')
-        create_new_lnk.click()
-
-        # complete new resource form
-        title_field = self.driver.find_element_by_name('title')
-        file_field = self.driver.find_element_by_name('files')
-        submit_btn = self.driver.find_element_by_xpath("//button[@type='submit']")
-
-        self.assertTrue(title_field.is_displayed())
-        title_field.send_keys(RESOURCE_TITLE)
-        file_field.send_keys(UPLOAD_FILE_PATH + ',', keys.Keys.ENTER)
-        submit_btn.click()
-
-        # check results
         title = self.driver.find_element_by_xpath("//h2[@id='resource-title']").text
-        self.assertEqual(title, RESOURCE_TITLE)
+        self.assertEqual(title, resource_title)
         citation = self.driver.find_element_by_xpath("//input[@id='citation-text']")
         citation_text = citation.get_attribute('value')
         import re
-        m = re.search('HydroShare, http://www.hydroshare.org/resource/(.*)$', citation_text)
+        m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
         shortkey = m.groups(0)[0]
         resource = BaseResource.objects.get()
-        self.assertEqual(resource.title, RESOURCE_TITLE)
+        self.assertEqual(resource.title, resource_title)
         self.assertEqual(resource.short_id, shortkey)
+        self.assertEqual(resource.creator, self.user)
         # Unsure why the following is not working currently.
-        # self.assertTrue("Congratulations!" in self.driver.page_source)
+        self.assertTrue("Congratulations!" in self.driver.page_source)
 
 
 @override_settings(
@@ -126,18 +245,14 @@ class FunctionalTestsCases(object):
     CSP_DICT={'default-src': 'unsafe-eval'}
 )
 class DesktopTests(FunctionalTestsCases, StaticLiveServerTestCase):
-    def setUp(self):
-        desktop_dcap = dict(desired_capabilities.DesiredCapabilities.PHANTOMJS)
-        desktop_dcap["phantomjs.page.settings.userAgent"] = (
-                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) "
-                     "AppleWebKit/537.36 (KHTML, like Gecko) "
-                     "Chrome/27.0.1453.93 Safari/537.36")
+    allow_database_queries = True
 
-        self.driver = webdriver.PhantomJS(desired_capabilities=desktop_dcap)
-        self.driver.set_window_size(width=1920, height=1200)
-        self.driver.implicitly_wait(10)
-        self.driver.get(self.live_server_url)
+    def setUp(self, driver=None):
         super(DesktopTests, self).setUp()
+        self.driver = driver
+        if not driver:
+            self.driver = create_driver('desktop')
+        self.driver.get(self.live_server_url)
 
     def test_login_email(self):
         super(DesktopTests, self).test_login_email()
@@ -157,6 +272,61 @@ class DesktopTests(FunctionalTestsCases, StaticLiveServerTestCase):
         desktop_login_link = self.driver.find_element_by_id('signin-menu')
         self.assertTrue(desktop_login_link.is_displayed())
 
+    def test_folder_drag(self):
+        self._login_helper(self.user.email, self.user_password)
+        self._create_resource_helper('./manage.py')
+
+        self.driver.find_element_by_id('edit-metadata').click()
+
+        # create new folder
+        self.assertTrue(self.driver.find_element_by_id('fb-files-container').is_displayed())
+        self.driver.find_element_by_xpath("//h3[text() = 'Content']").location_once_scrolled_into_view
+        try:
+            WebDriverWait(self.driver, 10).until(
+                expected_conditions.visibility_of_element_located(
+                    (By.CLASS_NAME, 'fb-file-name')
+                )
+            )
+        except TimeoutException:
+            self.driver.save_screenshot('resource-contents-display-timeout.png')
+            self.fail('Create folder modal not available')
+        self.driver.find_element_by_id('fb-files-container').click()
+        self.assertTrue(self.driver.find_element_by_id('fb-create-folder').is_enabled())
+        self.driver.find_element_by_id('fb-create-folder').click()
+        # wait for modal to appear
+        try:
+            WebDriverWait(self.driver, 10).until(
+                expected_conditions.visibility_of_element_located(
+                    (By.ID, 'txtFolderName')
+                )
+            )
+        except TimeoutException:
+            self.driver.save_screenshot('create-folder-modal-timeout.png')
+            self.fail('Create folder modal not available')
+        self.driver.find_element_by_id('txtFolderName').send_keys('Button Folder')
+        self.driver.find_element_by_id('btn-create-folder').click()
+
+        # TODO: try context click for creating a new folder
+
+        # drag and drop into new folder
+        time.sleep(3)
+        self.assertEqual(len(self.driver.find_elements_by_class_name('fb-file-name')), 2)
+        file_el = self.driver.find_element_by_class_name('fb-file')
+        folder_el = self.driver.find_element_by_class_name('fb-folder')
+        action_chain = webdriver.ActionChains(self.driver)
+        action_chain.drag_and_drop(file_el, folder_el).perform()
+        time.sleep(10)
+
+        # double click on new folder
+        #folder_el = self.driver.find_element_by_class_name('fb-folder')
+        #self.driver.find_element_by_id('fb-files-container').click()
+        #webdriver.ActionChains(self.driver).move_to_element(folder_el).double_click(folder_el).perform()
+        folder_el = self.driver.find_element_by_css_selector('#hs-file-browser li.fb-folder')
+        webdriver.ActionChains(self.driver).move_to_element(folder_el).click().perform()
+        time.sleep(3)
+        self.driver.execute_script("$('#hs-file-browser li.fb-folder').dblclick()")
+        time.sleep(2)
+        self.assertEqual(self.driver.find_element_by_class_name('fb-file-name').text, 'manage.py')
 
 @override_settings(
     CSRF_COOKIE_SECURE=False,
@@ -164,50 +334,39 @@ class DesktopTests(FunctionalTestsCases, StaticLiveServerTestCase):
     CSP_DICT={'default-src': 'unsafe-eval'}
 )
 class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
-    def setUp(self):
-        mobile_dcap = dict(desired_capabilities.DesiredCapabilities.PHANTOMJS)
-        mobile_dcap["phantomjs.page.settings.userAgent"] = (
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 5_0 like Mac OS X) "
-                    "AppleWebKit/534.46 (KHTML, like Gecko) "
-                    "Version/5.1 Mobile/9A334 Safari/7534.48.3")
-
-        self.driver = webdriver.PhantomJS(desired_capabilities=mobile_dcap)
-        # iPhone 5 resolution
-        self.driver.set_window_size(width=640, height=1136)
-        self.driver.get(self.live_server_url)
+    def setUp(self, driver=None):
         super(MobileTests, self).setUp()
+        self.driver = driver
+        if not driver:
+            self.driver = create_driver('mobile')
+        self.driver.get(self.live_server_url)
 
-    def _open_nav_menu(self):
-        toggle = self.driver.find_element_by_xpath("//button[contains(@class,'navbar-toggle')]")
-        navbar = self.driver.find_element_by_xpath("//ul[contains(@class,'navbar-nav')]")
-        if navbar.is_displayed():
+    def _open_nav_menu_helper(self):
+        if self.wait_for_visible('ul.navbar-nav', except_fail=False):
             return
-        toggle.click()
-        try:
-            WebDriverWait(self.driver, 20).until(EC.visibility_of(navbar))
-        finally:
-            if not navbar.is_displayed():
-                self.fail()
+        self.wait_and_click('button.navbar-toggle')
+        self.wait_for_visible('ul.navbar-nav')
 
     def _login_helper(self, login_name, user_password):
-        self._open_nav_menu()
+        self._open_nav_menu_helper()
         super(MobileTests, self)._login_helper(login_name, user_password)
-        self._open_nav_menu()
+        self._open_nav_menu_helper()
 
     def _logout_helper(self):
-        self._open_nav_menu()
+        self._open_nav_menu_helper()
         logout = self.driver.find_element_by_xpath("//a[contains(text(),'Sign Out')]")
         logout.click()
         self.driver.delete_all_cookies()
 
     def test_register_account(self):
-        self._open_nav_menu()
+        self._open_nav_menu_helper()
         super(MobileTests, self).test_register_account()
 
     def test_show_login_link_mobile(self):
+        self.driver.get(self.live_server_url)
         desktop_login = self.driver.find_element_by_id('signin-menu')
         mobile_login = self.driver.find_element_by_xpath("//li[contains(@class,'visible-xs')]/a")
         self.assertFalse(desktop_login.is_displayed())
         self.assertFalse(mobile_login.is_displayed())
-        self._open_nav_menu()
+        self._open_nav_menu_helper()
         self.assertTrue(mobile_login.is_displayed())
