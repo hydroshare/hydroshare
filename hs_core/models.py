@@ -29,6 +29,8 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
+from django.db.models.fields.related import ManyToManyField
+from itertools import chain
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
@@ -2786,6 +2788,35 @@ class CoreMetaData(models.Model):
         self.relations.all().delete()
         self.funding_agencies.all().delete()
 
+    def db_instance_to_dict(self, instance, fields=None, exclude=None):
+        """
+        modified version of Django's model_to_dict method accomodates many_to_many relations
+
+        Returns a dict containing the data in ``instance`` suitable for passing as
+        a Form's ``initial`` keyword argument.
+
+        ``fields`` is an optional list of field names. If provided, only the named
+        fields will be included in the returned dict.
+
+        ``exclude`` is an optional list of field names. If provided, the named
+        fields will be excluded from the returned dict, even if they are listed in
+        the ``fields`` argument.
+        """
+        opts = instance._meta
+        data = {}
+        for f in chain(opts.concrete_fields, opts.many_to_many):
+            if not getattr(f, 'editable', False):
+                continue
+            if fields and f.name not in fields:
+                continue
+            if exclude and f.name in exclude:
+                continue
+            if isinstance(f, ManyToManyField):
+                data[str(f.name)] = [choice.description for choice in f.value_from_object(instance)]
+            else:
+                data[str(f.name)] = f.value_from_object(instance)
+        return data
+
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
@@ -2794,7 +2825,7 @@ class CoreMetaData(models.Model):
             elements_to_copy = element_model_type.model_class().objects.filter(
                 object_id=src_md.id, content_type=md_type).all()
             for element in elements_to_copy:
-                element_args = model_to_dict(element)
+                element_args = self.db_instance_to_dict(element)
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
