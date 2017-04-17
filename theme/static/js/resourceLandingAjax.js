@@ -647,6 +647,17 @@ function filetype_keywords_update_ajax_submit() {
                     $("#lst-tags-filetype").append(li);
                     $(".icon-remove").click(onRemoveKeywordFileType);
                 }
+                // Refresh keywords field for the resource
+                var resKeywords = json_response.resource_keywords;
+                $("#lst-tags").empty();
+                for (var i = 0; i < resKeywords.length; i++) {
+                    if (resKeywords[i] != "") {
+                        var li = $("<li class='tag'><span></span></li>");
+                        li.find('span').text(resKeywords[i]);
+                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                        $("#lst-tags").append(li);
+                    }
+                }
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
