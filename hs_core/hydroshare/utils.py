@@ -427,9 +427,9 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     src_files = os.path.join(src_res.root_path, 'data')
     dest_files = os.path.join(tgt_res.root_path, 'data')
     istorage.copyFiles(src_files, dest_files)
-    
+
     src_coll = src_res.root_path
-    tgt_coll = tgt_res.root_path 
+    tgt_coll = tgt_res.root_path
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         if avu_name == 'isPublic':
