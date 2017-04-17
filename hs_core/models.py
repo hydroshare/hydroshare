@@ -1950,9 +1950,16 @@ class ResourceFile(models.Model):
                     istorage.copyFiles(source, target)
                 else:
                     istorage.moveFile(source, target)
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: copy to target {} failed"
+                                          .format(target))
             elif file is not None and source is None:
                 # file points to an existing iRODS file
                 target = get_resource_file_path(resource, file, folder=folder)
+                istorage = resource.get_irods_storage()
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: target {} does not exist"
+                                          .format(target))
             else:
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
