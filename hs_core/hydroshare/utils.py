@@ -29,7 +29,6 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
-from pprint import pprint
 
 
 logger = logging.getLogger(__name__)
@@ -426,7 +425,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
 
     # This makes an exact copy of all physical files.
     src_files = os.path.join(src_res.root_path, 'data')
-    # This has to be one segment short of the source because it is a target directory. 
+    # This has to be one segment short of the source because it is a target directory.
     dest_files = tgt_res.root_path
     istorage.copyFiles(src_files, dest_files)
 

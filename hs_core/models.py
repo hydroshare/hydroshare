@@ -1942,7 +1942,7 @@ class ResourceFile(models.Model):
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
                 if __debug__:
-                    assert(isinstance(source, baseString))
+                    assert(isinstance(source, basestring))
                 # source is a path to an iRODS file to be copied here.
                 root, newfile = os.path.split(source)  # take file from source path
                 # newfile is where it should be copied to.
