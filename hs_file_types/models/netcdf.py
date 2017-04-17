@@ -56,8 +56,10 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         """overrides the base class function"""
 
         html_string = super(NetCDFFileMetaData, self).get_html()
-        html_string += self.spatial_coverage.get_html()
-        html_string += self.originalCoverage.get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalCoverage:
+            html_string += self.originalCoverage.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
         variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
