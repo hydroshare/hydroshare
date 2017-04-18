@@ -1691,6 +1691,20 @@
                                         </ul>
                                     </span>
                                 </td>
+
+                                <td class="user-actions">
+                                    {% if u.can_undo %}
+                                        <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <i class="fa fa-undo btn-undo-share" aria-hidden="true"
+                                               data-toggle="tooltip"
+                                               title="Undo Share"></i>
+                                        </form>
+                                    {% endif %}
+                                </td>
+
                                 <td class="user-actions">
                                     <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
@@ -1751,6 +1765,20 @@
                                         </ul>
                                     </span>
                                 </td>
+
+                                <td class="user-actions">
+                                    {% if u.can_undo %}
+                                        <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
+                                              action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <i class="fa fa-undo btn-undo-share" aria-hidden="true"
+                                               data-toggle="tooltip"
+                                               title="Undo Share"></i>
+                                        </form>
+                                    {% endif %}
+                                </td>
+
                                 <td class="user-actions">
                                     <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
