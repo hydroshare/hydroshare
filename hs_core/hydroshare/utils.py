@@ -422,7 +422,7 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     :param set_to_private: set target resource to private if True. The default is False.
     :return:
     """
-	avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
+    avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
 
@@ -441,12 +441,12 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         if avu_name == 'isPublic' and set_to_private:
-			istorage.setAVU(dest_coll, avu_name, 'False')
-		elif avu_name == 'bag_modified':
-			# bag_modified AVU needs to be set to true for copied resource
-			istorage.setAVU(dest_coll, avu_name, 'true')
-		else:
-			istorage.setAVU(dest_coll, avu_name, value)
+	    istorage.setAVU(dest_coll, avu_name, 'False')
+	elif avu_name == 'bag_modified':
+	    # bag_modified AVU needs to be set to true for copied resource
+	    istorage.setAVU(dest_coll, avu_name, 'true')
+	else:
+	    istorage.setAVU(dest_coll, avu_name, value)
 
     # link copied resource files to Django resource model
     files = src_res.files.all()
