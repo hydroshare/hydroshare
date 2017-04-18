@@ -803,6 +803,44 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
 
     return JsonResponse(ajax_response_data)
 
+
+def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    user_to_unshare_with = utils.user_from_id(user_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        if user not in res.raccess.view_users:
+            # user has no explict access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
+def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    group_to_unshare_with = utils.group_from_id(group_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        if user not in res.raccess.view_users:
+            # user has no explicit access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
     if not request.method == 'POST':
