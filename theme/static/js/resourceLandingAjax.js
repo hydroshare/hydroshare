@@ -42,7 +42,6 @@ function label_ajax_submit() {
     return false;
 }
 
-
 function shareable_ajax_submit(event) {
     var form = $(this).closest("form");
     var datastring = form.serialize();
@@ -143,6 +142,7 @@ function undo_share_ajax_submit(form_id) {
         data: datastring,
         success: function (result) {
             var json_response;
+            var divInvite = $("#div-invite-people");
 
             try {
                 json_response = JSON.parse(result);
@@ -150,10 +150,10 @@ function undo_share_ajax_submit(form_id) {
             catch (err) {
                 console.log(err.message);
                 // Remove previous alerts
-                $("#div-invite-people").find(".label-danger").remove();
+                divInvite.find(".label-danger").remove();
 
                 // Append new error message
-                $("#div-invite-people").append("<span class='label label-danger'>" +
+                divInvite.append("<span class='label label-danger'>" +
                     "<strong>Error: </strong>Failed to undo action.</span>");
 
                 $form.parent().closest("tr").removeClass("loading");
@@ -162,24 +162,48 @@ function undo_share_ajax_submit(form_id) {
             }
 
             if (json_response.status == "success") {
+                // Set the new permission level in the interface
+                var userRoles = $form.closest("tr").find(".user-roles");
+
+                userRoles.find("li").removeClass("active");
+
                 if (json_response.undo_user_privilege == "view") {
+                    userRoles.find(".dropdown-toggle").text("Can view");
+                    userRoles.find("li[data-access-type='" + "Can view"
+                        + "']").addClass("active");
 
                 }
                 else if (json_response.undo_user_privilege == "edit") {
-
+                    userRoles.find(".dropdown-toggle").text("Can edit");
+                    userRoles.find("li[data-access-type='" + "Can edit"
+                        + "']").addClass("active");
                 }
                 else if (json_response.undo_user_privilege == "owner") {
-
+                    userRoles.find(".dropdown-toggle").text("Is owner");
+                    userRoles.find("li[data-access-type='" + "Is owner"
+                        + "']").addClass("active");
                 }
                 else {
+                    // The item has no other permission. Remove it.
                     $form.parent().closest("tr").remove();
+                    setPointerEvents(true);
+                    return;
                 }
+
+                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
+                $(".role-dropdown").removeClass("open");
+                $form.toggleClass("hidden", true);
             }
             else {
-                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
-                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                // An error occurred
+                divInvite.find(".label-danger").remove(); // Remove previous alerts
+
+                divInvite.append("<span class='label label-danger'><strong>Error: </strong>"
+                    + json_response.message + "</span>");
+
                 $form.parent().closest("tr").removeClass("loading");
             }
+
             $form.parent().closest("tr").removeClass("loading");
             setPointerEvents(true);
         },
@@ -274,24 +298,43 @@ function change_share_permission_ajax_submit(form_id) {
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
             json_response = JSON.parse(result);
 
-            if (json_response.status == "success") {
-                $form.parent().closest(".user-roles").find(".dropdown-toggle").text($form.attr("data-access-type"));
-                $form.parent().closest(".user-roles").find(".dropdown-toggle").append(" <span class='caret'></span>");
-                $form.parent().closest(".user-roles").find("li").removeClass("active");
+            try {
+                json_response = JSON.parse(result);
+            }
+            catch (err) {
+                console.log(err.message);
+                // Remove previous alerts
+                $("#div-invite-people").find(".label-danger").remove();
 
-                $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
+                // Append new error message
+                $("#div-invite-people").append("<span class='label label-danger'>" +
+                    "<strong>Error: </strong>Failed to change permission.</span>");
+
+                $form.parent().closest("tr").removeClass("loading");
+                setPointerEvents(true);
+                return;
+            }
+
+            var userRoles = $form.parent().closest(".user-roles");
+
+            if (json_response.status == "success") {
+                userRoles.find(".dropdown-toggle").text($form.attr("data-access-type"));
+                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
+                userRoles.find("li").removeClass("active");
+
+                userRoles.find("li[data-access-type='" + $form.attr("data-access-type")
+                    + "']").addClass("active");
                 $(".role-dropdown").removeClass("open");
-                $form.parent().closest(".user-roles").find("li").removeClass("loading");
+
+                $form.closest("tr").find(".undo-share-form").toggleClass("hidden", false);
 
                 updateActionsState(json_response.current_user_privilege);
-
-                setPointerEvents(true);
             }
             else if (json_response.status == "error") {
                 $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-                $form.parent().closest(".user-roles").find("li").removeClass("loading");
-                setPointerEvents(true);
             }
+            userRoles.find("li").removeClass("loading");
+            setPointerEvents(true);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
@@ -404,6 +447,7 @@ function share_resource_ajax_submit(form_id) {
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
+
                 if (shareType == "user") {
                     rowTemplate.find("span[data-col='user-name']").text(json_response.username);
                 }

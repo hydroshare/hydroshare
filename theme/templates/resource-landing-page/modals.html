@@ -1460,11 +1460,13 @@
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form class="remove-user-form" method="POST">
                                         {% csrf_token %}
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                         data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -1473,7 +1475,6 @@
                             <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
                                 <td>
                                     <div class="user-scope">
-
                                         {% if u.userprofile.picture %}
                                             <div style="background-image: url('{{ u.userprofile.picture.url }}');"
                                             class="profile-pic-thumbnail round-image"></div>
@@ -1483,6 +1484,7 @@
 
                                         <span data-col="name"
                                               class="user-name">{{ u|best_name }}</span>
+                                        {# TODO: FIX REFERENCED VARIABLE current_user.pk #}
                                         {% if u.pk == current_user.pk %}
                                             <span class="text-muted you-flag">(You)</span>
                                         {% endif %}
@@ -1537,17 +1539,17 @@
                                 </td>
 
                                 <td class="user-actions">
-                                    {% if u.can_undo %}
-                                    <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
+                                    <form id="form-undo-share-{{ u.pk }}"
+                                          class="undo-share-form{% if not u.can_undo %} hidden{% endif %}" method="POST"
                                           action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-user/{{ u.pk }}/" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
-                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form id="form-remove-user-{{ u.pk }}"
                                           class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
@@ -1556,6 +1558,7 @@
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                               data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1621,17 +1624,17 @@
                                 </td>
 
                                 <td class="user-actions">
-                                    {% if u.can_undo %}
-                                    <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
+                                    <form id="form-undo-share-{{ u.pk }}"
+                                          class="undo-share-form{% if not u.can_undo %} hidden{% endif %}" method="POST"
                                           action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-user/{{ u.pk }}/" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
-                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                           method="POST">
@@ -1639,6 +1642,7 @@
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                               data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1693,19 +1697,19 @@
                                 </td>
 
                                 <td class="user-actions">
-                                    {% if u.can_undo %}
-                                        <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <i class="fa fa-undo btn-undo-share" aria-hidden="true"
-                                               data-toggle="tooltip"
-                                               title="Undo Share"></i>
-                                        </form>
-                                    {% endif %}
+                                    <form id="form-undo-share-{{ u.pk }}"
+                                          class="undo-share-form{% if not u.can_undo %} hidden{% endif %}" method="POST"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <i class="fa fa-undo btn-undo-share" aria-hidden="true"
+                                           data-toggle="tooltip"
+                                           title="Undo Share"></i>
+                                    </form>
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                           method="POST">
@@ -1713,6 +1717,7 @@
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                               data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1767,19 +1772,19 @@
                                 </td>
 
                                 <td class="user-actions">
-                                    {% if u.can_undo %}
-                                        <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
-                                              action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <i class="fa fa-undo btn-undo-share" aria-hidden="true"
-                                               data-toggle="tooltip"
-                                               title="Undo Share"></i>
-                                        </form>
-                                    {% endif %}
+                                    <form id="form-undo-share-{{ u.pk }}"
+                                          class="undo-share-form{% if not u.can_undo %} hidden{% endif %}" method="POST"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-group/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <i class="fa fa-undo btn-undo-share" aria-hidden="true"
+                                           data-toggle="tooltip"
+                                           title="Undo Share"></i>
+                                    </form>
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                           method="POST">
@@ -1787,6 +1792,7 @@
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                               data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -1852,17 +1858,17 @@
                                 </td>
 
                                 <td class="user-actions">
-                                    {% if u.can_undo %}
-                                    <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
+                                    <form id="form-undo-share-{{ u.pk }}"
+                                          class="undo-share-form{% if not u.can_undo %} hidden{% endif %}" method="POST"
                                           action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-user/{{ u.pk }}/" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
                                     </form>
-                                    {% endif %}
                                 </td>
 
                                 <td class="user-actions">
+                                    {% if is_owner_user %}
                                     <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                           method="POST">
@@ -1870,6 +1876,7 @@
                                         <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"
                                               data-toggle="tooltip" title="Remove"></span>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
