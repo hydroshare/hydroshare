@@ -812,6 +812,17 @@ def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     ajax_response_data = {'status': 'success'}
     try:
         user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        undo_user_privilege = res.raccess.get_effective_privilege(user_to_unshare_with)
+        if undo_user_privilege == PrivilegeCodes.VIEW:
+            undo_user_privilege = "view"
+        elif undo_user_privilege == PrivilegeCodes.CHANGE:
+            undo_user_privilege = "change"
+        elif undo_user_privilege == PrivilegeCodes.OWNER:
+            undo_user_privilege = "owner"
+        else:
+            undo_user_privilege = 'none'
+        ajax_response_data['undo_user_privilege'] = undo_user_privilege
+
         if user not in res.raccess.view_users:
             # user has no explict access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
@@ -831,6 +842,14 @@ def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs)
     ajax_response_data = {'status': 'success'}
     try:
         user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        if group_to_unshare_with in res.raccess.edit_groups:
+            undo_group_privilege = 'change'
+        elif group_to_unshare_with in res.raccess.view_groups:
+            undo_group_privilege = 'view'
+        else:
+            undo_group_privilege = 'none'
+        ajax_response_data['undo_group_privilege'] = undo_group_privilege
+
         if user not in res.raccess.view_users:
             # user has no explicit access to the resource - redirect to resource listing page
             ajax_response_data['redirect_to'] = '/my-resources/'
