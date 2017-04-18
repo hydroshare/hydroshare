@@ -1948,28 +1948,25 @@ class ResourceFile(models.Model):
                 # newfile is where it should be copied to.
                 target = get_resource_file_path(resource, newfile, folder=folder)
                 istorage = resource.get_irods_storage()
-                if __debug__:
-                    if not istorage.exists(source):
-                        raise ValidationError("ResourceFile.create: source {} of copy not found"
-                                              .format(source))
+                if not istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: source {} of copy not found"
+                                          .format(source))
                 if not move:
                     istorage.copyFiles(source, target)
                 else:
                     istorage.moveFile(source, target)
-                if __debug__:
-                    if not istorage.exists(target):
-                        raise ValidationError("ResourceFile.create: copy to target {} failed"
-                                              .format(target))
-                    if move and istorage.exists(source):
-                        raise ValidationError("ResourceFile.create: move did not work")
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: copy to target {} failed"
+                                          .format(target))
+                if move and istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
                 target = get_resource_file_path(resource, file, folder=folder)
                 istorage = resource.get_irods_storage()
-                if __debug__:
-                    if not istorage.exists(target):
-                        raise ValidationError("ResourceFile.create: target {} does not exist"
-                                              .format(target))
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: target {} does not exist"
+                                          .format(target))
             else:
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
