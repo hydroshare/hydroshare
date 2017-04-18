@@ -1011,63 +1011,6 @@ li.account p{
 }
 
 
-#txt-abstract{
-    height: 155px;
-}
-
-span.remove{
-    position: absolute;
-    left: 0;
-    height: 100% !important;
-    background: #EEE;
-    top: 0;
-}
-
-.no-padding{
-    padding:0;
-}
-
-.icon-remove{
-    font-size: 17px;
-    top: 3px;
-    left: 6px;
-    color: rgb(217, 83, 79);
-    cursor:pointer;
-}
-
-.icon-add{
-    font-size: 17px;
-    top: 3px;
-    left: 1px;
-    color: #5cb85c;
-    cursor:pointer;
-}
-
-.icon-add:hover{
-    color: #47a447;
-}
-
-.icon-remove:hover{
-    color: rgb(168, 69, 66);
-}
-
-#panel-left{
-    padding-right:8px;
-    padding-left:0;
-    margin-bottom: 10px;
-}
-
-#panel-right{
-    padding-left:8px;
-    padding-right:0;
-    margin-bottom: 10px;
-}
-#add-keyword-wrapper{
-    width: 200px;
-    display: inline-flex;
-}
-
-
 #relatedResourcesTab{
     overflow:hidden;
 }
@@ -1138,13 +1081,13 @@ table.info-table {
 	padding-bottom: 8px;
 }
 
-#txt-title{
-    font-size: 27px;
-    height: auto;
+#txt-title {
+	font-size: 27px;
+	height: auto;
 }
 
-#txt-abstract{
-    height: 155px;
+#txt-abstract {
+	height: 155px;
 }
 
 span.remove {
@@ -1161,48 +1104,49 @@ span.remove {
 	margin-bottom: 8px;
 }
 
-.no-padding{
-    padding:0;
+.no-padding {
+	padding: 0;
 }
 
-.icon-remove{
-    font-size: 17px;
-    top: 3px;
-    left: 6px;
-    color: rgb(217, 83, 79);
-    cursor:pointer;
+.icon-remove {
+	font-size: 17px;
+	top: 3px;
+	left: 6px;
+	color: rgb(217, 83, 79);
+	cursor: pointer;
 }
 
-.icon-add{
-    font-size: 17px;
-    top: 3px;
-    left: 1px;
-    color: #5cb85c;
-    cursor:pointer;
+.icon-add {
+	font-size: 17px;
+	top: 3px;
+	left: 1px;
+	color: #5cb85c;
+	cursor: pointer;
 }
 
-.icon-add:hover{
-    color: #47a447;
+.icon-add:hover {
+	color: #47a447;
 }
 
-.icon-remove:hover{
-    color: rgb(168, 69, 66);
+.icon-remove:hover {
+	color: rgb(168, 69, 66);
 }
 
-#panel-left{
-    padding-right:8px;
-    padding-left:0;
-    margin-bottom: 10px;
+#panel-left {
+	padding-right: 8px;
+	padding-left: 0;
+	margin-bottom: 10px;
 }
 
-#panel-right{
-    padding-left:8px;
-    padding-right:0;
-    margin-bottom: 10px;
+#panel-right {
+	padding-left: 8px;
+	padding-right: 0;
+	margin-bottom: 10px;
 }
-#add-keyword-wrapper{
-    width: 200px;
-    display: inline-flex;
+
+#add-keyword-wrapper {
+	width: 200px;
+	display: inline-flex;
 }
 
 
