@@ -292,24 +292,23 @@ function share_resource_ajax_submit(form_id) {
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
 
-
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-                rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick", "unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
-                // Set form urls, ids, and onclick methods
+                rowTemplate.find(".remove-user-form .btn-remove-row").attr("data-arg", "form-remove-user-" + share_with);
+                // Set form urls, ids
                 rowTemplate.find(".share-form-view").attr('action', viewUrl);
                 rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
                 rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
-                rowTemplate.find(".share-form-view a").attr("onclick", "change_share_permission_ajax_submit('share-view-" + share_with + "')");
+                rowTemplate.find(".share-form-view a").attr("data-arg", "share-view-" + share_with);
                 rowTemplate.find(".share-form-edit").attr('action', changeUrl);
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
-                rowTemplate.find(".share-form-edit a").attr("onclick", "change_share_permission_ajax_submit('share-edit-" + share_with + "')");
+                rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                     rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                    rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                    rowTemplate.find(".share-form-owner a").attr("data-arg", "share-owner-" + share_with);
                 }
                 else {
                     rowTemplate.find(".share-form-owner").parent().remove();
@@ -361,6 +360,17 @@ function share_resource_ajax_submit(form_id) {
                 }
                 $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
+                // Rebind events
+                $(".btn-unshare-resource").click(function () {
+                    var formID = $(this).closest("form").attr("id");
+                    unshare_resource_ajax_submit(formID);
+                });
+
+                $(".btn-change-share-permission").click(function () {
+                    var arg = $(this).attr("data-arg");
+                    change_share_permission_ajax_submit(arg);
+                });
+
                 updateActionsState(json_response.current_user_privilege);
             }
             else if (json_response.status == "error") {
@@ -373,7 +383,6 @@ function share_resource_ajax_submit(form_id) {
             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
             setPointerEvents(true);
         }
-
     });
     //don't submit the form
     return false;
@@ -411,6 +420,10 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
                 // start timeseries resource specific DOM manipulation
                 if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
@@ -492,7 +505,7 @@ function metadata_update_ajax_submit(form_id){
                                     customAlert(promptMessage, 3000);
                                 }
                             }
-                            $("#missing-metadata-or-file").fadeOut();
+                            $("#missing-metadata-or-file:not(.persistent)").fadeOut();
                         }
                     }
                 }
@@ -558,14 +571,14 @@ function metadata_update_ajax_submit(form_id){
 }
 
 function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
-    $element_selection_dropdown = $('#' + element_id + '_code_choices');
+    var $element_selection_dropdown = $('#' + element_id + '_code_choices');
     if ($element_selection_dropdown.length && $element_selection_dropdown.attr('type') !== "hidden"){
         $('#' + form_id + ' :input').attr('readonly', 'readonly');
     }
 }
 
 function set_file_type_ajax_submit(url) {
-    $alert_success = '<div class="alert alert-success" id="error-alert"> \
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         File type was successful.\
@@ -614,9 +627,102 @@ function get_file_type_metadata_ajax_submit(url) {
     });
 }
 
+function filetype_keywords_update_ajax_submit() {
+    $form = $('#id-keywords-filetype');
+    var datastring = $form.serialize();
+    $.ajax({
+        type: "POST",
+        url: $form.attr('action'),
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                var keywords = json_response.added_keywords;
+                // add each of the newly added keywords as new li element for display
+                for (var i = 0; i < keywords.length; i++) {
+                    var li = $("<li class='tag'><span></span></li>");
+                    li.find('span').text(keywords[i]);
+                    li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>');
+                    $("#lst-tags-filetype").append(li);
+                    $(".icon-remove").click(onRemoveKeywordFileType);
+                }
+                // Refresh keywords field for the resource
+                var resKeywords = json_response.resource_keywords;
+                $("#lst-tags").empty();
+                for (var i = 0; i < resKeywords.length; i++) {
+                    if (resKeywords[i] != "") {
+                        var li = $("<li class='tag'><span></span></li>");
+                        li.find('span').text(resKeywords[i]);
+                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                        $("#lst-tags").append(li);
+                    }
+                }
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+        }
+    });
+}
+
+function filetype_keyword_delete_ajax_submit(keyword, tag) {
+    var datastring = 'keyword=' + keyword;
+    var url = $('#id-delete-keyword-filetype-action').val();
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                // remove the li element containing the deleted keyword
+                tag.remove();
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+            }
+        }
+    });
+}
+
+function update_netcdf_file_ajax_submit() {
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File update was successful.\
+    </div>';
+
+    var url = $('#update-netcdf-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-netcdf-file-update").hide();
+                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-success").alert('close');
+                });
+                // refetch file metadata to show the updated header file info
+                showFileTypeMetadata();
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
+        }
+    });
+}
+
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
-    var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
+    var entry = $(obj).closest("div[data-hs-user-type]").find("#id_user-deck > .hilight");
     if (entry.length < 1) {
         entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
         is_group = true;
@@ -722,7 +828,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
             }
             if (can_be_public) {
-                $("#missing-metadata-or-file").fadeOut();
+                $("#missing-metadata-or-file:not(.persistent)").fadeOut();
             }
             onSort();
 
@@ -884,6 +990,12 @@ function addFileTypeExtraMetadata(){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                BindKeyValueFileTypeClickHandlers();
+
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
             }
             else {
                 $("#add-keyvalue-filetype-modal").modal('hide');
@@ -924,6 +1036,11 @@ function updateFileTypeExtraMetadata(form_id){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+                BindKeyValueFileTypeClickHandlers();
             }
             else {
                 $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -963,6 +1080,11 @@ function deleteFileTypeExtraMetadata(form_id){
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
                 $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
+                // show update netcdf file update option for NetCDFLogicalFile
+                if (json_response.logical_file_type === "NetCDFLogicalFile"){
+                    $("#div-netcdf-file-update").show();
+                }
+                BindKeyValueFileTypeClickHandlers();
             }
             else {
                 $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -980,6 +1102,29 @@ function deleteFileTypeExtraMetadata(form_id){
     });
 }
 
+function BindKeyValueFileTypeClickHandlers(){
+    // bind key value add modal form OK button click event
+    var keyvalue_add_modal_form = $("#fileTypeMetaDataTab").find('#add-keyvalue-filetype-metadata');
+    keyvalue_add_modal_form.find("button.btn-primary").click(function () {
+        addFileTypeExtraMetadata();
+    });
+
+    // bind all key value edit modal forms OK button click event
+    $("#fileTypeMetaDataTab").find('[id^=edit-keyvalue-filetype-metadata]').each(function(){
+        var formId = $(this).attr('id');
+        $(this).find("button.btn-primary").click(function (){
+            updateFileTypeExtraMetadata(formId);
+        })
+    });
+
+    // bind all key value delete modal forms Delete button click event
+    $("#fileTypeMetaDataTab").find('[id^=delete-keyvalue-filetype-metadata]').each(function(){
+        var formId = $(this).attr('id');
+        $(this).find("button.btn-danger").click(function (){
+            deleteFileTypeExtraMetadata(formId);
+        })
+    });
+}
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
@@ -1003,41 +1148,73 @@ function initializeDatePickers(){
 
     // Set stored dates
     $(".dateinput").each(function () {
-        var dateString = $(this).attr("data-date").split("-");
-        var pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
-
-        $(this).datepicker("setDate", pickerDate);
+        var dateString;
+        var pickerDate = null;
+        if($(this).attr('data-date')){
+            // resource temporal date picker
+            dateString = $(this).attr("data-date").split("-");
+            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
+        }
+        else{
+            // file type temporal date picker
+            if($(this).attr('value')){
+                pickerDate = new Date($(this).attr("value"));
+            }
+        }
+        if(pickerDate != null){
+            $(this).datepicker("setDate", pickerDate);
+        }
     });
 }
 
 // act on spatial coverage type change
-function setFileTypeSpatialCoverageFormFields(){
-    $("#div_id_type_filetype input:radio").change(function () {
-        if ($(this).val() == "point" && $(this).attr("checked") == "checked") {
-            $("#div_id_north_filetype").show();
-            $("#div_id_east_filetype").show();
-            $("#div_id_elevation_filetype").show();
-            $("#div_id_northlimit_filetype").hide();
-            $("#div_id_eastlimit_filetype").hide();
-            $("#div_id_southlimit_filetype").hide();
-            $("#div_id_westlimit_filetype").hide();
-            $("#div_id_uplimit_filetype").hide();
-            $("#div_id_downlimit_filetype").hide();
+function setFileTypeSpatialCoverageFormFields(logical_type){
+    // Don't allow the user to change the coverage type
+    var $id_type_filetype_div = $("#id_type_filetype");
+
+    if (logical_type !== "GenericLogicalFile"){
+        // don't allow changing coverage type
+        $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
+        $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
+        $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+        $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+    }
+    else {
+        // file type is "GenericLogicalFile" - allow changing coverage type
+        $id_type_filetype_div.find("input:radio").change(function () {
+        if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
+            // coverage type is box
+            $("#id_north_filetype").parent().closest("#div_id_north").hide();
+            $("#id_east_filetype").parent().closest("#div_id_east").hide();
+            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
         }
         else {
-            $("#div_id_north_filetype").hide();
-            $("#div_id_east_filetype").hide();
-            $("#div_id_elevation_filetype").hide();
-            $("#div_id_northlimit_filetype").show();
-            $("#div_id_eastlimit_filetype").show();
-            $("#div_id_southlimit_filetype").show();
-            $("#div_id_westlimit_filetype").show();
-            $("#div_id_uplimit_filetype").show();
-            $("#div_id_downlimit_filetype").show();
+            // coverage type is point
+            $("#id_north_filetype").parent().closest("#div_id_north").show();
+            $("#id_east_filetype").parent().closest("#div_id_east").show();
+            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
         }
-        // Show save changes button
-        $("#id-coverage-spatial-filetype").find(".btn-primary").show();
-    });
+        });
+    }
+
+    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked"){
+        // coverage type is box
+        $("#id_north_filetype").parent().closest("#div_id_north").hide();
+        $("#id_east_filetype").parent().closest("#div_id_east").hide();
+    }
+    else {
+        // coverage type is point
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+    }
 }
 
 // updates the UI spatial coverage elements
@@ -1078,6 +1255,27 @@ function updateResourceSpatialCoverage(spatialCoverage){
 // updates the UI temporal coverage elements
 function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_start").val(temporalCoverage.start);
+    $("#id_start").attr('data-date', temporalCoverage.start);
     $("#id_end").val(temporalCoverage.end);
+    $("#id_end").attr('data-date', temporalCoverage.end);
     $("#id-coverage-temporal").find("button.btn-primary").hide();
+}
+
+function setFileTypeMetadataFormsClickHandlers(){
+    $("#fileTypeMetaDataTab").find('form').each(function () {
+        var formId = $(this).attr('id');
+        if(formId === "add-keyvalue-filetype-metadata"){
+            $(this).find("button.btn-primary").click(function () {
+                addFileTypeExtraMetadata();
+          });
+        }
+        else {
+            if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype"){
+              $(this).find("button.btn-primary").click(function () {
+                metadata_update_ajax_submit(formId);
+              });
+            }
+        }
+    });
+    BindKeyValueFileTypeClickHandlers();
 }

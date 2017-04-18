@@ -303,6 +303,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     Request data payload parameters:
     :type   resource_type: str
     :type   title: str
+    :type   subject: str
     :type   edit_users: str
     :type   edit_groups: str
     :type   view_users: str
@@ -489,7 +490,17 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
 
-        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
+        post_creation_error_msg = ''
+        try:
+            hydroshare.utils.resource_post_create_actions(request=request, resource=resource,
+                                                          user=request.user,
+                                                          metadata=metadata, **kwargs)
+        except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            post_creation_error_msg = ex.message
+
+        response_data = {'resource_type': resource_type, 'resource_id': resource.short_id,
+                         'message': post_creation_error_msg}
+
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
     pagination_class = PageNumberPagination
@@ -1056,10 +1067,13 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
+        folder = request.POST.get('folder', None)
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],
-                                                           user=request.user, extract_metadata=True)
+                                                           user=request.user,
+                                                           folder=folder,
+                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException,
                 hydroshare.utils.ResourceFileValidationException, Exception) as ex:
@@ -1067,7 +1081,6 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         try:
-            folder = request.POST.get('folder', None)
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           user=request.user,

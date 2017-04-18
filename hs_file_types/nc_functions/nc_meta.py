@@ -55,8 +55,14 @@ def get_nc_meta_dict(nc_file_name):
     type_specific_meta = get_type_specific_meta(nc_dataset)
     nc_meta_dict = {'dublin_core_meta': dublin_core_meta, 'type_specific_meta': type_specific_meta}
     nc_dataset.close()
+    try:
+        res_dublin_core_meta = nc_meta_dict['dublin_core_meta']
+        res_type_specific_meta = nc_meta_dict['type_specific_meta']
+    except:
+        res_dublin_core_meta = {}
+        res_type_specific_meta = {}
 
-    return nc_meta_dict
+    return res_dublin_core_meta, res_type_specific_meta
 
 
 # Functions for dublin core meta
@@ -257,10 +263,12 @@ def get_box_info(nc_dataset):
                     original_cs.ImportFromWkt(projection_import_string_dict.get('text'))
                     crs_transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
                     box_info['westlimit'], box_info['northlimit'] = crs_transform.TransformPoint(
-                        original_box_info['westlimit'], original_box_info['northlimit'])[:2]
+                        float(original_box_info['westlimit']),
+                        float(original_box_info['northlimit']))[:2]
 
                     box_info['eastlimit'], box_info['southlimit'] = crs_transform.TransformPoint(
-                        original_box_info['eastlimit'], original_box_info['southlimit'])[:2]
+                        float(original_box_info['eastlimit']),
+                        float(original_box_info['southlimit']))[:2]
                 except Exception:
                     pass
 

@@ -128,13 +128,16 @@
             {% for f in cm.files.all %}
                 {% if f.resource_file.name|slice:"-3:" == 'txt'%}
                     <div style="clear: both">
+                        <br>
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
-                        {% if f.resource_file.size <= 5000000 %}
-                            <textarea id="netcdf-header-info" readonly rows="15">{{ f.resource_file.read}}</textarea>
-                        {% else %}
-                            <textarea id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</textarea>
-                    {% endif %}
+                        <div class="hs-doc-preview">
+                            {% if f.resource_file.size <= 5000000 %}
+                                <pre id="netcdf-header-info">{{ f.resource_file.read}}</pre>
+                            {% else %}
+                                <pre id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</pre>
+                            {% endif %}
+                        </div>
                     </div>
 {#                    {% else %}#}
 {#                        {% if page.perms.change %}#}
@@ -168,25 +171,6 @@
 {{ block.super }}
 
 {# put resource specific js below #}
-<script type="text/javascript">
-    // original coverage meta check
-    function check_ori_meta_status(){
-        var form_action = $("form[id='id-originalcoverage']").attr('action');
-        if (form_action.indexOf('update-metadata') > -1) {
-            var new_action = form_action.replace('update-metadata', 'delete-metadata');
-            var modal_body_text = '<strong>Are you sure you want to delete this metadata element?</strong>'
-            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href',new_action);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").show()
-        }
-        else {
-            var modal_body_text = '<strong>There is no original coverage metadata for this resource to delete.</strong>'
-            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
-        }
-    };
-
-
-</script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/netcdf-resource.js"></script>
 
 {% endblock %}

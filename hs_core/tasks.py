@@ -172,7 +172,7 @@ def create_bag_by_irods(resource_id):
     # if metadata has been changed, then regenerate metadata xml files
     if metadata_dirty == "true":
         try:
-            create_bag_files(res, fed_zone_home_path=res.resource_federation_path)
+            create_bag_files(res)
         except Exception as ex:
             logger.error('Failed to create bag files. Error:{}'.format(ex.message))
             return False

@@ -16,9 +16,10 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet
         # is the order these fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         form_field_names = ['projection', 'datum', 'projection_string', 'units', 'northlimit',
                             'westlimit', 'southlimit', 'eastlimit']
-        crispy_form_fields = get_crispy_form_fields(form_field_names)
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id,
@@ -47,9 +48,11 @@ class OriginalCoverageSpatialForm(forms.Form):
                             widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='OriginalCoverage')
+                                                 element_name='OriginalCoverage',
+                                                 file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.delete_modal_form = None
@@ -59,7 +62,6 @@ class OriginalCoverageSpatialForm(forms.Form):
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         # modify the form's cleaned_data dictionary
@@ -295,12 +297,10 @@ BandInfoLayoutEdit = Layout(HTML("""
                      <form id="{{form.form_id}}" action="{{ form.action }}" method="POST"
                      enctype="multipart/form-data">
                          {% crispy form %}
-                         <div class="row" style="margin-top:10px">'
+                         <div class="row" style="margin-top:10px">
                              <div class="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6">
-                                 <button type="button" class="btn btn-primary pull-right"
-                                 onclick="metadata_update_ajax_submit({{ form.form_id_button }});
-                                 return false;"
-                                 >Save Changes</button>
+                                 <button type="button" class="btn btn-primary
+                                 pull-right btn-form-submit">Save Changes</button>
                              </div>
                          </div>
                      </form>

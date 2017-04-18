@@ -14,7 +14,7 @@ from django.apps import apps
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
@@ -205,20 +205,8 @@ def get_federated_zone_home_path(filepath):
         return ''
 
 
-def get_fed_zone_file_size(fname):
-    """
-    Get size of a data object from iRODS user zone
-    Args:
-        fname: the logical iRODS file name with full logical path
-
-    Returns:
-    the size of the file
-    """
-
-    irods_storage = IrodsStorage('federated')
-    return irods_storage.size(fname)
-
-
+# TODO: replace with a cache facility that has automatic cleanup
+# TODO: pass a list rather than a string to allow commas in filenames.
 def get_fed_zone_files(irods_fnames):
     """
     Get the files from iRODS federated zone to Django server for metadata extraction on-demand
@@ -229,6 +217,8 @@ def get_fed_zone_files(irods_fnames):
     Returns:
     a list of the named temp files which have been copied over to local Django server
     or raise exceptions if input parameter is wrong or iRODS operations fail
+
+    Note: application must delete these files after use.
     """
     ret_file_list = []
     if isinstance(irods_fnames, basestring):
@@ -240,6 +230,7 @@ def get_fed_zone_files(irods_fnames):
     irods_storage = IrodsStorage('federated')
     for ifname in ifnames:
         fname = os.path.basename(ifname.rstrip(os.sep))
+        # TODO: this is statistically unique but not guaranteed to be unique.
         tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
         tmpfile = os.path.join(tmpdir, fname)
         try:
@@ -255,6 +246,7 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
+# TODO: make the local cache file (and cleanup) part of ResourceFile state?
 def get_file_from_irods(res_file):
     """
     Copy the file (res_file) from iRODS (local or federated zone)
@@ -266,24 +258,15 @@ def get_file_from_irods(res_file):
     :return: location of the copied file
     """
     res = res_file.resource
-    if res_file.fed_resource_file or res_file.fed_resource_file_name_or_path:
-        istorage = IrodsStorage('federated')
-    else:
-        istorage = IrodsStorage()
-    if res_file.resource_file:
-        res_file_path = res_file.resource_file.name
-        file_name = os.path.basename(res_file.resource_file.name)
-    elif res_file.fed_resource_file:
-        res_file_path = res_file.fed_resource_file.name
-        file_name = os.path.basename(res_file.fed_resource_file.name)
-    else:
-        res_file_path = os.path.join(res.resource_federation_path, res.short_id,
-                                     res_file.fed_resource_file_name_or_path)
-        file_name = os.path.basename(res_file.fed_resource_file_name_or_path)
+    istorage = res.get_irods_storage()
+    res_file_path = res_file.storage_path
+    file_name = os.path.basename(res_file_path)
 
     tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
     tmpfile = os.path.join(tmpdir, file_name)
 
+    # TODO: If collisions occur, really bad things happen.
+    # TODO: Directories are never cleaned up when unused. need cache management.
     try:
         os.makedirs(tmpdir)
     except OSError as ex:
@@ -298,6 +281,7 @@ def get_file_from_irods(res_file):
     return copied_file
 
 
+# TODO: should be ResourceFile.replace
 def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
     Replaces the specified resource file with file (new_file) by copying to iRODS
@@ -307,24 +291,18 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
     :param user: user who is replacing the resource file.
     :return:
     """
-
     ori_res = original_resource_file.resource
-    if original_resource_file.resource_file:
-        istorage = IrodsStorage()
-        destination_file = original_resource_file.resource_file.name
-    else:
-        istorage = IrodsStorage('federated')
-        if original_resource_file.fed_resource_file:
-            destination_file = original_resource_file.fed_resource_file.name
-        else:
-            destination_file = os.path.join(ori_res.resource_federation_path, ori_res.short_id,
-                                            original_resource_file.fed_resource_file_name_or_path)
-    istorage.saveFile(new_file, destination_file, True)
+    istorage = ori_res.get_irods_storage()
+    ori_storage_path = original_resource_file.storage_path
 
-    # need to do this so that the bag will be regenerated prior to download of the bag
+    # Note: this doesn't update metadata at all.
+    istorage.saveFile(new_file, ori_storage_path, True)
+
+    # do this so that the bag will be regenerated prior to download of the bag
     resource_modified(ori_res, by_user=user, overwrite_bag=False)
 
 
+# TODO: should be inside ResourceFile, and federation logic should be transparent.
 def get_resource_file_name_and_extension(res_file):
     """
     Gets the full file name with path, file base name, and extension of the specified resource file
@@ -332,39 +310,31 @@ def get_resource_file_name_and_extension(res_file):
     :return: (full filename with path, full file base name, file extension)
              ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")
     """
-    f_fullname = None
-    if res_file.resource_file:
-        f_fullname = res_file.resource_file.name
-    elif res_file.fed_resource_file:
-        f_fullname = res_file.fed_resource_file.name
-    elif res_file.fed_resource_file_name_or_path:
-        f_fullname = res_file.fed_resource_file_name_or_path
-
+    f_fullname = res_file.storage_path
     f_basename = os.path.basename(f_fullname)
     _, file_ext = os.path.splitext(f_fullname)
 
     return f_fullname, f_basename, file_ext
 
 
+# TODO: should be ResourceFile.url
 def get_resource_file_url(res_file):
     """
     Gets the download url of the specified resource file
     :param res_file: an instance of ResourceFile for which download url is to be retrieved
     :return: download url for the resource file
     """
+
     if res_file.resource_file:
         f_url = res_file.resource_file.url
     elif res_file.fed_resource_file:
-        idx = res_file.fed_resource_file.url.find('/data/contents/')
-        f_url = res_file.fed_resource_file.url[idx + 1:]
-    elif res_file.fed_resource_file_name_or_path:
-        f_url = res_file.fed_resource_file_name_or_path
+        f_url = res_file.fed_resource_file.url
     else:
         f_url = ''
-
     return f_url
 
 
+# TODO: should be classmethod of ResourceFile
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
     for res_file in resource.files.all():
@@ -386,6 +356,7 @@ def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
 
 
+# TODO: This is unnecessary since delete now cascades.
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
@@ -415,22 +386,24 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     # needs to check whether res_id collection exists before getting/setting AVU on it to
     # accommodate the case where the very same resource gets deleted by another request when
     # it is getting downloaded
+    # TODO: why would we want to do anything at all if the resource does not exist???
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-    if bag_modified == "true":
-        # import here to avoid circular import issue
-        from hs_core.tasks import create_bag_by_irods
-        create_bag_by_irods(res_id, istorage)
+        if bag_modified == "true":
+            # import here to avoid circular import issue
+            from hs_core.tasks import create_bag_by_irods
+            create_bag_by_irods(res_id)
 
-    # do replication of the resource bag to irods user zone
-    if not res.resource_federation_path:
-        istorage.set_fed_zone_session()
-    src_file = 'bags/{resid}.zip'.format(resid=res_id)
-    if res.resource_federation_path:
-        src_file = os.path.join(res.resource_federation_path, src_file)
-    tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
-        userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
-    istorage.copyFiles(src_file, tgt_file)
+        # do replication of the resource bag to irods user zone
+        if not res.resource_federation_path:
+            istorage.set_fed_zone_session()
+        src_file = res.bag_path
+        # TODO: allow setting destination path
+        tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+            userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        istorage.copyFiles(src_file, tgt_file)
+    else:
+        raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
@@ -445,17 +418,17 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
     tgt_res = get_resource_by_shortkey(dest_res_id)
+
+    # This makes the assumption that the destination is in the same exact zone.
+    # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
     src_coll = os.path.join(src_res.root_path, 'data')
-    if src_res.resource_federation_path:
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
-        dest_coll += '/'
-    else:
-        dest_coll = dest_res_id + '/'
-
+    dest_coll = os.path.join(tgt_res.root_path, 'data')
     istorage.copyFiles(src_coll, dest_coll)
+
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
+        # TODO: what do these AVU flags do?
         if value:
             if avu_name == 'isPublic' and set_to_private:
                 istorage.setAVU(dest_coll, avu_name, 'False')
@@ -463,40 +436,19 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 istorage.setAVU(dest_coll, avu_name, value)
 
     # link copied resource files to Django resource model
-    res_id_len = len(src_res.short_id)
     files = src_res.files.all()
 
-    # if resource files are part of logical files, then logical files also need
-    # copying
+    # if resource files are part of logical files, then logical files also need copying
     src_logical_files = list(set([f.logical_file for f in files if f.has_logical_file]))
     map_logical_files = {}
     for src_logical_file in src_logical_files:
         map_logical_files[src_logical_file] = src_logical_file.get_copy()
 
     for n, f in enumerate(files):
-        new_resource_file = None
-        if f.fed_resource_file_name_or_path:
-            new_resource_file = ResourceFile.objects.create(
-                content_object=tgt_res,
-                resource_file=None,
-                fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
-                fed_resource_file_size=f.fed_resource_file_size)
-        elif f.fed_resource_file:
-            ori_file_path = f.fed_resource_file.name
-            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-            # find idx2 to start right after resource id
-            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
-            if idx1 > 0:
-                new_file_path = ori_file_path[0:idx1] + \
-                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
-                                '/' + tgt_res.short_id + ori_file_path[idx2:]
-                new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
-                                                                fed_resource_file=new_file_path)
-        elif f.resource_file:
-            ori_file_path = f.resource_file.name
-            new_file_path = tgt_res.short_id + ori_file_path[res_id_len:]
-            new_resource_file = ResourceFile.objects.create(content_object=tgt_res,
-                                                            resource_file=new_file_path)
+        folder, base = os.path.split(f.short_path)  # strips object information.
+        # this form of ResourceFile.create creates a reference to an existing file in iRODS
+        new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
+
         # if the original file is part of a logical file, then
         # add the corresponding new resource file to the copy of that logical file
         if f.has_logical_file:
@@ -549,7 +501,15 @@ def copy_and_create_metadata(src_res, dest_res):
     dest_res.save()
 
 
+# TODO: should be BaseResource.mark_as_modified.
 def resource_modified(resource, by_user=None, overwrite_bag=True):
+    """
+    Set an AVU flag that forces the bag to be recreated before fetch.
+
+    This indicates that some content of the bag has been edited.
+
+    """
+
     resource.last_changed_by = by_user
 
     resource.updated = now().isoformat()
@@ -561,18 +521,27 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
         resource.metadata.update_element('date', res_modified_date.id)
 
     if overwrite_bag:
-        create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
+        create_bag_files(resource)
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     set_dirty_bag_flag(resource)
 
 
+# TODO: should be part of BaseResource
 def set_dirty_bag_flag(resource):
-    # set bag_modified (AVU) to 'true' for the modified resource in iRODS to indicate
-    # the resource is modified for on-demand bagging.
-    # set metadata_dirty (AVU) to 'true' to indicate that metadata has been modified for the
-    # resource so that xml metadata files need to be generated on-demand
+    """
+    Set bag_modified=true AVU pair for the modified resource in iRODS
+    to indicate that the resource is modified for on-demand bagging.
+
+    set metadata_dirty (AVU) to 'true' to indicate that metadata has been modified for the
+    resource so that xml metadata files need to be generated on-demand
+
+    This is done so that the bag creation can be "lazy", in the sense that the
+    bag is recreated only after multiple changes to the bag files, rather than
+    after each change. It is created when someone attempts to download it.
+    """
+    res_coll = resource.root_path
 
     istorage = resource.get_irods_storage()
     res_coll = resource.root_path
@@ -674,10 +643,13 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
-                                files=(), fed_res_file_names='', metadata=None,
+                                files=(), source_names=[], metadata=None,
                                 requesting_user=None, **kwargs):
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -700,7 +672,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     page_url_dict = {}
     # this is needed since raster and feature resource types allows to upload a zip file,
     # then replace zip file with exploded files. If the zip file is loaded from hydroshare
-    # federation zone, the original zip file encoded in fed_res_file_names gets deleted
+    # federation zone, the original zip file encoded in source_names gets deleted
     # in this case and fed_res_path is used to keep the federation path, so that the resource
     # will be stored in the federated zone rather than the hydroshare zone
     fed_res_path = []
@@ -715,9 +687,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                              title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
                              validate_files=file_validation_dict,
-                             fed_res_file_names=fed_res_file_names,
-                             user=requesting_user, fed_res_path=fed_res_path,
-                             **kwargs)
+                             source_names=source_names,
+                             user=requesting_user, fed_res_path=fed_res_path, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
@@ -800,8 +771,12 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
     metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
     metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
 
-    creator_data = get_party_data_from_user(resource.creator)
-    metadata.append({'creator': creator_data})
+    # only add the resource creator as the creator for metadata if there is not already
+    # creator data in the metadata object
+    metadata_keys = [element.keys()[0].lower() for element in metadata]
+    if 'creator' not in metadata_keys:
+        creator_data = get_party_data_from_user(resource.creator)
+        metadata.append({'creator': creator_data})
 
 
 def get_party_data_from_user(user):
@@ -821,8 +796,11 @@ def get_party_data_from_user(user):
     return party_data
 
 
+# TODO: make this part of resource api. resource --> self.
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
-                                  fed_res_file_names='', **kwargs):
+                                  source_names=[], **kwargs):
+    if __debug__:
+        assert(isinstance(source_names, list))
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -830,27 +808,29 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
-                                   fed_res_file_names=fed_res_file_names,
+                                   source_names=source_names,
                                    validate_files=file_validation_dict,
                                    extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 
 
+# TODO: make this part of resource api. resource --> self.
 def resource_file_add_process(resource, files, user, extract_metadata=False,
-                              fed_res_file_names='', **kwargs):
+                              source_names=[], **kwargs):
 
     from .resource import add_resource_files
+    if __debug__:
+        assert(isinstance(source_names, list))
     folder = kwargs.pop('folder', None)
     resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
-                                               fed_res_file_names=fed_res_file_names,
-                                               fed_zone_home_path=resource.resource_federation_path)
+                                               source_names=source_names)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     post_add_files_to_resource.send(sender=resource.__class__, files=files,
-                                    fed_res_file_names=fed_res_file_names,
+                                    source_names=source_names,
                                     resource=resource, user=user,
                                     validate_files=file_validation_dict,
                                     extract_metadata=extract_metadata, **kwargs)
@@ -861,105 +841,64 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
     return resource_file_objects
 
 
+# TODO: move this to BaseResource
 def create_empty_contents_directory(resource):
-    res_id = resource.short_id
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_contents_dir = '{}/{}/data/contents'.format(resource.resource_federation_path,
-                                                        res_id)
-    else:
-        istorage = IrodsStorage()
-        res_contents_dir = '{}/data/contents'.format(res_id)
+    res_contents_dir = resource.file_path
+    istorage = resource.get_irods_storage()
     if not istorage.exists(res_contents_dir):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
-                         fed_copy_or_move=None):
+def add_file_to_resource(resource, f, folder=None, source_name='',
+                         move=False):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
-    :param folder: name of the folder path to which the file needs be uploaded
-    :param fed_res_file_name_or_path: the logical file name of the resource content file for
-                                      federated iRODS resource or the federated zone name;
-                                      By default, it is empty. A non-empty value indicates
-                                      the file needs to be added into the federated zone, either
-                                      from local disk where f holds the uploaded file from local
-                                      disk, or from the federated zone directly where f is empty
-                                      but fed_res_file_name_or_path has the whole data object
-                                      iRODS path in the federated zone
-    :param fed_copy_or_move: indicate whether the file should be copied or moved from private user
-                             account to proxy user account in federated zone; A value of 'copy'
-                             indicates copy is needed, a value of 'move' indicates no copy, but
-                             the file will be moved from private user account to proxy user account.
-                             The default value is None, which indicates N/A, or not applicable,
-                             since the files do not come from a federated zone, and this copy or
-                             move operation is not applicable, but any value other
-                             than 'copy' or 'move' is regarded as N/A.
+    :param source_name: the logical file name of the resource content file for
+                        federated iRODS resource or the federated zone name;
+                        By default, it is empty. A non-empty value indicates
+                        the file needs to be added into the federated zone, either
+                        from local disk where f holds the uploaded file from local
+                        disk, or from the federated zone directly where f is empty
+                        but source_name has the whole data object
+                        iRODS path in the federated zone
+    :param move: indicate whether the file should be copied or moved from private user
+                 account to proxy user account in federated zone; A value of False
+                 indicates copy is needed, a value of True indicates no copy, but
+                 the file will be moved from private user account to proxy user account.
+                 The default value is False.
 
     :return: The identifier of the ResourceFile added.
     """
     if f:
+
+        openfile = File(f) if not isinstance(f, UploadedFile) else f
+        ret = ResourceFile.create(resource, openfile, folder=folder, source=None, move=False)
+
+        # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
-        if fed_res_file_name_or_path:
-            ret = ResourceFile.objects.create(content_object=resource,
-                                              file_folder=folder,
-                                              resource_file=None,
-                                              fed_resource_file=File(f) if not isinstance(
-                                                  f, UploadedFile) else f)
-        else:
-            ret = ResourceFile.objects.create(content_object=resource,
-                                              file_folder=folder,
-                                              resource_file=File(f) if not isinstance(
-                                                  f, UploadedFile) else f,
-                                              fed_resource_file=None)
 
-    elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
-        size = get_fed_zone_file_size(fed_res_file_name_or_path)
-        file_format_type = get_file_mime_type(fed_res_file_name_or_path)
-        ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
-                                          fed_resource_file=None,
-                                          fed_resource_file_name_or_path=fed_res_file_name_or_path,
-                                          fed_resource_file_size=size)
+    elif source_name:
         try:
-            from_fname = fed_res_file_name_or_path
-            filename = from_fname.rsplit('/')[-1]
-            istorage = resource.get_irods_storage()
-            if resource.resource_federation_path:
-                if folder:
-                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
-                                            'data', 'contents', folder, filename)
-                else:
-                    to_fname = os.path.join(resource.resource_federation_path, resource.short_id,
-                                            'data', 'contents', filename)
-            else:
-                if folder:
-                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
-                                            folder, filename)
-                else:
-                    to_fname = os.path.join(resource.short_id, 'data', 'contents',
-                                            filename)
-
-            if fed_copy_or_move == 'copy':
-                istorage.copyFiles(from_fname, to_fname)
-            else:
-                istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare
-            # proxy account space
-            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(
-                file_name=filename)
-            ret.save()
+            # create from existing iRODS file
+            ret = ResourceFile.create(resource, None, folder=folder, source=source_name, move=move)
         except SessionException as ex:
-            # delete the file added if there is any exception
-            ret.delete()
+            try:
+                ret.delete()
+            except Exception:
+                pass
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
+
+        # add format metadata element if necessary
+        file_format_type = get_file_mime_type(source_name)
+
     else:
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')
 
-    # add format metadata element if necessary
+    # TODO: generate this from data in ResourceFile rather than extension
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 
@@ -1062,3 +1001,13 @@ class ZipContents(object):
 
 def get_file_storage():
     return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()
+
+
+def resolve_request(request):
+    if request.POST:
+        return request.POST
+
+    if request.data:
+        return request.data
+
+    return {}

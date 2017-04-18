@@ -114,7 +114,8 @@ def landing_page(request, page):
                 <div class="col-md-10">
                     <input style="margin-bottom:40px;"
                     class="btn-danger btn btn-md"
-                    onclick="check_ori_meta_status()" type="button"
+                    id="btn-delete-spatial-coverage"
+                    type="button"
                     data-toggle="modal"
                     data-target="#delete-original-coverage-element-dialog"
                     value="Delete Spatial Reference">
