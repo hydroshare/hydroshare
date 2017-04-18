@@ -1452,7 +1452,7 @@
 
                                 <td class="user-actions">
                                     <form class="undo-share-form" method="POST"
-                                          action="">
+                                          action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-user/">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true"
                                         data-toggle="tooltip" title="Undo Share"></i>

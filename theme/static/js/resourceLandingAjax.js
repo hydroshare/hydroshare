@@ -162,7 +162,18 @@ function undo_share_ajax_submit(form_id) {
             }
 
             if (json_response.status == "success") {
+                if (json_response.undo_user_privilege == "view") {
 
+                }
+                else if (json_response.undo_user_privilege == "edit") {
+
+                }
+                else if (json_response.undo_user_privilege == "owner") {
+
+                }
+                else {
+                    $form.parent().closest("tr").remove();
+                }
             }
             else {
                 $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
@@ -335,17 +346,28 @@ function share_resource_ajax_submit(form_id) {
 
                 // Form actions
                 var unshareUrl;
-                if (shareType == "user"){
-                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                var undoUrl;
+                if (shareType == "user") {
+                    unshareUrl =
+                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
+                        + share_with + "/";
+
+                    undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
                 }
                 else {
-                    unshareUrl = $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group") + share_with + "/";
+                    unshareUrl =
+                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
+                        + share_with + "/";
+
+                    undoUrl = rowTemplate.find(".undo-share-form").attr("action").replace("undo-share-resource-with-user", "undo-share-resource-with-group")
+                        + share_with + "/";
                 }
+
+
 
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
-                var undoUrl = "";   // TODO: COMPUTE THIS URL
 
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
