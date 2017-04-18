@@ -742,8 +742,8 @@ UpdateSQLiteLayout = Layout(HTML("""
             enctype="multipart/form-data">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit">
-                <button type="button" class="btn btn-primary" onclick="this.form.submit();
-                return false;">Update SQLite File</button>
+                <button id="btn-update-sqlite-file" type="button" class="btn btn-primary">
+                Update SQLite File</button>
             </form>
         </div>
     </div>
@@ -760,8 +760,7 @@ SeriesSelectionLayout = Layout(HTML("""
         <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
             {% csrf_token %}
             <input name="resource-mode" type="hidden" value="edit">
-            <select class="form-control" name="series_id" id="series_id"
-            onchange="this.form.submit()">
+            <select class="form-control" name="series_id" id="series_id">
                 {% for series_id, label in series_ids.items %}
                     {% if selected_series_id == series_id %}
                         <option value="{{ series_id }}" selected="selected"

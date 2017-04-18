@@ -228,6 +228,9 @@ class AbstractFileMetaData(models.Model):
     def get_supported_element_names(cls):
         return ['Coverage']
 
+    def get_required_missing_elements(self):
+        return []
+
     @property
     def has_metadata(self):
         if not self.coverages.all() and not self.extra_metadata \
@@ -398,9 +401,8 @@ class AbstractFileMetaData(models.Model):
                                   name="dataset_name", type="text")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
-                        button("Save changes", cls="btn btn-primary pull-right",
+                        button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
                                style="display: none;", type="button")
-
         return root_div
 
     def _get_add_key_value_modal_form(self):
@@ -440,8 +442,8 @@ class AbstractFileMetaData(models.Model):
                         with div(cls="modal-footer"):
                             button("Cancel", type="button", cls="btn btn-default",
                                    data_dismiss="modal")
-                            button("OK", type="button", cls="btn btn-primary")
-
+                            button("OK", type="button", cls="btn btn-primary",
+                                   id="btn-confirm-add-metadata")  # TODO: TESTING
         return modal_div
 
     def _get_edit_key_value_modal_forms(self):
@@ -505,8 +507,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("OK", type="button", cls="btn btn-primary")
-
+                                    button("OK", id="btn-confirm-edit-key-value",
+                                           type="button", cls="btn btn-primary")
             return root_div
 
     def _get_delete_key_value_modal_forms(self):
@@ -557,8 +559,8 @@ class AbstractFileMetaData(models.Model):
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
                                            data_dismiss="modal")
-                                    button("Delete", type="button", cls="btn btn-danger")
-
+                                    button("Delete", type="button", cls="btn btn-danger",
+                                           id="btn-delete-key-value")  # TODO: TESTING
         return root_div
 
 

@@ -107,10 +107,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                     with div(cls="col-md-offset-10 col-xs-offset-6 "
                                                  "col-md-2 col-xs-6"):
                                         button("Save changes", type="button",
-                                               cls="btn btn-primary pull-right",
-                                               style="display: none;",
-                                               onclick="metadata_update_ajax_submit({{ "
-                                                       "form.form_id_button }}); return false;")
+                                               cls="btn btn-primary pull-right btn-form-submit",
+                                               style="display: none;")
                         div("{% endfor %}")
 
         template = Template(root_div.render())

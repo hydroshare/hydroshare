@@ -35,6 +35,9 @@ def landing_page(request, page):
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)
 
+    file_type_missing_metadata = {'file_type_missing_metadata':
+                                  content_model.get_missing_file_type_metadata_info()}
+    context.update(file_type_missing_metadata)
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
 

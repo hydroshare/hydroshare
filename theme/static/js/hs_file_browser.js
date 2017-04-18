@@ -68,6 +68,12 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
                 "<i class='fa fa-th-large fa-stack-1x'></i>" +
                 "</span>";
         }
+        else if (fileTypeExt.toUpperCase() == "REFTS") {
+            iconTemplate = "<span class='fa-stack fb-stack fb-stack-refts'>" +
+                "<i class='fa fa-file-o fa-stack-2x '></i>" +
+                "<i class='fa fa-line-chart fa-stack-1x'></i>" +
+                "</span>";
+        }
         else {
             // Default file icon for other file types
             iconTemplate =  "<span class='fb-file-icon fa fa-file-o'></span>"
@@ -143,6 +149,9 @@ function updateSelectionMenuContext() {
         if (size > maxSize) {
             flagDisableDownload = true;
             $("#fb-download-help").toggleClass("hidden", false);
+        }
+        else {
+            $("#fb-download-help").toggleClass("hidden", true);
         }
     }
     else {
@@ -402,7 +411,7 @@ function bindFileBrowserItemEvents() {
                         top: ui.position.top,
                         left: ui.position.left
                     });
-                },
+                }
             }
         );
     }
@@ -417,7 +426,7 @@ function bindFileBrowserItemEvents() {
 
                 $("#fb-files-container li").removeClass("ui-last-selected");
                 $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
-            },
+            }
         });
 
     // Dismiss right click menu when mouse down outside of it
@@ -474,8 +483,10 @@ function showFileTypeMetadata(){
      resource_mode = resource_mode.toLowerCase();
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
      var calls = [];
      calls.push(get_file_type_metadata_ajax_submit(url));
+
      // Wait for the asynchronous calls to finish to get new folder structure
      $.when.apply($, calls).done(function (result) {
          var json_response = JSON.parse(result);
@@ -498,6 +509,15 @@ function showFileTypeMetadata(){
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
+
+         $("#txt-keyword-filetype").keypress(function (e) {
+             e.which = e.which || e.keyCode;
+             if (e.which == 13) {
+                 onAddKeywordFileType();
+                 return false;
+             }
+         });
+
          $(".icon-remove").click(onRemoveKeywordFileType);
          $("#id-update-netcdf-file").click(update_netcdf_file_ajax_submit);
          showMetadataFormSaveChangesButton();
@@ -536,7 +556,18 @@ function showFileTypeMetadata(){
              }
          }
 
-        $("#div_id_type_filetype input:radio").trigger("change");
+         $("#div_id_type_filetype input:radio").trigger("change");
+
+         // Bind event handler for submit button
+         $("#fileTypeMetaDataTab .btn-form-submit").click(function () {
+             var formID = $(this).closest("form").attr("id");
+             metadata_update_ajax_submit(formID);
+         });
+
+         $("#btn-confirm-add-metadata").click(function () {
+             addFileTypeExtraMetadata();
+             return true;
+         });
     });
 }
 
@@ -1281,30 +1312,6 @@ $(document).ready(function () {
          setFileType("RefTimeseries");
      });
 
-    // show file type metadata
-    $("#btn-show-file-metadata").click(function () {
-         var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-         var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-         var resource_mode = $("#resource-mode").val();
-         resource_mode = resource_mode.toLowerCase();
-         var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
-         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-         var calls = [];
-         calls.push(get_file_type_metadata_ajax_submit(url));
-         // Wait for the asynchronous calls to finish to get new folder structure
-         $.when.apply($, calls).done(function (result) {
-             var json_response = JSON.parse(result);
-             $("#fileTypeMetaDataTab").html(json_response.metadata);
-             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
-             $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
-             showMetadataFormSaveChangesButton();
-             initializeDatePickers();
-
-             $("html, body").animate({
-                 scrollTop: $("#fileTypeMetaDataTab").offset().top + 500
-             }, 1000);
-         });
-      });
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {

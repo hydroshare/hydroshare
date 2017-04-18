@@ -204,6 +204,17 @@ class CompositeResource(BaseResource):
 
         return True
 
+    def get_missing_file_type_metadata_info(self):
+        # this is used in page pre-processor to build the context
+        # so that the landing page can show what metadata items are missing for each logical file
+        metadata_missing_info = []
+        for lfo in self.logical_files:
+            if not lfo.metadata.has_all_required_elements():
+                file_path = lfo.files.first().short_path
+                missing_elements = lfo.metadata.get_required_missing_elements()
+                metadata_missing_info.append({'file_path': file_path,
+                                              'missing_elements': missing_elements})
+        return metadata_missing_info
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
