@@ -422,18 +422,24 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
-    src_coll = os.path.join(src_res.root_path, 'data')
-    dest_coll = os.path.join(tgt_res.root_path, 'data')
-    istorage.copyFiles(src_coll, dest_coll)
 
+    # This makes an exact copy of all physical files.
+    src_files = os.path.join(src_res.root_path, 'data')
+    # This has to be one segment short of the source because it is a target directory.
+    dest_files = tgt_res.root_path
+    istorage.copyFiles(src_files, dest_files)
+
+    src_coll = src_res.root_path
+    tgt_coll = tgt_res.root_path
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
-        # TODO: what do these AVU flags do?
-        if value:
-            if avu_name == 'isPublic' and set_to_private:
-                istorage.setAVU(dest_coll, avu_name, 'False')
+        if avu_name == 'isPublic':
+            if set_to_private:
+                istorage.setAVU(tgt_coll, avu_name, 'False')
             else:
-                istorage.setAVU(dest_coll, avu_name, value)
+                istorage.setAVU(tgt_coll, avu_name, value)
+        else:
+            istorage.setAVU(tgt_coll, avu_name, value)
 
     # link copied resource files to Django resource model
     files = src_res.files.all()
@@ -446,7 +452,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
-        # this form of ResourceFile.create creates a reference to an existing file in iRODS
         new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
 
         # if the original file is part of a logical file, then
