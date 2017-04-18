@@ -4171,7 +4171,7 @@ form#covereage-search-fields {
 	top: -4px;
 }
 
-.fb-view-grid .fb-stack-refts .fa-line-chart {
+.fb-view-grid .fb-stack-refts .fa-line-chart, .dz-details .fb-stack-refts .fa-line-chart {
 	top: 7px;
 	font-size: 14px;
 }

@@ -46,8 +46,15 @@ function getFileIcons() {
         "<i class='fa fa-th-large fa-stack-1x'></i>" +
         "</span>";
 
+    fileIcons.REFTS =
+        "<span class='fa-stack fb-stack fb-stack-refts'>" +
+        "<i class='fa fa-file-o fa-stack-2x '></i>" +
+        "<i class='fa fa-line-chart fa-stack-1x'></i>" +
+        "</span>";
+
     fileIcons.DEFAULT =
         "<span class='fb-file-icon fa fa-file-o'></span>";
+
 
     return fileIcons;
 }

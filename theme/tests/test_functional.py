@@ -95,15 +95,19 @@ class FunctionalTestsCases(object):
         create_new_lnk = self.driver.find_element_by_link_text('Create new')
         create_new_lnk.click()
 
-        # TODO: ADAPT TEST BELOW TO CHECK UPLOADING THROUGH DROPZONE JS
         # complete new resource form
-        title_field = self.driver.find_element_by_name('title')
+        title_field = self.driver.find_element_by_css_selector('#txtTitle')
         # file_field = self.driver.find_element_by_name('files')
-        submit_btn = self.driver.find_element_by_xpath("//button[@type='submit']")
+        self.driver.execute_script("""
+            var myZone = Dropzone.forElement('#hsDropzone');
+            var blob = new Blob(new Array(), {type: 'image/png'});
+            blob.name = 'filename.png'
+            myZone.addFile(blob);  
+        """)
+        submit_btn = self.driver.find_element_by_css_selector(".btn-create-resource")
 
         self.assertTrue(title_field.is_displayed())
         title_field.send_keys(RESOURCE_TITLE)
-        # file_field.send_keys(UPLOAD_FILE_PATH + ',', keys.Keys.ENTER)
         submit_btn.click()
 
         # check results
@@ -112,7 +116,7 @@ class FunctionalTestsCases(object):
         citation = self.driver.find_element_by_xpath("//div[@id='citation-text']")
         citation_text = citation.text
         import re
-        m = re.search('HydroShare, http://www.hydroshare.org/resource/(.*)$', citation_text)
+        m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
         shortkey = m.groups(0)[0]
         resource = BaseResource.objects.get()
         self.assertEqual(resource.title, RESOURCE_TITLE)
@@ -185,7 +189,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
             return
         toggle.click()
         try:
-            WebDriverWait(self.driver, 20).until(EC.visibility_of(navbar))
+            WebDriverWait(self.driver, 10).until(EC.visibility_of(navbar))
         finally:
             if not navbar.is_displayed():
                 self.fail()
