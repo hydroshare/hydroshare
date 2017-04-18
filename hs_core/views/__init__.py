@@ -190,7 +190,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         if is_update_success:
             ajax_response_data = {'status': 'success',
                                   'is_dirty': res.metadata.is_dirty if
-                                  hasattr(res.metadata,'is_dirty') else False}
+                                  hasattr(res.metadata, 'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -1320,7 +1320,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     _send_email_on_group_membership_acceptance(membership_request)
                 else:
                     message = 'Membership request declined'
-                    messages.error(request, message)
+                    messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, ex.message)

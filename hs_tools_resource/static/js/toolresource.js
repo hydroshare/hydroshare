@@ -1,22 +1,28 @@
 $(document).ready(function() {
 
+    /*
+    This part enables icon preview in WebApp Res's EDIT mode
+    */
     // Getter for icon_url input element
     var get_icon_input_element = function() {
-        return $('#resourceSpecificTab #div_id_url');
+        return $("#tool_icon").find("#id_value");
     };
-    // If the "Preview" elements don't exist, add them
-    if ($('#tool-icon-preview').length == 0) {
-        get_icon_input_element().after('<span id="icon-preview-label" class="control-label">Preview</span><br>' +
-            '<img id="tool-icon-preview" src="' + get_icon_input_element().val() + '">');
-    }
+
+    //// If the "Preview" elements don't exist, add them
+    //if ($('#tool-icon-preview').length == 0) {
+    //    get_icon_input_element().after('<span id="icon-preview-label" class="control-label">Preview</span><br>' +
+    //        '<img id="tool-icon-preview" src="' + get_icon_input_element().val() + '">');
+    //}
+
     // Set a key-up event that changes the preview picture each time the icon_url input is changed
     get_icon_input_element().keyup(function() {
-        $('#tool-icon-preview').attr('src', $('#resourceSpecificTab #id_url').val());
+        $('#tool-icon-preview').attr('src', get_icon_input_element().val());
     });
-    // When the page first loads, if there is a url already stored in the database, show the preview of the image
-    if ($('#resourceSpecificTab #id_url').val() != "") {
-        $('#tool-icon-preview').attr('src', $('#resourceSpecificTab #id_url').val());
-    }
+
+    //// When the page first loads, if there is a url already stored in the database, show the preview of the image
+    //if (get_icon_input_element().val() != "") {
+    //    $('#tool-icon-preview').attr('src', get_icon_input_element().val());
+    //}
 
     /*
     * The following code is only meant to affect resources landing pages other than

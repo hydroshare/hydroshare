@@ -81,7 +81,11 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test extracted metadata
         res_title = 'Test NetCDF File Type Metadata'
         assert_netcdf_file_type_metadata(self, res_title)
-
+        # test file level keywords
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 1)
+        self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
         self.composite_resource.delete()
 
     def test_set_file_type_to_netcdf_resource_title(self):

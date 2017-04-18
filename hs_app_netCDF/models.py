@@ -372,24 +372,28 @@ class NetCDFMetaDataMixin(models.Model):
         return self.ori_coverage.all().first()
 
     def has_all_required_elements(self):
-        if not super(NetCDFMetaDataMixin, self).has_all_required_elements():  # check required meta
+        # checks if all required metadata elements have been created
+        if not super(NetCDFMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.variables.all():
             return False
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             return False
+        if not self.originalCoverage:
+            return False
         return True
 
     def get_required_missing_elements(self):
-        # show missing required meta
+        # get a list of missing required metadata element names
         missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
-
+        if not self.originalCoverage:
+            missing_required_elements.append('Spatial Reference')
         return missing_required_elements
 
     def delete_all_elements(self):
@@ -399,7 +403,8 @@ class NetCDFMetaDataMixin(models.Model):
 
     @classmethod
     def get_supported_element_names(cls):
-        # get the names of all core metadata elements
+        # get the class names of all supported metadata elements for this resource type
+        # or file type
         elements = super(NetCDFMetaDataMixin, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('Variable')
