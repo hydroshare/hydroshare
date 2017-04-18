@@ -111,10 +111,10 @@ class FunctionalTestsCases(object):
         submit_btn.click()
 
         # check results
-        title = self.driver.find_element_by_xpath("//h2[@id='resource-title']").text
-        self.assertEqual(title, RESOURCE_TITLE)
-        citation = self.driver.find_element_by_xpath("//div[@id='citation-text']")
-        citation_text = citation.text
+        title_field = self.driver.find_element_by_css_selector("#resource-title")
+        self.assertTrue(title_field.is_displayed())
+        self.assertEqual(title_field.text, RESOURCE_TITLE)
+        citation_text = self.driver.find_element_by_css_selector("#citation-text").text
         import re
         m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
         shortkey = m.groups(0)[0]
