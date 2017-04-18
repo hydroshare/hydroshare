@@ -106,21 +106,6 @@ class FunctionalTestsCases(object):
         self.driver.quit()
         super(FunctionalTestsCases, self).tearDown()
 
-    def wait_and_click(self, selector_method, selector_str,except_fail=True):
-        elem = False
-        selector = (selector_method, selector_str)
-        try:
-            WebDriverWait(self.driver, 5).until(
-                expected_conditions.element_to_be_clickable(selector)
-            )
-            elem = self.driver.find_element(*selector)
-            elem.click()
-        except TimeoutException as e:
-            self.driver.save_screenshot('clickable' + selector[1].replace(' ', '') + '.png')
-            if except_fail:
-                self.fail(selector[1] + " not clickable within timeout")
-        return elem
-
     def wait_for_visible(self, selector_method, selector_str,except_fail=True):
         elem = False
         selector = (selector_method, selector_str)
@@ -143,29 +128,37 @@ class FunctionalTestsCases(object):
                 break
 
         # login page: fill login form
-        username_field = self.driver.find_element_by_name('username')
-        password_field = self.driver.find_element_by_name('password')
-        submit = self.driver.find_element_by_xpath("//input[@type='submit']")
-
-        username_field.send_keys(login_name, keys.Keys.TAB)
-        password_field.send_keys(user_password, keys.Keys.TAB)
-        submit.send_keys(keys.Keys.ENTER)
-        home_page_tag = self.driver.find_element_by_class_name('home-page-block-title')
-        self.assertTrue(home_page_tag.is_displayed())
+        self.wait_for_visible(By.TAG_NAME, 'html')
+        self.assertTrue('accounts/login/' in self.driver.current_url)
+        self.wait_for_visible(By.CSS_SELECTOR, 'input[name="username"]').send_keys(login_name, keys.Keys.TAB)
+        self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password"]').send_keys(user_password, keys.Keys.TAB)
+        self.wait_for_visible(By.CSS_SELECTOR, 'input[type="submit"]').send_keys(keys.Keys.ENTER)
+        self.wait_for_visible(By.CSS_SELECTOR, '.home-page-block-title')
 
     def _logout_helper(self):
-        self.driver.get(self.live_server_url)
-        xpath_query = "//li[@id='profile-menu']/a[@class='dropdown-toggle']"
-        dropdown = self.driver.find_element_by_xpath(xpath_query)
-        dropdown.click()
-        signout = dropdown.find_element_by_xpath("//a[@id='signout-menu']")
-        signout.click()
-        self.driver.delete_all_cookies()
+        pass
 
     def _create_resource_helper(self, upload_file_path, resource_title=None):
         if not resource_title:
             resource_title = str(uuid4())
         upload_file_path = os.path.abspath(upload_file_path)
+
+        """
+        # complete new resource form
+        title_field = self.driver.find_element_by_css_selector('#txtTitle')
+        # file_field = self.driver.find_element_by_name('files')
+        self.driver.execute_script(
+            var myZone = Dropzone.forElement('#hsDropzone');
+            var blob = new Blob(new Array(), {type: 'image/png'});
+            blob.name = 'filename.png'
+            myZone.addFile(blob);  
+        )
+        submit_btn = self.driver.find_element_by_css_selector(".btn-create-resource")
+
+        self.assertTrue(title_field.is_displayed())
+        title_field.send_keys(RESOURCE_TITLE)
+        submit_btn.click()
+        """
 
         # load my resources & click create new
         my_resources = self.driver.find_element_by_xpath("//a[contains(text(),'My Resources')]")
@@ -210,6 +203,7 @@ class FunctionalTestsCases(object):
         self.assertTrue(form.is_displayed())
 
     def test_login_email(self):
+        self.driver.get(self.live_server_url)
         self._login_helper(self.user.email, self.user_password)
         self.assertEqual(self.live_server_url + "/", self.driver.current_url)
         self.assertTrue('Successfully logged in' in self.driver.page_source)
@@ -221,6 +215,14 @@ class FunctionalTestsCases(object):
     def test_create_resource(self):
         self._login_helper(self.user.email, self.user_password)
         resource_title = self._create_resource_helper('./manage.py')
+
+        """
+        # check results
+        title_field = self.driver.find_element_by_css_selector("#resource-title")
+        self.assertTrue(title_field.is_displayed())
+        self.assertEqual(title_field.text, RESOURCE_TITLE)
+        citation_text = self.driver.find_element_by_css_selector("#citation-text").text
+        """
 
         title = self.driver.find_element_by_xpath("//h2[@id='resource-title']").text
         self.assertEqual(title, resource_title)
@@ -251,6 +253,11 @@ class DesktopTests(FunctionalTestsCases, StaticLiveServerTestCase):
         if not driver:
             self.driver = create_driver('desktop')
         self.driver.get(self.live_server_url)
+
+    def _logout_helper(self):
+        self.driver.get(self.live_server_url)
+        self.wait_for_visible(By.CSS_SELECTOR, '#profile-menu .dropdown-toggle').click()
+        self.wait_for_visible(By.CSS_SELECTOR, '#signout-menu').click()
 
     def test_login_email(self):
         super(DesktopTests, self).test_login_email()
@@ -342,7 +349,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
     def _open_nav_menu_helper(self):
         if self.wait_for_visible(By.CSS_SELECTOR, 'ul.navbar-nav', except_fail=False):
             return
-        self.wait_and_click(By.CSS_SELECTOR, 'button.navbar-toggle')
+        self.wait_for_visible(By.CSS_SELECTOR, 'button.navbar-toggle').click()
         self.wait_for_visible(By.CSS_SELECTOR, 'ul.navbar-nav')
 
     def _login_helper(self, login_name, user_password):
