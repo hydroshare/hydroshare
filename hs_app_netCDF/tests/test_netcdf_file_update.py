@@ -86,8 +86,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update temporal coverage for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.create_element('coverage',
                                               type='period',
@@ -98,8 +96,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('coverage', element.id, type='period',
                                     value={'start': '01/02/2000', 'end': '01/03/2000'})
@@ -109,8 +105,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update spatial coverage for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.create_element('coverage',
                                               type='box',
@@ -126,8 +120,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('coverage', element.id, type='box',
                                     value={'northlimit': '13',
@@ -143,8 +135,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update description for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.create_element('description', abstract='new abstract')
         res_metadata.refresh_from_db()
@@ -152,23 +142,14 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('description', element.id, abstract='update abstract')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
-        res_metadata.is_dirty = False
-        res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
-
         # create subject for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.create_element('subject', value='new keyword2')
         res_metadata.refresh_from_db()
@@ -177,8 +158,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update/delete source for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.create_element('source',
                                               derived_from='new source')
@@ -187,8 +166,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('source', element.id, abstract='update source')
         res_metadata.refresh_from_db()
@@ -196,8 +173,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.delete_element('source', element.id)
         res_metadata.refresh_from_db()
@@ -206,8 +181,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update/delete relation for setting flag
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element_1 = res_metadata.create_element('relation',
                                                 type='isHostedBy',
@@ -222,8 +195,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('relation', element_1.id, type='isHostedBy',
                                     value='update host')
@@ -237,8 +208,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.delete_element('relation', element_2.id)
         res_metadata.refresh_from_db()
@@ -247,8 +216,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # update creator
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.creators.all().first()
         res_metadata.update_element('creator', element.id, name='update name')
@@ -258,8 +225,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # create/update/delete contributor
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.create_element('contributor',
                                               name='new name')
@@ -268,8 +233,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.update_element('contributor', element.id, name='update name')
         res_metadata.refresh_from_db()
@@ -277,8 +240,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
 
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         res_metadata.delete_element('contributor', element.id)
         res_metadata.refresh_from_db()
@@ -287,8 +248,6 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         # update variable
         res_metadata.is_dirty = False
         res_metadata.save()
-        res_metadata.refresh_from_db()
-        self.assertFalse(res_metadata.is_dirty)
 
         element = res_metadata.variables.all().first()
         res_metadata.update_element('variable',

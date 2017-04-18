@@ -319,7 +319,7 @@ function saveExtraMetadata()
             if (json_response.status === 'success') {
                  $('#save-extra-meta-btn').hide();
                  customAlert($alert_success_extra_meta, 3000);
-                if(json_response.is_dirty === true) {
+                if(json_response.is_dirty) {
                     $('#netcdf-file-update').show();
                 }
             }

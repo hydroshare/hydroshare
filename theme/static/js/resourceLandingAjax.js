@@ -427,7 +427,7 @@ function metadata_update_ajax_submit(form_id){
 
                 // show update netcdf resource
                 if (resourceType === 'Multidimensional (NetCDF)' &&
-                    json_response.is_dirty === true) {
+                    json_response.is_dirty) {
                     $("#netcdf-file-update").show();
                 }
 
