@@ -97,6 +97,9 @@ function updateSelectionMenuContext() {
             flagDisableDownload = true;
             $("#fb-download-help").toggleClass("hidden", false);
         }
+        else {
+            $("#fb-download-help").toggleClass("hidden", true);
+        }
     }
     else {                              // No files selected
         flagDisableCut = true;
@@ -498,8 +501,6 @@ function showFileTypeMetadata(){
              return true;
          });
     });
-
-
 }
 
 function setBreadCrumbs(path) {

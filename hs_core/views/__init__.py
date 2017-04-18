@@ -1310,7 +1310,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     _send_email_on_group_membership_acceptance(membership_request)
                 else:
                     message = 'Membership request declined'
-                    messages.error(request, message)
+                    messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, ex.message)

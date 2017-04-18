@@ -349,9 +349,15 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
         logical_file.metadata.keywords += keywords
         logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
+        # add keywords to resource
+        resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
+        for kw in keywords:
+            if kw.lower() not in resource_keywords:
+                resource.metadata.create_element('subject', value=kw)
         resource_modified(resource, request.user, overwrite_bag=False)
+        resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                              'added_keywords': keywords,
+                              'added_keywords': keywords, 'resource_keywords': resource_keywords,
                               'message': "Add was successful"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
