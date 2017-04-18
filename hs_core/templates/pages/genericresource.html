@@ -470,18 +470,19 @@
                             {% endif %}
                         </div>
 
+                        <div id="fb-download-help" class="alert alert-warning hidden" role="alert">
+                            <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large
+                                Files</strong>
+                            <ul>
+                                <li><span>To learn how to download files larger than 1 GB see <a
+                                        href="https://pages.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
+                                        target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
+                                </li>
+                            </ul>
+                        </div>
+
                         {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
                             <div id="fb-alerts">
-                                <div id="fb-download-help" class="alert alert-danger hidden" role="alert">
-                                    <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Downloading Large Files</strong>
-                                    <ul>
-                                        <li><span>To learn how to download files larger than 1 GB see <a
-                                                href="https://pages.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
-                                                target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
-                                        </li>
-                                    </ul>
-                                </div>
-
                                 <div class="alert alert-warning alert-dismissible" role="alert">
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
@@ -1081,10 +1082,8 @@
                                 <div class="tab-pane" id="extraMetaTab">
                                     {% if metadata_form %}
                                         <a id="btn-add-new-entry" type="button" class="btn btn-success">
-                                           <span class="glyphicon glyphicon-plus">
-                                               <i class="fa fa-plus"></i> Add New Entry
-                                           </span>
-                                        </a
+                                            <i class="fa fa-plus"></i> Add New Entry
+                                        </a>
                                     {% endif %}
                                     <table id="extraMetaTable" class="hs-table table" width="100%">
                                         <thead>
