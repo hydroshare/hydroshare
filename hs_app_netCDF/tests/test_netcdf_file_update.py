@@ -37,7 +37,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.temp_dir = tempfile.mkdtemp()
-        self.netcdf_file_name = 'netcdf_valid.nc'
+        self.netcdf_file_name = 'netcdf_file_update.nc'
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
@@ -60,8 +60,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
         _, _, metadata, _ = utils.resource_pre_create_actions(
             resource_type='NetcdfResource',
-            resource_title='Snow water equivalent estimation at TWDEF site '
-                           'from Oct 2009 to June 2010',
+            resource_title='Untitled resource',
             page_redirect_url_key=None,
             files=files,
             metadata=None,)
@@ -69,7 +68,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
             self.john,
-            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
+            'Untitled resource',
             files=files,
             metadata=metadata
             )
@@ -77,13 +76,234 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
         utils.resource_post_create_actions(self.resNetcdf, self.john, metadata)
         res_metadata = self.resNetcdf.metadata
 
-        # update res core metadata for setting flag
+        # update title for setting flag
         self.assertFalse(res_metadata.is_dirty)
-        res_metadata.create_element('subject', value='new keyword')
+        element = res_metadata.title
+        res_metadata.update_element('title', element.id, value='new title')
         res_metadata.refresh_from_db()
         self.assertTrue(res_metadata.is_dirty)
 
-        # check file update request
+        # create/update temporal coverage for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.create_element('coverage',
+                                              type='period',
+                                              value={'start': '01/01/2000',
+                                                     'end': '12/12/2010'})
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('coverage', element.id, type='period',
+                                    value={'start': '01/02/2000', 'end': '01/03/2000'})
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # create/update spatial coverage for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.create_element('coverage',
+                                              type='box',
+                                              value={'northlimit': 12,
+                                                     'eastlimit': 12,
+                                                     'southlimit': 1,
+                                                     'westlimit': 1,
+                                                     'units': 'Decimal degree',
+                                                     'projection': 'WGS84'}
+                                              )
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('coverage', element.id, type='box',
+                                    value={'northlimit': '13',
+                                           'eastlimit': '13',
+                                           'southlimit': '2',
+                                           'westlimit': '2',
+                                           'units': 'Decimal degree',
+                                           'projection': 'WGS84'}
+                                    )
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # create/update description for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.create_element('description', abstract='new abstract')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('description', element.id, abstract='update abstract')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        # create subject for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.create_element('subject', value='new keyword2')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # create/update/delete source for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.create_element('source',
+                                              derived_from='new source')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('source', element.id, abstract='update source')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.delete_element('source', element.id)
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # create/update/delete relation for setting flag
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element_1 = res_metadata.create_element('relation',
+                                                type='isHostedBy',
+                                                value='new host')
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+        element_2 = res_metadata.create_element('relation',
+                                                type='cites',
+                                                value='new reference')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('relation', element_1.id, type='isHostedBy',
+                                    value='update host')
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('relation', element_2.id, type='cites',
+                                    value='update reference')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.delete_element('relation', element_2.id)
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # update creator
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.creators.all().first()
+        res_metadata.update_element('creator', element.id, name='update name')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # create/update/delete contributor
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.create_element('contributor',
+                                              name='new name')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.update_element('contributor', element.id, name='update name')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        res_metadata.delete_element('contributor', element.id)
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # update variable
+        res_metadata.is_dirty = False
+        res_metadata.save()
+        res_metadata.refresh_from_db()
+        self.assertFalse(res_metadata.is_dirty)
+
+        element = res_metadata.variables.all().first()
+        res_metadata.update_element('variable',
+                                    element.id,
+                                    name=element.name,
+                                    unit='update unit',
+                                    type=element.type,
+                                    shape=element.shape,
+                                    missing_value='1',
+                                    descriptive_name='update long name',
+                                    method='update method')
+        res_metadata.refresh_from_db()
+        self.assertTrue(res_metadata.is_dirty)
+
+        # check file content update request
         url = reverse("update_netcdf_resfile", kwargs={'resource_id': self.resNetcdf.short_id})
         request = self.factory.post(url)
         request.user = self.john
@@ -99,7 +319,7 @@ class TestUpdateNetcdfFile(MockIRODSTestCaseMixin, TestCase):
                 nc_dump_res_file = f
                 break
         self.assertNotEqual(nc_dump_res_file, None)
-        self.assertIn('keywords = "Snow water equivalent, new keyword"',
+        self.assertIn('title = "new title"',
                       nc_dump_res_file.resource_file.read())
         res_metadata.refresh_from_db()
         self.assertFalse(res_metadata.is_dirty)
