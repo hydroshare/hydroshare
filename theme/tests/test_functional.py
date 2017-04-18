@@ -106,35 +106,33 @@ class FunctionalTestsCases(object):
         self.driver.quit()
         super(FunctionalTestsCases, self).tearDown()
 
-    def wait_and_click(self, css_selector, except_fail=True):
+    def wait_and_click(self, selector_method, selector_str,except_fail=True):
         elem = False
+        selector = (selector_method, selector_str)
         try:
             WebDriverWait(self.driver, 5).until(
-                expected_conditions.element_to_be_clickable(
-                    (By.CSS_SELECTOR, css_selector)
-                )
+                expected_conditions.element_to_be_clickable(selector)
             )
-            elem = self.driver.find_element_by_css_selector(css_selector)
+            elem = self.driver.find_element(*selector)
             elem.click()
         except TimeoutException as e:
-            self.driver.save_screenshot('clickable' + css_selector.replace(' ', '') + '.png')
+            self.driver.save_screenshot('clickable' + selector[1].replace(' ', '') + '.png')
             if except_fail:
-                self.fail(css_selector + " not clickable within timeout")
+                self.fail(selector[1] + " not clickable within timeout")
         return elem
 
-    def wait_for_visible(self, css_selector, except_fail=True):
+    def wait_for_visible(self, selector_method, selector_str,except_fail=True):
         elem = False
+        selector = (selector_method, selector_str)
         try:
             WebDriverWait(self.driver, 5).until(
-                expected_conditions.visibility_of_element_located(
-                    (By.CSS_SELECTOR, css_selector)
-                )
+                expected_conditions.visibility_of_element_located(selector)
             )
-            elem = self.driver.find_element_by_css_selector(css_selector)
+            elem = self.driver.find_element(*selector)
         except TimeoutException:
-            self.driver.save_screenshot('visible' + css_selector.replace(' ', '') + '.png')
+            self.driver.save_screenshot('visible' + selector[1].replace(' ', '') + '.png')
             if except_fail:
-                self.fail(css_selector + " not visible within timeout")
+                self.fail(selector[1] + " not visible within timeout")
         return elem
 
     def _login_helper(self, login_name, user_password):
@@ -342,10 +340,10 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
         self.driver.get(self.live_server_url)
 
     def _open_nav_menu_helper(self):
-        if self.wait_for_visible('ul.navbar-nav', except_fail=False):
+        if self.wait_for_visible(By.CSS_SELECTOR, 'ul.navbar-nav', except_fail=False):
             return
-        self.wait_and_click('button.navbar-toggle')
-        self.wait_for_visible('ul.navbar-nav')
+        self.wait_and_click(By.CSS_SELECTOR, 'button.navbar-toggle')
+        self.wait_for_visible(By.CSS_SELECTOR, 'ul.navbar-nav')
 
     def _login_helper(self, login_name, user_password):
         self._open_nav_menu_helper()
