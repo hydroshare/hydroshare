@@ -1550,7 +1550,7 @@
                                     </td>
 
                                     <td class="user-actions">
-                                        {% if is_owner_user %}
+                                        {% if is_owner_user or u.pk == current_user.pk %}
                                         <form id="form-remove-user-{{ u.pk }}"
                                               class="remove-user-form"
                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
@@ -1635,7 +1635,7 @@
                                     </td>
 
                                     <td class="user-actions">
-                                        {% if is_owner_user %}
+                                        {% if is_owner_user or u.pk == current_user.pk %}
                                         <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                               method="POST">
@@ -1710,7 +1710,7 @@
                                     </td>
 
                                     <td class="user-actions">
-                                        {% if is_owner_user %}
+                                        {% if is_owner_user or u.pk == current_user.pk %}
                                         <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                               method="POST">
@@ -1785,7 +1785,7 @@
                                     </td>
 
                                     <td class="user-actions">
-                                        {% if is_owner_user %}
+                                        {% if is_owner_user or u.pk == current_user.pk %}
                                         <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                               method="POST">
@@ -1869,7 +1869,7 @@
                                     </td>
 
                                     <td class="user-actions">
-                                        {% if is_owner_user %}
+                                        {% if is_owner_user or u.pk == current_user.pk %}
                                         <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
                                               action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                               method="POST">
