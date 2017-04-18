@@ -925,7 +925,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
                 if hasattr(nc_dataset, attr_name):
                     delattr(nc_dataset, attr_name)
 
-            creator = instance.metadata.creators.all().filter(order=1)
+            creator = instance.metadata.creators.all().filter(order=1).first()
             if creator:
                 nc_dataset.creator_name = creator.name
                 if creator.email:

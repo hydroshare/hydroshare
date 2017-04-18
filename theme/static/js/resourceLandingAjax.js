@@ -415,6 +415,13 @@ function metadata_update_ajax_submit(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
+
+                // show update netcdf resource
+                if (resourceType === 'Multidimensional (NetCDF)' &&
+                    json_response.is_dirty === true) {
+                    $("#netcdf-file-update").show();
+                }
+
                 // start timeseries resource specific DOM manipulation
                 if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();

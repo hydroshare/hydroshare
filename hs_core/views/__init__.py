@@ -188,7 +188,9 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success',
+                                  'is_dirty': res.metadata.is_dirty if
+                                  hasattr(res.metadata,'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -333,6 +335,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -412,6 +418,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
 
             return JsonResponse(ajax_response_data)
         else:
