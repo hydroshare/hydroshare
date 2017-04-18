@@ -505,6 +505,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
             # one keyword metadata for the netcdf file type
             self.assertEqual(len(logical_file.metadata.keywords), 1)
 
+        # at this point resource should have all the keywords that we have for the file type
+        res_keywords = [subject.value for subject in
+                        self.composite_resource.metadata.subjects.all()]
+
+        for kw in logical_file.metadata.keywords:
+            self.assertIn(kw, res_keywords)
+
+        # add keywords at the file level
         url_params = {'hs_file_type': file_type,
                       'file_type_id': logical_file.id
                       }
@@ -529,6 +537,14 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('keyword-1', logical_file.metadata.keywords)
         self.assertIn('keyword-2', logical_file.metadata.keywords)
 
+        # resource level keywords must have been updated with the keywords we added
+        # to file level
+        res_keywords = [subject.value for subject in
+                        self.composite_resource.metadata.subjects.all()]
+
+        for kw in logical_file.metadata.keywords:
+            self.assertIn(kw, res_keywords)
+
         # delete keyword
         url = reverse('delete_file_keyword_metadata', kwargs=url_params)
         request = self.factory.post(url, data={'keyword': 'keyword-1'})
@@ -549,6 +565,9 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
         self.assertIn('keyword-2', logical_file.metadata.keywords)
 
+        # test that deleting a file level keyword doesn't delete the same keyword from
+        # resource level
+        self.assertIn('keyword-1', res_keywords)
         self.composite_resource.delete()
 
     def _create_composite_resource(self, file_obj):
