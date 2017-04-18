@@ -1909,9 +1909,9 @@ class ResourceFile(models.Model):
         Federation must be initialized first at the resource level.
 
         :param resource: resource that contains the file.
-        :param file: a File or a string.
+        :param file: a File or a iRODS path to an existing file already copied.
         :param folder: the folder in which to store the file.
-        :param source: an iRODS path from which to copy the file.
+        :param source: an iRODS path in the same zone from which to copy the file.
         :param move: if True, move the file rather than copying.
 
         There are two main usages to this constructor:
@@ -1929,7 +1929,8 @@ class ResourceFile(models.Model):
         In this case, source is a full iRODS pathname of the place from which to copy or move
         the file. The default is to copy the file and leave a copy in place.
 
-        A third form is less common and presumes that the file already exists in iRODS:
+        A third form is less common and presumes that the file already exists in iRODS
+        in the proper place:
 
         * pointing to an existing file:
 
@@ -1955,14 +1956,36 @@ class ResourceFile(models.Model):
 
         else:  # if file is not an open file, then it's a basename (string)
             if file is None and source is not None:
-                root, file = os.path.split(source)  # take from source path
-            target = get_resource_file_path(resource, file, folder=folder)
-            if source is not None:
+                if __debug__:
+                    assert(isinstance(source, basestring))
+                # source is a path to an iRODS file to be copied here.
+                root, newfile = os.path.split(source)  # take file from source path
+                # newfile is where it should be copied to.
+                target = get_resource_file_path(resource, newfile, folder=folder)
                 istorage = resource.get_irods_storage()
+                if not istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: source {} of copy not found"
+                                          .format(source))
                 if not move:
                     istorage.copyFiles(source, target)
                 else:
                     istorage.moveFile(source, target)
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: copy to target {} failed"
+                                          .format(target))
+                if move and istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: move did not work")
+            elif file is not None and source is None:
+                # file points to an existing iRODS file
+                target = get_resource_file_path(resource, file, folder=folder)
+                istorage = resource.get_irods_storage()
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: target {} does not exist"
+                                          .format(target))
+            else:
+                raise ValidationError(
+                    "ResourceFile.create: exactly one of source or file must be specified")
+
             # we've copied or moved if necessary; now set the paths
             if resource.resource_federation_path:
                 kwargs['resource_file'] = None

@@ -1826,7 +1826,7 @@
                                 <td class="user-actions">
                                     {% if u.can_undo %}
                                     <form id="form-undo-share-{{ u.pk }}" class="undo-share-form" method="POST"
-                                          action="" method="POST">
+                                          action="/hsapi/_internal/{{ cm.short_id }}/undo-share-resource-with-user/{{ u.pk }}/" method="POST">
                                         {% csrf_token %}
                                         <i class="fa fa-undo btn-undo-share" aria-hidden="true" data-toggle="tooltip"
                                            title="Undo Share"></i>
@@ -1900,10 +1900,8 @@
                                                         class="button-label">&nbspAdd</span></a>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
-
                             </form>
                         </div>
                     </div>
