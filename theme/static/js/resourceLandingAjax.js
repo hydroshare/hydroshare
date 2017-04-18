@@ -167,18 +167,18 @@ function undo_share_ajax_submit(form_id) {
 
                 userRoles.find("li").removeClass("active");
 
-                if (json_response.undo_user_privilege == "view") {
+                if (json_response.undo_user_privilege == "view" || json_response.undo_group_privilege == "view") {
                     userRoles.find(".dropdown-toggle").text("Can view");
                     userRoles.find("li[data-access-type='" + "Can view"
                         + "']").addClass("active");
 
                 }
-                else if (json_response.undo_user_privilege == "edit") {
+                else if (json_response.undo_user_privilege == "edit" || json_response.undo_group_privilege == "edit") {
                     userRoles.find(".dropdown-toggle").text("Can edit");
                     userRoles.find("li[data-access-type='" + "Can edit"
                         + "']").addClass("active");
                 }
-                else if (json_response.undo_user_privilege == "owner") {
+                else if (json_response.undo_user_privilege == "owner" || json_response.undo_group_privilege == "owner") {
                     userRoles.find(".dropdown-toggle").text("Is owner");
                     userRoles.find("li[data-access-type='" + "Is owner"
                         + "']").addClass("active");

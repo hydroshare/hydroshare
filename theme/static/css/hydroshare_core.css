@@ -2248,9 +2248,20 @@ button.loading {
 	}
 }
 
-.first-modal {
-	height: 500px;
+.access-table-wrapper {
+	min-height: 100px;
+	height: 250px;
 	overflow: auto;
+	resize: vertical;
+    border: 1px solid #DDD;
+    padding: 12px;
+    padding-bottom: 90px;
+    background: #f8f8f8;
+}
+
+table.table.access-table {
+    background: #FFF;
+    border: 1px solid #DDD;
 }
 
 .modal {
