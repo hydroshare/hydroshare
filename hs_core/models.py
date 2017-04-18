@@ -2380,6 +2380,8 @@ class DiscoverableResourceManager(models.Manager):
 # otherwise, get internal edit error when saving changes
 class BaseResource(Page, AbstractResource):
 
+    approved = models.BooleanField(default=False)
+
     resource_type = models.CharField(max_length=50, default="GenericResource")
     # this locked_time field is added for resource versioning locking representing
     # the time when the resource is locked for a new version action. A value of null
