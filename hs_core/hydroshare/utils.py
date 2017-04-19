@@ -389,7 +389,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     # TODO: why would we want to do anything at all if the resource does not exist???
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-        if bag_modified == "true":
+        if bag_modified.lower() == "true":
             # import here to avoid circular import issue
             from hs_core.tasks import create_bag_by_irods
             create_bag_by_irods(res_id)
@@ -441,8 +441,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 tgt_coll.raccess.discoverable = False
                 istorage.setAVU(tgt_coll, avu_name, 'false')
             else:
-                tgt_coll.raccess.public = (value == 'true')
-                tgt_coll.raccess.discoverable = (value == 'true')
+                tgt_coll.raccess.public = (value.lower() == 'true')
+                tgt_coll.raccess.discoverable = (value.lower() == 'true')
                 istorage.setAVU(tgt_coll, avu_name, value)
             tgt_coll.raccess.save()
 
