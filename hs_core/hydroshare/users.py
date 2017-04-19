@@ -308,7 +308,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
 
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
 
-    if coverage_type:
+    if coverage_type in ('box', 'point'):
         if not north or not west or not south or not east: \
             raise ValueError("coverage queries must have north, west, south, and east params")
 
