@@ -13,11 +13,11 @@
                     {########################}
                     {#       CONTENT FILES     #}
                     {########################}
-                    {% if mpmetadata.get_engine_list or mpmetadata.get_software_list or mpmetadata.get_releasenotes_list or mpmetadata.get_documentation_list %}
+                    {% if mpmetadata.get_engine_list|first or mpmetadata.get_software_list|first or mpmetadata.get_releasenotes_list|first  or mpmetadata.get_documentation_list|first  %}
                     <legend>Content files</legend>
                     <table class="custom-table">
                         <tbody>
-                        {% if mpmetadata.get_engine_list %}
+                        {% if mpmetadata.get_engine_list|first %}
                             {% for name in mpmetadata.get_engine_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -32,7 +32,7 @@
                             {% endfor %}
                         {% endif %}
 
-                        {% if mpmetadata.get_software_list %}
+                        {% if mpmetadata.get_software_list|first %}
                             {% for name in mpmetadata.get_software_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -47,7 +47,7 @@
                             {% endfor %}
                         {% endif %}
 
-                        {% if mpmetadata.get_documentation_list %}
+                        {% if mpmetadata.get_documentation_list|first %}
                             {% for name in mpmetadata.get_documentation_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
@@ -63,7 +63,7 @@
                         {% endif %}
 
 
-                        {% if mpmetadata.get_releasenotes_list %}
+                        {% if mpmetadata.get_releasenotes_list|first %}
                             {% for name in mpmetadata.get_releasenotes_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
