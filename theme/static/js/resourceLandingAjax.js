@@ -50,7 +50,6 @@ function shareable_ajax_submit(event) {
     var action = $(this).closest("form").find("input[name='t']").val();
     element.attr("disabled", true);
 
-
     $.ajax({
         type: "POST",
         url: url,
@@ -171,7 +170,6 @@ function undo_share_ajax_submit(form_id) {
                     userRoles.find(".dropdown-toggle").text("Can view");
                     userRoles.find("li[data-access-type='" + "Can view"
                         + "']").addClass("active");
-
                 }
                 else if (json_response.undo_user_privilege == "change" || json_response.undo_group_privilege == "change") {
                     userRoles.find(".dropdown-toggle").text("Can edit");
@@ -406,8 +404,6 @@ function share_resource_ajax_submit(form_id) {
                         + share_with + "/";
                 }
 
-
-
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
@@ -526,8 +522,7 @@ function metadata_update_ajax_submit(form_id){
         dataType: 'html',
         data: datastring,
         async: flagAsync,
-        success: function(result)
-        {
+        success: function(result) {
             /* The div contains now the updated form */
             //$('#' + form_id).html(result);
             json_response = JSON.parse(result);
@@ -1078,6 +1073,7 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         }
     });
 }
+
 function addFileTypeExtraMetadata(){
     $form = $('#add-keyvalue-filetype-metadata');
     var url = $form.attr('action');
@@ -1333,35 +1329,36 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
 // updates the UI spatial coverage elements
 function updateResourceSpatialCoverage(spatialCoverage){
     $("#spatial-coverage-type").val(spatialCoverage.type);
-        if (spatialCoverage.type === 'point'){
-            $("#id_type_2").attr('checked', 'checked');
-            $("#id_north").val(spatialCoverage.north);
-            $("#id_east").val(spatialCoverage.east);
-            $("#div_id_north").show();
-            $("#div_id_east").show();
-            $("#div_id_elevation").show();
-            $("#div_id_northlimit").hide();
-            $("#div_id_eastlimit").hide();
-            $("#div_id_southlimit").hide();
-            $("#div_id_westlimit").hide();
-            $("#div_id_uplimit").hide();
-            $("#div_id_downlimit").hide();
-        }
-        else { //coverage type is 'box'
-            $("#id_type_1").attr('checked', 'checked');
-            $("#id_eastlimit").val(spatialCoverage.eastlimit);
-            $("#id_northlimit").val(spatialCoverage.northlimit);
-            $("#id_westlimit").val(spatialCoverage.westlimit);
-            $("#id_southlimit").val(spatialCoverage.southlimit);
-            $("#div_id_north").hide();
-            $("#div_id_east").hide();
-            $("#div_id_elevation").hide();
-            $("#div_id_northlimit").show();
-            $("#div_id_eastlimit").show();
-            $("#div_id_southlimit").show();
-            $("#div_id_westlimit").show();
-            $("#div_id_uplimit").show();
-            $("#div_id_downlimit").show();
+
+    if (spatialCoverage.type === 'point') {
+        $("#id_type_2").attr('checked', 'checked');
+        $("#id_north").val(spatialCoverage.north);
+        $("#id_east").val(spatialCoverage.east);
+        $("#div_id_north").show();
+        $("#div_id_east").show();
+        $("#div_id_elevation").show();
+        $("#div_id_northlimit").hide();
+        $("#div_id_eastlimit").hide();
+        $("#div_id_southlimit").hide();
+        $("#div_id_westlimit").hide();
+        $("#div_id_uplimit").hide();
+        $("#div_id_downlimit").hide();
+    }
+    else { //coverage type is 'box'
+        $("#id_type_1").attr('checked', 'checked');
+        $("#id_eastlimit").val(spatialCoverage.eastlimit);
+        $("#id_northlimit").val(spatialCoverage.northlimit);
+        $("#id_westlimit").val(spatialCoverage.westlimit);
+        $("#id_southlimit").val(spatialCoverage.southlimit);
+        $("#div_id_north").hide();
+        $("#div_id_east").hide();
+        $("#div_id_elevation").hide();
+        $("#div_id_northlimit").show();
+        $("#div_id_eastlimit").show();
+        $("#div_id_southlimit").show();
+        $("#div_id_westlimit").show();
+        $("#div_id_uplimit").show();
+        $("#div_id_downlimit").show();
         }
 }
 
