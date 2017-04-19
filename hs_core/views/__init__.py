@@ -981,7 +981,6 @@ def create_resource(request, *args, **kwargs):
     ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-
     resource_files = request.FILES.values()
     source_names = []
     irods_fnames = request.POST.get('irods_file_names')
@@ -1003,12 +1002,13 @@ def create_resource(request, *args, **kwargs):
                                   zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
                 ajax_response_data['message'] = ex.message
+                return JsonResponse(ajax_response_data)
 
             except SessionException as ex:
                 ajax_response_data['message'] = ex.stderr
+                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
-
     try:
         page_url_dict, res_title, metadata, fed_res_path = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
@@ -1020,15 +1020,17 @@ def create_resource(request, *args, **kwargs):
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
         ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
         ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except Exception as ex:
         ajax_response_data['message'] = ex.message
-
+        return JsonResponse(ajax_response_data)
     # TODO: (Pabitra) Not sure how we should be handling this when the call now comes as an
-    # ajax call
+    # ajax call - this is relevant to only reference time series resource type
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
@@ -1051,9 +1053,15 @@ def create_resource(request, *args, **kwargs):
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
         ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['file_upload_status'] = 'error'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
     if not ajax_response_data['message']:
+        if resource.files.all():
+            ajax_response_data['file_upload_status'] = 'success'
         ajax_response_data['status'] = 'success'
         ajax_response_data['resource_url'] = resource.get_absolute_url()
 
