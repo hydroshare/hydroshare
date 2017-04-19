@@ -46,9 +46,9 @@ def get_quota_message(user):
                                                   percent=percent)
         else:
             # return quota informational message
-            return_msg += ' - You quota for HydroShare resources is {allocated}{unit} in {zone} ' \
+            return_msg += ' - Your quota for HydroShare resources is {allocated}{unit} in {zone} ' \
                           'zone. You currently have resources that consume {used}{unit}, ' \
-                          '{percent} of your quota.'.format(allocated=uq.allocated_value,
+                          '{percent}% of your quota.'.format(allocated=uq.allocated_value,
                                                             unit=uq.unit,
                                                             used=round(uq.used_value),
                                                             zone=uq.zone,
