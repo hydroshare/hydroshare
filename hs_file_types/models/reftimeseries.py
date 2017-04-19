@@ -26,8 +26,8 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 class TimeSeries(object):
     """represents a one timeseries metadata"""
     def __init__(self, network_name, site_name, site_code, latitude, longitude, variable_name,
-                 variable_code, url, service_type, reference_type, return_type, start_date,
-                 end_date):
+                 variable_code, method_description, method_link, sample_medium, url, service_type,
+                 reference_type, return_type, start_date, end_date):
         self.network_name = network_name
         self.site_name = site_name
         self.site_code = site_code
@@ -35,6 +35,9 @@ class TimeSeries(object):
         self.longitude = longitude
         self.variable_name = variable_name
         self.variable_code = variable_code
+        self.method_description = method_description
+        self.method_link = method_link
+        self.sample_medium = sample_medium
         self.url = url
         self.service_type = service_type
         self.reference_type = reference_type
@@ -221,6 +224,13 @@ class Variable(object):
         return root_div.render(pretty=True)
 
 
+class Method(object):
+    """represents a method for timeseries data"""
+    def __init__(self, description, link):
+        self.description = description
+        self.link = link
+
+
 class RefWebService(object):
     """represents a web service for timeseries data"""
     def __init__(self, url, service_type, reference_type, return_type):
@@ -267,41 +277,62 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
     @property
     def title(self):
+        """get the title associated with this ref time series"""
         json_data_dict = self._json_to_dict()
-        return json_data_dict['timeSeriesLayerResource']['title']
+        if 'title' in json_data_dict['timeSeriesLayerResource']:
+            return json_data_dict['timeSeriesLayerResource']['title']
+        return ''
 
     @property
     def abstract(self):
+        """get the abstract associated with this ref time series"""
         json_data_dict = self._json_to_dict()
-        return json_data_dict['timeSeriesLayerResource']['abstract']
+        if 'abstract' in json_data_dict['timeSeriesLayerResource']:
+            return json_data_dict['timeSeriesLayerResource']['abstract']
+        return ''
 
     @property
     def key_words(self):
+        """get a list of all keywords associated with this ref time series"""
         # had to name this property as key_words since the parent class has a model field keywords
         json_data_dict = self._json_to_dict()
-        return json_data_dict['timeSeriesLayerResource']['keyWords']
+        if 'keyWords' in json_data_dict['timeSeriesLayerResource']:
+            return json_data_dict['timeSeriesLayerResource']['keyWords']
+        return []
 
     @property
     def serieses(self):
         json_data_dict = self._json_to_dict()
-        return json_data_dict['timeSeriesLayerResource']['REFTS']
+        return json_data_dict['timeSeriesLayerResource']['referencedTimeSeries']
 
     @property
     def time_serieses(self):
+        """get a list of all time series associated with this ref time series"""
         ts_serieses = []
         for series in self.serieses:
             st_date = parser.parse(series['beginDate'])
             st_date = st_date.strftime('%m-%d-%Y')
             end_date = parser.parse(series['endDate'])
             end_date = end_date.strftime('%m-%d-%Y')
+            method_des = ''
+            method_link = ''
+            if 'method' in series:
+                method_des = series['method']['methodDescription']
+                method_link = series['method']['methodLink']
+
+            sample_medium = series.get('sampleMedium', "")
+
             ts_series = TimeSeries(network_name=series['networkName'],
-                                   site_name=series['site'],
-                                   site_code=series['siteCode'],
-                                   latitude=series['location']['latitude'],
-                                   longitude=series['location']['longitude'],
-                                   variable_name=series['variable'],
-                                   variable_code=series['variableCode'],
-                                   url=series['url'],
+                                   site_name=series['site']['siteName'],
+                                   site_code=series['site']['siteCode'],
+                                   latitude=series['site']['latitude'],
+                                   longitude=series['site']['longitude'],
+                                   variable_name=series['variable']['variableName'],
+                                   variable_code=series['variable']['variableCode'],
+                                   method_description=method_des,
+                                   method_link=method_link,
+                                   sample_medium=sample_medium,
+                                   url=series['wsdlURL'],
                                    service_type=series['serviceType'],
                                    reference_type=series['refType'],
                                    return_type=series['returnType'],
@@ -313,13 +344,15 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
     @property
     def sites(self):
+        """get a list of all sites associated with this ref time series"""
         sites = []
         site_codes = []
         for series in self.serieses:
-            if series['siteCode'] not in site_codes:
-                site = Site(name=series['site'], code=series['siteCode'],
-                            latitude=series['location']['latitude'],
-                            longitude=series['location']['longitude']
+            site_dict = series['site']
+            if site_dict['siteCode'] not in site_codes:
+                site = Site(name=site_dict['siteName'], code=site_dict['siteCode'],
+                            latitude=site_dict['latitude'],
+                            longitude=site_dict['longitude']
                             )
                 sites.append(site)
                 site_codes.append(site.code)
@@ -327,22 +360,38 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
     @property
     def variables(self):
+        """get a list of all variables associated with this ref time series"""
         variables = []
         variable_codes = []
         for series in self.serieses:
-            if series['variableCode'] not in variable_codes:
-                variable = Variable(name=series['variable'], code=series['variableCode'])
+            variable_dict = series['variable']
+            if variable_dict['variableCode'] not in variable_codes:
+                variable = Variable(name=variable_dict['variableName'],
+                                    code=variable_dict['variableCode'])
                 variables.append(variable)
                 variable_codes.append(variable.code)
         return variables
 
     @property
+    def methods(self):
+        """get a list of all methods associated with this ref time series"""
+        methods = []
+        for series in self.serieses:
+            if 'method' in series:
+                method_dict = series['method']
+                method = Method(description=method_dict['methodDescription'],
+                                link=method_dict['methodLink'])
+                methods.append(method)
+        return methods
+
+    @property
     def web_services(self):
+        """get a list of all web services associated with this ref time series"""
         services = []
         urls = []
         for series in self.serieses:
-            if series['url'] not in urls:
-                service = RefWebService(url=series['url'], service_type=series['serviceType'],
+            if series['wsdlURL'] not in urls:
+                service = RefWebService(url=series['wsdlURL'], service_type=series['serviceType'],
                                         reference_type=series['refType'],
                                         return_type=series['returnType'])
                 services.append(service)
@@ -505,13 +554,28 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        """only .json.refts file can be set to this logical file group"""
-        return [".json.refts"]
+        """only .refts file can be set to this logical file group"""
+        return [".refts"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        """file type allowed in this logical file group is: .json.refts"""
-        return [".json.refts"]
+        """file type allowed in this logical file group is: .refts"""
+        return [".refts"]
+
+    @classmethod
+    def get_allowed_ref_types(cls):
+        """returns a list of refType controlled vocabulary terms"""
+        return ['WOF']
+
+    @classmethod
+    def get_allowed_return_types(cls):
+        """returns a list of returnType controlled vocabulary terms"""
+        return ['WaterML 1.1']
+
+    @classmethod
+    def get_allowed_service_types(cls):
+        """returns a list of serviceType controlled vocabulary terms"""
+        return ['SOAP']
 
     @classmethod
     def create(cls):
@@ -642,11 +706,11 @@ def _extract_metadata(resource, logical_file):
 
     # add file level spatial coverage
     # check if we have single site or multiple sites
-    sites = set([series['siteCode'] for series in logical_file.metadata.serieses])
+    sites = set([series['site']['siteCode'] for series in logical_file.metadata.serieses])
     if len(sites) == 1:
         series = logical_file.metadata.serieses[0]
-        value_dict = {'east': series['location']['longitude'],
-                      'north': series['location']['latitude'],
+        value_dict = {'east': series['site']['longitude'],
+                      'north': series['site']['latitude'],
                       'projection': 'Unknown',
                       'units': "Decimal degrees"}
         logical_file.metadata.create_element('coverage', type='point', value=value_dict)
@@ -654,13 +718,13 @@ def _extract_metadata(resource, logical_file):
         bbox = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
                 'projection': 'Unknown', 'units': "Decimal degrees"}
         for series in logical_file.metadata.serieses:
-            latitude = float(series['location']['latitude'])
+            latitude = float(series['site']['latitude'])
             if bbox['northlimit'] < latitude:
                 bbox['northlimit'] = latitude
             if bbox['southlimit'] > latitude:
                 bbox['southlimit'] = latitude
 
-            longitude = float(series['location']['longitude'])
+            longitude = float(series['site']['longitude'])
             if bbox['eastlimit'] < longitude:
                 bbox['eastlimit'] = longitude
 
@@ -684,19 +748,20 @@ def _validate_json_file(res_json_file):
     except Exception:
         raise Exception("Not a valid reference time series json file")
 
+    # TODO: validate that there are no duplicate time series
     # test that there is no duplicate time series data
-    ts_serieses = json_data['timeSeriesLayerResource']['REFTS']
-    locations = []
-    for item in ts_serieses:
-        # remove the inner dictionary item with key of 'location'
-        if 'location' in item.keys():
-            locations.append(item.pop('location'))
-
-    ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
-    if len(ts_serieses) != len(ts_unique_serieses):
-        raise Exception("Duplicate time series found")
-    if not locations:
-        raise Exception("Not a valid reference time series json file")
+    ts_serieses = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
+    # locations = []
+    # for item in ts_serieses:
+    #     # remove the inner dictionary item with key of 'location'
+    #     if 'location' in item.keys():
+    #         locations.append(item.pop('location'))
+    #
+    # ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
+    # if len(ts_serieses) != len(ts_unique_serieses):
+    #     raise Exception("Duplicate time series found")
+    # if not locations:
+    #     raise Exception("Not a valid reference time series json file")
     _validate_json_data(ts_serieses)
     return json_file_content
 
@@ -707,6 +772,7 @@ def _validate_json_data(series_data):
     # 2. the url is valid and live
 
     err_msg = "Invalid json file. {}"
+    urls = []
     for series in series_data:
         try:
             start_date = parser.parse(series['beginDate'])
@@ -720,54 +786,89 @@ def _validate_json_data(series_data):
             end_date = timezone.make_naive(end_date)
         if start_date > end_date:
             raise Exception(err_msg.format("Invalid date values"))
-        req = Request(series['url'])
-        try:
-            urlopen(req)
-        except URLError:
-            raise Exception(err_msg.format("Invalid URL found"))
+
+        # validate refType
+        if series['refType'] not in RefTimeseriesLogicalFile.get_allowed_ref_types():
+            raise ValidationError("Invalid value for refType")
+        # validate returnType
+        if series['returnType'] not in RefTimeseriesLogicalFile.get_allowed_return_types():
+            raise ValidationError("Invalid value for returnType")
+        # validate serviceType
+        if series['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
+            raise ValidationError("Invalid value for serviceType")
+
+        url = Request(series['wsdlURL'])
+        if url not in urls:
+            urls.append(url)
+            try:
+                urlopen(url)
+            except URLError:
+                raise Exception(err_msg.format("Invalid web service URL found"))
+
+        if 'method' in series:
+            url = Request(series['method']['methodLink'])
+            if url not in urls:
+                urls.append(url)
+                try:
+                    urlopen(url)
+                except URLError:
+                    raise Exception(err_msg.format("Invalid method link found"))
 
 TS_SCHEMA = {
     "type": "object",
     "properties": {
-        "timeSeriesLayerResource": {
+        "timeSeriesReferenceFile": {
             "type": "object",
             "properties": {
                 "title": {"type": "string"},
                 "abstract": {"type": "string"},
-                "fileVersion": {"type": "number"},
+                "fileVersion": {"type": "string"},
                 "keyWords": {
                     "type": "array",
                     "items": {"type": "string"}
                 },
                 "symbol": {"type": "string"},
-                "REFTS": {
+                "referencedTimeSeries": {
                     "type": "array",
                     "properties": {
                         "beginDate": {"type": "string"},
                         "endDate": {"type": "string"},
-                        "location": {
+                        "site": {
                             "type": "object",
                             "properties": {
+                                "siteCode": {"type": "string"},
+                                "siteName": {"type": "string"},
                                 "latitude": {"type": "number", "minimum": -90, "maximum": 90},
                                 "longitude": {"type": "number", "minimum": -180, "maximum": 180},
+                            },
+                        },
+                        "variable": {
+                            "type": "object",
+                            "properties": {
+                                "variableCode": {"type": "string"},
+                                "variableName": {"type": "string"},
+                            },
+                        },
+                        "method": {
+                            "type": "object",
+                            "properties": {
+                                "methodDescription": {"type": "string"},
+                                "methodLink": {"type": "string"},
                             },
                         },
                         "netWorkName": {"type": "string"},
                         "refType": {"type": "string"},
                         "returnType": {"type": "string"},
                         "serviceType": {"type": "string"},
-                        "site": {"type": "string"},
-                        "siteCode": {"type": "string"},
-                        "url": {"type": "string"},
-                        "variable": {"type": "string"},
-                        "variableCode": {"type": "string"}
+                        "wsdlURL": {"type": "string"},
+                        "sampleMedium": {"type": "string"},
                     },
-                    "required": ["beginDate", "endDate", "location", "netWorkName", "refType",
-                                 "returnType", "serviceType", "site", "siteCode", "url",
-                                 "variable", "variableCode"]
+                    "required": ["beginDate", "endDate", "netWorkName", "refType",
+                                 "returnType", "serviceType", "site", "siteCode", "wsdlURL",
+                                 "variable"]
                 }
             },
-            "required": ["title", "abstract", "fileVersion", "keyWords", "symbol", "REFTS"]
+            "required": ["fileVersion", "referencedTimeSeries"]
         }
     }
 }
