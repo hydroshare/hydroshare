@@ -1,3 +1,7 @@
+import os
+import subprocess
+import signal
+
 from django.contrib.auth.models import Group
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import override_settings
@@ -34,7 +38,17 @@ class FunctionalTestsCases(object):
         super(FunctionalTestsCases, self).setUp()
 
     def tearDown(self):
+        self.driver.close()
         self.driver.quit()
+
+        # Selenium does not clean up phantomjs processes, so we are left to take care of it.
+        # see Selenium bug: https://github.com/seleniumhq/selenium/issues/767
+        processes = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+        out, err = processes.communicate()
+        for line in out.splitlines():
+            if 'phantomjs' in line:
+                pid = int(line.split(None, 1)[0])
+                os.kill(pid, signal.SIGKILL)
         super(FunctionalTestsCases, self).tearDown()
 
     def _login_helper(self, login_name, user_password):
