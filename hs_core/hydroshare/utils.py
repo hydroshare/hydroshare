@@ -20,7 +20,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
 from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 
 from mezzanine.conf import settings
 
@@ -441,12 +440,12 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
         if avu_name == 'isPublic' and set_to_private:
-	    istorage.setAVU(dest_coll, avu_name, 'False')
-	elif avu_name == 'bag_modified':
-	    # bag_modified AVU needs to be set to true for copied resource
-	    istorage.setAVU(dest_coll, avu_name, 'true')
-	else:
-	    istorage.setAVU(dest_coll, avu_name, value)
+            istorage.setAVU(tgt_coll, avu_name, 'False')
+        elif avu_name == 'bag_modified':
+            # bag_modified AVU needs to be set to true for copied resource
+            istorage.setAVU(tgt_coll, avu_name, 'true')
+        else:
+            istorage.setAVU(tgt_coll, avu_name, value)
 
     # link copied resource files to Django resource model
     files = src_res.files.all()
