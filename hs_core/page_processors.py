@@ -73,6 +73,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         relevant_tools = []
         relevant_tools_open_with = []
+        my_resource_list = get_my_resources_list(request)
         # loop through all SupportedResTypes objs (one webapp resources has one
         # SupportedResTypes obj)
         for res_type in SupportedResTypes.objects.all():
@@ -124,9 +125,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                       format(tool_short_id=tool_res_obj.short_id),
                                       'icon_url': tool_icon_url,
                                       'url': tool_url_new}
+                                # prepare for "WebApp" tab page
                                 relevant_tools.append(tl)
 
-                                if tool_res_obj in get_my_resources_list(request) or tool_res_obj.approved:
+                                # prepare for "open with" drop down
+                                if tool_res_obj in my_resource_list or tool_res_obj.approved:
                                     relevant_tools_open_with.append(tl)
 
     just_created = False
