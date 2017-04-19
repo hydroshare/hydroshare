@@ -2738,6 +2738,16 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
+    def set_dirty(self, flag):
+        """
+        Subclasses that have the attribute to track whether metadata object is dirty
+        should override this method to allow setting that attribute
+
+        :param flag: a boolean value
+        :return:
+        """
+        pass
+
     def has_all_required_elements(self):
         # this method needs to be overriden by any subclass of this class
         # if they implement additional metadata elements that are required
