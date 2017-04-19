@@ -180,6 +180,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
         # iPhone 5 resolution
         self.driver.set_window_size(width=640, height=1136)
         self.driver.get(self.live_server_url)
+        self.driver.implicitly_wait(10)
         super(MobileTests, self).setUp()
 
     def _open_nav_menu(self):
