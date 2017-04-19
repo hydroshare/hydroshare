@@ -2,7 +2,7 @@ import json
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
-from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos import Polygon, Point
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core import exceptions
@@ -315,15 +315,24 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         coverages = set()
         search_polygon = Polygon.from_bbox((east,south,west,north))
 
-        for coverage in Coverage.objects.filter(Q(type="box") | Q(type="point")):
+        for coverage in Coverage.objects.filter(type="box"):
             coverage_polygon = Polygon.from_bbox((
-                coverage.value['eastlimit'],
-                coverage.value['southlimit'],
-                coverage.value['westlimit'],
-                coverage.value['northlimit']
+                coverage.value.get('eastlimit', None),
+                coverage.value.get('southlimit', None),
+                coverage.value.get('westlimit', None),
+                coverage.value.get('northlimit', None)
             ))
 
             if search_polygon.intersects(coverage_polygon):
+                coverages.add(coverage.id)
+
+        for coverage in Coverage.objects.filter(type="point"):
+            coverage_shape = Point(
+                coverage.value.get('east', None),
+                coverage.value.get('north', None),
+            )
+
+            if search_polygon.intersects(coverage_shape):
                 coverages.add(coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))

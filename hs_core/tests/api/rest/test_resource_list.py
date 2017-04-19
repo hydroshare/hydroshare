@@ -227,8 +227,15 @@ class TestResourceList(HSRESTTestCase):
         gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
                                                metadata=metadata_dict_two)
 
+        metadata_dict_two = [{'coverage': {'type': 'point', 'value': {'north': '70',
+                                                                    'east': '70',
+                                                                    'units': 'decimal deg'}}}]
+        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 2',
+                                               metadata=metadata_dict_two)
+
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
+        self.resources_to_delete.append(gen_res_three.short_id)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
                                                         'north': '70',
@@ -255,4 +262,4 @@ class TestResourceList(HSRESTTestCase):
                                                         'west': '0'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['count'], 2)
+        self.assertEqual(content['count'], 3)
