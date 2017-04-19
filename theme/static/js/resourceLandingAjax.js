@@ -173,7 +173,7 @@ function undo_share_ajax_submit(form_id) {
                         + "']").addClass("active");
 
                 }
-                else if (json_response.undo_user_privilege == "edit" || json_response.undo_group_privilege == "edit") {
+                else if (json_response.undo_user_privilege == "change" || json_response.undo_group_privilege == "change") {
                     userRoles.find(".dropdown-toggle").text("Can edit");
                     userRoles.find("li[data-access-type='" + "Can edit"
                         + "']").addClass("active");
