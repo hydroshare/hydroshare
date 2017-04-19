@@ -183,10 +183,14 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
+        res_metadata = res.metadata
+        res_metadata.set_dirty(True)
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success',
+                                  'is_dirty': res.metadata.is_dirty if
+                                  hasattr(res.metadata, 'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -331,6 +335,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -410,6 +418,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
 
             return JsonResponse(ajax_response_data)
         else:
@@ -1049,8 +1060,8 @@ def create_resource(request, *args, **kwargs):
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, 
-                                           user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
+                                           metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
@@ -1309,7 +1320,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     _send_email_on_group_membership_acceptance(membership_request)
                 else:
                     message = 'Membership request declined'
-                    messages.error(request, message)
+                    messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, ex.message)
