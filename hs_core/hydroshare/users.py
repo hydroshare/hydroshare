@@ -2,12 +2,13 @@ import json
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
+from django.contrib.gis.geos import Polygon
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core import exceptions
 from django.db.models import Q
 
-from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title
+from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, Coverage
 from .utils import user_from_id, group_from_id, get_profile
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
@@ -241,7 +242,8 @@ def get_public_groups():
 def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
-                      type=None, author=None, contributor=None, subject=None):
+                      type=None, author=None, contributor=None, subject=None, coverage_type=None,
+                      north=None, south=None, east=None, west=None):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -277,6 +279,11 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         count = int
         subject = list of subject
         type = list of resource type names, used for filtering
+        coverage_type = geo parameter, one of box or point
+        north = north coordinate
+        west = west coordinate
+        south = south coordinate
+        east = east coordinate
     """
 
     if not any((creator, group, user, owner, from_date, to_date, start,
@@ -300,6 +307,27 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         )
 
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+    if coverage_type:
+        if not north or not west or not south or not east: \
+            raise ValueError("coverage queries must have north, west, south, and east params")
+
+        coverages = set()
+        search_polygon = Polygon.from_bbox((east,south,west,north))
+
+        for coverage in Coverage.objects.filter(Q(type="box") | Q(type="point")):
+            coverage_polygon = Polygon.from_bbox((
+                coverage.value['eastlimit'],
+                coverage.value['southlimit'],
+                coverage.value['westlimit'],
+                coverage.value['northlimit']
+            ))
+
+            if search_polygon.intersects(coverage_polygon):
+                coverages.add(coverage.id)
+
+        coverage_hits = (Coverage.objects.filter(id__in=coverages))
+        q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
 
     if contributor:
         contributor_parties = (

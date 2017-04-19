@@ -211,46 +211,48 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_by_bounding_box(self):
-        metadata_dict = [{'coverage': {'type': 'box', 'value': { 'northlimit':'56.45678',
-                                                                'eastlimit':'16.6789',
-                                                                'southlimit':'16.45678',
-                                                                'westlimit':'12.6789',
+        metadata_dict_one = [{'coverage': {'type': 'box', 'value': { 'northlimit':'80',
+                                                                'eastlimit':'40',
+                                                                'southlimit':'60',
+                                                                'westlimit':'20',
                                                                 'units': 'decimal deg' }}}]
-        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1', metadata=metadata_dict)
+        gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
+                                               metadata=metadata_dict_one)
 
-        metadata_dict = [{'coverage': {'type': 'box', 'value': {'northlimit': '56.45678',
-                                                               'eastlimit': '12.1234',
-                                                               'southlimit': '16.45678',
-                                                               'westlimit': '8.1234',
+        metadata_dict_two = [{'coverage': {'type': 'box', 'value': {'northlimit': '60',
+                                                               'eastlimit': '110',
+                                                               'southlimit': '50',
+                                                               'westlimit': '90',
                                                                'units': 'decimal deg'}}}]
-        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2', metadata=metadata_dict)
+        gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
+                                               metadata=metadata_dict_two)
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
-                                                        'north': '57',
-                                                        'east': '17',
-                                                        'south': '16',
-                                                        'west': '12'}, format='json')
+                                                        'north': '70',
+                                                        'east': '50',
+                                                        'south': '50',
+                                                        'west': '30'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
-                                                        'north': '57',
-                                                        'east': '13',
-                                                        'south': '16',
-                                                        'west': '8'}, format='json')
+                                                        'north': '70',
+                                                        'east': '120',
+                                                        'south': '40',
+                                                        'west': '100'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
 
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'box',
-                                                        'north': '57',
-                                                        'east': '17',
-                                                        'south': '16',
-                                                        'west': '8'}, format='json')
+                                                        'north': '90',
+                                                        'east': '140',
+                                                        'south': '30',
+                                                        'west': '0'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
