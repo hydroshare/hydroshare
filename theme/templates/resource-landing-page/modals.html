@@ -1411,7 +1411,7 @@
                                                      style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                             </div>
                                             <span data-col="name" class="user-name"></span>
-                                            <span class="text-muted you-flag">(You)</span>
+                                            <span class="badge you-flag">You</span>
                                             <br>
                                             <span data-col="user-name"
                                                   class="user-username-content"></span>
@@ -1485,9 +1485,9 @@
 
                                             <span data-col="name"
                                                   class="user-name">{{ u|best_name }}</span>
-                                            {# TODO: FIX REFERENCED VARIABLE current_user.pk #}
+
                                             {% if u.pk == current_user.pk %}
-                                                <span class="text-muted you-flag">(You)</span>
+                                                <span class="badge you-flag">You</span>
                                             {% endif %}
                                             <br>
                                             <span data-col="user-name"
@@ -1580,7 +1580,7 @@
                                             </div>
                                             <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
                                             {% if u.pk == current_user.pk %}
-                                                <span class="text-muted">(You)</span>
+                                                <span class="badge you-flag">You</span>
                                             {% endif %}
                                             <br>
                                             <span class="user-username-content">{{ u.username }}</span>
@@ -1814,7 +1814,7 @@
                                             </div>
                                             <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
                                             {% if u.pk == current_user.pk %}
-                                                <span class="text-muted">(You)</span>
+                                                <span class="badge you-flag">You</span>
                                             {% endif %}
                                             <br>
                                             <span class="user-username-content">{{ u.username }}</span>
