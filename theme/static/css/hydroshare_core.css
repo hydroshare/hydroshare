@@ -4569,8 +4569,13 @@ span.caption-file-type {
 	border: 1px solid #DDD;
 	border-bottom: 0;
 	padding: 10px;
-	height: 55px;
 	line-height: 37px;
+}
+
+.hs-dropzone-header-help {
+	width: calc(100% - 180px);
+	display: inline-block;
+	line-height: 18px;
 }
 
 #resource-content #file-types > i, #resource-content #file-multiple > i, #resource-content .hs-dropzone-header > i {
