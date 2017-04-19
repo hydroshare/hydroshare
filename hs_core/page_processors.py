@@ -238,7 +238,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
-                   'belongs_to_collections': belongs_to_collections
+                   'belongs_to_collections': belongs_to_collections,
+                   'current_user': user
         }
 
         if 'task_id' in request.session:
