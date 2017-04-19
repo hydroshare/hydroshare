@@ -214,7 +214,7 @@ def create_bag(resource):
 
     istorage.setAVU(to_coll_name, "bag_modified", "true")
 
-    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public))
+    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public).lower())
 
     istorage.setAVU(to_coll_name, "resourceType", resource._meta.object_name)
 

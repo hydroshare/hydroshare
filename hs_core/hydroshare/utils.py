@@ -439,16 +439,16 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
                 # also turn off discoverable flag
                 tgt_coll.raccess.public = False
                 tgt_coll.raccess.discoverable = False
-                istorage.setAVU(tgt_coll, avu_name, 'False')
+                istorage.setAVU(tgt_coll, avu_name, 'false')
             else:
-                tgt_coll.raccess.public = (value == 'True')
-                tgt_coll.raccess.discoverable = (value == 'True')
+                tgt_coll.raccess.public = (value == 'true')
+                tgt_coll.raccess.discoverable = (value == 'true')
                 istorage.setAVU(tgt_coll, avu_name, value)
             tgt_coll.raccess.save()
 
         # bag_modified AVU needs to be set to true for copied resource
         elif avu_name == 'bag_modified':
-            istorage.setAVU(tgt_coll, avu_name, 'True')
+            istorage.setAVU(tgt_coll, avu_name, 'true')
         else:
             istorage.setAVU(tgt_coll, avu_name, value)
 

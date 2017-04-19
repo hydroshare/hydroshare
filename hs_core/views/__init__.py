@@ -1511,7 +1511,7 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         # set isPublic metadata AVU accordingly
         res_coll = resource.root_path
         istorage = resource.get_irods_storage()
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
