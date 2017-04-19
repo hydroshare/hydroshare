@@ -438,6 +438,7 @@ def create_resource(
     return resource
 
 
+# TODO: this is incredibly misnamed. It should not be used to create empty resources!
 def create_empty_resource(pk, user, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
