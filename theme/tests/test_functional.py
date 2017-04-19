@@ -86,7 +86,6 @@ class FunctionalTestsCases(object):
 
     def test_create_resource(self):
         RESOURCE_TITLE = 'Selenium resource creation test'
-        UPLOAD_FILE_PATH = '/hydroshare/manage.py'
         self._login_helper(self.user.email, self.user_password)
 
         # load my resources & click create new
@@ -102,7 +101,7 @@ class FunctionalTestsCases(object):
             var myZone = Dropzone.forElement('#hsDropzone');
             var blob = new Blob(new Array(), {type: 'image/png'});
             blob.name = 'filename.png'
-            myZone.addFile(blob);  
+            myZone.addFile(blob);
         """)
         submit_btn = self.driver.find_element_by_css_selector(".btn-create-resource")
 
