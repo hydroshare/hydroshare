@@ -21,7 +21,7 @@ from rest_framework.exceptions import ValidationError, NotAuthenticated, Permiss
 
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
+from hs_core.hydroshare.utils import current_site_url, get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
@@ -38,11 +38,11 @@ logger = logging.getLogger(__name__)
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        site_url = hydroshare.utils.current_site_url()
-        bag_url = site_url + AbstractResource.bag_url(r.short_id)
-        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
-        resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
-        resource_url = site_url + r.get_absolute_url()
+        bag_url = current_site_url(AbstractResource.bag_url(r.short_id))
+        science_metadata_url = current_site_url(reverse('get_update_science_metadata',
+                                                        args=[r.short_id]))
+        resource_map_url = current_site_url(reverse('get_resource_map', args=[r.short_id]))
+        resource_url = current_site_url(r.get_absolute_url())
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
@@ -63,7 +63,7 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
-        url = hydroshare.utils.current_site_url() + f.resource_file.url
+        url = current_site_url(f.resource_file.url)
         fsize = f.resource_file.size
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
@@ -266,15 +266,14 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         """
         res, _, _ = view_utils.authorize(request, pk,
                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        site_url = hydroshare.utils.current_site_url()
         if res.resource_type.lower() == "reftimeseriesresource":
 
             # if res is RefTimeSeriesResource
-            bag_url = site_url + reverse('rest_download_refts_resource_bag',
-                                         kwargs={'shortkey': pk})
+            bag_url = current_site_url(reverse('rest_download_refts_resource_bag',
+                                               kwargs={'shortkey': pk}))
         else:
-            bag_url = site_url + reverse('rest_download',
-                                         kwargs={'path': 'bags/{}.zip'.format(pk)})
+            bag_url = current_site_url(reverse('rest_download',
+                                               kwargs={'path': 'bags/{}.zip'.format(pk)}))
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
@@ -659,7 +658,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-        scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
+        scimeta_url = current_site_url(AbstractResource.scimeta_url(pk))
         return redirect(scimeta_url)
 
     def put(self, request, pk):
@@ -759,7 +758,7 @@ class ResourceMapRetrieve(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-        resmap_url = hydroshare.utils.current_site_url() + AbstractResource.resmap_url(pk)
+        resmap_url = current_site_url(AbstractResource.resmap_url(pk))
         return redirect(resmap_url)
 
 

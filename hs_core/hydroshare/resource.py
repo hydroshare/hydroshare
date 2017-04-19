@@ -709,6 +709,9 @@ def delete_resource(pk):
             obsolete_res_id = is_version_of_res_link
         else:
             obsolete_res_id = is_version_of_res_link[idx+1:]
+        print(pk)
+        print(is_version_of_res_link)
+        print(obsolete_res_id)
         obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
         if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
             eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
