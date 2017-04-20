@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
+TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
 import importlib
@@ -255,6 +256,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 ################
 
 INSTALLED_APPS = (
+    'test_without_migrations',
     "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -314,6 +316,8 @@ INSTALLED_APPS = (
     "security",
 )
 
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
 APPS_TO_NOT_RUN = (
@@ -327,6 +331,15 @@ APPS_TO_NOT_RUN = (
     'autocomplete_light',
     'widget_tweaks',
     'oauth2_provider',
+    'debug_toolbar',
+    'corsheaders',
+    'security',
+    'django_comments',
+    'haystack'
+    'test_without_migrations',
+    'robots',
+    'heartbeat',
+    'filebrowser_safe'
     # etc...
 )
 
@@ -595,6 +608,7 @@ CSP_DICT = {
         "*.rawgit.com",
         "*.cloudflare.com",
         "*.datatables.net ",
+        "*.github.io",
         "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
         "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
         "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
@@ -645,7 +659,8 @@ CSP_DICT = {
         "*.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
-        "*.cloudflare.com "
+        "*.cloudflare.com ",
+        "*.github.io"
         # "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
         # "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
         # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
@@ -653,6 +668,7 @@ CSP_DICT = {
     ],
     "img-src" : [
         "self",
+        "data:",
         "*.datatables.net",
         "*.googleapis.com",
         "*.gstatic.com",

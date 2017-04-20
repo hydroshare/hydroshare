@@ -528,9 +528,8 @@ ModelInputLayoutEdit = Layout(
              'data-target="#delete-modelinput-element-dialog_{{ form.number }}"></span>'
              '</div>'
              '<div class="col-md-3">'
-             '<button type="button" class="btn btn-primary pull-right" '
-             'onclick="metadata_update_ajax_submit({{ form.form_id_button }});'
-             ' return false;">Save changes</button>'
+             '<button type="button" class="btn btn-primary pull-right btn-form-submit">'
+             'Save changes</button>'  # TODO: TESTING
              '</div>'
              '</div>'
              '{% crispy form.delete_modal_form %} '

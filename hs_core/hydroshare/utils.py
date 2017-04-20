@@ -389,7 +389,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     # TODO: why would we want to do anything at all if the resource does not exist???
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
-        if bag_modified == "true":
+        if bag_modified.lower() == "true":
             # import here to avoid circular import issue
             from hs_core.tasks import create_bag_by_irods
             create_bag_by_irods(res_id)
@@ -406,13 +406,12 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
 
 
-def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
+def copy_resource_files_and_AVUs(src_res_id, dest_res_id):
     """
     Copy resource files and AVUs from source resource to target resource including both
     on iRODS storage and on Django database
     :param src_res_id: source resource uuid
     :param dest_res_id: target resource uuid
-    :param set_to_private: set target resource to private if True. The default is False.
     :return:
     """
     avu_list = ['bag_modified', 'metadata_dirty', 'isPublic', 'resourceType']
@@ -422,18 +421,29 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     # This makes the assumption that the destination is in the same exact zone.
     # Also, bags and similar attached files are not copied.
     istorage = src_res.get_irods_storage()
-    src_coll = os.path.join(src_res.root_path, 'data')
-    dest_coll = os.path.join(tgt_res.root_path, 'data')
-    istorage.copyFiles(src_coll, dest_coll)
 
+    # This makes an exact copy of all physical files.
+    src_files = os.path.join(src_res.root_path, 'data')
+    # This has to be one segment short of the source because it is a target directory.
+    dest_files = tgt_res.root_path
+    istorage.copyFiles(src_files, dest_files)
+
+    src_coll = src_res.root_path
+    tgt_coll = tgt_res.root_path
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
-        # TODO: what do these AVU flags do?
-        if value:
-            if avu_name == 'isPublic' and set_to_private:
-                istorage.setAVU(dest_coll, avu_name, 'False')
-            else:
-                istorage.setAVU(dest_coll, avu_name, value)
+
+        # make formerly public things private
+        if avu_name == 'isPublic':
+            istorage.setAVU(tgt_coll, avu_name, 'false')
+
+        # bag_modified AVU needs to be set to true for copied resource
+        elif avu_name == 'bag_modified':
+            istorage.setAVU(tgt_coll, avu_name, 'true')
+
+        # everything else gets copied literally
+        else:
+            istorage.setAVU(tgt_coll, avu_name, value)
 
     # link copied resource files to Django resource model
     files = src_res.files.all()
@@ -446,7 +456,6 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
 
     for n, f in enumerate(files):
         folder, base = os.path.split(f.short_path)  # strips object information.
-        # this form of ResourceFile.create creates a reference to an existing file in iRODS
         new_resource_file = ResourceFile.create(tgt_res, base, folder=folder)
 
         # if the original file is part of a logical file, then
