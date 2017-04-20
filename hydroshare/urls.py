@@ -15,6 +15,7 @@ from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
+from hs_app_netCDF import views as nc_views
 
 
 autocomplete_light.autodiscover()
@@ -80,6 +81,7 @@ urlpatterns += patterns('',
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),
     url('^hsapi/', include('hs_file_types.urls')),
+    url('^hsapi/', include('hs_app_netCDF.urls')),
 )
 
 # robots.txt URLs for django-robots
