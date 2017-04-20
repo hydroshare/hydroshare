@@ -231,7 +231,7 @@ class TestResourceList(HSRESTTestCase):
                                                                       'east': '70',
                                                                       'units': 'decimal deg'}}}]
         gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 2',
-                                               metadata=metadata_dict_two)
+                                                 metadata=metadata_dict_two)
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
