@@ -55,6 +55,7 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
                      'title': 'Test Raster Resource Creation',
                      'irods_federated': 'false'
                      }
+        
         url = reverse('create_resource')
         request = self.factory.post(url, data=post_data)
         request.user = self.user
