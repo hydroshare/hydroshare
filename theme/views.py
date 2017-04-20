@@ -306,7 +306,9 @@ def login(request, template="accounts/account_login.html",
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        login_msg += get_quota_message(authenticated_user)
+        add_msg = get_quota_message(authenticated_user)
+        if add_msg:
+            login_msg += add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)
