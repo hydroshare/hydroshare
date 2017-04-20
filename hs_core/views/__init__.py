@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -32,7 +33,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
@@ -99,10 +100,17 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
+    file_folder = request.POST.get('file_folder', None)
+    if file_folder is not None:
+        if file_folder == "data/contents":
+            file_folder = None
+        elif file_folder.startswith("data/contents/"):
+            file_folder = file_folder[len("data/contents/"):]
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata)
+                                            extract_metadata=extract_metadata,
+                                            folder=file_folder)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         msg = 'file_size_error: ' + ex.message
@@ -113,8 +121,10 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
         return HttpResponse(msg, status=500)
 
     try:
-        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+        hydroshare.utils.resource_file_add_process(resource=resource, files=res_files,
+                                                   user=request.user,
+                                                   extract_metadata=extract_metadata,
+                                                   folder=file_folder)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         msg = 'validation_error: ' + ex.message
@@ -173,10 +183,14 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
+        res_metadata = res.metadata
+        res_metadata.set_dirty(True)
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success',
+                                  'is_dirty': res.metadata.is_dirty if
+                                  hasattr(res.metadata, 'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -190,6 +204,28 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         messages.error(request, err_message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+@api_view(['POST'])
+def update_key_value_metadata_public(request, pk):
+    res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    post_data = request.data.copy()
+    res.extra_metadata = post_data
+
+    is_update_success = True
+
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+
+    if is_update_success:
+        resource_modified(res, request.user, overwrite_bag=False)
+
+    if is_update_success:
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
@@ -299,6 +335,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -379,6 +419,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
 
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -444,12 +487,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
-
+    ajax_response_data = {'status': 'success'}
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        if request.is_ajax():
+            ajax_response_data['status'] = 'error'
+            ajax_response_data['message'] = ex.message
+            return JsonResponse(ajax_response_data)
+        else:
+            request.session['validation_error'] = ex.message
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # if the deleted resource is part of any collection resource, then for each of those collection
     # create a CollectionDeletedResource object which can then be used to list collection deleted
@@ -468,7 +516,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
                               resource_shortkey=shortkey, resource=res,
                               resource_title=res_title, resource_type=res_type, **kwargs)
 
-    return HttpResponseRedirect('/my-resources/')
+    if request.is_ajax():
+        return JsonResponse(ajax_response_data)
+    else:
+        return HttpResponseRedirect('/my-resources/')
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
@@ -496,7 +547,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     try:
         utils.replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
+            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
         )
     except SessionException as ex:
@@ -504,6 +555,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         json.dumps({"error": ex.stderr}),
         content_type="application/json"
         )
+
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
@@ -522,6 +574,12 @@ def copy_resource(request, shortkey, *args, **kwargs):
     request.session['just_created'] = True
     request.session['just_copied'] = True
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
+
+@api_view(['POST'])
+def copy_resource_public(request, pk):
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
 
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
@@ -569,6 +627,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
+@api_view(['POST'])
+def create_new_version_resource_public(request, pk):
+    redirect = create_new_version_resource(request, pk)
+    return HttpResponse(redirect.url.split('/')[2], status=202)
+
+
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
@@ -585,7 +649,7 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = request.POST['t']
+    t = resolve_request(request).get('t', None)
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
@@ -597,9 +661,24 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if request.META.get('HTTP_REFERER', None):
+        request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', None))
 
+    return HttpResponse(status=202)
+
+
+@api_view(['POST'])
+def set_resource_flag_public(request, pk):
+    http_request = request._request
+    http_request.data = request.data.copy()
+    response = set_resource_flag(http_request, pk)
+
+    messages = get_messages(request)
+    for message in messages:
+        if(message.tags == "error"):
+            return HttpResponse(message, status=400)
+    return response
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""
@@ -816,6 +895,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
+    auto_approve = forms.BooleanField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -840,9 +920,11 @@ class GroupForm(forms.Form):
 class GroupCreateForm(GroupForm):
     def save(self, request):
         frm_data = self.cleaned_data
+
         new_group = request.user.uaccess.create_group(title=frm_data['name'],
                                                       description=frm_data['description'],
-                                                      purpose=frm_data['purpose'])
+                                                      purpose=frm_data['purpose'],
+                                                      auto_approve=frm_data['auto_approve'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
@@ -859,6 +941,7 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.auto_approve = frm_data['auto_approve']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -871,10 +954,6 @@ def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
 
-    import sys
-    sys.path.append('/pycharm-debug')
-    import pydevd
-    pydevd.settrace('192.168.1.159', port=21000, suspend=False)
     return context
 
 
@@ -908,18 +987,20 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
+    """ Create resource via REST API """
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
     resource_files = request.FILES.getlist('files')
-    fed_res_file_names=[]
+    source_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
         if federated:
-            fed_res_file_names = irods_fnames.split(',')
+            source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -939,48 +1020,53 @@ def create_resource(request, *args, **kwargs):
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
-                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
+        page_url_dict, res_title, metadata, fed_res_path = \
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+                                                         files=resource_files,
+                                                         resource_title=res_title,
+                                                         source_names=source_names,
+                                                         page_redirect_url_key=url_key,
+                                                         requesting_user=request.user,
+                                                         **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
         context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     except Exception as ex:
         context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
-    # try:
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
             owner=request.user,
             title=res_title,
             metadata=metadata,
             files=resource_files,
-            fed_res_file_names=fed_res_file_names,
+            source_names=source_names,
+            # TODO: should probably be resource_federation_path like it is set to.
             fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
-            fed_copy_or_move=fed_copy_or_move,
+            move=(fed_copy_or_move == 'move'),
             content=res_title
     )
-    # except Exception as ex:
-    #     context = {'resource_creation_error': ex.message }
-    #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
+                                           metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
-    # go to resource landing page
     request.session['just_created'] = True
-
+    # go to resource landing page
     return HttpResponseRedirect(resource.get_absolute_url())
 
 
@@ -1130,20 +1216,33 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
-        membership_request = requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        membership_request = requesting_user.uaccess.create_group_membership_request(
+            group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
                                       group=group_to_join, membership_request=membership_request)
         else:
-            message = 'Group membership request was successful'
-            # send mail to all owners of the group
-            for grp_owner in group_to_join.gaccess.owners:
-                send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                          group=group_to_join, group_owner=grp_owner,
-                                          membership_request=membership_request)
-
+            message = 'You are now a member of this group'
+            # membership_request is None in case where group allows auto approval of membership
+            # request. no need send email notification to group owners for membership approval
+            if membership_request is not None:
+                message = 'Group membership request was successful'
+                # send mail to all owners of the group for approval of the request
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_membership',
+                                              group=group_to_join, group_owner=grp_owner,
+                                              membership_request=membership_request)
+            else:
+                # send mail to all owners of the group to let them know that someone has
+                # joined this group
+                for grp_owner in group_to_join.gaccess.owners:
+                    send_action_to_take_email(request, user=requesting_user,
+                                              action_type='group_auto_membership',
+                                              group=group_to_join,
+                                              group_owner=grp_owner)
         messages.success(request, message)
     except PermissionDenied as ex:
         messages.error(request, ex.message)
@@ -1221,7 +1320,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     _send_email_on_group_membership_acceptance(membership_request)
                 else:
                     message = 'Membership request declined'
-                    messages.error(request, message)
+                    messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, ex.message)
@@ -1408,14 +1507,11 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
+
         # set isPublic metadata AVU accordingly
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
-        else:
-            istorage = IrodsStorage()
-            res_coll = resource.short_id
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
+        res_coll = resource.root_path
+        istorage = resource.get_irods_storage()
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \

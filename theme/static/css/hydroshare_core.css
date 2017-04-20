@@ -30,6 +30,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
     padding-top: 10px;
 }
 
+#img-brand-logo {
+	width: 145px;
+}
+
 .container>.navbar-header, .container>.navbar-collapse {
     padding-left: 15px;
     padding-right: 15px;
@@ -238,7 +242,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	-webkit-animation-duration: 1.9s;
 	-moz-animation-duration: 1.9s;
 }
-
 
 
 /* ===== Profiles ===== */
@@ -747,6 +750,8 @@ li.account p{
     border-bottom-left-radius: 4px;
 }
 
+#profile-menu #profile-menu-fullname { font-weight: bold; }
+
 #profile-menu > .dropdown-toggle:hover, #profile-menu > .dropdown-toggle:focus {
     background:none;
 }
@@ -947,26 +952,64 @@ li.account p{
 }
 /* ===== Resource edit page changes ===== */
 
-#contact-table .icon-button{
-    float:left;
-    background-color: transparent;
-    border: 0;
-}
-
-#contact-table .icon-button, .funding-agencies-table .icon-button {
+.contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;
     text-decoration: none;
 }
 
-#contactTab table .header-row {
+.contact-table {
+	table-layout: fixed;
+}
+
+.contact-table .drag-indicator > i {
+	color: #777;
+}
+
+.contact-table td.drag-indicator, .contact-table th.drag-indicator {
+	width: 20px;
+}
+
+.contact-table td:last-child{
+    width: calc(20% - 20px);
+}
+
+.hs-table {
+	border: 1px solid #DDD;
+	border-collapse: collapse !important;
+}
+
+.hs-table tr {
+	border: 1px solid #DDD;
+	background: #FFF;
+}
+
+.hs-table td, .hs-table th {
+	padding: 10px 18px !important;
+}
+
+.hs-table thead tr {
     border-bottom: 1px solid #DDD;
 }
 
-#contactTab table .header-row th {
-    background-color: #FFF;
+.hs-table thead tr th {
+	background-color: #F1F1F1;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
+
+.contact-table-view td {
+	width: 25%;
+}
+
+.contact-table td {
+	width: 20%;
+	border-top: 0 !important;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 
 #txt-abstract{
     height: 155px;
@@ -978,10 +1021,6 @@ span.remove{
     height: 100% !important;
     background: #EEE;
     top: 0;
-}
-
-.form-control{
-    margin-bottom:8px;
 }
 
 .no-padding{
@@ -1042,14 +1081,21 @@ table.info-table td{
     padding-left:15px;
 }
 
+table.info-table {
+	margin-bottom: 20px;
+}
+
 #resourceSpecificTab{
     overflow-x:hidden;
 }
 
 #variables .custom-well {
-	height: 180px;
+	height: 225px;
 	overflow: auto;
-	background-color:#FFF;
+	background-color: #FFF;
+	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+	-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+	-moz-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
 }
 
 #variables .custom-well > strong{
@@ -1064,11 +1110,21 @@ table.info-table td{
 
 #netcdf-header-info {
     margin-bottom: 20px;
-    border: 1px solid #ddd;
-    width: 100%;
-	padding: 10px;
+    padding: 32px;
+    background-color: #FFF;
+	-webkit-box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+	-moz-box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
 }
 
+.hs-doc-preview {
+	background: #f5f5f5;
+    border: 1px solid #DDD;
+    padding: 32px;
+    height: 300px;
+    overflow: auto;
+    resize: vertical;
+}
 #resourceSpecificTab input.form-control[type='radio'], #resourceSpecificTab input.form-control[type='checkbox'] {
 	box-shadow: none;
 }
@@ -1101,8 +1157,8 @@ span.remove {
 	margin: 1px;
 }
 
-.form-control{
-    margin-bottom:8px;
+.form-control, .controls .input-group .form-control {
+	margin-bottom: 8px;
 }
 
 .no-padding{
@@ -1317,13 +1373,6 @@ table.table-plain td{
     box-shadow: inset 0 1px 0 #ffffff;
 }
 
-#coverageTab{
-    overflow-x:hidden;
-}
-
-#coverageTab{
-    overflow-x:hidden;
-}
 .tab-elements > .tabs-body {
     min-height: 150px;
     border: 1px solid #ddd;
@@ -1493,7 +1542,10 @@ body > .main-container {
 	height: 34px;
 	border-radius: 0;
 	width: 100%;
-	margin-top: 7px;
+}
+
+#btn-add-new-entry {
+	margin-bottom: 20px;
 }
 
 #invite-to-group .btn-add-access {
@@ -1573,7 +1625,6 @@ body > .main-container {
 
 .content-block {
 	display: table;
-	width: 100%;
 }
 
 #comment, .comment-reply-form {
@@ -1608,13 +1659,24 @@ body > .main-container {
 }
 
 #citation-text {
-    display: inline-block;
-    width: 100%;
-    min-height: 30px;
-    background: #EEE;
-    border: 1px solid #cccccc;
-    border-radius: 0px;
-    padding: 4px;
+	display: inline-block;
+	width: calc(100% - 65px);
+	min-height: 30px;
+	background: #EEE;
+	border: 1px solid #CCC;
+	border-radius: 0;
+	padding: 4px;
+	cursor: default;
+	line-height: 24px;
+}
+
+.clipboard-copy {
+	border-radius: 0;
+	margin-left: -1px;
+}
+
+.flex {
+	display: flex;
 }
 
 #citation-text a, .rights-url a{
@@ -1634,10 +1696,6 @@ body > .main-container {
     text-overflow: ellipsis;
     max-width: 100%;
     overflow: hidden;
-}
-
-div#sharing-status {
-	margin-top: 20px;
 }
 
 div#sharing-status .col-sm-12{
@@ -1689,22 +1747,20 @@ a.tag:hover {
 }
 
 .tab-elements {
-    overflow-x:auto;
-    overflow-y:hidden;
     margin-top: 20px;
     border:0;
 }
 
-.tab-elements .table:not(.table-striped) {
+.tab-elements .table:not(.contact-table) {
     width:auto;
 }
 
-.tab-elements .table td, .tab-elements .table th {
+.tab-elements .table th {
     border:0;
 }
 
-.tab-elements .nav-tabs>li>a {
-    border: 1px solid #ddd;
+.tab-elements .nav-tabs > li > a {
+	border: 1px solid #ddd;
 }
 
 .tab-elements .nav-tabs > li.active > a {
@@ -2238,7 +2294,6 @@ button.loading {
     text-align: center;
 }
 
-
 #div-invite-people .label-danger {
 	font-size: 12px;
 }
@@ -2252,14 +2307,66 @@ button.loading {
     top: 2px;
 }
 
-/*  =============== Coverage Tab - Google map css ================ */
+/*  =============== Coverage - Google map css ================ */
+
+div#coverage-spatial .coordinates-label-addon {
+	width: 127px;
+	text-align: left;
+}
+
+.sharing-status-container > div {
+	margin-bottom: 20px;
+}
+
+#img-badge {
+	margin-bottom: 10px;
+}
+
+#btn-calc-coverage {
+	margin: 10px 0;
+}
+
+#coverageMap[data-mode="view"] {
+	width:100%;
+	height: 370px;
+}
+
+#coverage-spatial {
+	margin-top: 5px;
+}
+
+#coverage-spatial .info-table td {
+	padding-left: 0;
+	padding-bottom: 10px;
+}
+
+.coordinates-list-container > div {
+	margin-bottom: 10px;
+}
+
+#id-coverage-spatial .control-group input {
+	text-align: right;
+}
+
+.coordinates-list-container .list-group-item {
+	padding: 5px;
+}
+
+.coordinates-list-container .list-group-item > div {
+	text-align: right;
+}
+
+.coordinates-list-container .list-group {
+	margin-bottom: 0;
+}
+
 #coverageMap {
 	height:350px;
 	border:1px solid #DDD;
 }
 
 .coverage-container {
-    margin-top: -20px; margin-bottom:20px;
+	margin-bottom:20px;
 }
 
 .invalid-input {
@@ -2281,9 +2388,10 @@ button.loading {
     box-shadow: 0 1px 0 rgba(111, 111, 111, 0.5);
     background-color: #FFF;
     float: right;
-    right: 11px;
-    top: -120px;
+    right: 26px;
+    top: 255px;
     color: #666;
+    position: absolute;
 }
 
 #resetZoomBtn:hover {
@@ -2463,11 +2571,8 @@ div.affiliation {
     float: left;
 }
 
-.abstract-block {
-    color: #757575;
-    border-left: 3px solid #CCC;
-    padding-left: 5px;
-      margin-top: 10px;
+#div_id_abstract textarea, #id_statement {
+    resize: vertical;
 }
 
 form.act-on-request button {
@@ -3716,10 +3821,6 @@ div.group-add-photo {
     margin-bottom: 20px;
 }
 
-.funding-agencies-table {
-    border: 1px solid #DDD;
-}
-
 #collection-table_wrapper {
     margin-bottom: 20px;
 }
@@ -3855,6 +3956,10 @@ div.group-add-photo {
 
 .or-separator {
 	margin-top: 20px;
+}
+
+.fieldWrapper {
+    margin-right: 20px;
 }
 
 #clear-dates-options:hover {
@@ -4051,6 +4156,14 @@ form#covereage-search-fields {
 	color: rgb(0, 170, 163);
 }
 
+.fb-stack-netcdf {
+	color: #244960;
+}
+
+.fb-stack-refts {
+	color: #4caf50;
+}
+
 .fb-view-grid .fb-stack {
 	height: 32px;
 }
@@ -4074,6 +4187,26 @@ form#covereage-search-fields {
 .fb-view-list .fb-stack-database .fa-database {
 	font-size: 10px;
 	top: -4px;
+}
+
+.fb-view-grid .fb-stack-netcdf .fa-th-large {
+	top: 7px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-netcdf .fa-th-large {
+	font-size: 10px;
+	top: -4px;
+}
+
+.fb-view-grid .fb-stack-refts .fa-line-chart {
+	top: 7px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-refts .fa-line-chart {
+    font-size: 9px;
+    top: -3px;
 }
 
 .fb-view-grid .fb-stack .fa-file-o {
@@ -4416,4 +4549,18 @@ div#fb-file-operations-controls {
 
 .ui-widget-overlay {
 	z-index: 1031 !important;
+}
+
+/*Coordinates picker styling*/
+#picker-map-container {
+	height: 300px;
+	margin: 0 1px;
+}
+
+#coordinates-picker-modal .modal-footer {
+	margin-top: 0;
+}
+
+.btn-choose-coordinates {
+	vertical-align: top;
 }

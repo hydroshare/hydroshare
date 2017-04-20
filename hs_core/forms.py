@@ -578,19 +578,17 @@ class BaseFormHelper(FormHelper):
             element_name = "Keywords"
         elif element_name == "Description":
             element_name = "Abstract"
-        form_id = "'" + self.form_id + "'"
         if res_short_id and allow_edit:
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,
                                      HTML('<div style="margin-top:10px">'),
                                      HTML('<button type="button" '
-                                          'class="btn btn-primary pull-right" '
-                                          'onclick="metadata_update_ajax_submit(%s); '
-                                          'return false;">Save changes</button>' % form_id),
+                                          'class="btn btn-primary pull-right btn-form-submit" '
+                                          'return false;">Save changes</button>'),
                                      HTML('</div>')
                                      ),
-                         )
+                         )  # TODO: TESTING
         else:
             self.form_tag = False
             self.layout = Layout(
@@ -701,12 +699,11 @@ class CoverageTemporalFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('type', css_class=field_width),
-                        Field('start', css_class=field_width),
-                        Field('end', css_class=field_width),
-                 )
+
+        file_type = kwargs.pop('file_type', False)
+        form_field_names = ['type', 'start', 'end']
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
+        layout = Layout(*crispy_form_fields)
 
         kwargs['coverage'] = 'temporal'
 
@@ -719,9 +716,11 @@ class CoverageTemporalForm(forms.Form):
     end = forms.DateField(label='End Date')
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(CoverageTemporalForm, self).__init__(*args, **kwargs)
         self.helper = CoverageTemporalFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='Temporal Coverage')
+                                                 element_name='Temporal Coverage',
+                                                 file_type=file_type)
         self.number = 0
         self.delete_modal_form = None
         if res_short_id:
@@ -775,22 +774,18 @@ class CoverageSpatialFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
 
+        file_type = kwargs.pop('file_type', False)
+
+        layout = Layout()
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('type'),
-                        Field('name', css_class=field_width),
-                        Field('projection', css_class=field_width),
-                        Field('east', css_class=field_width),
-                        Field('north', css_class=field_width),
-                        Field('northlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width),
-                        Field('southlimit', css_class=field_width),
-                        Field('westlimit', css_class=field_width),
-                        Field('units', css_class=field_width),
-                 )
-
+        layout.append(Field('type', id="id_{}_filetype".format('type') if file_type else
+                            "id_{}".format('type')))
+        form_field_names = ['name', 'projection', 'east', 'north', 'northlimit', 'eastlimit',
+                            'southlimit', 'westlimit', 'units']
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
+        for field in crispy_form_fields:
+            layout.append(field)
         kwargs['coverage'] = 'spatial'
         super(CoverageSpatialFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                         element_name, layout,  *args, **kwargs)
@@ -817,9 +812,12 @@ class CoverageSpatialForm(forms.Form):
     westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
+
         self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id,
-                                                element_name='Spatial Coverage')
+                                                element_name='Spatial Coverage',
+                                                file_type=file_type)
         self.number = 0
         self.delete_modal_form = None
         if self.errors:
@@ -981,8 +979,22 @@ class ValidDateValidationForm(forms.Form):
         return self.cleaned_data
 
 
-def get_crispy_form_fields(field_names):
+def get_crispy_form_fields(field_names, file_type=False):
+    """
+    This creates a list of objects of type Field
+    :param field_names: list of form field names
+    :param file_type: if true, then this is a metadata form for file type, otherwise, a form
+    for resource
+    :return: a list of Field objects
+    """
     crispy_fields = []
+
+    def get_field_id(field_name):
+        if file_type:
+            return "id_{}_filetype".format(field_name)
+        return "id_{}".format(field_name)
+
     for field_name in field_names:
-        crispy_fields.append(Field(field_name, css_class='form-control input-sm'))
+        crispy_fields.append(Field(field_name, css_class='form-control input-sm',
+                                   id=get_field_id(field_name)))
     return crispy_fields

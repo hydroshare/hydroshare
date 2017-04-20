@@ -82,6 +82,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(res.files.all().count(), 0, 'Resource has content files')
+        if res:
+            res.delete()
 
     def test_create_resource_with_content_files(self):
         new_res = resource.create_resource(
@@ -108,6 +110,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+        if new_res:
+            new_res.delete()
 
         # test creating resource with multiple files
         new_res = resource.create_resource(
@@ -119,6 +123,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # test resource has 2 files
         self.assertEquals(new_res.files.all().count(), 2, msg="Number of content files is not equal to 2")
+        if new_res:
+            new_res.delete()
 
     def test_create_resource_with_metadata(self):
         # Note: if element 'type' or 'format' is added to the following dictionary, they will be ignored
@@ -165,7 +171,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.metadata.description.abstract, 'My test abstract')
 
         # the following 3 date elements should have been created as part of resource creation
-        self.assertEqual(res.metadata.dates.all().count(), 3, msg="Number of date elements not equal to 3.")
+        self.assertEqual(res.metadata.dates.all().count(), 3,
+                         msg="Number of date elements not equal to 3.")
         self.assertIn('created', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Created' does not exist")
         self.assertIn('modified', [dt.type for dt in res.metadata.dates.all()],
@@ -173,16 +180,18 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('valid', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Modified' does not exist")
 
-        # number of creators at this point should be 3 (2 are created based on supplied metadata and one is
-        # automatically generated as part of the resource creation
-        self.assertEqual(res.metadata.creators.all().count(), 3, msg='Number of creators not equal to 3')
+        # number of creators at this point should be 2 as created based on supplied
+        # metadata and the user creating the resource won't be added as the creator
+        self.assertEqual(res.metadata.creators.all().count(), 2,
+                         msg='Number of creators not equal to 2')
         self.assertIn('John Smith', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'John Smith' was not found")
         self.assertIn('Lisa Molley', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'Lisa Molley' was not found")
 
         # number of contributors at this point should be 1
-        self.assertEqual(res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
+        self.assertEqual(res.metadata.contributors.all().count(), 1,
+                         msg='Number of contributors not equal to 1')
 
         # there should be now 2 coverage elements as per the supplied metadata
         self.assertEqual(res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
@@ -226,6 +235,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
                                              timezone.get_default_timezone())
         self.assertEquals(valid_date_element.start_date, valid_start_date)
         self.assertEquals(valid_date_element.end_date, valid_end_date)
+        if res:
+            res.delete()
 
     def test_create_resource_with_metadata_for_publisher(self):
         # trying to create a resource with metadata for publisher should fail due to the fact that the
@@ -251,6 +262,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         type_url = '{0}/terms/{1}'.format(hydroshare.utils.current_site_url(), 'GenericResource')
         self.assertEqual(res.metadata.type.url, type_url, msg='type element url is wrong')
+        if res:
+            res.delete()
 
     def test_create_resource_with_metadata_for_format(self):
         # trying to create a resource with metadata for format element should ignore the provided format element data
@@ -263,6 +276,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             metadata=metadata_dict
         )
         self.assertEqual(res.metadata.formats.all().count(), 0, msg="Number of format elements not equal to 0.")
+        if res:
+            res.delete()
 
     def test_create_resource_with_metadata_for_date(self):
         # trying to create a resource with metadata for 'date' element of type 'created' or 'modified' should ignore
@@ -314,6 +329,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertIn(valid_end_date, [dt.end_date for dt in res.metadata.dates.all()],
                       msg="Matching date value was not found")
+        if res:
+            res.delete()
 
     def test_create_resource_with_file(self):
         raster = open(self.raster_file_path)
@@ -329,6 +346,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
         self.assertEquals(res.files.all().count(), 1)
+        if res:
+            res.delete()
 
     def test_create_resource_with_two_files(self):
         raster = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name=self.raster_file_path,
@@ -349,6 +368,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(isinstance(res, GenericResource), type(res))
         self.assertEqual(res.metadata.title.value, 'My Test resource')
         self.assertEquals(res.files.all().count(), 2)
+        if res:
+            res.delete()
 
     def test_create_resource_with_zipfile(self):
 
@@ -384,4 +405,5 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         pid = res.short_id
         res = get_resource_by_shortkey(pid)
         self.assertEquals(res.files.all().count(), 2)
-
+        if res:
+            res.delete()

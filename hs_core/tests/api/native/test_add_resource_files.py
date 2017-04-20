@@ -81,3 +81,4 @@ class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
         self.assertTrue(self.n1 in file_list, "file 1 has not been added")
         self.assertTrue(self.n2 in file_list, "file 2 has not been added")
         self.assertTrue(self.n3 in file_list, "file 3 has not been added")
+        res.delete()

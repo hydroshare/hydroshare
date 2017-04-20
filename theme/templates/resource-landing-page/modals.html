@@ -155,7 +155,7 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"- 1" }}-name"
+                                        id="id_contributor-{{ contributor.order|add:"-1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"-1" }}-name"
                                         required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
                             </div>
                             {% if contributor.description %}
@@ -164,9 +164,9 @@
 
                                     <div class="controls"><input
                                             class="form-control input-sm urlinput"
-                                            id="id_creator-{{ contributor.order|add:"- 1" }}-description"
+                                            id="id_creator-{{ contributor.order|add:"-1" }}-description"
                                             maxlength="200"
-                                            name="creator-{{ contributor.order|add:"- 1" }}-description" type="url"
+                                            name="creator-{{ contributor.order|add:"-1" }}-description" type="url"
                                             value="{{ contributor.description }}"
                                             readonly></div>
                                 </div>
@@ -176,15 +176,15 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-organization" maxlength="200"
-                                        name="contributor-{{ contributor.order|add:"- 1" }}-organization" type="text" value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}"></div>
+                                        id="id_contributor-{{ contributor.order|add:"-1" }}-organization" maxlength="200"
+                                        name="contributor-{{ contributor.order|add:"-1" }}-organization" type="text" value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}"></div>
                             </div>
                             <div id="div_id_email" class="control-group">
                                 <label class="control-label">Email</label>
 
                                 <div class="controls">
                                     <input class="form-control input-sm emailinput"
-                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-email" maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
+                                           id="id_contributor-{{ contributor.order|add:"-1" }}-email" maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
                                            type="email" value="{% if contributor.email %}{{ contributor.email }}{% endif %}">
                                 </div>
                             </div>
@@ -193,8 +193,8 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm textinput textInput"
-                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-address" maxlength="250"
-                                           name="contributor-{{ contributor.order|add:"- 1" }}-address"
+                                           id="id_contributor-{{ contributor.order|add:"-1" }}-address" maxlength="250"
+                                           name="contributor-{{ contributor.order|add:"-1" }}-address"
                                            type="text" value="{% if contributor.address %}{{ contributor.address }}{% endif %}">
                                 </div>
                             </div>
@@ -203,7 +203,7 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm textinput textInput"
-                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-phone" maxlength="25" name="contributor-{{ contributor.order|add:"- 1" }}-phone"
+                                           id="id_contributor-{{ contributor.order|add:"-1" }}-phone" maxlength="25" name="contributor-{{ contributor.order|add:"- 1" }}-phone"
                                            type="text" value="{% if contributor.phone %}{{ contributor.phone }}{% endif %}">
                                 </div>
                             </div>
@@ -212,7 +212,7 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm urlinput"
-                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"- 1" }}-homepage"
+                                        id="id_contributor-{{ contributor.order|add:"-1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"-1" }}-homepage"
                                         type="url" value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}"></div>
                             </div>
 
@@ -273,7 +273,7 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                        id="id_creator-{{ author.order|add:"-1" }}-name" maxlength="100" name="creator-{{ author.order|add:"-1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
                             {% else %}
@@ -283,7 +283,7 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                        id="id_creator-{{ author.order|add:"-1" }}-name" maxlength="100" name="creator-{{ author.order|add:"-1" }}-name"
                                         type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
                             {% endif %}
@@ -293,8 +293,8 @@
 
                                     <div class="controls"><input
                                             class="form-control input-sm urlinput"
-                                            id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
-                                            name="creator-{{ author.order|add:"- 1" }}-description" type="url"
+                                            id="id_creator-{{ author.order|add:"-1" }}-description" maxlength="200"
+                                            name="creator-{{ author.order|add:"-1" }}-description" type="url"
                                             value="{{ author.description }}"
                                             readonly></div>
                                 </div>
@@ -306,8 +306,8 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
-                                        name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                                        id="id_creator-{{ author.order|add:"-1" }}-organization" maxlength="200"
+                                        name="creator-{{ author.order|add:"-1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
                             {% else %}
                             <div id="div_id_organization" class="control-group requiredField">
@@ -316,8 +316,8 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm textinput textInput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
-                                        required="required" name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                                        id="id_creator-{{ author.order|add:"-1" }}-organization" maxlength="200"
+                                        required="required" name="creator-{{ author.order|add:"-1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
                             {% endif %}
                             <div id="div_id_email" class="control-group">
@@ -325,7 +325,7 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm emailinput"
-                                           id="id_creator-{{ author.order|add:"- 1" }}-email" maxlength="75" name="creator-{{ author.order|add:"- 1" }}-email"
+                                           id="id_creator-{{ author.order|add:"-1" }}-email" maxlength="75" name="creator-{{ author.order|add:"-1" }}-email"
                                            type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
                                 </div>
                             </div>
@@ -334,8 +334,8 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm textinput textInput"
-                                           id="id_creator-{{ author.order|add:"- 1" }}-address" maxlength="250"
-                                           name="creator-{{ author.order|add:"- 1" }}-address"
+                                           id="id_creator-{{ author.order|add:"-1" }}-address" maxlength="250"
+                                           name="creator-{{ author.order|add:"-1" }}-address"
                                            type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
                                 </div>
                             </div>
@@ -344,7 +344,7 @@
 
                                 <div class="controls">
                                     <input class="form-control input-sm textinput textInput"
-                                           id="id_creator-{{ author.order|add:"- 1" }}-phone" maxlength="25" name="creator-{{ author.order|add:"- 1" }}-phone"
+                                           id="id_creator-{{ author.order|add:"-1" }}-phone" maxlength="25" name="creator-{{ author.order|add:"-1" }}-phone"
                                            type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
                                 </div>
                             </div>
@@ -353,20 +353,17 @@
 
                                 <div class="controls"><input
                                         class="form-control input-sm urlinput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"- 1" }}-homepage"
+                                        id="id_creator-{{ author.order|add:"-1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"-1" }}-homepage"
                                         type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
-                            </div>
-                            <div id="div_id_order" class="control-group">
-                                <label class="control-label">Order<span class="asteriskField">*</span></label>
-
-                                <div class="controls"><input
-                                        class="form-control input-sm urlinput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-order" name="creator-{{ author.order|add:"- 1" }}-order" required="required"
-                                        type="number" value="{% if author.order %}{{ author.order }}{% endif %}"></div>
                             </div>
                         </fieldset>
                     </div>
                 </div>
+
+                {# Hidden in replacement for drag and drop, but still needed for form submission here #}
+                <input class="hidden-form" id="id_creator-{{ author.order|add:"-1" }}-order"
+                       name="creator-{{ author.order|add:"-1" }}-order" value="">
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save changes</button>
@@ -397,6 +394,8 @@
 
 {% include "irods_signin.html" %}
 {% include "irods_upload_add.html" %}
+
+<input id="resID" type="hidden" value="{{ cm.short_id }}"/>
 
 <div class="modal fade" id="large-file-download-alert" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
@@ -537,15 +536,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="rep-res-to-irods-title">Replicate resource bag to your iRODS user zone</h4>
+                <h4 class="modal-title" id="rep-res-to-irods-title">Copy resource bag to your iRODS user zone</h4>
             </div>
             <div class="modal-body">
-                Are you sure you want to replicate this resource bag to your iRODS user zone?
+                Are you sure you want to copy this resource bag to your iRODS user zone?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-danger"
-                   onclick="rep_res_to_irods_user_zone_ajax_submit('{{ cm.short_id }}');return false;">Replicate</a>
+                <a id="btn-replicate" class="btn btn-danger">Copy</a>
             </div>
         </div>
     </div>
@@ -681,11 +679,11 @@
 {%  endblock %}
 
 {%  block wait-for-process-to-complete %}
-    <div id="wait-to-complete" title="Processing ...">
-    <p><span style="float:left; margin:12px 12px 50px 0;"></span>
-        Please wait for the process to complete.
-    </p>
-</div>
+    <div id="wait-to-complete" title="Processing ..." style="display: none;">
+        <p><span style="float:left; margin:12px 12px 50px 0;"></span>
+            Please wait for the process to complete.
+        </p>
+    </div>
 {%  endblock %}
 
 <div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
@@ -864,8 +862,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary"
-                                    onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)">Save Changes</button>
+                            <button id="btn-add-author" type="button" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -1237,8 +1234,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary"
-                           onclick="get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)">Save Changes</button>
+                        <button id="btn-add-hydroshare-user" type="button" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -1343,7 +1339,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addEditExtraMeta2Table()">OK</button>
+                    <button id="btn-confirm-extended-metadata" type="button" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -1363,9 +1359,6 @@
 
                 <div class="modal-body first-modal">
                     <div class="alert alert-info" role="alert">
-
-
-
                         <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse" data-target="#usage-info">&nbsp;</span>Use this window to share your resource with specific HydroShare users. You can give other
                             users the ability to view or edit this resource. You can also add additional owners who
                             will
@@ -1438,21 +1431,21 @@
                                                 <form class="share-form-view" data-access-type="Can view"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a>Can view</a>
+                                                    <a class="btn-change-share-permission">Can view</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Can edit">
                                                 <form class="share-form-edit" data-access-type="Can edit"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a>Can edit</a>
+                                                    <a class="btn-change-share-permission">Can edit</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Is owner">
                                                 <form class="share-form-owner" data-access-type="Is owner"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a>Is owner</a>
+                                                    <a class="btn-change-share-permission">Is owner</a>
                                                 </form>
                                             </li>
                                         </ul>
@@ -1462,7 +1455,7 @@
                                 <td class="user-actions">
                                     <form class="remove-user-form" method="POST">
                                         {% csrf_token %}
-                                        <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1492,50 +1485,47 @@
                                 </td>
 
                                 <td class="user-roles">
-                                        <span class="dropdown role-dropdown">
-                                            <span class="dropdown-toggle" data-col="current-access"
-                                                  id="roles-menu"
-                                                  data-toggle="dropdown"
-                                                  aria-haspopup="true" aria-expanded="true">
-                                                Is owner
-                                                <span class="caret"></span>
-                                            </span>
-                                            <ul class="dropdown-menu" aria-labelledby="roles-menu">
-                                                <li data-access-type="Can view">
-                                                    <form id="share-view-{{ u.pk }}"
-                                                          class="share-form-view"
-                                                          data-access-type="Can view"
-                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
-                                                          method="POST">
-                                                        {% csrf_token %}
-                                                        <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can
-                                                            view</a>
-                                                    </form>
-                                                </li>
-                                                <li data-access-type="Can edit">
-                                                    <form id="share-edit-{{ u.pk }}"
-                                                          class="share-form-edit"
-                                                          data-access-type="Can edit"
-                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
-                                                          method="POST">
-                                                        {% csrf_token %}
-                                                        <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can
-                                                            edit</a>
-                                                    </form>
-                                                </li>
-                                                <li class="active {% if not can_change_resource_flags %}disabled{% endif %}" data-access-type="Is owner">
-                                                    <form id="share-owner-{{ u.pk }}"
-                                                          class="share-form-owner"
-                                                          data-access-type="Is owner"
-                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
-                                                          method="POST">
-                                                        {% csrf_token %}
-                                                        <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is
-                                                            owner</a>
-                                                    </form>
-                                                </li>
-                                            </ul>
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu"
+                                              data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            Is owner
+                                            <span class="caret"></span>
                                         </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li data-access-type="Can view">
+                                                <form id="share-view-{{ u.pk }}"
+                                                      class="share-form-view"
+                                                      data-access-type="Can view"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Can edit">
+                                                <form id="share-edit-{{ u.pk }}"
+                                                      class="share-form-edit"
+                                                      data-access-type="Can edit"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
+                                                </form>
+                                            </li>
+                                            <li class="active {% if not can_change_resource_flags %}disabled{% endif %}" data-access-type="Is owner">
+                                                <form id="share-owner-{{ u.pk }}"
+                                                      class="share-form-owner"
+                                                      data-access-type="Is owner"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a class="btn-change-share-permission" data-arg="share-owner-{{ u.pk }}">Is owner</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
                                 </td>
 
                                 <td class="user-actions">
@@ -1544,8 +1534,7 @@
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
-                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1588,7 +1577,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
                                                 </form>
                                             </li>
                                             <li class="active" data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
@@ -1596,7 +1585,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Is owner" {% if not is_owner_user %}class="disabled"{% endif %}>
@@ -1604,7 +1593,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-owner-{{ u.pk }}">Is owner</a>
                                                 </form>
                                             </li>
                                         </ul>
@@ -1615,8 +1604,7 @@
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
-                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1656,7 +1644,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/view/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
                                                 </form>
                                             </li>
                                             <li class="active" data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
@@ -1664,7 +1652,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/edit/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
                                                 </form>
                                             </li>
                                         </ul>
@@ -1675,8 +1663,7 @@
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <span onclick="unshare_resource_ajax_submit('form-remove-group-{{ u.pk }}')"
-                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1716,7 +1703,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/view/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
@@ -1724,7 +1711,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/edit/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
                                                 </form>
                                             </li>
                                         </ul>
@@ -1735,8 +1722,7 @@
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <span onclick="unshare_resource_ajax_submit('form-remove-group-{{ u.pk }}')"
-                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1779,7 +1765,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-view-{{ u.pk }}">Can view</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
@@ -1787,7 +1773,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-edit-{{ u.pk }}">Can edit</a>
                                                 </form>
                                             </li>
                                             <li data-access-type="Is owner" {% if not is_owner_user %}class="disabled"{% endif %}>
@@ -1795,7 +1781,7 @@
                                                       action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
                                                       method="POST">
                                                     {% csrf_token %}
-                                                    <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
+                                                    <a class="btn-change-share-permission" data-arg="share-owner-{{ u.pk }}">Is owner</a>
                                                 </form>
                                             </li>
                                         </ul>
@@ -1807,8 +1793,7 @@
                                           action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
-                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                        <span class="btn-unshare-resource glyphicon glyphicon-remove btn-remove-row"></span>
                                     </form>
                                 </td>
                             </tr>
@@ -1862,14 +1847,11 @@
                                                 </div>
                                             </div>
 
-
                                             <div class="col-xs-6">
-                                                <a id="btn-invite"
-                                                   onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                                <a id="btn-confirm-add-access"
                                                    class="btn btn-add-access btn-success glyphicon glyphicon-plus"><span
                                                         class="button-label">&nbspAdd</span></a>
                                             </div>
-
                                         </div>
 
                                     </div>
@@ -2129,7 +2111,6 @@
     </div>
 </div>
 
-
 <div class="modal fade in" id="get-file-url-dialog" tabindex="-1" role="dialog"
      aria-labelledby="rename" aria-hidden="false">
     <div class="modal-dialog">
@@ -2144,46 +2125,24 @@
                     <fieldset class="col-sm-12">
                         <div class="input-group">
                             <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
-                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default clipboard-copy" data-target="txtFileURL"
+                                        type="button">
+                                    <i class="fa fa-clipboard" aria-hidden="true"></i> Copy
+                                </button>
+                            </span>
                         </div>
                     </fieldset>
                 </div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-
 {% block extra_js %}
-    <script type="text/javascript">
-        function rep_res_to_irods_user_zone_ajax_submit(res_id) {
-            setPointerEvents(false);
-            $.ajax({
-                url: "/hsapi/_internal/" + res_id + "/rep-res-bag-to-irods-user-zone/",
-                type: "POST",
-                data: {},
-                success: function(json) {
-                    if (json.success) {
-                        $("#rep-alert-success").show();
-                        $("#rep-status-success").text(json.success);
-                    }
-                    if (json.error) {
-                        $("#rep-alert-error").show();
-                        $("#rep-status-error").text(json.error);
-                    }
-                    $('#rep-resource-to-irods-dialog').modal('hide');
-                },
-                error: function(xhr, errmsg, err) {
-                    status_error = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
-                    console.log(status_error);
-                    $("#rep-status-error").text(status_error);
-                    $('#rep-resource-to-irods-dialog').modal('hide');
-                }
-            });
-        }
-    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/modals.js"></script>
 {% endblock %}

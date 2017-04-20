@@ -94,6 +94,13 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test extracted raster file type metadata
         assert_raster_file_type_metadata(self)
 
+        # there should not be any file level keywords at this point
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 0)
+
+        self.composite_resource.delete()
+
     def test_zip_set_file_type_to_geo_raster(self):
         # here we are using a valid raster zip file for setting it
         # to Geo Raster file type which includes metadata extraction
@@ -158,9 +165,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         box_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.04959948647449)
+        self.assertEqual(box_coverage.value['northlimit'], 42.050028785767275)
         self.assertEqual(box_coverage.value['eastlimit'], -111.5773750264389)
-        self.assertEqual(box_coverage.value['southlimit'], 41.987886149256404)
+        self.assertEqual(box_coverage.value['southlimit'], 41.98745777902698)
         self.assertEqual(box_coverage.value['westlimit'], -111.65768822411239)
 
         # testing extended metadata element: original coverage
@@ -189,6 +196,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(band_info.maximumValue, '2880.00708008')
         self.assertEqual(band_info.minimumValue, '2274.95898438')
 
+        self.composite_resource.delete()
+
     def test_set_file_type_to_geo_raster_invalid_file_1(self):
         # here we are using an invalid raster tif file for setting it
         # to Geo Raster file type which should fail
@@ -196,6 +205,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._create_composite_resource()
 
         self._test_invalid_file()
+
+        self.composite_resource.delete()
 
     def test_set_file_type_to_geo_raster_invalid_file_2(self):
         # here we are using a raster tif file for setting it
@@ -223,6 +234,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # ValidationError
         with self.assertRaises(ValidationError):
             GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        self.composite_resource.delete()
 
     def test_set_file_type_to_geo_raster_invalid_file_3(self):
         # here we are using an invalid raster zip file for setting it
@@ -414,6 +427,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file.metadata.save()
         self.assertEqual(logical_file.metadata.extra_metadata, {})
 
+        self.composite_resource.delete()
+
     def test_file_metadata_on_file_delete(self):
         # test that when any file in GeoRasterFileType is deleted
         # all metadata associated with GeoRasterFileType is deleted
@@ -424,6 +439,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test with deleting of 'vrt' file
         self._test_file_metadata_on_file_delete(ext='.vrt')
+
+        self.composite_resource.delete()
 
     def test_file_metadata_on_logical_file_delete(self):
         # test that when the GeoRasterFileType is deleted
@@ -463,6 +480,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
+
+        self.composite_resource.delete()
 
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
@@ -523,6 +542,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file.logical_delete(self.user)
         self.assertEqual(self.composite_resource.files.all().count(), 0)
 
+        self.composite_resource.delete()
+
     def test_content_file_delete(self):
         # test that when any file that is part of an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
@@ -532,6 +553,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test deleting of vrt file
         self._content_file_delete('.vrt')
+
+        self.composite_resource.delete()
 
     def test_raster_file_type_folder_delete(self):
         # when  a file is set to georasterlogical file type
@@ -576,6 +599,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
+        self.composite_resource.delete()
 
     def test_file_rename_or_move(self):
         # test that file can't be moved or renamed for any resource file
@@ -610,6 +634,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         with self.assertRaises(DRF_ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
+
+        self.composite_resource.delete()
 
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.raster_file_obj,

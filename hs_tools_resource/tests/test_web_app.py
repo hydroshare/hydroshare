@@ -104,17 +104,17 @@ class TestWebAppFeature(TransactionTestCase):
 
         # create 2 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetCDF Resource'])
+                                         supported_res_types=['NetcdfResource'])
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetCDF Resource'])
+                                         supported_res_types=['NetcdfResource'])
         self.assertEqual(SupportedResTypes.objects.all().count(), 2)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
                                          element_id=SupportedResTypes.objects.first().id,
-                                         supported_res_types=['Time Series Resource'])
+                                         supported_res_types=['TimeSeriesResource'])
         self.assertEqual(SupportedResTypes.objects.first().supported_res_types.all()[0].description,
-                         'Time Series Resource')
+                         'TimeSeriesResource')
 
         # try to delete 1st SupportedResTypes obj
         with self.assertRaises(Exception):
@@ -132,21 +132,24 @@ class TestWebAppFeature(TransactionTestCase):
         # create 1 ToolIcon obj with required params
         resource.create_metadata_element(self.resWebApp.short_id,
                                          'ToolIcon',
-                                         value='https://test_icon_url.png')
+                                         value='https://www.hydroshare.org/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # may not create additional instance of ToolIcon
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resWebApp.short_id,
-                                             'ToolIcon',
-                                             value='https://test_icon_url_2.png')
+            resource.\
+                create_metadata_element(self.resWebApp.short_id,
+                                        'ToolIcon',
+                                        value='https://www.hydroshare.org/static/img/logo-sm.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
-        resource.update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
-                                         element_id=ToolIcon.objects.first().id,
-                                         value='https://test_icon_url_3.png')
-        self.assertEqual(ToolIcon.objects.first().value, 'https://test_icon_url_3.png')
+        resource.\
+            update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
+                                    element_id=ToolIcon.objects.first().id,
+                                    value='https://www.hydroshare.org/static/img/logo-sm.png')
+        self.assertEqual(ToolIcon.objects.first().value,
+                         'https://www.hydroshare.org/static/img/logo-sm.png')
 
         # delete ToolIcon obj
         resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',

@@ -73,7 +73,6 @@ $(document).ready(function () {
         $("#txtLabelName").focus();
     });
 
-
     $("#item-selectors").show();
 
     // Bind ajax submit events to favorite and label buttons
@@ -147,6 +146,112 @@ $(document).ready(function () {
         }
     });
 
+    // Categorizes the resources based on criteria about delete permissions.
+    function inspectResources(indexes, notOwned, published) {
+        var selectedRows = $("#item-selectors input[type='checkbox']:checked").closest("tr.data-row");
+        for (var i = 0; i < selectedRows.length; i++) {
+            var index = resourceTable.row($(selectedRows[i])).index();
+            var permission = resourceTable.cell(index, PERM_LEVEL_COL).data();
+            var status = resourceTable.cell(index, SHARING_STATUS_COL).data();
+
+            if (permission != "Owned") {
+                notOwned.push($(selectedRows[i]));
+                // No permission to delete non owned resources.
+            }
+            else if (status == "published") {
+                published.push($(selectedRows[i]));
+            }
+            else {
+                indexes.push($(selectedRows[i]));
+            }
+        }
+    }
+
+    $("#btn-delete-multiple-resources").click(function() {
+        var indexes = [];   // List of selected resources allowed for deletion
+        var notOwned = [];
+        var published = [];
+
+        inspectResources(indexes, notOwned, published);
+
+        if (indexes.length > 0) {
+            delete_multiple_resources_ajax_submit(indexes); // Submit a delete request for each index
+        }
+    });
+
+    $("#btn-confirm-delete-resources").click(function () {
+        var indexes = [];   // List of selected resources allowed for deletion
+        var notOwned = [];
+        var published = [];
+
+        inspectResources(indexes, notOwned, published);
+
+        var messageBody = $("#delete-multiple-resources-dialog .modal-body");
+
+        messageBody.empty();
+
+        // Resources that cannot be deleted becausse the current user does not own them
+        if (notOwned.length > 0) {
+            var notOwnedTemplate = "";
+            for (var i = 0; i < notOwned.length; i++) {
+                var index = resourceTable.row($(notOwned[i])).index();
+                var resourceTitle = resourceTable.cell(index, TITLE_COL).data();
+                notOwnedTemplate += "<li>" + resourceTitle + "</li>";
+            }
+            messageBody.append(
+                '<div class="alert alert-warning">' +
+                    '<strong>You do not have permission to delete the following resources:</strong>' +
+                    '<ul>' +
+                        notOwnedTemplate +
+                    '</ul>' +
+                '</div>'
+            );
+        }
+
+        // Resources that cannot be deleted because they have been published
+        if (published.length > 0) {
+            var publishedTemplate = "";
+            for (var i = 0; i < published.length; i++) {
+                var index = resourceTable.row($(published[i])).index();
+                var resourceTitle = resourceTable.cell(index, TITLE_COL).data();
+                publishedTemplate += "<li>" + resourceTitle + "</li>";
+            }
+            messageBody.append(
+                '<div class="alert alert-warning">' +
+                    '<strong>The following resources have been published and cannot be deleted:</strong>' +
+                    '<ul>' +
+                        publishedTemplate +
+                    '</ul>' +
+                '</div>'
+            );
+        }
+
+        if((published.length || notOwned.length) && indexes.length) {
+            messageBody.append("<hr><h4>Continue with the rest?</h4>")
+        }
+
+        if (indexes.length > 0) {
+            var actionWarningTemplate =
+            '<div class="alert alert-danger">' +
+                '<strong>THIS IS A PERMANENT ACTION</strong>' +
+                '<ul>' +
+                    '<li>This will delete any resources you have selected.</li>' +
+                    '<li>HydroShare will not retain copies of any of your content files.</li>' +
+                    '<li>We highly recommend that you download the latest copy of your resource file(s) before deleting.</li>' +
+                '</ul>' +
+            '</div>';
+
+            messageBody.append(actionWarningTemplate);
+            $("#btn-delete-multiple-resources").attr("disabled", false);
+        }
+        else {
+            messageBody.append('<div>Select resources to delete.</div><br>');
+            $("#btn-delete-multiple-resources").attr("disabled", true);
+        }
+
+        messageBody.find("a").attr("target", "_blank"); // Make listed resources open in new tab
+    });
+
     $("#item-selectors td").click(function(e){
         if (e.target.tagName != "TD") {
             return;
@@ -166,8 +271,43 @@ $(document).ready(function () {
 
     updateLabelLists();
     updateLabelCount();
-
 });
+
+function delete_multiple_resources_ajax_submit(indexes) {
+    var calls = [];
+
+    // Submit all delete requests asynchronously
+    for (var i = 0; i < indexes.length; i++) {
+        var form = $(indexes[i]).find("form[data-form-type='delete-resource']");
+        const row = $(indexes[i]);  // Needs to be a constant so the value doesn't change during the asynchronous calls
+        var datastring = $(form).serialize();
+        var url = $(form).attr("action");
+
+        $("html").css("cursor", "progress");
+
+        calls.push(
+            $.ajax({
+                type: "POST",
+                url: url,
+                datastring: datastring,
+                dataType: "html",
+                success: function () {
+                    resourceTable.row(row).remove();  // Delete row from the table
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                }
+            })
+        );
+    }
+
+    // Wait for all asynchronous calls to finish
+    $.when.apply($, calls).done(function () {
+        resourceTable.draw();
+        updateLabelCount();
+        $("html").css("cursor", "initial"); // Restore default cursor
+    });
+}
 
 function label_ajax_submit() {
     var el = $(this);
@@ -185,6 +325,7 @@ function label_ajax_submit() {
         success: function (result) {
             var json_response = JSON.parse(result);
             if (json_response.status == "success") {
+                var rowIndex = resourceTable.row(tableRow).index();
                 if (formType == "create-label") {
                     createLabel();
                 }
@@ -203,25 +344,22 @@ function label_ajax_submit() {
                     var action = form.find("input[name='action']");
 
                     el.toggleClass("isfavorite");
-                    var rowIndex = parseInt(form.closest("tr").attr("data-tr-index"));
-                    var favoriteColIndex = 9;   // Index of the favorite column in the table
 
                     if (json_response.action == "DELETE") { // Got unchecked
                         action.val("CREATE");
-                        resourceTable.cell(rowIndex,favoriteColIndex).data("").draw();
+                        resourceTable.cell(rowIndex, FAVORITE_COL).data("").draw();
                     }
                     else {                          // Got checked
                         action.val("DELETE");
 
-                        resourceTable.cell(rowIndex,favoriteColIndex).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
+                        resourceTable.cell(rowIndex, FAVORITE_COL).data("Favorite").draw();  // .draw refreshed the internal cache of the table object
                     }
                 }
                 else if (formType = "toggle-label") {
                     var action = form.find("input[name='action']");
                     var label = el[0].value;
 
-                    var rowIndex = parseInt(tableRow.attr("data-tr-index"));
-                    var currentCell = resourceTable.cell(rowIndex,LABELS_COL);
+                    var currentCell = resourceTable.cell(rowIndex, LABELS_COL);
 
                     var dataColLabels = currentCell.data().replace(/\s+/g,' ').split(","); // List of labels already applied to the resource;
 
@@ -243,7 +381,7 @@ function label_ajax_submit() {
                     }
 
                     // If the row has labels, color the label icon blue
-                    var labelButton = $("#item-selectors tr[data-tr-index='" + rowIndex + "']").find(".btn-inline-label");
+                    var labelButton = tableRow.find(".btn-inline-label");
                     if (dataColLabels.length > 0) {
                         if (dataColLabels.length == 1 && dataColLabels[0].trim() == "") {   // The list could have an empty []
                             labelButton.removeClass("has-labels");
@@ -260,7 +398,6 @@ function label_ajax_submit() {
                 updateLabelCount();
                 refreshToolbarCheckboxState();
             }
-
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
 
@@ -310,7 +447,6 @@ function updateLabelLists() {
             }
         }
 
-
         if ($(".row-selector:checked").length == 0) {
             $("#toolbar-labels-dropdown ul").prepend(
                     '<li>' +
@@ -326,14 +462,12 @@ function updateLabelLists() {
                     '</li>'
             );
         }
-
-        // $(".inline-dropdown input[type='checkbox']").change(updateLabelCount);
     }
 
     // Check checkboxes for labels currently in the resource
     if (dropdowns) {
         for (var i = 0; i < dropdowns.length; i++) {
-            var rowIndex = parseInt($(dropdowns[i]).closest("tr").attr("data-tr-index"));
+            var rowIndex = resourceTable.row($(dropdowns[i]).closest("tr")).index();
 
             var dataColLabels = resourceTable.cell(rowIndex,LABELS_COL).data().replace(/\s+/g,' ').split(",");
 
@@ -487,11 +621,6 @@ function updateLabelCount() {
             viewableCount++;
         }
 
-        // Update filter badges count
-        $("#filter .badge[data-facet='owned']").text(ownedCount);
-        $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
-        $("#filter .badge[data-facet='viewable by me']").text(viewableCount+editableCount+ownedCount);
-
         if (dataColFavorite == "Favorite") {
             favorites++;
         }
@@ -505,6 +634,11 @@ function updateLabelCount() {
             collection[label]++;
         }
     });
+
+    // Update filter badges count
+    $("#filter .badge[data-facet='owned']").text(ownedCount);
+    $("#filter .badge[data-facet='editable']").text(ownedEditableCount + editableCount);
+    $("#filter .badge[data-facet='viewable by me']").text(viewableCount + editableCount + ownedCount);
 
     // Set label counts
     for (var key in collection) {
@@ -595,7 +729,6 @@ function typeQueryStrings () {
     searchInput.val(searchQuery);
 }
 
-
 /*==================================================
     Table columns
     0 - actions
@@ -617,125 +750,125 @@ function typeQueryStrings () {
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
 $.fn.dataTable.ext.search.push (
-        function (settings, data, dataIndex) {
-            var inputString = $("#resource-search-input").val().toLowerCase();
-            // Matches occurrences of query strings. i.e.: author:mauriel
-            var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
-            var occurrences = inputString.match(regExp);
+    function (settings, data, dataIndex) {
+        var inputString = $("#resource-search-input").val().toLowerCase();
+        // Matches occurrences of query strings. i.e.: author:mauriel
+        var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
+        var occurrences = inputString.match(regExp);
 
-            var inputType = "";
-            var inputSubject = "";
-            var inputAuthor = "";
+        var inputType = "";
+        var inputSubject = "";
+        var inputAuthor = "";
 
-            // Split the occurrences at ':' and move to an array.
-            var collection = [];
-            if (occurrences) {
-                for (var item in occurrences) {
-                    var content = occurrences[item].replace("[", "").replace("]", "").split(":");
-                    collection.push(content);
-                }
+        // Split the occurrences at ':' and move to an array.
+        var collection = [];
+        if (occurrences) {
+            for (var item in occurrences) {
+                var content = occurrences[item].replace("[", "").replace("]", "").split(":");
+                collection.push(content);
             }
-
-            // Extract the pieces of information
-            for (var item in collection) {
-                if (collection[item][0].toUpperCase() == "TYPE") {
-                    inputType = collection[item][1];
-                }
-                else if (collection[item][0].toUpperCase() == "AUTHOR") {
-                    inputAuthor = collection[item][1];
-                }
-                else if (collection[item][0].toUpperCase() == "SUBJECT") {
-                    inputSubject = collection[item][1];
-                }
-            }
-
-            // Filter the table for each value
-
-            if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
-                return false;
-            }
-
-            if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
-                return false;
-            }
-
-            if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
-                return false;
-            }
-
-            //---------------- Facets filter--------------------
-            // Owned by me
-            if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-                if (data[PERM_LEVEL_COL] != "Owned") {
-                    return false;
-                }
-            }
-
-            // Editable by me
-            if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
-                // published resources are not editable
-                var sharingStatus = data[SHARING_STATUS_COL].trim();
-                if (sharingStatus.indexOf('Published') != -1)
-                    return false;
-
-                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Editable") {
-                    return false;
-                }
-            }
-
-            // Viewable by me
-            if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-                // published resources are viewable
-                var sharingStatus = data[SHARING_STATUS_COL].trim();
-                if (sharingStatus.indexOf('Published') != -1)
-                    return true;
-
-                if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Viewable" && data[PERM_LEVEL_COL] != "Editable") {
-                    return false;
-                }
-            }
-
-            // Shared by - Used in group resource listing
-            var grantors = $('#filter-shared-by .grantor:checked');
-            if (grantors.length) {
-                var grantorFlag = false;
-                for (var i = 0; i < grantors.length; i++) {
-                    var user = parseInt($(grantors[i]).attr("data-grantor-id"));
-                    if (parseInt(data[ACCESS_GRANTOR_COL]) == user) {
-                        grantorFlag = true;
-                    }
-                }
-
-                if (!grantorFlag) {
-                    return false;
-                }
-            }
-
-            // Labels - Check if the label exists in the table
-            var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
-            for (var i = 0; i < labelCheckboxes.length; i++) {
-                if ($(labelCheckboxes[i]).prop("checked") == true) {
-                    var label = $(labelCheckboxes[i]).attr("data-label");
-
-                    var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
-                    for (var h = 0; h < dataColLabels.length; h++) {
-                        dataColLabels[h] = dataColLabels[h].trim();
-                    }
-
-                    if (dataColLabels.indexOf(label) == -1) {
-                        return false;
-                    }
-                }
-            }
-
-            // Favorite
-            if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                if (data[FAVORITE_COL] != "Favorite") {
-                    return false;
-                }
-            }
-
-            // Default
-            return true;
         }
+
+        // Extract the pieces of information
+        for (var item in collection) {
+            if (collection[item][0].toUpperCase() == "TYPE") {
+                inputType = collection[item][1];
+            }
+            else if (collection[item][0].toUpperCase() == "AUTHOR") {
+                inputAuthor = collection[item][1];
+            }
+            else if (collection[item][0].toUpperCase() == "SUBJECT") {
+                inputSubject = collection[item][1];
+            }
+        }
+
+        // Filter the table for each value
+
+        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
+            return false;
+        }
+
+        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
+            return false;
+        }
+
+        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
+            return false;
+        }
+
+        //---------------- Facets filter--------------------
+        // Owned by me
+        if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+            if (data[PERM_LEVEL_COL] != "Owned") {
+                return false;
+            }
+        }
+
+        // Editable by me
+        if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
+            // published resources are not editable
+            var sharingStatus = data[SHARING_STATUS_COL].trim();
+            if (sharingStatus.indexOf('Published') != -1)
+                return false;
+
+            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Editable") {
+                return false;
+            }
+        }
+
+        // Viewable by me
+        if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
+            // published resources are viewable
+            var sharingStatus = data[SHARING_STATUS_COL].trim();
+            if (sharingStatus.indexOf('Published') != -1)
+                return true;
+
+            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Viewable" && data[PERM_LEVEL_COL] != "Editable") {
+                return false;
+            }
+        }
+
+        // Shared by - Used in group resource listing
+        var grantors = $('#filter-shared-by .grantor:checked');
+        if (grantors.length) {
+            var grantorFlag = false;
+            for (var i = 0; i < grantors.length; i++) {
+                var user = parseInt($(grantors[i]).attr("data-grantor-id"));
+                if (parseInt(data[ACCESS_GRANTOR_COL]) == user) {
+                    grantorFlag = true;
+                }
+            }
+
+            if (!grantorFlag) {
+                return false;
+            }
+        }
+
+        // Labels - Check if the label exists in the table
+        var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
+        for (var i = 0; i < labelCheckboxes.length; i++) {
+            if ($(labelCheckboxes[i]).prop("checked") == true) {
+                var label = $(labelCheckboxes[i]).attr("data-label");
+
+                var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
+                for (var h = 0; h < dataColLabels.length; h++) {
+                    dataColLabels[h] = dataColLabels[h].trim();
+                }
+
+                if (dataColLabels.indexOf(label) == -1) {
+                    return false;
+                }
+            }
+        }
+
+        // Favorite
+        if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+            if (data[FAVORITE_COL] != "Favorite") {
+                return false;
+            }
+        }
+
+        // Default
+        return true;
+    }
 );

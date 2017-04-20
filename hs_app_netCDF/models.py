@@ -1,4 +1,5 @@
 import json
+from lxml import etree
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -6,9 +7,12 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
+
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
+    add_metadata_element_to_xml, get_resource_files_by_extension
 
 
 # Define original spatial coverage metadata info
@@ -69,6 +73,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                    'westlimit', 'projection')}
 
+            cls._validate_bounding_box(value_dict)
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
                 del kwargs['value']
@@ -95,10 +100,117 @@ class OriginalCoverage(AbstractMetaDataElement):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
+            cls._validate_bounding_box(value_dict)
             value_json = json.dumps(value_dict)
             del kwargs['value']
             kwargs['_value'] = value_json
             super(OriginalCoverage, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def _validate_bounding_box(cls, box_dict):
+        for limit in ('northlimit', 'eastlimit', 'southlimit', 'westlimit'):
+            try:
+                float(box_dict[limit])
+            except ValueError:
+                raise ValidationError("Bounding box data is not numeric")
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
+        cov_term = '{%s}' + 'box'
+        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
+        rdf_coverage_value = etree.SubElement(coverage_terms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        # netcdf original coverage is of box type
+        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                    % (self.value['northlimit'], self.value['eastlimit'],
+                       self.value['southlimit'], self.value['westlimit'],
+                       self.value['units'])
+
+        for meta_element in self.value:
+            if meta_element == 'projection':
+                if self.value[meta_element]:
+                    cov_value += '; projection_name={}'.format(self.value[meta_element])
+
+        if self.projection_string_text:
+            cov_value += '; projection_string={}'.format(self.projection_string_text)
+
+        if self.datum:
+            cov_value += '; datum={}'.format(self.datum)
+
+        rdf_coverage_value.text = cov_value
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
+        from .forms import OriginalCoverageForm
+
+        ori_coverage_data_dict = dict()
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.datum
+            ori_coverage_data_dict['projection_string_type'] = element.projection_string_type
+            ori_coverage_data_dict['projection_string_text'] = element.projection_string_text
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
+
+        originalcov_form = OriginalCoverageForm(
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
+            res_short_id=resource.short_id if resource else None,
+            element_id=element.id if element else None, file_type=file_type)
+
+        return originalcov_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Spatial Reference')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Coordinate Reference System')
+                        td(self.value.get('projection', ''))
+                    with tr():
+                        get_th('Datum')
+                        td(self.datum)
+                    with tr():
+                        get_th('Coordinate String Type')
+                        td(self.projection_string_type)
+                    with tr():
+                        get_th('Coordinate String Text')
+                        td(self.projection_string_text)
+            h4('Extent')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('North')
+                        td(self.value['northlimit'])
+                    with tr():
+                        get_th('West')
+                        td(self.value['westlimit'])
+                    with tr():
+                        get_th('South')
+                        td(self.value['southlimit'])
+                    with tr():
+                        get_th('East')
+                        td(self.value['eastlimit'])
+                    with tr():
+                        get_th('Unit')
+                        td(self.value['units'])
+
+        return root_div.render(pretty=pretty)
 
 
 # Define netCDF variable metadata
@@ -140,8 +252,59 @@ class Variable(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("The variable of the resource can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
 
-# Define the netCDF resource
+        md_fields = {
+            "md_element": "netcdfVariable",
+            "name": "name",
+            "unit": "unit",
+            "type": "type",
+            "shape": "shape",
+            "descriptive_name": "longName",
+            "method": "comment",
+            "missing_value": "missingValue"
+        }  # element name : name in xml
+        add_metadata_element_to_xml(container, self, md_fields)
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Unit')
+                            td(self.unit)
+                        with tr():
+                            get_th('Type')
+                            td(self.type)
+                        with tr():
+                            get_th('Shape')
+                            td(self.shape)
+                        if self.descriptive_name:
+                            with tr():
+                                get_th('Long Name')
+                                td(self.descriptive_name)
+                        if self.missing_value:
+                            with tr():
+                                get_th('Missing Value')
+                                td(self.missing_value)
+                        if self.method:
+                            with tr():
+                                get_th('Comment')
+                                td(self.method)
+
+        return root_div.render(pretty=pretty)
+
+
 class NetcdfResource(BaseResource):
     objects = ResourceManager("NetcdfResource")
 
@@ -152,7 +315,7 @@ class NetcdfResource(BaseResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        # 3 file types are supported
+        # only file with extension .nc is supported for uploading
         return (".nc",)
 
     @classmethod
@@ -178,6 +341,17 @@ class NetcdfResource(BaseResource):
                 break
         return hs_term_dict
 
+    def update_netcdf_file(self, user):
+        if not self.metadata.is_dirty:
+            return
+
+        nc_res_file = get_resource_files_by_extension(self, ".nc")
+        txt_res_file = get_resource_files_by_extension(self, ".txt")
+
+        from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
+        if nc_res_file and txt_res_file:
+            netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
+
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True
@@ -185,48 +359,80 @@ class NetcdfResource(BaseResource):
 processor_for(NetcdfResource)(resource_processor)
 
 
-# define the netcdf metadata
-class NetcdfMetaData(CoreMetaData):
+class NetCDFMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
     variables = GenericRelation(Variable)
     ori_coverage = GenericRelation(OriginalCoverage)
 
-    @classmethod
-    def get_supported_element_names(cls):
-        # get the names of all core metadata elements
-        elements = super(NetcdfMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('Variable')
-        elements.append('OriginalCoverage')
-        return elements
+    class Meta:
+        abstract = True
 
     @property
-    def resource(self):
-        return NetcdfResource.objects.filter(object_id=self.id).first()
+    def originalCoverage(self):
+        return self.ori_coverage.all().first()
 
     def has_all_required_elements(self):
-        if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
+        # checks if all required metadata elements have been created
+        if not super(NetCDFMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.variables.all():
             return False
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             return False
+        if not self.originalCoverage:
+            return False
         return True
 
-    def get_required_missing_elements(self):  # show missing required meta
-        missing_required_elements = super(NetcdfMetaData, self).get_required_missing_elements()
+    def get_required_missing_elements(self):
+        # get a list of missing required metadata element names
+        missing_required_elements = super(NetCDFMetaDataMixin, self).get_required_missing_elements()
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.variables.all().first():
             missing_required_elements.append('Variable')
-
+        if not self.originalCoverage:
+            missing_required_elements.append('Spatial Reference')
         return missing_required_elements
+
+    def delete_all_elements(self):
+        super(NetCDFMetaDataMixin, self).delete_all_elements()
+        self.ori_coverage.all().delete()
+        self.variables.all().delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the class names of all supported metadata elements for this resource type
+        # or file type
+        elements = super(NetCDFMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('Variable')
+        elements.append('OriginalCoverage')
+        return elements
+
+
+# define the netcdf metadata
+class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
+    is_dirty = models.BooleanField(default=False)
+
+    @property
+    def resource(self):
+        return NetcdfResource.objects.filter(object_id=self.id).first()
+
+    def set_dirty(self, flag):
+        """
+        Overriding the base class method
+        """
+
+        if self.resource.files.all():
+            self.is_dirty = flag
+            self.save()
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=pretty_print)
+        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -236,72 +442,68 @@ class NetcdfMetaData(CoreMetaData):
 
         # inject netcdf resource specific metadata element 'variable' to container element
         for variable in self.variables.all():
-            md_fields = {
-                "md_element": "netcdfVariable",
-                "name": "name",
-                "unit": "unit",
-                "type": "type",
-                "shape": "shape",
-                "descriptive_name": "longName",
-                "method": "comment",
-                "missing_value": "missingValue"
-            }  # element name : name in xml
-            self.add_metadata_element_to_xml(container, variable, md_fields)
+            variable.add_to_xml_container(container)
 
-        if self.ori_coverage.all().first():
-            ori_cov_obj = self.ori_coverage.all().first()
-            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' %
-                                               self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            hsterms_coverage_terms = etree.SubElement(hsterms_ori_cov, cov_term %
-                                                      self.NAMESPACES['hsterms'])
-
-            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_coverage_terms, '{%s}value' %
-                                                               self.NAMESPACES['rdf'])
-            cov_box = ''
-
-            # add extent info
-            if ori_cov_obj.value:
-                cov_box = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; unit=%s' \
-                        % (ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
-                           ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'],
-                           ori_cov_obj.value['units'])
-
-            if ori_cov_obj.value.get('projection'):
-                cov_box += '; projection_name={}'.format(ori_cov_obj.value['projection'])
-
-            if ori_cov_obj.projection_string_text:
-                cov_box += '; projection_string={}'.format(ori_cov_obj.projection_string_text)
-
-            if ori_cov_obj.datum:
-                cov_box += '; datum={}'.format(ori_cov_obj.datum)
-
-            hsterms_ori_cov_rdf_Description.text = cov_box
+        ori_cov_obj = self.ori_coverage.all().first()
+        if ori_cov_obj is not None:
+            ori_cov_obj.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
-    def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        from lxml import etree
-        element_name = md_fields.get('md_element') if md_fields.get('md_element') \
-            else md_element.term
+    def update_element(self, element_model_name, element_id, **kwargs):
+        super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
+        if self.resource.files.all() and element_model_name in ['variable', 'title', 'description',
+                                                                'rights', 'source', 'coverage',
+                                                                'relation', 'creator',
+                                                                'contributor']:
 
-        hsterms_newElem = etree.SubElement(
-            root,
-            "{{{ns}}}{new_element}".format(ns=self.NAMESPACES['hsterms'], new_element=element_name))
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs.get('type', None) == 'cites':
+                self.is_dirty = True
 
-        hsterms_newElem_rdf_Desc = etree.SubElement(
-            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+            self.save()
 
-        for md_field in md_fields.keys():
-            if hasattr(md_element, md_field):
-                attr = getattr(md_element, md_field)
-                if attr:
-                    field = etree.SubElement(hsterms_newElem_rdf_Desc,
-                                             "{{{ns}}}{field}".format(ns=self.NAMESPACES['hsterms'],
-                                                                      field=md_fields[md_field]))
-                    field.text = str(attr)
+    def create_element(self, element_model_name, **kwargs):
+        element = super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
+        if self.resource.files.all() and element_model_name in ['description', 'subject', 'source',
+                                                                'coverage', 'relation', 'creator',
+                                                                'contributor']:
 
-    def delete_all_elements(self):
-        super(NetcdfMetaData, self).delete_all_elements()
-        self.ori_coverage.all().delete()
-        self.variables.all().delete()
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs.get('type', None) == 'cites':
+                self.is_dirty = True
+
+            self.save()
+
+        return element
+
+    def delete_element(self, element_model_name, element_id):
+        super(NetcdfMetaData, self).delete_element(element_model_name, element_id)
+        if self.resource.files.all() and element_model_name in ['source', 'contributor', 'creator',
+                                                                'relation']:
+            self.is_dirty = True
+            self.save()
+
+    def get_update_netcdf_file_html_form(self):
+        form_action = "/hsapi/_internal/netcdf_update/{}/".\
+            format(self.resource.short_id)
+        style = "display:none;"
+        if self.is_dirty:
+            style = "margin-bottom:10px"
+        root_div = div(id="netcdf-file-update", cls="row", style=style)
+
+        with root_div:
+            with div(cls="col-sm-12"):
+                with div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    strong("NetCDF file needs to be synced with metadata changes.")
+
+                    input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
+                    with form(action=form_action, method="post", id="update-netcdf-file",):
+                        div('{% csrf_token %}')
+                        button("Update NetCDF File", type="submit", cls="btn btn-primary",
+                               id="id-update-netcdf-file",
+                               )
+
+        return root_div

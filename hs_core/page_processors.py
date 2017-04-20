@@ -49,6 +49,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             del request.session["file_type_error"]
 
     content_model = page.get_content_model()
+    # whether the user has permission to view this resource
+    can_view = content_model.can_view(request)
+    if not can_view:
+        raise PermissionDenied()
+
     discoverable = content_model.raccess.discoverable
     validation_error = None
     resource_is_mine = False
@@ -106,7 +111,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         if is_authorized:
                             tool_url = tool_res_obj.metadata.url_bases.first().value \
                                 if tool_res_obj.metadata.url_bases.first() else None
-                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().value \
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().data_url \
                                 if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                             hs_term_dict_user = {}
                             hs_term_dict_user["HS_USR_NAME"] = request.user.username if \

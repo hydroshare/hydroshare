@@ -238,8 +238,11 @@
                                 <textarea class="form-control" required="required" name="description"></textarea>
                             </fieldset>
 
-                            <br>
-
+                            {# auto approve #}
+                            <fieldset class="col-sm-12">
+                               <input id="auto-approve" type="checkbox"  name="auto_approve">
+                               <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                            </fieldset>
                             {# Picture #}
                             <div class="col-sm-12">
                                 <fieldset>
@@ -302,45 +305,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
-    <script>
-
-        // Preview profile picture
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-
-                };
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // File name preview for picture field, change method
-        $(document).on('change', '.btn-file :file', function () {
-            var input = $(this);
-            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
-            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-            input.trigger('fileselect', [numFiles, label]);
-        });
-
-        $(document).ready(function () {
-            $("title").text("My Groups | HydroShare"); // Fix page title
-
-            // File name preview for picture field, file select method
-            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
-                var input = $(this).parents('.input-group').find(':text');
-                input.val(label);
-            });
-            $("#show-deleted-groups").click(function () {
-                if ($(this).text() === "Show deleted groups"){
-                    $(this).text("Hide deleted groups");
-                }
-                else {
-                    $(this).text("Show deleted groups");
-                }
-            })
-        });
-    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/my-groups.js"></script>
 {% endblock %}

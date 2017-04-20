@@ -4,7 +4,7 @@ from django.test import TestCase
 from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
 from hs_core.tasks import create_bag_by_irods
-
+from hs_core.models import GenericResource
 from django_irods.storage import IrodsStorage
 
 
@@ -27,6 +27,12 @@ class TestBagIt(TestCase):
             self.user,
             'My Test Resource'
             )
+
+    def tearDown(self):
+        super(TestBagIt, self).tearDown()
+        if self.test_res:
+            self.test_res.delete()
+        GenericResource.objects.all().delete()
 
     def test_create_bag(self):
         # the resource should have only one bags object
@@ -53,10 +59,10 @@ class TestBagIt(TestCase):
         except Exception as ex:
             self.fail("create_bag_by_irods() raised exception.{}".format(ex.message))
 
-    def test_delete_bag(self):
+    def test_delete_files_and_bag(self):
         # check we have one bag at this point
         self.assertEquals(self.test_res.bags.count(), 1)
         # this is the api we are testing
-        hs_bagit.delete_bag(self.test_res)
+        hs_bagit.delete_files_and_bag(self.test_res)
         # resource should not have any bags
         self.assertEquals(self.test_res.bags.count(), 0)

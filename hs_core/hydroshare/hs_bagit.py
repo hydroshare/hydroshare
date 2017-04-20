@@ -11,9 +11,7 @@ from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
 
 import bagit
-
 from mezzanine.conf import settings
-
 from hs_core.models import Bags, ResourceFile
 
 
@@ -21,45 +19,38 @@ class HsBagitException(Exception):
     pass
 
 
-def delete_bag(resource):
+def delete_files_and_bag(resource):
     """
-    delete the resource bag
+    delete the resource bag and all resource files.
 
     Parameters:
-    :param resource: the resource to delete the bag for.
+    :param resource: the resource to delete the bag and files for.
     :return: none
     """
-    res_id = resource.short_id
-
-    res_path = resource.root_path
-    bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        bagname = '{}/{}'.format(resource.resource_federation_path, bagname)
 
     # delete resource directory first to remove all generated bag-related files for the resource
-    istorage.delete(res_path)
+    if istorage.exists(resource.root_path):
+        istorage.delete(resource.root_path)
 
-    # the resource bag may not exist due to on-demand bagging
-    if istorage.exists(bagname):
-        # delete the resource bag
-        istorage.delete(bagname)
+    if istorage.exists(resource.bag_path):
+        istorage.delete(resource.bag_path)
 
+    # TODO: delete this whole mechanism; redundant.
     # delete the bags table
     for bag in resource.bags.all():
         bag.delete()
 
 
-def create_bag_files(resource, fed_zone_home_path=''):
+def create_bag_files(resource):
     """
-    create and update files needed by bagit operation that is conducted on iRODS server; no bagit
-    operation is performed, only files that will be included in the bag are created or updated.
+    create and update files needed by bagit operation that is conducted on iRODS server;
+    no bagit operation is performed, only files that will be included in the bag are created
+    or updated.
 
     Parameters:
     :param resource: A resource whose files will be created or updated to be included in the
     resource bag.
-    :param fed_zone_home_path: Optional, A passed-in non-empty value that indicates that the
-    resource needs to be created in a federated zone rather than in the default hydroshare zone.
     :return: istorage, an IrodsStorage object that will be used by subsequent operation to
     create a bag on demand as needed.
     """
@@ -67,16 +58,20 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     istorage = resource.get_irods_storage()
 
-    # has to make bagit_path unique even for the same resource with same update time
+    # the temp_path is a temporary holding path to make the files available to iRODS
+    # we have to make temp_path unique even for the same resource with same update time
     # to accommodate asynchronous multiple file move operations for the same resource
-    bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
+
+    # TODO: This is always /tmp; otherwise code breaks because open() is called on the result!
+    temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     try:
-        os.makedirs(bagit_path)
+        os.makedirs(temp_path)
     except OSError as ex:
+        # TODO: there might be concurrent operations.
         if ex.errno == errno.EEXIST:
-            shutil.rmtree(bagit_path)
-            os.makedirs(bagit_path)
+            shutil.rmtree(temp_path)
+            os.makedirs(temp_path)
         else:
             raise Exception(ex.message)
 
@@ -88,25 +83,23 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # to_file_name = '{res_id}/data/visualization/'.format(res_id=resource.short_id)
     # istorage.saveFile('', to_file_name, create_directory=True)
 
-    # create resourcemetadata.xml and upload it to iRODS
-    from_file_name = '{path}/resourcemetadata.xml'.format(path=bagit_path)
+    # create resourcemetadata.xml in local directory and upload it to iRODS
+    from_file_name = os.path.join(temp_path, 'resourcemetadata.xml')
     with open(from_file_name, 'w') as out:
         # resources that don't support file types this would write only resource level metadata
         # resource types that support file types this would write resource level metadata
         # as well as file type metadata
         out.write(resource.get_metadata_xml())
-    to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-                            fed_zone_home_path=fed_zone_home_path,
-                            rel_path=to_file_name)
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemetadata.xml')
     istorage.saveFile(from_file_name, to_file_name, True)
 
-    # make the resource map
+    # URLs are found in the /data/ subdirectory to comply with bagit format assumptions
     current_site_url = current_site_url()
-    hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
-                                                          res_id=resource.short_id)
+    # This is the qualified resource url.
+    hs_res_url = os.path.join(current_site_url, 'resource', resource.short_id, 'data')
+    # this is the path to the resourcemedata file for download
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
+    # this is the path to the resourcemap file for download
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
     # make the resource map:
@@ -141,31 +134,13 @@ def create_bag_files(resource, fed_zone_home_path=''):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        prefix_str = 'data/contents/'
-        prefix_len = len(prefix_str)
-
-        file_name_with_rel_path = ''
-        if f.fed_resource_file_name_or_path:
-            # move or copy the file under the user account to under local hydro proxy account
-            # in federated zone
-            idx = f.fed_resource_file_name_or_path.find(prefix_str)
-            if idx >= 0:
-                file_name_with_rel_path = f.fed_resource_file_name_or_path[idx+prefix_len:]
-        elif f.resource_file:
-            idx = f.resource_file.name.find(prefix_str)
-            file_name_with_rel_path = f.resource_file.name[idx+prefix_len:]
-        elif f.fed_resource_file:
-            idx = f.fed_resource_file.name.find(prefix_str)
-            file_name_with_rel_path = f.fed_resource_file.name[idx+prefix_len:]
-
-        if file_name_with_rel_path:
-            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                hs_url=current_site_url,
-                res_id=resource.short_id,
-                file_name=file_name_with_rel_path)
-            resFiles.append(AggregatedResource(res_path))
-            resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(file_name_with_rel_path))
+        res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            hs_url=current_site_url,
+            res_id=resource.short_id,
+            file_name=f.short_path)
+        resFiles.append(AggregatedResource(res_uri))
+        resFiles[n]._ore.isAggregatedBy = ag_url
+        resFiles[n]._dc.format = get_file_mime_type(os.path.basename(f.short_path))
 
     # Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -173,7 +148,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
         a.add_resource(f)
 
     # handle collection resource type
-    # save cotained resource urls into resourcemap.xml
+    # save contained resource urls into resourcemap.xml
     if resource.resource_type == "CollectionResource" and resource.resources:
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
@@ -203,23 +178,19 @@ def create_bag_files(resource, fed_zone_home_path=''):
         '<ore:aggregates rdf:resource="%s"/>\n' % str(resource.metadata.type.url), '')
 
     # create resourcemap.xml and upload it to iRODS
-    from_file_name = os.path.join(bagit_path, 'resourcemap.xml')
+    from_file_name = os.path.join(temp_path, 'resourcemap.xml')
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
-    to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
-    if fed_zone_home_path:
-        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=to_file_name)
-
+    to_file_name = os.path.join(resource.root_path, 'data', 'resourcemap.xml')
     istorage.saveFile(from_file_name, to_file_name, False)
+
     res_coll = resource.root_path
     istorage.setAVU(res_coll, 'metadata_dirty', "false")
-    shutil.rmtree(bagit_path)
+    shutil.rmtree(temp_path)
     return istorage
 
 
-def create_bag(resource, fed_zone_home_path=''):
+def create_bag(resource):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from
     the current filesystem of the resource, then zip it up and add it to the resource. The new
@@ -232,27 +203,18 @@ def create_bag(resource, fed_zone_home_path=''):
 
     Parameters:
     :param resource: (subclass of AbstractResource) A resource to create a bag for.
-           fed_zone_home_path: default is empty indicating the resource bag should be created and
-                               stored in the default hydroshare zone; a non-empty string value
-                               indicates the absolute logical home path for the federated zone where
-                               the new created bag should be stored in
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
 
-    istorage = create_bag_files(resource, fed_zone_home_path)
+    istorage = create_bag_files(resource)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
     # created when user clicks on download button
-    if fed_zone_home_path:
-        to_coll_name = '{fed_zone_home_path}/{rel_path}'.format(
-            fed_zone_home_path=fed_zone_home_path,
-            rel_path=resource.short_id)
-    else:
-        to_coll_name = resource.short_id
+    to_coll_name = resource.root_path
 
     istorage.setAVU(to_coll_name, "bag_modified", "true")
 
-    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public))
+    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public).lower())
 
     istorage.setAVU(to_coll_name, "resourceType", resource._meta.object_name)
 

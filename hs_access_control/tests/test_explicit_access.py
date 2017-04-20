@@ -360,6 +360,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         g = C_user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW,
                                                               via_user=False,
                                                               via_group=True)
+
         self.assertTrue(is_equal_to_as_set(g, [r1_resource]))
 
         # owner squashes CHANGE + immutable

@@ -348,6 +348,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.raster_file_obj = open(self.raster_file, 'r')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.raster_file_obj,), user=self.user)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
         # add some core metadata
         # create abstract
         metadata = self.composite_resource.metadata
@@ -394,7 +396,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         value_dict = {'east': '56.45678', 'north': '12.6789', 'units': 'decimal deg'}
         gen_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
 
-        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        tif_res_file = [f for f in self.composite_resource.files.all()
+                        if f.extension == ".tif"][0]
+
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
         # add generic logical file type metadata
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
@@ -525,9 +530,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             type='box').first()
         self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(res_coverage.value['northlimit'], 42.049364058252266)
+        self.assertEqual(res_coverage.value['northlimit'], 42.0500269597691)
         self.assertEqual(res_coverage.value['eastlimit'], -111.57773718106195)
-        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
         self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
         value_dict = {'east': '-110.88845678', 'north': '43.6789', 'units': 'Decimal deg'}
         generic_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
@@ -537,7 +542,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(res_coverage.value['northlimit'], 43.6789)
         self.assertEqual(res_coverage.value['eastlimit'], -110.88845678)
-        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['southlimit'], 41.98722286029891)
         self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
         # update the LFO coverage to box type
         value_dict = {'eastlimit': '-110.88845678', 'northlimit': '43.6789',
@@ -634,18 +639,21 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEqual(self.composite_resource.files.count(), 1)
         # we should be able to create this new folder
-        new_folder_path = "data/contents/my-new-folder"
-        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        new_folder_full_path = os.path.join(self.composite_resource.file_path, "my-new-folder")
+        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_full_path),
+                         True)
         # create the folder
+        new_folder_path = os.path.join("data", "contents", "my-new-folder")
         create_folder(self.composite_resource.short_id, new_folder_path)
+        old_file_path = self.composite_resource.files.get().short_path
         # now move the file to this new folder
         move_or_rename_file_or_folder(self.user, self.composite_resource.short_id,
-                                      'data/contents/' + self.generic_file_name,
-                                      new_folder_path + "/" + self.generic_file_name)
+                                      os.path.join("data", "contents", old_file_path),
+                                      os.path.join(new_folder_path, self.generic_file_name))
         # test that we should be able to create a folder inside the folder that contains
         # a resource file that is part of a Generic Logical file
-        new_folder_path = "data/contents/my-new-folder/another-folder"
-        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        new_folder_full_path = os.path.join(new_folder_full_path, "another-folder")
+        self.assertTrue(self.composite_resource.supports_folder_creation(new_folder_full_path))
 
         # add a raster tif file to the resource which will be part of
         # a GoeRasterLogicalFile object
@@ -679,21 +687,24 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         gen_res_file_basename = hydroshare.utils.get_resource_file_name_and_extension(
             gen_res_file)[1]
         self.assertEqual(self.generic_file_name, gen_res_file_basename)
-        src_full_path = self.composite_resource.short_id + 'data/contents/' + self.generic_file_name
-        tgt_full_path = self.composite_resource.short_id + 'data/contents/renamed_file.txt'
+        src_full_path = os.path.join(self.composite_resource.file_path, self.generic_file_name)
+        tgt_full_path = os.path.join(self.composite_resource.file_path, 'renamed_file.txt')
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
 
-        # create a new folder so that we can test if the generic file can be moved there
-        # or not
-        new_folder_path = "data/contents/my-new-folder"
-        self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), True)
+        # create a new folder so that we can test if the generic file can be moved there or not
+        # this code is confusing because three different conventions are involved:
+        # 1. Relative path
+        # 2. Partially qualified path data/contents/folder
+        # 3. Fully qualified path starting at root_path and containing file_path
+        new_folder_full_path = os.path.join(self.composite_resource.file_path, "my-new-folder")
+        new_folder_path = os.path.join("data", "contents", "my-new-folder")
+        self.assertTrue(self.composite_resource.supports_folder_creation(new_folder_full_path))
         # create the folder
         create_folder(self.composite_resource.short_id, new_folder_path)
         # now move the file to this new folder
-        tgt_full_path = self.composite_resource.short_id + '/data/contents/my-new-folder/' + \
-            self.generic_file_name
+        tgt_full_path = os.path.join(new_folder_full_path, self.generic_file_name)
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), True)
