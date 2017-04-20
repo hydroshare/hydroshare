@@ -953,7 +953,7 @@ class GroupUpdateForm(GroupForm):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
     return context
 
 
@@ -995,7 +995,7 @@ def create_resource(request, *args, **kwargs):
     source_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
-    # TODO: need to make REST API consistent with internal API. This is just "move" now there. 
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
@@ -1021,26 +1021,26 @@ def create_resource(request, *args, **kwargs):
 
     try:
         page_url_dict, res_title, metadata, fed_res_path = \
-            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, 
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
-                                                         resource_title=res_title, 
+                                                         resource_title=res_title,
                                                          source_names=source_names,
-                                                         page_redirect_url_key=url_key, 
-                                                         requesting_user=request.user, 
+                                                         page_redirect_url_key=url_key,
+                                                         requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
+        return render_to_response('pages/create-resource.html', context,
                                   context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
         context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
+        return render_to_response('pages/create-resource.html', context,
                                   context_instance=RequestContext(request))
 
     except Exception as ex:
         context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
+        return render_to_response('pages/create-resource.html', context,
                                   context_instance=RequestContext(request))
 
     if url_key in page_url_dict:
@@ -1053,9 +1053,9 @@ def create_resource(request, *args, **kwargs):
             metadata=metadata,
             files=resource_files,
             source_names=source_names,
-            # TODO: should probably be resource_federation_path like it is set to. 
+            # TODO: should probably be resource_federation_path like it is set to.
             fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
-            move=(fed_copy_or_move == 'move'), 
+            move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
@@ -1507,14 +1507,11 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
+
         # set isPublic metadata AVU accordingly
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
-        else:
-            istorage = IrodsStorage()
-            res_coll = resource.short_id
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
+        res_coll = resource.root_path
+        istorage = resource.get_irods_storage()
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
