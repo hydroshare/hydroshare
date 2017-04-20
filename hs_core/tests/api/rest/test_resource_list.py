@@ -268,6 +268,4 @@ class TestResourceList(HSRESTTestCase):
         response = self.client.get('/hsapi/resource/', {'coverage_type': 'bad',
                                                         'nonsensical': '90',
                                                         'params': '140'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        content = json.loads(response.content)
-        self.assertEqual(content['count'], 3)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -81,7 +81,7 @@ class ResourceListRequestValidator(serializers.Serializer):
     edit_permission = serializers.BooleanField(required=False, default=False)
     published = serializers.BooleanField(required=False, default=False)
     type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None)
-    coverage_type = serializers.CharField(required=False)
+    coverage_type = serializers.ChoiceField(choices=['box', 'point'], required=False)
     north = serializers.CharField(required=False)
     south = serializers.CharField(required=False)
     east = serializers.CharField(required=False)
