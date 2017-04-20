@@ -608,6 +608,7 @@ CSP_DICT = {
         "*.rawgit.com",
         "*.cloudflare.com",
         "*.datatables.net ",
+        "*.github.io",
         "'sha256-knR/FBinurfPQntk2aEOJBVdKTB+jAzLBk5er9r0rEI='",
         "'sha256-s9/ymLoZ5XUQCLrYU4LA0197Ys8F+MChBBmMgWyBUm4='",
         "'sha256-r8WSQMRpNued376HSguoGRJRnDD1TXEdhbfJ9agQytA='",
@@ -658,7 +659,8 @@ CSP_DICT = {
         "*.googleapis.com",
         "*.bootstrapcdn.com",
         "*.datatables.net",
-        "*.cloudflare.com "
+        "*.cloudflare.com ",
+        "*.github.io"
         # "'sha256-eg/xnzXUz6KMG1HVuW/xUt76FyF5028DbB4i0AhZTjA='",
         # "'sha256-G/USJC1+tllSYwvERC+xNnfMa+5foeWVYBUWvwijyls='",
         # "'sha256-Z0H+TBASBR4zypo3RZbXhkcJdwMNyyMhi4QrwsslVeg='",
@@ -666,6 +668,7 @@ CSP_DICT = {
     ],
     "img-src" : [
         "self",
+        "data:",
         "*.datatables.net",
         "*.googleapis.com",
         "*.gstatic.com",

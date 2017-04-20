@@ -183,10 +183,14 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
+        res_metadata = res.metadata
+        res_metadata.set_dirty(True)
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success',
+                                  'is_dirty': res.metadata.is_dirty if
+                                  hasattr(res.metadata, 'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -331,6 +335,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -410,6 +418,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'res_public_status': res_public_status,
                                       'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
 
             return JsonResponse(ajax_response_data)
         else:
@@ -536,7 +547,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     try:
         utils.replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
+            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
             content_type = "application/json"
         )
     except SessionException as ex:
@@ -942,7 +953,7 @@ class GroupUpdateForm(GroupForm):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
     return context
 
 
@@ -976,18 +987,20 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
+    """ Create resource via REST API """
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
 
     resource_files = request.FILES.getlist('files')
-    fed_res_file_names=[]
+    source_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
         if federated:
-            fed_res_file_names = irods_fnames.split(',')
+            source_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -1007,20 +1020,28 @@ def create_resource(request, *args, **kwargs):
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
-                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
+        page_url_dict, res_title, metadata, fed_res_path = \
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+                                                         files=resource_files,
+                                                         resource_title=res_title,
+                                                         source_names=source_names,
+                                                         page_redirect_url_key=url_key,
+                                                         requesting_user=request.user,
+                                                         **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     except utils.ResourceFileValidationException as ex:
         context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     except Exception as ex:
         context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        return render_to_response('pages/create-resource.html', context,
+                                  context_instance=RequestContext(request))
 
     if url_key in page_url_dict:
         return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
@@ -1031,9 +1052,10 @@ def create_resource(request, *args, **kwargs):
             title=res_title,
             metadata=metadata,
             files=resource_files,
-            fed_res_file_names=fed_res_file_names,
-            fed_res_path = fed_res_path[0] if len(fed_res_path) == 1 else '',
-            fed_copy_or_move=fed_copy_or_move,
+            source_names=source_names,
+            # TODO: should probably be resource_federation_path like it is set to.
+            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
+            move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
@@ -1298,7 +1320,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                     _send_email_on_group_membership_acceptance(membership_request)
                 else:
                     message = 'Membership request declined'
-                    messages.error(request, message)
+                    messages.success(request, message)
 
             except PermissionDenied as ex:
                 messages.error(request, ex.message)
@@ -1485,14 +1507,11 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
+
         # set isPublic metadata AVU accordingly
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
-        else:
-            istorage = IrodsStorage()
-            res_coll = resource.short_id
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
+        res_coll = resource.root_path
+        istorage = resource.get_irods_storage()
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \

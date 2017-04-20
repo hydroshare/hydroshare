@@ -1,5 +1,6 @@
 from django.forms.models import formset_factory
 from django.forms import BaseFormSet
+from django.contrib import messages
 from mezzanine.pages.page_processors import processor_for
 
 from crispy_forms.layout import Layout, HTML
@@ -19,6 +20,8 @@ from hs_app_netCDF.models import NetcdfResource
 def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
+    if content_model.metadata.is_dirty:
+        messages.info(request, "NetCDF file is out of sync with resource metadata changes.")
 
     if not edit_resource:  # not editing mode
         # get the context from hs_core
@@ -103,26 +106,21 @@ def landing_page(request, page):
             else:
                 form.action = "/hsapi/_internal/%s/variable/add-metadata/" % content_model.short_id
 
+        # netcdf file update notification in editing mode
+        UpdateNetcdfLayout = HTML(content_model.metadata.get_update_netcdf_file_html_form())
+
         # get the context from hs_core
-        ext_md_layout = Layout(HTML(
-            """
-                <div class="row">
-                <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
-                {% load crispy_forms_tags %}
-                {% crispy original_coverage_form %}
-                </div>
-                <div class="col-md-10">
-                    <input style="margin-bottom:40px;"
-                    class="btn-danger btn btn-md"
-                    onclick="check_ori_meta_status()" type="button"
-                    data-toggle="modal"
-                    data-target="#delete-original-coverage-element-dialog"
-                    value="Delete Spatial Reference">
-                </div>
-                <hr style="border: 0;">
-                {% crispy original_coverage_form.delete_modal_form %}
-                </div>
-            """
+        ext_md_layout = Layout(
+            UpdateNetcdfLayout,
+            HTML(
+                """
+                    <div class="row">
+                        <div class="form-group col-sm-6 col-xs-12" id="originalcoverage">
+                        {% load crispy_forms_tags %}
+                        {% crispy original_coverage_form %}
+                        </div>
+                    </div>
+                """
             ),
             VariableLayoutEdit,
             ModalDialogLayoutAddVariable,)
