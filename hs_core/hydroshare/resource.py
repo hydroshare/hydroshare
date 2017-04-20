@@ -438,6 +438,7 @@ def create_resource(
     return resource
 
 
+# TODO: this is incredibly misnamed. It should not be used to create empty resources!
 def create_empty_resource(pk, user, action='version'):
     """
     Create a resource with empty content and empty metadata for resource versioning or copying.
@@ -492,7 +493,7 @@ def copy_resource(ori_res, new_res):
     """
 
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private=True)
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
 
     utils.copy_and_create_metadata(ori_res, new_res)
 
@@ -525,12 +526,8 @@ def create_new_version_resource(ori_res, new_res, user):
 
     """
     # newly created new resource version is private initially
-    set_to_private = False
-    if ori_res.raccess.public:
-        set_to_private = True
-
     # add files directly via irods backend file operation
-    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     utils.copy_and_create_metadata(ori_res, new_res)

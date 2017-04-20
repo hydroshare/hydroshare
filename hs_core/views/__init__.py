@@ -953,7 +953,7 @@ class GroupUpdateForm(GroupForm):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
     return context
 
 
@@ -1516,14 +1516,11 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
+
         # set isPublic metadata AVU accordingly
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
-        else:
-            istorage = IrodsStorage()
-            res_coll = resource.short_id
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
+        res_coll = resource.root_path
+        istorage = resource.get_irods_storage()
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
