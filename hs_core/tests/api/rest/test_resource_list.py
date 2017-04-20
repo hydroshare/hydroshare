@@ -211,25 +211,25 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
     def test_resource_list_by_bounding_box(self):
-        metadata_dict_one = [{'coverage': {'type': 'box', 'value': { 'northlimit':'80',
-                                                                'eastlimit':'40',
-                                                                'southlimit':'60',
-                                                                'westlimit':'20',
-                                                                'units': 'decimal deg' }}}]
+        metadata_dict_one = [{'coverage': {'type': 'box', 'value': {'northlimit': '80',
+                                                                    'eastlimit': '40',
+                                                                    'southlimit': '60',
+                                                                    'westlimit': '20',
+                                                                    'units': 'decimal deg'}}}]
         gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1',
                                                metadata=metadata_dict_one)
 
         metadata_dict_two = [{'coverage': {'type': 'box', 'value': {'northlimit': '60',
-                                                               'eastlimit': '110',
-                                                               'southlimit': '50',
-                                                               'westlimit': '90',
-                                                               'units': 'decimal deg'}}}]
+                                                                    'eastlimit': '110',
+                                                                    'southlimit': '50',
+                                                                    'westlimit': '90',
+                                                                    'units': 'decimal deg'}}}]
         gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2',
                                                metadata=metadata_dict_two)
 
         metadata_dict_two = [{'coverage': {'type': 'point', 'value': {'north': '70',
-                                                                    'east': '70',
-                                                                    'units': 'decimal deg'}}}]
+                                                                      'east': '70',
+                                                                      'units': 'decimal deg'}}}]
         gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 2',
                                                metadata=metadata_dict_two)
 
