@@ -12,13 +12,9 @@ class mp_form_helper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
         files = kwargs.pop('files')
-        file_data = {}
-        for f in files.all():
-            short_url = escape(f.resource_file.name)
-            name = short_url.split('/')[-1]
-            file_data[name] = short_url
+        file_names = [f.file_name for f in files.all()]
 
-        options = '\n'.join(['<option value="%s">%s</option>'%(value, key) for key, value in file_data.iteritems() ])
+        options = '\n'.join(['<option value="{0}">{0}</option>'.format(n) for n in file_names])
 
         multiselect_elements = ['modelSoftware', 'modelDocumentation', 'modelReleaseNotes', 'modelEngine']
         multiselect = {}
