@@ -142,6 +142,96 @@
         {{ comment }}
     {% endif %} 
 {% endfor %}
-{% if object.body %} 
+{% if object.metadata.geometryinformation.geometryType  %}
+    {{ object.metadata.geometryinformation.geometryType }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldName  %}
+    {{ object.metadata.fieldinformation.fieldName }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldType  %}
+    {{ object.metadata.fieldinformation.fieldType }}
+{% endif %}
+{% if object.metadata.fieldinformation.fieldTypeCode  %}
+    {{ object.metadata.fieldinformation.fieldTypeCode }}
+{% endif %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.name %}
+        {{ variable.name }}
+    {% elif variable.variable_name %}
+        {{ variable.variable_name }}
+    {% endif %}
+{% endfor %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.type %}
+        {{ variable.type }}
+    {% elif variable.variable_type %}
+        {{ variable.variable_type }}
+    {% endif  %}
+{% endfor %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.shape %}
+        {{ variable.shape }}
+    {% endif  %}
+{% endfor %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.descriptive_name %}
+        {{ variable.descriptive_name }}
+    {% endif  %}
+{% endfor %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.speciation %}
+        {{ variable.speciation }}
+    {% endif  %}
+{% endfor %}
+{% for site in object.metadata.sites.all %}
+    {% if site.name %}
+        {{ site.name }}
+    {% elif site.site_name %}
+        {{ site.site_name }}
+    {% endif  %}
+{% endfor %}
+{% for method in object.metadata.methods.all %}
+    {% if method.description %}
+        {{ method.description }}
+    {% elif method.method_description %}
+        {{ method.method_description }}
+    {% endif  %}
+{% endfor %}
+{% for quality_level in object.metadata.quality_levels.all %}
+    {% if quality_level.code %}
+        {{ quality_level.code }}
+    {% endif  %}
+{% endfor %}
+{% for data_source in object.metadata.data_sources.all %}
+    {% if data_source.code %}
+        {{ data_source.code }}
+    {% endif  %}
+{% endfor %}
+{% for time_series_result in object.metadata.time_series_results.all %}
+    {% if time_series_result.sample_medium %}
+        {{ time_series_result.sample_medium }}
+    {% endif  %}
+{% endfor %}
+{% for variable in object.metadata.variables.all %}
+    {% if variable.sample_medium %}
+        {{ variable.sample_medium }}
+    {% endif  %}
+{% endfor %}
+{% for time_series_result in object.metadata.time_series_results.all %}
+    {% if time_series_result.units_name %}
+        {{ time_series_result.units_name }}
+    {% endif  %}
+{% endfor %}
+{% for time_series_result in object.metadata.time_series_results.all %}
+    {% if time_series_result.units_type %}
+        {{ time_series_result.units_type }}
+    {% endif  %}
+{% endfor %}
+{% for time_series_result in object.metadata.time_series_results.all %}
+    {% if time_series_result.aggregation_statistics %}
+        {{ time_series_result.aggregation_statistics }}
+    {% endif  %}
+{% endfor %}
+{% if object.body %}
     {{ object.body }}
-{% endif %} 
+{% endif %}
