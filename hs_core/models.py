@@ -2342,30 +2342,31 @@ class ResourceFile(models.Model):
     @property
     def url(self):
         """
-        return the URL of the file contained in this ResourceFile. 
+        return the URL of the file contained in this ResourceFile.
 
         A GET of this URL simply returns the file. This URL is independent of federation.
-        PUT, POST, and DELETE are not supported. 
+        PUT, POST, and DELETE are not supported.
 
-        This choice for a URL is dependent mainly upon conformance to DataOne URL standards 
-        that are also conformant to the format in resourcemap.xml. This url does not contain 
-        the site URL, which is prefixed when needed. 
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
 
-        This is based upon the resourcemap_urls.py entry: 
+        This is based upon the resourcemap_urls.py entry:
 
-            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?P<path>.+)/$',
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
                 views.file_download_url_mapper,
                 name='get_resource_file')
+
+        The important thing is that there is a trailing '/' in that pattern.
         """
-        return reverse('get_resource_file',
-                       kwargs={ 'shortkey': self.resource.short_id,
-                                'path': self.short_path } )
+        return os.path.join('resource', self.resource.short_id,
+                            'data', 'contents', self.short_path) + '/'
 
     @property
     def irods_url(self):
-        """ 
+        """
         Return the iRODS URL of the file
-        
+
         This is a direct link and independent of the Django path in ResourceFile.url
         """
         if self.resource_file:
