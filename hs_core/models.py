@@ -2358,11 +2358,10 @@ class ResourceFile(models.Model):
                 views.file_download_url_mapper,
                 name='get_resource_file')
 
-        The important thing is that there is a trailing '/' in that pattern.
         """
         # must start with a / in order to concat with current_site_url.
         return '/' + os.path.join('resource', self.resource.short_id,
-                                  'data', 'contents', self.short_path) + '/'
+                                  'data', 'contents', self.short_path)
 
     @property
     def irods_url(self):

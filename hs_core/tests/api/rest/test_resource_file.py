@@ -57,8 +57,8 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
-        content_list = [os.path.basename(content['results'][0]['url'].rstrip('/')),
-                        os.path.basename(content['results'][1]['url'].rstrip('/'))]
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url'])]
         self.assertIn(self.txt_file_name, content_list)
         self.assertIn(self.raster_file_name, content_list)
 
@@ -68,8 +68,8 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
-        content_list = [os.path.basename(content['results'][0]['url'].rstrip('/')),
-                        os.path.basename(content['results'][1]['url'].rstrip('/'))]
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url'])]
         self.assertIn(self.txt_file_name, content_list)
         self.assertIn(self.raster_file_name, content_list)
 
@@ -99,9 +99,9 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-        content_list = [os.path.basename(content['results'][0]['url'].rstrip('/')),
-                        os.path.basename(content['results'][1]['url'].rstrip('/')),
-                        os.path.basename(content['results'][2]['url'].rstrip('/'))]
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url']),
+                        os.path.basename(content['results'][2]['url'])]
         self.assertIn(txt_file_name, content_list)
 
     def test_create_resource_file_with_custom_folder(self):
@@ -135,7 +135,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-        content_list = [os.path.basename(content['results'][0]['url'].rstrip('/')),
-                        os.path.basename(content['results'][1]['url'].rstrip('/')),
-                        os.path.basename(content['results'][2]['url'].rstrip('/'))]
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url']),
+                        os.path.basename(content['results'][2]['url'])]
         self.assertIn(txt_file_name, content_list)
