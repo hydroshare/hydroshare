@@ -2339,6 +2339,7 @@ class ResourceFile(models.Model):
         return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
                                                               self.logical_file_type_name ==
                                                               "GenericLogicalFile")
+
     @property
     def url(self):
         """
@@ -2359,8 +2360,9 @@ class ResourceFile(models.Model):
 
         The important thing is that there is a trailing '/' in that pattern.
         """
-        return os.path.join('resource', self.resource.short_id,
-                            'data', 'contents', self.short_path) + '/'
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.resource.short_id,
+                                  'data', 'contents', self.short_path) + '/'
 
     @property
     def irods_url(self):
