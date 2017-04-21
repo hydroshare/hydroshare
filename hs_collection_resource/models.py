@@ -67,4 +67,5 @@ class CollectionDeletedResource(models.Model):
     collection = models.ForeignKey(BaseResource)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
+    resource_url = models.CharField(max_length=2000)
     resource_owners = models.ManyToManyField(User, related_name='collectionDeleted')

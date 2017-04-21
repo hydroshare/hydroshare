@@ -33,7 +33,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
+from hs_core.hydroshare.utils import current_site_url, get_resource_by_shortkey, resource_modified, resolve_request
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
@@ -508,6 +508,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
              deleted_by=user,
              resource_id=res_id,
              resource_type=res_type,
+             resource_url=current_site_url(res.get_absolute_url()),
              collection=collection_res
              )
         o.resource_owners.add(*owners_list)
@@ -1367,7 +1368,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
 
         user_data['name'] = user_name
         user_data['email'] = user.email
-        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=current_site_url(), uid=user.pk)
         if user.userprofile.phone_1:
             user_data['phone'] = user.userprofile.phone_1
         elif user.userprofile.phone_2:
@@ -1390,7 +1391,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
     else:
         group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name
-        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=current_site_url(),
                                                          uid=group.pk)
         user_data['description'] = group.gaccess.description
 
