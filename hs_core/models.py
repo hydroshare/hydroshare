@@ -2840,6 +2840,14 @@ class CoreMetaData(models.Model):
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
     def update(self, metadata):
+        """
+        :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
+        element_name must be in lowercase.
+        example of a dict in metadata list:
+            {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :return:
+        """
+
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
