@@ -2339,9 +2339,23 @@ class ResourceFile(models.Model):
         return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
                                                               self.logical_file_type_name ==
                                                               "GenericLogicalFile")
-
     @property
     def url(self):
+        """
+        return the URL of the file in the CRUD interface
+
+        A GET of this URL simply returns the file. This URL is independent of federation.
+        """
+        return reverse('get_update_delete_resource_file',
+                       kwargs = { 'pk': self.short_id,
+                                  'pathname': self.short_path } )
+    # urls.py ENTRY:
+    # url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
+    #     views.resource_rest_api.ResourceFileCRUD.as_view(),
+    #     name='get_update_delete_resource_file'),
+
+    @property
+    def irods_url(self):
         if self.resource_file:
             return self.resource_file.url
         elif self.fed_resource_file:
