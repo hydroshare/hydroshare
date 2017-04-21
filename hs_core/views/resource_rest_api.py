@@ -63,7 +63,8 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
-        url = f.resource_file.url
+        site_url = hydroshare.utils.current_site_url()
+        url = site_url + f.url
         fsize = f.resource_file.size
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
