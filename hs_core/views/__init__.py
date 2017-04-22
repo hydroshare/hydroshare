@@ -437,9 +437,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    istorage = resource.get_irods_storage()
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
-    istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
