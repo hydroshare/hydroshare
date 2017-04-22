@@ -67,7 +67,7 @@ class ResourceFileToListItemMixin(object):
         url = site_url + f.url
         fsize = f.size
         # trailing slash confuses mime guesser
-        mimetype = mimetypes.guess_type(url.rstrip('/'))
+        mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
             ftype = mimetype[0]
         else:
