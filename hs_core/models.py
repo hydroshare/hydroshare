@@ -1,10 +1,12 @@
 import os.path
 import json
 import arrow
+import logging
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -1766,6 +1768,69 @@ class AbstractResource(ResourcePermissionsMixin):
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
+
+    def check_irods_sync(self, raise_exceptions=False):
+        """ Check whether files in self.files and on iRODS agree """
+
+        logger = logging.getLogger(__name__)
+        istorage = self.get_irods_storage()
+        errors = []
+
+        # Step 1: does every file here refer to an existing file in iRODS?
+        for f in self.files.all():
+            if not istorage.exists(f.storage_path):
+                msg = "file {} does not exist in iRODS".format(f.storage_path)
+                logger.debug(msg)
+                errors.append(msg)
+                if raise_exceptions:
+                    raise ValidationError(msg)
+
+        # Step 2: does every iRODS file correspond to a record in files?
+        error2 = self.__check_irods_directory(self.file_path, logger,
+                                              raise_exceptions=raise_exceptions)
+        for e in error2:
+            errors.append(e)
+
+        return errors
+
+    def __check_irods_directory(self, dir, logger, raise_exceptions=False):
+        """ ls a directory and check files there for conformance with django """
+        errors = []
+        istorage = self.get_irods_storage()
+        if len(dir) > len(self.file_path):
+            folder = dir[len(self.file_path)+1:]
+        else:
+            folder = None
+        try:
+
+            listing = istorage.listdir(dir)
+            for fname in listing[1]:  # files
+                fullpath = os.path.join(dir, fname)
+                found = False
+                for f in self.files.all():
+                    if f.storage_path == fullpath:
+                        found = True
+                if not found:
+                    msg = "file {} in iROds does not exist in Django".format(fullpath)
+                    logger.debug(msg)
+                    errors.append(msg)
+                    if raise_exceptions:
+                        raise ValidationError(msg)
+
+            for dname in listing[0]:  # directories
+                error2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                      raise_exceptions=raise_exceptions)
+                for e in error2:
+                    errors.append(e)
+
+        except SessionException:
+            msg = "listing of iRODS directory {} failed".format(dir)
+            logger.debug(msg)
+            errors.append(msg)
+            if raise_exceptions:
+                raise ValidationError(msg)
+
+        return errors
 
 
 def get_path(instance, filename, folder=None):
