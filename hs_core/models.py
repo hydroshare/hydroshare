@@ -1797,10 +1797,6 @@ class AbstractResource(ResourcePermissionsMixin):
         """ ls a directory and check files there for conformance with django """
         errors = []
         istorage = self.get_irods_storage()
-        if len(dir) > len(self.file_path):
-            folder = dir[len(self.file_path)+1:]
-        else:
-            folder = None
         try:
 
             listing = istorage.listdir(dir)

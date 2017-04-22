@@ -9,7 +9,6 @@ from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 
 from hs_core.models import ResourceFile, get_path
 
-from pprint import pprint
 
 class TestResourceFileAPI(MockIRODSTestCaseMixin,
                           TestCaseCommonUtilities, TransactionTestCase):
@@ -66,7 +65,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # should succeed without errors
         self.res.check_irods_sync(raise_exceptions=True)
 
-        #resource should has only one file at this point
+        # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
                          msg="resource file count didn't match")
 
