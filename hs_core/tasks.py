@@ -250,3 +250,14 @@ def create_bag_by_irods(resource_id):
     else:
         logger.error('Resource does not exist.')
         return False
+
+
+@shared_task
+def check_irods_files():
+    """
+    Check every resource for iRODS file problems.
+
+    This logs DEBUG messages for every problem it finds
+    """
+    for r in BaseResource.objects.all():
+        r.check_irods_sync()
