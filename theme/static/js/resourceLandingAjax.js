@@ -389,18 +389,16 @@ function share_resource_ajax_submit(form_id) {
                 var unshareUrl;
                 var undoUrl;
                 if (shareType == "user") {
-                    unshareUrl =
-                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
-                        + share_with + "/";
-
+                    unshareUrl = $form.attr('action') + share_with + "/";
                     undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
                 }
                 else {
                     unshareUrl =
-                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
+                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-group")
                         + share_with + "/";
 
-                    undoUrl = rowTemplate.find(".undo-share-form").attr("action").replace("undo-share-resource-with-user", "undo-share-resource-with-group")
+                    undoUrl = rowTemplate.find(".undo-share-form").attr("action")
+                            .replace("undo-share-resource-with-user", "undo-share-resource-with-group")
                         + share_with + "/";
                 }
 
