@@ -1784,28 +1784,39 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage = self.get_irods_storage()
         errors = []
 
-        # Step 1: does every file here refer to an existing file in iRODS?
-        for f in self.files.all():
-            if not istorage.exists(f.storage_path):
-                msg = "check_irods_files: django file {} does not exist in iRODS"\
-                    .format(f.storage_path)
-                if echo_errors:
-                    print(msg)
-                if log_errors:
-                    logger.error(msg)
-                if return_errors:
-                    errors.append(msg)
-                if stop_on_error:
-                    raise ValidationError(msg)
+        # skip federated resources if not configured to handle these
+        if self.is_federated and not settings.REMOTE_USE_IRODS:
+            msg = "check_irods_files: skipping checking federated resource {}"\
+                .format(self.short_id)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
 
-        # Step 2: does every iRODS file correspond to a record in files?
-        error2 = self.__check_irods_directory(self.file_path, logger,
-                                              stop_on_error=stop_on_error,
-                                              log_errors=log_errors,
-                                              echo_errors=echo_errors,
-                                              return_errors=return_errors)
-        for e in error2:
-            errors.append(e)
+        else:
+
+            # Step 1: does every file here refer to an existing file in iRODS?
+            for f in self.files.all():
+                if not istorage.exists(f.storage_path):
+                    msg = "check_irods_files: django file {} does not exist in iRODS"\
+                        .format(f.storage_path)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            # Step 2: does every iRODS file correspond to a record in files?
+            error2 = self.__check_irods_directory(self.file_path, logger,
+                                                  stop_on_error=stop_on_error,
+                                                  log_errors=log_errors,
+                                                  echo_errors=echo_errors,
+                                                  return_errors=return_errors)
+            for e in error2:
+                errors.append(e)
 
         return errors  # empty unless return_errors=True
 
