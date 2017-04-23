@@ -17,7 +17,7 @@
     color: #357ebd;
 }
 
-#irodsContent #irods_structure #file_struct {
+#irodsContent #file_struct {
     margin-top: 10px;
     height: 250px;
     overflow: auto;
@@ -25,7 +25,6 @@
     border: 1px solid #DDD;
     padding: 4px;
 }
-
 
 #irods_search {
     position: absolute;
