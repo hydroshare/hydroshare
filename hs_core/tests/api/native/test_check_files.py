@@ -57,13 +57,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -109,7 +109,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            self.res.check_irods_sync(raise_exceptions=True)
+            self.res.check_irods_files(stop_on_error=True)
 
         # TODO: how to eliminate this kind of error
         # dumbpath = 'x' + shortpath
@@ -127,13 +127,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         ResourceFile.create_folder(self.res, 'foo')
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -180,7 +180,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            self.res.check_irods_sync(raise_exceptions=True)
+            self.res.check_irods_files(stop_on_error=True)
 
         # TODO: how to eliminate this particular error.
         # dumbpath = 'x' + shortpath
@@ -199,13 +199,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
                          msg="resource file count didn't match")
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1)
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -285,13 +285,13 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         ResourceFile.create_folder(self.res, 'foo')
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # add one file to the resource
         hydroshare.add_resource_files(self.res.short_id, self.test_file_1, folder='foo')
 
         # should succeed without errors
-        self.res.check_irods_sync(raise_exceptions=True)
+        self.res.check_irods_files(stop_on_error=True)
 
         # resource should has only one file at this point
         self.assertEqual(self.res.files.all().count(), 1,
@@ -359,7 +359,7 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
 
         # should raise exception
         with self.assertRaises(ValidationError):
-            self.res.check_irods_sync(raise_exceptions=True)
+            self.res.check_irods_files(stop_on_error=True)
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
