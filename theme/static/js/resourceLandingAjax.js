@@ -389,7 +389,8 @@ function share_resource_ajax_submit(form_id) {
                 var unshareUrl;
                 var undoUrl;
                 if (shareType == "user") {
-                    unshareUrl = $form.attr('action') + share_with + "/";
+                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
+                        + share_with + "/";
                     undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
                 }
                 else {
