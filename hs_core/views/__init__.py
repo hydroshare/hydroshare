@@ -1021,7 +1021,7 @@ def create_resource(request, *args, **kwargs):
 
     url_key = "page_redirect_url"
     try:
-        page_url_dict, res_title, metadata, fed_res_path = \
+        _, res_title, metadata, fed_res_path = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
                                                          resource_title=res_title,
@@ -1040,10 +1040,6 @@ def create_resource(request, *args, **kwargs):
     except Exception as ex:
         ajax_response_data['message'] = ex.message
         return JsonResponse(ajax_response_data)
-    # TODO: (Pabitra) Not sure how we should be handling this when the call now comes as an
-    # ajax call - this is relevant to only reference time series resource type
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -1053,7 +1049,7 @@ def create_resource(request, *args, **kwargs):
             files=resource_files,
             source_names=source_names,
             # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path = fed_res_path[0] if len(fed_res_path) == 1 else '',
+            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=(fed_copy_or_move == 'move'),
             content=res_title
     )
