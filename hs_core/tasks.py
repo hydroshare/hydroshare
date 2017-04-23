@@ -257,7 +257,8 @@ def check_irods_files():
     """
     Check every resource for iRODS file problems.
 
-    This logs DEBUG messages for every problem it finds
+    This logs ERROR messages for every problem it finds
     """
     for r in BaseResource.objects.all():
-        r.check_irods_files()
+        r.check_irods_files(log_errors=True, echo_errors=False, 
+                            stop_on_error=False, return_errors=False)
