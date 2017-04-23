@@ -260,4 +260,4 @@ def check_irods_files():
     This logs DEBUG messages for every problem it finds
     """
     for r in BaseResource.objects.all():
-        r.check_irods_sync()
+        r.check_irods_files()

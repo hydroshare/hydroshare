@@ -1769,8 +1769,16 @@ class AbstractResource(ResourcePermissionsMixin):
         abstract = True
         unique_together = ("content_type", "object_id")
 
-    def check_irods_sync(self, raise_exceptions=False):
-        """ Check whether files in self.files and on iRODS agree """
+    def check_irods_files(self, stop_on_error=False, log_errors=True,
+                          echo_errors=False, return_errors=False):
+        """
+        Check whether files in self.files and on iRODS agree
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
 
         logger = logging.getLogger(__name__)
         istorage = self.get_irods_storage()
@@ -1779,22 +1787,40 @@ class AbstractResource(ResourcePermissionsMixin):
         # Step 1: does every file here refer to an existing file in iRODS?
         for f in self.files.all():
             if not istorage.exists(f.storage_path):
-                msg = "file {} does not exist in iRODS".format(f.storage_path)
-                logger.debug(msg)
-                errors.append(msg)
-                if raise_exceptions:
+                msg = "check_irods_files: django file {} does not exist in iRODS"\
+                    .format(f.storage_path)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
                     raise ValidationError(msg)
 
         # Step 2: does every iRODS file correspond to a record in files?
         error2 = self.__check_irods_directory(self.file_path, logger,
-                                              raise_exceptions=raise_exceptions)
+                                              stop_on_error=stop_on_error,
+                                              log_errors=log_errors,
+                                              echo_errors=echo_errors,
+                                              return_errors=return_errors)
         for e in error2:
             errors.append(e)
 
-        return errors
+        return errors  # empty unless return_errors=True
 
-    def __check_irods_directory(self, dir, logger, raise_exceptions=False):
-        """ ls a directory and check files there for conformance with django """
+    def __check_irods_directory(self, dir, logger,
+                                stop_on_error=False, log_errors=True,
+                                echo_errors=False, return_errors=False):
+        """
+        list a directory and check files there for conformance with django ResourceFiles
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+
+        """
         errors = []
         istorage = self.get_irods_storage()
         try:
@@ -1807,26 +1833,38 @@ class AbstractResource(ResourcePermissionsMixin):
                     if f.storage_path == fullpath:
                         found = True
                 if not found:
-                    msg = "file {} in iROds does not exist in Django".format(fullpath)
-                    logger.debug(msg)
-                    errors.append(msg)
-                    if raise_exceptions:
+                    msg = "check_irods_files: file {} in iRODs does not exist in Django"\
+                        .format(fullpath)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
                         raise ValidationError(msg)
 
             for dname in listing[0]:  # directories
                 error2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
-                                                      raise_exceptions=raise_exceptions)
+                                                      stop_on_error=stop_on_error,
+                                                      echo_errors=echo_errors,
+                                                      log_errors=log_errors,
+                                                      return_errors=return_errors)
                 for e in error2:
                     errors.append(e)
 
         except SessionException:
-            msg = "listing of iRODS directory {} failed".format(dir)
-            logger.debug(msg)
-            errors.append(msg)
-            if raise_exceptions:
+            msg = "check_irods_files: listing of iRODS directory {} failed".format(dir)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.error(msg)
+            if return_errors:
+                errors.append(msg)
+            if stop_on_error:
                 raise ValidationError(msg)
 
-        return errors
+        return errors  # empty unless return_errors=True
 
 
 def get_path(instance, filename, folder=None):
