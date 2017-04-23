@@ -4333,9 +4333,10 @@ div.fb-upload-caption {
 	padding: 8px;
 	border: 1px solid #DDD;
 	border-top: 0;
-    background: #fafafa;
-    color: #555;
+	background: #fafafa;
+	color: #555;
 	margin-bottom: 20px;
+	padding-bottom: 20px;
 }
 
 div.fb-upload-caption a {
