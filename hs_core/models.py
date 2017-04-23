@@ -1783,10 +1783,11 @@ class AbstractResource(ResourcePermissionsMixin):
         logger = logging.getLogger(__name__)
         istorage = self.get_irods_storage()
         errors = []
+        ecount = 0
 
         # skip federated resources if not configured to handle these
         if self.is_federated and not settings.REMOTE_USE_IRODS:
-            msg = "check_irods_files: skipping checking federated resource {}"\
+            msg = "check_irods_files: skipping check of federated resource {}"\
                 .format(self.short_id)
             if echo_errors:
                 print(msg)
@@ -1798,6 +1799,7 @@ class AbstractResource(ResourcePermissionsMixin):
             # Step 1: does every file here refer to an existing file in iRODS?
             for f in self.files.all():
                 if not istorage.exists(f.storage_path):
+                    ecount += 1
                     msg = "check_irods_files: django file {} does not exist in iRODS"\
                         .format(f.storage_path)
                     if echo_errors:
@@ -1810,15 +1812,65 @@ class AbstractResource(ResourcePermissionsMixin):
                         raise ValidationError(msg)
 
             # Step 2: does every iRODS file correspond to a record in files?
-            error2 = self.__check_irods_directory(self.file_path, logger,
-                                                  stop_on_error=stop_on_error,
-                                                  log_errors=log_errors,
-                                                  echo_errors=echo_errors,
-                                                  return_errors=return_errors)
-            for e in error2:
-                errors.append(e)
+            error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
+                                                           stop_on_error=stop_on_error,
+                                                           log_errors=log_errors,
+                                                           echo_errors=echo_errors,
+                                                           return_errors=return_errors)
+            errors.extend(error2)
+            ecount += ecount2
 
-        return errors  # empty unless return_errors=True
+            # finally, check whether the public flag agrees with ours
+            django_public = self.raccess.public
+            try:
+                irods_public = istorage.getAVU(self.root_path, 'isPublic')
+                if irods_public is None:
+                    irods_public = False
+                else:
+                    irods_public = irods_public.lower() == 'true'
+                msg = ''
+                if irods_public != django_public:
+                    ecount += 1
+                    if irods_public:  # and not django_public
+                        msg = "check_irods_files: resource {} public in irods, private in Django"\
+                            .format(self.short_id)
+                    else:
+                        msg = "check_irods_files: resource {} private in irods, public in Django"\
+                            .format(self.short_id)
+                    if msg != '':
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+
+            except SessionException:
+                msg = "check_irods_files: resource {} has no 'isPublic' attribute"\
+                    .format(self.short_id)
+                ecount += 1
+                if log_errors:
+                    logger.error(msg)
+                if echo_errors:
+                    print(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
+                    raise ValidationError(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+
+        return errors, ecount  # empty unless return_errors=True
 
     def __check_irods_directory(self, dir, logger,
                                 stop_on_error=False, log_errors=True,
@@ -1833,6 +1885,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
         """
         errors = []
+        ecount = 0
         istorage = self.get_irods_storage()
         try:
 
@@ -1844,6 +1897,7 @@ class AbstractResource(ResourcePermissionsMixin):
                     if f.storage_path == fullpath:
                         found = True
                 if not found:
+                    ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
                     if echo_errors:
@@ -1856,15 +1910,16 @@ class AbstractResource(ResourcePermissionsMixin):
                         raise ValidationError(msg)
 
             for dname in listing[0]:  # directories
-                error2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
-                                                      stop_on_error=stop_on_error,
-                                                      echo_errors=echo_errors,
-                                                      log_errors=log_errors,
-                                                      return_errors=return_errors)
-                for e in error2:
-                    errors.append(e)
+                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                               stop_on_error=stop_on_error,
+                                                               echo_errors=echo_errors,
+                                                               log_errors=log_errors,
+                                                               return_errors=return_errors)
+                errors.extend(error2)
+                ecount += ecount2
 
         except SessionException:
+            ecount += 1
             msg = "check_irods_files: listing of iRODS directory {} failed".format(dir)
             if echo_errors:
                 print(msg)
@@ -1875,7 +1930,7 @@ class AbstractResource(ResourcePermissionsMixin):
             if stop_on_error:
                 raise ValidationError(msg)
 
-        return errors  # empty unless return_errors=True
+        return errors, ecount  # empty unless return_errors=True
 
 
 def get_path(instance, filename, folder=None):

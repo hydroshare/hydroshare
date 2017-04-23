@@ -111,6 +111,16 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         with self.assertRaises(ValidationError):
             self.res.check_irods_files(stop_on_error=True)
 
+        # now don't raise exception and read error
+        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False)
+
+        self.assertTrue(errors[0].endswith(
+             'data/contents/fuzz.txt does not exist in iRODS'))
+        self.assertTrue(errors[1].endswith(
+            'data/contents/file1.txt in iRODs does not exist in Django'))
+        self.assertTrue(errors[2].endswith(
+            "type is GenericResource, title is 'My Test Resource'"))
+
         # TODO: how to eliminate this kind of error
         # dumbpath = 'x' + shortpath
         # dumbpath = self.res.short_id + "file1.txt"
@@ -181,6 +191,16 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # should raise exception
         with self.assertRaises(ValidationError):
             self.res.check_irods_files(stop_on_error=True)
+
+        # now don't raise exception and read error
+        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False)
+
+        self.assertTrue(errors[0].endswith(
+             'data/contents/fuzz.txt does not exist in iRODS'))
+        self.assertTrue(errors[1].endswith(
+            'data/contents/file1.txt in iRODs does not exist in Django'))
+        self.assertTrue(errors[2].endswith(
+            "type is GenericResource, title is 'My Test Resource'"))
 
         # TODO: how to eliminate this particular error.
         # dumbpath = 'x' + shortpath
@@ -360,6 +380,16 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         # should raise exception
         with self.assertRaises(ValidationError):
             self.res.check_irods_files(stop_on_error=True)
+
+        # now don't raise exception and read error
+        errors, ecount = self.res.check_irods_files(return_errors=True, log_errors=False)
+
+        self.assertTrue(errors[0].endswith(
+             'data/contents/fuzz.txt does not exist in iRODS'))
+        self.assertTrue(errors[1].endswith(
+            'data/contents/file1.txt in iRODs does not exist in Django'))
+        self.assertTrue(errors[2].endswith(
+            "type is GenericResource, title is 'My Test Resource'"))
 
         # delete resources to clean up
         hydroshare.delete_resource(self.res.short_id)
