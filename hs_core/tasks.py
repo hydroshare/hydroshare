@@ -260,5 +260,5 @@ def check_irods_files():
     This logs ERROR messages for every problem it finds
     """
     for r in BaseResource.objects.all():
-        r.check_irods_files(log_errors=True, echo_errors=False, 
+        r.check_irods_files(log_errors=True, echo_errors=False,
                             stop_on_error=False, return_errors=False)
