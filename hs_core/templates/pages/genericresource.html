@@ -158,14 +158,15 @@
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
                 <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
-                        <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
-                            data-target="#create-folder-dialog">
-                            <span class="fa fa-folder icon-blue"></span>
-                            <span>New Folder</span>
-                        </li>
-
-                        <li role="separator" class="divider"></li>
+                    {% if page.perms.change and metadata_form %}
+                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                            <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
+                                data-target="#create-folder-dialog">
+                                <span class="fa fa-folder icon-blue"></span>
+                                <span>New Folder</span>
+                            </li>
+                            <li role="separator" class="divider"></li>
+                        {% endif %}
                     {% endif %}
 
                     <li data-menu-name="refresh">
@@ -234,7 +235,7 @@
                                 <div id="fb-inner-controls">
                                     <div id="fb-inner-buttons">
                                         <div class="row">
-                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                             <div class="col-xs-6 col-sm-3 col-md-3">
                                                 <button id="fb-move-back"
                                                         class="btn btn-default fb-control-round disabled"
@@ -313,7 +314,7 @@
                                         <div class="row">
                                             <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                 {% if page.perms.change and metadata_form %}
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
+                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-create-folder" class="fb-space-right disabled"
                                                                 data-toggle="modal"
                                                                 data-target="#create-folder-dialog"
