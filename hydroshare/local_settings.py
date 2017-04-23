@@ -179,3 +179,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
+
+TIME_ZONE = "Etc/UTC"

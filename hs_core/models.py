@@ -2357,6 +2357,34 @@ class ResourceFile(models.Model):
 
     @property
     def url(self):
+        """
+        return the URL of the file contained in this ResourceFile.
+
+        A GET of this URL simply returns the file. This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.resource.short_id,
+                                  'data', 'contents', self.short_path)
+
+    @property
+    def irods_url(self):
+        """
+        Return the iRODS URL of the file
+
+        This is a direct link and independent of the Django path in ResourceFile.url
+        """
         if self.resource_file:
             return self.resource_file.url
         elif self.fed_resource_file:
@@ -2752,6 +2780,16 @@ class CoreMetaData(models.Model):
                 'Relation',
                 'Publisher',
                 'FundingAgency']
+
+    def set_dirty(self, flag):
+        """
+        Subclasses that have the attribute to track whether metadata object is dirty
+        should override this method to allow setting that attribute
+
+        :param flag: a boolean value
+        :return:
+        """
+        pass
 
     def has_all_required_elements(self):
         # this method needs to be overriden by any subclass of this class
