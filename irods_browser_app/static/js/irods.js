@@ -1,5 +1,5 @@
 $('#btn-select-irods-file').on('click',function(event) {
-    $('#res_type').val($('#resource-type').val());
+    $('#res_type').val($("#form-resource-type").val());
     $('#file_struct').children().remove();
     $('.ajax-loader').hide();
     var store = '';

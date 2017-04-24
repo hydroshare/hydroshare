@@ -110,6 +110,77 @@ class IconBox(Orderable):
         help_text="Optional, if provided clicking the box will go here.")
 
 
+class QuotaMessage(models.Model):
+    # warning_content_prepend prepends the content to form a warning message to be emailed to the
+    # user and displayed when the user is logged in; grace_period_cotent_prepend prepends the
+    # content when over quota within grace period and less than 125% of hard limit quota;
+    # enforce_content_prepend prepends the content to form an enforcement message to inform users
+    # after grace period or when they are over hard limit quota
+    warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
+                                                       '{allocated}{unit} in {zone} zone. You '
+                                                       'currently have resources that consume '
+                                                       '{used}{unit}, {percent}% of your quota. '
+                                                       'Once your quota reaches 100% you will no '
+                                                       'longer be able to create new resources in '
+                                                       'HydroShare. ')
+    grace_period_content_prepend = models.TextField(default='You have exceeded your HydroShare '
+                                                            'quota. Your quota for HydroShare '
+                                                            'resources is {allocated}{unit} in '
+                                                            '{zone} zone. You currently have '
+                                                            'resources that consume {used}{unit}, '
+                                                            '{percent}% of your quota. You have a '
+                                                            'grace period until {cut_off_date} to '
+                                                            'reduce your use to below your quota, '
+                                                            'or to acquire additional quota, after '
+                                                            'which you will no longer be able to '
+                                                            'create new resources in HydroShare. ')
+    enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
+                                                       'was refused because you have exceeded your '
+                                                       'quota. Your quota for HydroShare resources '
+                                                       'is {allocated}{unit} in {zone} zone. You '
+                                                       'currently have resources that consume '
+                                                       '{used}{unit}, {percent}% of your quota. ')
+    content = models.TextField(default='To request additional quota, please contact '
+                                       'support@hydroshare.org. We will try to accommodate '
+                                       'reasonable requests for additional quota. If you have a '
+                                       'large quota request you may need to contribute toward the '
+                                       'costs of providing the additional space you need. See '
+                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'quota/ for more information about the quota policy.')
+    # quota soft limit percent value for starting to show quota usage warning. Default is 80%
+    soft_limit_percent = models.IntegerField(default=80)
+    # quota hard limit percent value for hard quota enforcement. Default is 125%
+    hard_limit_percent = models.IntegerField(default=125)
+    # grace period, default is 7 days
+    grace_period = models.IntegerField(default=7)
+
+
+class UserQuota(models.Model):
+    # ForeignKey relationship makes it possible to associate multiple UserQuota models to
+    # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
+    # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
+    # categorized as hydroshare_internal in zone field in UserQuota model, however,
+    # another UserQuota model instance could be defined in a third-party federated zone as needed.
+    user = models.ForeignKey(User,
+                             editable=False,
+                             null=False,
+                             on_delete=models.CASCADE,
+                             related_name='quotas',
+                             related_query_name='quotas')
+
+    allocated_value = models.BigIntegerField(default=20)
+    used_value = models.BigIntegerField(default=0)
+    unit = models.CharField(max_length=10, default="GB")
+    zone = models.CharField(max_length=100, default="hydroshare_internal")
+    # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
+    # soft quota limit and thus grace period has not started. When grace period is 0, quota
+    # enforcement takes place
+    remaining_grace_period = models.IntegerField(default=-1)
+    class Meta:
+        verbose_name = _("User quota")
+        verbose_name_plural = _("User quotas")
+        unique_together = ('user', 'zone')
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)

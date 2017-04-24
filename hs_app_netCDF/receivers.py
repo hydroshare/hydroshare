@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
-    pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
+    pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update, \
+    post_add_files_to_resource, post_create_resource
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
 
@@ -25,7 +26,10 @@ def netcdf_pre_create_resource(sender, **kwargs):
     files = kwargs['files']
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     file_selected = False
     in_file_name = ''
@@ -34,9 +38,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
         nc_file_name = os.path.splitext(files[0].name)[0]
-    elif fed_res_fnames:
-        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        nc_file_name = os.path.splitext(os.path.basename(source_names[0]))[0]
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -61,14 +65,25 @@ def netcdf_pre_create_resource(sender, **kwargs):
             validate_files_dict['message'] = 'Please check if the uploaded file ' \
                                              'is in valid NetCDF format.'
 
-        if fed_res_fnames and in_file_name:
+        if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
+
+
+@receiver(post_create_resource, sender=NetcdfResource)
+def netcdf_post_create_resource(sender, **kwargs):
+    metadata = kwargs['resource'].metadata
+    metadata.is_dirty = False
+    metadata.save()
 
 
 # receiver used after user clicks on "delete file" for existing netcdf file
 @receiver(pre_delete_file_from_resource, sender=NetcdfResource)
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
+    metadata = nc_res.metadata
+    metadata.is_dirty = False
+    metadata.save()
+
     del_file = kwargs['file']
     del_file_ext = utils.get_resource_file_name_and_extension(del_file)[2]
 
@@ -102,7 +117,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
 
     if len(files) > 1:
         # file number validation
@@ -116,9 +134,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
         nc_file_name = os.path.splitext(files[0].name)[0]
-    elif fed_res_fnames:
-        nc_file_name = os.path.splitext(os.path.basename(fed_res_fnames[0]))[0]
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+    elif source_names:
+        nc_file_name = os.path.splitext(os.path.basename(source_names[0]))[0]
+        ref_tmpfiles = utils.get_fed_zone_files(source_names)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -255,8 +273,43 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             validate_files_dict['message'] = 'Please check if the uploaded file is in ' \
                                              'valid NetCDF format.'
 
-        if fed_res_fnames and in_file_name:
+        if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
+
+
+@receiver(post_add_files_to_resource, sender=NetcdfResource)
+def netcdf_post_add_files_to_resource(sender, **kwargs):
+    resource = kwargs['resource']
+    metadata = resource.metadata
+
+    for f in resource.files.all():
+        if f.extension == ".txt":
+            if f.resource_file:
+                nc_text = f.resource_file.read()
+            else:
+                nc_text = f.fed_resource_file.read()
+            break
+
+    if 'title = ' not in nc_text and metadata.title.value != 'Untitled resource':
+        metadata.is_dirty = True
+    elif 'summary = ' not in nc_text and metadata.description:
+        metadata.is_dirty = True
+    elif 'keywords' not in nc_text and metadata.subjects.all():
+        metadata.is_dirty = True
+    elif 'contributor_name =' not in nc_text and metadata.contributors.all():
+        metadata.is_dirty = True
+    elif 'creator_name =' not in nc_text and metadata.creators.all():
+        metadata.is_dirty = True
+    elif 'license =' not in nc_text and metadata.rights:
+        metadata.is_dirty = True
+    elif 'references =' not in nc_text and metadata.relations.all().filter(type='cites'):
+        metadata.is_dirty = True
+    elif 'source =' not in nc_text and metadata.sources.all():
+        metadata.is_dirty = True
+    else:
+        metadata.is_dirty = False
+
+    metadata.save()
 
 
 @receiver(pre_metadata_element_create, sender=NetcdfResource)

@@ -63,8 +63,10 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
-        url = hydroshare.utils.current_site_url() + f.resource_file.url
-        fsize = f.resource_file.size
+        site_url = hydroshare.utils.current_site_url()
+        url = site_url + f.url
+        fsize = f.size
+        # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
             ftype = mimetype[0]
@@ -1067,10 +1069,13 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
+        folder = request.POST.get('folder', None)
         try:
             hydroshare.utils.resource_file_add_pre_process(resource=resource,
                                                            files=[resource_files[0]],
-                                                           user=request.user, extract_metadata=True)
+                                                           user=request.user,
+                                                           folder=folder,
+                                                           extract_metadata=True)
 
         except (hydroshare.utils.ResourceFileSizeException,
                 hydroshare.utils.ResourceFileValidationException, Exception) as ex:
@@ -1078,7 +1083,6 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             raise ValidationError(detail=error_msg)
 
         try:
-            folder = request.POST.get('folder', None)
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
                                                                           user=request.user,

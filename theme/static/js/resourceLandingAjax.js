@@ -42,7 +42,6 @@ function label_ajax_submit() {
     return false;
 }
 
-
 function shareable_ajax_submit(event) {
     var form = $(this).closest("form");
     var datastring = form.serialize();
@@ -50,7 +49,6 @@ function shareable_ajax_submit(event) {
     var element = $(this);
     var action = $(this).closest("form").find("input[name='t']").val();
     element.attr("disabled", true);
-
 
     $.ajax({
         type: "POST",
@@ -128,6 +126,95 @@ function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permissi
     //don't submit the form
     return false;
 }
+
+function undo_share_ajax_submit(form_id) {
+    $form = $('#' + form_id);
+    var datastring = $form.serialize();
+    var url = $form.attr('action');
+    setPointerEvents(false);
+    $form.parent().closest("tr").addClass("loading");
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+            var json_response;
+            var divInvite = $("#div-invite-people");
+
+            try {
+                json_response = JSON.parse(result);
+            }
+            catch (err) {
+                console.log(err.message);
+                // Remove previous alerts
+                divInvite.find(".label-danger").remove();
+
+                // Append new error message
+                divInvite.append("<span class='label label-danger'>" +
+                    "<strong>Error: </strong>Failed to undo action.</span>");
+
+                $form.parent().closest("tr").removeClass("loading");
+                setPointerEvents(true);
+                return;
+            }
+
+            if (json_response.status == "success") {
+                // Set the new permission level in the interface
+                var userRoles = $form.closest("tr").find(".user-roles");
+
+                userRoles.find("li").removeClass("active");
+
+                if (json_response.undo_user_privilege == "view" || json_response.undo_group_privilege == "view") {
+                    userRoles.find(".dropdown-toggle").text("Can view");
+                    userRoles.find("li[data-access-type='" + "Can view"
+                        + "']").addClass("active");
+                }
+                else if (json_response.undo_user_privilege == "change" || json_response.undo_group_privilege == "change") {
+                    userRoles.find(".dropdown-toggle").text("Can edit");
+                    userRoles.find("li[data-access-type='" + "Can edit"
+                        + "']").addClass("active");
+                }
+                else if (json_response.undo_user_privilege == "owner" || json_response.undo_group_privilege == "owner") {
+                    userRoles.find(".dropdown-toggle").text("Is owner");
+                    userRoles.find("li[data-access-type='" + "Is owner"
+                        + "']").addClass("active");
+                }
+                else {
+                    // The item has no other permission. Remove it.
+                    $form.parent().closest("tr").remove();
+                    setPointerEvents(true);
+                    return;
+                }
+
+                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
+                $(".role-dropdown").removeClass("open");
+                $form.toggleClass("hidden", true);
+            }
+            else {
+                // An error occurred
+                divInvite.find(".label-danger").remove(); // Remove previous alerts
+
+                divInvite.append("<span class='label label-danger'><strong>Error: </strong>"
+                    + json_response.message + "</span>");
+
+                $form.parent().closest("tr").removeClass("loading");
+            }
+
+            $form.parent().closest("tr").removeClass("loading");
+            setPointerEvents(true);
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+            $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
+            setPointerEvents(true);
+        }
+    });
+    //don't submit the form
+    return false;
+}
+
 function showWaitDialog(){
     // display wait for the process to complete dialog
     return $("#wait-to-complete").dialog({
@@ -209,24 +296,43 @@ function change_share_permission_ajax_submit(form_id) {
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
             json_response = JSON.parse(result);
 
-            if (json_response.status == "success") {
-                $form.parent().closest(".user-roles").find(".dropdown-toggle").text($form.attr("data-access-type"));
-                $form.parent().closest(".user-roles").find(".dropdown-toggle").append(" <span class='caret'></span>");
-                $form.parent().closest(".user-roles").find("li").removeClass("active");
+            try {
+                json_response = JSON.parse(result);
+            }
+            catch (err) {
+                console.log(err.message);
+                // Remove previous alerts
+                $("#div-invite-people").find(".label-danger").remove();
 
-                $form.parent().closest(".user-roles").find("li[data-access-type='" + $form.attr("data-access-type") + "']").addClass("active");
+                // Append new error message
+                $("#div-invite-people").append("<span class='label label-danger'>" +
+                    "<strong>Error: </strong>Failed to change permission.</span>");
+
+                $form.parent().closest("tr").removeClass("loading");
+                setPointerEvents(true);
+                return;
+            }
+
+            var userRoles = $form.parent().closest(".user-roles");
+
+            if (json_response.status == "success") {
+                userRoles.find(".dropdown-toggle").text($form.attr("data-access-type"));
+                userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
+                userRoles.find("li").removeClass("active");
+
+                userRoles.find("li[data-access-type='" + $form.attr("data-access-type")
+                    + "']").addClass("active");
                 $(".role-dropdown").removeClass("open");
-                $form.parent().closest(".user-roles").find("li").removeClass("loading");
+
+                $form.closest("tr").find(".undo-share-form").toggleClass("hidden", false);
 
                 updateActionsState(json_response.current_user_privilege);
-
-                setPointerEvents(true);
             }
             else if (json_response.status == "error") {
                 $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.error_msg + "</span>");
-                $form.parent().closest(".user-roles").find("li").removeClass("loading");
-                setPointerEvents(true);
             }
+            userRoles.find("li").removeClass("loading");
+            setPointerEvents(true);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
@@ -281,35 +387,46 @@ function share_resource_ajax_submit(form_id) {
 
                 // Form actions
                 var unshareUrl;
-                if (shareType == "user"){
-                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                var undoUrl;
+                if (shareType == "user") {
+                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user")
+                        + share_with + "/";
+                    undoUrl = rowTemplate.find(".undo-share-form").attr("action") + share_with + "/";
                 }
                 else {
-                    unshareUrl = $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group") + share_with + "/";
+                    unshareUrl =
+                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-group")
+                        + share_with + "/";
+
+                    undoUrl = rowTemplate.find(".undo-share-form").attr("action")
+                            .replace("undo-share-resource-with-user", "undo-share-resource-with-group")
+                        + share_with + "/";
                 }
 
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
 
-
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
-                rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick", "unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
-                // Set form urls, ids, and onclick methods
+
+                rowTemplate.find(".undo-share-form").attr('action', undoUrl);
+                rowTemplate.find(".undo-share-form").attr('id', 'form-undo-share-' + share_with);
+
+                // Set form urls, ids
                 rowTemplate.find(".share-form-view").attr('action', viewUrl);
                 rowTemplate.find(".share-form-view").attr("id", "share-view-" + share_with);
                 rowTemplate.find(".share-form-view").attr("data-access-type", "Can view");
-                rowTemplate.find(".share-form-view a").attr("onclick", "change_share_permission_ajax_submit('share-view-" + share_with + "')");
+                rowTemplate.find(".share-form-view a").attr("data-arg", "share-view-" + share_with);
                 rowTemplate.find(".share-form-edit").attr('action', changeUrl);
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
-                rowTemplate.find(".share-form-edit a").attr("onclick", "change_share_permission_ajax_submit('share-edit-" + share_with + "')");
+                rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
                     rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                    rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                    rowTemplate.find(".share-form-owner a").attr("data-arg", "share-owner-" + share_with);
                 }
                 else {
                     rowTemplate.find(".share-form-owner").parent().remove();
@@ -325,6 +442,7 @@ function share_resource_ajax_submit(form_id) {
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
+
                 if (shareType == "user") {
                     rowTemplate.find("span[data-col='user-name']").text(json_response.username);
                 }
@@ -373,7 +491,6 @@ function share_resource_ajax_submit(form_id) {
             $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + errorThrown + "</span>");
             setPointerEvents(true);
         }
-
     });
     //don't submit the form
     return false;
@@ -404,8 +521,7 @@ function metadata_update_ajax_submit(form_id){
         dataType: 'html',
         data: datastring,
         async: flagAsync,
-        success: function(result)
-        {
+        success: function(result) {
             /* The div contains now the updated form */
             //$('#' + form_id).html(result);
             json_response = JSON.parse(result);
@@ -415,6 +531,13 @@ function metadata_update_ajax_submit(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
+
+                // show update netcdf resource
+                if (resourceType === 'Multidimensional (NetCDF)' &&
+                    json_response.is_dirty) {
+                    $("#netcdf-file-update").show();
+                }
+
                 // start timeseries resource specific DOM manipulation
                 if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
@@ -638,6 +761,17 @@ function filetype_keywords_update_ajax_submit() {
                     $("#lst-tags-filetype").append(li);
                     $(".icon-remove").click(onRemoveKeywordFileType);
                 }
+                // Refresh keywords field for the resource
+                var resKeywords = json_response.resource_keywords;
+                $("#lst-tags").empty();
+                for (var i = 0; i < resKeywords.length; i++) {
+                    if (resKeywords[i] != "") {
+                        var li = $("<li class='tag'><span></span></li>");
+                        li.find('span').text(resKeywords[i]);
+                        li.append('&nbsp;<a><span class="glyphicon glyphicon-remove-circle icon-remove"></span></a>')
+                        $("#lst-tags").append(li);
+                    }
+                }
                 // show update netcdf file update option for NetCDFLogicalFile
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
@@ -702,7 +836,7 @@ function update_netcdf_file_ajax_submit() {
 
 function get_user_info_ajax_submit(url, obj) {
     var is_group = false;
-    var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
+    var entry = $(obj).closest("div[data-hs-user-type]").find("#id_user-deck > .hilight");
     if (entry.length < 1) {
         entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
         is_group = true;
@@ -945,6 +1079,7 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         }
     });
 }
+
 function addFileTypeExtraMetadata(){
     $form = $('#add-keyvalue-filetype-metadata');
     var url = $form.attr('action');
@@ -1157,6 +1292,7 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
+        $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
@@ -1199,35 +1335,36 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
 // updates the UI spatial coverage elements
 function updateResourceSpatialCoverage(spatialCoverage){
     $("#spatial-coverage-type").val(spatialCoverage.type);
-        if (spatialCoverage.type === 'point'){
-            $("#id_type_2").attr('checked', 'checked');
-            $("#id_north").val(spatialCoverage.north);
-            $("#id_east").val(spatialCoverage.east);
-            $("#div_id_north").show();
-            $("#div_id_east").show();
-            $("#div_id_elevation").show();
-            $("#div_id_northlimit").hide();
-            $("#div_id_eastlimit").hide();
-            $("#div_id_southlimit").hide();
-            $("#div_id_westlimit").hide();
-            $("#div_id_uplimit").hide();
-            $("#div_id_downlimit").hide();
-        }
-        else { //coverage type is 'box'
-            $("#id_type_1").attr('checked', 'checked');
-            $("#id_eastlimit").val(spatialCoverage.eastlimit);
-            $("#id_northlimit").val(spatialCoverage.northlimit);
-            $("#id_westlimit").val(spatialCoverage.westlimit);
-            $("#id_southlimit").val(spatialCoverage.southlimit);
-            $("#div_id_north").hide();
-            $("#div_id_east").hide();
-            $("#div_id_elevation").hide();
-            $("#div_id_northlimit").show();
-            $("#div_id_eastlimit").show();
-            $("#div_id_southlimit").show();
-            $("#div_id_westlimit").show();
-            $("#div_id_uplimit").show();
-            $("#div_id_downlimit").show();
+
+    if (spatialCoverage.type === 'point') {
+        $("#id_type_2").attr('checked', 'checked');
+        $("#id_north").val(spatialCoverage.north);
+        $("#id_east").val(spatialCoverage.east);
+        $("#div_id_north").show();
+        $("#div_id_east").show();
+        $("#div_id_elevation").show();
+        $("#div_id_northlimit").hide();
+        $("#div_id_eastlimit").hide();
+        $("#div_id_southlimit").hide();
+        $("#div_id_westlimit").hide();
+        $("#div_id_uplimit").hide();
+        $("#div_id_downlimit").hide();
+    }
+    else { //coverage type is 'box'
+        $("#id_type_1").attr('checked', 'checked');
+        $("#id_eastlimit").val(spatialCoverage.eastlimit);
+        $("#id_northlimit").val(spatialCoverage.northlimit);
+        $("#id_westlimit").val(spatialCoverage.westlimit);
+        $("#id_southlimit").val(spatialCoverage.southlimit);
+        $("#div_id_north").hide();
+        $("#div_id_east").hide();
+        $("#div_id_elevation").hide();
+        $("#div_id_northlimit").show();
+        $("#div_id_eastlimit").show();
+        $("#div_id_southlimit").show();
+        $("#div_id_westlimit").show();
+        $("#div_id_uplimit").show();
+        $("#div_id_downlimit").show();
         }
 }
 
