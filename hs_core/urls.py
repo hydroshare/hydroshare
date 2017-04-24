@@ -113,6 +113,8 @@ urlpatterns = patterns('',
 
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$',
         views.add_files_to_resource, name='add_files_to_resource'),
+	url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/change-quota-holder/$', 
+		views.change_quota_holder, name='change_quota_holder'),	
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/add-metadata/$',
         views.add_metadata_element, name='add_metadata_element'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$',

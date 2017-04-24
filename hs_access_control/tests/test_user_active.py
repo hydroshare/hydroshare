@@ -155,9 +155,9 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
                 cat.uaccess.get_group_unshare_users(felines), [
                     cat, dog]))
         self.assertTrue(
+            # cat is the quota holder, so cannot be unshared
             is_equal_to_as_set(
-                cat.uaccess.get_resource_unshare_users(scratching), [
-                    cat, dog]))
+                cat.uaccess.get_resource_unshare_users(scratching), [dog]))
 
         self.assertTrue(
             is_equal_to_as_set(

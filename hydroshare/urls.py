@@ -9,8 +9,6 @@ from mezzanine.conf import settings
 
 import autocomplete_light
 
-from haystack.views import FacetedSearchView
-from hs_core.discovery_form import DiscoveryForm
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
@@ -48,6 +46,7 @@ urlpatterns = i18n_patterns("",
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
+    url(r'^accounts/login/$', theme.login, name='login'),
     url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
         theme.email_verify, name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),

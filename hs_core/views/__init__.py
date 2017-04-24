@@ -13,7 +13,8 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
+    HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -26,6 +27,8 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
+
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
@@ -84,6 +87,36 @@ def verify(request, *args, **kwargs):
         messages.error(request, "Your verification token was invalid.")
 
     return HttpResponseRedirect('/')
+
+
+def change_quota_holder(request, shortkey):
+    new_holder_uname = request.POST.get('new_holder_username', '')
+    if not new_holder_uname:
+        return HttpResponseBadRequest()
+    new_holder_u = User.objects.filter(username=new_holder_uname).first()
+    if not new_holder_u:
+        return HttpResponseBadRequest()
+
+    res = utils.get_resource_by_shortkey(shortkey)
+    try:
+        res.raccess.set_quota_holder(request.user, new_holder_u)
+
+        # send notification to the new quota holder
+        context = {
+            "request": request,
+            "user": request.user,
+            "new_quota_holder": new_holder_u,
+            "resource_uuid": res.short_id,
+        }
+        subject_template_name = "email/quota_holder_change_subject.txt"
+        subject = subject_template(subject_template_name, context)
+        send_mail_template(subject, "email/quota_holder_change",
+                           settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
+                           context=context)
+    except PermissionDenied:
+        return HttpResponseForbidden()
+
+    return HttpResponseRedirect(res.get_absolute_url())
 
 
 def add_files_to_resource(request, shortkey, *args, **kwargs):
@@ -1008,6 +1041,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
 

@@ -19,6 +19,7 @@ from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
+from django.core.validators import validate_email
 
 from mezzanine.conf import settings
 
@@ -29,6 +30,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+from theme.models import QuotaMessage
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,10 @@ class ResourceFileSizeException(Exception):
 
 
 class ResourceFileValidationException(Exception):
+    pass
+
+
+class QuotaException(Exception):
     pass
 
 
@@ -559,8 +565,6 @@ def set_dirty_bag_flag(resource):
 
 
 def _validate_email(email):
-    from django.core.validators import validate_email
-    from django.core.exceptions import ValidationError
     try:
         validate_email(email)
         return True
@@ -612,9 +616,11 @@ def raise_file_size_exception():
 
 def validate_resource_file_size(resource_files):
     from .resource import check_resource_files
-    valid = check_resource_files(resource_files)
+    valid, size = check_resource_files(resource_files)
     if not valid:
         raise_file_size_exception()
+    # if no exception, return the total size of all files
+    return size
 
 
 def validate_resource_file_type(resource_cls, files):
@@ -651,6 +657,61 @@ def validate_resource_file_count(resource_cls, files, resource=None):
                 raise ResourceFileValidationException(err_msg)
 
 
+def convert_file_size_to_unit(size, unit):
+    """
+    Convert file size to unit for quota comparison
+    :param size: in byte unit
+    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :return: the size converted to the pass-in unit
+    """
+    unit = unit.lower()
+    if unit not in ('kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+                              'or TB')
+
+    kbsize = size / 1000.0
+    if unit == 'kb':
+        return kbsize
+    mbsize = kbsize / 1000.0
+    if unit == 'mb':
+        return mbsize
+    gbsize = mbsize / 1000.0
+    if unit == 'gb':
+        return gbsize
+    tbsize = gbsize / 1000.0
+    if unit == 'tb':
+        return tbsize
+
+
+def validate_user_quota(user, size):
+    """
+    validate to make sure the user is not over quota with the newly added size
+    :param user: the user to be validated
+    :param size: the newly added file size to add on top of the user's used quota to be validated.
+                 size input parameter should be in byte unit
+    :return: raise exception for the over quota case
+    """
+    if user:
+        # validate it is within quota hard limit
+        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        if uq:
+            if not QuotaMessage.objects.exists():
+                QuotaMessage.objects.create()
+            qmsg = QuotaMessage.objects.first()
+            hard_limit = qmsg.hard_limit_percent
+            used_size = round(uq.used_value + convert_file_size_to_unit(size, uq.unit))
+            used_percent = round(used_size*100.0/uq.allocated_value)
+            if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=used_size,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=used_percent)
+                raise QuotaException(msg_str)
+
+
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), source_names=[], metadata=None,
                                 requesting_user=None, **kwargs):
@@ -668,10 +729,14 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
             resource_title = 'Untitled resource'
 
     resource_cls = check_resource_type(resource_type)
+    size = 0
     if len(files) > 0:
-        validate_resource_file_size(files)
+        size = validate_resource_file_size(files)
         validate_resource_file_count(resource_cls, files)
         validate_resource_file_type(resource_cls, files)
+
+    # validate it is within quota hard limit
+    validate_user_quota(requesting_user, size)
 
     if not metadata:
         metadata = []
@@ -811,9 +876,11 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     if __debug__:
         assert(isinstance(source_names, list))
     resource_cls = resource.__class__
-    validate_resource_file_size(files)
-    validate_resource_file_type(resource_cls, files)
-    validate_resource_file_count(resource_cls, files, resource)
+    if len(files) > 0:
+        size = validate_resource_file_size(files)
+        validate_user_quota(resource.raccess.get_quota_holder(), size)
+        validate_resource_file_type(resource_cls, files)
+        validate_resource_file_count(resource_cls, files, resource)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,

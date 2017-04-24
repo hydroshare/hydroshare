@@ -15,6 +15,7 @@ from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
+from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
 
 
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
@@ -110,6 +111,9 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+        self.assertEqual(new_res.raccess.get_quota_holder(), self.user,
+                         msg="The quota holder of the newly created resource is not the creator")
+
         if new_res:
             new_res.delete()
 
@@ -407,3 +411,17 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(res.files.all().count(), 2)
         if res:
             res.delete()
+
+    def test_create_resource_over_quota(self):
+        uquota = self.user.quotas.first()
+        # make user's quota over hard limit 125%
+        uquota.used_value = uquota.allocated_value * 1.3
+        uquota.save()
+        # create_resource should raise quota exception now that the creator user is over hard limit
+        with self.assertRaises(QuotaException):
+            resource_pre_create_actions(resource_type='GenericResource',
+                                        resource_title='My Test Resource',
+                                        page_redirect_url_key=None,
+                                        files=(self.file_one,),
+                                        metadata=None,
+                                        requesting_user=self.user,)

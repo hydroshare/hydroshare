@@ -10,6 +10,7 @@ from django.db.models import Q
 
 from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, Coverage
 from .utils import user_from_id, group_from_id, get_profile
+from theme.models import UserQuota
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
@@ -67,6 +68,9 @@ def create_account(
     user_access.save()
     user_labels = UserLabels(user=u)
     user_labels.save()
+    # create default UserQuota object for the new user
+    uq = UserQuota.objects.create(user=u)
+    uq.save()
     return u
 
 
