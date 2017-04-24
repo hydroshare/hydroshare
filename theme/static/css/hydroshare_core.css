@@ -975,63 +975,6 @@ li.account p{
 }
 
 
-#txt-abstract{
-    height: 155px;
-}
-
-span.remove{
-    position: absolute;
-    left: 0;
-    height: 100% !important;
-    background: #EEE;
-    top: 0;
-}
-
-.no-padding{
-    padding:0;
-}
-
-.icon-remove{
-    font-size: 17px;
-    top: 3px;
-    left: 6px;
-    color: rgb(217, 83, 79);
-    cursor:pointer;
-}
-
-.icon-add{
-    font-size: 17px;
-    top: 3px;
-    left: 1px;
-    color: #5cb85c;
-    cursor:pointer;
-}
-
-.icon-add:hover{
-    color: #47a447;
-}
-
-.icon-remove:hover{
-    color: rgb(168, 69, 66);
-}
-
-#panel-left{
-    padding-right:8px;
-    padding-left:0;
-    margin-bottom: 10px;
-}
-
-#panel-right{
-    padding-left:8px;
-    padding-right:0;
-    margin-bottom: 10px;
-}
-#add-keyword-wrapper{
-    width: 200px;
-    display: inline-flex;
-}
-
-
 #relatedResourcesTab{
     overflow:hidden;
 }
@@ -1102,13 +1045,13 @@ table.info-table {
 	padding-bottom: 8px;
 }
 
-#txt-title{
-    font-size: 27px;
-    height: auto;
+#txt-title {
+	font-size: 27px;
+	height: auto;
 }
 
-#txt-abstract{
-    height: 155px;
+#txt-abstract {
+	height: 155px;
 }
 
 span.remove {
@@ -1125,48 +1068,49 @@ span.remove {
 	margin-bottom: 8px;
 }
 
-.no-padding{
-    padding:0;
+.no-padding {
+	padding: 0;
 }
 
-.icon-remove{
-    font-size: 17px;
-    top: 3px;
-    left: 6px;
-    color: rgb(217, 83, 79);
-    cursor:pointer;
+.icon-remove {
+	font-size: 17px;
+	top: 3px;
+	left: 6px;
+	color: rgb(217, 83, 79);
+	cursor: pointer;
 }
 
-.icon-add{
-    font-size: 17px;
-    top: 3px;
-    left: 1px;
-    color: #5cb85c;
-    cursor:pointer;
+.icon-add {
+	font-size: 17px;
+	top: 3px;
+	left: 1px;
+	color: #5cb85c;
+	cursor: pointer;
 }
 
-.icon-add:hover{
-    color: #47a447;
+.icon-add:hover {
+	color: #47a447;
 }
 
-.icon-remove:hover{
-    color: rgb(168, 69, 66);
+.icon-remove:hover {
+	color: rgb(168, 69, 66);
 }
 
-#panel-left{
-    padding-right:8px;
-    padding-left:0;
-    margin-bottom: 10px;
+#panel-left {
+	padding-right: 8px;
+	padding-left: 0;
+	margin-bottom: 10px;
 }
 
-#panel-right{
-    padding-left:8px;
-    padding-right:0;
-    margin-bottom: 10px;
+#panel-right {
+	padding-left: 8px;
+	padding-right: 0;
+	margin-bottom: 10px;
 }
-#add-keyword-wrapper{
-    width: 200px;
-    display: inline-flex;
+
+#add-keyword-wrapper {
+	width: 200px;
+	display: inline-flex;
 }
 
 
@@ -1988,7 +1932,7 @@ td.user-roles .caret {
     border-top: 4px solid #428bca;
 }
 
-td.user-actions span {
+td.user-actions span, td.user-actions i {
     cursor: pointer;
 }
 
@@ -2068,6 +2012,7 @@ td.user-actions > span:hover {
 
 .user-roles li:not(.loading):not(.active) a:hover {
 	background-color: #DDD;
+	text-decoration: none;
 	-webkit-transition: background-color 200ms linear;
 	-moz-transition: background-color 200ms linear;
 	-o-transition: background-color 200ms linear;
@@ -2213,9 +2158,20 @@ button.loading {
 	}
 }
 
-.first-modal {
-	height: 500px;
+.access-table-wrapper {
+	min-height: 100px;
+	height: 250px;
 	overflow: auto;
+	resize: vertical;
+    border: 1px solid #DDD;
+    padding: 12px;
+    padding-bottom: 90px;
+    background: #f8f8f8;
+}
+
+table.table.access-table {
+    background: #FFF;
+    border: 1px solid #DDD;
 }
 
 .modal {
@@ -2685,6 +2641,10 @@ h4.title {
 
 #badge-modflow .badge {
 	background-color: #673ab7;
+}
+
+span.you-flag {
+    background: #2d9eb3;
 }
 
 .table-user-contributions .badge {

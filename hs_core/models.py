@@ -139,6 +139,21 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
+    for owner in owners:
+        owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+
+    for viewer in viewers:
+        viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+
+    for editor in editors:
+        editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
+
+    for view_grp in view_groups:
+        view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, view_grp)
+
+    for edit_grp in edit_groups:
+        edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, edit_grp)
+
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
     else:
