@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 try:
                     resource = BaseResource.objects.get(short_id=rid)
                 except BaseResource.DoesNotExist:
-                    msg = "Resource with id {} not found".format(rid)
+                    msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
 
                 print("LOOKING FOR ERRORS FOR RESOURCE {}".format(rid))

@@ -1847,9 +1847,9 @@ class AbstractResource(ResourcePermissionsMixin):
                         if stop_on_error:
                             raise ValidationError(msg)
 
-            except SessionException:
-                msg = "check_irods_files: resource {} has no 'isPublic' attribute"\
-                    .format(self.short_id)
+            except SessionException as ex:
+                msg = "cannot read isPublic attribute of {}: {}"\
+                    .format(self.short_id, ex.stderr)
                 ecount += 1
                 if log_errors:
                     logger.error(msg)

@@ -46,10 +46,6 @@ class TestResourceFileAPI(MockIRODSTestCaseMixin,
         super(TestResourceFileAPI, self).tearDown()
         self.test_file_1.close()
         os.remove(self.test_file_1.name)
-        # self.test_file_2.close()
-        # os.remove(self.test_file_2.name)
-        # self.test_file_3.close()
-        # os.remove(self.test_file_3.name)
 
     def test_unfederated_root_path_setting(self):
         """ an unfederated file in the root folder has the proper state after state changes """
