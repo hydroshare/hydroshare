@@ -131,7 +131,8 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         for meta_element in self.value:
             if meta_element == 'projection':
-                cov_value += '; projection_name={}'.format(self.value[meta_element])
+                if self.value[meta_element]:
+                    cov_value += '; projection_name={}'.format(self.value[meta_element])
 
         if self.projection_string_text:
             cov_value += '; projection_string={}'.format(self.projection_string_text)
