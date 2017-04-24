@@ -162,10 +162,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_is_replaced_by(self, obj):
         if hasattr(obj, 'metadata'):
-            if obj.metadata.relations.all().filter(type='isReplacedBy').exists():
-                return True
-            else:
-                return False
+            return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
         else:
             return False
 
