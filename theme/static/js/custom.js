@@ -149,4 +149,7 @@ $(document).ready(function () {
 	$(".btn-close-message").click(function() {
 		$(this).parent().parent().parent().parent().hide(400);
 	});
+
+	// Initialize tooltips
+	$('[data-toggle="tooltip"]').tooltip();
 });

@@ -139,6 +139,21 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
+    for owner in owners:
+        owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+
+    for viewer in viewers:
+        viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+
+    for editor in editors:
+        editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
+
+    for view_grp in view_groups:
+        view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, view_grp)
+
+    for edit_grp in edit_groups:
+        edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, edit_grp)
+
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
     else:
@@ -2342,6 +2357,34 @@ class ResourceFile(models.Model):
 
     @property
     def url(self):
+        """
+        return the URL of the file contained in this ResourceFile.
+
+        A GET of this URL simply returns the file. This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.resource.short_id,
+                                  'data', 'contents', self.short_path)
+
+    @property
+    def irods_url(self):
+        """
+        Return the iRODS URL of the file
+
+        This is a direct link and independent of the Django path in ResourceFile.url
+        """
         if self.resource_file:
             return self.resource_file.url
         elif self.fed_resource_file:
