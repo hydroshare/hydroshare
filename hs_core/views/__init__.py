@@ -987,14 +987,15 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    """ Create resource via REST API """
+    # Note: This view function must be called by ajax
+
+    ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-
-    resource_files = request.FILES.getlist('files')
-    source_names=[]
+    resource_files = request.FILES.values()
+    source_names = []
     irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower()=='true'
+    federated = request.POST.get("irods_federated").lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
@@ -1009,18 +1010,18 @@ def create_resource(request, *args, **kwargs):
             zone = request.POST.get("irods-zone")
             try:
                 upload_from_irods(username=user, password=password, host=host, port=port,
-                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
-                context = {'file_size_error': ex.message}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.message
+                return JsonResponse(ajax_response_data)
+
             except SessionException as ex:
-                context = {'resource_creation_error': ex.stderr}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.stderr
+                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
-
     try:
-        page_url_dict, res_title, metadata, fed_res_path = \
+        _, res_title, metadata, fed_res_path = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
                                                          resource_title=res_title,
@@ -1029,22 +1030,16 @@ def create_resource(request, *args, **kwargs):
                                                          requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
-        context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
-        context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except Exception as ex:
-        context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -1054,20 +1049,30 @@ def create_resource(request, *args, **kwargs):
             files=resource_files,
             source_names=source_names,
             # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
+            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
-                                           metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource,
+                                           user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
+        ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['file_upload_status'] = 'error'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
-    # go to resource landing page
-    return HttpResponseRedirect(resource.get_absolute_url())
+    if not ajax_response_data['message']:
+        if resource.files.all():
+            ajax_response_data['file_upload_status'] = 'success'
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+
+    return JsonResponse(ajax_response_data)
 
 
 @login_required

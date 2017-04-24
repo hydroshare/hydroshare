@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -56,8 +57,10 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
 
         response = create_resource(request)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        res_id = response.url.split('/')[2]
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        json_content = json.loads(response.content)
+        self.assertEqual(json_content['status'], 'success')
+        res_id = json_content['resource_url'].split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
         hydroshare.delete_resource(res_id)
         self.assertEqual(BaseResource.objects.count(), 0)
@@ -76,8 +79,11 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.add_session_to_request(request)
 
         response = create_resource(request)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        res_id = response.url.split('/')[2]
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        json_content = json.loads(response.content)
+        self.assertEqual(json_content['status'], 'success')
+        self.assertEqual(json_content['file_upload_status'], 'success')
+        res_id = json_content['resource_url'].split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
         self.assertEqual(ResourceFile.objects.count(), 1)
         hydroshare.delete_resource(res_id)
@@ -99,6 +105,6 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
 
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # this should take back to create_resource.html page
-        self.assertIn('<!doctype html>', response.content)
+        json_content = json.loads(response.content)
+        self.assertEqual(json_content['status'], 'error')
         self.assertEqual(BaseResource.objects.count(), 0)

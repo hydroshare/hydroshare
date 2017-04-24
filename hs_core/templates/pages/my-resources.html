@@ -121,27 +121,41 @@
                         </div>
                     </div>
                  </div>
+
                 <div class="col-sm-4 col-xs-12 pull-left">
                     <div id="resource-actions-container" class="noselect">
-                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
-                              data-toggle="dropdown" aria-expanded="false" title="Label"></span>
+                        <span data-toggle="tooltip" data-placement="bottom" title="Label">
+                            <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
+                                  data-toggle="dropdown" aria-expanded="false"></span>
 
-                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
-
-                        <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove" data-toggle="modal" data-target="#delete-multiple-resources-dialog" title="Delete"></span>
-
-                        <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
-                            <div class="panel-body" role="form">
-                                <strong>Label as:</strong>
-                                <ul class="list-group list-labels">
-                                    <li class="divider persist"></li>
-                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">
-                                        <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
-                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">
-                                        <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
-                                </ul>
+                            <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
+                                <div class="panel-body" role="form">
+                                    <strong>Label as:</strong>
+                                    <ul class="list-group list-labels">
+                                        <li class="divider persist"></li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalCreateLabel">
+                                            <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalManageLabels">
+                                            <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
+                        </span>
+
+
+
+                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
+                              data-placement="bottom" title="Favorite"></span>
+
+                        <span data-toggle="tooltip"
+                              data-placement="bottom" title="Delete">
+                            <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
+                                  data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
+                        </span>
+
+
                     </div>
                 </div>
             </div>
@@ -215,47 +229,61 @@
                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                 {% if res|resource_type == "Generic" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Raster" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Program Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Web App Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "HIS Referenced Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Script Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Collection Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Composite Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% endif %}
@@ -264,30 +292,35 @@
                                 <div class="access-icon-wrapper">
                                     {% if res.raccess.published %}
                                         <img src="{{ STATIC_URL }}img/published.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Published Resource" title="Published"/>
                                     {% elif res.raccess.public %}
                                         <img src="{{ STATIC_URL }}img/public.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Public Resource" title="Public"/>
                                     {% elif res.raccess.discoverable %}
                                         <img src="{{ STATIC_URL }}img/discoverable.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Discoverable Resource" title="Discoverable"/>
                                     {% else %}
                                         <img src="{{ STATIC_URL }}img/private.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Private Resource" title="Private"/>
                                     {% endif %}
 
                                     {% if res.raccess.published %}
                                         {% if "pending" in cm.doi or "failure" in cm.doi %}
                                             <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                 data-toggle="tooltip" data-placement="top"
                                                  title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
                                         {% endif %}
                                     {% else %}
                                         {% if res.raccess.shareable %}
                                             <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                                 title="Shareable"/>
+                                                 data-toggle="tooltip" data-placement="top" title="Shareable"/>
                                         {% else %}
                                             <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                                                 title="Not Shareable"/>
+                                                 data-toggle="tooltip" data-placement="top" title="Not Shareable"/>
                                         {% endif %}
                                     {% endif %}
                                 </div>
