@@ -400,7 +400,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
     all_file_removed = False
     del_res_fname = get_resource_file_name(del_file)
 
-    ori_file_info = res_obj.metadata.originalfileinfo.all().first()
+    ori_file_info = res_obj.metadata.originalfileinfo
     if ori_file_info.fileType == "SHP" or ori_file_info.fileType == "ZSHP":
         del_f_fullname = del_res_fname[del_res_fname.rfind('/')+1:].lower()
         del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
@@ -416,7 +416,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                     delete_resource_file_only(res_obj, f)
 
         elif del_f_ext == ".prj":
-            originalcoverage_obj = res_obj.metadata.originalcoverage.all().first()
+            originalcoverage_obj = res_obj.metadata.originalcoverage
             res_obj.metadata.update_element('OriginalCoverage',
                                             element_id=originalcoverage_obj.id,
                                             projection_string=UNKNOWN_STR,
@@ -432,10 +432,10 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                 res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,
                                                 filenameString=json.dumps(ori_fn_dict))
         else:
-            res_obj.metadata.originalfileinfo.all().delete()
-            res_obj.metadata.geometryinformation.all().delete()
-            res_obj.metadata.fieldinformation.all().delete()
-            res_obj.metadata.originalcoverage.all().delete()
+            res_obj.metadata.originalfileinfos.all().delete()
+            res_obj.metadata.geometryinformations.all().delete()
+            res_obj.metadata.fieldinformations.all().delete()
+            res_obj.metadata.originalcoverages.all().delete()
             res_obj.metadata.coverages.all().delete()
 
 
@@ -457,7 +457,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                          'either local disk or irods, not both.'
         return
 
-    ori_file_info = res_obj.metadata.originalfileinfo.all().first()
+    ori_file_info = res_obj.metadata.originalfileinfo
     some_new_files_added = True
 
     file_info_list = []  # [[full_name1, full_path1], [full_name2, full_path2], ...]
@@ -523,10 +523,10 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
             if validate_files_dict['are_files_valid']:
 
-                res_obj.metadata.originalfileinfo.all().delete()
-                res_obj.metadata.geometryinformation.all().delete()
-                res_obj.metadata.fieldinformation.all().delete()
-                res_obj.metadata.originalcoverage.all().delete()
+                res_obj.metadata.originalfileinfos.all().delete()
+                res_obj.metadata.geometryinformations.all().delete()
+                res_obj.metadata.fieldinformations.all().delete()
+                res_obj.metadata.originalcoverages.all().delete()
                 res_obj.metadata.coverages.all().delete()
 
                 tmp_dir = files_type['tmp_dir']
@@ -703,11 +703,11 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                         shutil.rmtree(source)
                 # parse the .shp file from that copy.
                 # TODO: why copy the files other than .shp? Are they accessed in parse_shp?
-                ori_file_info = resource.metadata.originalfileinfo.all().first()
+                ori_file_info = resource.metadata.originalfileinfo
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
 
                 parsed_md_dict = parse_shp(shp_full_path)
-                originalcoverage_obj = resource.metadata.originalcoverage.all().first()
+                originalcoverage_obj = resource.metadata.originalcoverage
                 if originalcoverage_obj:
                     resource.metadata.\
                         update_element('OriginalCoverage',

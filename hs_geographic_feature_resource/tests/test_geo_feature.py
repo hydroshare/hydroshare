@@ -351,30 +351,27 @@ class TestGeoFeature(TransactionTestCase):
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
 
         self.assertEqual(len(files), 5)
-        self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename,
+        self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo, None)
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.baseFilename,
                          "gis.osm_adminareas_v06")
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().fileCount, 5)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.fileCount, 5)
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.
                          fileType, "ZSHP")
-        self.assertEqual(self.resGeoFeature.metadata.fieldinformation.all().count(), 7)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
-                         first().featureCount, 87)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
-                         first().geometryType, "POLYGON")
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().datum,
-                         'WGS_1984')
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().eastlimit - 3.4520493) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().northlimit - 45.0466382) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().southlimit - 42.5732416) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().westlimit - (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().unit, 'Degree')
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().
-                         first().projection_name, 'GCS_WGS_1984')
+        self.assertEqual(self.resGeoFeature.metadata.fieldinformations.all().count(), 7)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.featureCount, 87)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.geometryType, "POLYGON")
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.datum, 'WGS_1984')
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.eastlimit - 3.4520493)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.northlimit - 45.0466382)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.southlimit - 42.5732416)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit - (-0.3263017))
+                        < self.allowance)
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
+                         'GCS_WGS_1984')
 
     def test_geofeature_pre_delete_file(self):
         # Example
@@ -435,8 +432,7 @@ class TestGeoFeature(TransactionTestCase):
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
                     self.assertNotEqual(del_f_ext, ".prj")
-                    originalcoverage_obj = self.resGeoFeature.metadata.\
-                        originalcoverage.all().first()
+                    originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage
                     self.assertEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
 
@@ -499,10 +495,10 @@ class TestGeoFeature(TransactionTestCase):
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
                     self.assertNotEqual(del_f_ext, ".prj")
-                    originalcoverage_obj = self.resGeoFeature.metadata.\
-                        originalcoverage.all().first()
+                    originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage
                     self.assertEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
+
         # add .prj
         add_files = []
         target = 'hs_geographic_feature_resource/' + \
@@ -515,7 +511,8 @@ class TestGeoFeature(TransactionTestCase):
                                                       resource=self.resGeoFeature, files=add_files,
                                                       validate_files={'are_files_valid': True,
                                                                       'message': ''})
-        originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
+        
+        originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
     def test_metadata_element_pre_create_and_update(self):

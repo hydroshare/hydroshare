@@ -113,9 +113,9 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
             except ObjectDoesNotExist:
                 continue
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().count(), 0)
-        self.assertEqual(self.resGeoFeature.metadata.fieldinformation.all().count(), 0)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().count(), 0)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformations.all().count(), 0)
+        self.assertEqual(self.resGeoFeature.metadata.fieldinformations.all().count(), 0)
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverages.all().count(), 0)
 
         # test metadata extraction with a valid file being added coming from user zone space
         res_add_files = []
@@ -130,30 +130,26 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
                                                    user=self.user,
                                                    source_names=[fed_test_add_file_full_path])
 
-        self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename,
+        self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo, None)
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.baseFilename,
                          "gis.osm_adminareas_v06")
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().fileCount, 5)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().
-                         fileType, "ZSHP")
-        self.assertEqual(self.resGeoFeature.metadata.fieldinformation.all().count(), 7)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
-                         first().featureCount, 87)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
-                         first().geometryType, "POLYGON")
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().datum,
-                         'WGS_1984')
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().eastlimit - 3.4520493) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().northlimit - 45.0466382) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().southlimit - 42.5732416) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
-                            all().first().westlimit - (-0.3263017)) < self.allowance)
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().unit, 'Degree')
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().
-                         first().projection_name, 'GCS_WGS_1984')
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.fileCount, 5)
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.fileType, "ZSHP")
+        self.assertEqual(self.resGeoFeature.metadata.fieldinformations.all().count(), 7)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.featureCount, 87)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.geometryType, "POLYGON")
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.datum, 'WGS_1984')
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.eastlimit - 3.4520493)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.northlimit - 45.0466382)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.southlimit - 42.5732416)
+                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit - (-0.3263017))
+                        < self.allowance)
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
+                         'GCS_WGS_1984')
         self.assertEqual(CoreMetaData.objects.all().count(), 1)
         # delete resource
         hydroshare.delete_resource(self.resGeoFeature.short_id)

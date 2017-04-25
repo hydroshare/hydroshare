@@ -9,7 +9,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 from lxml import etree
 
 
-# Create your models here.
 class OriginalFileInfo(AbstractMetaDataElement):
 
     term = 'OriginalFileInfo'
@@ -33,9 +32,7 @@ class OriginalFileInfo(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
-# Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
-
     term = 'OriginalCoverage'
 
     northlimit = models.FloatField(null=False, blank=False)
@@ -73,9 +70,7 @@ class GeometryInformation(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
-# Define the Geographic Feature
 class GeographicFeatureResource(BaseResource):
-
     objects = ResourceManager("GeographicFeatureResource")
 
     @property
@@ -93,11 +88,10 @@ class GeographicFeatureResource(BaseResource):
                 ".fbx", ".ain", ".aih", ".atx", ".ixs",
                 ".mxs")
 
-    # add resource-specific HS terms
     def get_hs_term_dict(self):
         # get existing hs_term_dict from base class
         hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()
-        geometryinformation = self.metadata.geometryinformation.all().first()
+        geometryinformation = self.metadata.geometryinformation
         if geometryinformation is not None:
             hs_term_dict["HS_GFR_FEATURE_COUNT"] = geometryinformation.featureCount
         else:
@@ -112,21 +106,32 @@ class GeographicFeatureResource(BaseResource):
 processor_for(GeographicFeatureResource)(resource_processor)
 
 
-# define the GeographicFeatureMetaData metadata
-class GeographicFeatureMetaData(CoreMetaData):
-    geometryinformation = GenericRelation(GeometryInformation)
-    fieldinformation = GenericRelation(FieldInformation)
-    originalcoverage = GenericRelation(OriginalCoverage)
-    originalfileinfo = GenericRelation(OriginalFileInfo)
+class GeographicFeatureMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
+    geometryinformations = GenericRelation(GeometryInformation)
+    fieldinformations = GenericRelation(FieldInformation)
+    originalcoverages = GenericRelation(OriginalCoverage)
+    originalfileinfos = GenericRelation(OriginalFileInfo)
+
+    class Meta:
+        abstract = True
 
     @property
-    def resource(self):
-        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
+    def geometryinformation(self):
+        return self.geometryinformations.all().first()
+
+    @property
+    def originalcoverage(self):
+        return self.originalcoverages.all().first()
+
+    @property
+    def originalfileinfo(self):
+        return self.originalfileinfos.all().first()
 
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
-        elements = super(GeographicFeatureMetaData, cls).get_supported_element_names()
+        elements = super(GeographicFeatureMetaDataMixin, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('FieldInformation')
         elements.append('OriginalCoverage')
@@ -140,19 +145,33 @@ class GeographicFeatureMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
-        missing_required_elements = super(GeographicFeatureMetaData, self).\
+        missing_required_elements = super(GeographicFeatureMetaDataMixin, self). \
             get_required_missing_elements()
         if not (self.coverages.all().filter(type='box').first() or
                 self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
-        if not self.originalcoverage.all().first():
+        if not self.originalcoverage:
             missing_required_elements.append('Spatial Reference')
-        if not self.geometryinformation.all().first():
+        if not self.geometryinformation:
             missing_required_elements.append('Geometry Information')
-        if not self.originalfileinfo.all().first():
+        if not self.originalfileinfo:
             missing_required_elements.append('Resource File Information')
 
         return missing_required_elements
+
+    def delete_all_elements(self):
+        super(GeographicFeatureMetaDataMixin, self).delete_all_elements()
+        self.geometryinformations.all().delete()
+        self.fieldinformations.all().delete()
+        self.originalcoverages.all().delete()
+        self.originalfileinfos.all().delete()
+
+
+class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
+
+    @property
+    def resource(self):
+        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
 
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
@@ -164,25 +183,25 @@ class GeographicFeatureMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        if self.originalfileinfo.all().first():
+        if self.originalfileinfo:
             originalfileinfo_fields = ['fileType', 'fileCount', 'baseFilename', 'filenameString']
             self.add_metadata_element_to_xml(container,
-                                             self.originalfileinfo.all().first(),
+                                             self.originalfileinfo,
                                              originalfileinfo_fields)
 
-        if self.geometryinformation.all().first():
+        if self.geometryinformation:
             geometryinformation_fields = ['geometryType', 'featureCount']
             self.add_metadata_element_to_xml(container,
-                                             self.geometryinformation.all().first(),
+                                             self.geometryinformation,
                                              geometryinformation_fields)
 
-        for field_info in self.fieldinformation.all():
+        for field_info in self.fieldinformations.all():
             field_info_fields = ['fieldName', 'fieldType',
                                  'fieldTypeCode', 'fieldWidth', 'fieldPrecision']
             self.add_metadata_element_to_xml(container, field_info, field_info_fields)
 
-        if self.originalcoverage.all().first():
-            ori_coverage = self.originalcoverage.all().first()
+        if self.originalcoverage:
+            ori_coverage = self.originalcoverage
             cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
@@ -201,10 +220,3 @@ class GeographicFeatureMetaData(CoreMetaData):
             rdf_coverage_value.text = cov_value
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
-    def delete_all_elements(self):
-        super(GeographicFeatureMetaData, self).delete_all_elements()
-        self.geometryinformation.all().delete()
-        self.fieldinformation.all().delete()
-        self.originalcoverage.all().delete()
-        self.originalfileinfo.all().delete()
