@@ -1,4 +1,6 @@
 import os
+import re
+import time
 from uuid import uuid4
 
 from django.contrib.auth.models import User, Group, Permission
@@ -15,7 +17,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.testing import MockIRODSTestCaseMixin
 
 
 def create_driver(platform='desktop', driver_name='phantomjs'):
@@ -36,7 +37,7 @@ def create_driver(platform='desktop', driver_name='phantomjs'):
         dcap = dict(desired_capabilities.DesiredCapabilities.PHANTOMJS)
         dcap["phantomjs.page.settings.userAgent"] = user_agent
         driver = webdriver.PhantomJS(desired_capabilities=dcap)
-        driver.implicitly_wait(10)
+        driver.implicitly_wait(15)
         driver.set_page_load_timeout(20)
     elif driver_name is 'firefox':
         profile = webdriver.FirefoxProfile()
@@ -67,7 +68,7 @@ def upload_file(driver, file_field, local_upload_path):
 
 
 class SeleniumTestsParentClass(object):
-    class MultiPlatformTests(MockIRODSTestCaseMixin, StaticLiveServerTestCase):
+    class MultiPlatformTests(StaticLiveServerTestCase):
         """
         Shared Mobile and Desktop test cases (all are run twice, so use sparingly)
         For single browser cases see desired browser specific classes below.
@@ -141,51 +142,24 @@ class SeleniumTestsParentClass(object):
                 resource_title = str(uuid4())
             upload_file_path = os.path.abspath(upload_file_path)
 
-            """
+            # load my resources & click create new
+            self.wait_for_visible(By.XPATH, '//a[contains(text(),"My Resources")]').click()
+            self.wait_for_visible(By.LINK_TEXT, 'Create new').click()
+
             # complete new resource form
-            title_field = self.driver.find_element_by_css_selector('#txtTitle')
-            # file_field = self.driver.find_element_by_name('files')
-            self.driver.execute_script(
+            self.wait_for_visible(By.CSS_SELECTOR, '#txtTitle').send_keys(resource_title)
+            self.driver.execute_script("""
                 var myZone = Dropzone.forElement('#hsDropzone');
                 var blob = new Blob(new Array(), {type: 'image/png'});
                 blob.name = 'filename.png'
                 myZone.addFile(blob);  
-            )
-            submit_btn = self.driver.find_element_by_css_selector(".btn-create-resource")
-    
-            self.assertTrue(title_field.is_displayed())
-            title_field.send_keys(RESOURCE_TITLE)
-            submit_btn.click()
-            """
-
-            # load my resources & click create new
-            my_resources = self.driver.find_element_by_xpath("//a[contains(text(),'My Resources')]")
-            try:
-                WebDriverWait(self.driver, 5).until(expected_conditions.visibility_of(my_resources))
-            except TimeoutException:
-                self.driver.save_screenshot('myresources-not-found.png')
-                self.fail('My resources link not visible')
-            my_resources.click()
-
-            try:
-                WebDriverWait(self.driver, 10).until(
-                    expected_conditions.presence_of_element_located(
-                        (By.LINK_TEXT, "Create new")
-                    )
-                )
-            except TimeoutException:
-                self.driver.save_screenshot('create-new-not-found.png')
-                self.fail('Create new resource link not available')
-
-            self.driver.find_element_by_link_text('Create new').click()
-
-            # complete new resource form
-            self.driver.find_element_by_name('title').send_keys(resource_title)
-            file_field = self.driver.find_element_by_name('files')
-            upload_file(self.driver, file_field, upload_file_path)
-            self.driver.find_element_by_xpath("//button[@type='submit']").click()
-            resource_detail_page_tag = self.driver.find_element_by_id('resource-title')
-            self.assertTrue(resource_detail_page_tag.is_displayed())
+            """)
+            time.sleep(1)
+            self.wait_for_visible(By.CSS_SELECTOR, '.btn-create-resource').click()
+            self.wait_for_visible(By.CSS_SELECTOR, '#resource-title')
+            time.sleep(1)
+            self.driver.get(self.driver.current_url)
+            self.wait_for_visible(By.CSS_SELECTOR, '#resource-title')
             return resource_title
 
         def test_register_account(self):
@@ -213,23 +187,12 @@ class SeleniumTestsParentClass(object):
             self._login_helper(self.user.email, self.user_password)
             resource_title = self._create_resource_helper('./manage.py')
 
-            """
-            # check results
-            title_field = self.driver.find_element_by_css_selector("#resource-title")
-            self.assertTrue(title_field.is_displayed())
-            self.assertEqual(title_field.text, RESOURCE_TITLE)
-            citation_text = self.driver.find_element_by_css_selector("#citation-text").text
-            """
-
-            title = self.driver.find_element_by_xpath('//h2[@id="resource-title"]').text
+            title = self.wait_for_visible(By.CSS_SELECTOR, '#resource-title').text
             self.assertEqual(title, resource_title)
-            citation = self.driver.find_element_by_xpath('//input[@id="citation-text"]')
-            citation_text = citation.get_attribute('value')
-            import re
+            citation_text = self.wait_for_visible(By.CSS_SELECTOR, 'div#citation-text').text
             m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
             shortkey = m.groups(0)[0]
             resource = BaseResource.objects.get()
             self.assertEqual(resource.title, resource_title)
             self.assertEqual(resource.short_id, shortkey)
             self.assertEqual(resource.creator, self.user)
-            self.assertTrue('Congratulations!' in self.driver.page_source)
