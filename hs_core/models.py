@@ -1785,6 +1785,15 @@ class AbstractResource(ResourcePermissionsMixin):
         errors = []
         ecount = 0
 
+        # report federation paths for debugging
+        if self.is_federated:
+            msg = "federation path for {} is {}".format(self.short_id,
+                                                        self.resource_federation_path)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
         # skip federated resources if not configured to handle these
         if self.is_federated and not settings.REMOTE_USE_IRODS:
             msg = "check_irods_files: skipping check of federated resource {}"\
@@ -1819,6 +1828,27 @@ class AbstractResource(ResourcePermissionsMixin):
                                                            return_errors=return_errors)
             errors.extend(error2)
             ecount += ecount2
+
+            # Step 3: does the resource contain required file elements?
+            meta = os.path.join(self.root_path, 'data', 'resourcemetadata.xml')
+            if not istorage.exists(meta):
+                msg = "metadata file {} does not exist".format(meta)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+            rmap = os.path.join(self.root_path, 'data', 'resourcemap.xml')
+            if not istorage.exists(rmap):
+                msg = "map file {} does not exist".format(rmap)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
 
             # finally, check whether the public flag agrees with ours
             django_public = self.raccess.public
