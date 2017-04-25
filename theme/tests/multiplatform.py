@@ -62,7 +62,8 @@ def upload_file(driver, file_field, local_upload_path):
         driver.execute_script("return arguments[0].multiple = false", file_field)
         file_field.send_keys(local_upload_path)
     elif type(driver) == webdriver.Firefox or type(driver) == webdriver.FirefoxProfile:
-        file_field._execute(Command.SEND_KEYS_TO_ELEMENT, {'value': list(os.path.abspath(local_upload_path))})
+        full_path = os.path.abspath(local_upload_path)
+        file_field._execute(Command.SEND_KEYS_TO_ELEMENT, {'value': list(full_path)})
     else:
         raise ValueError('Unkonwn driver')
 
@@ -83,8 +84,8 @@ class SeleniumTestsParentClass(object):
             if not User.objects.filter(email='user30@example.com'):
                 group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
-                # Permissions model level permissions are required for some actions because of legacy Mezzanine
-                # It also relies on the magic "Hydroshare Author" group which is not created via a migration :/
+                # Model level permissions are required for some actions bc of legacy Mezzanine
+                # Also relies on the magic "Hydroshare Author" group
                 hs_perms = Permission.objects.filter(content_type__app_label__startswith="hs_")
 
                 group.permissions.add(*list(hs_perms))
@@ -114,14 +115,16 @@ class SeleniumTestsParentClass(object):
             except TimeoutException:
                 if except_fail:
                     self.driver.save_screenshot('visible' + selector[1].replace(' ', '') + '.png')
-                    # if there is an issue with the selector, the following assert will create an error.
-                    self.assertTrue(self.driver.find_element(*selector).is_visible())
-                    self.fail('{} not visible within timeout. Screenshot saved.'.format(selector[1]))
+                    err_msg  = '{} not visible within timeout. Screenshot saved'.format(selector[1])
+                    # if there is an issue with the selector, raise a relevant an error.
+                    self.assertTrue(self.driver.find_element(*selector).is_visible(), err_msg)
+                    # failsafe just in case it became visible while we were writing the screenshot
+                    self.fail(err_msg)
                 else:
                     return None
             return self.driver.find_element(*selector)
 
-        def _login_helper(self, login_name, user_password):
+        def _login_helper(self, login, password):
             # home page: click to login. Uses generic xpath for Mobile & Desktop
             for e in self.driver.find_elements_by_xpath('//a[contains(text(),"Sign In")]'):
                 if e.is_displayed():
@@ -129,9 +132,11 @@ class SeleniumTestsParentClass(object):
                     break
 
             # login page: fill login form
-            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="username"]').send_keys(login_name)
-            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password"]').send_keys(user_password)
-            self.wait_for_visible(By.CSS_SELECTOR, 'input[type="submit"]').send_keys(keys.Keys.ENTER)
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="username"]').send_keys(login)
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password"]').send_keys(password)
+            self.wait_for_visible(
+                                  By.CSS_SELECTOR, 'input[type="submit"]'
+                                  ).send_keys(keys.Keys.ENTER)
             self.wait_for_visible(By.CSS_SELECTOR, '.home-page-block-title')
 
         def _logout_helper(self):
@@ -152,7 +157,7 @@ class SeleniumTestsParentClass(object):
                 var myZone = Dropzone.forElement('#hsDropzone');
                 var blob = new Blob(new Array(), {type: 'image/png'});
                 blob.name = 'filename.png'
-                myZone.addFile(blob);  
+                myZone.addFile(blob);
             """)
             time.sleep(1)
             self.wait_for_visible(By.CSS_SELECTOR, '.btn-create-resource').click()
@@ -163,7 +168,8 @@ class SeleniumTestsParentClass(object):
             return resource_title
 
         def test_register_account(self):
-            for e in self.driver.find_elements(By.CSS_SELECTOR, 'a[href="{}"]'.format(reverse('login'))):
+            login_link_css_selector = 'a[href="{}"]'.format(reverse('login'))
+            for e in self.driver.find_elements(By.CSS_SELECTOR, login_link_css_selector):
                 if e.is_displayed():
                     e.click()
                     break

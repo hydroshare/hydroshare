@@ -24,10 +24,11 @@ class DesktopTests(SeleniumTestsParentClass.MultiPlatformTests):
         super(DesktopTests, self).test_login_email()
 
         # home page: returned after successful login with profile info in dropdown
-        self.wait_for_visible(By.CSS_SELECTOR, 'li[id="profile-menu"] a[class="dropdown-toggle"]').click()
-        email = self.wait_for_visible(By.CSS_SELECTOR, '#profile-menu-email').get_attribute('innerHTML').strip()
+        profile_dropdown_selector = 'li[id="profile-menu"] a[class="dropdown-toggle"]'
+        self.wait_for_visible(By.CSS_SELECTOR, profile_dropdown_selector).click()
+        email = self.wait_for_visible(By.CSS_SELECTOR, '#profile-menu-email').text
         self.assertEquals(self.user.email, email)
-        full_name = self.wait_for_visible(By.CSS_SELECTOR, '#profile-menu-fullname').get_attribute('innerHTML').strip()
+        full_name = self.wait_for_visible(By.CSS_SELECTOR, '#profile-menu-fullname').text
         self.assertTrue(self.user.first_name in full_name)
         self.assertTrue(self.user.last_name in full_name)
 
@@ -63,9 +64,13 @@ class DesktopTests(SeleniumTestsParentClass.MultiPlatformTests):
         self.wait_for_visible(By.CSS_SELECTOR, '#fb-files-container').click()
         folder = self.driver.find_element_by_css_selector('#hs-file-browser li.fb-folder')
 
-        # Create a mouse down (not click) event on the folder in order to select it prior to sending the double click.
-        webdriver.ActionChains(self.driver).move_to_element(folder).click_and_hold().release().double_click().perform()
-        self.wait_for_visible(By.XPATH, "//li[@class='active']/span[contains(text(),'Button Folder')]")
+        # Create a mouse down (not click) event on the folder in order to select
+        # prior to sending the double click.
+        ac = webdriver.ActionChains(self.driver).move_to_element(folder).click_and_hold()
+        ac = ac.release().double_click()
+        ac.perform()
+        active_folder_in_crumbs = '//li[@class="active"]/span[contains(text(),"Button Folder")]'
+        self.wait_for_visible(By.XPATH, active_folder_in_crumbs)
         self.assertEqual(self.driver.find_element_by_class_name('fb-file-name').text, 'manage.py')
 
 
