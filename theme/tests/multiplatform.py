@@ -115,7 +115,7 @@ class SeleniumTestsParentClass(object):
             except TimeoutException:
                 if except_fail:
                     self.driver.save_screenshot('visible' + selector[1].replace(' ', '') + '.png')
-                    err_msg  = '{} not visible within timeout. Screenshot saved'.format(selector[1])
+                    err_msg = '{} not visible within timeout. Screenshot saved'.format(selector[1])
                     # if there is an issue with the selector, raise a relevant an error.
                     self.assertTrue(self.driver.find_element(*selector).is_visible(), err_msg)
                     # failsafe just in case it became visible while we were writing the screenshot
