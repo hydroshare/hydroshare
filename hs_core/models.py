@@ -616,7 +616,11 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
+    def __str__(self):
+        return "{type} {value}".format(type=self.type, value=self.value)
+
     def __unicode__(self):
+        """ deprecated """
         return "{type} {value}".format(type=self.type, value=self.value)
 
     @classmethod
@@ -1768,6 +1772,26 @@ class AbstractResource(ResourcePermissionsMixin):
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
+
+    def check_relations(self, stop_on_error=False, log_errors=True,
+                        echo_errors=False, return_errors=False):
+        """
+        Check for dangling relations due to deleted resource files
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
+        for r in self.metadata.relations.all():
+            if r.value.startswith('http://www.hydroshare.org/resource/'):
+                target = r.value[len('http://www.hydroshare.org/resource/'):].rstrip('/')
+                try:
+                    get_resource_by_shortkey(target, or_404=False)
+                except BaseResource.DoesNotExist:
+                    print("relation {} {} {} (this does not exist)"
+                          .format(self.short_id, r.type, target))
 
     def check_irods_files(self, stop_on_error=False, log_errors=True,
                           echo_errors=False, return_errors=False):
