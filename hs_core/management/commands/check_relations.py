@@ -11,6 +11,9 @@ This checks that every relation to a resource refers to an existing resource
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+
+import logging
 
 
 class Command(BaseCommand):
