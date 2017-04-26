@@ -105,10 +105,15 @@ $(document).ready(function () {
                     this.removeFile(this.files[0]);
                 }
                 $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
+
+                $(".hs-upload-indicator").hide();
             });
 
             this.on("removedfile", function (file) {
                 $('#hsDropzone .tooltip').remove();
+                if (myDropzone.files.length == 0) {
+                    $(".hs-upload-indicator").show();
+                }
             });
 
             this.on("error", function (file, error) {
@@ -262,7 +267,8 @@ $(document).ready(function () {
         })
     });
 
-    $("#btn-remove-all-files").click(function() {
+    $("#btn-remove-all-files").click(function () {
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+        $(".hs-upload-indicator").show();
     });
-    });
+});

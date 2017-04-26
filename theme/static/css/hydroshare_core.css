@@ -4445,6 +4445,21 @@ span.caption-file-type {
 	resize: vertical;
 	border: 0;
 }
+
+.hs-upload-indicator {
+	position: absolute;
+	color: #777;
+	top: 125px;
+	padding: 20px;
+	width: calc(100% - 20px);
+	pointer-events: none;
+	text-shadow: 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.hs-upload-indicator > i {
+	font-size: 50px;
+}
+
 .fb-loading-spinner {
 	list-style: none;
     width: 100%;
