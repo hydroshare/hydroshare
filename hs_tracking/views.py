@@ -4,9 +4,39 @@ from cStringIO import StringIO
 from django.views.generic import TemplateView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 
 from . import models as hs_tracking
+from .models import Session, Variable
+from .utils import get_std_log_fields
+
+
+class AppLaunch(TemplateView):
+
+    def get(self, request, **kwargs):
+
+        # get the url or hydroshare.org if one is not provided.
+        url = request.GET.get('url', 'http://www.hydroshare.org')
+
+        # log app launch details if user is logged in
+        if hasattr(request, 'user'):
+
+            # get user session and standard fields
+            session = Session.objects.for_request(request, request.user)
+            fields = get_std_log_fields(request, session)
+
+            # get extra app related fields, e.g. params in the app redirect
+            fields['name'] = request.GET.get('name', 'Not Provided')
+            if '?' in url:
+                app_args = url.split('?')[1]
+                arg_dict = dict(item.split("=") for item in app_args.split("&"))
+                fields.update(arg_dict)
+
+            # format and save the log message
+            msg = Variable.format_kwargs(**fields)
+            session.record('app_launch', value=msg)
+
+        return HttpResponseRedirect(url)
 
 
 class UseTrackingView(TemplateView):
