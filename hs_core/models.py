@@ -1965,6 +1965,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 for f in self.files.all():
                     if f.storage_path == fullpath:
                         found = True
+                        break
                 if not found:
                     ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
