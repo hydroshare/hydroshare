@@ -1,7 +1,3 @@
-/**
-* Created by Mauriel on 3/9/2017.
-*/
-
 var minFloatingNumber = 0.0001;
 var map = null;
 var map_default_bounds = null;
@@ -511,19 +507,16 @@ var generateLegend = function() {
     var geocoder_content = [];
     var resetButton_content = [];
     var legend_table = "<table><tbody>";
-    var staticURL = $("#static-url").val();
-    legend_table += "<tr><td class='text-center'><img src=" + staticURL + "img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
-    legend_table += "<tr><td class='text-center'><img src=" + staticURL + "img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
-    legend_table += "<tr><td class='text-center'><img src=" + staticURL + "img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
+    legend_table += "<tr><td class='text-center'><img src='/static/img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
+    legend_table += "<tr><td class='text-center'><img src='/static/img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+    legend_table += "<tr><td class='text-center'><img src='/static/img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
     geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
     geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
-    resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm'>");
+    resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
     resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
     map_legend.innerHTML = legend_table;
     geo_coder.innerHTML = geocoder_content.join('');
     reset_zoom_button.innerHTML = resetButton_content.join('');
-
-    $("#reset-zoom-btn").click(resetMapZoom);
 };
 
 var geocodeAddress = function(geocoder, resultsMap, mapDim) {
@@ -578,16 +571,13 @@ var updateListView = function (data) {
 
     if (window.location.search.length == 0) {
         requestURL += "?q=";
-    }
-    else {
+    } else {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
         requestURL += searchURL;
         requestURL += buildURLOnCheckboxes();
     }
-
     $("#discover-list-loading-spinner").show();
-
     $.ajax({
         type: "GET",
         url: requestURL,
@@ -716,7 +706,8 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
+    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names',
+        'variable_names', 'sample_mediums', 'units_names', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
         var faceting_div = "faceting-"+field;
@@ -844,7 +835,6 @@ $(document).ready(function () {
         changeYear: true,
         yearRange: '1950:'
     });
-
     $("#id_end_date").datepicker({
         dateFormat: 'mm/dd/yy',
         changeMonth: true,
@@ -855,7 +845,6 @@ $(document).ready(function () {
     if (window.location.search.length == 0) {
         clearCheckboxes();
     }
-
     $(".search-field").keypress(function(event) {
         if (event.which == 13) {
             event.preventDefault();
@@ -991,7 +980,4 @@ $(document).ready(function () {
         content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
         trigger: 'click'
     });
-
-    $("#btn-show-all").click(clearAllFaceted);
-    $("#clear-dates-options").click(clearDates);
 });

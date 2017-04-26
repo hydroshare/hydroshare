@@ -158,14 +158,15 @@
 
                 {# POPUP MENU - Right clicking empty space in file browser #}
                 <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                    {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
-                        <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
-                            data-target="#create-folder-dialog">
-                            <span class="fa fa-folder icon-blue"></span>
-                            <span>New Folder</span>
-                        </li>
-
-                        <li role="separator" class="divider"></li>
+                    {% if page.perms.change and metadata_form %}
+                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
+                            <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
+                                data-target="#create-folder-dialog">
+                                <span class="fa fa-folder icon-blue"></span>
+                                <span>New Folder</span>
+                            </li>
+                            <li role="separator" class="divider"></li>
+                        {% endif %}
                     {% endif %}
 
                     <li data-menu-name="refresh">
@@ -234,7 +235,7 @@
                                 <div id="fb-inner-controls">
                                     <div id="fb-inner-buttons">
                                         <div class="row">
-                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                            {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                             <div class="col-xs-6 col-sm-3 col-md-3">
                                                 <button id="fb-move-back"
                                                         class="btn btn-default fb-control-round disabled"
@@ -313,7 +314,7 @@
                                         <div class="row">
                                             <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                 {% if page.perms.change and metadata_form %}
-                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource"  %}
+                                                    {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm.resource_type == "CompositeResource" %}
                                                         <button id="fb-create-folder" class="fb-space-right disabled"
                                                                 data-toggle="modal"
                                                                 data-target="#create-folder-dialog"
@@ -387,11 +388,13 @@
                                                             class="disabled"
                                                             title="Set Geographic Raster File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                        <span class="caption-file-type">Geographic Raster</span>
                                                     </button>
                                                     <button id="fb-set-netcdf-file-type"
                                                             class="disabled"
                                                             title="Set Multidimensional Data File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                        <span class="caption-file-type">Multidimensional</span>
                                                     </button>
                                                  {% endif %}
 
@@ -453,19 +456,35 @@
                                         files smaller than 1GB in size by dragging & dropping, or click <a
                                                 id="upload-toggle" class="dz-clickable">here</a> to select them.
                                     </span>
-                                    <a id="btn-select-irods-file" type="button"
-                                       class="btn btn-success row-selector hidden-form" data-toggle="modal"
+
+                                    <hr>
+
+                                    <div id="log-into-irods">
+                                        <a id="btn-signin-irods" type="button" class="btn btn-info"
+                                           data-toggle="modal"
+                                           data-target="#irodsSignin">
+                                            <span class="glyphicon glyphicon-log-in"></span>
+                                            &nbsp;&nbsp;Log in to iRODS to add files from an iRODS server...
+                                        </a>
+                                    </div>
+
+                                    <div><a id="btn-select-irods-file" type="button"
+                                       class="btn btn-success row-selector hidden" data-toggle="modal"
                                        data-target="#irodsContent">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
+                                        <span class="glyphicon glyphicon-plus"><span class="button-label">
+                                            Add files from iRODS...</span></span>
+                                    </a></div>
+
+                                    <div id="sign-in-info">
+                                        <div id="sign-in-name"></div>
+                                    </div>
+                                    <a id="btn-signout-irods" type="button"
+                                       class="btn btn-default hidden-form">
+                                        <span class="glyphicon glyphicon-log-out"></span>
+                                        &nbsp;&nbsp;Log out of iRODS
                                     </a>
 
-                                    <span id="log-into-irods">To add files from an iRODS server,
-                                    <a id="btn-signin-irods" type="button" class="btn-link"
-                                       data-toggle="modal"
-                                       data-target="#irodsSignin">Log in to iRODS</a></span>
-                                    <span id="sign-in-info"></span>
-                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of
-                                        iRODS</a>
+
                                 </div>
                             {% endif %}
                         </div>
@@ -1138,23 +1157,27 @@
                             </div>
                         </div>
                      <!-- ==== Tabs end ==== -->
-                    </div>
                 </div>
-
-                {# ======= Credits ======= #}
-                {% include "resource-landing-page/credits.html" %}
-
-                {# ======= Ratings ======= #}
-                {% include "resource-landing-page/ratings.html" %}
-
-                {# ======= Comments ======= #}
-                {% include "resource-landing-page/comments.html" %}
-
-                {%  block modal %}
-                    {% include "resource-landing-page/modals.html" %}
-                    {% include "resource-landing-page/coordinates_picker.html" %}
-                {%  endblock %}
             </div>
+
+            {# ======= Credits ======= #}
+            {% include "resource-landing-page/credits.html" %}
+
+            {# ======= Change quota holder ======= #}
+            {% include "resource-landing-page/quota.html" %}
+
+            {# ======= Ratings ======= #}
+            {% include "resource-landing-page/ratings.html" %}
+
+            {# ======= Comments ======= #}
+            {% include "resource-landing-page/comments.html" %}
+
+            {%  block modal %}
+                {% include "resource-landing-page/modals.html" %}
+                {% include "resource-landing-page/coordinates_picker.html" %}
+            {%  endblock %}
+            </div>
+
     {% endwith %}
 {% endblock %}
 
@@ -1163,6 +1186,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
     <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>

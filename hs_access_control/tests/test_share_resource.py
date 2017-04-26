@@ -219,8 +219,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set([], holes.raccess.view_groups))
         self.assertTrue(is_equal_to_as_set([], holes.raccess.edit_groups))
 
-        self.assertTrue(is_equal_to_as_set(
-            [cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
+        # cat is the quota holder, so cannot be unshared
+        self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_resource_unshare_users(holes)))
         self.assertTrue(
             is_equal_to_as_set(
                 [], cat.uaccess.get_resource_unshare_groups(holes)))
@@ -1988,16 +1988,18 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
             cat.uaccess.can_share_resource(
                 holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, cat))
+        # assert cat is the quota holder and quota holder cannot be removed from ownership
+        self.assertTrue(holes.raccess.get_quota_holder(), cat)
+        self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, cat))
         self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, cat))
+        self.assertFalse(dog.uaccess.can_unshare_resource_with_user(holes, cat))
 
         # test list access functions for unshare targets
         self.assertTrue(is_equal_to_as_set(
-            [cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
+            [dog], cat.uaccess.get_resource_unshare_users(holes)))
 
         self.assertTrue(is_equal_to_as_set(
-            [cat, dog], dog.uaccess.get_resource_unshare_users(holes)))
+            [dog], dog.uaccess.get_resource_unshare_users(holes)))
 
         # test idempotence of sharing
         self.assertTrue(

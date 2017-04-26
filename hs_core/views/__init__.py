@@ -13,7 +13,8 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
+    HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -26,6 +27,8 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
+
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
@@ -84,6 +87,36 @@ def verify(request, *args, **kwargs):
         messages.error(request, "Your verification token was invalid.")
 
     return HttpResponseRedirect('/')
+
+
+def change_quota_holder(request, shortkey):
+    new_holder_uname = request.POST.get('new_holder_username', '')
+    if not new_holder_uname:
+        return HttpResponseBadRequest()
+    new_holder_u = User.objects.filter(username=new_holder_uname).first()
+    if not new_holder_u:
+        return HttpResponseBadRequest()
+
+    res = utils.get_resource_by_shortkey(shortkey)
+    try:
+        res.raccess.set_quota_holder(request.user, new_holder_u)
+
+        # send notification to the new quota holder
+        context = {
+            "request": request,
+            "user": request.user,
+            "new_quota_holder": new_holder_u,
+            "resource_uuid": res.short_id,
+        }
+        subject_template_name = "email/quota_holder_change_subject.txt"
+        subject = subject_template(subject_template_name, context)
+        send_mail_template(subject, "email/quota_holder_change",
+                           settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
+                           context=context)
+    except PermissionDenied:
+        return HttpResponseForbidden()
+
+    return HttpResponseRedirect(res.get_absolute_url())
 
 
 def add_files_to_resource(request, shortkey, *args, **kwargs):
@@ -437,9 +470,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    istorage = resource.get_irods_storage()
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
-    istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
@@ -814,6 +847,63 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
 
     return JsonResponse(ajax_response_data)
 
+
+def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    user_to_unshare_with = utils.user_from_id(user_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        undo_user_privilege = res.raccess.get_effective_privilege(user_to_unshare_with)
+        if undo_user_privilege == PrivilegeCodes.VIEW:
+            undo_user_privilege = "view"
+        elif undo_user_privilege == PrivilegeCodes.CHANGE:
+            undo_user_privilege = "change"
+        elif undo_user_privilege == PrivilegeCodes.OWNER:
+            undo_user_privilege = "owner"
+        else:
+            undo_user_privilege = 'none'
+        ajax_response_data['undo_user_privilege'] = undo_user_privilege
+
+        if user not in res.raccess.view_users:
+            # user has no explict access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
+def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    group_to_unshare_with = utils.group_from_id(group_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        if group_to_unshare_with in res.raccess.edit_groups:
+            undo_group_privilege = 'change'
+        elif group_to_unshare_with in res.raccess.view_groups:
+            undo_group_privilege = 'view'
+        else:
+            undo_group_privilege = 'none'
+        ajax_response_data['undo_group_privilege'] = undo_group_privilege
+
+        if user not in res.raccess.view_users:
+            # user has no explicit access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
     if not request.method == 'POST':
@@ -951,6 +1041,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
 
@@ -987,14 +1078,15 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    """ Create resource via REST API """
+    # Note: This view function must be called by ajax
+
+    ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-
-    resource_files = request.FILES.getlist('files')
-    source_names=[]
+    resource_files = request.FILES.values()
+    source_names = []
     irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower()=='true'
+    federated = request.POST.get("irods_federated").lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
@@ -1009,18 +1101,18 @@ def create_resource(request, *args, **kwargs):
             zone = request.POST.get("irods-zone")
             try:
                 upload_from_irods(username=user, password=password, host=host, port=port,
-                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
-                context = {'file_size_error': ex.message}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.message
+                return JsonResponse(ajax_response_data)
+
             except SessionException as ex:
-                context = {'resource_creation_error': ex.stderr}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.stderr
+                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
-
     try:
-        page_url_dict, res_title, metadata, fed_res_path = \
+        _, res_title, metadata, fed_res_path = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
                                                          resource_title=res_title,
@@ -1029,22 +1121,16 @@ def create_resource(request, *args, **kwargs):
                                                          requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
-        context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
-        context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except Exception as ex:
-        context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context,
-                                  context_instance=RequestContext(request))
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -1054,20 +1140,30 @@ def create_resource(request, *args, **kwargs):
             files=resource_files,
             source_names=source_names,
             # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
+            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, user=request.user,
-                                           metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource,
+                                           user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
+        ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['file_upload_status'] = 'error'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
-    # go to resource landing page
-    return HttpResponseRedirect(resource.get_absolute_url())
+    if not ajax_response_data['message']:
+        if resource.files.all():
+            ajax_response_data['file_upload_status'] = 'success'
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+
+    return JsonResponse(ajax_response_data)
 
 
 @login_required
