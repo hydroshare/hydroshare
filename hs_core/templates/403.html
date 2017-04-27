@@ -20,7 +20,7 @@
                             <td>
                             {% for u in res.raccess.owners.all %}
                                 {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
-                                <span>{{ u|contact|safe }}</span>
+                                <span>{{ u|contact }}</span>
                             {% endfor %}
                             </td>
                         </tr>

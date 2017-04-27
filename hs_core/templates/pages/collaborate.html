@@ -99,7 +99,7 @@
                                                                             {% endif %}
 
                                                                             <a data-col="name"
-                                                                               class="user-name">{{ u|contact|safe }}</a>
+                                                                               class="user-name">{{ u|contact }}</a>
                                                                             {% if u.pk == current_user.pk %}
                                                                                 <span class="text-muted you-flag">(You)</span>
                                                                             {% endif %}

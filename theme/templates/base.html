@@ -196,7 +196,7 @@
                         <h3>{{ siteconf.col1_heading }}</h3>
                     </div>
                     <div class="content">
-                        {{ siteconf.col1_content|richtext_filters|safe }}
+                        {{ siteconf.col1_content|richtext_filters }}
                     </div>
                     {% endeditable %}
                 </div>
@@ -208,7 +208,7 @@
                     {% endeditable %}
                     <div class="content social">
                         {% editable siteconf.col2_content %}
-                        {{ siteconf.col2_content|richtext_filters|safe }}
+                        {{ siteconf.col2_content|richtext_filters }}
                         {% endeditable %}
                         {% if siteconf.has_social_network_links %}
                         <ul>{% if siteconf.twitter_link %}
@@ -262,7 +262,7 @@
                     {% editable siteconf.col3_heading siteconf.col3_content %}
                     <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
                     <div class="content">
-                        {{ siteconf.col3_content|richtext_filters|safe }}
+                        {{ siteconf.col3_content|richtext_filters }}
                     </div>
                     {% endeditable %}
                 </div>
