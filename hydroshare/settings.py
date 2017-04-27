@@ -294,8 +294,6 @@ INSTALLED_APPS = (
     "jquery_ui",
     "rest_framework",
     "rest_framework_swagger",
-    "ga_ows",
-    "ga_resources",
     "robots",
     "hs_core",
     "hs_access_control",
