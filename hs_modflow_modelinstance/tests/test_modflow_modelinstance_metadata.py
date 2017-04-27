@@ -73,7 +73,15 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Instance resource files")
+        text_file.close()
         self.text_file_obj = open(temp_text_file, 'r')
+
+        self.file_name_2 = "MIR.csv"
+        temp_text_file_2 = os.path.join(self.temp_dir, self.file_name_2)
+        text_file = open(temp_text_file_2, 'w')
+        text_file.write("Model,Instance,resource,files")
+        text_file.close()
+        self.text_file_obj_2 = open(temp_text_file_2, 'r')
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()
@@ -91,7 +99,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                             extract_metadata=False)
-
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=False)
 
@@ -103,10 +110,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.executed_by, None)
 
         # Upload any other file type should pass both the file pre add check post add check
-        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        files = [UploadedFile(file=self.text_file_obj_2, name=self.text_file_obj_2.name)]
         utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                             extract_metadata=True)
-
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=True)
 
@@ -902,69 +908,17 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                             extract_metadata=False)
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=False)
-        self.assertFalse(self.res.has_required_content_files())
-        self.assertFalse(self.res.can_be_public_or_discoverable)
-
-        # add .nam file
-        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
-        self.assertFalse(self.res.has_required_content_files())
-        self.assertFalse(self.res.can_be_public_or_discoverable)
-
-        # add reqd files except 2
-        for f in self.file_list[2:]:
-            self.assertFalse(self.res.has_required_content_files())
-            self.assertFalse(self.res.can_be_public_or_discoverable)
-            f_obj = open(f, 'r')
-            files = [UploadedFile(file=f_obj, name=f_obj.name)]
-            utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                                extract_metadata=False)
-            utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        self.assertFalse(self.res.has_required_content_files())
-        self.assertFalse(self.res.can_be_public_or_discoverable)
-
-        # add all reqd files
-        for f in self.file_list[:2]:
-            self.assertFalse(self.res.has_required_content_files())
-            self.assertFalse(self.res.can_be_public_or_discoverable)
-            f_obj = open(f, 'r')
-            files = [UploadedFile(file=f_obj, name=f_obj.name)]
-            utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                                extract_metadata=False)
-            utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
         self.assertTrue(self.res.has_required_content_files())
         self.assertFalse(self.res.can_be_public_or_discoverable)
 
         # add generically required elements; should be made public
         self.res.metadata.create_element('Description', abstract="test abstract")
+        self.assertTrue(self.res.has_required_content_files())
         self.assertFalse(self.res.can_be_public_or_discoverable)
 
         self.res.metadata.create_element('Subject', value="test subject")
-        self.assertTrue(self.res.can_be_public_or_discoverable)
-
-        # add another .nam file; should not be able to be public
-        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
-        self.assertFalse(self.res.has_required_content_files())
-        self.assertFalse(self.res.can_be_public_or_discoverable)
-
-        # delete extra .nam file; should be able to be public again
-        hydroshare.delete_resource_file(self.res.short_id, self.sample_nam_name2, self.user)
         self.assertTrue(self.res.has_required_content_files())
         self.assertTrue(self.res.can_be_public_or_discoverable)
-
-        # delete one reqd file; should not be able to be public again
-        hydroshare.delete_resource_file(self.res.short_id, self.file_names[2], self.user)
-        self.assertFalse(self.res.has_required_content_files())
-        self.assertFalse(self.res.can_be_public_or_discoverable)
 
     def test_can_have_multiple_content_files(self):
         self.assertTrue(self.res.can_have_multiple_files())

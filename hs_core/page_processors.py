@@ -110,7 +110,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         if is_authorized:
                             tool_url = tool_res_obj.metadata.url_bases.first().value \
                                 if tool_res_obj.metadata.url_bases.first() else None
-                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().value \
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().data_url \
                                 if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
                             hs_term_dict_user = {}
                             hs_term_dict_user["HS_USR_NAME"] = request.user.username if \
@@ -156,6 +156,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         show_content_files = content_model.raccess.public
 
     allow_copy = can_user_copy_resource(content_model, user)
+
+    qholder = content_model.raccess.get_quota_holder()
 
     # user requested the resource in READONLY mode
     if not resource_edit:
@@ -205,6 +207,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             content_model.metadata.description else None
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
@@ -238,7 +241,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
-                   'belongs_to_collections': belongs_to_collections
+                   'quota_holder': qholder,
+                   'belongs_to_collections': belongs_to_collections,
+                   'current_user': user
         }
 
         if 'task_id' in request.session:
@@ -426,6 +431,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
+               'quota_holder': qholder,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and

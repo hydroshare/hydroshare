@@ -385,7 +385,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .shp file (all files will be removed)
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
         # add files first
         files = []
@@ -410,7 +410,7 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .prj file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
 
@@ -442,7 +442,6 @@ class TestGeoFeature(TransactionTestCase):
 
         # test: del .xml file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
             f.delete()
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
 
@@ -470,7 +469,7 @@ class TestGeoFeature(TransactionTestCase):
     def test_post_add_files_to_resource(self):
         # test: add all files
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
-            f.resource_file.delete()
+            # f.resource_file.delete()
             f.delete()
 
         # add files first
@@ -506,11 +505,12 @@ class TestGeoFeature(TransactionTestCase):
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
         # add .prj
         add_files = []
-        target = 'hs_geographic_feature_resource/' \
+        target = 'hs_geographic_feature_resource/' + \
                  'tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
         add_files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06.prj'))
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
+        # TODO: why is this not called in add_resource_files? It should be called with post_add_*
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
                                                       resource=self.resGeoFeature, files=add_files,
                                                       validate_files={'are_files_valid': True,

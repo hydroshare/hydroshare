@@ -12,7 +12,7 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
 
-from .models import GeoRasterLogicalFile
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile
 
 
 @login_required
@@ -24,6 +24,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
+    file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile}
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
@@ -35,16 +36,17 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
-    if hs_file_type != "GeoRaster":
-        err_msg = "Currently a file can be set to Geo Raster file type only."
+    if hs_file_type not in file_type_map:
+        err_msg = "Unsupported file type."
         response_data['message'] = err_msg
         return JsonResponse(response_data, status=status.HTTP_200_OK)
 
     try:
-        GeoRasterLogicalFile.set_file_type(resource=res, file_id=file_id, user=request.user)
+        logical_file_type_class = file_type_map[hs_file_type]
+        logical_file_type_class.set_file_type(resource=res, file_id=file_id, user=request.user)
         resource_modified(res, request.user, overwrite_bag=False)
-        msg = "File was successfully set to Geo Raster file type. " \
-              "Raster metadata extraction was successful."
+        msg = "File was successfully set to selected file type. " \
+              "Metadata extraction was successful."
         response_data['message'] = msg
         response_data['status'] = 'success'
         spatial_coverage_dict = get_coverage_data_dict(res)
@@ -132,7 +134,9 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
             metadata_status = METADATA_STATUS_INSUFFICIENT
 
         ajax_response_data = {'status': 'success', 'element_name': element_name,
-                              'metadata_status': metadata_status}
+                              'metadata_status': metadata_status,
+                              'logical_file_type': logical_file.type_name()
+                              }
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -263,10 +267,11 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
             return json_response
 
     logical_file.metadata.extra_metadata[key] = value
+    logical_file.metadata.is_dirty = True
     logical_file.metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms(datatset_name_form=False)
+                               logical_file.metadata).get_extra_metadata_html_form()
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
@@ -298,11 +303,12 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     key = request.POST['key']
     if key in logical_file.metadata.extra_metadata.keys():
         del logical_file.metadata.extra_metadata[key]
+        logical_file.metadata.is_dirty = True
         logical_file.metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
 
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms(datatset_name_form=False)
+                               logical_file.metadata).get_extra_metadata_html_form()
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
@@ -310,6 +316,93 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
                           'extra_metadata': rendered_html,
                           'message': "Delete was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """adds one or more keywords for a given logical file
+    data for keywords is expected as part of the request.POST
+    multiple keywords are part of the post data in a comma separated format
+    If any of the keywords to be added already exists (case insensitive check) then none of
+    the posted keywords is added
+    NOTE: This view function must be called via ajax call
+    """
+
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    keywords = request.POST['keywords']
+    keywords = keywords.split(",")
+    existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
+    if not any(kw.lower() in keywords for kw in existing_keywords):
+        logical_file.metadata.keywords += keywords
+        logical_file.metadata.is_dirty = True
+        logical_file.metadata.save()
+        # add keywords to resource
+        resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
+        for kw in keywords:
+            if kw.lower() not in resource_keywords:
+                resource.metadata.create_element('subject', value=kw)
+        resource_modified(resource, request.user, overwrite_bag=False)
+        resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'added_keywords': keywords, 'resource_keywords': resource_keywords,
+                              'message': "Add was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    else:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Keyword already exists"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """deletes a keyword for a given logical file
+    The keyword to be deleted is expected as part of the request.POST
+    NOTE: This view function must be called via ajax call
+    """
+
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    keyword = request.POST['keyword']
+    existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
+    if keyword.lower() in existing_keywords:
+        logical_file.metadata.keywords = [kw for kw in logical_file.metadata.keywords if
+                                          kw.lower() != keyword.lower()]
+        logical_file.metadata.is_dirty = True
+        logical_file.metadata.save()
+        resource_modified(resource, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'deleted_keyword': keyword,
+                              'message': "Add was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    else:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'keyword', 'message': "Keyword was not found"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
 @login_required
@@ -333,9 +426,44 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
     logical_file.save()
+    logical_file.metadata.is_dirty = True
+    logical_file.metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'datatset_name', 'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def update_netcdf_file(request, file_type_id, **kwargs):
+    """updates (writes the metadata) the netcdf file associated with a instance of a specified
+    NetCDFLogicalFile file object
+    """
+
+    hs_file_type = "NetCDFLogicalFile"
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'datatset_name', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    try:
+        logical_file.update_netcdf_file(request.user)
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': ex.message}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'message': "NetCDF file update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
@@ -359,12 +487,15 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     if json_response is not None:
         return json_response
 
-    if metadata_mode == 'view':
-        metadata = logical_file.metadata.get_html()
-    else:
-        metadata = logical_file.metadata.get_html_forms()
+    try:
+        if metadata_mode == 'view':
+            metadata = logical_file.metadata.get_html()
+        else:
+            metadata = logical_file.metadata.get_html_forms()
+        ajax_response_data = {'status': 'success', 'metadata': metadata}
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'message': ex.message}
 
-    ajax_response_data = {'status': 'success', 'metadata': metadata}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

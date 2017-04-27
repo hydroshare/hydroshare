@@ -37,10 +37,10 @@ def get_model_metadata(request):
                 software_language=mpmeta.modelProgramLanguage,
                 operating_sys=mpmeta.modelOperatingSystem,
                 url = protocol+"://"+request.get_host()+"/resource/"+resource_id+"/",
-                modelEngine = mpmeta.modelEngine.split(';'),
-                modelSoftware=mpmeta.modelSoftware.split(';'),
-                modelDocumentation=mpmeta.modelDocumentation.split(';'),
-                modelReleaseNotes=mpmeta.modelReleaseNotes.split(';'),
+                modelEngine = mpmeta.get_engine_list(),
+                modelSoftware=mpmeta.get_software_list(),
+                modelDocumentation=mpmeta.get_documentation_list(),
+                modelReleaseNotes=mpmeta.get_releasenotes_list(),
             )
 
     json_data = json.dumps(metadata)

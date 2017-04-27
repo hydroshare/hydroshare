@@ -121,25 +121,41 @@
                         </div>
                     </div>
                  </div>
+
                 <div class="col-sm-4 col-xs-12 pull-left">
                     <div id="resource-actions-container" class="noselect">
-                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
-                              data-toggle="dropdown" aria-expanded="false" title="Label"></span>
+                        <span data-toggle="tooltip" data-placement="bottom" title="Label">
+                            <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"
+                                  data-toggle="dropdown" aria-expanded="false"></span>
 
-                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>
-
-                        <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
-                            <div class="panel-body" role="form">
-                                <strong>Label as:</strong>
-                                <ul class="list-group list-labels">
-                                    <li class="divider persist"></li>
-                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">
-                                        <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
-                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">
-                                        <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
-                                </ul>
+                            <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">
+                                <div class="panel-body" role="form">
+                                    <strong>Label as:</strong>
+                                    <ul class="list-group list-labels">
+                                        <li class="divider persist"></li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalCreateLabel">
+                                            <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>
+                                        <li class="list-group-item persist" data-toggle="modal"
+                                            data-target="#modalManageLabels">
+                                            <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
+                        </span>
+
+
+
+                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
+                              data-placement="bottom" title="Favorite"></span>
+
+                        <span data-toggle="tooltip"
+                              data-placement="bottom" title="Delete">
+                            <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
+                                  data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
+                        </span>
+
+
                     </div>
                 </div>
             </div>
@@ -166,17 +182,22 @@
                 </thead>
                 <tbody>
                     {% for res in collection %}
-                        <tr data-tr-index="{{ forloop.counter0 }}">
+                        <tr class="data-row">
                             {# Selection controls #}
                             <td>
                                 <input class="row-selector" type="checkbox">
+                                {# Delete resource forms #}
+                                <form class="hidden-form" data-id="form-delete-{{ res.short_id }}" data-form-type="delete-resource" method="POST"
+                                      action="/hsapi/_internal/{{ res.short_id }}/delete-resource/">
+                                    {% csrf_token %}
+                                </form>
                                 {% if res.is_favorite %}
                                     <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
                                     <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
+                                          method="POST">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="DELETE">
                                         <input type="hidden" name="label_type" value="FAVORITE">
@@ -187,7 +208,7 @@
 
                                     <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
                                           action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
-                                          method="post">
+                                          method="POST">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="CREATE">
                                         <input type="hidden" name="label_type" value="FAVORITE">
@@ -208,47 +229,61 @@
                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                 {% if res|resource_type == "Generic" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Raster" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Program Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Web App Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "HIS Referenced Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Script Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Collection Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Composite Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
+                                         data-toggle="tooltip" data-placement="top"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                          class="table-res-type-icon"/>
                                 {% endif %}
@@ -257,30 +292,35 @@
                                 <div class="access-icon-wrapper">
                                     {% if res.raccess.published %}
                                         <img src="{{ STATIC_URL }}img/published.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Published Resource" title="Published"/>
                                     {% elif res.raccess.public %}
                                         <img src="{{ STATIC_URL }}img/public.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Public Resource" title="Public"/>
                                     {% elif res.raccess.discoverable %}
                                         <img src="{{ STATIC_URL }}img/discoverable.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Discoverable Resource" title="Discoverable"/>
                                     {% else %}
                                         <img src="{{ STATIC_URL }}img/private.png"
+                                             data-toggle="tooltip" data-placement="top"
                                              alt="Private Resource" title="Private"/>
                                     {% endif %}
 
                                     {% if res.raccess.published %}
                                         {% if "pending" in cm.doi or "failure" in cm.doi %}
                                             <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                 data-toggle="tooltip" data-placement="top"
                                                  title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
                                         {% endif %}
                                     {% else %}
                                         {% if res.raccess.shareable %}
                                             <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                                 title="Shareable"/>
+                                                 data-toggle="tooltip" data-placement="top" title="Shareable"/>
                                         {% else %}
                                             <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                                                 title="Not Shareable"/>
+                                                 data-toggle="tooltip" data-placement="top" title="Not Shareable"/>
                                         {% endif %}
                                     {% endif %}
                                 </div>
@@ -354,205 +394,130 @@
                 </tbody>
             </table>
 
+            <br>
             {% include "includes/legend.html" %}
 
         </div>
     </div>
 </div>
 
-    <!-- Create Label Modal -->
-    <div class="modal fade" id="modalCreateLabel" tabindex="-1" role="dialog" aria-labelledby="Create New Label">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
-                </div>
-                <div class="modal-body">
-                    <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="txtLabelName">New Label Name:</label>
-                            <input id="txtLabelName" name="label" type="text" class="form-control">
-                            <input type="hidden" name="label_type" value="SAVEDLABEL">
-                            <input type="hidden" name="action" value="CREATE">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button data-form-id="form-create-label" data-form-type="create-label" id="btn-create-label" class="btn btn-primary">Create</button>
-                </div>
+<!-- Create Label Modal -->
+<div class="modal fade" id="modalCreateLabel" tabindex="-1" role="dialog" aria-labelledby="Create New Label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create New Label</h4>
+            </div>
+            <div class="modal-body">
+                <form data-id="form-create-label" action="/hsapi/_internal/label-resource-action/"
+                      method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="txtLabelName">New Label Name:</label>
+                        <input id="txtLabelName" name="label" type="text" class="form-control">
+                        <input type="hidden" name="label_type" value="SAVEDLABEL">
+                        <input type="hidden" name="action" value="CREATE">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button data-form-id="form-create-label" data-form-type="create-label" id="btn-create-label"
+                        class="btn btn-primary">Create
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    {#    To be used for querying the tabla in javascrip    t#}
-    <input id="currentUserName" value="{{ user|best_name }}" style="display:none">
-    <span id="csrf">{% csrf_token %}</span>
+{#    To be used for querying the tabla in javascrip    t#}
+<input id="currentUserName" value="{{ user|best_name }}" style="display:none">
+<span id="csrf">{% csrf_token %}</span>
 
-    <!-- Manage Labels Modal -->
-    <div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
-                </div>
-                <div class="modal-body">
-                    <table id="table-user-labels" class="table">
-                        <thead>
-                            <tr><th>Label</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                            {% if user.ulabels.saved_labels %}
-                                {% for label in user.ulabels.saved_labels %}
-                                <tr>
-                                    <td class="user-label" data-label="{{ label }}">{{ label }}</td>
-                                    <td>
-                                        <form class="hidden-form" data-id="form-delete-label-{{ label }}"
-                                              action="/hsapi/_internal/label-resource-action/"
-                                              method="post">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="label" value="{{ label }}">
-                                            <input type="hidden" name="label_type" value="SAVEDLABEL">
-                                            <input type="hidden" name="action" value="DELETE">
-                                        </form>
-                                        <span data-label="{{ label }}" data-form-type="delete-label" class="btn-label-remove glyphicon glyphicon-remove" data-form-id="form-delete-label-{{ label }}"></span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr class="no-items-found"><td>No labels found.</td></tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
+<!-- Manage Labels Modal -->
+<div class="modal fade" id="modalManageLabels" tabindex="-1" role="dialog" aria-labelledby="Manage Labels">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Manage Labels</h4>
+            </div>
+            <div class="modal-body">
+                <table id="table-user-labels" class="table">
+                    <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if user.ulabels.saved_labels %}
+                        {% for label in user.ulabels.saved_labels %}
+                            <tr>
+                                <td class="user-label" data-label="{{ label }}">{{ label }}</td>
+                                <td>
+                                    <form class="hidden-form" data-id="form-delete-label-{{ label }}"
+                                          action="/hsapi/_internal/label-resource-action/"
+                                          method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="label" value="{{ label }}">
+                                        <input type="hidden" name="label_type" value="SAVEDLABEL">
+                                        <input type="hidden" name="action" value="DELETE">
+                                    </form>
+                                    <span data-label="{{ label }}" data-form-type="delete-label"
+                                          class="btn-label-remove glyphicon glyphicon-remove"
+                                          data-form-id="form-delete-label-{{ label }}"></span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="no-items-found">
+                            <td>No labels found.</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Delete Resource Modal -->
-    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
-                </div>
-                <div class="modal-body">
-                    <strong>THIS IS A PERMANENT ACTION. </strong>
-                    <ul>
-                        <li>This will delete the resource file.</li>
-                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
-                        <li>We highly recommend that you download the latest copy of your resource file before
-                            confirming this action.
-                        </li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" class="btn btn-danger"
-                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
-                </div>
+<!-- Delete Resource Modal -->
+<div class="modal fade" id="delete-multiple-resources-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="delete-resource-title">Delete Resources</h4>
+            </div>
+            <div class="modal-body">
+                <div>Select resources to delete</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button id="btn-delete-multiple-resources" class="btn btn-danger" data-dismiss="modal">Confirm</button>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_css %}
+    {{ block.super }}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
-    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
-    <script>
-        var ACTIONS_COL = 0;
-        var RESOURCE_TYPE_COL = 1;
-        var TITLE_COL = 2;
-        var OWNER_COL = 3;
-        var DATE_CREATED_COL = 4;
-        var LAST_MODIFIED_COL = 5;
-        var SUBJECT_COL = 6;
-        var AUTHORS_COL = 7;
-        var PERM_LEVEL_COL = 8;
-        var LABELS_COL = 9;
-        var FAVORITE_COL = 10;
-        var LAST_MODIF_SORT_COL = 11;
-        var SHARING_STATUS_COL = 12;
-        var DATE_CREATED_SORT_COL = 13;
-        var ACCESS_GRANTOR_COL = 14;
+{% endblock %}
 
-        var colDefs = [
-            {
-                "targets": [RESOURCE_TYPE_COL],     // Resource type
-                "width": "100px"
-            },
-            {
-                "targets": [ACTIONS_COL],     // Actions
-                "orderable": false,
-                "searchable": false,
-                "width": "70px"
-            },
-            {
-                "targets": [LAST_MODIFIED_COL],     // Last modified
-                "iDataSort": LAST_MODIF_SORT_COL
-            },
-            {
-                "targets": [DATE_CREATED_COL],     // Created
-                "iDataSort": DATE_CREATED_SORT_COL
-            },
-            {
-                "targets": [SUBJECT_COL],     // Subject
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [AUTHORS_COL],     // Authors
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [PERM_LEVEL_COL],     // Permission level
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [LABELS_COL],     // Labels
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [FAVORITE_COL],     // Favorite
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [DATE_CREATED_SORT_COL],     // Date Created (for sorting)
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [SHARING_STATUS_COL],     // Sharing status
-                "visible": false,
-                "searchable": false
-            }
-        ];
-        // TODO: fix the following references
-{#        $(document).ready(function () {#}
-{#            start_resource_table();#}
-{#            $.fn.dataTable.ext.search.push(hs_resource_table_custom_search);#}
-{#        });#}
-    </script>
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/my-resources.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 {% endblock %}

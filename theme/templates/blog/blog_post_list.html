@@ -4,12 +4,13 @@
 {% block meta_title %}{% if page %}{{ page.richtextpage.meta_title }}{% else %}{% trans "Blog" %}{% endif %}{% endblock %}
 
 {% block extra_js %}
-<script src="{% static "js/jquery.fitvids.js" %}"></script>
-<script>
-    $(document).ready(function(){
-        $(".video-blog").fitVids();
-    });
-</script>
+    {{ block.super }}
+    <script src="{% static "js/jquery.fitvids.js" %}"></script>
+    <script>
+        $(document).ready(function () {
+            $(".video-blog").fitVids();
+        });
+    </script>
 {% endblock %}
 
 {% block meta_keywords %}{% metablock %}

@@ -65,15 +65,15 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
                            '2010',
             page_redirect_url_key=None,
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path])
+            source_names=[fed_test_file_full_path])
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
             self.user,
             'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-            fed_copy_or_move='copy',
+            move=False,
             metadata=metadata)
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
 
@@ -96,8 +96,8 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # there should be abstract element
         self.assertNotEqual(self.resNetcdf.metadata.description, None)
 
-        # there should be 2 creator element
-        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
+        # there should be 1 creator element (based on the extracted metadata)
+        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 1)
 
         # there should be 1 contributor element
         self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)
@@ -120,11 +120,11 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resNetcdf,
                                             files=res_add_files,
                                             user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path])
+                                            source_names=[fed_test_file_full_path])
         utils.resource_file_add_process(resource=self.resNetcdf,
                                         files=res_add_files,
                                         user=self.user,
-                                        fed_res_file_names=[fed_test_file_full_path])
+                                        source_names=[fed_test_file_full_path])
 
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
         self.assertEqual(CoreMetaData.objects.all().count(), 1)
