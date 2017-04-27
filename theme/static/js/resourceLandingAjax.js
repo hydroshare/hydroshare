@@ -188,6 +188,15 @@ function undo_share_ajax_submit(form_id) {
                     return;
                 }
 
+                // At least one owner constraint
+                var owners = $(".access-table li.active[data-access-type='Is owner']");
+                if (owners.length > 1) {
+                    owners.closest("tr").toggleClass("hide-actions", false);
+                }
+                else {
+                    owners.closest("tr").toggleClass("hide-actions", true);
+                }
+
                 userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
                 $(".role-dropdown").removeClass("open");
                 $form.toggleClass("hidden", true);
@@ -395,7 +404,7 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     unshareUrl =
-                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-group")
+                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
                         + share_with + "/";
 
                     undoUrl = rowTemplate.find(".undo-share-form").attr("action")
