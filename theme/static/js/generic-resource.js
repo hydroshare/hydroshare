@@ -63,8 +63,15 @@ function updateActionsState(privilege){
         // Remove buttons
         $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
         $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
+
         if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {     // At least one owner constrain
-            $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+            var rows = $(".access-table li.active[data-access-type='Is owner']").closest("tr");
+            rows.each(function(){
+                var row = $(this);
+                if (!row.find("[quota-holder]").length) {
+                    row.removeClass("hide-actions");
+                }
+            });
         }
     }
 }
