@@ -89,20 +89,20 @@ class Command(BaseCommand):
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
 
-                print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid) + 
+                print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid) +
                       (' (repairing problems)' if options['repair'] else ""))
                 resource.check_irods_files(stop_on_error=False,
                                            echo_errors=not options['log'],
                                            log_errors=options['log'],
-                                           return_errors=False, 
+                                           return_errors=False,
                                            repair=options['repair'])
 
         else:  # check all resources
-            print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES" + 
+            print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES" +
                   (' (repairing problems)' if options['repair'] else ""))
             for r in BaseResource.objects.all():
                 r.check_irods_files(stop_on_error=False,
                                     echo_errors=not options['log'],  # Don't both log and echo
                                     log_errors=options['log'],
-                                    return_errors=False, 
+                                    return_errors=False,
                                     repair=options['repair'])

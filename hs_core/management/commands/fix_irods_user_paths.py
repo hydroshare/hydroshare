@@ -15,10 +15,6 @@ This checks that:
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey
-from django_irods.storage import IrodsStorage
-
-import logging
 
 
 class Command(BaseCommand):
@@ -55,7 +51,6 @@ class Command(BaseCommand):
                                                   return_actions=False)
                 else:
                     print("Resource with id {} is not a default userspace resource".format(rid))
-
 
         else:  # fix all userspace resources
             print("REMAPPING ALL USERSPACE RESOURCES TO LOCAL USERSPACE")

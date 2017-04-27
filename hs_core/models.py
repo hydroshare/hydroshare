@@ -1841,7 +1841,6 @@ class AbstractResource(ResourcePermissionsMixin):
         * It does not check whether the paths exist afterward. This is done by check_irods_files.
         """
         logger = logging.getLogger(__name__)
-        istorage = self.get_irods_storage()
         actions = []
         ecount = 0
 
@@ -1864,8 +1863,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
         # only take action if you find a path that is a default user path and not in production
         if self.resource_federation_path == defaultpath and userpath != defaultpath:
-            msg ="fix_irods_user_paths: mapping existing user federation path {} to {}"\
-                 .format(self.resource_federation_path, userpath)
+            msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
+                  .format(self.resource_federation_path, userpath)
             if echo_actions:
                 print(msg)
             if log_actions:
@@ -1890,8 +1889,8 @@ class AbstractResource(ResourcePermissionsMixin):
                         actions.append(msg)
                 else:
                     msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
-                          " {} should start with {}; cannot convert")\
-                          .format(path, self.short_id, defaultpath)
+                           " {} should start with {}; cannot convert")\
+                           .format(path, self.short_id, defaultpath)
                     if echo_actions:
                         print(msg)
                     if log_actions:
