@@ -3,11 +3,21 @@ import logging
 import shutil
 
 from osgeo import ogr, osr
+try:
+    #  Python 2.6-2.7
+    from HTMLParser import HTMLParser
+except ImportError:
+    #  Python 3
+    from html.parser import HTMLParser
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.core.files.uploadedfile import UploadedFile
+from django.db import models, transaction
+from django.utils.html import strip_tags
 
+from hs_core.models import Title
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.resource import delete_resource_file
 
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, OriginalFileInfo, FieldInformation
@@ -114,20 +124,20 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             raise ValidationError("Selected file must be generic file type.")
 
         if res_file.extension == '.shp':
-            # check that the shp file is not at the root level
-            if not res_file.file_folder:
-                raise ValidationError("Selected shape file must be at the root level.")
             # get the names of all files where res_file exists
             shape_files = []
             shp_res_files = []
             for f in resource.files.all():
-                if f.file_folder == res_file.file_folder:
-                    shape_files.append(f.file_name)
-                    shp_res_files.append(f)
+                if f.extension in cls.get_allowed_storage_file_types() and \
+                        f.has_generic_logical_file:
+                    # compare without the file extension (-4)
+                    if res_file.short_path[:-4] == f.short_path[:-4]:
+                        shape_files.append(f.file_name)
+                        shp_res_files.append(f)
             if not check_if_shape_files(shape_files):
                 err_msg = "One or more dependent shape files are missing at location: " \
                           "{folder_path} or one or more files are of not shape file type."
-                err_msg = err_msg.format(res_file.short_path)
+                err_msg = err_msg.format(folder_path=res_file.short_path)
                 raise ValidationError(err_msg)
             # base file name (no path included)
             file_name = res_file.file_name
@@ -135,7 +145,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             base_file_name = file_name.split(".")[0]
             # copy the needed shape files from irods to django to the same temp dir
             temp_dir = ''
-            temp_shp_files = []
+            files_to_add_to_resource = []
+            xml_file = ''
+            shp_file = ''
             for f in shp_res_files:
                 temp_file = utils.get_file_from_irods(f)
                 if not temp_dir:
@@ -146,16 +158,135 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     shutil.copy(temp_file, dst_dir)
                     shutil.rmtree(file_temp_dir)
                     temp_file = dst_dir
-                temp_shp_files.append(temp_file)
-                # TODO: need to figure out the best way to call the parse_shp_zshp()
-                # parse_shp_zshp(uploadedFileType='shp', baseFilename=base_file_name,
-                #                uploadedFileCount=len(temp_shp_files),  )
+                files_to_add_to_resource.append(temp_file)
+                if not xml_file and f.extension == '.xml':
+                    xml_file = temp_file
+                if not shp_file and f.extension == '.shp':
+                    shp_file = temp_file
+
+            # TODO: need to figure out the best way to call the parse_shp_zshp()
+            uploaded_file_names_string = ','.join(f.file_name for f in shp_res_files)
+            try:
+                meta_array, meta_dict = parse_shp_zshp(
+                    uploadedFileType='shp',
+                    baseFilename=base_file_name,
+                    uploadedFileCount=len(files_to_add_to_resource),
+                    uploadedFilenameString=uploaded_file_names_string,
+                    shpFullPath=shp_file
+                )
+            except Exception as ex:
+                # remove temp dir
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
+                msg = "GeoFeature file type. Error when setting file type. Error:{}"
+                msg = msg.format(ex.message)
+                log.exception(msg)
+                # TODO: in case of any error put the original file back and
+                # delete the folder that was created
+                raise ValidationError(msg)
+
+            file_folder = res_file.file_folder
+            with transaction.atomic():
+                # first delete all the shape files that we retrieved from irods
+                # for setting it to GeoFeature file type
+                for fl in shp_res_files:
+                    delete_resource_file(resource.short_id, fl.id, user)
+
+                # create a GeoFeature logical file object to be associated with
+                # resource files
+                logical_file = cls.create()
+
+                # by default set the dataset_name attribute of the logical file to the
+                # name of the file selected to set file type
+                logical_file.dataset_name = base_file_name
+                logical_file.save()
+                try:
+                    # create a folder for the geofeature file type using the base file
+                    # name as the name for the new folder
+                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                   base_file_name)
+                    create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
+
+                    new_folder_name = new_folder_path.split('/')[-1]
+                    if file_folder is None:
+                        upload_folder = new_folder_name
+                    else:
+                        upload_folder = os.path.join(file_folder, new_folder_name)
+                    # add all new files to the resource
+                    for fl in files_to_add_to_resource:
+                        uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                                     name=os.path.basename(fl))
+                        new_res_file = utils.add_file_to_resource(
+                            resource, uploaded_file, folder=upload_folder
+                        )
+
+                        # make each resource file we added part of the logical file
+                        logical_file.add_resource_file(new_res_file)
+
+                    log.info("GeoFeature file type - files were added to the file type.")
+                except Exception as ex:
+                    msg = "GeoFeature file type. Error when setting file type. Error:{}"
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
+                    # TODO: in case of any error put the original file back and
+                    # delete the folder that was created
+                    raise ValidationError(msg)
+                finally:
+                    # remove temp dir
+                    if os.path.isdir(temp_dir):
+                        shutil.rmtree(temp_dir)
+
+                log.info("GeoFeature file type was created.")
+                # populate logical file level metadata
+                if "coverage" in meta_dict.keys():
+                    coverage_dict = meta_dict["coverage"]['Coverage']
+                    logical_file.metadata.create_element('coverage',
+                                                         type=coverage_dict['type'],
+                                                         value=coverage_dict['value'])
+                originalcoverage_dict = meta_dict["originalcoverage"]['originalcoverage']
+                logical_file.metadata.create_element('originalcoverage',
+                                                     **originalcoverage_dict)
+                field_info_array = meta_dict["field_info_array"]
+                for field_info in field_info_array:
+                    field_info_dict = field_info["fieldinformation"]
+                    logical_file.metadata.create_element('fieldinformation',
+                                                         **field_info_dict)
+                geometryinformation_dict = meta_dict["geometryinformation"]
+                logical_file.metadata.create_element('geometryinformation',
+                                                     **geometryinformation_dict)
+                if xml_file:
+                    shp_xml_metadata_list = parse_shp_xml(xml_file)
+                    for shp_xml_metadata in shp_xml_metadata_list:
+                        if 'description' in shp_xml_metadata:
+                            # overwrite existing description metadata - at the resource level
+                            if not resource.metadata.description:
+                                abstract = shp_xml_metadata['description']['abstract']
+                                resource.metadata.create_element('description',
+                                                                 abstract=abstract)
+                        elif 'title' in shp_xml_metadata:
+                            title = shp_xml_metadata['title']['value']
+                            if resource.metadata.title.value.lower() == 'untitled resource':
+                                resource.metadata.create_element('title', value=title)
+                            else:
+                                logical_file.dataset_name = title
+                                logical_file.save()
+                        elif 'subject' in shp_xml_metadata:
+                            # append new keywords to existing keywords - at the resource level
+                            existing_keywords = [subject.value.lower() for
+                                                 subject in resource.metadata.subjects.all()]
+                            keyword = shp_xml_metadata['subject']['value']
+                            if keyword.lower() not in existing_keywords:
+                                resource.metadata.create_element('subject', value=keyword)
+                            # add keywords at the file level
+                            logical_file.metadata.keywords += [keyword]
+                            logical_file.metadata.save()
+
+                log.info("GeoFeature file type and resource level metadata updated.")
         else:
             # TODO:
             # process zip file
-            pass
-
-
+            raise ValidationError("Need to process zip file for geo feature file type ")
 
 
 def check_if_shape_files(files):
@@ -286,7 +417,7 @@ def parse_shp_zshp(uploadedFileType, baseFilename,
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_array, metadata_dict
     except:
-        raise Exception("Parse Shapefiles Failed!")
+        raise ValidationError("Parse Shapefiles Failed!")
 
 
 def parse_shp(shp_file_path):
@@ -423,3 +554,56 @@ def parse_shp(shp_file_path):
         shp_metadata_dict["wgs84_extent_dict"]["units"] = UNKNOWN_STR
 
     return shp_metadata_dict
+
+
+def parse_shp_xml(shp_xml_full_path):
+    """
+    Parse ArcGIS 10.X ESRI Shapefile Metadata XML.
+    :param shp_xml_full_path: Expected fullpath to the .shp.xml file
+    :return: a list of metadata dict
+    """
+    metadata = []
+
+    try:
+        if os.path.isfile(shp_xml_full_path):
+            with open(shp_xml_full_path) as fd:
+                xml_dict = xmltodict.parse(fd.read())
+
+                dataIdInfo_dict = xml_dict['metadata']['dataIdInfo']
+                if 'idCitation' in dataIdInfo_dict:
+                    if 'resTitle' in dataIdInfo_dict['idCitation']:
+                        if '#text' in dataIdInfo_dict['idCitation']['resTitle']:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']['#text']
+                        else:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']
+
+                        title_max_length = Title._meta.get_field('value').max_length
+                        if len(title_value) > title_max_length:
+                            title_value = title_value[:title_max_length-1]
+                        title = {'title': {'value': title_value}}
+                        metadata.append(title)
+
+                if 'idAbs' in dataIdInfo_dict:
+                    description_value = strip_tags(dataIdInfo_dict['idAbs'])
+                    description = {'description': {'abstract': description_value}}
+                    metadata.append(description)
+
+                if 'searchKeys' in dataIdInfo_dict:
+                    searchKeys_dict = dataIdInfo_dict['searchKeys']
+                    if 'keyword' in searchKeys_dict:
+                        keyword_list = []
+                        if type(searchKeys_dict["keyword"]) is list:
+                            keyword_list += searchKeys_dict["keyword"]
+                        else:
+                            keyword_list.append(searchKeys_dict["keyword"])
+                        for k in keyword_list:
+                            metadata.append({'subject': {'value': k}})
+
+    except Exception:
+        # Catch any exception silently and return an empty list
+        # Due to the variant format of ESRI Shapefile Metadata XML
+        # among different ArcGIS versions, an empty list will be returned
+        # if any exception occurs
+        metadata = []
+    finally:
+        return metadata
