@@ -1949,8 +1949,8 @@ td.user-actions > span:hover {
     border-bottom: 1px solid #ddd;
 }
 
-.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .caret {
-	display:none;
+.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .undo-share-form, .access-table tr.hide-actions .caret {
+	display: none;
 }
 
 .access-table tr.hide-actions .user-roles {
