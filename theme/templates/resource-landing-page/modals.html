@@ -1490,7 +1490,9 @@
                                                 <span class="badge you-flag">You</span>
                                             {% endif %}
                                             {% if u.pk == quota_holder.pk %}
-                                                <span quota-holder class="badge you-flag">Quota Holder</span>
+                                                <span quota-holder class="badge you-flag">
+                                                    <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
+                                                </span>
                                             {% endif %}
                                             <br>
                                             <span data-col="user-name"
