@@ -1845,7 +1845,7 @@ class AbstractResource(ResourcePermissionsMixin):
         ecount = 0
 
         # location of the user files in production
-        defaultpath = getattr(settings, 'HS_USER_ZONE_DEFAULT_PATH',
+        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
                               '/hydroshareuserZone/home/localHydroProxy')
         # where resource should be found; this is equal to the default path in production
         userpath = '/' + os.path.join(
@@ -1927,7 +1927,7 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage = self.get_irods_storage()
         errors = []
         ecount = 0
-        defaultpath = getattr(settings, 'HS_USER_ZONE_DEFAULT_PATH',
+        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
                               '/hydroshareuserZone/home/localHydroProxy')
 
         # skip federated resources if not configured to handle these
