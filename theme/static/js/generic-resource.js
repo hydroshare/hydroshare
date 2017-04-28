@@ -23,7 +23,7 @@ function setPointerEvents(flag) {
 }
 
 function ownersConstrain() {
-// Constrains: 1 - At least one owner. 2 - Quota holders cannot be removed
+    // Constrains: 1 - At least one owner. 2 - Quota holders cannot be removed
     if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {
         var owners = $(".access-table li.active[data-access-type='Is owner']").closest("tr");
         owners.each(function () {
