@@ -15,11 +15,12 @@ class AppLaunch(TemplateView):
 
     def get(self, request, **kwargs):
 
-        # get the url or hydroshare.org if one is not provided.
-        url = request.GET.get('url', 'http://www.hydroshare.org')
+        # get the url from the request
+        url = request.GET.get('url')
 
         # log app launch details if user is logged in
-        if hasattr(request, 'user'):
+#        if hasattr(request, 'user'):
+        if request.user.is_authenticated():
 
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
