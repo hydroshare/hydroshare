@@ -35,7 +35,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        defaultpath = '/hydroshareuserZone/home/localHydroProxy'
+        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
+                              '/hydroshareuserZone/home/localHydroProxy')
+
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
