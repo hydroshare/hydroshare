@@ -932,7 +932,7 @@ li.account p{
 }
 
 .contact-table td.drag-indicator, .contact-table th.drag-indicator {
-	width: 45px;
+	width: 20px;
 }
 
 .contact-table td:last-child{
@@ -1949,8 +1949,8 @@ td.user-actions > span:hover {
     border-bottom: 1px solid #ddd;
 }
 
-.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .undo-share-form, .access-table tr.hide-actions .caret {
-	display: none;
+.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .caret {
+	display:none;
 }
 
 .access-table tr.hide-actions .user-roles {

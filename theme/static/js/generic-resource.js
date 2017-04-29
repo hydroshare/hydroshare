@@ -22,22 +22,6 @@ function setPointerEvents(flag) {
     }
 }
 
-function ownersConstrain() {
-    // Constrains: 1 - At least one owner. 2 - Quota holders cannot be removed
-    if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {
-        var owners = $(".access-table li.active[data-access-type='Is owner']").closest("tr");
-        owners.each(function () {
-            var owner = $(this);
-            if (!owner.find("[quota-holder]").length && owners.length > 1) {
-                owner.toggleClass("hide-actions", false);
-            }
-            else {
-                owner.toggleClass("hide-actions", true);
-            }
-        });
-    }
-}
-
 // Enables and disables granting access buttons accordingly to the current access level
 function updateActionsState(privilege){
     // Set the state of dropdown menu items and remove buttons to false by default
@@ -79,8 +63,9 @@ function updateActionsState(privilege){
         // Remove buttons
         $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
         $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
-
-        ownersConstrain();
+        if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {     // At least one owner constrain
+            $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
+        }
     }
 }
 
