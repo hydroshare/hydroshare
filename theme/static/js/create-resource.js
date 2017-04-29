@@ -145,7 +145,10 @@ $(document).ready(function () {
     });
 
     $('#dropdown-resource-type li a').click(function () {
+        // Removed all previously queued files when the resource type changes
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+        $('#irods-sel-file').text("No file selected.");
+        $('#irods_file_names').val("");
 
         if (selected_file != undefined) {
             selected_file.value = '';
