@@ -158,6 +158,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         remove_folder(self.user, self.composite_resource.short_id, folder_path)
         txt_res_file.refresh_from_db()
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+        # there should not be any GeoRasterLogicalFile object
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # there should be 1 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
         self.composite_resource.delete()
 
     def test_core_metadata_CRUD(self):
