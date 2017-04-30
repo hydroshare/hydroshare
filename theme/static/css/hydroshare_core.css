@@ -4599,10 +4599,6 @@ div#resource-content {
     margin-bottom: 35px
 }
 
-#resource-title {
-	border-bottom: 1px solid #DDD;
-}
-
 #resource-content .resource-type {
 	border-radius: 4px;
 	display: inline-block;
