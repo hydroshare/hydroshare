@@ -50,6 +50,19 @@
     }
 })(jQuery);
 
+// Formats dates from "yyyy-mm-dd" to "mm/dd/yyyy"
+(function ($) {
+    $.fn.formatDate = function () {
+        var item = $(this);
+        var dateString = item.attr("data-date").split("-");
+        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
+        item.text(formattedDate);
+        item.removeClass("format-date");
+
+        return item;
+    }
+})(jQuery);
+
 
 $(document).ready(function () {
     // Search box toggle
