@@ -164,4 +164,9 @@ $(document).ready(function () {
 
 	// Initialize tooltips
 	$('[data-toggle="tooltip"]').tooltip();
+
+    // Format the dates before displaying them
+    $(".format-date").each(function () {
+        $(this).formatDate();
+    });
 });

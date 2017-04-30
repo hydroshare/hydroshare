@@ -37,11 +37,6 @@ $(document).ready(function () {
     if ($("#coverageMap").length) {
         google.maps.event.addDomListener(window, "load", initMap);
     }
-
-    // Format the dates before displaying them
-    $(".format-date").each(function () {
-        $(this).formatDate();
-    });
 });
 
 function drawInitialShape() {
