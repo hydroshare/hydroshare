@@ -2910,6 +2910,14 @@ span.you-flag {
 	color: #AAA;
 }
 
+.table-icon {
+	padding-top: 3px;
+	margin-left: 4px;
+	margin-right: 4px;
+	font-size: 16px;
+	cursor: pointer;
+}
+
 .btn-inline-label:hover, .has-labels {
 	color: #0A91AB;
 }
