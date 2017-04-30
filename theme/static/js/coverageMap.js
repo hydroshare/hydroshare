@@ -40,9 +40,7 @@ $(document).ready(function () {
 
     // Format the dates before displaying them
     $(".format-date").each(function () {
-        var dateString = $(this).attr("data-date").trim().substr(0, 10).split("-");    // original format: yyyy-mm-dd (10 characters)
-        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
-        $(this).text(formattedDate);
+        $(this).formatDate();
     });
 });
 
