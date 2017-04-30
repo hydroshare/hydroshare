@@ -566,19 +566,16 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
             folderpath += '/'
         res_file_set = ResourceFile.objects.filter(object_id=resource.id)
 
-        # TODO: integrate this with ResourceFile.delete
-        # delete all unique logical file objects associated with any resource files to be deleted
-        # from django as they need to be deleted differently
-        logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
-        for lf in logical_files:
-            # this should delete the logical file and any associated metadata
-            # but does not delete the resource files that are part of the logical file
-            lf.logical_delete(user, delete_res_files=False)
-
         # then delete resource file objects
         for f in res_file_set:
             filename = f.storage_path
             if filename.startswith(folderpath):
+                # TODO: integrate deletion of logical file with ResourceFile.delete
+                # delete the logical file object if the resource file has one
+                if f.has_logical_file:
+                    # this should delete the logical file and any associated metadata
+                    # but does not delete the resource files that are part of the logical file
+                    f.logical_file.logical_delete(user, delete_res_files=False)
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
