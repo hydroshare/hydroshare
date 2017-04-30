@@ -1045,6 +1045,11 @@ table.info-table {
 	padding-bottom: 8px;
 }
 
+.custom-table td {
+	word-break: break-all;
+	word-wrap: break-word;
+}
+
 #txt-title {
 	font-size: 27px;
 	height: auto;
