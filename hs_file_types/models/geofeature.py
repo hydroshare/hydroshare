@@ -14,6 +14,9 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models, transaction
 from django.utils.html import strip_tags
+from django.template import Template, Context
+
+from dominate.tags import legend, table, tbody, tr, th, div
 
 from hs_core.models import Title
 from hs_core.hydroshare import utils
@@ -45,6 +48,36 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes['originalfileinfo'] = OriginalFileInfo
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
+
+    def get_html(self):
+        """overrides the base class function"""
+
+        html_string = super(GeoFeatureFileMetaData, self).get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalcoverage:
+            html_string += self.originalcoverage.get_html()
+        if self.temporal_coverage:
+            html_string += self.temporal_coverage.get_html()
+
+        root_div = div(cls="col-md-12 col-sm-12", style="margin-bottom:40px;")
+        with root_div:
+            legend('Field Information')
+            with table(cls='field-table'):
+                with tbody():
+                    with tr(cls='row'):
+                        th('Name')
+                        th('Type')
+                        th('Width')
+                        th('Precision')
+
+                    for field_info in self.fieldinformations.all():
+                        field_info.get_html()
+
+        html_string += root_div.render()
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
@@ -114,7 +147,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         # get the file from irods
         res_file = utils.get_resource_file_by_id(resource, file_id)
 
-        if res_file is None:
+        if res_file is None or not res_file.exists:
             raise ValidationError("File not found.")
 
         if res_file.extension not in ('.zip', '.shp'):

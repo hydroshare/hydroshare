@@ -3,6 +3,8 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div
+
 from hs_core.models import BaseResource, ResourceManager, resource_processor,\
                            CoreMetaData, AbstractMetaDataElement
 
@@ -48,6 +50,48 @@ class OriginalCoverage(AbstractMetaDataElement):
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Spatial Reference')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Coordinate Reference System')
+                        td(self.projection_name)
+                    with tr():
+                        get_th('Datum')
+                        td(self.datum)
+                    with tr():
+                        get_th('Coordinate String Text')
+                        td(self.projection_string)
+            h4('Extent')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('North')
+                        td(self.northlimit)
+                    with tr():
+                        get_th('West')
+                        td(self.westlimit)
+                    with tr():
+                        get_th('South')
+                        td(self.southlimit)
+                    with tr():
+                        get_th('East')
+                        td(self.eastlimit)
+                    with tr():
+                        get_th('Unit')
+                        td(self.unit)
+
+        return root_div.render(pretty=pretty)
+
 
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
@@ -57,6 +101,17 @@ class FieldInformation(AbstractMetaDataElement):
     fieldTypeCode = models.CharField(max_length=50, null=True, blank=True)
     fieldWidth = models.IntegerField(null=True, blank=True)
     fieldPrecision = models.IntegerField(null=True, blank=True)
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        field_infor_tr = tr(cls='row')
+        with field_infor_tr:
+            td(self.fieldName)
+            td(self.fieldType)
+            td(self.fieldWidth)
+            td(self.fieldPrecision)
+        return field_infor_tr
 
 
 class GeometryInformation(AbstractMetaDataElement):
