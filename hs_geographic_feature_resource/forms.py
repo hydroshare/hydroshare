@@ -1,6 +1,6 @@
 from django import forms
 from crispy_forms.layout import Layout, Field
-from hs_core.forms import BaseFormHelper
+from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 
 
 class OriginalCoverageFormHelper(BaseFormHelper):
@@ -74,11 +74,10 @@ class GeometryInformationFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet
         # is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('geometryType', css_class=field_width),
-                        Field('featureCount', css_class=field_width),
-                       )
+        file_type = kwargs.pop('file_type', False)
+        form_field_names = ['geometryType', 'featureCount']
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
+        layout = Layout(*crispy_form_fields)
 
         super(GeometryInformationFormHelper, self)\
             .__init__(allow_edit, res_short_id, element_id, element_name,
@@ -93,11 +92,13 @@ class GeometryInformationForm(forms.Form):
                                       widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(GeometryInformationForm, self).__init__(*args, **kwargs)
         self.helper = GeometryInformationFormHelper(allow_edit,
                                                     res_short_id,
                                                     element_id,
-                                                    element_name='GeometryInformation')
+                                                    element_name='GeometryInformation',
+                                                    file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit

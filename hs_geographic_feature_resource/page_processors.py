@@ -20,21 +20,21 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
 
-        if content_model.metadata.originalcoverage.all():
+        if content_model.metadata.originalcoverage:
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
 
         # add the original coverage context
         geom_info_for_view = {}
-        geom_info = content_model.metadata.geometryinformation.all().first()
+        geom_info = content_model.metadata.geometryinformation
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
             context['geometry_information'] = geom_info_for_view
 
         ori_cov_dict = {}
-        ori_cov_obj = content_model.metadata.originalcoverage.all().first()
+        ori_cov_obj = content_model.metadata.originalcoverage
         if ori_cov_obj:
             ori_cov_dict['northlimit'] = ori_cov_obj.northlimit
             ori_cov_dict['eastlimit'] = ori_cov_obj.eastlimit
@@ -46,7 +46,7 @@ def landing_page(request, page):
             ori_cov_dict['unit'] = ori_cov_obj.unit
             context['original_coverage'] = ori_cov_dict
 
-        field_info_list = content_model.metadata.fieldinformation.all()
+        field_info_list = content_model.metadata.fieldinformations.all()
         field_info_list_context = []
         for field_info in field_info_list:
             field_info_dict_item = {}
@@ -60,7 +60,7 @@ def landing_page(request, page):
 
     else:  # editing mode
         geom_info_for_view = {}
-        geom_info = content_model.metadata.geometryinformation.all().first()
+        geom_info = content_model.metadata.geometryinformation
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
@@ -78,7 +78,7 @@ def landing_page(request, page):
                                        '</div>')
 
         # origina coverage_form
-        ori_cov_obj = content_model.metadata.originalcoverage.all().first()
+        ori_cov_obj = content_model.metadata.originalcoverage
         ori_coverage_data_dict = {}
         if ori_cov_obj:
             ori_coverage_data_dict['projection_string'] = ori_cov_obj.projection_string

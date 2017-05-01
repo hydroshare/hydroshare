@@ -146,6 +146,25 @@ class GeometryInformation(AbstractMetaDataElement):
                         td(self.featureCount)
         return root_div.render(pretty=pretty)
 
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from .forms import GeometryInformationForm
+
+        geom_info_data_dict = {}
+        if element is not None:
+            geom_info_data_dict['geometryType'] = element.geometryType
+            geom_info_data_dict['featureCount'] = element.featureCount
+
+        geom_information_form = GeometryInformationForm(initial=geom_info_data_dict,
+                                                        res_short_id=resource.short_id if
+                                                        resource else None,
+                                                        allow_edit=allow_edit,
+                                                        element_id=element.id if element else None,
+                                                        file_type=file_type)
+        return geom_information_form
 
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")

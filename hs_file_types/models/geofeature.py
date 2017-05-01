@@ -21,6 +21,7 @@ from dominate.tags import legend, table, tbody, tr, th, div
 from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.forms import CoverageTemporalForm
 
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, OriginalFileInfo, FieldInformation
@@ -61,7 +62,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
 
-        root_div = div(cls="col-md-12 col-sm-12", style="margin-bottom:40px;")
+        root_div = div(cls="col-md-12 col-sm-12 pull-left", style="margin-bottom:40px;")
         with root_div:
             legend('Field Information')
             with table(style="width: 100%;"):
@@ -79,6 +80,57 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         template = Template(html_string)
         context = Context({})
         return template.render(context)
+
+    def get_html_forms(self, datatset_name_form=True):
+        """overrides the base class function to generate html needed for metadata editing"""
+
+        root_div = div("{% load crispy_forms_tags %}")
+        with root_div:
+            super(GeoFeatureFileMetaData, self).get_html_forms()
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy geometry_information_form %}")
+
+        template = Template(root_div.render())
+        context_dict = dict()
+
+        context_dict["geometry_information_form"] = self.get_geometry_information_form()
+        update_action = "/hsapi/_internal/GeoFeatureLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        create_action = "/hsapi/_internal/GeoFeatureLogicalFile/{0}/{1}/add-file-metadata/"
+        temp_cov_form = self.get_temporal_coverage_form()
+        if self.temporal_coverage:
+            form_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.temporal_coverage.id)
+            temp_cov_form.action = form_action
+        else:
+            form_action = create_action.format(self.logical_file.id, "coverage")
+            temp_cov_form.action = form_action
+
+        context_dict["temp_form"] = temp_cov_form
+        context = Context(context_dict)
+        rendered_html = template.render(context)
+
+        return rendered_html
+
+    def get_geometry_information_form(self):
+        return GeometryInformation.get_html_form(resource=None, element=self.geometryinformation,
+                                                 file_type=True, allow_edit=False)
+
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        """overriding the base class method"""
+
+        # the only metadata that we are allowing for editing is the temporal coverage
+        element_name = element_name.lower()
+        if element_name != 'coverage' or 'start' not in request.POST:
+            err_msg = 'Data for temporal coverage is missing'
+            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+
+        element_form = CoverageTemporalForm(data=request.POST)
+
+        if element_form.is_valid():
+            return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        else:
+            return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
