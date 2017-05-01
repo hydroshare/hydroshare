@@ -411,7 +411,6 @@ function bindFileBrowserItemEvents() {
     });
 }
 
-
 function showFileTypeMetadata(){
      var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
      if (logical_file_id.length == 0){

@@ -3,12 +3,11 @@ from django.forms import ModelForm, BaseFormSet
 from django import forms
 
 from crispy_forms.layout import *
+from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from hs_model_program.models import MpMetadata
-
 from hs_core.forms import BaseFormHelper
 from django.utils.html import escape
-
 class mp_form_helper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
 
@@ -63,7 +62,16 @@ class mp_form_helper(BaseFormHelper):
 
 class mp_form(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        # pop files from kwargs, else metadata will fail to load in edit mode
+        files = kwargs.pop('files')
         super(mp_form, self).__init__(*args, **kwargs)
+        self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata', files=files)
+
+        # hide the field help text
+        for field in self.fields:
+            help_text = self.fields[field].help_text
+            self.fields[field].help_text = None
+
 
     class Meta:
         model = MpMetadata
@@ -93,3 +101,5 @@ class mp_form_validation(forms.Form):
     modelDocumentation = forms.CharField(required=False)
     modelSoftware = forms.CharField(required=False)
     modelEngine = forms.CharField(required=False)
+
+

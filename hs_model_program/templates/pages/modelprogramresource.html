@@ -1,11 +1,8 @@
 {# This template is used as the landing page for Model Program resource #}
 
-
 {% extends "pages/genericresource.html" %}
 {% load pages_tags mezzanine_tags crispy_forms_tags %}
 {% load staticfiles  %}
-
-
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
@@ -13,7 +10,6 @@
             <div class="col-md-12">
                 {# Add the view mode html code below #}
                 {% if mpmetadata %}
-
                     {########################}
                     {#       CONTENT FILES     #}
                     {########################}
@@ -87,7 +83,6 @@
                     </table>
                     <hr style="border:0">
 
-
                 {% endif %}
 
                     {########################}
@@ -114,30 +109,15 @@
     {% endif %}
 {% endblock %}
 
-{% block content_block%}
-    {{ block.super }}
-{% endblock %}
-
-{% block extended_metadata_edit %}
-    <hs-api base-url="//192.168.56.101:8000"> </hs-api>
-   <model-program></model-program>
-
-{{ block.super }}
-{% endblock %}
-
 {% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-multiselect.css" %}" />
     <link rel="stylesheet" type="text/css" href="{% static "css/model_program.css" %}" />
-    <link rel="import" href="{%  static "bower_components/polymer/polymer.html" %}">
-    <link rel="import" href="{%  static "hs_components/model-program.html" %}">
-    <link rel="import" href="{%  static "hs_components/hs-api.html" %}">
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
     <script src="{% static "js/bootstrap-multiselect.js"%}"></script>
     <script src="{% static "js/model_program.js"%}"></script>
-    <script src="{% static "bower_components/moment/min/locales.js" %}"></script>
 {% endblock %}
 
 

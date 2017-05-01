@@ -33,21 +33,7 @@ $(document).ready(function () {
                 $("#resourceSpecificTab").find('.btn-primary').show();
             }
         });
-
-
-//    var calendarButton = document.querySelector("#calendar-button");
-//    calendarButton.addEventListener("click", function() {
-//        $('#calendar-dialog').show();
-//    });
-//    $("#calendar-dismiss").on("click", function(){
-//        $('#calendar-dialog').hide();
-//    });
-//    $("#calendar-confirm").on("click", function(){
-//        $('#calendar-dialog').hide();
-//    });
-
 });
-
 
 /**
  * Builds jQuery multiselect listboxes
