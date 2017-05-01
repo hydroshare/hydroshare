@@ -131,6 +131,7 @@ def _process_package_info(resource):
             for p in packages:
                 # check each term
                 # StressPeriod
+                p = p[0]
                 if p in modflow_models.uncouple(
                         modflow_models.StressPeriod.stressPeriodTypeChoices):
                     # create if does not exist, update if it does exist

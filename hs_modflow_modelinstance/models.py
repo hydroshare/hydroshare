@@ -176,13 +176,17 @@ class StressPeriod(AbstractMetaDataElement):
 
 class GroundWaterFlow(AbstractMetaDataElement):
     term = 'GroundWaterFlow'
-    flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
-                          ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2'),)
+    flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'), ('UPW', 'UPW'),)
     flowParameterChoices = (('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                             ('Transmissivity', 'Transmissivity'),)
 
     flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True,
                                    blank=True, verbose_name='Flow package')
+    unsaturatedZonePackage = models.BooleanField(default=False, verbose_name='Includes UZF package')
+    horizontalFlowBarrierPackage = models.BooleanField(default=False,
+                                                       verbose_name='Includes HFB6 package')
+    seawaterIntrusionPackage = models.BooleanField(default=False,
+                                                   verbose_name='Includes SWI2 package')
     flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True,
                                      blank=True, verbose_name='Flow parameter')
 
@@ -214,6 +218,27 @@ class GroundWaterFlow(AbstractMetaDataElement):
             elif key == 'flowParameter':
                 kwargs[key] = validate_choice(val, cls.flowParameterChoices)
         return kwargs
+
+    @property
+    def includesUnsaturatedZonePackage(self):
+        if self.unsaturatedZonePackage:
+            return "Yes"
+        else:
+            return "No"
+
+    @property
+    def includesHorizontalFlowBarrierPackage(self):
+        if self.horizontalFlowBarrierPackage:
+            return "Yes"
+        else:
+            return "No"
+
+    @property
+    def includesSeawaterIntrusionPackage(self):
+        if self.seawaterIntrusionPackage:
+            return "Yes"
+        else:
+            return "No"
 
 
 class AbstractChoices(models.Model):
@@ -627,7 +652,8 @@ class MODFLOWModelInstanceResource(BaseResource):
                  included for the model to run
                  -existing_files, (list of strings), the names of files that have been uploaded
                  -model packages (list of strings), the names of the packages for the uploaded model
-                 found in the .nam file
+                 found in the .nam or .mfn file. These are the entries in the far left column of the 
+                 .nam or .mfn file.
         """
         nam_file_count = 0
         existing_files = []
@@ -645,8 +671,11 @@ class MODFLOWModelInstanceResource(BaseResource):
                         r = row[0].strip()
                         if not r.startswith('#') and r != '' and r.lower() != 'list' \
                                 and r.lower() != 'data' and r.lower() != 'data(binary)':
-                            reqd_files.append(row[-1].strip())
-                            model_packages.append(row[0].strip())
+                            reqd_file = row[-1].strip()
+                            reqd_files.append(reqd_file)
+                            model_package_name = row[0].strip()
+                            model_package_ext = reqd_file.split('.')[-1].upper()
+                            model_packages.append((model_package_name, model_package_ext))
         return nam_file_count, reqd_files, existing_files, model_packages
 
 
@@ -740,7 +769,9 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             self.add_metadata_element_to_xml(container, self.stress_period, stressPeriodFields)
 
         if self.ground_water_flow:
-            groundWaterFlowFields = ['flowPackage', 'flowParameter']
+            groundWaterFlowFields = ['flowPackage', 'includesUnsaturatedZonePackage',
+                                     'includesHorizontalFlowBarrierPackage',
+                                     'includesSeawaterIntrusionPackage', 'flowParameter']
             self.add_metadata_element_to_xml(container, self.ground_water_flow,
                                              groundWaterFlowFields)
 

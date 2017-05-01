@@ -263,6 +263,9 @@ class GroundWaterFlowFormHelper(BaseFormHelper):
         # will be displayed
         layout = Layout(
                         MetadataField('flowPackage'),
+                        MetadataField('unsaturatedZonePackage'),
+                        MetadataField('horizontalFlowBarrierPackage'),
+                        MetadataField('seawaterIntrusionPackage'),
                         MetadataField('flowParameter'),
         )
         kwargs['element_name_label'] = 'Groundwater Flow'
@@ -275,6 +278,15 @@ class GroundWaterFlowForm(ModelForm):
         (('Choose a package', 'Choose a package'),) + GroundWaterFlow.flowPackageChoices
     flow_parameter_choices = \
         (('Choose a parameter', 'Choose a parameter'),) + GroundWaterFlow.flowParameterChoices
+    unsaturatedZonePackage = forms.TypedChoiceField(
+        choices=((True, 'Yes'), (False, 'No')),
+        widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+    horizontalFlowBarrierPackage = forms.TypedChoiceField(
+        choices=((True, 'Yes'), (False, 'No')),
+        widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+    seawaterIntrusionPackage = forms.TypedChoiceField(
+        choices=((True, 'Yes'), (False, 'No')),
+        widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GroundWaterFlowForm, self).__init__(*args, **kwargs)
@@ -286,13 +298,40 @@ class GroundWaterFlowForm(ModelForm):
     class Meta:
         model = GroundWaterFlow
         fields = ('flowPackage',
+                  'unsaturatedZonePackage',
+                  'horizontalFlowBarrierPackage',
+                  'seawaterIntrusionPackage',
                   'flowParameter',
                   )
 
 
 class GroundWaterFlowValidationForm(forms.Form):
     flowPackage = forms.CharField(max_length=100, required=False)
+    unsaturatedZonePackage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
+    horizontalFlowBarrierPackage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
+    seawaterIntrusionPackage = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')))
     flowParameter = forms.CharField(max_length=100, required=False)
+
+    def cleanUnsaturatedZonePackage(self):
+        data = self.cleaned_data['unsaturatedZonePackage']
+        if data == u'False':
+            return False
+        else:
+            return True
+
+    def cleanHorizontalFlowBarrierPackage(self):
+        data = self.cleaned_data['horizontalFlowBarrierPackage']
+        if data == u'False':
+            return False
+        else:
+            return True
+
+    def cleanSeawaterIntrusionPackage(self):
+        data = self.cleaned_data['seawaterIntrusionPackage']
+        if data == u'False':
+            return False
+        else:
+            return True
 
 
 # BoundaryCondition element forms
