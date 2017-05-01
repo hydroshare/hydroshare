@@ -5,10 +5,9 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 RUN pip install --upgrade pip && pip install \
   robot_detection \
   django-ipware \
-  django-test-without-migrations
+  django-test-without-migrations \
+  django-rest-swagger
 ### End - HydroShare Development Image Additions ###
-
-RUN pip install django-rest-swagger
 
 USER root
 WORKDIR /hydroshare
