@@ -55,14 +55,12 @@ class AbstractFileMetaData(models.Model):
         """
 
         root_div = div()
-        dataset_name_div = div(cls="col-xs-12")
+        dataset_name_div = div(cls="col-xs-12 content-block")
         if self.logical_file.dataset_name:
             with dataset_name_div:
-                with table(cls='custom-table'):
-                    with tbody():
-                        with tr():
-                            th("Title", cls="text-muted")
-                            td(self.logical_file.dataset_name)
+                legend("Title")
+                p(self.logical_file.dataset_name)
+
         keywords_div = div()
         if self.keywords:
             keywords_div = div(cls="col-sm-12 content-block")

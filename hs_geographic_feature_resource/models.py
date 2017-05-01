@@ -111,6 +111,8 @@ class FieldInformation(AbstractMetaDataElement):
             td(self.fieldType)
             td(self.fieldWidth)
             td(self.fieldPrecision)
+        if pretty:
+            return field_infor_tr.render(pretty=pretty)
         return field_infor_tr
 
 
@@ -123,6 +125,26 @@ class GeometryInformation(AbstractMetaDataElement):
     class Meta:
         # GeometryInformation element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-12 col-sm-12", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Geometry Information')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Geometry Type')
+                        td(self.geometryType)
+                    with tr():
+                        get_th('Feature Count')
+                        td(self.featureCount)
+        return root_div.render(pretty=pretty)
 
 
 class GeographicFeatureResource(BaseResource):

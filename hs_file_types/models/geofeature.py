@@ -53,6 +53,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         """overrides the base class function"""
 
         html_string = super(GeoFeatureFileMetaData, self).get_html()
+        html_string += self.geometryinformation.get_html()
         if self.spatial_coverage:
             html_string += self.spatial_coverage.get_html()
         if self.originalcoverage:
@@ -63,7 +64,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         root_div = div(cls="col-md-12 col-sm-12", style="margin-bottom:40px;")
         with root_div:
             legend('Field Information')
-            with table(cls='field-table'):
+            with table(style="width: 100%;"):
                 with tbody():
                     with tr(cls='row'):
                         th('Name')
@@ -72,7 +73,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                         th('Precision')
 
                     for field_info in self.fieldinformations.all():
-                        field_info.get_html()
+                        field_info.get_html(pretty=False)
 
         html_string += root_div.render()
         template = Template(html_string)
