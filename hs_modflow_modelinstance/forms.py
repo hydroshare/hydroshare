@@ -278,9 +278,15 @@ class GroundWaterFlowForm(ModelForm):
         (('Choose a package', 'Choose a package'),) + GroundWaterFlow.flowPackageChoices
     flow_parameter_choices = \
         (('Choose a parameter', 'Choose a parameter'),) + GroundWaterFlow.flowParameterChoices
-    unsaturatedZonePackage = forms.BooleanField()
-    horizontalFlowBarrierPackage = forms.BooleanField()
-    seawaterIntrusionPackage = forms.BooleanField()
+    unsaturatedZonePackage = forms.BooleanField(
+        label='Includes Unsaturated Zone Package package (UZF) ', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
+    horizontalFlowBarrierPackage = forms.BooleanField(
+        label='Includes Horizontal Flow Barrier package (HFB6)', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
+    seawaterIntrusionPackage = forms.BooleanField(
+        label='Includes Seawater Intrusion package (SWI2)', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GroundWaterFlowForm, self).__init__(*args, **kwargs)
