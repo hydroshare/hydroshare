@@ -16,4 +16,8 @@ urlpatterns = [
     url(r'^resources/(?P<pk>[0-9a-f-]+)/access/$',
         hs_core.views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
+
+    url(r'^resources/(?P<pk>[0-9a-f-]+)/sysmeta/$',
+        hs_core.views.resource_rest_api.SystemMetadataRetrieve.as_view(),
+        name='get_update_delete_resource_sysmeta'),
 ]

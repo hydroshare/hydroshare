@@ -12,6 +12,8 @@ from .base import HSRESTTestCase
 
 
 class TestCreateResource(HSRESTTestCase):
+    NEW_API_ROOT = "/api/v2/resources"
+
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_DEPRECATED_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
@@ -55,7 +57,7 @@ class TestCreateResource(HSRESTTestCase):
             self.assertEqual(response['Content-Type'], 'application/zip')
             self.assertGreater(int(response['Content-Length']), 0)
 
-    def test_post_resource_get_sysmeta(self):
+    def test_DEPRECATED_post_resource_get_sysmeta(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
@@ -63,7 +65,7 @@ class TestCreateResource(HSRESTTestCase):
                   'file': ('cea.tif',
                            open('hs_core/tests/data/cea.tif'),
                            'image/tiff')}
-        url = '/hsapi/resource/'
+        url = root + '/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
@@ -72,7 +74,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # Get the resource system metadata to make sure the resource was
         # properly created.
-        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
+        sysmeta_url = root + "/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -96,6 +98,9 @@ class TestCreateResource(HSRESTTestCase):
         else:
             self.assertEqual(response['Content-Type'], 'application/zip')
             self.assertGreater(int(response['Content-Length']), 0)
+
+    def test_post_resource_get_sysmeta(self):
+        self.test_DEPRECATED_post_resource_get_sysmeta(self.NEW_API_ROOT)
 
     def test_resource_create_with_core_metadata(self):
         """

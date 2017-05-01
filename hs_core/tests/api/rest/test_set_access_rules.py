@@ -59,7 +59,7 @@ class TestSetAccessRules(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertTrue(content['public'])
 
-    def test_get_access_rules_via_sysmeta(self):
+    def test_DEPRECATED_get_access_rules_via_sysmeta(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
         title = 'My Test resource'
         keywords = ('foo', 'bar')
@@ -72,13 +72,16 @@ class TestSetAccessRules(HSRESTTestCase):
         res_id = new_res.short_id
         self.resources_to_delete.append(res_id)
 
-        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
+        sysmeta_url = root + "/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['resource_type'], rtype)
         self.assertEqual(content['resource_title'], title)
         self.assertFalse(content['public'])
+
+    def test_get_access_rules_via_sysmeta(self):
+        self.test_DEPRECATED_get_access_rules_via_sysmeta(self.NEW_API_ROOT)
 
     def test_DEPRECATED_get_resource_access(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
