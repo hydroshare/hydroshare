@@ -82,7 +82,7 @@ class TestResourceMap(ResMapTestCase):
         params = {'file': (txt_file_name,
                            open(txt_file_path),
                            'text/plain')}
-        url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
+        url = root + "/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)

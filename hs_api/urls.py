@@ -17,6 +17,14 @@ urlpatterns = [
         hs_core.views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
+        hs_core.views.resource_rest_api.ResourceFileCRUD.as_view(),
+        name='get_update_delete_resource_file'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$',
+        hs_core.views.resource_rest_api.ResourceFileListCreate.as_view(),
+        name='list_create_resource_file'),
+
     url(r'^resource/(?P<pk>[0-9a-f-]+)/map/$',
         hs_core.views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_update_delete_resource_sysmeta'),
