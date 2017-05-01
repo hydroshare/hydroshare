@@ -10,40 +10,40 @@ from . import models as hs_tracking
 from .models import Session, Variable
 from .utils import get_std_log_fields
 
-import urllib
 import urlparse
+
 
 class AppLaunch(TemplateView):
 
     def get(self, request, **kwargs):
 
-        # get the query parameters and remove the redirect url b/c 
+        # get the query parameters and remove the redirect url b/c
         # we don't need to log this.
         querydict = dict(request.GET)
         url = querydict.pop('url')[0]
 
         # log app launch details if user is logged in
         if request.user.is_authenticated():
-        
+
             # get user session and standard fields
             session = Session.objects.for_request(request, request.user)
             fields = get_std_log_fields(request, session)
-            
+
             # parse the query and param portions of the url
             purl = urlparse.urlparse(url)
-            
+
             # extract the app url args so they can be logged
             app_args = urlparse.parse_qs(purl.query)
-            
+
             # update the log fields with the extracted request and url params
             fields.update(querydict)
             fields.update(app_args)
-            
+
             # clean up the formatting of the query and app arg dicts
             # i.e. represent lists in csv format without brackets [ ]
             # so that the log records don't need to be cleaned later.
-            fields.update(dict((k,','.join(v)) for k,v in fields.iteritems() 
-                                 if type(v) == list))
+            fields.update(dict((k, ','.join(v)) for k, v in fields.iteritems()
+                          if type(v) == list))
 
             # format and save the log message
             msg = Variable.format_kwargs(**fields)
