@@ -1236,10 +1236,12 @@ class Coverage(AbstractMetaDataElement):
                     with tbody():
                         with tr():
                             get_th('Start Date')
-                            td(self.value['start'])
+                            td(self.value['start'], id='temporal_start_date',
+                               data_date=self.value['start'])
                         with tr():
                             get_th('End Date')
-                            td(self.value['end'])
+                            td(self.value['end'], id='temporal_end_date',
+                               data_date=self.value['end'])
 
         return root_div.render(pretty=pretty)
 
