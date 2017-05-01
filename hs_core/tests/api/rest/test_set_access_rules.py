@@ -9,7 +9,7 @@ from hs_core.hydroshare import users
 
 
 class TestSetAccessRules(HSRESTTestCase):
-    NEW_API_ROOT = "/api/v2/resources"
+    V2_API_ROOT = "/api/v2/resource"
 
     def setUp(self):
         super(TestSetAccessRules, self).setUp()
@@ -81,7 +81,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertFalse(content['public'])
 
     def test_get_access_rules_via_sysmeta(self):
-        self.test_DEPRECATED_get_access_rules_via_sysmeta(self.NEW_API_ROOT)
+        self.test_DEPRECATED_get_access_rules_via_sysmeta(self.V2_API_ROOT)
 
     def test_DEPRECATED_get_resource_access(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
@@ -139,7 +139,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual(1, len(get_response.data['users']))
 
     def test_set_and_delete_user_resource_access(self):
-        self.test_DEPRECATED_set_and_delete_user_resource_access(root=self.NEW_API_ROOT)
+        self.test_DEPRECATED_set_and_delete_user_resource_access(root=self.V2_API_ROOT)
 
     def test_DEPRECATED_set_and_delete_group_resource_access(self, root="/hsapi/resource"):
         rtype = 'GenericResource'

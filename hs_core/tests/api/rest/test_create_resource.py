@@ -12,7 +12,7 @@ from .base import HSRESTTestCase
 
 
 class TestCreateResource(HSRESTTestCase):
-    NEW_API_ROOT = "/api/v2/resources"
+    V2_API_ROOT = "/api/v2/resource"
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_DEPRECATED_post_resource_get_sysmeta(self):
@@ -100,7 +100,7 @@ class TestCreateResource(HSRESTTestCase):
             self.assertGreater(int(response['Content-Length']), 0)
 
     def test_post_resource_get_sysmeta(self):
-        self.test_DEPRECATED_post_resource_get_sysmeta(self.NEW_API_ROOT)
+        self.test_DEPRECATED_post_resource_get_sysmeta(self.V2_API_ROOT)
 
     def test_resource_create_with_core_metadata(self):
         """

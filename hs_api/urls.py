@@ -9,15 +9,23 @@ urlpatterns = [
         hs_core.views.resource_rest_api.ResourceListCreate.as_view(),
         name='list_create_resource'),
 
-    url(r'^resources/(?P<pk>[0-9a-f-]+)/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/$',
         hs_core.views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    url(r'^resources/(?P<pk>[0-9a-f-]+)/access/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
         hs_core.views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
-    url(r'^resources/(?P<pk>[0-9a-f-]+)/sysmeta/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/sysmeta/$',
         hs_core.views.resource_rest_api.SystemMetadataRetrieve.as_view(),
+        name='get_update_delete_resource_sysmeta'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/sysmeta/$',
+        hs_core.views.resource_rest_api.SystemMetadataRetrieve.as_view(),
+        name='get_update_delete_resource_sysmeta'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/map/$',
+        hs_core.views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_update_delete_resource_sysmeta'),
 ]
