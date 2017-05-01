@@ -28,12 +28,51 @@
 
       <div id="recaptcha-div"></div>
 
+      <div id="missing-data-div"></div>
+
       <input class="btn btn-primary" type="button" id="signup" value="Join HydroShare & start collaborating">
+
   </div>
 </form>
 
 <script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 <script type="text/javascript">
+    $(document).ready(function() {
+         $('input[type="button"]').prop('disabled', false);
+         // remove the content of the 'missing-data-div' upon data editing in any of the
+        // form fields
+         var fieldsToCheck = ["#id_first_name", "#id_last_name", "#id_username", "#id_email",
+             "#id_password1", "#id_password2", "#recaptcha_response_field"];
+
+         var i;
+         for (i=0; i< fieldsToCheck.length; i++){
+             $(fieldsToCheck[i]).keyup(function () {
+                 $("#missing-data-div").html(" ");
+             });
+             $(fieldsToCheck[i]).change(function () {
+                 $("#missing-data-div").html(" ");
+             });
+         }
+    });
+
+    // Only letters, numbers, dashes, dot, underscore, or @ are viewed as valid characters
+    // to conform to the same user name validation rules in Django with + removed from set of
+    // valid characters since although + is supported as a valid character in username field,
+    // it is not supported as a valid character in corresponding iRODS username
+    function validateUserName() {
+        var regex = /^[a-zA-Z0-9-_.@]+$/;
+        var username = $("#id_username");
+
+        if (!username.val()) {
+            return false;
+        }
+
+        if (!regex.test(username.val())) {
+            return false;
+        }
+        return true;
+    }
+
     $(function() {
         function cb() {
             $("#recaptcha_privacy").attr('style', "display:none");
@@ -47,13 +86,44 @@
         });
 
         $("#signup").click(function() {
-            var username = $("#username").val();
-            var firstName = $("#firstname").val();
-            var lastName = $("#lastname").val();
-            var email = $("#email").val();
-            var password = $("#password").val();
-            var pwconfirm = $("#pwconfirm").val();
-
+            var password = $("#id_password1").val();
+            var pwconfirm = $("#id_password2").val();
+            // These are the required form fields
+            var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
+                "#id_password2", "#recaptcha_response_field"];
+            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', 'ReCaptcha'];
+            var empty = false;
+            var missingFields = 'Data missing for:';
+            var missingFieldCount = 0;
+            var j;
+            for(j=0; j< requiredFieldsToCheck.length; j++) {
+                if ($(requiredFieldsToCheck[j]).val() == '') {
+                    empty = true;
+                    if (missingFieldCount == 0){
+                        missingFields += " " + fieldNames[j];
+                    }
+                    else {
+                        missingFields += ", " + fieldNames[j];
+                    }
+                    missingFieldCount++;
+                }
+           }
+           // validate username to make sure username not only passes django username validation
+           // but also passed iRODS username validation
+           var username_valid = validateUserName();
+           if(empty || !username_valid) {
+               var warning_str = '';
+               if(empty)
+                   warning_str += missingFields;
+               if(!username_valid) {
+                   if (empty)
+                       warning_str += "<br>";
+                   warning_str += "username is not valid - make sure username only contains " +
+                       "letters, numbers, dashes, dot, underscore, or @";
+               }
+               $("#missing-data-div").html('<p class="alert alert-danger">' + warning_str +'</p>');
+               return;
+           }
             function onSuccess() {
                 document.location.href = '/verify-account/';
             }
@@ -62,15 +132,16 @@
                 console.log(stuff);
                 alert('cannot create account');
             }
-            if (password === pwconfirm) {
-                $("[name=challenge]").val(Recaptcha.get_challenge());
-                $("[name=response]").val(Recaptcha.get_response());
-
-                $('#form-signup').submit();
-            } else {
-                $("#password").val('');
-                $("#pwconfirm").val('');
-                $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
+            if (password && pwconfirm) {
+                if (password === pwconfirm) {
+                    $("[name=challenge]").val(Recaptcha.get_challenge());
+                    $("[name=response]").val(Recaptcha.get_response());
+                    $('#form-signup').submit();
+                } else {
+                    $("#id_password1").val('');
+                    $("#id_password2").val('');
+                    $("#missing-data-div").append('<p class="alert alert-danger">Passwords do not match</p>');
+                }
             }
         });
     });

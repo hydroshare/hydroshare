@@ -16,6 +16,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils.http import int_to_base36
+from django.template.response import TemplateResponse
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -24,6 +25,7 @@ from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
@@ -31,6 +33,7 @@ from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
+from theme.utils import get_quota_message
 
 from .forms import SignupForm
 
@@ -55,6 +58,7 @@ class UserProfileView(TemplateView):
         resources = u.uaccess.owned_resources
         # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
@@ -73,6 +77,7 @@ class UserProfileView(TemplateView):
         return {
             'profile_user': u,
             'resources': resources,
+            'quota_message': get_quota_message(u),
             'group_membership_requests': group_membership_requests,
         }
 
@@ -87,6 +92,8 @@ def comment(request, template="generic/comments.html"):
     if isinstance(response, HttpResponse):
         return response
     obj, post_data = response
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     form = ThreadedCommentForm(request, obj, post_data)
     if form.is_valid():
         url = obj.get_absolute_url()
@@ -120,6 +127,8 @@ def rating(request):
     obj, post_data = response
     url = add_cache_bypass(obj.get_absolute_url().split("#")[0])
     response = redirect(url + "#rating-%s" % obj.id)
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     rating_form = RatingForm(request, obj, post_data)
     if rating_form.is_valid():
         rating_form.save()
@@ -136,16 +145,15 @@ def rating(request):
     return response
 
 
-def signup(request, template="accounts/account_signup.html"):
+def signup(request, template="accounts/account_signup.html", extra_context=None):
     """
-    Signup form.
+    Signup form. Overriding mezzanine's view function for signup submit
     """
     form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
         try:
             new_user = form.save()
         except ValidationError as e:
-            # form.add_error(None, e.message)
             messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
@@ -167,11 +175,23 @@ def signup(request, template="accounts/account_signup.html"):
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
                 return login_redirect(request)
-    context = {
-        "form": form,
-        "title": _("Sign up"),
-    }
-    return render(request, template, context)
+
+    # remove the key 'response' from errors as the user would have no idea what it means
+    form.errors.pop('response', None)
+    messages.error(request, form.errors)
+
+    # TODO: User entered data could be retained only if the following
+    # render function would work without messing up the css
+
+    # context = {
+    #     "form": form,
+    #     "title": _("Sign up"),
+    # }
+    # context.update(extra_context or {})
+    # return render(request, template, context)
+
+    # This one keeps the css but not able to retained user entered data.
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
@@ -276,6 +296,28 @@ def send_verification_mail_for_email_update(request, user, new_email, verificati
                        context=context)
 
 
+def login(request, template="accounts/account_login.html",
+          form_class=LoginForm, extra_context=None):
+    """
+    Login form - customized from Mezzanine login form so that quota warning message can be
+    displayed when the user is logged in.
+    """
+    form = form_class(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        login_msg = "Successfully logged in"
+        authenticated_user = form.save()
+        # Comment out for now to hide quota info message until backend script is hooked up
+        # add_msg = get_quota_message(authenticated_user)
+        # if add_msg:
+        #    login_msg += add_msg
+        info(request, _(login_msg))
+        auth_login(request, authenticated_user)
+        return login_redirect(request)
+    context = {"form": form, "title": _("Log in")}
+    context.update(extra_context or {})
+    return TemplateResponse(request, template, context)
+
+
 def email_verify(request, new_email, uidb36=None, token=None):
     """
     View for the link in the verification email sent to a user
@@ -361,7 +403,7 @@ def create_irods_account(request):
             )
         except Exception as ex:
             return HttpResponse(
-                    dumps({"error": ex.message}),
+                    dumps({"error": ex.message + ' - iRODS server failed to create this iRODS account.'}),
                     content_type = "application/json"
             )
     else:

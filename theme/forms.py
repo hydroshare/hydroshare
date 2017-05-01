@@ -227,7 +227,7 @@ class SignupForm(forms.ModelForm):
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
-
+    Captcha = forms.CharField(required=False)
     challenge = forms.CharField()
     response = forms.CharField()
 
@@ -248,7 +248,8 @@ class SignupForm(forms.ModelForm):
 
     def clean(self):
         if not self.verify_captcha():
-            self.add_error(None, "You did not complete the CAPTCHA correctly. Please try again.")
+            self.add_error('Captcha', "You did not complete the CAPTCHA correctly. "
+                                      "Please try again.")
 
     def clean_password2(self):
         data = self.cleaned_data
@@ -274,7 +275,7 @@ class SignupForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email']
+        fields = ['first_name', 'last_name', 'email']
 
     def clean_first_name(self):
         data = self.cleaned_data['first_name']
@@ -292,12 +293,6 @@ class UserForm(forms.ModelForm):
         data = self.cleaned_data['email']
         if len(data.strip()) == 0:
             raise forms.ValidationError("Email is a required field.")
-        return data
-
-    def clean_username(self):
-        data = self.cleaned_data['username']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Username is a required field.")
         return data
 
 

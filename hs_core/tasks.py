@@ -21,9 +21,10 @@ from celery import shared_task
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
-from django_irods.storage import IrodsStorage
+
 from django_irods.icommands import SessionException
 
 
@@ -79,12 +80,12 @@ def check_doi_activation():
                                                    TYPE='result'))
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
-            success_cnt_elem = root.find('.//success_count')
+            failure_cnt_elem = root.find('.//failure_count')
             success = False
-            if rec_cnt_elem is not None and success_cnt_elem is not None:
-                rec_cnt = rec_cnt_elem.text
-                success_cnt = success_cnt_elem.text
-                if rec_cnt == success_cnt:
+            if rec_cnt_elem is not None and failure_cnt_elem is not None:
+                rec_cnt = int(rec_cnt_elem.text)
+                failure_cnt = int(failure_cnt_elem.text)
+                if rec_cnt > 0 and failure_cnt == 0:
                     res.doi = act_doi
                     res.save()
                     success = True
@@ -151,14 +152,13 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 
 @shared_task
-def create_bag_by_irods(resource_id, istorage=None):
+def create_bag_by_irods(resource_id):
     """
     create a resource bag on iRODS side by running the bagit rule followed by ibun zipping
     operation. This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
-    istorage: IrodsStorage object used to call irods bagit rule and zipping up operation
 
     :return: True if bag creation operation succeeds;
              False if there is an exception raised or resource does not exist.
@@ -166,13 +166,19 @@ def create_bag_by_irods(resource_id, istorage=None):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
 
     res = get_resource_by_shortkey(resource_id)
-    is_exist = False
-    is_bagit_readme_exist = False
+    istorage = res.get_irods_storage()
+
+    metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
+    # if metadata has been changed, then regenerate metadata xml files
+    if metadata_dirty.lower() == "true":
+        try:
+            create_bag_files(res)
+        except Exception as ex:
+            logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+            return False
 
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
     if res.resource_federation_path:
-        if not istorage:
-            istorage = IrodsStorage('federated')
         irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
         is_exist = istorage.exists(irods_bagit_input_path)
         # check to see if bagit readme.txt file exists or not
@@ -195,8 +201,6 @@ def create_bag_by_irods(resource_id, istorage=None):
                                                       res_id=resource_id)
         ]
     else:
-        if not istorage:
-            istorage = IrodsStorage()
         is_exist = istorage.exists(resource_id)
         # check to see if bagit readme.txt file exists or not
         bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)

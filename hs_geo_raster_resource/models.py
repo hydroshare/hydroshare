@@ -1,19 +1,22 @@
 import json
+from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
-from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
+from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
 
-
-# extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
-# stores the converted WGS84 geographic coordinate system projection coverage, see issue #210 on github for details
+# extended metadata for raster resource type to store the original box type coverage
+# since the core metadata coverage stores the converted WGS84 geographic coordinate
+# system projection coverage, see issue #210 on github for details
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -24,9 +27,12 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'southlimit':southernmost coordinate value,
                 'westlimit':westernmost coordinate value,
                 'units:units applying to 4 limits (north, east, south & east),
-                'projection': name of the projection (optional)}"
+                'projection': name of the projection (optional),
+                'projection_string: OGC WKT string of the projection (optional),
+                'datum: projection datum name (optional),
+                }"
     """
-    _value = models.CharField(max_length=1024, null=True)
+    _value = models.CharField(max_length=10000, null=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -39,8 +45,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         """
-        The '_value' subelement needs special processing. (Check if the 'value' includes the required info and convert
-        'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
+        The '_value' subelement needs special processing. (Check if the 'value' includes the
+        required info and convert 'value' dict as Json string to be the '_value' subelement value.)
+        The base class create() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
 
@@ -55,11 +62,13 @@ class OriginalCoverage(AbstractMetaDataElement):
         if value_arg_dict:
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in value_arg_dict:
-                    raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
+                if value_item not in value_arg_dict:
+                    raise ValidationError("For coverage of type 'box' values for one or more "
+                                          "bounding box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                                   'projection', 'projection_string', 'datum')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
@@ -72,8 +81,9 @@ class OriginalCoverage(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         """
-        The '_value' subelement needs special processing. (Convert the 'value' dict as Json string to be the "_value"
-        subelement value.) The base class update() can't do it.
+        The '_value' subelement needs special processing.
+        (Convert the 'value' dict as Json string to be the "_value" subelement value.)
+        The base class update() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
@@ -83,7 +93,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_dict = cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                              'projection', 'projection_string', 'datum'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
@@ -96,11 +107,103 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
+        cov_term = '{%s}' + 'box'
+        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
+        rdf_coverage_value = etree.SubElement(coverage_terms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        # raster original coverage is of box type
+        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                    % (self.value['northlimit'], self.value['eastlimit'],
+                       self.value['southlimit'], self.value['westlimit'],
+                       self.value['units'])
+
+        for meta_element in self.value:
+            if meta_element == 'projection':
+                cov_value += '; projection_name={}'.format(self.value[meta_element])
+            if meta_element in ['projection_string', 'datum']:
+                cov_value += '; {}={}'.format(meta_element, self.value[meta_element])
+
+        rdf_coverage_value.text = cov_value
+
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from .forms import OriginalCoverageSpatialForm
+
+        ori_coverage_data_dict = {}
+        if element is not None:
+            ori_coverage_data_dict['projection'] = element.value.get('projection', None)
+            ori_coverage_data_dict['datum'] = element.value.get('datum', None)
+            ori_coverage_data_dict['projection_string'] = element.value.get('projection_string',
+                                                                            None)
+            ori_coverage_data_dict['units'] = element.value['units']
+            ori_coverage_data_dict['northlimit'] = element.value['northlimit']
+            ori_coverage_data_dict['eastlimit'] = element.value['eastlimit']
+            ori_coverage_data_dict['southlimit'] = element.value['southlimit']
+            ori_coverage_data_dict['westlimit'] = element.value['westlimit']
+
+        originalcov_form = OriginalCoverageSpatialForm(
+            initial=ori_coverage_data_dict, allow_edit=allow_edit,
+            res_short_id=resource.short_id if resource else None,
+            element_id=element.id if element else None, file_type=file_type)
+
+        return originalcov_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Spatial Reference')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Coordinate Reference System')
+                        td(self.value.get('projection', ''))
+                    with tr():
+                        get_th('Coordinate Reference System Unit')
+                        td(self.value['units'])
+                    with tr():
+                        get_th('Datum')
+                        td(self.value.get('datum', ''))
+                    with tr():
+                        get_th('Coordinate String')
+                        td(self.value.get('projection_string', ''))
+            h4('Extent')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('North')
+                        td(self.value['northlimit'])
+                    with tr():
+                        get_th('West')
+                        td(self.value['westlimit'])
+                    with tr():
+                        get_th('South')
+                        td(self.value['southlimit'])
+                    with tr():
+                        get_th('East')
+                        td(self.value['eastlimit'])
+
+        return root_div.render(pretty=pretty)
+
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
     # required fields
-    # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
+    # has to call the field name rather than bandName, which seems to be enforced by
+    # the AbstractMetaDataElement;
     # otherwise, got an error indicating required "name" field does not exist
     name = models.CharField(max_length=500, null=True)
     variableName = models.TextField(max_length=100, null=True)
@@ -119,6 +222,56 @@ class BandInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of this metadata element"""
+
+        bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
+                           'maximumValue', 'minimumValue',
+                           'method', 'comment']
+        add_metadata_element_to_xml(container, self, bandinfo_fields)
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Variable Name')
+                            td(self.variableName)
+                        with tr():
+                            get_th('Variable Unit')
+                            td(self.variableUnit)
+                        if self.noDataValue:
+                            with tr():
+                                get_th('No Data Value')
+                                td(self.noDataValue)
+                        if self.maximumValue:
+                            with tr():
+                                get_th('Maximum Value')
+                                td(self.maximumValue)
+                        if self.minimumValue:
+                            with tr():
+                                get_th('Minimum Value')
+                                td(self.minimumValue)
+                        if self.method:
+                            with tr():
+                                get_th('Method')
+                                td(self.method)
+                        if self.comment:
+                            with tr():
+                                get_th('Comment')
+                                td(self.comment)
+
+        return root_div.render(pretty=pretty)
 
 
 class CellInformation(AbstractMetaDataElement):
@@ -142,10 +295,54 @@ class CellInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of this metadata element"""
 
-#
+        cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
+                           'cellDataType']
+        add_metadata_element_to_xml(container, self, cellinfo_fields)
+
+    def get_html_form(self, resource):
+        """Generates html form code for this metadata element so that this element can be edited"""
+
+        from .forms import CellInfoForm
+        cellinfo_form = CellInfoForm(instance=self,
+                                     res_short_id=resource.short_id if resource else None,
+                                     element_id=self.id if self else None)
+        return cellinfo_form
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Cell Information')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Rows')
+                        td(self.rows)
+                    with tr():
+                        get_th('Columns')
+                        td(self.columns)
+                    with tr():
+                        get_th('Cell Size X Value')
+                        td(self.cellSizeXValue)
+                    with tr():
+                        get_th('Cell Size Y Value')
+                        td(self.cellSizeYValue)
+                    with tr():
+                        get_th('Cell Data Type')
+                        td(self.cellDataType)
+
+        return root_div.render(pretty=pretty)
+
+
 # To create a new resource, use these two super-classes.
-#
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
 
@@ -161,7 +358,7 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif",".zip")
+        return (".tif", ".zip")
 
     @classmethod
     def allow_multiple_file_upload(cls):
@@ -174,65 +371,83 @@ class RasterResource(BaseResource):
         return False
 
 
-# this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
+# this would allow us to pick up additional form elements for the template
+# before the template is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
 
 
-class RasterMetaData(CoreMetaData):
+class GeoRasterMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
+
     # required non-repeatable cell information metadata elements
     _cell_information = GenericRelation(CellInformation)
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
 
-    @property
-    def resource(self):
-        return RasterResource.objects.filter(object_id=self.id).first()
+    class Meta:
+        abstract = True
 
     @property
     def cellInformation(self):
         return self._cell_information.all().first()
 
     @property
-    def bandInformation(self):
+    def bandInformations(self):
         return self._band_information.all()
 
     @property
     def originalCoverage(self):
         return self._ori_coverage.all().first()
 
-    @classmethod
-    def get_supported_element_names(cls):
-        # get the names of all core metadata elements
-        elements = super(RasterMetaData, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('CellInformation')
-        elements.append('BandInformation')
-        elements.append('OriginalCoverage')
-        return elements
-
     def has_all_required_elements(self):
-        if not super(RasterMetaData, self).has_all_required_elements():
+        if not super(GeoRasterMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.cellInformation:
             return False
-        if not self.bandInformation:
+        if self.bandInformations.count() == 0:
             return False
         if not self.coverages.all().filter(type='box').first():
             return False
         return True
 
     def get_required_missing_elements(self):
-        missing_required_elements = super(RasterMetaData, self).get_required_missing_elements()
+        missing_required_elements = super(GeoRasterMetaDataMixin,
+                                          self).get_required_missing_elements()
         if not self.coverages.all().filter(type='box').first():
-            missing_required_elements.append('Spatial Coverage: Box')
+            missing_required_elements.append('Spatial Coverage')
         if not self.cellInformation:
             missing_required_elements.append('Cell Information')
-        if not self.bandInformation:
+        if not self.bandInformations:
             missing_required_elements.append('Band Information')
 
         return missing_required_elements
 
-    def get_xml(self):
+    def delete_all_elements(self):
+        super(GeoRasterMetaDataMixin, self).delete_all_elements()
+        if self.cellInformation:
+            self.cellInformation.delete()
+        if self.originalCoverage:
+            self.originalCoverage.delete()
+        self.bandInformations.delete()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(GeoRasterMetaDataMixin, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('CellInformation')
+        elements.append('BandInformation')
+        elements.append('OriginalCoverage')
+        return elements
+
+
+class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
+
+    @property
+    def resource(self):
+        return RasterResource.objects.filter(object_id=self.id).first()
+
+    def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)
@@ -245,38 +460,12 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
-            self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
+            self.cellInformation.add_to_xml_container(container)
 
-        for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue',
-                               'method', 'comment']
-            self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
+        for band_info in self.bandInformations:
+            band_info.add_to_xml_container(container)
 
         if self.originalCoverage:
-            ori_coverage = self.originalCoverage;
-            cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
-            #raster original coverage is of box type
-            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
-                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+            self.originalCoverage.add_to_xml_container(container)
 
-            if 'projection' in ori_coverage.value:
-                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
-
-            rdf_coverage_value.text = cov_value
-
-        return etree.tostring(RDF_ROOT, pretty_print=True)
-
-    def delete_all_elements(self):
-        super(RasterMetaData, self).delete_all_elements()
-        if self.cellInformation:
-            self.cellInformation.delete()
-        if self.originalCoverage:
-            self.originalCoverage.delete()
-        self.bandInformation.delete()
-
-import receivers
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)

@@ -1,5 +1,9 @@
 {% extends "pages/page.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+
+{% block extra_css %}
+{#    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">#}
+{% endblock %}
 
 {% block main %}
     <div class="collaborate-header">
@@ -27,9 +31,8 @@
                         be shared with the group and other users cannot be invited.
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
-                        <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to
-                            if
-                            you want to make the group active again.
+                        <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) below
+                            if you want to make the group active again.
                         </small>
                     </div>
                 {% endif %}
@@ -56,16 +59,24 @@
                 <p>{{ group.gaccess.description|linebreaks }}</p>
             </div>
 
-
             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                 <div class="col-sm-2">
-                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                        <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                            <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                    {% if group.gaccess.active %}
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                            <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
+                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                        {% endif %}
                     {% endif %}
-
                     <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
                         <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip" data-placement="auto" title="Leave Group"></span></a>
+                    {% if profile_user.is_group_owner and group.gaccess.active %}
+                        <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
+                        <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip" data-placement="auto" title="Delete Group"></span></a>
+                    {% endif %}
+                    {% if profile_user.is_group_owner and not group.gaccess.active %}
+                        <a href="{% url "restore_user_group" group.id %}">
+                        <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip" data-placement="auto" title="Restore Group"></span></a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -382,9 +393,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a
-                                                    href="#">{{ pendingrequest.request_from|best_name }}</a></strong>
-                                            </h4>
+                                            <h4><strong><a>{{ pendingrequest.request_from|contact|safe }}</a></strong></h4>
                                             {% if  pendingrequest.request_from.userprofile.title %}
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}
@@ -425,8 +434,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <h4><strong><a
-                                                        href="#">{{ pendingrequest.invitation_to|best_name }}</a></strong>
+                                                <h4><strong>{{ pendingrequest.invitation_to|contact|safe }}</strong>
                                                 </h4>
                                                 {% if  pendingrequest.invitation_to.userprofile.title %}
                                                     <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
@@ -542,57 +550,117 @@
                                     <th><input class="all-rows-selector" type="checkbox"></th>
                                     <th>Type</th>
                                     <th>Title</th>
-                                    <th>Owners</th>
+                                    <th>First Author</th>
+                                    <th>Date Created</th>
                                     <th>Last modified</th>
-                                    <th>Subject</th>{# Used in table processing #}
-                                    <th>Authors</th>{# Used in table processing #}
-                                    <th>Permission Level</th>{# Used in table processing #}
-                                    <th>Labels</th>{# Used in table processing #}
-                                    <th>Favorite</th>{# Used in table processing #}
-                                    <th>Last modified</th>{# Used in table processing #}
-                                    <th>Sharing Status</th>{# Used in table processing #}
-                                    <th>Grantor</th>{# Used in table processing #}
+                                    <th>Subject</th>
+                                    {# Used in table processing #}
+                                    <th>Authors</th>
+                                    {# Used in table processing #}
+                                    <th>Permission Level</th>
+                                    {# Used in table processing #}
+                                    <th>Labels</th>
+                                    {# Used in table processing #}
+                                    <th>Favorite</th>
+                                    {# Used in table processing #}
+                                    <th>Last modified</th>
+                                    {# Used in table processing #}
+                                    <th>Sharing Status</th>
+                                    {# Used in table processing #}
+                                    <th>Date Created</th>
+                                    {# Used in table processing #}
                                 </tr>
                                 </thead>
                                 <tbody>
                                     {% for res in group_resources %}
-                                        <tr data-tr-index="{{ forloop.counter0 }}">
-                                            <td></td> {# Empty for now, needed for the script to run correctly #}
+                                        <tr class="data-row">
+                                            {# Selection controls #}
+                                            <td>
+                                                <input class="row-selector" type="checkbox">
+                                                {% if res.is_favorite %}
+                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                          data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
+
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                          method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="DELETE">
+                                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                                    </form>
+                                                {% else %}
+                                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                                          data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>
+
+                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
+                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"
+                                                          method="post">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="action" value="CREATE">
+                                                        <input type="hidden" name="label_type" value="FAVORITE">
+                                                    </form>
+                                                {% endif %}
+
+                                                <span class="glyphicon glyphicon-tag btn-inline-label"
+                                                      data-toggle="dropdown" aria-expanded="false"></span>
+
+                                                <div class="dropdown-menu inline-dropdown" role="menu">
+                                                    <div class="panel-body" role="form">
+                                                        <ul data-resource-id="{{ res.short_id }}"
+                                                            class="list-group list-labels">
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            {# Type #}
                                             <td>
                                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                                 {% if res|resource_type == "Generic" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Geographic Raster" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Model Program Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Model Instance Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Time Series" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Web App Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "HIS Referenced Time Series" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Script Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Collection Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
@@ -621,31 +689,43 @@
 
                                                     {% if res.raccess.published %}
                                                         {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                            <img src="{{ STATIC_URL }}img/pending.png"
+                                                                 alt="Pending Publication"
                                                                  title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
                                                         {% endif %}
                                                     {% else %}
                                                         {% if res.raccess.shareable %}
-                                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                            <img src="{{ STATIC_URL }}img/shareable.png"
+                                                                 alt="Sharable Resource"
                                                                  title="Shareable"/>
                                                         {% else %}
-                                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                                            <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                                 alt="Non Sharable Resource"
                                                                  title="Not Shareable"/>
                                                         {% endif %}
                                                     {% endif %}
                                                 </div>
                                             </td>
+                                            {# Title #}
                                             <td>
-                                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                                <strong><a
+                                                        href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
                                             </td>
-                                            <td>{% for owner in res.raccess.owners.all %}
-                                                  {% if forloop.counter0 > 0 %} · {% endif %}
-                                                <span>{{ owner|contact|safe }}</span>
-                                            {% endfor %}</td>
+                                            {# First Author #}
+                                            {% if res.first_creator.description %}
+                                                <td>
+                                                    <a href="{{ res.first_creator.description }}">{{ res.first_creator.name }}</a>
+                                                </td>
+                                            {% else %}
+                                                <td>{{ res.first_creator.name }}</td>
+                                            {% endif %}
+                                            {# Date Created #}
+                                            <td>{{ res.created|date:"m/d/Y" }}, {{ res.created|time }}</td>
+                                            {# Last Modified #}
                                             <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
-                                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
                                                 {% endfor %}
                                             </td>
                                             <td>
@@ -689,6 +769,7 @@
                                                     Private
                                                 {% endif %}
                                             </td>
+                                            <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
                                             <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
@@ -723,7 +804,7 @@
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
-                                    <a id="btn-invite" onclick="group_invite_ajax_submit(); return false;"
+                                    <a id="btn-group-invite"
                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
@@ -764,6 +845,30 @@
             </div>
         </div>
 
+        <!-- Delete/Inactive Group Modal -->
+        <div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Delete">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="Delete">Delete Group</h4>
+                    </div>
+                    <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
+                        <div class="modal-body">
+                            <h5>Are you sure you want to delete this group? If you decide to delete it, you can restore it later.</h5>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Confirm</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     {% endif %}
 
     {% if profile_user.is_group_owner or profile_user.is_group_editor %}
@@ -783,13 +888,6 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="row">
-                                <fieldset class="col-sm-12 pull-right">
-                                    <input id="active_flag" name="active" data-toggle="toggle" data-on="Active"
-                                           data-off="Inactive" type="checkbox"
-                                           data-onstyle="success"
-                                           {% if group.gaccess.active %}checked{% endif %} data-toggle="toggle">
-                                </fieldset>
-
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
@@ -815,7 +913,12 @@
                                               name="description">{{ group.gaccess.description }}</textarea>
                                 </fieldset>
 
-                                <br>
+                                {# auto approve #}
+                                <fieldset class="col-sm-12">
+                                   <input id="auto-approve" type="checkbox"  name="auto_approve"
+                                          {% if group.gaccess.auto_approve %}checked{% endif %}>
+                                   <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                                </fieldset>
 
                                 {# Picture #}
                                 <div class="col-sm-12">
@@ -873,8 +976,8 @@
                                     <small class="text-muted">( * ) Required fields</small>
                                 </fieldset>
                             </div>
-
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">Save</button>
@@ -888,342 +991,9 @@
 {% endblock %}
 
 {% block extra_js %}
+    {{ block.super }}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
-    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
-
-    <script>
-        var colDefs = [
-            {
-                "targets": [0],     // Row selector and controls
-                "visible": false,
-            },
-            {
-                "targets": [1],     // Resource type
-                "width": "100px"
-            },
-            {
-                "targets": [0],     // Actions
-                "orderable": false,
-                "searchable": false,
-                "width": "70px"
-            },
-            {
-                "targets": [4],     // Last modified
-                "iDataSort": 10
-            },
-            {
-                "targets": [5],     // Subject
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [6],     // Authors
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [7],     // Permission level
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [8],     // Labels
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [9],     // Favorite
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [10],     // Last modified (for sorting)
-                "visible": false,
-                "searchable": true
-            },
-            {
-                "targets": [11],     // Sharing status
-                "visible": false,
-                "searchable": false
-            },
-            {
-                "targets": [12],     // Access Grantor
-                "visible": false,
-                "searchable": true
-            }
-        ];
-
-        function group_invite_ajax_submit() {
-            if (!$("#id_user-deck > .hilight").length) {
-                return false; // If no user selected, ignore the request
-            }
-            var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
-            var form = $("#invite-to-group");
-            var datastring = form.serialize();
-            var url = form.attr('action') + share_with + "/";
-
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    $(".hilight > span").click(); // Clears the search field
-                    $("#invite-dialog .modal-body").prepend('<div class="alert alert-success" role="alert"><span class="glyphicon glyphicon-ok glyphicon"></span> An invitation to join has been sent.</strong></div>');
-
-                    setTimeout(function () {
-                       $("#invite-dialog .modal-body .alert").fadeOut();
-                    }, 3000);
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    $("#invite-dialog .modal-body").prepend('<div class="alert alert-error" role="alert"><span class="glyphicon glyphicon-ok glyphicon"></span> This invitation could not be sent.</strong></div>');
-
-                    setTimeout(function () {
-                        $("#invite-dialog .modal-body .alert").fadeOut();
-                    }, 3000);
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
-        function onRoleSelect(event) {
-            var el = $(event.target);
-            $("#selected_role").text(el.text());
-            $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
-        }
-
-        function act_on_request_ajax_submit() {
-            var target = $(this);
-            var form = $(this).closest("form");
-            var datastring = form.serialize();
-            var url = form.attr('action');
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    if (target.attr("data-user-action") == "Accept") {
-                        // Get a copy of the member row template
-                        var rowTemplate = $("#templateRow").clone();
-
-                        var name = target.attr("data-name");
-                        var title = target.attr("data-title");
-                        var picture = target.parent().parent().parent().find("[data-id='picture']");
-
-                        rowTemplate.find("[data-id='name']").text(name);
-                        rowTemplate.find("[data-id='name']").attr("href", "/user/" + target.attr("data-member-id") + "/");
-                        rowTemplate.find("[data-id='title']").text(title);
-                        var forms = rowTemplate.find("form");
-                        for (var i = 0; i < forms.length; i++) {
-                            var newAction = $(forms[i]).attr("action").replace("member_id", target.attr("data-member-id"));
-                            $(forms[i]).attr("action", newAction);
-                        }
-                        rowTemplate.prepend(picture);
-
-                        $("#all-members-table tbody").append($("<tr data-filter-by='view-user' style='display: none;'>" + rowTemplate.html() + "</tr>"));
-                        $(".btn-share-group").click(share_group_ajax_submit);
-                        $(".btn-unshare-group").click(unshare_group_ajax_submit);
-                    }
-
-                    target.parent().parent().parent().remove();
-                    updateMembersLabelCount();
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
-        function share_group_ajax_submit() {
-            var target = $(this);
-            var form = target.closest("form");
-            var role = target.attr("data-role");
-            var datastring = form.serialize();
-            var url = form.attr('action');
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    var dropdownButton = target.parent().parent().parent().parent().find(".dropdown-toggle");
-                    dropdownButton.text(role);
-                    dropdownButton.append('&nbsp;<span class="caret"></span>');
-
-                    var row = target.parent().parent().parent().parent().parent().parent();
-                    if (role == "Owner") {
-                        row.attr("data-filter-by", "edit-user");
-                    }
-                    else if (role == "Member") {
-                        row.attr("data-filter-by", "view-user");
-                    }
-
-                    dropdownButton.dropdown("toggle");
-                    updateMembersLabelCount();
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
-        function unshare_group_ajax_submit() {
-            var target = $(this);
-            var form = target.closest("form");
-            var datastring = form.serialize();
-            var url = form.attr('action');
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    var row = target.parent().parent().parent().parent().parent().parent();
-                    row.remove();
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
-        function updateMembersLabelCount() {
-            var viewCount = $("#all-members-table tr[data-filter-by='view-user']").length - 1;  // Subtract hidden template row
-            var editCount = $("#all-members-table tr[data-filter-by='edit-user']").length;
-            var pendingCount = $("table[data-filter-by='pending'] tr:not('.no-pending-requests')").length;
-
-            $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount);
-            $("#members-filter .badge[data-filter-by='Owners']").text(editCount);
-            $("#members-filter .badge[data-filter-by='Pending']").text(pendingCount);
-
-            // Disable options to leave or remove for last owner item.
-            if (editCount == 1) {
-                $("#all-members-table tr[data-filter-by='edit-user'] .dropdown-toggle").attr("disabled", true);
-            }
-            else {
-                $("#all-members-table tr[data-filter-by='edit-user'] .dropdown-toggle").attr("disabled", false);
-            }
-        }
-
-        // Preview profile picture
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-
-                };
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // File name preview for picture field, change method
-        $(document).on('change', '.btn-file :file', function () {
-            var input = $(this);
-            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
-            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-            input.trigger('fileselect', [numFiles, label]);
-        });
-
-        $(document).ready(function () {
-            $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
-
-            // Abstract collapse toggle
-            $(".show-more-btn").click(function () {
-                if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
-                    var block = $(this).parent().find(".activity-description");
-
-                    block.css("max-height", "initial"); // Set max-height to initial temporarily.
-                    var maxHeight = block.height();    // Save the max height
-                    block.css("max-height", "50px");    // Restore
-
-                    block.animate({'max-height': maxHeight}, 300); // Animate to max height
-                    $(this).text("▲");
-                    $(this).attr("title", "Show less");
-                }
-                else {
-                    $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
-                    $(this).attr("title", "Show more");
-                    $(this).text("···");
-                }
-            });
-
-            $("#list-roles a").click(onRoleSelect);
-
-            $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
-
-            // Filter
-            $("#members").find(".table-members-list").hide();
-            $("#members").find(".table-members-list.active").show();
-
-            $("#members-filter tr").click(function() {
-                $("#members").find(".table-members-list tr").hide();
-                $("table[data-filter-by='pending'] tr").hide();
-                $("table[data-filter-by='pending']").hide();
-
-                var dataFilter = $(this).attr("data-filter-by");
-                if (dataFilter == "edit-user") {
-                    $("#members").find(".table-members-list tr[data-filter-by='" + dataFilter + "']").fadeIn();
-                    $("#members").find(".table-members-list tr[data-filter-by='" + "creator" + "']").fadeIn();
-                }
-                else if (dataFilter == "all") {
-                    $("#members").find(".table-members-list tr").addClass("active").fadeIn();
-                }
-                else if(dataFilter == "pending") {
-                    $("#members").find(".table-members-list tr").addClass("active").hide();
-                    $("table[data-filter-by='pending'] tr").fadeIn();
-                    $("table[data-filter-by='pending']").fadeIn();
-                }
-
-                $(this).parent().find("tr").removeClass("active");
-                $(this).addClass("active");
-            });
-
-            $(".btn-act-on-request").click(act_on_request_ajax_submit);
-            $(".btn-share-group").click(share_group_ajax_submit);
-            $(".btn-unshare-group").click(unshare_group_ajax_submit);
-
-            // Initialize filters counters
-            updateMembersLabelCount();
-
-            // Initialize Shared By filter
-            var grantors = $("#grantors-list span");
-            if (grantors.length)
-                $("#filter-shared-by .no-items-found").remove();
-            for (var i = 0; i < grantors.length; i++) {
-                var id = $(grantors[i]).attr("data-grantor-id");
-                if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
-                    var count = $("#grantors-list span[data-grantor-id='" + id + "']").length;
-                    var name = $(grantors[i]).attr("data-grantor-name").trim();
-
-                    $("#filter-shared-by .inputs-group").append('<li class="list-group-item">' +
-                                                                    '<span data-facet="owned" class="badge">' + count + '</span>' +
-                                                                    '<label class="checkbox noselect">' +
-                                                                    '<input type="checkbox" class="grantor" data-grantor-id="' + id + '">' + name + '</label>' +
-                                                                '</li>')
-                }
-            }
-
-            $("#grantors-list").remove();   // Remove temporary list
-
-            // File name preview for picture field, file select method
-            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
-                var input = $(this).parents('.input-group').find(':text');
-                input.val(label);
-            });
-
-        });
-    </script>
-
+    <script type="text/javascript" src="{{ STATIC_URL }}js/group.js"></script>
+{#    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
-
 {% endblock %}

@@ -35,9 +35,12 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
-    fed_res_fnames = kwargs['fed_res_file_names']
+    source_names = kwargs['source_names']
 
-    if files or fed_res_fnames:
+    if __debug__:
+        assert(isinstance(source_names, list))
+
+    if files or source_names:
         if resource.has_sqlite_file or resource.has_csv_file:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Resource already has the necessary content files.'
@@ -82,16 +85,25 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    uploaded_file = kwargs['files'][0]
+    files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
+    source_names = kwargs['source_names']
+
+    if __debug__:
+        assert(isinstance(source_names, list))
+
+    if files:
+        file_name = files[0].name
+    elif source_names:
+        file_name = os.path.basename(source_names[0])
 
     # extract metadata from the just uploaded file
     uploaded_file_to_process = None
     uploaded_file_ext = ''
     for res_file in resource.files.all():
         _, res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
-        if res_file_name == uploaded_file.name:
+        if res_file_name == file_name:
             uploaded_file_to_process = res_file
             break
 
@@ -118,8 +130,12 @@ def post_create_resource_handler(sender, **kwargs):
         # check if the uploaded file is a sqlite file or csv file
         file_ext = utils.get_resource_file_name_and_extension(res_file)[2]
         if file_ext == '.sqlite':
+            # metadata can exist at this point if a timeseries resource is created
+            # using REST API since the API caller can pass metadata information. Before
+            # metadata can be extracted from the sqlite file and populated to database, existing
+            # metadata needs to be deleted.
             _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                          delete_existing_metadata=False)
+                                          delete_existing_metadata=True)
         elif file_ext == '.csv':
             _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                        delete_existing_metadata=False)
@@ -242,7 +258,7 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                 TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
                 # delete the csv file if it exists
                 _delete_resource_file(resource, ".csv")
-                utils.resource_modified(resource, user)
+                utils.resource_modified(resource, user, overwrite_bag=False)
 
         else:   # file validation failed
             # delete the invalid file just uploaded

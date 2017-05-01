@@ -1,7 +1,7 @@
 {# This template is used as the landing page for NetCDF Resource #}
 
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
+{% load pages_tags mezzanine_tags crispy_forms_tags %}
 
 {% block extended_metadata %}
         <div class="row">
@@ -20,13 +20,19 @@
                                     <tr><th class="text-muted">Coordinate Reference System </th><td>{{ original_coverage.projection}}</td></tr>
                                 {% endif %}
 
+                                {% if original_coverage.datum %}
+                                    <tr><th class="text-muted">Datum </th><td>{{ original_coverage.datum}}</td></tr>
+                                {% endif %}
+
                                 {% if original_coverage.projection_string_type %}
-                                    <tr><th class="text-muted">Coordinate Reference System Representation Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
+                                    <tr><th class="text-muted">Coordinate String Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
                                 {% endif %}
 
                                 {% if original_coverage.projection_string_text %}
-                                    <tr><th class="text-muted">Coordinate Reference System Representation Text </th><td>{{ original_coverage.projection_string_text}}</td></tr>
+                                    <tr><th class="text-muted">Coordinate String </th><td style="word-break:break-all" >{{ original_coverage.projection_string_text}}</td></tr>
                                 {% endif %}
+
+
                             </tbody>
                         </table>
                         {% endif %}
@@ -34,6 +40,7 @@
                         <h4>Extent</h4>
 
                         <table class="custom-table">
+
                             {% if original_coverage.northlimit %}
                                 <tr><th class="text-muted">North </th><td>{{ original_coverage.northlimit }}</td></tr>
                             {% endif %}
@@ -51,8 +58,9 @@
                             {% endif %}
 
                             {% if original_coverage.units %}
-                                <tr><th class="text-muted">Extent Unit </th><td>{{ original_coverage.units }}</td></tr>
+                                <tr><th class="text-muted">Extent Unit</th><td>{{ original_coverage.units }}</td></tr>
                             {% endif %}
+
                         </table>
                     {% else %}
                         <p>Metadata information is not provided. </p>
@@ -120,13 +128,16 @@
             {% for f in cm.files.all %}
                 {% if f.resource_file.name|slice:"-3:" == 'txt'%}
                     <div style="clear: both">
+                        <br>
                         <legend>NetCDF Header Info</legend>
                         <p>{{ f.resource_file.name|slice:"33:" }}</p>
-                        {% if f.resource_file.size <= 5000000 %}
-                            <textarea id="netcdf-header-info" readonly rows="15">{{ f.resource_file.read}}</textarea>
-                        {% else %}
-                            <textarea id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</textarea>
-                    {% endif %}
+                        <div class="hs-doc-preview">
+                            {% if f.resource_file.size <= 5000000 %}
+                                <pre id="netcdf-header-info">{{ f.resource_file.read}}</pre>
+                            {% else %}
+                                <pre id="netcdf-header-info" readonly rows="5">The size of the netCDF header information text file is too large for loading on the page.</pre>
+                            {% endif %}
+                        </div>
                     </div>
 {#                    {% else %}#}
 {#                        {% if page.perms.change %}#}
@@ -160,25 +171,7 @@
 {{ block.super }}
 
 {# put resource specific js below #}
-<script type="text/javascript">
-    // original coverage meta check
-    function check_ori_meta_status(){
-        var form_action = $("form[id='id-originalcoverage']").attr('action');
-        if (form_action.indexOf('update-metadata') > -1) {
-            var new_action = form_action.replace('update-metadata', 'delete-metadata');
-            var modal_body_text = '<strong>Are you sure you want to delete this metadata element?</strong>'
-            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").attr('href',new_action);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").show()
-        }
-        else {
-            var modal_body_text = '<strong>There is no original coverage metadata for this resource to delete.</strong>'
-            $("#delete-original-coverage-element-dialog").find(".modal-body").html(modal_body_text);
-            $("#delete-original-coverage-element-dialog").find(".modal-footer").children("a").hide()
-        }
-    };
+<script type="text/javascript" src="{{ STATIC_URL }}js/netcdf-resource.js"></script>
 
-
-</script>
 
 {% endblock %}

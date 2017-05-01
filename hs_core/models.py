@@ -1,10 +1,12 @@
 import os.path
 import json
 import arrow
+import logging
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -19,8 +21,8 @@ from django.dispatch import receiver
 from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
-from django.core.files.storage import DefaultStorage
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.files import File
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -29,6 +31,8 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
+
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 
 class GroupOwnership(models.Model):
@@ -137,6 +141,35 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
+    if request.user.is_authenticated():
+        for owner in owners:
+            owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+
+        for viewer in viewers:
+            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+
+        for editor in editors:
+            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
+
+        for view_grp in view_groups:
+            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        view_grp)
+
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        edit_grp)
+    else:
+        for owner in owners:
+            owner.can_undo = False
+        for viewer in viewers:
+            viewer.can_undo = False
+        for editor in editors:
+            editor.can_undo = False
+        for view_grp in view_groups:
+            view_grp.can_undo = False
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = False
+
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
     else:
@@ -229,7 +262,7 @@ class ExternalProfileLink(models.Model):
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     address = models.CharField(max_length=250, null=True, blank=True)
@@ -260,9 +293,19 @@ class Party(AbstractMetaDataElement):
             creator_order = 1
             if party:
                 creator_order = party.order + 1
-            if 'name' in kwargs:
+
+            if ('name' not in kwargs or kwargs['name'] is None) and \
+                    ('organization' not in kwargs or kwargs['organization'] is None):
+                raise ValidationError(
+                    "Either an organization or name is required for a creator element")
+
+            if 'name' in kwargs and kwargs['name'] is not None:
                 if len(kwargs['name'].strip()) == 0:
-                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+                    if 'organization' in kwargs and kwargs['organization'] is not None:
+                        if len(kwargs['organization'].strip()) == 0:
+                            raise ValidationError(
+                                "Either the name or organization must not be blank for the creator "
+                                "element")
 
             kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
@@ -602,7 +645,11 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
+    def __str__(self):
+        return "{type} {value}".format(type=self.type, value=self.value)
+
     def __unicode__(self):
+        """ deprecated """
         return "{type} {value}".format(type=self.type, value=self.value)
 
     @classmethod
@@ -911,7 +958,6 @@ class Coverage(AbstractMetaDataElement):
         to dictionaries.
         """
 
-        # TODO: validate coordinate values
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
             metadata_obj = kwargs['content_object']
@@ -1024,6 +1070,56 @@ class Coverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        NAMESPACES = CoreMetaData.NAMESPACES
+        dc_coverage = etree.SubElement(container, '{%s}coverage' % NAMESPACES['dc'])
+        cov_dcterm = '{%s}' + self.type
+        dc_coverage_dcterms = etree.SubElement(dc_coverage,
+                                               cov_dcterm % NAMESPACES['dcterms'])
+        rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        if self.type == 'period':
+            start_date = parser.parse(self.value['start'])
+            end_date = parser.parse(self.value['end'])
+            cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
+                                                              end_date.isoformat())
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+
+        elif self.type == 'point':
+            cov_value = 'east=%s; north=%s; units=%s' % (self.value['east'],
+                                                         self.value['north'],
+                                                         self.value['units'])
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'elevation' in self.value:
+                cov_value += '; elevation=%s' % self.value['elevation']
+                if 'zunits' in self.value:
+                    cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        else:
+            # this is box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        % (self.value['northlimit'], self.value['eastlimit'],
+                           self.value['southlimit'], self.value['westlimit'],
+                           self.value['units'])
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'uplimit' in self.value:
+                cov_value += '; uplimit=%s' % self.value['uplimit']
+            if 'downlimit' in self.value:
+                cov_value += '; downlimit=%s' % self.value['downlimit']
+            if 'uplimit' in self.value or 'downlimit' in self.value:
+                cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        rdf_coverage_value.text = cov_value
+
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         if coverage_type == 'period':
@@ -1089,6 +1185,105 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
 
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        # this function should be used for displaying one spatial coverage element
+        # or one temporal coverage element
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            if self.type == 'box' or self.type == 'point':
+                legend('Spatial Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Coordinate Reference System')
+                            td(self.value['projection'])
+                        with tr():
+                            get_th('Coordinate Reference System Unit')
+                            td(self.value['units'])
+
+                h4('Extent')
+                with table(cls='custom-table'):
+                    if self.type == 'box':
+                        with tbody():
+                            with tr():
+                                get_th('North')
+                                td(self.value['northlimit'])
+                            with tr():
+                                get_th('West')
+                                td(self.value['westlimit'])
+                            with tr():
+                                get_th('South')
+                                td(self.value['southlimit'])
+                            with tr():
+                                get_th('East')
+                                td(self.value['eastlimit'])
+                    else:
+                        with tr():
+                            get_th('North')
+                            td(self.value['north'])
+                        with tr():
+                            get_th('Eest')
+                            td(self.value['east'])
+            else:
+                legend('Temporal Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Start Date')
+                            td(self.value['start'])
+                        with tr():
+                            get_th('End Date')
+                            td(self.value['end'])
+
+        return root_div.render(pretty=pretty)
+
+    @classmethod
+    def get_temporal_html_form(cls, resource, element=None, file_type=False):
+        from .forms import CoverageTemporalForm
+        coverage_data_dict = dict()
+        if element is not None:
+            start_date = parser.parse(element.value['start'])
+            end_date = parser.parse(element.value['end'])
+            # change the date format to match with datepicker date format
+            coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
+            coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
+
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+                                             res_short_id=resource.short_id if resource else None,
+                                             element_id=element.id if element else None,
+                                             file_type=file_type)
+        return coverage_form
+
+    @classmethod
+    def get_spatial_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        from .forms import CoverageSpatialForm
+        coverage_data_dict = dict()
+
+        if element is not None:
+            coverage_data_dict['type'] = element.type
+            coverage_data_dict['name'] = element.value.get('name', "")
+            if element.type == 'box':
+                coverage_data_dict['northlimit'] = element.value['northlimit']
+                coverage_data_dict['eastlimit'] = element.value['eastlimit']
+                coverage_data_dict['southlimit'] = element.value['southlimit']
+                coverage_data_dict['westlimit'] = element.value['westlimit']
+            else:
+                coverage_data_dict['east'] = element.value['east']
+                coverage_data_dict['north'] = element.value['north']
+                coverage_data_dict['elevation'] = element.value.get('elevation', None)
+
+        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=allow_edit,
+                                            res_short_id=resource.short_id if resource else None,
+                                            element_id=element.id if element else None,
+                                            file_type=file_type)
+        return coverage_form
+
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
@@ -1137,6 +1332,16 @@ class Subject(AbstractMetaDataElement):
 
     def __unicode__(self):
         return self.value
+
+    @classmethod
+    def create(cls, **kwargs):
+        metadata_obj = kwargs['content_object']
+        value = kwargs.get('value', None)
+        if value is not None:
+            if metadata_obj.subjects.filter(value__iexact=value).exists():
+                raise ValidationError("Subject element already exists.")
+
+        return super(Subject, cls).create(**kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -1222,29 +1427,25 @@ class AbstractResource(ResourcePermissionsMixin):
     last_changed_by = models.ForeignKey(User,
                                         help_text='The person who last changed the resource',
                                         related_name='last_changed_%(app_label)s_%(class)s',
-                                        null=True
+                                        null=True,
                                         )
-
-    # dublin_metadata = GenericRelation(
-    #     'dublincore.QualifiedDublinCoreElement',
-    #     help_text='The dublin core metadata of the resource'
-    # )
 
     files = GenericRelation('hs_core.ResourceFile',
                             help_text='The files associated with this resource',
                             for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
-                                          blank=True, null=True,
+                                          null=True, blank=True,
                                           choices=(('Pending', 'Pending'), ('Running', 'Running'),
                                                    ('Done', 'Done'), ('Error', 'Error'))
                                           )
-    file_unpack_message = models.TextField(blank=True, null=True)
+    file_unpack_message = models.TextField(null=True, blank=True)
 
+    # TODO: why are old versions saved?
     bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of '
                                                      'this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
-    doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
+    doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
     comments = CommentsField()
     rating = RatingField()
@@ -1262,6 +1463,15 @@ class AbstractResource(ResourcePermissionsMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
+    # definition of resource logic
+    @property
+    def supports_folders(self):
+        """ returns whether folder operations are supported. Computed for polymorphic types"""
+        return False
+
+    # TODO: Why isn't this a regular method? Why does it need to be a class method?
+    # It would seem to me that one only creates a bag after a resource has been created,
+    # so that this would be an instance method....
     @classmethod
     def bag_url(cls, resource_id):
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
@@ -1269,7 +1479,9 @@ class AbstractResource(ResourcePermissionsMixin):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
-        istorage = IrodsStorage()
+        # type resolution is not relevant; grab base class instance.
+        res = BaseResource.objects.get(short_id=resource_id)
+        istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
 
         return bag_url
@@ -1280,12 +1492,17 @@ class AbstractResource(ResourcePermissionsMixin):
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
+    # TODO: there are too many ways to get to the resourcemap.
+    # 1. {id}/data/resourcemap.xml
+    # 2. {id}/resmap
+    # Choose one!
     @classmethod
     def resmap_url(cls, resource_id):
         resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
         resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
         return resmap_url
 
+    # TODO: this is inaccurate; resourcemap.xml != systemmetadata.xml
     @classmethod
     def sysmeta_path(cls, resource_id):
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
@@ -1293,31 +1510,28 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            if fl.fed_resource_file_name_or_path:
-                istorage = IrodsStorage('federated')
-                if fl.fed_resource_file_name_or_path.find(self.short_id) >= 0:
-                    istorage.delete('{}/{}'.format(self.resource_federation_path,
-                                                   fl.fed_resource_file_name_or_path))
-                else:
-                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path,
-                                                      self.short_id,
-                                                      fl.fed_resource_file_name_or_path))
-            elif fl.resource_file:
-                fl.resource_file.delete()
-            elif fl.fed_resource_file:
-                fl.fed_resource_file.delete()
+            if fl.logical_file is not None:
+                # delete of metadata file deletes the logical file (one-to-one relation)
+                # so no need for fl.logical_file.delete() and deleting of metadata file
+                # object deletes (cascade delete) all the contained GenericRelated metadata
+                # elements
+                fl.logical_file.metadata.delete()
+            # COUCH: delete of file objects now cascades.
             fl.delete()
-        hs_bagit.delete_bag(self)
-
+        hs_bagit.delete_files_and_bag(self)
+        # TODO: Pabitra - delete_all_elements() may not be needed in Django 1.8 and later
         self.metadata.delete_all_elements()
         self.metadata.delete()
-
         super(AbstractResource, self).delete()
 
-    # this property needs to be overriden by any specific resource type
-    # that needs additional metadata elements on top of core metadata data elements
     @property
     def metadata(self):
+        """
+        Return a pointer to the metadata object for this resource.
+
+        This object can vary based upon resource type. Please override this function to
+        return the appropriate object for each resource type.
+        """
         md = CoreMetaData()  # only this line needs to be changed when you override
         return self._get_metadata(md)
 
@@ -1325,6 +1539,12 @@ class AbstractResource(ResourcePermissionsMixin):
     def first_creator(self):
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
+
+    def get_metadata_xml(self, pretty_print=True):
+        # Resource types that support file types
+        # must override this method. See Composite Resource
+        # type as an example
+        return self.metadata.get_xml(pretty_print=pretty_print)
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)
@@ -1346,49 +1566,63 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
+    def parse_citation_name(self, name, first_author=False):
+        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        first_names = None
+        if "," in name:
+            name_parts = name.split(",")
+            if len(name_parts) == 0:
+                return CREATOR_NAME_ERROR
+            elif len(name_parts) == 1:
+                last_names = name_parts[0]
+            elif len(name_parts) == 2:
+                first_names = name_parts[1]
+                first_names = first_names.split()
+                last_names = name_parts[0]
+            else:
+                return CREATOR_NAME_ERROR
+        else:
+            name_parts = name.split()
+            if len(name_parts) == 0:
+                return CREATOR_NAME_ERROR
+            elif len(name_parts) > 1:
+                first_names = name_parts[:-1]
+                last_names = name_parts[-1]
+            else:
+                last_names = name_parts[0]
+
+        if first_names:
+            initials_list = [i[0] for i in first_names]
+            initials = u". ".join(initials_list) + "."
+            if first_author:
+                author_name = u"{last_name}, {initials}"
+            else:
+                author_name = u"{initials} {last_name}"
+            author_name = author_name.format(last_name=last_names,
+                                             initials=initials
+                                             )
+        else:
+            author_name = u"{last_name}".format(last_name=last_names)
+
+        return author_name + ", "
+
     def get_citation(self):
         citation_str_lst = []
 
-        CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         CITATION_ERROR = "Failed to generate citation."
 
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split()
-        if len(name_parts) == 0:
-            return CREATOR_NAME_ERROR
-
-        if len(name_parts) > 2:
-            author_name = "{last_name}, {first_initial}. {middle_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0],
-                                             middle_initial=name_parts[1][0])
-            citation_str_lst.append(author_name)
-
+        if first_author.organization and not first_author.name:
+            citation_str_lst.append(first_author.organization + ", ")
         else:
-            author_name = "{last_name}, {first_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0])
-            citation_str_lst.append(author_name)
+            citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split()
-            if len(name_parts) == 0:
-                return CREATOR_NAME_ERROR
-
-            if len(name_parts) > 2:
-                author_name = "{first_initial}. {middle_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 middle_initial=name_parts[1][0],
-                                                 last_name=name_parts[-1])
-                citation_str_lst.append(author_name)
-
-            else:
-                author_name = "{first_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 last_name=name_parts[-1])
-
-                citation_str_lst.append(author_name)
+            if author.organization and not author.name:
+                citation_str_lst.append(author.organization + ", ")
+            elif author.name and len(author.name.strip()) != 0:
+                citation_str_lst.append(self.parse_citation_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
@@ -1421,14 +1655,14 @@ class AbstractResource(ResourcePermissionsMixin):
         date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
                                  citation_date.start_date.year)
         if ref_rel:
-            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
+            citation_str_lst.append(u", {ref_rel_value}, last accessed {creation_date}.".format(
                 ref_rel_value=ref_rel.value,
                 creation_date=date_str))
         elif repl_rel:
-            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                  creation_date=date_str,
-                                                                  url=hs_identifier.url))
+            citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
+                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
+                                                                   creation_date=date_str,
+                                                                   url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
@@ -1446,26 +1680,43 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
-        # to allow only specific file types return a tuple of those file extensions
-        # (ex: return (".csv", ".txt",)) to not allow any file upload, return a empty
-        # tuple ( return ()) by default all file types are supported
+        """
+        Get a list of permissible upload types
+
+        Subclasses override this function to allow only specific file types.
+        Any version should return a tuple of those file extensions
+        (ex: return (".csv", ".txt",))
+
+        To disallow all file upload, return an empty tuple ( return ())
+
+        By default all file types are supported
+
+        This is called before creating a specific instance; hence it is a class method.
+        """
         return (".*",)
 
     @classmethod
     def allow_multiple_file_upload(cls):
-        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
-        # to allow multiple files to be uploaded return True, otherwise return False
+        """
+        Return whether multiple files can be uploaded.
 
-        # resource by default allows multiple file upload
+        Subclasses of BaseResource override this function to tailor file upload.
+        To allow multiple files to be uploaded return True, otherwise return False
+
+        Resource by default allows multiple file upload.
+        """
         return True
 
     @classmethod
     def can_have_multiple_files(cls):
-        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
-        # to allow resource to have only 1 file or no file, return False
+        """
+        Return whether this kind of resource can contain multiple files.
+        Subclasses of BaseResource override this function to tailor file upload.
 
-        # resource by default can have multiple files
+        To allow resource to have only 1 file or no file, return False
+
+        A resource by default can contain multiple files
+        """
         return True
 
     def has_required_content_files(self):
@@ -1479,45 +1730,901 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return True
 
+    @property
+    def logical_files(self):
+        logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is not None:
+                if res_file.logical_file not in logical_files_list:
+                    logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
+    @property
+    def non_logical_files(self):
+        non_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is None:
+                if res_file.logical_file not in non_logical_files_list:
+                    non_logical_files_list.append(res_file)
+        return non_logical_files_list
+
+    @property
+    def generic_logical_files(self):
+        generic_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.has_generic_logical_file:
+                if res_file.logical_file not in generic_logical_files_list:
+                    generic_logical_files_list.append(res_file.logical_file)
+        return generic_logical_files_list
+
+    def get_logical_files(self, logical_file_class_name):
+        logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is not None:
+                if res_file.logical_file_type_name == logical_file_class_name:
+                    if res_file.logical_file not in logical_files_list:
+                        logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
+    @property
+    def supports_logical_file(self):
+        """If this resource allows associating resource file objects with logical file"""
+        return False
+
+    def set_default_logical_file(self):
+        """Sets an instance of default logical file type to any resource file objects of
+        this instance of the resource that is not already associated with a logical file.
+        Each specific resource type needs to override this function in order to to support logical
+        file types"""
+        pass
+
+    def supports_folder_creation(self, folder_full_path):
+        """If resource supports creation of folder at the specified path"""
+        return True
+
+    def supports_rename_path(self, src_full_path, tgt_full_path):
+        """If file/folder rename/move is allowed by this resource"""
+        return True
+
+    def supports_zip(self, folder_to_zip):
+        """if resource supports the specified folder to be zipped"""
+        return True
+
+    def supports_unzip(self, file_to_unzip):
+        """if resource supports the unzipping of the specified file"""
+        return True
+
+    def supports_delete_folder_on_zip(self, original_folder):
+        """if resource allows the original folder to be deleted upon zipping of that folder"""
+        return True
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
 
+    def check_relations(self, stop_on_error=False, log_errors=True,
+                        echo_errors=False, return_errors=False):
+        """
+        Check for dangling relations due to deleted resource files
 
-def get_path(instance, filename):
-    if instance.content_object.resource_federation_path:
-        return os.path.join(instance.content_object.resource_federation_path,
-                            instance.content_object.short_id, 'data',
-                            'contents', filename)
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
+        for r in self.metadata.relations.all():
+            if r.value.startswith('http://www.hydroshare.org/resource/'):
+                target = r.value[len('http://www.hydroshare.org/resource/'):].rstrip('/')
+                try:
+                    get_resource_by_shortkey(target, or_404=False)
+                except BaseResource.DoesNotExist:
+                    print("relation {} {} {} (this does not exist)"
+                          .format(self.short_id, r.type, target))
+
+    def check_irods_files(self, stop_on_error=False, log_errors=True,
+                          echo_errors=False, return_errors=False):
+        """
+        Check whether files in self.files and on iRODS agree
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+
+        logger = logging.getLogger(__name__)
+        istorage = self.get_irods_storage()
+        errors = []
+        ecount = 0
+
+        # report federation paths for debugging
+        if self.is_federated:
+            msg = "federation path for {} is {}".format(self.short_id,
+                                                        self.resource_federation_path)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
+        # skip federated resources if not configured to handle these
+        if self.is_federated and not settings.REMOTE_USE_IRODS:
+            msg = "check_irods_files: skipping check of federated resource {}"\
+                .format(self.short_id)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
+        else:
+
+            # Step 1: does every file here refer to an existing file in iRODS?
+            for f in self.files.all():
+                if not istorage.exists(f.storage_path):
+                    ecount += 1
+                    msg = "check_irods_files: django file {} does not exist in iRODS"\
+                        .format(f.storage_path)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            # Step 2: does every iRODS file correspond to a record in files?
+            error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
+                                                           stop_on_error=stop_on_error,
+                                                           log_errors=log_errors,
+                                                           echo_errors=echo_errors,
+                                                           return_errors=return_errors)
+            errors.extend(error2)
+            ecount += ecount2
+
+            # Step 3: does the resource contain required file elements?
+            meta = os.path.join(self.root_path, 'data', 'resourcemetadata.xml')
+            if not istorage.exists(meta):
+                msg = "metadata file {} does not exist".format(meta)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+            rmap = os.path.join(self.root_path, 'data', 'resourcemap.xml')
+            if not istorage.exists(rmap):
+                msg = "map file {} does not exist".format(rmap)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+            # finally, check whether the public flag agrees with ours
+            django_public = self.raccess.public
+            try:
+                irods_public = istorage.getAVU(self.root_path, 'isPublic')
+                if irods_public is None:
+                    irods_public = False
+                else:
+                    irods_public = irods_public.lower() == 'true'
+                msg = ''
+                if irods_public != django_public:
+                    ecount += 1
+                    if irods_public:  # and not django_public
+                        msg = "check_irods_files: resource {} public in irods, private in Django"\
+                            .format(self.short_id)
+                    else:
+                        msg = "check_irods_files: resource {} private in irods, public in Django"\
+                            .format(self.short_id)
+                    if msg != '':
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+
+            except SessionException as ex:
+                msg = "cannot read isPublic attribute of {}: {}"\
+                    .format(self.short_id, ex.stderr)
+                ecount += 1
+                if log_errors:
+                    logger.error(msg)
+                if echo_errors:
+                    print(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
+                    raise ValidationError(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+
+        return errors, ecount  # empty unless return_errors=True
+
+    def __check_irods_directory(self, dir, logger,
+                                stop_on_error=False, log_errors=True,
+                                echo_errors=False, return_errors=False):
+        """
+        list a directory and check files there for conformance with django ResourceFiles
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+
+        """
+        errors = []
+        ecount = 0
+        istorage = self.get_irods_storage()
+        try:
+
+            listing = istorage.listdir(dir)
+            for fname in listing[1]:  # files
+                fullpath = os.path.join(dir, fname)
+                found = False
+                for f in self.files.all():
+                    if f.storage_path == fullpath:
+                        found = True
+                        break
+                if not found:
+                    ecount += 1
+                    msg = "check_irods_files: file {} in iRODs does not exist in Django"\
+                        .format(fullpath)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            for dname in listing[0]:  # directories
+                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                               stop_on_error=stop_on_error,
+                                                               echo_errors=echo_errors,
+                                                               log_errors=log_errors,
+                                                               return_errors=return_errors)
+                errors.extend(error2)
+                ecount += ecount2
+
+        except SessionException:
+            ecount += 1
+            msg = "check_irods_files: listing of iRODS directory {} failed".format(dir)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.error(msg)
+            if return_errors:
+                errors.append(msg)
+            if stop_on_error:
+                raise ValidationError(msg)
+
+        return errors, ecount  # empty unless return_errors=True
+
+
+def get_path(instance, filename, folder=None):
+    """
+    Get a path from a ResourceFile, filename, and folder
+
+    :param instance: instance of ResourceFile to use
+    :param filename: file name to use (without folder)
+    :param folder: can override folder for ResourceFile instance
+
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local.  The instance points to the Resource record,
+    which contains the federation path. The folder in the instance will be used unless
+    overridden.
+
+    Note: this does not change the default behavior.
+    Thus it can be used to compute a new path for file that
+    one wishes to move.
+    """
+    if not folder:
+        folder = instance.file_folder
+    return get_resource_file_path(instance.resource, filename, folder)
+
+
+# TODO: make this an instance method of BaseResource.
+def get_resource_file_path(resource, filename, folder=None):
+    """
+    Dynamically determine storage path for a FileField based upon whether resource is federated
+
+    :param resource: resource containing the file.
+    :param filename: name of file without folder.
+    :param folder: folder of file
+
+    The filename is only a single name. This routine converts it to an absolute
+    path that can be federated or local. The resource contains information on how
+    to do this.
+
+    """
+    # folder can be absolute pathname; strip qualifications off of folder if necessary
+    if folder is not None and folder.startswith(resource.root_path):
+        # TODO: does this now start with /?
+        folder = folder[len(resource.root_path):]
+    if folder == '':
+        folder = None
+
+    # retrieve federation path -- if any -- from Resource object containing the file
+    if filename.startswith(resource.file_path):
+        return filename
+
+    # otherwise, it is an unqualified name.
+    if folder is not None:
+        # use subfolder
+        return os.path.join(resource.file_path, folder, filename)
     else:
-        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+        # use root folder
+        return os.path.join(resource.file_path, filename)
 
+
+def _path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if '/../' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")
+    if '/./' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/./'")
+
+
+class FedStorage(IrodsStorage):
+    """
+    The constructor of a Django storage object must have no arguments.
+    This simple workaround accomplishes that.
+    """
+    def __init__(self):
+        super(FedStorage, self).__init__("federated")
+
+
+# TODO: revise path logic for rename_resource_file_in_django for proper path.
+# TODO: utilize antibugging to check that paths are coherent after each operation.
 
 class ResourceFile(models.Model):
+    """
+    Represent a file in a resource.
+    """
+
+    # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
-
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                     storage=IrodsStorage()
-                                     if getattr(settings, 'USE_IRODS', False)
-                                     else DefaultStorage())
-    # the following optional fields are added for use by federated iRODS resources where
-    # resources are created in the local federated zone rather than hydroshare zone, in
-    # which case resource_file is empty, and we record iRODS logical resource file name
-    # and file size for customized copy or move operations for resource creation and other
-    # operations fed_resource_file in particular is a counterpart of resource_file, but
-    # handles files uploaded from local disk and store the files to federated zone rather
-    # than hydroshare zone.
-    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                         storage=IrodsStorage('federated') if getattr(
-                                             settings, 'USE_IRODS', False) else DefaultStorage())
-    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
-    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
+    # This is used to direct uploads to a subfolder of the root folder for the resource.
+    # See get_path and get_resource_file_path above.
+    file_folder = models.CharField(max_length=4096, null=True)
+
+    # This pair of FileFields deals with the fact that there are two kinds of storage
+    resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                     null=True, blank=True, storage=IrodsStorage())
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=4096,
+                                         null=True, blank=True, storage=FedStorage())
+
+    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
+    # fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    # DEPRECATED: use native size routine
+    # fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
+    # we are using GenericForeignKey to allow resource file to be associated with any
+    # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
+    logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
+    logical_file_content_type = models.ForeignKey(ContentType,
+                                                  null=True, blank=True,
+                                                  related_name="files")
+    logical_file_content_object = GenericForeignKey('logical_file_content_type',
+                                                    'logical_file_object_id')
+
+    def __str__(self):
+        if self.resource.resource_federation_path:
+            return self.fed_resource_file.name
+        else:
+            return self.resource_file.name
+
+    @classmethod
+    def create(cls, resource, file, folder=None, source=None, move=False):
+        """
+        Create takes arguments that are invariant of storage medium.
+        These are turned into a path that is suitable for the medium.
+        Federation must be initialized first at the resource level.
+
+        :param resource: resource that contains the file.
+        :param file: a File or a iRODS path to an existing file already copied.
+        :param folder: the folder in which to store the file.
+        :param source: an iRODS path in the same zone from which to copy the file.
+        :param move: if True, move the file rather than copying.
+
+        There are two main usages to this constructor:
+
+        * uploading a file from a form or REST call:
+
+                ResourceFile.create(r, File(...something...), folder=d)
+
+        * copying a file internally from iRODS:
+
+                ResourceFile.create(r, file_name, folder=d, source=s, move=True)
+          or
+                ResourceFile.create(r, file_name, folder=d, source=s, move=False)
+
+        In this case, source is a full iRODS pathname of the place from which to copy or move
+        the file. The default is to copy the file and leave a copy in place.
+
+        A third form is less common and presumes that the file already exists in iRODS
+        in the proper place:
+
+        * pointing to an existing file:
+
+                ResourceFile.create(r, file_name, folder=d)
+
+        """
+        # bind to appropriate resource
+        kwargs = {}
+        if __debug__:
+            assert isinstance(resource, BaseResource)
+        kwargs['content_object'] = resource
+
+        kwargs['file_folder'] = folder
+
+        # if file is an open file, use native copy by setting appropriate variables
+        if isinstance(file, File):
+            if resource.resource_federation_path:
+                kwargs['resource_file'] = None
+                kwargs['fed_resource_file'] = file
+            else:
+                kwargs['resource_file'] = file
+                kwargs['fed_resource_file'] = None
+
+        else:  # if file is not an open file, then it's a basename (string)
+            if file is None and source is not None:
+                if __debug__:
+                    assert(isinstance(source, basestring))
+                # source is a path to an iRODS file to be copied here.
+                root, newfile = os.path.split(source)  # take file from source path
+                # newfile is where it should be copied to.
+                target = get_resource_file_path(resource, newfile, folder=folder)
+                istorage = resource.get_irods_storage()
+                if not istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: source {} of copy not found"
+                                          .format(source))
+                if not move:
+                    istorage.copyFiles(source, target)
+                else:
+                    istorage.moveFile(source, target)
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: copy to target {} failed"
+                                          .format(target))
+                if move and istorage.exists(source):
+                    raise ValidationError("ResourceFile.create: move did not work")
+            elif file is not None and source is None:
+                # file points to an existing iRODS file
+                target = get_resource_file_path(resource, file, folder=folder)
+                istorage = resource.get_irods_storage()
+                if not istorage.exists(target):
+                    raise ValidationError("ResourceFile.create: target {} does not exist"
+                                          .format(target))
+            else:
+                raise ValidationError(
+                    "ResourceFile.create: exactly one of source or file must be specified")
+
+            # we've copied or moved if necessary; now set the paths
+            if resource.resource_federation_path:
+                kwargs['resource_file'] = None
+                kwargs['fed_resource_file'] = target
+            else:
+                kwargs['resource_file'] = target
+                kwargs['fed_resource_file'] = None
+
+        # Actually create the file record
+        # when file is a File, the file is copied to storage in this step
+        # otherwise, the copy must precede this step.
+        return ResourceFile.objects.create(**kwargs)
+
+    # TODO: automagically handle orphaned logical files
+    def delete(self):
+        """
+        Delete a resource file record and the file contents
+
+        model.delete does not cascade to delete files themselves,
+        and these must be explicitly deleted.
+
+        """
+        if self.exists:
+            if self.fed_resource_file:
+                self.fed_resource_file.delete()
+            if self.resource_file:
+                self.resource_file.delete()
+        super(ResourceFile, self).delete()
 
     @property
     def resource(self):
         return self.content_object
+
+    # TODO: write unit test
+    @property
+    def size(self):
+        if self.resource.resource_federation_path:
+            if __debug__:
+                assert self.resource_file.name is None or \
+                       self.resource_file.name == ''
+            return self.fed_resource_file.size
+        else:
+            if __debug__:
+                assert self.fed_resource_file.name is None or \
+                       self.fed_resource_file.name == ''
+            return self.resource_file.size
+
+    # TODO: write unit test
+    @property
+    def exists(self):
+        istorage = self.resource.get_irods_storage()
+        if self.resource.resource_federation_path:
+            if __debug__:
+                assert self.resource_file.name is None or \
+                       self.resource_file.name == ''
+            return istorage.exists(self.fed_resource_file.name)
+        else:
+            if __debug__:
+                assert self.fed_resource_file.name is None or \
+                       self.fed_resource_file.name == ''
+            return istorage.exists(self.resource_file.name)
+
+    @property
+    def storage_path(self):
+        """
+        Return the qualified name for a file in the storage hierarchy.
+        This is a valid input to IrodsStorage for manipulating the file.
+        The output depends upon whether the IrodsStorage instance is running
+        in federated mode.
+
+        """
+        # instance.content_object can be stale after changes.
+        # Re-fetch based upon key; bypass type system; it is not relevant
+        resource = self.resource
+        if resource.resource_federation_path:  # false if None or empty
+            if __debug__:
+                assert self.resource_file.name is None or \
+                       self.resource_file.name == ''
+            return self.fed_resource_file.name
+        else:
+            if __debug__:
+                assert self.fed_resource_file.name is None or \
+                       self.fed_resource_file.name == ''
+            return self.resource_file.name
+
+    # ResourceFile API handles file operations
+    def set_storage_path(self, path, test_exists=True):
+        """
+        Bind this ResourceFile instance to an existing file.
+
+        :param path: the path of the object.
+        :param test_exists: if True, test for path existence in iRODS
+
+        Path can be absolute or relative.
+
+            * absolute paths contain full irods path to local or federated object.
+            * relative paths start with anything else and can start with optional folder
+
+        :raises ValidationError: if the pathname is inconsistent with resource configuration.
+        It is rather important that applications call this rather than simply calling
+        resource_file = "text path" because it takes the trouble of making that path
+        fully qualified so that IrodsStorage will work properly.
+
+        This records file_folder for future possible uploads and searches.
+
+        The heavy lifting in this routine is accomplished via path_is_acceptable and get_path,
+        which together normalize the file name.  Regardless of whether the internal file name
+        is qualified or not, this makes it fully qualified from the point of view of the
+        IrodsStorage module.
+
+        """
+        folder, base = self.path_is_acceptable(path, test_exists=test_exists)
+        self.file_folder = folder
+        self.save()
+
+        # self.content_object can be stale after changes. Re-fetch based upon key
+        # bypass type system; it is not relevant
+        resource = self.resource
+
+        # switch FileFields based upon federation path
+        if resource.resource_federation_path:
+            # uses file_folder; must come after that setting.
+            self.fed_resource_file = get_path(self, base)
+            self.resource_file = None
+        else:
+            self.fed_resource_file = None
+            self.resource_file = get_path(self, base)
+        self.save()
+
+    @property
+    def short_path(self):
+        """
+        Return the unqualified path to the file object.
+
+        * This path is invariant of where the object is stored.
+
+        * Thus, it does not change if the resource is moved.
+
+        This is the path that should be used as a key to index things such as file type.
+        """
+        if self.resource.resource_federation_path:
+            folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
+        else:
+            folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
+        if folder is not None:
+            return os.path.join(folder, base)
+        else:
+            return base
+
+    def set_short_path(self, path):
+        """
+        Set a path to a given path, relative to resource root
+
+        There is some question as to whether the short path should be stored explicitly or
+        derived as in short_path above. The latter is computationally expensive but results
+        in a single point of truth.
+        """
+        folder, base = os.path.split(path)
+        if folder == "":
+            folder = None
+        self.file_folder = folder  # must precede call to get_path
+        if self.resource.resource_federation_path:
+            self.resource_file = None
+            self.fed_resource_file = get_path(self, base)
+        else:
+            self.resource_file = get_path(self, base)
+            self.fed_resource_file = None
+        self.save()
+
+    def parse(self):
+        """ parse a path into folder and basename """
+        return self.path_is_acceptable(self.storage_path, test_exists=False)
+
+    def path_is_acceptable(self, path, test_exists=True):
+        """
+        Determine whether a path is acceptable for this resource file
+
+        Called inside ResourceFile objects to check paths
+
+        :param path: path to test
+        :param test_exists: if True, test for path existence in iRODS
+
+        """
+        return ResourceFile.resource_path_is_acceptable(self.resource, path, test_exists)
+
+    @classmethod
+    def resource_path_is_acceptable(cls, resource, path, test_exists=True):
+        """
+        Determine whether a path is acceptable for this resource file
+
+        Called outside ResourceFile objects or before such an object exists
+
+        :param path: path to test
+        :param test_exists: if True, test for path existence in iRODS
+
+        This has the side effect of returning the short path for the resource
+        as a folder/filename pair.
+        """
+        if test_exists:
+            storage = resource.get_irods_storage()
+        locpath = os.path.join(resource.short_id, "data", "contents") + "/"
+        relpath = path
+        fedpath = resource.resource_federation_path
+        if fedpath and relpath.startswith(fedpath + '/'):
+            if test_exists and not storage.exists(path):
+                raise ValidationError("Federated path does not exist in irods")
+            plen = len(fedpath + '/')
+            relpath = relpath[plen:]  # omit fed path
+
+            # strip resource id from path
+            if relpath.startswith(locpath):
+                plen = len(locpath)
+                relpath = relpath[plen:]  # omit local path
+            else:
+                raise ValidationError("Malformed federated resource path")
+        elif path.startswith(locpath):
+            # strip optional local path prefix
+            if test_exists and not storage.exists(path):
+                raise ValidationError("Local path does not exist in irods")
+            plen = len(locpath)
+            relpath = relpath[plen:]  # strip local prefix, omit /
+
+        # now we have folder/file. We could have gotten this from the input, or
+        # from stripping qualification folders. Note that this can contain
+        # misnamed header content misinterpreted as a folder unless one tests
+        # for existence
+        if '/' in relpath:
+            folder, base = os.path.split(relpath)
+            abspath = get_resource_file_path(resource, base, folder=folder)
+            if test_exists and not storage.exists(abspath):
+                raise ValidationError("Local path does not exist in irods")
+        else:
+            folder = None
+            base = relpath
+            abspath = get_resource_file_path(resource, base, folder=folder)
+            if test_exists and not storage.exists(abspath):
+                raise ValidationError("Local path does not exist in irods")
+
+        return folder, base
+
+    # def rename(self, new_name):
+    #     """ rename a file, setting all path variables appropriately """
+    #     pass
+
+    # def copy_irods(self, source_path, dest_path=None):
+    #     """ copy an irods file into this FileField, setting all paths appropriately """
+    #     pass
+
+    # def move_irods(self, source_path, dest_path=None):
+    #     """ move an irods file into this object, setting all paths appropriately """
+
+    # classmethods do things that query or affect all files.
+
+    @classmethod
+    def get(cls, resource, file, folder=None):
+        """
+        Get a ResourceFile record via its short path.
+        """
+        if resource.resource_federation_path:
+            return ResourceFile.objects.get(object_id=resource.id,
+                                            fed_resource_file=get_resource_file_path(resource,
+                                                                                     file,
+                                                                                     folder))
+        else:
+            return ResourceFile.objects.get(object_id=resource.id,
+                                            resource_file=get_resource_file_path(resource,
+                                                                                 file,
+                                                                                 folder))
+
+    # TODO: move to BaseResource as instance method
+    @classmethod
+    def list_folder(cls, resource, folder):
+        """
+        List a given folder
+
+        :param resource: resource for which to list the folder
+        :param folder: folder listed as either short_path or fully qualified path
+        """
+        if folder is None:
+            folder = resource.file_path
+        elif not folder.startswith(resource.file_path):
+            folder = os.path.join(resource.file_path, folder)
+        if resource.resource_federation_path:
+            return ResourceFile.objects.filter(
+                object_id=resource.id,
+                fed_resource_file__startswith=folder)
+        else:
+            return ResourceFile.objects.filter(
+                object_id=resource.id,
+                resource_file__startswith=folder)
+
+    # TODO: move to BaseResource as instance method
+    @classmethod
+    def create_folder(cls, resource, folder):
+        """ create a folder for a resource """
+        # avoid import loop
+        from hs_core.views.utils import create_folder
+        _path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        create_folder(resource.short_id, os.path.join('data', 'contents', folder))
+
+    # TODO: move to BaseResource as instance method
+    @classmethod
+    def remove_folder(cls, resource, folder, user):
+        """ remove a folder for a resource """
+        # avoid import loop
+        from hs_core.views.utils import remove_folder
+        _path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
+
+    @property
+    def has_logical_file(self):
+        return self.logical_file is not None
+
+    @property
+    def logical_file(self):
+        return self.logical_file_content_object
+
+    @property
+    def logical_file_type_name(self):
+        return self.logical_file_content_object.__class__.__name__
+
+    @property
+    def has_generic_logical_file(self):
+        return self.logical_file_type_name == "GenericLogicalFile"
+
+    @property
+    def metadata(self):
+        if self.logical_file is not None:
+            return self.logical_file.metadata
+        return None
+
+    @property
+    def mime_type(self):
+        from .hydroshare.utils import get_file_mime_type
+        return get_file_mime_type(self.file_name)
+
+    @property
+    def extension(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[2]
+
+    # TODO: these are much simpler than this now. use storage_path, short_path, etc.
+    @property
+    def dir_path(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return os.path.dirname(get_resource_file_name_and_extension(self)[0])
+
+    @property
+    def full_path(self):
+        # from .hydroshare.utils import get_resource_file_name_and_extension
+        # return get_resource_file_name_and_extension(self)[0]
+        return self.storage_path
+
+    @property
+    def file_name(self):
+        # from .hydroshare.utils import get_resource_file_name_and_extension
+        # return get_resource_file_name_and_extension(self)[1]
+        return os.path.basename(self.storage_path)
+
+    @property
+    def can_set_file_type(self):
+        # currently user can set file type only for files with extension
+        # tif, zip and nc.
+        return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
+                                                              self.logical_file_type_name ==
+                                                              "GenericLogicalFile")
+
+    @property
+    def url(self):
+        """
+        return the URL of the file contained in this ResourceFile.
+
+        A GET of this URL simply returns the file. This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.resource.short_id,
+                                  'data', 'contents', self.short_path)
+
+    @property
+    def irods_url(self):
+        """
+        Return the iRODS URL of the file
+
+        This is a direct link and independent of the Django path in ResourceFile.url
+        """
+        if self.resource_file:
+            return self.resource_file.url
+        elif self.fed_resource_file:
+            return self.fed_resource_file.url
+        else:
+            return None
 
 
 class Bags(models.Model):
@@ -1559,7 +2666,10 @@ class BaseResource(Page, AbstractResource):
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
+
+    # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
+
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
@@ -1584,9 +2694,82 @@ class BaseResource(Page, AbstractResource):
 
     def get_irods_storage(self):
         if self.resource_federation_path:
-            return IrodsStorage('federated')
+            return FedStorage()
         else:
             return IrodsStorage()
+
+    @property
+    def is_federated(self):
+        return self.resource_federation_path is not None and \
+               self.resource_federation_path != ''
+
+    # Paths relative to the resource
+    @property
+    def root_path(self):
+        """
+        Return the root folder of the iRODS structure containing resource files
+
+        Note that this folder doesn't directly contain the resource files;
+        They are contained in ./data/contents/* instead.
+        """
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, self.short_id)
+        else:
+            return self.short_id
+
+    @property
+    def file_path(self):
+        """
+        Return the file path of the resource. This is the root path plus "data/contents".
+
+        This is the root of the folder structure for resource files.
+        """
+        return os.path.join(self.root_path, "data", "contents")
+
+    # These are currently classmethods
+    # @property
+    # def scimeta_path(self):
+    #     """ path to science metadata file (in iRODS) """
+    #     return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+
+    # @property
+    # def sysmeta_path(self):
+    #     """ path to system metadata file (in iRODS) """
+    #     return os.path.join(self.root_path, "data", "systemmetadata.xml")
+
+    @property
+    def bag_path(self):
+        """
+        return the unique iRODS path to the bag for the resource
+
+        Since this is a cache, it is stored in a different place than the resource files.
+        """
+        if self.is_federated:
+            return os.path.join(self.resource_federation_path, "bags", self.short_id + '.zip')
+        else:
+            return os.path.join("bags", self.short_id + '.zip')
+
+    # URIs relative to resource
+    # these are independent of federation strategy
+    # TODO: utilize "reverse" abstraction to tie this to urls.py for robustness
+
+    # add these one by one to avoid errors.
+
+    # @property
+    # def root_uri(self):
+    #     pass
+
+    # @property
+    # def scimeta_uri(self):
+    #     return os.path.join(self.root_uri, 'scimeta')
+
+    # @property
+    # def sysmeta_uri(self):
+    #     return os.path.join(self.root_uri, 'sysmeta')
+
+    # @property
+    # def file_uri(self):
+    #     return os.path.join(self.root_uri, 'files')
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
@@ -1644,20 +2827,69 @@ class BaseResource(Page, AbstractResource):
             ROOT, pretty_print=pretty_print)
 
     @property
+    def size(self):
+        """
+        Return the total size of all data files in iRODS.
+
+        This size does not include metadata. Just files. Specifically,
+        resourcemetadata.xml, systemmetadata.xml are not included in this
+        size estimate.
+
+        Raises SessionException if iRODS fails.
+        """
+        # compute the total file size for the resource
+        f_sizes = [f.size for f in self.files.all()]
+        return sum(f_sizes)
+
+    @property
     def verbose_name(self):
         return self.get_content_model()._meta.verbose_name
 
+    @property
+    def can_be_published(self):
+        """
+        Determine when data and metadata are complete enough for the resource to be published.
+
+        The property can be overriden by specific resource type which is not appropriate for
+        publication such as the Web App resource
+        :return:
+        """
+        return self.can_be_public_or_discoverable
+
     @classmethod
     def get_supported_upload_file_types(cls):
-        # all file types are supported
+        """
+        Get supported upload types for a resource.
+
+        This can be overridden to choose which types of file can be uploaded by a subclass.
+
+        By default, all file types are supported
+        """
+        # TODO: this should be replaced by an instance method.
         return ('.*')
 
     @classmethod
     def can_have_multiple_files(cls):
+        """
+        Return True if multiple files can be uploaded.
+
+        This can be overridden to choose how many files can be uploaded by a subclass.
+
+        By default, uploads are not limited.
+        """
+        # TODO: this should be replaced by an instance method.
         return True
 
     @classmethod
     def can_have_files(cls):
+        """
+        Return whether the resource supports files at all.
+
+        This can be overridden to choose whether files can be uploaded by a subclass.
+
+        By default, uploads are allowed.
+        """
+        # TODO: this should be replaced by an instance method.
         return True
 
     def get_hs_term_dict(self):
@@ -1681,6 +2913,10 @@ class BaseResource(Page, AbstractResource):
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
 
+    @property
+    def supports_folders(self):
+        return True
+
     class Meta:
         verbose_name = 'Generic'
         proxy = True
@@ -1696,6 +2932,8 @@ def new_get_content_model(self):
         rt = [rt for rt in get_resource_types() if rt._meta.model_name == content_model][0]
         return rt.objects.get(id=self.id)
     return old_get_content_model(self)
+
+
 Page.get_content_model = new_get_content_model
 
 
@@ -1776,6 +3014,16 @@ class CoreMetaData(models.Model):
                 'Relation',
                 'Publisher',
                 'FundingAgency']
+
+    def set_dirty(self, flag):
+        """
+        Subclasses that have the attribute to track whether metadata object is dirty
+        should override this method to allow setting that attribute
+
+        :param flag: a boolean value
+        :return:
+        """
+        pass
 
     def has_all_required_elements(self):
         # this method needs to be overriden by any subclass of this class
@@ -1979,53 +3227,7 @@ class CoreMetaData(models.Model):
             self._create_person_element(etree, rdf_Description, contributor)
 
         for coverage in self.coverages.all():
-            dc_coverage = etree.SubElement(rdf_Description, '{%s}coverage' % self.NAMESPACES['dc'])
-            cov_dcterm = '{%s}' + coverage.type
-            dc_coverage_dcterms = etree.SubElement(dc_coverage,
-                                                   cov_dcterm % self.NAMESPACES['dcterms'])
-            rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
-                                                  '{%s}value' % self.NAMESPACES['rdf'])
-            if coverage.type == 'period':
-                start_date = parser.parse(coverage.value['start'])
-                end_date = parser.parse(coverage.value['end'])
-                cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
-                                                                  end_date.isoformat())
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-
-            elif coverage.type == 'point':
-                cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'],
-                                                             coverage.value['north'],
-                                                             coverage.value['units'])
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'elevation' in coverage.value:
-                    cov_value = cov_value + '; elevation=%s' % coverage.value['elevation']
-                    if 'zunits' in coverage.value:
-                        cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            else:
-                # this is box type
-                cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                            % (coverage.value['northlimit'], coverage.value['eastlimit'],
-                               coverage.value['southlimit'], coverage.value['westlimit'],
-                               coverage.value['units'])
-
-                if 'name' in coverage.value:
-                    cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
-                if 'uplimit' in coverage.value:
-                    cov_value = cov_value + '; uplimit=%s' % coverage.value['uplimit']
-                if 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; downlimit=%s' % coverage.value['downlimit']
-                if 'uplimit' in coverage.value or 'downlimit' in coverage.value:
-                    cov_value = cov_value + '; zunits=%s' % coverage.value['zunits']
-                if 'projection' in coverage.value:
-                    cov_value = cov_value + '; projection=%s' % coverage.value['projection']
-
-            rdf_coverage_value.text = cov_value
+            coverage.add_to_xml_container(rdf_Description)
 
         for dt in self.dates.all():
             dc_date = etree.SubElement(rdf_Description, '{%s}date' % self.NAMESPACES['dc'])
@@ -2147,6 +3349,8 @@ class CoreMetaData(models.Model):
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
+    # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
+    # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         """
         helper function to generate xml elements for a given metadata element that belongs to
@@ -2212,9 +3416,10 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        hsterms_name = etree.SubElement(dc_person_rdf_Description,
-                                        '{%s}name' % self.NAMESPACES['hsterms'])
-        hsterms_name.text = person.name
+        if person.name:
+            hsterms_name = etree.SubElement(dc_person_rdf_Description,
+                                            '{%s}name' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = person.name
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)

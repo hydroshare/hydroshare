@@ -10,6 +10,7 @@
 {% endblock %}
 
 {% block main %}
+    <div style="margin-left: 10px;">
     <h2>Description of HydroShare Resource Types and Metadata Terms</h2>
     <h3>Generic Resource Type Description</h3>
     <p>A generic resource is an arbitrary collection of files that are logically grouped together as a resource.
@@ -124,6 +125,7 @@
             <li><strong>Description: </strong>Name or URL of the source from which a resource is copied.</li>
         </ul>
 
+        <a name="extendedMetadata"></a>
         <ul >
             <li><strong>Term: </strong>isHostedBy</li>
             <li><strong>URI: </strong><a href="#isHostedBy">http://www.hydroshare.org/terms/isHostedBy</a></li>
@@ -131,6 +133,26 @@
             <li><strong>Description: </strong>Name or URL of the external system where a resource is located.</li>
         </ul>
 
+        <a name="key"></a>
+        <ul >
+            <li><strong>Term: </strong>extendedMetadata</li>
+            <li><strong>URI: </strong><a href="#extendedMetadata">http://www.hydroshare.org/terms/extendedMetadata</a></li>
+            <li><strong>Label: </strong>Extended Metadata</li>
+            <li><strong>Description: </strong>User defined key/value pair metadata.</li>
+        </ul>
+        <a name="value"></a>
+        <ul >
+            <li><strong>Term: </strong>key</li>
+            <li><strong>URI: </strong><a href="#key">http://www.hydroshare.org/terms/key</a></li>
+            <li><strong>Label: </strong>Key</li>
+            <li><strong>Description: </strong>The content of the key for key/value pair extended metadata.</li>
+        </ul>
+        <ul >
+            <li><strong>Term: </strong>value</li>
+            <li><strong>URI: </strong><a href="#value">http://www.hydroshare.org/terms/value</a></li>
+            <li><strong>Label: </strong>Value</li>
+            <li><strong>Description: </strong>The content of the value for key/value pair extended metadata.</li>
+        </ul>
 
     <h3> Time Series Resource Type Description</h3>
     <p>The time series is a sequence of individual data values that are ordered in time to record the
@@ -488,7 +510,7 @@
             <li><strong>Description: </strong>Site longitude </li>
         </ul>
 
-
+    <a name="netcdf_res"></a>
     <h3>Multidimensional (NetCDF) Resource Type Description</h3>
     <p>Multidimensional space-time data is one of the major data types used for hydrological modeling. For example, the
         precipitation or surface air temperature data that have two dimensions in space and one dimension in time.
@@ -603,6 +625,7 @@
                 missing value should be the same as the variable type.</li>
         </ul>
 
+    <a name="geo_raster_res"></a>
     <h3>Geographic Raster Resource Type Description</h3>
     <p> Geographic raster data are commonly used for representing and managing imagry, digital elevation, and other phenomena
         which is widely used in hydrological research. The raster can have a single or multiple bands (or layers) of data.
@@ -1423,4 +1446,66 @@
         publication status or permissions settings associated with resources in a collection.
     </p>
 
+    <h3>Composite Resource Type Description</h3>
+    <a name="Dataset"></a>
+    <p>
+        A Composite resource is a resource which can include multiple files without file format
+        limitations. This resource is designed to support metadata and data functions at both file
+        level and resource level to better support data management in HydroShare. Each file may be
+        annotated with general file type metadata. If a file, or group of files representing
+        one logical object (e.g. multiple files for a shapefile) is in the format which represents
+        a specific file type supported in HydroShare, the file will be supported with specific file
+        type metadata and additional data functions established for that type
+        (e.g. metadata extraction from TIFF or NetCDF file). The resource level metadata will be the
+        same as metadata of the generic resource type. Each file within the resource will be associated
+        with the following additional metadata terms:
+    </p>
+
+     <a name="dataType"></a>
+        <ul >
+            <li><strong>Term: </strong>Dataset</li>
+            <li><strong>URI: </strong><a href="#Dataset">http://www.hydroshare.org/terms/Dataset</a></li>
+            <li><strong>Label: </strong>Dataset</li>
+            <li><strong>Description: </strong>One or multiple files that represent one logical object as a hydrologic dataset.</li>
+        </ul>
+
+     <a name="dataTitle"></a>
+        <ul >
+            <li><strong>Term: </strong>dataType</li>
+            <li><strong>URI: </strong><a href="#dataType">http://www.hydroshare.org/terms/dataType</a></li>
+            <li><strong>Label: </strong>Data Type</li>
+            <li><strong>Description: </strong>The data type (or file type) of the dataset.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>dataTitle</li>
+            <li><strong>URI: </strong><a href="#dataTitle">http://www.hydroshare.org/terms/dataTitle</a></li>
+            <li><strong>Label: </strong>Data Title</li>
+            <li><strong>Description: </strong>The title of the dataset.</li>
+        </ul>
+
+        <p>
+            All file types include additional terms that can be referred to
+            <a href="#extendedMetadata">Extended Metadata</a>,
+            <a href="#key">Key</a>,
+            <a href="#value">Value</a>
+        </p>
+
+    <p>Currently, composite resource type supports three file types including the generic file type.
+        Any file uploaded to the composite resource by default becomes part of the generic file type. All the file
+        types are associated with the terms shown above. In addition, when the user sets a generic file type to a specific file type,
+        it will be associated with more metadata terms, which are derived from the corresponding resource types. </p>
+
+    <h4>Geo raster file type</h4>
+    <p>
+        This file type includes additional terms that can be referred to
+        <a href="#geo_raster_res">Geographic Raster Resource Type</a>
+    </p>
+
+    <h4>NetCDF file type</h4>
+    <p>
+        This file type includes additional terms that can be referred to
+        <a href="#netcdf_res">Multidimensional (NetCDF) Resource Type</a>
+    </p>
+    </div>
 {% endblock %}

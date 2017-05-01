@@ -6,8 +6,6 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
 
-import os
-
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     AbstractMetaDataElement
 
@@ -31,9 +29,11 @@ def uncouple(choices):
 
 def validate_choice(value, choices):
     choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
+    if isinstance(value, int):
+        return value
     if 'Choose' in value:
         return ''
-    if value not in choices:
+    if value and value not in choices:
         raise ValidationError('Invalid parameter: {} not in {}'.format(value, ", ".join(choices)))
     else:
         return value
@@ -67,6 +67,12 @@ class StudyArea(AbstractMetaDataElement):
     class Meta:
         # StudyArea element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        study_area = super(StudyArea, cls).update(element_id, **kwargs)
+        delete_if_empty(study_area,
+                        ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation'])
 
 
 class GridDimensions(AbstractMetaDataElement):
@@ -277,28 +283,47 @@ class BoundaryCondition(AbstractMetaDataElement):
                           self.head_dependent_flux_boundary_packages.all()])
 
     def _add_specified_head_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_head_boundary_packages.add(qs[0])
             else:
-                self.specified_head_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.specified_head_boundary_packages.create(description=package)
 
     def _add_specified_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
                 self.specified_flux_boundary_packages.add(qs[0])
             else:
-                self.specified_flux_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.specified_flux_boundary_packages.create(description=package)
 
     def _add_head_dependent_flux_boundary_packages(self, packages):
+        """ there are two possibilities for package values: list of string (during normal create or
+         update) or integer (during creating new version of the resource)"""
         for package in packages:
-            qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if isinstance(package, int):
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(id=package)
+            else:
+                qs = HeadDependentFluxBoundaryPackageChoices.objects.\
+                    filter(description__exact=package)
             if qs.exists():
                 self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                self.head_dependent_flux_boundary_packages.create(description=package)
+                if isinstance(package, basestring):
+                    self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
     @classmethod
@@ -488,12 +513,18 @@ class GeneralElements(AbstractMetaDataElement):
         return ', '.join([packages.description for packages in self.output_control_package.all()])
 
     def _add_output_control_package(self, choices):
+        """ there are two possibilities for type_choices values: list of string (during normal
+         create or update) or integer (during creating new version of the resource)"""
         for type_choices in choices:
-            qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
+            if isinstance(type_choices, int):
+                qs = OutputControlPackageChoices.objects.filter(id=type_choices)
+            else:
+                qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
             if qs.exists():
                 self.output_control_package.add(qs[0])
             else:
-                self.output_control_package.create(description=type_choices)
+                if isinstance(type_choices, basestring):
+                    self.output_control_package.create(description=type_choices)
 
     @classmethod
     def create(cls, **kwargs):
@@ -534,6 +565,7 @@ class GeneralElements(AbstractMetaDataElement):
 
     @classmethod
     def _validate_params(cls, **kwargs):
+        # raise Exception(kwargs)
         for key, val in kwargs.iteritems():
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
@@ -558,26 +590,13 @@ class MODFLOWModelInstanceResource(BaseResource):
         md = MODFLOWModelInstanceMetaData()
         return self._get_metadata(md)
 
-    def has_required_content_files(self):
-        if self.files.all().count() >= 1:
-            nam_files, reqd_files, existing_files, model_packages = self.find_content_files()
-            if nam_files != 1:
-                return False
-            else:
-                for f in reqd_files:
-                    if f not in existing_files:
-                        return False
-                else:
-                    return True
-        else:
-            return False
-
     def check_content_files(self):
         """
-        like 'has_required_content_files()' this method checks that one and only .nam exists, but
-        unlike 'has_required_content_files()' this method returns which files are missing so that
-        more information can be returned to the user via the interface
-        :return: -['nam'] if there are no files or if there are files but no .nam file
+        like 'has_required_content_files()' this method checks that one and only of .nam or .mfn
+         exists, but unlike 'has_required_content_files()' this method returns which files are
+         missing so that more information can be returned to the user via the interface
+        :return: -['.nam or .mfn'] if there are no files or if there are files but no .nam or .mfn
+                    file
                  -'multiple_nam' if more than one .nam file has been uploaded
                  -missing_files, a list of file names that are included in the .nam file but have
                  not been uploaded by the user
@@ -586,7 +605,7 @@ class MODFLOWModelInstanceResource(BaseResource):
         if self.files.all().count() >= 1:
             nam_files, reqd_files, existing_files, model_packages = self.find_content_files()
             if not nam_files:
-                return ['.nam']
+                return ['.nam or .mfn']
             else:
                 if nam_files > 1:
                     return 'multiple_nam'
@@ -596,13 +615,13 @@ class MODFLOWModelInstanceResource(BaseResource):
                             missing_files.append(f)
                     return missing_files
         else:
-            return ['.nam']
+            return ['.nam or .mfn ']
 
     def find_content_files(self):
         """
-        loops through uploaded files to count the .nam files, creates a list of required files
-        (file names listed in the .nam file needed to run the model), and a list of existing file
-        names
+        loops through uploaded files to count the .nam and/or .mfn files, creates a list of required
+         files (file names listed in the .nam or .mfn file needed to run the model), and a list of
+         existing file names
         :return: -nam_file_count, (int), the number of .nam files uploaded
                  -reqd_files, (list of strings), the files listed in the .nam file that should be
                  included for the model to run
@@ -615,9 +634,9 @@ class MODFLOWModelInstanceResource(BaseResource):
         reqd_files = []
         model_packages = []
         for res_file in self.files.all():
-                ext = os.path.splitext(res_file.resource_file.name)[-1]
-                existing_files.append(res_file.resource_file.name.split("/")[-1])
-                if ext == '.nam':
+                ext = res_file.extension
+                existing_files.append(res_file.file_name)
+                if ext == '.nam' or ext == '.mfn':
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
                     for row in name_file:
@@ -698,7 +717,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
-        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -794,7 +813,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
-            self.add_metadata_element_to_xml(container, self.model_inputs.first(), modelInputFields)
+            for model_input in self.model_inputs:
+                self.add_metadata_element_to_xml(container, model_input, modelInputFields)
 
         if self.general_elements:
 
@@ -818,7 +838,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                                                       self.NAMESPACES['hsterms'])
                 subsidence_package.text = self.general_elements.subsidencePackage
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(MODFLOWModelInstanceMetaData, self).delete_all_elements()

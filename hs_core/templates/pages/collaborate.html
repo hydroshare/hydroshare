@@ -212,7 +212,11 @@
                                 <textarea class="form-control" required="required" name="description"></textarea>
                             </fieldset>
 
-                            <br>
+                            {# auto approve #}
+                            <fieldset class="col-sm-12">
+                               <input id="auto-approve" type="checkbox"  name="auto_approve">
+                               <label class="checkbox-label" for="auto-approve">Auto approve membership</label>
+                            </fieldset>
 
                             {# Picture #}
                             <div class="col-sm-12">
@@ -221,7 +225,7 @@
 
                                     <div class="input-group">
                                         <span class="input-group-btn">
-                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                            <span id="group-image-upload" class="btn btn-default btn-file">
                                                 Browse&hellip; <input class="upload-picture" type="file" name="picture">
                                             </span>
                                         </span>
@@ -277,150 +281,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-toolkit.min.js"></script>
-    <script>
-        function request_join_group_ajax_submit() {
-            var target = $(this);
-            var dataFormID = $(this).attr("data-form-id");
-            var form = $("#" + dataFormID);
-            var datastring = form.serialize();
-            var url = form.attr('action');
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    var container = target.parent().parent();
-                    target.parent().remove();
-                    container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
-                }
-            });9
-            //don't submit the form
-            return false;
-        }
-
-        function act_on_request_ajax_submit() {
-            var target = $(this);
-            var form = $(this).closest("form");
-            var datastring = form.serialize();
-            var url = form.attr('action');
-            $.ajax({
-                type: "POST",
-                url: url,
-                dataType: 'html',
-                data: datastring,
-                success: function (result) {
-                    var container = target.parent().parent().parent().parent();
-                    target.parent().parent().parent().remove();
-                    if (target.attr("data-user-action") == "Accept") {
-                        container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4></div>');
-                    }
-                    else {
-                        container.append('<div class="text-center"><h4 class="flag-declined"><span class="glyphicon glyphicon-remove"></span> You have declined to join this group.</h4></div>');
-                    }
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
-                }
-            });
-            //don't submit the form
-            return false;
-        }
-
-        // Makes all group preview containers have the same height.
-        function fixViewPort(current) {
-            if (!current) {
-                return;
-            }
-
-            $('.group-thumbnails').find('div.group-container').height("initial");   // Reset height
-
-            var delta;
-            if (current == "xs") {
-                return; // Delta is 1. No need to adjust
-            }
-            else if (current == "sm") {
-                delta = 2;
-            }
-            else if (current == "md" || current == "lg") {
-                delta = 3;
-            }
-
-            var containers = $('.group-thumbnails').find('div.group-container');
-
-            // Fix height of containers for each row. One row every delta items.
-            for (var i = 0; i < containers.length - delta; i += delta) {
-                var maxHeight = 0;
-                for (var j = 0; j < delta; j++) {
-                    maxHeight = Math.max($(containers[i + j]).height(), maxHeight);
-                }
-                for (var j = 0; j < delta; j++) {
-                    $(containers[i + j]).height(maxHeight);
-                }
-            }
-        }
-
-        // Preview profile picture
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-
-                };
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // File name preview for picture field, change method
-        $(document).on('change', '.btn-file :file', function () {
-            var input = $(this);
-            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
-            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-            input.trigger('fileselect', [numFiles, label]);
-        });
-
-        $(document).ready(function () {
-            $(".btn-ask-to-join").click(request_join_group_ajax_submit);
-            $(".btn-act-on-request").click(act_on_request_ajax_submit);
-            $("#txt-search-groups").keyup(function () {
-                var searchString = $("#txt-search-groups").val().toLowerCase();
-                $(".group-container").show();
-                var groups = $(".group-container");
-                for (var i = 0; i < groups.length; i++) {
-                    var groupName = $(groups[i]).find(".group-name").text().toLowerCase();
-                    if (groupName.indexOf(searchString) < 0) {
-                        $(groups[i]).hide();
-                    }
-                }
-            });
-
-            // File name preview for picture field, file select method
-            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
-                var input = $(this).parents('.input-group').find(':text');
-                input.val(label);
-            });
-
-        });
-
-
-        // Uses bootstrap toolkit to trigger FixViewPort on bootstrap responsive breakpoints
-        (function ($, viewport) {
-            $(document).ready(function () {
-                // Executes when page loads
-                fixViewPort(viewport.current());
-
-                // Executes each time window size changes
-                $(window).resize(
-                        viewport.changed(function () {
-                            fixViewPort(viewport.current());
-                        })
-                );
-            });
-        })(jQuery, ResponsiveBootstrapToolkit);
-    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/collaborate.js"></script>
 {% endblock %}

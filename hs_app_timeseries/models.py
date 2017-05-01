@@ -639,7 +639,7 @@ class TimeSeriesResource(BaseResource):
             log.info("Blank SQLite file was added.")
 
             # need to do this so that the bag will be regenerated prior to download of the bag
-            utils.resource_modified(self, by_user=user)
+            utils.resource_modified(self, by_user=user, overwrite_bag=False)
         except Exception as ex:
             log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
             raise ex
@@ -792,7 +792,7 @@ class TimeSeriesMetaData(CoreMetaData):
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -925,7 +925,7 @@ class TimeSeriesMetaData(CoreMetaData):
                                                  (processing_level, 'processingLevel'),
                                                  element_fields)
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(TimeSeriesMetaData, self).delete_all_elements()
@@ -949,6 +949,29 @@ class TimeSeriesMetaData(CoreMetaData):
         self.cv_statuses.all().delete()
         self.cv_mediums.all().delete()
         self.cv_aggregation_statistics.all().delete()
+
+    def copy_all_elements_from(self, src_md, exclude_elements=None):
+        super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)
+        self.value_counts = src_md.value_counts
+        self.save()
+        # create CV terms
+
+        def copy_cv_terms(cv_class, cv_terms_to_copy):
+            for cv_term in cv_terms_to_copy:
+                cv_class.objects.create(metadata=self, name=cv_term.name,
+                                        term=cv_term.term,
+                                        is_dirty=cv_term.is_dirty)
+
+        copy_cv_terms(CVVariableType, src_md.cv_variable_types.all())
+        copy_cv_terms(CVVariableName, src_md.cv_variable_names.all())
+        copy_cv_terms(CVSpeciation, src_md.cv_speciations.all())
+        copy_cv_terms(CVElevationDatum, src_md.cv_elevation_datums.all())
+        copy_cv_terms(CVSiteType, src_md.cv_site_types.all())
+        copy_cv_terms(CVMethodType, src_md.cv_method_types.all())
+        copy_cv_terms(CVUnitsType, src_md.cv_units_types.all())
+        copy_cv_terms(CVStatus, src_md.cv_statuses.all())
+        copy_cv_terms(CVMedium, src_md.cv_mediums.all())
+        copy_cv_terms(CVAggregationStatistic, src_md.cv_aggregation_statistics.all())
 
     def update_sqlite_file(self, user):
         if not self.is_dirty:

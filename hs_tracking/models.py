@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from theme.models import UserProfile
-
+from utils import get_std_log_fields
 
 SESSION_TIMEOUT = settings.TRACKING_SESSION_TIMEOUT
 PROFILE_FIELDS = settings.TRACKING_PROFILE_FIELDS
@@ -51,7 +51,12 @@ class SessionManager(models.Manager):
             visitor = Visitor.objects.create()
 
         session = Session.objects.create(visitor=visitor)
-        session.record('begin_session')
+
+        # get standard fields and format
+        fields = get_std_log_fields(request, session)
+        msg = Variable.format_kwargs(**fields)
+
+        session.record('begin_session', msg)
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})
         return session
 
@@ -115,7 +120,9 @@ class Variable(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)
-    value = models.CharField(max_length=500)
+    # change value to TextField to be less restrictive as max_length of CharField has been
+    # exceeded a couple of times
+    value = models.TextField()
 
     def get_value(self):
         v = self.value
@@ -130,6 +137,13 @@ class Variable(models.Model):
             return v == 'true'
         elif t == 'None':
             return None
+
+    @classmethod
+    def format_kwargs(cls, **kwargs):
+        msg_items = []
+        for k, v in kwargs.iteritems():
+            msg_items.append('%s=%s' % (unicode(k).encode(), unicode(v).encode()))
+        return ' '.join(msg_items)
 
     @classmethod
     def record(cls, session, name, value=None):

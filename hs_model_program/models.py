@@ -67,13 +67,13 @@ class MpMetadata(AbstractMetaDataElement):
         metadata.delete()
 
     def get_software_list(self):
-        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelSoftware.split(';')]}
+        return self.modelSoftware.split(';')
     def get_documentation_list(self):
-        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelDocumentation.split(';')]}
+        return self.modelDocumentation.split(';')
     def get_releasenotes_list(self):
-        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelReleaseNotes.split(';')]}
+        return self.modelReleaseNotes.split(';')
     def get_engine_list(self):
-        return {name:path for (name, path) in [(i.split('/')[-1], i) for i in self.modelEngine.split(';')]}
+        return self.modelEngine.split(';')
 
 
 class ModelProgramResource(BaseResource):
@@ -116,11 +116,11 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
 
 
         # get the xml string for Model Program
-        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create  etree element
         RDF_ROOT = etree.fromstring(xml_string)
@@ -129,10 +129,10 @@ class ModelProgramMetaData(CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.program:
-            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.modelEngine.split(';'))
-            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.modelSoftware.split(';'))
-            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.modelDocumentation.split(';'))
-            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.modelReleaseNotes.split(';'))
+            self.build_xml_for_uploaded_content(container, 'modelEngine', self.program.get_engine_list())
+            self.build_xml_for_uploaded_content(container, 'modelSoftware', self.program.get_software_list())
+            self.build_xml_for_uploaded_content(container, 'modelDocumentation', self.program.get_documentation_list())
+            self.build_xml_for_uploaded_content(container, 'modelReleaseNotes', self.program.get_releasenotes_list())
 
             if self.program.modelReleaseDate:
                 model_release_date = etree.SubElement(container, '{%s}modelReleaseDate' % self.NAMESPACES['hsterms'])
@@ -153,14 +153,14 @@ class ModelProgramMetaData(CoreMetaData):
             model_code_repository = etree.SubElement(container, '{%s}modelCodeRepository' % self.NAMESPACES['hsterms'])
             model_code_repository.text = self.program.modelCodeRepository
 
-
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
+        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
         return xml_string
 
     def build_xml_for_uploaded_content(self, parent_container, element_name, content_list):
         # create an XML element for each content file
         for content in content_list:
+            content = '/data/contents/' + content
             element = etree.SubElement(parent_container, '{%s}%s' % (self.NAMESPACES['hsterms'], element_name) )
             element.text = content
     

@@ -75,11 +75,17 @@ class ResourceListRequestValidator(serializers.Serializer):
     to_date = serializers.DateField(required=False, default=None)
     start = serializers.IntegerField(required=False, default=None)
     count = serializers.IntegerField(required=False, default=None)
+    subject = serializers.CharField(required=False)
     metadata = serializers.CharField(min_length=1, required=False, validators=[validate_json])
     full_text_search = serializers.CharField(required=False)
     edit_permission = serializers.BooleanField(required=False, default=False)
     published = serializers.BooleanField(required=False, default=False)
     type = serializers.MultipleChoiceField(choices=RESOURCE_TYPES, required=False, default=None)
+    coverage_type = serializers.ChoiceField(choices=['box', 'point'], required=False)
+    north = serializers.CharField(required=False)
+    south = serializers.CharField(required=False)
+    east = serializers.CharField(required=False)
+    west = serializers.CharField(required=False)
 
 
 class ResourceListItemSerializer(serializers.Serializer):

@@ -51,14 +51,27 @@ class TestResourceFile(HSRESTTestCase):
 
         super(TestResourceFile, self).tearDown()
 
-    def test_resource_file_list(self):
+    def test_DEPRECATED_resource_file_list(self):
         response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
-        self.assertEqual(os.path.basename(content['results'][0]['url']), self.txt_file_name)
-        self.assertEqual(os.path.basename(content['results'][1]['url']), self.raster_file_name)
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url'])]
+        self.assertIn(self.txt_file_name, content_list)
+        self.assertIn(self.raster_file_name, content_list)
+
+    def test_resource_file_list(self):
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url'])]
+        self.assertIn(self.txt_file_name, content_list)
+        self.assertIn(self.raster_file_name, content_list)
 
     def test_get_resource_file(self):
         file_response = self.getResourceFile(self.pid, self.txt_file_name)
@@ -81,9 +94,48 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEquals(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
-        response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
-        self.assertEqual(os.path.basename(content['results'][0]['url']), txt_file_name)
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url']),
+                        os.path.basename(content['results'][2]['url'])]
+        self.assertIn(txt_file_name, content_list)
+
+    def test_create_resource_file_with_custom_folder(self):
+        # Make a new text file
+        txt_file_name = 'text2.txt'
+        txt_file_path = os.path.join(self.tmp_dir, txt_file_name)
+        txt = open(txt_file_path, 'w')
+        txt.write("Hello World, again.\n")
+        txt.close()
+        # Upload the new resource file
+
+        params = {
+            'file': (txt_file_name, open(txt_file_path), 'text/plain'),
+            'folder': "folder/path"
+        }
+
+        url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
+        response = self.client.post(url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url2 = str.format('/hsapi/resource/{}/folders/folder/path/', self.pid )
+        response = self.client.get(url2, {})
+        content = json.loads(response.content)
+        self.assertEqual(len(content['files']), 1)
+        self.assertEqual(content['files'][0], u'text2.txt')
+        self.assertEquals(content['resource_id'], self.pid)
+
+        # Make sure the new file appears in the file list
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 3)
+        content_list = [os.path.basename(content['results'][0]['url']),
+                        os.path.basename(content['results'][1]['url']),
+                        os.path.basename(content['results'][2]['url'])]
+        self.assertIn(txt_file_name, content_list)

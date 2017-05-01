@@ -1,54 +1,13 @@
 from __future__ import absolute_import, division, unicode_literals
-from future.builtins import int, open, str
+from future.builtins import int
 
-from hashlib import md5
-from json import loads
-import os
-#from dublincore.models import AbstractQualifiedDublinCoreTerm
-import re
-
-try:
-    from urllib.request import urlopen
-    from urllib.parse import urlencode, quote, unquote
-except ImportError:
-    from urllib import urlopen, urlencode, quote, unquote
-
-from django.contrib import admin
-from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.sites.models import Site
-from django.core.files import File
-from django.core.files.storage import default_storage
-from django.core.urlresolvers import reverse, resolve, NoReverseMatch
-from django.db.models import Model
-from django.template.base import (Context, Node, TextNode, Template,
-    TemplateSyntaxError, TOKEN_TEXT, TOKEN_VAR, TOKEN_COMMENT, TOKEN_BLOCK)
-from django.template.defaultfilters import escape
-from django.template.loader import get_template
-from django.utils import translation
-from django.utils.html import strip_tags
-from django.utils.text import capfirst
-
-# Try to import PIL in either of the two ways it can end up installed.
-try:
-    from PIL import Image, ImageFile, ImageOps
-except ImportError:
-    import Image
-    import ImageFile
-    import ImageOps
-
-from mezzanine.conf import settings
-from mezzanine.core.fields import RichTextField
-from mezzanine.core.forms import get_edit_form
-from mezzanine.utils.cache import nevercache_token, cache_installed
-from mezzanine.utils.html import decode_entities
-from mezzanine.utils.importing import import_dotted_path
-from mezzanine.utils.sites import current_site_id, has_site_permission
-from mezzanine.utils.urls import admin_url
-from mezzanine.utils.views import is_editable
 from mezzanine import template
+
+from hs_core.hydroshare.utils import get_resource_by_shortkey
 
 
 register = template.Library()
+
 
 @register.filter
 def user_permission(content, arg):
@@ -67,9 +26,11 @@ def user_permission(content, arg):
             permission = "Open Access"
     return permission
 
+
 @register.filter
 def resource_type(content):
     return content.get_content_model()._meta.verbose_name
+
 
 @register.filter
 def contact(content):
@@ -83,11 +44,14 @@ def contact(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = """<a href='/user/{uid}/'>{fn} {ln}<a>""".format(fn=content.first_name, ln=content.last_name, uid=content.pk)
+        content = """<a href='/user/{uid}/'>{fn} {ln}<a>""".format(fn=content.first_name,
+                                                                   ln=content.last_name,
+                                                                   uid=content.pk)
     else:
         content = """<a href='/user/{uid}/'>{un}<a>""".format(uid=content.pk, un=content.username)
 
     return content
+
 
 @register.filter
 def best_name(content):
@@ -99,11 +63,29 @@ def best_name(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = """{fn} {ln}""".format(fn=content.first_name, ln=content.last_name, un=content.username)
+        content = """{fn} {ln}""".format(fn=content.first_name, ln=content.last_name,
+                                         un=content.username)
     else:
         content = content.username
 
     return content
+
+
+@register.filter
+def display_name(user):
+    """
+    take a User instance and return the full name of the user regardless of whether the user
+    is authenticated or not. This filter is used by changing quota holders.
+    """
+
+    if user.first_name:
+        content = "{fn} {ln} ({un})".format(fn=user.first_name, ln=user.last_name,
+                                            un=user.username)
+    else:
+        content = user.username
+
+    return content
+
 
 @register.filter
 def clean_pagination_url(content):
@@ -120,11 +102,35 @@ def clean_pagination_url(content):
         clean_content = clean_content[:-1]
         return clean_content
 
+
 @register.filter
 def to_int(value):
     return int(value)
+
 
 @register.filter
 def relative_irods_path(fed_irods_file_name):
     idx = fed_irods_file_name.find('/data/contents/')
     return fed_irods_file_name[idx+1:]
+
+
+@register.filter
+def resource_from_uuid(id):
+    return get_resource_by_shortkey(id)
+
+
+@register.filter
+def res_uuid_from_res_path(path):
+    prefix_str = 'resource/'
+    prefix_idx = path.find(prefix_str)
+    if prefix_idx >= 0:
+        sidx = prefix_idx+len(prefix_str)
+        # resource uuid is 32 bits
+        return path[sidx:sidx+32]
+    else:
+        return path
+
+
+@register.filter
+def remove_last_char(statement):
+    return statement[:len(statement)-1]

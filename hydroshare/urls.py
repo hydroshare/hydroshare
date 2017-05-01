@@ -9,14 +9,13 @@ from mezzanine.conf import settings
 
 import autocomplete_light
 
-from haystack.views import FacetedSearchView
-from hs_core.discovery_form import DiscoveryForm
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
+from hs_app_netCDF import views as nc_views
 
 
 autocomplete_light.autodiscover()
@@ -33,12 +32,11 @@ urlpatterns = i18n_patterns("",
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
-    url('^ga_resources/', include('ga_resources.urls')),
-    #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
-    # url('^party/', include('hs_scholar_profile.urls'))
-    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
-    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
+    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
+        name='tracking-report-profiles'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
+        name='tracking-report-history'),
     url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
@@ -48,11 +46,11 @@ urlpatterns = i18n_patterns("",
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
-    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/', theme.email_verify,
-        name='email_verify'),
+    url(r'^accounts/login/$', theme.login, name='login'),
+    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
+        theme.email_verify, name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
     url(r'^django_irods/', include('django_irods.urls')),
-    url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
@@ -78,14 +76,20 @@ urlpatterns += patterns('',
     url('', include('hs_core.metadata_terms_urls')),
     url('^hsapi/', include('ref_ts.urls')),
     url('^irods/', include('irods_browser_app.urls')),
-    #url('^hs_party/', include('hs_party.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
     url('^hsapi/', include('hs_collection_resource.urls')),
+    url('^hsapi/', include('hs_file_types.urls')),
+    url('^hsapi/', include('hs_app_netCDF.urls')),
 )
 
-if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
+# robots.txt URLs for django-robots
+urlpatterns += patterns('',
+    (r'^robots\.txt$', include('robots.urls')),
+)
+
+if settings.DEBUG is False:   # if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
   url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
 )
@@ -110,6 +114,7 @@ urlpatterns += patterns('',
     # one out.
 
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
+    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
 
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------

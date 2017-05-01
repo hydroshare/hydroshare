@@ -177,6 +177,29 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.update_metadata_element(self.res.short_id,'creator', cr_john.id, order=4)
         self.assertEqual(cr_john.order, 3)
 
+        # try to add a creator with no name
+        resource.create_metadata_element(self.res.short_id, 'creator',
+                                         organization='test org',
+                                         description='test desc',
+                                         email='test@test.com',
+                                         address='test address',
+                                         phone='111-111-1111',
+                                         homepage='http://www.test.com',
+                                         )
+        self.assertEqual(self.res.metadata.creators.all().count(), 4)
+        self.assertIn('test org', [cr.organization for cr in self.res.metadata.creators.all()],
+                      msg="Creator 'test org' was not found")
+
+        # try to add a creator with no name or organization should raise error
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id, 'creator',
+                                             description='test desc',
+                                             email='test@test.com',
+                                             address='test address',
+                                             phone='111-111-1111',
+                                             homepage='http://www.test.com',
+                                             )
+
         # delete Mike's home page
         resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, homepage=None)
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
@@ -775,9 +798,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # test adding files of different mime types creates one format element for each mime type
         res_file_3 = "file_three.tif"
         open(res_file_3, "w").close()
-
-        # open the file for read
         file_obj_3 = open(res_file_3, "r")
+
+        # reopen file_obj_1 for read
+        file_obj_1 = open(res_file_1, "r")
+
         res = hydroshare.create_resource(resource_type='GenericResource',
                                          owner=self.user,
                                          title='Generic resource',
@@ -812,8 +837,16 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         fmt_element = res.metadata.formats.all().first()
         self.assertEqual(fmt_element.value, format_CSV)
 
+        # there should be only one file
+        self.assertEquals(res.files.all().count(), 1) 
+        
+        # that file should be file_one.txt 
+        self.assertEquals(res.files.all()[0].short_path, "file_one.txt") 
+
         # delete resource file
         hydroshare.delete_resource_file(res.short_id, file_obj_1.name, self.user)
+
+        istorage = res.get_irods_storage()
 
         # there should be not be any format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 0, msg="Number of format elements is not equal to 0")
@@ -824,7 +857,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # open the file for read
         file_obj_2 = open(res_file_2, "r")
+        file_obj_1 = open(res_file_1, "r")
         hydroshare.add_resource_files(res.short_id, file_obj_1, file_obj_2)
+
+        # the two files have the same format
+        self.assertEquals(res.files.all().count(), 2) 
 
         # there should be one format element at this point for this resource
         self.assertEquals(res.metadata.formats.all().count(), 1, msg="Number of format elements is not equal to 1")
@@ -1305,9 +1342,14 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('sub-2', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
 
-        # add another subject element with duplicate value- should raise exception
-        self.assertRaises(Exception, lambda :resource.create_metadata_element(self.res.short_id, 'subject',
+        # add another subject element with duplicate value (note values are case insensitive for
+        # determining duplicates)
+        # - should raise exception
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id, 'subject',
                                                                               value='sub-2'))
+        self.assertRaises(Exception,
+                          lambda: resource.create_metadata_element(self.res.short_id, 'subject',
+                                                                   value='Sub-2'))
 
         # test sub-element update
         sub_1 = self.res.metadata.subjects.all().filter(value='sub-1').first()
@@ -1492,7 +1534,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         #print (abstract_sub_element.text)
         #print(self.res.metadata.description.abstract)
         #print (container.get('{%s}title' % self.res.metadata.NAMESPACES['dc']))
-        # print self.res.metadata.get_xml()
+        #print self.res.metadata.get_xml()
         #print (bad)
 
     def test_metadata_delete_on_resource_delete(self):

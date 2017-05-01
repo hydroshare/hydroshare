@@ -3,14 +3,17 @@ import logging
 import os
 
 from django.http import HttpResponse
-from rest_framework.exceptions import NotFound, PermissionDenied
+
+from rest_framework.exceptions import NotFound, status, PermissionDenied, \
+    ValidationError as DRF_ValidationError
+from rest_framework.decorators import api_view
 
 from django_irods.icommands import SessionException
 
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
-    get_resource_file_url
+    get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder
+    create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
@@ -27,32 +30,49 @@ def data_store_structure(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     res_id = str(res_id).strip()
     try:
         resource, _, _ = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     store_path = request.POST.get('store_path', None)
     if store_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - store_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     store_path = str(store_path).strip()
     if not store_path:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - store_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not store_path.startswith('data/contents'):
+        return HttpResponse('Bad request - store_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if store_path.find('/../') >= 0 or store_path.endswith('/..'):
+        return HttpResponse('Bad request - store_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # this is federated if warranted, automatically, by choosing an appropriate session.
     istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
+        # This implies that the path starts with data/contents
         res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
+        rel_path = store_path
     else:
         res_coll = os.path.join(res_id, store_path)
-
+        rel_path = res_coll
     try:
         store = istorage.listdir(res_coll)
         files = []
         for fname in store[1]:
             name_with_full_path = os.path.join(res_coll, fname)
+            name_with_rel_path = os.path.join(rel_path, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
             idx = mtype.find('/')
@@ -60,26 +80,38 @@ def data_store_structure(request):
                 mtype = mtype[idx + 1:]
             f_pk = ''
             f_url = ''
+            logical_file_type = ''
+            logical_file_id = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
-                if fname == get_resource_file_name_and_extension(f)[1]:
+                if name_with_rel_path == get_resource_file_name_and_extension(f)[0]:
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
+                    if resource.resource_type == "CompositeResource":
+                        logical_file_type = f.logical_file_type_name
+                        logical_file_id = f.logical_file.id
                     break
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url})
+
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                          'logical_type': logical_file_type, 'logical_file_id': logical_file_id})
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
-                     'folders': store[0]}
+                     'folders': store[0],
+                     'can_be_public': resource.can_be_public_or_discoverable}
 
+    if resource.resource_type == "CompositeResource":
+        spatial_coverage_dict = get_coverage_data_dict(resource)
+        temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
+        return_object['spatial_coverage'] = spatial_coverage_dict
+        return_object['temporal_coverage'] = temporal_coverage_dict
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
     )
 
 
-def data_store_folder_zip(request):
+def data_store_folder_zip(request, res_id=None):
     """
     Zip requested files and folders into a zip file in hydroshareZone or any federated zone
     used for HydroShare resource backend store. It is invoked by an AJAX call and returns
@@ -91,29 +123,50 @@ def data_store_folder_zip(request):
     and remove_original_after_zip has a value of "true" or "false" (default is "true") indicating
     whether original files will be deleted after zipping.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
-    input_coll_path = request.POST.get('input_coll_path', None)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    input_coll_path = resolve_request(request).get('input_coll_path', None)
     if input_coll_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - input_coll_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     input_coll_path = str(input_coll_path).strip()
     if not input_coll_path:
-        return HttpResponse(content_type='application/json', status=400)
-    output_zip_fname = request.POST.get('output_zip_file_name', None)
+        return HttpResponse('Bad request - input_coll_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not input_coll_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - input_coll_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if input_coll_path.find('/../') >= 0 or input_coll_path.endswith('/..'):
+        return HttpResponse('Bad request - input_coll_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    output_zip_fname = resolve_request(request).get('output_zip_file_name', None)
     if output_zip_fname is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - output_zip_fname is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     output_zip_fname = str(output_zip_fname).strip()
     if not output_zip_fname:
-        return HttpResponse(content_type='application/json', status=400)
-    remove_original = request.POST.get('remove_original_after_zip', None)
+        return HttpResponse('Bad request - output_zip_fname cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if output_zip_fname.find('/') >= 0:
+        return HttpResponse('Bad request - output_zip_fname cannot contain /',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    remove_original = resolve_request(request).get('remove_original_after_zip', None)
     bool_remove_original = True
     if remove_original:
         remove_original = str(remove_original).strip().lower()
@@ -124,8 +177,9 @@ def data_store_folder_zip(request):
         output_zip_fname, size = \
             zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original)
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'name': output_zip_fname,
                      'size': size,
@@ -137,7 +191,12 @@ def data_store_folder_zip(request):
     )
 
 
-def data_store_folder_unzip(request):
+@api_view(['POST'])
+def data_store_folder_zip_public(request, pk):
+    return data_store_folder_zip(request, res_id=pk)
+
+
+def data_store_folder_unzip(request, **kwargs):
     """
     Unzip requested zip file while preserving folder structures in hydroshareZone or
     any federated zone used for HydroShare resource backend store. It is invoked by an AJAX call,
@@ -148,22 +207,37 @@ def data_store_folder_unzip(request):
     unzipped, and remove_original_zip has a value of "true" or "false" (default is "true")
     indicating whether original zip file will be deleted after unzipping.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', kwargs.get('res_id'))
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
-    zip_with_rel_path = request.POST.get('zip_with_rel_path', None)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    zip_with_rel_path = request.POST.get('zip_with_rel_path', kwargs.get('zip_with_rel_path'))
     if zip_with_rel_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - zip_with_rel_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     zip_with_rel_path = str(zip_with_rel_path).strip()
     if not zip_with_rel_path:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - zip_with_rel_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # security checks deny illicit requests
+    if not zip_with_rel_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - zip_with_rel_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if zip_with_rel_path.find('/../') >= 0 or zip_with_rel_path.endswith('/..'):
+        return HttpResponse('Bad request - zip_with_rel_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     remove_original = request.POST.get('remove_original_zip', None)
     bool_remove_original = True
     if remove_original:
@@ -174,8 +248,13 @@ def data_store_folder_unzip(request):
     try:
         unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
+                       "protection from overwriting existing files. Unzip in a different " \
+                       "location (e.g., folder) or move or rename the file being overwritten. " \
+                       "iRODS error follows: "
+        return HttpResponse(specific_msg + ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
@@ -185,6 +264,21 @@ def data_store_folder_unzip(request):
         json.dumps(return_object),
         content_type="application/json"
     )
+
+
+@api_view(['POST'])
+def data_store_folder_unzip_public(request, pk, pathname):
+    """
+    Public version of data_store_folder_unzip, incorporating path variables
+
+    :param request:
+    :param pk:
+    :param pathname:
+    :return HttpResponse:
+    """
+
+    sys_pathname = 'data/contents/%s' % pathname
+    return data_store_folder_unzip(request, res_id=pk, zip_with_rel_path=sys_pathname)
 
 
 def data_store_create_folder(request):
@@ -198,27 +292,40 @@ def data_store_create_folder(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, _ = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
     if folder_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - folder_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     folder_path = str(folder_path).strip()
     if not folder_path:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - folder_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not folder_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - folder_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
+        return HttpResponse('Bad request - folder_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     try:
         create_folder(res_id, folder_path)
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'new_folder_rel_path': folder_path}
 
@@ -239,27 +346,38 @@ def data_store_remove_folder(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     folder_path = request.POST.get('folder_path', None)
     if folder_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - folder_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     folder_path = str(folder_path).strip()
     if not folder_path:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - folder_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not folder_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - folder_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if folder_path.find('/../') >= 0 or folder_path.endswith('/..'):
+        return HttpResponse('Bad request - folder_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     try:
         remove_folder(user, res_id, folder_path)
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'status': 'success'}
     return HttpResponse(
@@ -268,7 +386,7 @@ def data_store_remove_folder(request):
     )
 
 
-def data_store_file_or_folder_move_or_rename(request):
+def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store. It is invoked by an AJAX call and returns json object that has the
@@ -277,31 +395,51 @@ def data_store_file_or_folder_move_or_rename(request):
     source_path, and target_path where source_path and target_path are the relative paths for the
     source and target file or folder under res_id collection/directory.
     """
-    res_id = request.POST.get('res_id', None)
+    res_id = request.POST.get('res_id', res_id)
     if res_id is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    except (NotFound, PermissionDenied):
-        # return permission defined response
-        return HttpResponse(content_type='application/json', status=403)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    src_path = request.POST.get('source_path', None)
-    tgt_path = request.POST.get('target_path', None)
+    src_path = resolve_request(request).get('source_path', None)
+    tgt_path = resolve_request(request).get('target_path', None)
     if src_path is None or tgt_path is None:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - src_path or tgt_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
     src_path = str(src_path).strip()
     tgt_path = str(tgt_path).strip()
     if not src_path or not tgt_path:
-        return HttpResponse(content_type='application/json', status=400)
+        return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not src_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - src_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+        return HttpResponse('Bad request - src_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not tgt_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
+        return HttpResponse('Bad request - tgt_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
 
     try:
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
-        logger.error(ex.stderr)
-        return HttpResponse(content_type='application/json', status=500)
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
 
@@ -309,3 +447,8 @@ def data_store_file_or_folder_move_or_rename(request):
         json.dumps(return_object),
         content_type='application/json'
     )
+
+
+@api_view(['POST'])
+def data_store_file_or_folder_move_or_rename_public(request, pk):
+    return data_store_file_or_folder_move_or_rename(request, res_id=pk)

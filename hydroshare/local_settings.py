@@ -56,20 +56,19 @@ IPYTHON_HOST='127.0.0.1'
 # docker daemons.  we also need a special queue for direct messages to all
 # docker daemons.
 BROKER_URL='amqp://guest:guest@{RABBITMQ_HOST}:{RABBITMQ_PORT}//'.format(RABBITMQ_HOST=RABBITMQ_HOST, RABBITMQ_PORT=RABBITMQ_PORT)
-CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 CELERY_DEFAULT_QUEUE = 'default'
-DOCKER_EXCHANGE=Exchange('docker', type='direct')
 DEFAULT_EXCHANGE=Exchange('default', type='topic')
 
 CELERY_QUEUES = (
     Queue('default', DEFAULT_EXCHANGE, routing_key='task.default'),
-    Queue('docker_container_tasks', DOCKER_EXCHANGE, routing_key='docker.container'),
-    Broadcast('docker_broadcast_tasks', DOCKER_EXCHANGE, routing_key='docker.broadcast'),
 )
 CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
-CELERY_ROUTES = ('hs_core.router.HSTaskRouter', 'django_docker_processes.router.DockerRouter',)
+CELERY_ROUTES = ('hs_core.router.HSTaskRouter',)
 
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
@@ -180,3 +179,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
+
+TIME_ZONE = "Etc/UTC"

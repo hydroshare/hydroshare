@@ -24,10 +24,19 @@ class TestResourceTypes(APITestCase):
                                'GeographicFeatureResource',
                                'ScriptResource',
                                'CollectionResource',
-                               'MODFLOWModelInstanceResource'}
+                               'MODFLOWModelInstanceResource',
+                               'CompositeResource'}
+
+    def test_DEPRECATED_resource_typelist(self):
+        response = self.client.get('/hsapi/resourceTypes/', format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        rest_resource_types = set([t['resource_type'] for t in content])
+
+        self.assertEqual(self.resource_types, rest_resource_types)
 
     def test_resource_typelist(self):
-        response = self.client.get('/hsapi/resourceTypes/', format='json')
+        response = self.client.get('/hsapi/resource/types/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         rest_resource_types = set([t['resource_type'] for t in content])

@@ -1,6 +1,7 @@
 import csv
 import datetime
 import sys
+import logging
 from calendar import monthrange
 from optparse import make_option
 
@@ -8,11 +9,22 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-from django_irods.icommands import SessionException
 from hs_core.models import BaseResource
 from theme.models import UserProfile
 
 from ... import models as hs_tracking
+
+# Add logger for stderr messages.
+err = logging.getLogger('stats-command')
+err.setLevel(logging.ERROR)
+handler = logging.StreamHandler(stream=sys.stderr)
+formatter = logging.Formatter("%(asctime)s - "
+                              "%(levelname)s - "
+                              "%(funcName)s - "
+                              "line %(lineno)s - "
+                              "%(message)s")
+handler.setFormatter(formatter)
+err.addHandler(handler)
 
 
 def month_year_iter(start, end):
@@ -133,43 +145,25 @@ class Command(BaseCommand):
             'title',
             'resource type',
             'size',
-            'publication status'
+            'publication status',
+            'user type',
+            'user id'
         ]
         w.writerow(fields)
 
-        resources = BaseResource.objects.all()
-        for r in resources:
-            f_sizes = [f.resource_file.size
-                       if f.resource_file else 0
-                       for f in r.files.all()]
-            total_file_size = sum(f_sizes)
-            try:
-                f_sizes = [int(f.fed_resource_file_size)
-                           if f.fed_resource_file_size else 0
-                           for f in r.files.all()]
-                total_file_size += sum(f_sizes)
-            except SessionException:
-                pass
+        for r in BaseResource.objects.all():
             values = [
                 r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
                 r.resource_type,
-                total_file_size,
+                r.size,
                 r.raccess.sharing_status,
+                r.user.userprofile.user_type,
+                r.user_id
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
     def yesterdays_variables(self):
-        w = csv.writer(sys.stdout)
-        fields = [
-            'timestamp',
-            'user id',
-            'session id',
-            'name',
-            'type',
-            'value',
-        ]
-        w.writerow(fields)
 
         today_start = timezone.datetime.now().replace(
             hour=0,
@@ -177,6 +171,7 @@ class Command(BaseCommand):
             second=0,
             microsecond=0
         )
+
         yesterday_start = today_start - datetime.timedelta(days=1)
         variables = hs_tracking.Variable.objects.filter(
             timestamp__gte=yesterday_start,
@@ -184,15 +179,14 @@ class Command(BaseCommand):
         )
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
-            values = [
-                v.timestamp,
-                uid,
-                v.session.id,
-                v.name,
-                v.type,
-                v.value,
-            ]
-            w.writerow([unicode(v).encode("utf-8") for v in values])
+
+            # encode variables as key value pairs (except for timestamp)
+            values = [unicode(v.timestamp).encode('utf-8'),
+                      'user_id=%s' % unicode(uid).encode(),
+                      'session_id=%s' % unicode(v.session.id).encode(),
+                      'action=%s' % unicode(v.name).encode(),
+                      v.value]
+            print(' '.join(values))
 
     def handle(self, *args, **options):
         START_YEAR = 2016

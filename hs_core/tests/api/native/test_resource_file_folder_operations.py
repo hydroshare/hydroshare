@@ -1,21 +1,19 @@
 import os
 
 from django.test import TransactionTestCase
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, ResourceFile
-from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
-    unzip_file, remove_folder
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 
 
-class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
+                                    TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestResourceFileFolderOprsAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user to be used for creating the resource
-        self.user_creator = hydroshare.create_account(
+        self.user = hydroshare.create_account(
             'creator@usu.edu',
             username='creator',
             first_name='Creator_FirstName',
@@ -24,38 +22,35 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase)
             groups=[]
         )
 
-        self.new_res = hydroshare.create_resource(
+        self.res = hydroshare.create_resource(
             'GenericResource',
-            self.user_creator,
+            self.user,
             'My Test Resource'
         )
 
         # create three files
-        test_file_name1 = 'file1.txt'
-        test_file_name2 = 'file2.txt'
-        test_file_name3 = 'file3.txt'
-
-        test_file = open(test_file_name1, 'w')
+        self.test_file_name1 = 'file1.txt'
+        self.test_file_name2 = 'file2.txt'
+        self.test_file_name3 = 'file3.txt'
+        self.file_name_list = [self.test_file_name1, self.test_file_name2, self.test_file_name3]
+        test_file = open(self.test_file_name1, 'w')
         test_file.write("Test text file in file1.txt")
         test_file.close()
 
-        test_file = open(test_file_name2, 'w')
+        test_file = open(self.test_file_name2, 'w')
         test_file.write("Test text file in file2.txt")
         test_file.close()
 
-        test_file = open(test_file_name3, 'w')
+        test_file = open(self.test_file_name3, 'w')
         test_file.write("Test text file in file3.txt")
         test_file.close()
 
-        self.test_file_1 = open(test_file_name1, 'r')
-        self.test_file_2 = open(test_file_name2, 'r')
-        self.test_file_3 = open(test_file_name3, 'r')
+        self.test_file_1 = open(self.test_file_name1, 'r')
+        self.test_file_2 = open(self.test_file_name2, 'r')
+        self.test_file_3 = open(self.test_file_name3, 'r')
 
     def tearDown(self):
         super(TestResourceFileFolderOprsAPI, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        GenericResource.objects.all().delete()
         self.test_file_1.close()
         os.remove(self.test_file_1.name)
         self.test_file_2.close()
@@ -65,114 +60,17 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase)
 
     def test_resource_file_folder_oprs(self):
         # resource should not have any files at this point
-        self.assertEqual(self.new_res.files.all().count(), 0,
+        self.assertEqual(self.res.files.all().count(), 0,
                          msg="resource file count didn't match")
 
         # add the three files to the resource
-        hydroshare.add_resource_files(self.new_res.short_id, self.test_file_1, self.test_file_2,
+        hydroshare.add_resource_files(self.res.short_id, self.test_file_1, self.test_file_2,
                                       self.test_file_3)
 
         # resource should has only three files at this point
-        self.assertEqual(self.new_res.files.all().count(), 3,
+        self.assertEqual(self.res.files.all().count(), 3,
                          msg="resource file count didn't match")
+        super(TestResourceFileFolderOprsAPI, self).resource_file_oprs()
 
-        # create a folder, if folder is created successfully, no exception is raised, otherwise,
-        # an iRODS exception will be raised which will be caught by the test runner and mark as
-        # a test failure
-        create_folder(self.new_res.short_id, 'data/contents/sub_test_dir')
-
-        istorage = self.new_res.get_irods_storage()
-        store = istorage.listdir(self.new_res.short_id + '/data/contents')
-        self.assertIn('sub_test_dir', store[0], msg='resource does not contain sub folder created')
-
-        # rename a file
-        move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,
-                                      'data/contents/file3.txt', 'data/contents/file3_new.txt')
-        # move two files to the new folder
-        move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,
-                                      'data/contents/file1.txt',
-                                      'data/contents/sub_test_dir/file1.txt')
-        move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,
-                                      'data/contents/file2.txt',
-                                      'data/contents/sub_test_dir/file2.txt')
-
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=self.new_res.id):
-            updated_res_file_names.append(rf.resource_file.name)
-        self.assertIn(self.new_res.short_id + '/data/contents/file3_new.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain the updated file file3_new.txt")
-        self.assertNotIn(self.new_res.short_id + '/data/contents/file3.txt',
-                         updated_res_file_names,
-                         msg="resource still contains the old file file3.txt after renaming")
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_test_dir/file1.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain file1.txt moved to a folder")
-        self.assertNotIn(self.new_res.short_id + '/data/contents/file1.txt',
-                         updated_res_file_names,
-                         msg="resource still contains the old file1.txt after moving to a folder")
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_test_dir/file2.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain file2.txt moved to a new folder")
-        self.assertNotIn(self.new_res.short_id + '/data/contents/file2.txt',
-                         updated_res_file_names,
-                         msg="resource still contains the old file2.txt after moving to a folder")
-
-        # zip the folder
-        output_zip_fname, size = \
-            zip_folder(self.user_creator, self.new_res.short_id, 'data/contents/sub_test_dir',
-                       'sub_test_dir.zip', True)
-        self.assertGreater(size, 0, msg='zipped file has a size of 0')
-        # Now resource should contain only two files: file3_new.txt and sub_test_dir.zip
-        # since the folder is zipped into sub_test_dir.zip with the folder deleted
-        self.assertEqual(self.new_res.files.all().count(), 2,
-                         msg="resource file count didn't match")
-
-        # unzip the file
-        unzip_file(self.user_creator, self.new_res.short_id, 'data/contents/sub_test_dir.zip', True)
-        # Now resource should contain three files: file1.txt, file2.txt, and file3_new.txt
-        self.assertEqual(self.new_res.files.all().count(), 3,
-                         msg="resource file count didn't match")
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=self.new_res.id):
-            updated_res_file_names.append(rf.resource_file.name)
-        self.assertNotIn(self.new_res.short_id + '/data/contents/sub_test_dir.zip',
-                         updated_res_file_names,
-                         msg="resource still contains the zip file after unzipping")
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_test_dir/file1.txt',
-                      updated_res_file_names,
-                      msg='resource does not contain unzipped file file1.txt')
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_test_dir/file2.txt',
-                      updated_res_file_names,
-                      msg='resource does not contain unzipped file file2.txt')
-        self.assertIn(self.new_res.short_id + '/data/contents/file3_new.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain untouched file3_new.txt after unzip")
-
-        # rename a folder
-        move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,
-                                      'data/contents/sub_test_dir', 'data/contents/sub_dir')
-        updated_res_file_names = []
-        for rf in ResourceFile.objects.filter(object_id=self.new_res.id):
-            updated_res_file_names.append(rf.resource_file.name)
-
-        self.assertNotIn(self.new_res.short_id + '/data/contents/sub_test_dir/file1.txt',
-                         updated_res_file_names,
-                         msg="resource still contains file1.txt in the old folder after renaming")
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_dir/file1.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain file1.txt in the new folder after renaming")
-        self.assertNotIn(self.new_res.short_id + '/data/contents/sub_test_dir/file2.txt',
-                         updated_res_file_names,
-                         msg="resource still contains file2.txt in the old folder after renaming")
-        self.assertIn(self.new_res.short_id + '/data/contents/sub_dir/file2.txt',
-                      updated_res_file_names,
-                      msg="resource does not contain file2.txt in the new folder after renaming")
-
-        # remove a folder
-        remove_folder(self.user_creator, self.new_res.short_id, 'data/contents/sub_dir')
-        # Now resource only contains one file
-        self.assertEqual(self.new_res.files.all().count(), 1,
-                         msg="resource file count didn't match")
-        res_fname = ResourceFile.objects.filter(object_id=self.new_res.id)[0].resource_file.name
-        self.assertEqual(res_fname, self.new_res.short_id + '/data/contents/file3_new.txt')
+        # delete resources to clean up
+        hydroshare.delete_resource(self.res.short_id)

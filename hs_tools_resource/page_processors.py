@@ -5,8 +5,9 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 
 from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
-    SupportedResTypes_choices, SupportedSharingStatusForm, AppHomePageUrlForm
+                  SupportedSharingStatusForm, AppHomePageUrlForm
 from models import ToolResource
+from utils import get_SupportedResTypes_choices
 
 
 @processor_for(ToolResource)
@@ -35,9 +36,9 @@ def landing_page(request, page):
                 supported_res_types.first().get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
-                for display_name_tuple in SupportedResTypes_choices:
-                    if type_name.lower() == display_name_tuple[0].lower():
-                        new_supported_res_types_array += [display_name_tuple[1]]
+                for class_verbose_list in get_SupportedResTypes_choices():
+                    if type_name.lower() == class_verbose_list[0].lower():
+                        new_supported_res_types_array += [class_verbose_list[1]]
                         break
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
@@ -49,7 +50,7 @@ def landing_page(request, page):
             context['supported_sharing_status'] = sharing_status_str
 
         if content_model.metadata.tool_icon.first():
-            context['tool_icon_url'] = content_model.metadata.tool_icon.first().url
+            context['tool_icon_url'] = content_model.metadata.tool_icon.first().data_url
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()
