@@ -1382,17 +1382,10 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 function setFileTypeMetadataFormsClickHandlers(){
     $("#fileTypeMetaDataTab").find('form').each(function () {
         var formId = $(this).attr('id');
-        if(formId === "add-keyvalue-filetype-metadata"){
-            $(this).find("button.btn-primary").click(function () {
-                addFileTypeExtraMetadata();
-          });
-        }
-        else {
-            if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype"){
+        if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {
                 metadata_update_ajax_submit(formId);
               });
-            }
         }
     });
     BindKeyValueFileTypeClickHandlers();
