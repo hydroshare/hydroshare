@@ -5,23 +5,16 @@ from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
-                 element_id=None, element_name=None,  *args, **kwargs):
-
+                 element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('projection_name', css_class=field_width),
-                        Field('datum', css_class=field_width),
-                        Field('unit', css_class=field_width),
-                        Field('projection_string', css_class=field_width),
-                        Field('northlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width),
-                        Field('southlimit', css_class=field_width),
-                        Field('westlimit', css_class=field_width),
-                       )
+        file_type = kwargs.pop('file_type', False)
+        form_field_names = ['projection_name', 'datum', 'unit', 'projection_string', 'northlimit',
+                            'eastlimit', 'southlimit', 'westlimit']
+        crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
+        layout = Layout(*crispy_form_fields)
 
-        super(OriginalCoverageFormHelper, self).\
+        super(OriginalCoverageFormHelper, self). \
             __init__(allow_edit, res_short_id, element_id, element_name, layout,
                      element_name_label='Spatial Reference', *args, **kwargs)
 
@@ -41,11 +34,13 @@ class OriginalCoverageForm(forms.Form):
     westlimit = forms.FloatField(label='West Extent', widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
         self.helper = OriginalCoverageFormHelper(allow_edit,
                                                  res_short_id,
                                                  element_id,
-                                                 element_name='OriginalCoverage')
+                                                 element_name='OriginalCoverage',
+                                                 file_type=file_type)
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -54,7 +49,6 @@ class OriginalCoverageForm(forms.Form):
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
 
 class OriginalCoverageValidationForm(forms.Form):
@@ -70,8 +64,7 @@ class OriginalCoverageValidationForm(forms.Form):
 
 class GeometryInformationFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None,
-                 element_name=None,  *args, **kwargs):
-
+                 element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet
         # is the order these fields will be displayed
         file_type = kwargs.pop('file_type', False)
@@ -79,7 +72,7 @@ class GeometryInformationFormHelper(BaseFormHelper):
         crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
         layout = Layout(*crispy_form_fields)
 
-        super(GeometryInformationFormHelper, self)\
+        super(GeometryInformationFormHelper, self) \
             .__init__(allow_edit, res_short_id, element_id, element_name,
                       layout, element_name_label='Geometry Information',
                       *args, **kwargs)
@@ -107,7 +100,6 @@ class GeometryInformationForm(forms.Form):
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
 
 class GeometryInformationValidationForm(forms.Form):

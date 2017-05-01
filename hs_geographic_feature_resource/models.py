@@ -92,6 +92,32 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         return root_div.render(pretty=pretty)
 
+    @classmethod
+    def get_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Generates html form code for an instance of this metadata element so
+        that this element can be edited"""
+
+        from .forms import OriginalCoverageForm
+
+        ori_cov_dict = {}
+        if element is not None:
+            ori_cov_dict['northlimit'] = element.northlimit
+            ori_cov_dict['eastlimit'] = element.eastlimit
+            ori_cov_dict['southlimit'] = element.southlimit
+            ori_cov_dict['westlimit'] = element.westlimit
+            ori_cov_dict['projection_string'] = element.projection_string
+            ori_cov_dict['projection_name'] = element.projection_name
+            ori_cov_dict['datum'] = element.datum
+            ori_cov_dict['unit'] = element.unit
+
+        orig_coverage_form = OriginalCoverageForm(initial=ori_cov_dict,
+                                                  res_short_id=resource.short_id if
+                                                  resource else None,
+                                                  allow_edit=allow_edit,
+                                                  element_id=element.id if element else None,
+                                                  file_type=file_type)
+        return orig_coverage_form
+
 
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'

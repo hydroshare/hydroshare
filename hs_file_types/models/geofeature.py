@@ -62,6 +62,12 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
 
+        html_string += self._get_field_informations_html()
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
+
+    def _get_field_informations_html(self):
         root_div = div(cls="col-md-12 col-sm-12 pull-left", style="margin-bottom:40px;")
         with root_div:
             legend('Field Information')
@@ -76,10 +82,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
                     for field_info in self.fieldinformations.all():
                         field_info.get_html(pretty=False)
 
-        html_string += root_div.render()
-        template = Template(html_string)
-        context = Context({})
-        return template.render(context)
+        return root_div.render()
 
     def get_html_forms(self, datatset_name_form=True):
         """overrides the base class function to generate html needed for metadata editing"""
@@ -89,6 +92,10 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             super(GeoFeatureFileMetaData, self).get_html_forms()
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy geometry_information_form %}")
+            with div(cls="col-lg-6 col-xs-12 col-md-pull-6", style="margin-top:40px;"):
+                div("{% crispy spatial_coverage_form %}")
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy original_coverage_form %}")
 
         template = Template(root_div.render())
         context_dict = dict()
@@ -106,14 +113,21 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
             temp_cov_form.action = form_action
 
         context_dict["temp_form"] = temp_cov_form
+        context_dict['original_coverage_form'] = self.get_original_coverage_form()
+        context_dict['spatial_coverage_form'] = self.get_spatial_coverage_form()
         context = Context(context_dict)
         rendered_html = template.render(context)
+        rendered_html += self._get_field_informations_html()
 
         return rendered_html
 
     def get_geometry_information_form(self):
         return GeometryInformation.get_html_form(resource=None, element=self.geometryinformation,
                                                  file_type=True, allow_edit=False)
+
+    def get_original_coverage_form(self):
+        return OriginalCoverage.get_html_form(resource=None, element=self.originalcoverage,
+                                              file_type=True, allow_edit=False)
 
     @classmethod
     def validate_element_data(cls, request, element_name):
