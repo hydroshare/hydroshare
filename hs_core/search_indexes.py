@@ -21,6 +21,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     public = indexes.BooleanField(faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
     published = indexes.BooleanField(faceted=True)
+    is_replaced_by = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created', faceted=True)
     modified = indexes.DateTimeField(model_attr='updated', faceted=True)
     organizations = indexes.MultiValueField(faceted=True)
@@ -178,6 +179,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 return True
             else:
                 return False
+        else:
+            return False
+
+    def prepare_is_replaced_by(self, obj):
+        if hasattr(obj, 'metadata'):
+            return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
         else:
             return False
 

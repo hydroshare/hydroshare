@@ -1,8 +1,12 @@
+import datetime
+from django.utils import timezone
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
 
 from mezzanine.core.fields import FileField, RichTextField
@@ -70,6 +74,7 @@ class HomePage(Page):
     '''
     A home page page type
     '''
+    MESSAGE_TYPE_CHOICES = (('warning', 'Warning'), ('information', 'Information'))
     heading = models.CharField(max_length=100)
     slide_in_one_icon = models.CharField(max_length=50, blank=True)
     slide_in_one = models.CharField(max_length=200, blank=True)
@@ -85,14 +90,42 @@ class HomePage(Page):
         format="Image", max_length=255, blank=True, null=True)
     welcome_heading = models.CharField(max_length=100, default="Welcome")
     content = RichTextField()
-    recent_blog_heading = models.CharField(max_length=100,
-        default="Latest blog posts")
+    recent_blog_heading = models.CharField(max_length=100, default="Latest blog posts")
     number_recent_posts = models.PositiveIntegerField(default=3,
         help_text="Number of recent blog posts to show")
+
+    # The following date fields are used for duration during which the message will be displayed
+    message_start_date = models.DateField(null=True, help_text="Date from which the message will "
+                                                               "be displayed")
+    message_end_date = models.DateField(null=True, help_text="Date on which the message will no "
+                                                             "more be displayed")
+
+    # this must be True for the message to be displayed
+    show_message = models.BooleanField(default=False, help_text="Check to show message")
+
+    # use message type to change background color of the message
+    message_type = models.CharField(max_length=100, choices=MESSAGE_TYPE_CHOICES,
+                                    default='Information')
 
     class Meta:
         verbose_name = _("Home page")
         verbose_name_plural = _("Home pages")
+
+    @property
+    def can_show_message(self):
+        if not self.show_message:
+            return False
+        message = strip_tags(self.content).strip()
+        if not message:
+            return False
+        today = datetime.datetime.combine(datetime.datetime.today(), datetime.time())
+        today = timezone.make_aware(today)
+        today = today.date()
+        if self.message_start_date and self.message_end_date:
+            if self.message_start_date <= today <= self.message_end_date:
+                return True
+
+        return False
 
 
 class IconBox(Orderable):

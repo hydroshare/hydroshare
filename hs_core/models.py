@@ -1,10 +1,12 @@
 import os.path
 import json
 import arrow
+import logging
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -139,20 +141,34 @@ def page_permissions_page_processor(request, page):
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
-    for owner in owners:
-        owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+    if request.user.is_authenticated():
+        for owner in owners:
+            owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
 
-    for viewer in viewers:
-        viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+        for viewer in viewers:
+            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
 
-    for editor in editors:
-        editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
+        for editor in editors:
+            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
 
-    for view_grp in view_groups:
-        view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, view_grp)
+        for view_grp in view_groups:
+            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        view_grp)
 
-    for edit_grp in edit_groups:
-        edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm, edit_grp)
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        edit_grp)
+    else:
+        for owner in owners:
+            owner.can_undo = False
+        for viewer in viewers:
+            viewer.can_undo = False
+        for editor in editors:
+            editor.can_undo = False
+        for view_grp in view_groups:
+            view_grp.can_undo = False
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = False
 
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
@@ -629,7 +645,11 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
+    def __str__(self):
+        return "{type} {value}".format(type=self.type, value=self.value)
+
     def __unicode__(self):
+        """ deprecated """
         return "{type} {value}".format(type=self.type, value=self.value)
 
     @classmethod
@@ -1781,6 +1801,220 @@ class AbstractResource(ResourcePermissionsMixin):
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
+
+    def check_relations(self, stop_on_error=False, log_errors=True,
+                        echo_errors=False, return_errors=False):
+        """
+        Check for dangling relations due to deleted resource files
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
+        for r in self.metadata.relations.all():
+            if r.value.startswith('http://www.hydroshare.org/resource/'):
+                target = r.value[len('http://www.hydroshare.org/resource/'):].rstrip('/')
+                try:
+                    get_resource_by_shortkey(target, or_404=False)
+                except BaseResource.DoesNotExist:
+                    print("relation {} {} {} (this does not exist)"
+                          .format(self.short_id, r.type, target))
+
+    def check_irods_files(self, stop_on_error=False, log_errors=True,
+                          echo_errors=False, return_errors=False):
+        """
+        Check whether files in self.files and on iRODS agree
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+
+        logger = logging.getLogger(__name__)
+        istorage = self.get_irods_storage()
+        errors = []
+        ecount = 0
+
+        # report federation paths for debugging
+        if self.is_federated:
+            msg = "federation path for {} is {}".format(self.short_id,
+                                                        self.resource_federation_path)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
+        # skip federated resources if not configured to handle these
+        if self.is_federated and not settings.REMOTE_USE_IRODS:
+            msg = "check_irods_files: skipping check of federated resource {}"\
+                .format(self.short_id)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
+        else:
+
+            # Step 1: does every file here refer to an existing file in iRODS?
+            for f in self.files.all():
+                if not istorage.exists(f.storage_path):
+                    ecount += 1
+                    msg = "check_irods_files: django file {} does not exist in iRODS"\
+                        .format(f.storage_path)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            # Step 2: does every iRODS file correspond to a record in files?
+            error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
+                                                           stop_on_error=stop_on_error,
+                                                           log_errors=log_errors,
+                                                           echo_errors=echo_errors,
+                                                           return_errors=return_errors)
+            errors.extend(error2)
+            ecount += ecount2
+
+            # Step 3: does the resource contain required file elements?
+            meta = os.path.join(self.root_path, 'data', 'resourcemetadata.xml')
+            if not istorage.exists(meta):
+                msg = "metadata file {} does not exist".format(meta)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+            rmap = os.path.join(self.root_path, 'data', 'resourcemap.xml')
+            if not istorage.exists(rmap):
+                msg = "map file {} does not exist".format(rmap)
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+            # finally, check whether the public flag agrees with ours
+            django_public = self.raccess.public
+            try:
+                irods_public = istorage.getAVU(self.root_path, 'isPublic')
+                if irods_public is None:
+                    irods_public = False
+                else:
+                    irods_public = irods_public.lower() == 'true'
+                msg = ''
+                if irods_public != django_public:
+                    ecount += 1
+                    if irods_public:  # and not django_public
+                        msg = "check_irods_files: resource {} public in irods, private in Django"\
+                            .format(self.short_id)
+                    else:
+                        msg = "check_irods_files: resource {} private in irods, public in Django"\
+                            .format(self.short_id)
+                    if msg != '':
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+
+            except SessionException as ex:
+                msg = "cannot read isPublic attribute of {}: {}"\
+                    .format(self.short_id, ex.stderr)
+                ecount += 1
+                if log_errors:
+                    logger.error(msg)
+                if echo_errors:
+                    print(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
+                    raise ValidationError(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+
+        return errors, ecount  # empty unless return_errors=True
+
+    def __check_irods_directory(self, dir, logger,
+                                stop_on_error=False, log_errors=True,
+                                echo_errors=False, return_errors=False):
+        """
+        list a directory and check files there for conformance with django ResourceFiles
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+
+        """
+        errors = []
+        ecount = 0
+        istorage = self.get_irods_storage()
+        try:
+
+            listing = istorage.listdir(dir)
+            for fname in listing[1]:  # files
+                fullpath = os.path.join(dir, fname)
+                found = False
+                for f in self.files.all():
+                    if f.storage_path == fullpath:
+                        found = True
+                        break
+                if not found:
+                    ecount += 1
+                    msg = "check_irods_files: file {} in iRODs does not exist in Django"\
+                        .format(fullpath)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            for dname in listing[0]:  # directories
+                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                               stop_on_error=stop_on_error,
+                                                               echo_errors=echo_errors,
+                                                               log_errors=log_errors,
+                                                               return_errors=return_errors)
+                errors.extend(error2)
+                ecount += ecount2
+
+        except SessionException:
+            ecount += 1
+            msg = "check_irods_files: listing of iRODS directory {} failed".format(dir)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.error(msg)
+            if return_errors:
+                errors.append(msg)
+            if stop_on_error:
+                raise ValidationError(msg)
+
+        return errors, ecount  # empty unless return_errors=True
 
 
 def get_path(instance, filename, folder=None):

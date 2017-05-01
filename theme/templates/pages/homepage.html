@@ -5,6 +5,20 @@
 {% block meta_title %}Share and Collaborate{% endblock %}
 
 {% block main %}
+    {# Begin Maintenance Warning #}
+    {% with page.get_content_model as cm %}
+        {% if cm.can_show_message %}
+            {% if cm.message_type|lower == 'warning' %}
+                <div class="alert alert-danger" id="error-alert" style="margin-top: 60px;">
+            {% else %}
+                <div class="alert alert-success" id="error-alert" style="margin-top: 60px;">
+            {% endif %}
+            <button type="button" class="close" data-dismiss="alert">x</button>
+            {{ cm.content|striptags }}.
+            </div>
+        {% endif %}
+    {% endwith %}
+    {# End Maintenance Warning #}
     {% if user.is_anonymous %}
         <div>
             <div class="container">
