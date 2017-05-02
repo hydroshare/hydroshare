@@ -1491,8 +1491,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
         and False otherwise
         """
-        has_files = self.has_required_content_files()
-        has_metadata = self.has_required_metadata()
+        has_files = self.has_required_content_files
+        has_metadata = self.has_required_metadata
         return has_files and has_metadata
 
     def set_discoverable(self, value, user=None):
@@ -1522,8 +1522,8 @@ class AbstractResource(ResourcePermissionsMixin):
             raise ValidationError("You don't have permission to change resource sharing status")
 
         # check that there is sufficient resource content
-        has_metadata = self.has_required_metadata()
-        has_files = self.has_required_content_files(),
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
         if value and not (has_metadata or has_files):
 
             if not has_metadata and not has_files:
@@ -1576,8 +1576,8 @@ class AbstractResource(ResourcePermissionsMixin):
         old_value = self.raccess.public  # is this a change?
 
         # check that there is sufficient resource content
-        has_metadata = self.has_required_metadata()
-        has_files = self.has_required_content_files(),
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
         if value and (not has_metadata or not has_files):
 
             if not has_metadata and not has_files:
