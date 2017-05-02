@@ -34,8 +34,6 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
-from hs_core.views.utils import run_script_to_update_hyrax_input_files
-
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1568,6 +1566,9 @@ class AbstractResource(ResourcePermissionsMixin):
         If `user` is None, access control is not checked.  This happens when a resource has been
         invalidated outside of the control of a specific user. In this case, user can be None
         """
+        # avoid import loop
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
+
         # access control is separate from validation logic
         if user is not None and not user.uaccess.can_change_resource_flags(self):
             raise ValidationError("You don't have permission to change resource sharing status")
