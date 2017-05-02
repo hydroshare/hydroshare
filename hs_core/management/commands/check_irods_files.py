@@ -55,15 +55,22 @@ class Command(BaseCommand):
         parser.add_argument(
             '--log',
             action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
+            dest='log',  # value is options['log']
             help='log errors to system log',
         )
 
         # Named (optional) arguments
         parser.add_argument(
+            '--repair',
+            action='store_true',  # True for presence, False for absence
+            dest='repair',
+            help='check for local unreferenced iRODS files',
+        )
+        # Named (optional) arguments
+        parser.add_argument(
             '--unreferenced',
             action='store_true',  # True for presence, False for absence
-            dest='unreferenced',           # value is options['log']
+            dest='unreferenced',
             help='check for local unreferenced iRODS files',
         )
 
@@ -82,16 +89,20 @@ class Command(BaseCommand):
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
 
-                print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid))
+                print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid) +
+                      (' (repairing problems)' if options['repair'] else ""))
                 resource.check_irods_files(stop_on_error=False,
                                            echo_errors=not options['log'],
                                            log_errors=options['log'],
-                                           return_errors=False)
+                                           return_errors=False,
+                                           repair=options['repair'])
 
         else:  # check all resources
-            print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES")
+            print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES" +
+                  (' (repairing problems)' if options['repair'] else ""))
             for r in BaseResource.objects.all():
                 r.check_irods_files(stop_on_error=False,
                                     echo_errors=not options['log'],  # Don't both log and echo
                                     log_errors=options['log'],
-                                    return_errors=False)
+                                    return_errors=False,
+                                    repair=options['repair'])

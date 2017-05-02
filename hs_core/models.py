@@ -1822,8 +1822,97 @@ class AbstractResource(ResourcePermissionsMixin):
                     print("relation {} {} {} (this does not exist)"
                           .format(self.short_id, r.type, target))
 
+    def fix_irods_user_paths(self, log_actions=True, echo_actions=False, return_actions=False):
+        """
+        Move iRODS user paths to the locations specified in settings
+
+        :param log_actions: whether to log actions to Django log
+        :param echo_actions: whether to print actions on stdout
+        :param return_actions: whether to collect actions in an array and return them.
+
+        This is a temporary fix to the user resources, which are currently stored like
+        federated resources but whose paths are dynamically determined. This function points
+        the paths for user-level resources to where they are stored in the current environment,
+        as specified in hydroshare/local_settings.py.
+
+        * This only does something if the environment is not a production environment.
+        * It is idempotent, in the sense that it can be repeated more than once without problems.
+        * It must be done once whenever the django database is reloaded.
+        * It does not check whether the paths exist afterward. This is done by check_irods_files.
+        """
+        logger = logging.getLogger(__name__)
+        actions = []
+        ecount = 0
+
+        # location of the user files in production
+        defaultpath = getattr(settings, 'HS_USER_ZONE_DEFAULT_PATH',
+                              '/hydroshareuserZone/home/localHydroProxy')
+        # where resource should be found; this is equal to the default path in production
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+
+        msg = "fix_irods_user_paths: user path is {}".format(userpath)
+        if echo_actions:
+            print(msg)
+        if log_actions:
+            logger.info(msg)
+        if return_actions:
+            actions.append(msg)
+
+        # only take action if you find a path that is a default user path and not in production
+        if self.resource_federation_path == defaultpath and userpath != defaultpath:
+            msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
+                  .format(self.resource_federation_path, userpath)
+            if echo_actions:
+                print(msg)
+            if log_actions:
+                logger.info(msg)
+            if return_actions:
+                actions.append(msg)
+
+            self.resource_federation_path = userpath
+            self.save()
+            for f in self.files.all():
+                path = f.storage_path
+                if path.startswith(defaultpath):
+                    newpath = userpath + path[len(defaultpath):]
+                    f.set_storage_path(newpath, test_exists=False)  # does implicit save
+                    ecount += 1
+                    msg = "fix_irods_user_paths: rewriting {} to {}".format(path, newpath)
+                    if echo_actions:
+                        print(msg)
+                    if log_actions:
+                        logger.info(msg)
+                    if return_actions:
+                        actions.append(msg)
+                else:
+                    msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
+                           " {} should start with {}; cannot convert")\
+                           .format(path, self.short_id, defaultpath)
+                    if echo_actions:
+                        print(msg)
+                    if log_actions:
+                        logger.error(msg)
+                    if return_actions:
+                        actions.append(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_actions:
+                logger.info(msg)
+            if echo_actions:
+                print(msg)
+            if return_actions:
+                actions.append(msg)
+
+        return actions, ecount  # empty unless return_actions=True
+
     def check_irods_files(self, stop_on_error=False, log_errors=True,
-                          echo_errors=False, return_errors=False):
+                          echo_errors=False, return_errors=False,
+                          repair=False):
         """
         Check whether files in self.files and on iRODS agree
 
@@ -1831,21 +1920,15 @@ class AbstractResource(ResourcePermissionsMixin):
         :param log_errors: whether to log errors to Django log
         :param echo_errors: whether to print errors on stdout
         :param return_errors: whether to collect errors in an array and return them.
+        :param repair: whether to repair errors that can be repaired
         """
 
         logger = logging.getLogger(__name__)
         istorage = self.get_irods_storage()
         errors = []
         ecount = 0
-
-        # report federation paths for debugging
-        if self.is_federated:
-            msg = "federation path for {} is {}".format(self.short_id,
-                                                        self.resource_federation_path)
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.info(msg)
+        defaultpath = getattr(settings, 'HS_USER_ZONE_DEFAULT_PATH',
+                              '/hydroshareuserZone/home/localHydroProxy')
 
         # skip federated resources if not configured to handle these
         if self.is_federated and not settings.REMOTE_USE_IRODS:
@@ -1855,8 +1938,17 @@ class AbstractResource(ResourcePermissionsMixin):
                 print(msg)
             if log_errors:
                 logger.info(msg)
-
         else:
+
+            # Step 0: repair irods user file paths if necessary
+            if repair:
+                # fix user paths before check (required). This is an idempotent step.
+                if self.resource_federation_path == defaultpath:
+                    error2, ecount2 = self.fix_irods_user_paths(log_actions=log_errors,
+                                                                echo_actions=echo_errors,
+                                                                return_actions=False)
+                    errors.extend(error2)
+                    ecount += ecount2
 
             # Step 1: does every file here refer to an existing file in iRODS?
             for f in self.files.all():
@@ -1883,9 +1975,8 @@ class AbstractResource(ResourcePermissionsMixin):
             ecount += ecount2
 
             # Step 3: does the resource contain required file elements?
-            meta = os.path.join(self.root_path, 'data', 'resourcemetadata.xml')
-            if not istorage.exists(meta):
-                msg = "metadata file {} does not exist".format(meta)
+            if not istorage.exists(self.root_path):
+                msg = "root path {} does not exist".format(self.root_path)
                 if echo_errors:
                     print(msg)
                 if log_errors:
@@ -1893,33 +1984,30 @@ class AbstractResource(ResourcePermissionsMixin):
                 if return_errors:
                     errors.append(msg)
 
-            rmap = os.path.join(self.root_path, 'data', 'resourcemap.xml')
-            if not istorage.exists(rmap):
-                msg = "map file {} does not exist".format(rmap)
-                if echo_errors:
-                    print(msg)
-                if log_errors:
-                    logger.error(msg)
-                if return_errors:
-                    errors.append(msg)
-
-            # finally, check whether the public flag agrees with ours
+            # finally, check whether the iRODS public flag agrees with Django
             django_public = self.raccess.public
             try:
                 irods_public = istorage.getAVU(self.root_path, 'isPublic')
-                if irods_public is None:
-                    irods_public = False
-                else:
+                if irods_public is not None:
                     irods_public = irods_public.lower() == 'true'
-                msg = ''
+                else:
+                    irods_public = False
+                # print("{} irods isPublic={}, django public={}"
+                #       .format(self.root_path, str(irods_public), str(django_public)))
                 if irods_public != django_public:
                     ecount += 1
                     if irods_public:  # and not django_public
                         msg = "check_irods_files: resource {} public in irods, private in Django"\
                             .format(self.short_id)
-                    else:
+                        if repair:
+                            istorage.setAVU(self.root_path, 'isPublic', 'false')
+                            msg += " REPAIRED"
+                    else:  # django_public and not irods_public
                         msg = "check_irods_files: resource {} private in irods, public in Django"\
                             .format(self.short_id)
+                        if repair:
+                            istorage.setAVU(self.root_path, 'isPublic', 'true')
+                            msg += " REPAIRED"
                     if msg != '':
                         if echo_errors:
                             print(msg)
@@ -1971,7 +2059,6 @@ class AbstractResource(ResourcePermissionsMixin):
         ecount = 0
         istorage = self.get_irods_storage()
         try:
-
             listing = istorage.listdir(dir)
             for fname in listing[1]:  # files
                 fullpath = os.path.join(dir, fname)
@@ -2003,16 +2090,8 @@ class AbstractResource(ResourcePermissionsMixin):
                 ecount += ecount2
 
         except SessionException:
-            ecount += 1
-            msg = "check_irods_files: listing of iRODS directory {} failed".format(dir)
-            if echo_errors:
-                print(msg)
-            if log_errors:
-                logger.error(msg)
-            if return_errors:
-                errors.append(msg)
-            if stop_on_error:
-                raise ValidationError(msg)
+            pass  # not an error not to have a file directory.
+            # Non-existence of files is checked elsewhere.
 
         return errors, ecount  # empty unless return_errors=True
 
