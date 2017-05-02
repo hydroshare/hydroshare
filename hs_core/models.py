@@ -1471,7 +1471,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def has_required_metadata(self):
-        """ return True only if all required metadata is present for publication. """
+        """ return True only if all required metadata is present. """
         if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
         for f in self.logical_files:
@@ -1524,7 +1524,7 @@ class AbstractResource(ResourcePermissionsMixin):
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
         has_files = self.has_required_content_files
-        if value and not (has_metadata or has_files):
+        if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
                 msg = "Resource does not have sufficient metadata and content files to be " + \
@@ -1578,7 +1578,7 @@ class AbstractResource(ResourcePermissionsMixin):
         # check that there is sufficient resource content
         has_metadata = self.has_required_metadata
         has_files = self.has_required_content_files
-        if value and (not has_metadata or not has_files):
+        if value and not (has_metadata and has_files):
 
             if not has_metadata and not has_files:
                 msg = "Resource does not have sufficient metadata and content files to be public"
