@@ -90,7 +90,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         self.composite_resource.delete()
-        
+
     def test_file_add_to_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
