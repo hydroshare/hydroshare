@@ -857,7 +857,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
 
             # set to private if necessary -- AFTER post_delete_file handling
-            resource.update_public_and_discoverable()  # set to False if necessary 
+            resource.update_public_and_discoverable()  # set to False if necessary
 
             # generate bag
             utils.resource_modified(resource, user, overwrite_bag=False)

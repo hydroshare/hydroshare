@@ -1474,12 +1474,12 @@ class AbstractResource(ResourcePermissionsMixin):
     @property
     def has_required_metadata(self):
         """ return True only if all required metadata is present for publication. """
-        if self.metadata is None or not self.metadata.has_all_required_elements(): 
+        if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
-        for f in self.logical_files: 
-            if not f.metadata.has_all_required_elements(): 
+        for f in self.logical_files:
+            if not f.metadata.has_all_required_elements():
                 return False
-        return True 
+        return True
 
     @property
     def can_be_public_or_discoverable(self):
@@ -1555,13 +1555,13 @@ class AbstractResource(ResourcePermissionsMixin):
 
         This sets the public flag (self.raccess.public) for a resource based
         upon application logic. It is part of AbstractResource because its result depends
-        upon resource state, and not just access control. 
+        upon resource state, and not just access control.
 
         * This flag can only be set to True if the resource passes basic validations
           `has_required_metata` and `has_required_content_files`
         * setting `public` to `True` also sets `discoverable` to `True`
         * setting `public` to `False` does not change `discoverable`
-        * setting `public` to either also modifies the AVU isPublic for the resource. 
+        * setting `public` to either also modifies the AVU isPublic for the resource.
 
         Thus, the setting public=True, discoverable=False is disallowed.
 
@@ -1599,51 +1599,50 @@ class AbstractResource(ResourcePermissionsMixin):
 
             # public changed state: set isPublic metadata AVU accordingly
             if value != old_value:
-                res_coll = self.root_path
                 self.setAVU("isPublic", self.raccess.public)
 
-                # TODO: why does this only run when something becomes public? 
-                # TODO: Should it be run when a NetcdfResource becomes private? 
+                # TODO: why does this only run when something becomes public?
+                # TODO: Should it be run when a NetcdfResource becomes private?
                 # run script to update hyrax input files when private netCDF resource changes state
                 if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
                     run_script_to_update_hyrax_input_files(self.short_id)
 
-    def update_public_and_discoverable(self): 
+    def update_public_and_discoverable(self):
         """ update the settings of the public and discoverable flags for changes in metadata """
-        if self.raccess.discoverable and not self.can_be_public_or_discoverable: 
+        if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
-    def setAVU(self, attribute, value): 
-        """ 
-        set an AVU at the resource level 
-        
-        This avoids mistakes in setting AVUs by assuring that the appropriate root path
-        is alway used. 
+    def setAVU(self, attribute, value):
         """
-        if isinstance(value, boolean): 
-            value = str(value).lower()  # normalize boolean values to strings  
+        set an AVU at the resource level
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        if isinstance(value, bool):
+            value = str(value).lower()  # normalize boolean values to strings
         istorage = self.get_irods_storage()
         root_path = self.root_path
-        istorage.setAVU(root_path, attribute, value) 
+        istorage.setAVU(root_path, attribute, value)
 
-    def getAVU(self, attribute) 
+    def getAVU(self, attribute):
         """
         get an AVU for a resource
 
         This avoids mistakes in getting AVUs by assuring that the appropriate root path
-        is alway used. 
+        is alway used.
         """
         istorage = self.get_irods_storage()
         root_path = self.root_path
-        value = istorage.getAVU(root_path, attribute) 
-        if attribute == 'isPublic': 
-            if value.lower() == 'true': 
+        value = istorage.getAVU(root_path, attribute)
+        if attribute == 'isPublic':
+            if value.lower() == 'true':
                 return True
-            else: 
+            else:
                 return False
-        else: 
+        else:
             return value
-        
+
     # TODO: Why isn't this a regular method? Why does it need to be a class method?
     # It would seem to me that one only creates a bag after a resource has been created,
     # so that this would be an instance method....

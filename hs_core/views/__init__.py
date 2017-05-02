@@ -273,7 +273,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
         res.metadata.subjects.all().delete()
         is_add_success = True
-        res.update_public_and_discoverable()  # set to private if necessary now 
+        res.update_public_and_discoverable()  # set to private if necessary now
         resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
@@ -323,7 +323,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                     err_msg = err_msg.format(element_name, response['errors'])
 
     # TODO: This is curious, because it seems to allow something to have insufficient metadata
-    # TODO: and remain discoverable. Is this an error? 
+    # TODO: and remain discoverable. Is this an error?
     if request.is_ajax():
         if is_add_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
@@ -416,7 +416,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 err_msg = err_msg.format(element_name, response['errors'])
 
     # TODO: This is curious, because it seems to allow something to have insufficient metadata
-    # TODO: and remain discoverable. Is this an error? 
+    # TODO: and remain discoverable. Is this an error?
     if request.is_ajax():
         if is_update_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
@@ -1619,13 +1619,13 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
 
     elif flag_to_set == 'discoverable':
         try:
-            resource.set_discoverable(flag_value, user=session.user)  # checks access control
+            resource.set_discoverable(flag_value, user)  # checks access control
         except ValidationError as v:
             messages.error(request, v.message)
 
     elif flag_to_set == 'public':
         try:
-            resource.set_public(flag_value, user=session.user)  # checks access control
+            resource.set_public(flag_value, user)  # checks access control
         except ValidationError as v:
             messages.error(request, v.message)
 
