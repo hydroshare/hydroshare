@@ -3224,6 +3224,28 @@ class CoreMetaData(models.Model):
         return element_name.lower() in allowed_elements
 
     def update_non_repeatable_element(self, element_name, metadata, property_name=None):
+        """
+        This helper function is to create/update a specific metadata element as specified by
+        *element_name*
+        :param element_name: metadata element class name (e.g. title)
+        :param metadata: a list of dicts - each dict has data to update/create a specific metadata
+        element (e.g. {'title': {'value': 'my resource title'}}
+        :param property_name: name of the property/attribute name in this class or its sub class
+        to access the metadata element instance of *metadata_element*. This is needed only when
+        the property/attribute name differs from the element class name
+
+            Example:
+            class ModelProgramMetaData(CoreMetaData):
+                _mpmetadata = GenericRelation(MpMetadata)
+
+                @property
+                def program(self):
+                    return self._mpmetadata.all().first()
+
+            For the above class to update the metadata element MpMetadata, this function needs to
+            be called with element_name='mpmetadata' and property_name='program'
+        :return:
+        """
         for dict_item in metadata:
             if element_name in dict_item:
                 if property_name is None:
@@ -3242,11 +3264,25 @@ class CoreMetaData(models.Model):
         """
         Creates new metadata elements of type *element_name*. Any existing metadata elements of
         matching type get deleted first.
-        :param element_name: class name of the metadata element
+        :param element_name: class name of the metadata element (e.g. creator)
         :param metadata: a list of dicts containing data for each of the metadata elements that
         needs to be created/updated as part of bulk update
-        :param property_name: (Optional) the property name used in this instance of CoreMetaData
-        (or its sub class) to access all the objects of type *element_type*
+        :param property_name: (Optional) the property/attribute name used in this instance of
+        CoreMetaData (or its sub class) to access all the objects of type *element_type*
+            Example:
+            class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
+                 _model_input = GenericRelation(ModelInput)
+
+                @property
+                def model_inputs(self):
+                    return self._model_input.all()
+
+            For the above class to update the metadata element ModelInput, this function needs to
+            be called with element_name='modelinput' and property_name='model_inputs'. If in the
+            above class instead of using the attribute name '_model_inputs' we have used
+            'modelinputs' then this function needs to be called with element_name='modelinput' and
+            no need to pass a value for the property_name.
+
         :return:
         """
 
