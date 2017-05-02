@@ -12,7 +12,7 @@ from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, Rela
     MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section, \
-    can_user_copy_resource
+    can_user_copy_resource, get_my_resources_list
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -72,6 +72,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 tool_homepage_url = content_model.metadata.homepage_url.first().value
 
         relevant_tools = []
+        relevant_tools_open_with = []
+        my_resource_list = get_my_resources_list(request)
         # loop through all SupportedResTypes objs (one webapp resources has one
         # SupportedResTypes obj)
         for res_type in SupportedResTypes.objects.all():
@@ -119,9 +121,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                 tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
                             if tool_url_new is not None:
                                 tl = {'title': str(tool_res_obj.metadata.title.value),
+                                      'tool_landing_page': "/resource/{tool_short_id}/".
+                                      format(tool_short_id=tool_res_obj.short_id),
                                       'icon_url': tool_icon_url,
                                       'url': tool_url_new}
+                                # prepare for "WebApp" tab page
                                 relevant_tools.append(tl)
+
+                                # prepare for "open with" drop down
+                                if tool_res_obj in my_resource_list or tool_res_obj.approved:
+                                    relevant_tools_open_with.append(tl)
 
     just_created = False
     just_copied = False
@@ -230,6 +239,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'validation_error': validation_error if validation_error else None,
                    'resource_creation_error': create_resource_error,
                    'relevant_tools': relevant_tools,
+                   'relevant_tools_open_with': relevant_tools_open_with,
                    'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,

@@ -4,5 +4,12 @@ from django.contrib.gis import admin
 from mezzanine.pages.admin import PageAdmin
 
 from .models import ToolResource
+from copy import deepcopy
 
-admin.site.register(ToolResource, PageAdmin)
+author_extra_fieldsets = ((None, {"fields": ("approved",)}),)
+
+
+class ToolAdmin(PageAdmin):
+    fieldsets = deepcopy(PageAdmin.fieldsets) + author_extra_fieldsets
+
+admin.site.register(ToolResource, ToolAdmin)

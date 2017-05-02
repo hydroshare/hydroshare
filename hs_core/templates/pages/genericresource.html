@@ -1077,16 +1077,17 @@
                             <!-- ========= RELEVANT TOOLS TAB ========= -->
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
+                                    <h3>Community apps you may choose to use with this resource</h3>
                                     {% if not metadata_form %}
                                         {% for tool in relevant_tools %}
                                             <div title="{{ tool.title }}" id="web-app-item">
                                                 <a href="{{ tool.url }}" target="_blank">
-                                                    {% if tool.title|length > 20 %}
-                                                        <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                    {% else %}
-                                                        <h4>{{ tool.title }}</h4>
-                                                    {% endif %}
                                                     <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                                    {% if tool.title|length > 20 %}
+                                                        <h4><a target="_blank" href="{{ tool.tool_landing_page }}">{{ tool.title|slice:":21"|add:"..." }}</a></h4>
+                                                    {% else %}
+                                                        <h4><a target="_blank" href="{{ tool.tool_landing_page }}">{{ tool.title }}</a></h4>
+                                                    {% endif %}
                                                 </a>
                                             </div>
                                         {% endfor %}
