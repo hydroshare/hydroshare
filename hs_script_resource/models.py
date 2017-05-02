@@ -53,7 +53,7 @@ class ScriptSpecificMetadata(AbstractMetaDataElement):
                                              help_text='The date that this version of the script was released')
 
     # repository
-    scriptCodeRepository = models.CharField(verbose_name='Script Repository', blank=True, max_length=255,
+    scriptCodeRepository = models.URLField(verbose_name='Script Repository', blank=True, max_length=255,
                                             help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     class Meta:

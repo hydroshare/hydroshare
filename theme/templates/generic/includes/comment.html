@@ -9,7 +9,7 @@
                         {% blocktrans with sometime=comment.submit_date|timesince %}{{ sometime }} ago{% endblocktrans %}
                         </small>
                     </h4>
-                    <p style="color:black"> {{comment.comment|linebreaksbr }}  </p>
+                    <p style="color:black"> {{comment.comment|comment_filter }}  </p>
             {% endif %}
 
             {% if not comment.is_removed and comment.is_public %}
