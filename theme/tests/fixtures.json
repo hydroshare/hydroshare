@@ -1,5 +1,13 @@
 [
   {
+   "fields": {
+     "domain": "www.hydroshare.org",
+     "name": "Default"
+    },
+    "model": "sites.site",
+    "pk": 1
+  },
+  {
     "fields": {
       "status": 2,
       "login_required": false,
@@ -57,14 +65,6 @@
     },
     "model": "pages.richtextpage",
     "pk": 421
-  },
-  {
-   "fields": {
-     "domain": "www.hydroshare.org",
-     "name": "Default"
-    },
-    "model": "sites.site",
-    "pk": 1
   },
   {
    "fields": {
