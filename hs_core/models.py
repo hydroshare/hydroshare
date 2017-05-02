@@ -34,6 +34,8 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
+from hs_core.views.utils import run_script_to_update_hyrax_input_files
+
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -701,13 +703,13 @@ class Relation(AbstractMetaDataElement):
         rel = Relation.objects.get(id=element_id)
         if rel.type != kwargs['type']:
             if kwargs['type'] == 'isHostedBy' and \
-                 Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                         content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isCopiedFrom relation already exists.' % rel.type)
             elif kwargs['type'] == 'isCopiedFrom' and \
-                    Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                            content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isHostedBy relation already exists.' % rel.type)
 
@@ -1158,8 +1160,8 @@ class Coverage(AbstractMetaDataElement):
                         try:
                             value_dict[value_item] = float(value_dict[value_item])
                         except TypeError:
-                            raise ValidationError("Value for '{}' must be numeric".format(
-                                                                              value_item))
+                            raise ValidationError("Value for '{}' must be numeric"
+                                                  .format(value_item))
 
             if value_dict['northlimit'] < value_dict['southlimit']:
                 raise ValidationError("Value for North latitude must be greater than or equal to "
@@ -1469,6 +1471,179 @@ class AbstractResource(ResourcePermissionsMixin):
         """ returns whether folder operations are supported. Computed for polymorphic types"""
         return False
 
+    @property
+    def has_required_metadata(self):
+        """ return True only if all required metadata is present for publication. """
+        if self.metadata is None or not self.metadata.has_all_required_elements(): 
+            return False
+        for f in self.logical_files: 
+            if not f.metadata.has_all_required_elements(): 
+                return False
+        return True 
+
+    @property
+    def can_be_public_or_discoverable(self):
+        """
+        Return True if the resource can be set to public or discoverable
+
+        This is True if
+
+        1. The resource has all metadata elements marked as required.
+        2. The resource has all files that are considered required.
+
+        and False otherwise
+        """
+        has_files = self.has_required_content_files()
+        has_metadata = self.has_required_metadata()
+        return has_files and has_metadata
+
+    def set_discoverable(self, value, user=None):
+        """
+        Set the discoverable flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the discoverable flag (self.raccess.discoverable) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control.
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `discoverable` to `False` also sets `public` to `False`
+        * setting `discoverable` to `True` does not change `public`
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata()
+        has_files = self.has_required_content_files(),
+        if value and not (has_metadata or has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be " + \
+                    "discoverable"
+                raise ValidationError(msg)
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be discoverable"
+                raise ValidationError(msg)
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be discoverable"
+                raise ValidationError(msg)
+
+        else:  # state change is allowed
+            self.raccess.discoverable = value
+            self.raccess.save()
+            if not value:  # not discoverable means also not public
+                self.set_public(value)  # This must be called, as it sets the AVU isPublic
+
+    def set_public(self, value, user=None):
+        """
+        set the public flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the public flag (self.raccess.public) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control. 
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `public` to `True` also sets `discoverable` to `True`
+        * setting `public` to `False` does not change `discoverable`
+        * setting `public` to either also modifies the AVU isPublic for the resource. 
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        old_value = self.raccess.public  # is this a change?
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata()
+        has_files = self.has_required_content_files(),
+        if value and (not has_metadata or not has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be public"
+                raise ValidationError(msg)
+
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be public"
+                raise ValidationError(msg)
+
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be public"
+                raise ValidationError(msg)
+
+        else:  # make valid state change
+            self.raccess.public = value
+            if value:  # can't be public without being discoverable
+                self.raccess.discoverable = value
+            self.raccess.save()
+
+            # public changed state: set isPublic metadata AVU accordingly
+            if value != old_value:
+                res_coll = self.root_path
+                self.setAVU("isPublic", self.raccess.public)
+
+                # TODO: why does this only run when something becomes public? 
+                # TODO: Should it be run when a NetcdfResource becomes private? 
+                # run script to update hyrax input files when private netCDF resource changes state
+                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                    run_script_to_update_hyrax_input_files(self.short_id)
+
+    def update_public_and_discoverable(self): 
+        """ update the settings of the public and discoverable flags for changes in metadata """
+        if self.raccess.discoverable and not self.can_be_public_or_discoverable: 
+            self.set_discoverable(False)  # also sets Public
+
+    def setAVU(self, attribute, value): 
+        """ 
+        set an AVU at the resource level 
+        
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used. 
+        """
+        if isinstance(value, boolean): 
+            value = str(value).lower()  # normalize boolean values to strings  
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.setAVU(root_path, attribute, value) 
+
+    def getAVU(self, attribute) 
+        """
+        get an AVU for a resource
+
+        This avoids mistakes in getting AVUs by assuring that the appropriate root path
+        is alway used. 
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        value = istorage.getAVU(root_path, attribute) 
+        if attribute == 'isPublic': 
+            if value.lower() == 'true': 
+                return True
+            else: 
+                return False
+        else: 
+            return value
+        
     # TODO: Why isn't this a regular method? Why does it need to be a class method?
     # It would seem to me that one only creates a bag after a resource has been created,
     # so that this would be an instance method....
@@ -1483,7 +1658,6 @@ class AbstractResource(ResourcePermissionsMixin):
         res = BaseResource.objects.get(short_id=resource_id)
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
-
         return bag_url
 
     @classmethod
@@ -1670,13 +1844,6 @@ class AbstractResource(ResourcePermissionsMixin):
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
-
-    @property
-    def can_be_public_or_discoverable(self):
-        if self.metadata.has_all_required_elements() and self.has_required_content_files():
-            return True
-
-        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1890,7 +2057,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 else:
                     msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
                            " {} should start with {}; cannot convert")\
-                           .format(path, self.short_id, defaultpath)
+                        .format(path, self.short_id, defaultpath)
                     if echo_actions:
                         print(msg)
                     if log_actions:
@@ -2338,12 +2505,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.size
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.size
 
     # TODO: write unit test
@@ -2353,12 +2520,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return istorage.exists(self.fed_resource_file.name)
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return istorage.exists(self.resource_file.name)
 
     @property
@@ -2376,12 +2543,12 @@ class ResourceFile(models.Model):
         if resource.resource_federation_path:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.name
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.name
 
     # ResourceFile API handles file operations
@@ -2780,7 +2947,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def is_federated(self):
         return self.resource_federation_path is not None and \
-               self.resource_federation_path != ''
+            self.resource_federation_path != ''
 
     # Paths relative to the resource
     @property
@@ -2868,8 +3035,8 @@ class BaseResource(Page, AbstractResource):
         # create the head sub element
         head = etree.SubElement(ROOT, 'head')
         etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated).format(
-                                                                 "YYYYMMDDHHmmss")
+        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
+            .format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
@@ -3460,12 +3627,12 @@ class CoreMetaData(models.Model):
         else:
             element_name = md_element.term
 
-        hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(
-                                            ns=self.NAMESPACES['hsterms'],
-                                            new_element=element_name))
-        hsterms_newElem_rdf_Desc = etree.SubElement(
-            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
+        hsterms_newElem = etree.SubElement(root, "{{{ns}}}{new_element}"
+                                           .format(ns=self.NAMESPACES['hsterms'],
+                                                   new_element=element_name))
+        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
+                                                    "{{{ns}}}Description"
+                                                    .format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
             if isinstance(md_field, tuple):
                 field_name = md_field[0]

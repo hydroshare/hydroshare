@@ -32,27 +32,20 @@ from mezzanine.utils.email import subject_template, send_mail_template
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
-from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, resolve_request
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, \
     get_my_resources_list, send_action_to_take_email, get_coverage_data_dict
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-
 from hs_core.hydroshare import utils
 
-from hs_core.signals import *
+from hs_core.signals import pre_metadata_element_create,  pre_metadata_element_update, \
+    post_metadata_element_update, post_delete_resource
+
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 from hs_collection_resource.models import CollectionDeletedResource
@@ -75,7 +68,7 @@ def verify(request, *args, **kwargs):
     u = User.objects.get(pk=pk)
     if u.email == email:
         if not u.is_active:
-            u.is_active=True
+            u.is_active = True
             u.save()
             u.groups.add(Group.objects.get(name="Hydroshare Author"))
         from django.contrib.auth import login
@@ -167,7 +160,8 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
 
 
 def _get_resource_sender(element_name, resource):
-    core_metadata_element_names = [el_name.lower() for el_name in CoreMetaData.get_supported_element_names()]
+    core_metadata_element_names = [el_name.lower() for el_name in
+                                   CoreMetaData.get_supported_element_names()]
 
     if element_name in core_metadata_element_names:
         sender_resource = GenericResource().__class__
@@ -181,7 +175,9 @@ def get_supported_file_types_for_resource_type(request, resource_type, *args, **
     resource_cls = hydroshare.check_resource_type(resource_type)
     if request.is_ajax:
         # TODO: use try catch
-        ajax_response_data = {'file_types': json.dumps(resource_cls.get_supported_upload_file_types())}
+        ajax_response_data = {
+            'file_types': json.dumps(resource_cls.get_supported_upload_file_types())
+        }
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -238,6 +234,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @api_view(['POST'])
 def update_key_value_metadata_public(request, pk):
     res, _, _ = authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -249,7 +246,7 @@ def update_key_value_metadata_public(request, pk):
 
     try:
         res.save()
-    except Error as ex:
+    except Error:
         is_update_success = False
 
     if is_update_success:
@@ -276,14 +273,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
         res.metadata.subjects.all().delete()
         is_add_success = True
-        if not res.can_be_public_or_discoverable:
-            res.raccess.public = False
-            res.raccess.discoverable = False
-            res.raccess.save()
-        elif not res.raccess.discoverable:
-            res.raccess.discoverable = True
-            res.raccess.save()
-
+        res.update_public_and_discoverable()  # set to private if necessary now 
         resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
@@ -332,6 +322,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response['errors'])
 
+    # TODO: This is curious, because it seems to allow something to have insufficient metadata
+    # TODO: and remain discoverable. Is this an error? 
     if request.is_ajax():
         if is_add_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
@@ -415,16 +407,16 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
                 if element_name == 'title':
-                    if res.raccess.public:
-                        if not res.can_be_public_or_discoverable:
-                            res.raccess.public = False
-                            res.raccess.save()
+                    # TODO: why only for title?
+                    res.update_public_and_discoverable()
 
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
+    # TODO: This is curious, because it seems to allow something to have insufficient metadata
+    # TODO: and remain discoverable. Is this an error? 
     if request.is_ajax():
         if is_update_success:
             res_public_status = 'public' if res.raccess.public else 'not public'
@@ -470,7 +462,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     istorage = resource.get_irods_storage()
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
     file_download_url = istorage.url(irods_file_path)
@@ -513,7 +506,8 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    res, _, user = authorize(request, shortkey,
+                             needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     res_title = res.metadata.title
     res_id = shortkey
@@ -536,13 +530,13 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
     for collection_res in resource_related_collections:
-        o=CollectionDeletedResource.objects.create(
-             resource_title=res_title,
-             deleted_by=user,
-             resource_id=res_id,
-             resource_type=res_type,
-             collection=collection_res
-             )
+        o = CollectionDeletedResource.objects.create(
+            resource_title=res_title,
+            deleted_by=user,
+            resource_id=res_id,
+            resource_type=res_type,
+            collection=collection_res
+        )
         o.resource_owners.add(*owners_list)
 
     post_delete_resource.send(sender=type(res), request=request, user=user,
@@ -557,12 +551,15 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     '''
-    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
-    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
-    should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
-    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
-    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
-    the resource
+    This function needs to be called via AJAX. The function replicates resource bag to
+    iRODS user zone on users.hydroshare.org which is federated with hydroshare zone
+    under the iRODS user account corresponding to a HydroShare user. This function
+    should only be called or exposed to be called from web interface when a
+    corresponding iRODS user account on hydroshare user Zone exists. The purpose of
+    this function is to allow HydroShare resource bag that a HydroShare user has access
+    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users
+    can do analysis or computations on the resource
+
     Args:
         request: an AJAX request
         shortkey: UUID of the resource to be copied to the login user's iRODS user space
@@ -570,23 +567,28 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     Returns:
         JSON list that indicates status of resource replication, i.e., success or error
     '''
-    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+    res, authorized, user = authorize(request, shortkey,
+                                      needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                      raises_exception=False)
     if not authorized:
         return HttpResponse(
-        json.dumps({"error": "You are not authorized to replicate this resource."}),
-        content_type="application/json"
+            json.dumps({"error": "You are not authorized to replicate this resource."}),
+            content_type="application/json"
         )
 
     try:
         utils.replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
-            json.dumps({"success": "This resource bag zip file has been successfully copied to your iRODS user zone."}),
-            content_type = "application/json"
+            json.dumps({
+                "success":
+                "This resource bag zip file has been successfully copied to your iRODS user zone."
+            }),
+            content_type="application/json"
         )
     except SessionException as ex:
         return HttpResponse(
-        json.dumps({"error": ex.stderr}),
-        content_type="application/json"
+            json.dumps({"error": ex.stderr}),
+            content_type="application/json"
         )
 
 
@@ -626,7 +628,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.locked_time = None
             res.save()
         else:
-            # cannot create new version for this resource since the resource is locked by another user
+            # cannot create new version for resource since the resource is locked by another user
             request.session['resource_creation_error'] = 'Failed to create a new version for ' \
                                                          'this resource since another user is ' \
                                                          'creating a new version for this ' \
@@ -635,8 +637,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
     new_resource = None
     try:
-        # lock the resource to prevent concurrent new version creation since only one new version for an
-        # obsoleted resource is allowed
+        # lock the resource to prevent concurrent new version creation since only one new
+        # version for an obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_empty_resource(shortkey, user)
@@ -668,7 +670,8 @@ def create_new_version_resource_public(request, pk):
 
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+    res, _, _ = authorize(request, shortkey,
+                          needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
     try:
         hydroshare.publish_resource(request.user, shortkey)
@@ -681,18 +684,20 @@ def publish(request, shortkey, *args, **kwargs):
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
-    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+    res, _, user = authorize(request, shortkey,
+                             needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     t = resolve_request(request).get('t', None)
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
     elif t == 'make_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable',
+                                     flag_value=True)
     elif t == 'make_not_shareable':
         _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
     elif t == 'make_shareable':
-       _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     if request.META.get('HTTP_REFERER', None):
         request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
@@ -713,6 +718,7 @@ def set_resource_flag_public(request, pk):
             return HttpResponse(message, status=400)
     return response
 
+
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     """this view function is expected to be called by ajax"""
     return _share_resource(request, shortkey, privilege, user_id, user_or_group='user')
@@ -730,9 +736,10 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     :param shortkey: id of the resource to share with
     :param privilege: access privilege need for the resource
     :param user_or_group_id: id of the user or group with whom the resource to be shared
-    :param user_or_group: indicates if the resource to be shared with a user or group. A value of 'user' will share
-                          the resource with a user whose id is provided with the parameter 'user_or_group_id'.
-                          Any other value for this parameter assumes resource to be shared with a group.
+    :param user_or_group: indicates if the resource to be shared with a user or group.
+        A value of 'user' will share the resource with a user whose id is provided
+        with the parameter 'user_or_group_id'.  Any other value for this parameter assumes
+        resource to be shared with a group.
     :return:
     """
 
@@ -793,7 +800,8 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
             picture_url = user_to_share_with.userprofile.picture.url
 
         ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                              'username': user_to_share_with.username, 'privilege_granted': privilege,
+                              'username': user_to_share_with.username,
+                              'privilege_granted': privilege,
                               'current_user_privilege': current_user_privilege,
                               'profile_pic': picture_url, 'is_current_user': is_current_user,
                               'error_msg': err_message}
@@ -927,24 +935,25 @@ def save_ajax(request):
         if form.is_valid():
             adaptor.save(value_edit_with_filter)
             return _get_http_response({'errors': False,
-                                        'value': adaptor.render_value_edit()})
-        messages = [] # The error is for another field that you are editing
+                                       'value': adaptor.render_value_edit()})
+        messages = []  # The error is for another field that you are editing
         for field_name_error, errors_field in form.errors.items():
             for error in errors_field:
                 messages.append("%s: %s" % (field_name_error, unicode(error)))
         message_i18n = ','.join(messages)
         return _get_http_response({'errors': message_i18n})
-    except ValidationError as error: # The error is for a field that you are editing
+    except ValidationError as error:  # The error is for a field that you are editing
         message_i18n = ', '.join([u"%s" % m for m in error.messages])
         return _get_http_response({'errors': message_i18n})
 
 
 def verify_account(request, *args, **kwargs):
     context = {
-            'username' : request.GET['username'],
-            'email' : request.GET['email']
-        }
-    return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+        'username': request.GET['username'],
+        'email': request.GET['email']
+    }
+    return render_to_response('pages/verify-account.html', context,
+                              context_instance=RequestContext(request))
 
 
 @processor_for('resend-verification-email')
@@ -962,12 +971,11 @@ go to http://{domain}/verify/{token}/ and verify your account.
             token=token
         ))
 
-        context = {
-            'is_email_sent' : True
-        }
-        return render_to_response('pages/verify-account.html', context, context_instance=RequestContext(request))
+        context = {'is_email_sent': True}
+        return render_to_response('pages/verify-account.html', context,
+                                  context_instance=RequestContext(request))
     except:
-        pass # FIXME should log this instead of ignoring it.
+        pass  # TODO: should log this instead of ignoring it.
 
 
 class FilterForm(forms.Form):
@@ -1038,6 +1046,7 @@ class GroupUpdateForm(GroupForm):
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
 
+
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
@@ -1058,7 +1067,8 @@ def add_generic_context(request, page):
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True)
+                                       .exclude(name='Hydroshare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
@@ -1073,7 +1083,8 @@ def add_generic_context(request, page):
 
 @login_required
 def create_resource_select_resource_type(request, *args, **kwargs):
-    return render_to_response('pages/create-resource.html', context_instance=RequestContext(request))
+    return render_to_response('pages/create-resource.html',
+                              context_instance=RequestContext(request))
 
 
 @login_required
@@ -1133,16 +1144,16 @@ def create_resource(request, *args, **kwargs):
         return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
-            owner=request.user,
-            title=res_title,
-            metadata=metadata,
-            files=resource_files,
-            source_names=source_names,
-            # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-            move=(fed_copy_or_move == 'move'),
-            content=res_title
+        resource_type=request.POST['resource-type'],
+        owner=request.user,
+        title=res_title,
+        metadata=metadata,
+        files=resource_files,
+        source_names=source_names,
+        # TODO: should probably be resource_federation_path like it is set to.
+        fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
+        move=(fed_copy_or_move == 'move'),
+        content=res_title
     )
 
     try:
@@ -1199,16 +1210,19 @@ def update_user_group(request, group_id, *args, **kwargs):
                 messages.success(request, "Group update was successful.")
             except IntegrityError as ex:
                 if group_form.cleaned_data['name'] in ex.message:
-                    message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
+                    message = "Group name '{}' already exists".format(
+                        group_form.cleaned_data['name'])
                     messages.error(request, "Group update errors: {}.".format(message))
                 else:
                     messages.error(request, "Group update errors:{}.".format(ex.message))
         else:
             messages.error(request, "Group update errors:{}.".format(group_form.errors.as_json))
     else:
-        messages.error(request, "Group update errors: You don't have permission to update this group")
+        messages.error(request,
+                       "Group update errors: You don't have permission to update this group")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def delete_user_group(request, group_id, *args, **kwargs):
@@ -1236,6 +1250,7 @@ def restore_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
@@ -1253,7 +1268,9 @@ def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs
     if access_privilege != PrivilegeCodes.NONE:
         if requesting_user.uaccess.can_share_group(group_to_share, access_privilege):
             try:
-                requesting_user.uaccess.share_group_with_user(group_to_share, user_to_share_with, access_privilege)
+                requesting_user.uaccess.share_group_with_user(group_to_share,
+                                                              user_to_share_with,
+                                                              access_privilege)
                 messages.success(request, "User successfully added to the group")
             except PermissionDenied as ex:
                 messages.error(request, ex.message)
@@ -1298,12 +1315,12 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
 @login_required
 def make_group_membership_request(request, group_id, user_id=None, *args, **kwargs):
     """
-    Allows either an owner of the group to invite a user to join a group or a user to make a request
-    to join a group
+    Allows either an owner of the group to invite a user to join a group or a user
+    to make a request to join a group
     :param request: the user who is making the request
     :param group_id: ID of the group for which the join request/invitation to me made
-    :param user_id: needed only when an owner is inviting a user to join a group. This is the id of the user the owner
-                    is inviting
+    :param user_id: needed only when an owner is inviting a user to join a group.
+    This is the id of the user the owner is inviting
     :return:
     """
     requesting_user = request.user
@@ -1345,35 +1362,41 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
     View for the link in the verification email that was sent to a user
     when they request/invite to join a group.
-    User is logged in and the request to join a group is accepted. Then the user is redirected to the group
-    profile page of the group for which the membership got accepted.
+    User is logged in and the request to join a group is accepted. Then the user is
+    redirected to the group profile page of the group for which the membership got accepted.
 
     :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
     :param token: token that was part of the link in the email
-    :param membership_request_id: ID of the GroupMembershipRequest object (part of the link in the email)
+    :param membership_request_id: ID of the GroupMembershipRequest object (part of the link
+        in the email)
     """
     membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
     if membership_request is not None:
         if membership_request.group_to_join.gaccess.active:
             user = authenticate(uidb36=uidb36, token=token, is_active=True)
             if user is not None:
-                user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+                user.uaccess.act_on_group_membership_request(membership_request,
+                                                             accept_request=True)
                 auth_login(request, user)
                 # send email to notify membership acceptance
                 _send_email_on_group_membership_acceptance(membership_request)
                 if membership_request.invitation_to is not None:
-                    message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+                    message = "You just joined the group '{}'"\
+                        .format(membership_request.group_to_join.name)
                 else:
-                    message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
-                                                                            membership_request.group_to_join.name)
+                    message = "User '{}' just joined the group '{}'"\
+                        .format(membership_request.request_from.first_name,
+                                membership_request.group_to_join.name)
 
                 messages.info(request, message)
                 # redirect to group profile page
-                return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+                return HttpResponseRedirect('/group/{}/'
+                                            .format(membership_request.group_to_join.id))
             else:
                 messages.error(request, "The link you clicked is no longer valid.")
                 return redirect("/")
@@ -1390,10 +1413,11 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
     """
     Take action (accept or decline) on group membership request
 
-    :param request: requesting user is either owner of the group taking action on a request from a user
-                    or a user taking action on a invitation to join a group from a group owner
-    :param membership_request_id: id of the membership request object (an instance of GroupMembershipRequest)
-                                  to act on
+    :param request: requesting user is either owner of the group taking action on a
+        request from a user or a user taking action on a invitation to join a group from
+        a group owner
+    :param membership_request_id: id of the membership request object
+        (an instance of GroupMembershipRequest) to act on
     :param action: need to have a value of either 'accept' or 'decline'
     :return:
     """
@@ -1408,7 +1432,8 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
     else:
         if membership_request.group_to_join.gaccess.active:
             try:
-                user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
+                user_acting.uaccess.act_on_group_membership_request(membership_request,
+                                                                    accept_request)
                 if accept_request:
                     message = 'Membership request accepted'
                     messages.success(request, message)
@@ -1432,7 +1457,7 @@ def get_file(request, *args, **kwargs):
     name = kwargs['name']
     session = RodsSession("./", "/usr/bin")
     session.runCmd("iinit")
-    session.runCmd('iget', [ name, 'tempfile.' + name ])
+    session.runCmd('iget', [name, 'tempfile.' + name])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 
@@ -1457,13 +1482,15 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
-            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name,
+                                          user.last_name)
         else:
             user_name = "{} {}".format(user.first_name, user.last_name)
 
         user_data['name'] = user_name
         user_data['email'] = user.email
-        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
+                                                         uid=user.pk)
         if user.userprofile.phone_1:
             user_data['phone'] = user.userprofile.phone_1
         elif user.userprofile.phone_2:
@@ -1481,7 +1508,8 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
                 address = user.userprofile.country
 
         user_data['address'] = address
-        user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+        user_data['organization'] = user.userprofile.organization \
+            if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
     else:
         group = utils.group_from_id(user_or_group_id)
@@ -1509,7 +1537,8 @@ def _send_email_on_group_membership_acceptance(membership_request):
         <p>Thank you</p>
         <p>The HydroShare Team</p>
         """.format(membership_request.request_from.first_name,
-                   membership_request.invitation_to.first_name, membership_request.group_to_join.name)
+                   membership_request.invitation_to.first_name,
+                   membership_request.group_to_join.name)
     else:
         # group owner accepted user request
         # here wre are sending email to the user whose request to join got accepted
@@ -1517,7 +1546,8 @@ def _send_email_on_group_membership_acceptance(membership_request):
         <p>Your request to join the group '{}' has been accepted.</p>
         <p>Thank you</p>
         <p>The HydroShare Team</p>
-        """.format(membership_request.request_from.first_name, membership_request.group_to_join.name)
+        """.format(membership_request.request_from.first_name,
+                   membership_request.group_to_join.name)
 
     send_mail(subject="HydroShare group membership",
               message=email_msg,
@@ -1529,14 +1559,16 @@ def _send_email_on_group_membership_acceptance(membership_request):
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
     if frm.is_valid():
         try:
-            requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
+            requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'],
+                                                             privilege)
         except PermissionDenied as exp:
             messages.error(request, exp.message)
     else:
         messages.error(request, frm.errors.as_json())
 
 
-def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource, privilege):
+def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with, resource,
+                                 privilege):
     users_to_keep = User.objects.in_bulk(users_to_unshare_with).values()
     owners = set(resource.raccess.owners.all())
     editors = set(resource.raccess.edit_users.all()) - owners
@@ -1568,64 +1600,38 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
 
 
 def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
-    if not user.uaccess.can_change_resource_flags(resource):
-        messages.error(request, "You don't have permission to change resource sharing status")
-        return
+    """
+    Set flags 'public', 'discoverable', shareable'
 
-    if flag_to_set == 'shareable':
+    This routine generates appropriate messages for the REST API and thus differs from
+    AbstractResource.set_public, set_discoverable, which raise exceptions.
+    """
+
+    if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
+        # access control is separate from validation logic
+        if not user.uaccess.can_change_resource_flags(resource):
+            messages.error(request, "You don't have permission to change resource sharing status")
+            return
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()
             return
 
-    has_files = False
-    has_metadata = False
-    can_resource_be_public_or_discoverable = False
-    is_public = (flag_to_set == 'public' and flag_value)
-    is_discoverable = (flag_to_set == 'discoverable' and flag_value)
-    if is_public or is_discoverable:
-        has_files = resource.has_required_content_files()
-        has_metadata = resource.metadata.has_all_required_elements()
-        can_resource_be_public_or_discoverable = has_files and has_metadata
+    elif flag_to_set == 'discoverable':
+        try:
+            resource.set_discoverable(flag_value, user=session.user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
 
-    if is_public and not can_resource_be_public_or_discoverable:
-        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
+    elif flag_to_set == 'public':
+        try:
+            resource.set_public(flag_value, user=session.user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
+
     else:
-        if is_discoverable:
-            if can_resource_be_public_or_discoverable:
-                resource.raccess.public = False
-                resource.raccess.discoverable = True
-            else:
-                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
-                                                                               resource_flag='discoverable'))
-        else:
-            resource.raccess.public = is_public
-            resource.raccess.discoverable = is_public
-
-        resource.raccess.save()
-
-        # set isPublic metadata AVU accordingly
-        res_coll = resource.root_path
-        istorage = resource.get_irods_storage()
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
-
-        # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
-                        resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files(resource.short_id)
-
-
-def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
-    msg = ''
-    if not has_metadata and not has_files:
-        msg = "Resource does not have sufficient required metadata and content files to be {flag}".format(
-              flag=resource_flag)
-    elif not has_metadata:
-        msg = "Resource does not have sufficient required metadata to be {flag}".format(flag=resource_flag)
-    elif not has_files:
-        msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
-
-    return msg
+        messages.error(request,
+                       "unrecognized resource flag {}".format(flag_to_set))
 
 
 class MyGroupsView(TemplateView):
@@ -1659,7 +1665,8 @@ class MyGroupsView(TemplateView):
 
 
 class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+        user = forms.ModelChoiceField(User.objects.all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
 
 class GroupView(TemplateView):
@@ -1677,8 +1684,10 @@ class GroupView(TemplateView):
         u.is_group_editor = g in u.uaccess.edit_groups
         u.is_group_viewer = g in u.uaccess.view_groups
 
-        g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-        g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+        g.join_request_waiting_owner_action = \
+            g.gaccess.group_membership_requests.filter(request_from=u).exists()
+        g.join_request_waiting_user_action = \
+            g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
         g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         group_resources = []
@@ -1714,13 +1723,18 @@ class CollaborateView(TemplateView):
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members
-            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
-            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+            g.join_request_waiting_owner_action = \
+                g.gaccess.group_membership_requests.filter(request_from=u).exists()
+            g.join_request_waiting_user_action = \
+                g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = None
             if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
-                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
-                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
+                g.join_request = \
+                    g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                    g.gaccess.group_membership_requests.filter(invitation_to=u).first()
         return {
             'profile_user': u,
             'groups': groups,
         }
+
+# flake8 __init__.py

@@ -854,13 +854,11 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # This presumes that the file is no longer in django
             delete_format_metadata_after_delete_file(resource, file_name)
 
-            if resource.raccess.public or resource.raccess.discoverable:
-                if not resource.can_be_public_or_discoverable:
-                    resource.raccess.public = False
-                    resource.raccess.discoverable = False
-                    resource.raccess.save()
-
             signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+            # set to private if necessary -- AFTER post_delete_file handling
+            resource.update_public_and_discoverable()  # set to False if necessary 
+
             # generate bag
             utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -960,6 +958,8 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
+    # TODO: whether a resource can be published is not considered in can_be_published
+    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
                               "metadata or content files or this resource type is not allowed "
@@ -977,7 +977,7 @@ def publish_resource(user, pk):
         resource.doi = get_resource_doi(pk, 'failure')
         resource.save()
 
-    resource.raccess.public = True
+    resource.set_public(True)  # also sets discoverable to True
     resource.raccess.immutable = True
     resource.raccess.shareable = False
     resource.raccess.published = True
