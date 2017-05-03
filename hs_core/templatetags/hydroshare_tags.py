@@ -46,12 +46,14 @@ def contact(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = """<a href='/user/{uid}/'>{fn} {ln}<a>""".format_html(fn=content.first_name,
-                                                                        ln=content.last_name,
-                                                                        uid=content.pk)
+        content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
+                              fn=content.first_name,
+                              ln=content.last_name,
+                              uid=content.pk)
     else:
-        content = """<a href='/user/{uid}/'>{un}<a>""".format_html(uid=content.pk,
-                                                                   un=content.username)
+        content = format_html("<a href='/user/{uid}/'>{un}</a>",
+                              uid=content.pk,
+                              un=content.username)
 
     return content
 
