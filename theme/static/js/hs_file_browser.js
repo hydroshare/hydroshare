@@ -58,6 +58,7 @@ function formatBytes(bytes) {
 // Updates the state of toolbar and menu buttons when a selection is made
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
+    var resourceType = $("#resource-type").val();
 
     var flagDisableOpen = false;
     var flagDisableDownload = false;
@@ -125,6 +126,12 @@ function updateSelectionMenuContext() {
         flagDisableDownload = true;
         flagDisableUnzip = true;
         flagDisableGetLink = true;
+        // Multiple folder deletion is not allowed for composite resource
+        // to avoid race condition that can occur with logical file objects especially
+        // if a folder has many files
+        if(resourceType === 'Composite Resource' && selected.length > 1){
+            flagDisableDelete = true;
+        }
     }
 
     if (!sourcePaths.length) {
