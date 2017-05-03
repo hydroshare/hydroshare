@@ -50,6 +50,8 @@ from . import resource_folder_hierarchy
 from . import resource_access_api
 from . import resource_folder_rest_api
 
+from . import discovery_rest_api
+
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
