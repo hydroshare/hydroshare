@@ -1901,7 +1901,7 @@ class AbstractResource(ResourcePermissionsMixin):
                         actions.append(msg)
 
         if ecount > 0:  # print information about the affected resource (not really an error)
-            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+            msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
                 .format(self.short_id, self.resource_type, self.metadata.title.value)
             if log_actions:
                 logger.info(msg)
@@ -2084,6 +2084,135 @@ class AbstractResource(ResourcePermissionsMixin):
 
             for dname in listing[0]:  # directories
                 error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                               stop_on_error=stop_on_error,
+                                                               echo_errors=echo_errors,
+                                                               log_errors=log_errors,
+                                                               return_errors=return_errors)
+                errors.extend(error2)
+                ecount += ecount2
+
+        except SessionException:
+            pass  # not an error not to have a file directory.
+            # Non-existence of files is checked elsewhere.
+
+        return errors, ecount  # empty unless return_errors=True
+
+    def clean_irods_files(self, stop_on_error=False, log_errors=True,
+                          echo_errors=False, return_errors=False,
+                          repair_irods=True, repair_django=True):
+        """
+        Check whether files in self.files and on iRODS agree; delete files and references
+        with no corresponding object.
+
+        THIS SHOULD ONLY BE DONE AFTER FORENSIC ANALYSIS OF A FAILURE.
+        THIS IS A SEPARATE FUNCTION SO THAT IT IS MORE DIFFICULT TO INVOKE BY ACCIDENT!
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        :param repair_django: whether to delete non-existent resource files from Django
+        :param repair_irods: whether to delete unreferenced resource files from iRODS
+        """
+
+        logger = logging.getLogger(__name__)
+        istorage = self.get_irods_storage()
+        errors = []
+        ecount = 0
+
+        # skip federated resources if not configured to handle these
+        if self.is_federated and not settings.REMOTE_USE_IRODS:
+            msg = "clean_irods_files: skipping check of federated resource {}"\
+                .format(self.short_id)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+        else:
+
+            # Step 1: does every file here refer to an existing file in iRODS?
+            if repair_django:
+                for f in self.files.all():
+                    if not istorage.exists(f.storage_path):
+                        ecount += 1
+                        f.delete()
+                        msg = ("clean_irods_files: django file {} does not exist in iRODS " +
+                            "(deleting)")\
+                            .format(f.storage_path)
+                        if echo_errors:
+                            print(msg)
+                        if log_errors:
+                            logger.error(msg)
+                        if return_errors:
+                            errors.append(msg)
+                        if stop_on_error:
+                            raise ValidationError(msg)
+
+            # Step 2: does every iRODS file correspond to a record in files?
+            if repair_irods:
+                error2, ecount2 = self.__clean_irods_directory(self.file_path, logger,
+                                                               stop_on_error=stop_on_error,
+                                                               log_errors=log_errors,
+                                                               echo_errors=echo_errors,
+                                                               return_errors=return_errors)
+                errors.extend(error2)
+                ecount += ecount2
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "clean_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+
+        return errors, ecount  # empty unless return_errors=True
+
+    def __clean_irods_directory(self, dir, logger,
+                                stop_on_error=False, log_errors=True,
+                                echo_errors=False, return_errors=False):
+        """
+        list a directory and clean up files there for conformance with django ResourceFiles
+
+        THIS SHOULD ONLY BE DONE AFTER FORENSIC ANALYSIS OF A FAILURE.
+        THIS IS A SEPARATE FUNCTION SO THAT IT IS MORE DIFFICULT TO INVOKE BY ACCIDENT!
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+
+        """
+        errors = []
+        ecount = 0
+        istorage = self.get_irods_storage()
+        try:
+            listing = istorage.listdir(dir)
+            for fname in listing[1]:  # files
+                fullpath = os.path.join(dir, fname)
+                found = False
+                for f in self.files.all():
+                    if f.storage_path == fullpath:
+                        found = True
+                        break
+                if not found:
+                    ecount += 1
+                    istorage.delete(fullpath)
+                    msg = "clean_irods_files: file {} in iRODs does not exist in Django (deleting)"\
+                        .format(fullpath)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            for dname in listing[0]:  # directories
+                error2, ecount2 = self.__clean_irods_directory(os.path.join(dir, dname), logger,
                                                                stop_on_error=stop_on_error,
                                                                echo_errors=echo_errors,
                                                                log_errors=log_errors,
