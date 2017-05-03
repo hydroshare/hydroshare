@@ -1,6 +1,7 @@
 from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
 from hs_core.hydroshare.hs_bagit import create_bag_files
+import itertools
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_create_resource, post_metadata_element_update, post_add_files_to_resource, \
@@ -127,11 +128,20 @@ def _process_package_info(resource):
             specified_flux_boundary_packages_list = []
             head_dependent_flux_boundary_packages = []
 
+            packages = list(itertools.chain(*packages))
             # loop through packages from .nam file to see if they match any of the controlled terms
+            if 'UZF' in packages:
+                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                               unsaturatedZonePackage=True)
+            if 'HFB6' in packages:
+                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                               horizontalFlowBarrierPackage=True)
+            if 'SWI2' in packages:
+                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                               seawaterIntrusionPackage=True)
             for p in packages:
                 # check each term
                 # StressPeriod
-                p = p[0]
                 if p in modflow_models.uncouple(
                         modflow_models.StressPeriod.stressPeriodTypeChoices):
                     # create if does not exist, update if it does exist
