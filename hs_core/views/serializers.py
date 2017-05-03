@@ -147,3 +147,9 @@ class UserAuthenticateRequestValidator(serializers.Serializer):
 
 class AccessRulesRequestValidator(serializers.Serializer):
     public = serializers.BooleanField(default=False)
+
+
+class DiscoverySerializer(serializers.Serializer):
+    text = serializers.CharField()
+    author = serializers.CharField()
+    title = serializers.CharField()
