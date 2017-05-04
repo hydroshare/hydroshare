@@ -456,9 +456,9 @@ def create_resource(
         if create_bag:
             hs_bagit.create_bag(resource)
 
-    # set the resource to private 
+    # set the resource to private
     istorage = resource.get_irods_storage()
-    istorage.setAVU(resource.root_path, 'isPublic', str(resource.raccess.public).lower()) 
+    istorage.setAVU(resource.root_path, 'isPublic', str(resource.raccess.public).lower())
 
     # set quota of this resource to this creator
     resource.raccess.set_quota_holder(owner, owner)
