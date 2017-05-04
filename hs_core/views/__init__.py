@@ -470,6 +470,7 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
+    res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -676,7 +677,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
