@@ -1974,7 +1974,7 @@ class AbstractResource(ResourcePermissionsMixin):
                     msg = "check_irods_files: django file {} does not exist in iRODS"\
                         .format(f.storage_path)
                     if clean_django:
-                        delete_resource_file(self.short_id, f,
+                        delete_resource_file(self.short_id, f.short_path,
                                              User.objects.get(username='admin'),
                                              delete_logical_file=False)
                         msg += " (DELETED FROM DJANGO)"
