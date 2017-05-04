@@ -701,13 +701,13 @@ class Relation(AbstractMetaDataElement):
         rel = Relation.objects.get(id=element_id)
         if rel.type != kwargs['type']:
             if kwargs['type'] == 'isHostedBy' and \
-                 Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                         content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isCopiedFrom relation already exists.' % rel.type)
             elif kwargs['type'] == 'isCopiedFrom' and \
-                    Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                            content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isHostedBy relation already exists.' % rel.type)
 
@@ -1158,8 +1158,8 @@ class Coverage(AbstractMetaDataElement):
                         try:
                             value_dict[value_item] = float(value_dict[value_item])
                         except TypeError:
-                            raise ValidationError("Value for '{}' must be numeric".format(
-                                                                              value_item))
+                            raise ValidationError("Value for '{}' must be numeric"
+                                                  .format(value_item))
 
             if value_dict['northlimit'] < value_dict['southlimit']:
                 raise ValidationError("Value for North latitude must be greater than or equal to "
@@ -1892,7 +1892,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 else:
                     msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
                            " {} should start with {}; cannot convert")\
-                           .format(path, self.short_id, defaultpath)
+                        .format(path, self.short_id, defaultpath)
                     if echo_actions:
                         print(msg)
                     if log_actions:
@@ -2354,12 +2354,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.size
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.size
 
     # TODO: write unit test
@@ -2369,12 +2369,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return istorage.exists(self.fed_resource_file.name)
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return istorage.exists(self.resource_file.name)
 
     @property
@@ -2392,12 +2392,12 @@ class ResourceFile(models.Model):
         if resource.resource_federation_path:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.name
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.name
 
     # ResourceFile API handles file operations
@@ -2796,7 +2796,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def is_federated(self):
         return self.resource_federation_path is not None and \
-               self.resource_federation_path != ''
+            self.resource_federation_path != ''
 
     # Paths relative to the resource
     @property
@@ -2884,8 +2884,8 @@ class BaseResource(Page, AbstractResource):
         # create the head sub element
         head = etree.SubElement(ROOT, 'head')
         etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated).format(
-                                                                 "YYYYMMDDHHmmss")
+        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
+            .format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
@@ -3477,9 +3477,9 @@ class CoreMetaData(models.Model):
             element_name = md_element.term
 
         hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(
-                                            ns=self.NAMESPACES['hsterms'],
-                                            new_element=element_name))
+                                           "{{{ns}}}{new_element}"
+                                           .format(ns=self.NAMESPACES['hsterms'],
+                                                   new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(
             hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:

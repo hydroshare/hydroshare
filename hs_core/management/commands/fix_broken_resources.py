@@ -23,13 +23,11 @@ bc16655330b64bcaa366d464b00e45f0 Delete files in Django that are not in Irods (f
 c3ecee31a0c64490bf6a2fcb4841cee4 Delete files in Django that are not in Irods (failed upload)
 a56608d8948c43fdb302e1438cf09169 Delete files in Django that are not in Irods (failed upload)
 878093a81b284ac8a4f65948b1c597a2 Delete files in Django that are not in Irods (failed upload)
-e81b1fb3cb5a49538d6c2ad3077b7b71 Delete whole resource
-cdc6292fbee24dfd9810da7696a40dcf Remove '10.References' from every Django filename.
+e81b1fb3cb5a49538d6c2ad3077b7b71 Delete unreferenced files on both sides.
+cdc6292fbee24dfd9810da7696a40dcf Delete unreferenced files on both sides.
 """
 
 from django.core.management.base import BaseCommand
-from django.conf import settings
-from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.utils import resource_modified
 
@@ -54,8 +52,10 @@ VACUUM = [
     # 'c3ecee31a0c64490bf6a2fcb4841cee4',
     # 'a56608d8948c43fdb302e1438cf09169',
     # '878093a81b284ac8a4f65948b1c597a2',
-    # 'e81b1fb3cb5a49538d6c2ad3077b7b71'
+    # 'e81b1fb3cb5a49538d6c2ad3077b7b71',
+    # 'cdc6292fbee24dfd9810da7696a40dcf'
 ]
+
 
 class Command(BaseCommand):
     help = "Check synchronization between iRODS and Django."
@@ -63,19 +63,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         pass
 
-
     def handle(self, *args, **options):
 
         print("FIX ALL AFFECTED RESOURCES")
 
         for rid in VACUUM:  # delete all non-matching IDS
             r = get_resource_by_shortkey(rid)
-            r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False, 
+            r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False,
                                 clean_irods=True, clean_django=True, sync_ispublic=True)
             resource_modified(r, r.creator)
-            # Do a redundant check to ensure that cleaning worked. 
+            # Do a redundant check to ensure that cleaning worked.
             r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False)
-
-        rid = 'cdc6292fbee24dfd9810da7696a40dcf'
-        r = get_resource_by_shortkey(rid)
-        r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False) 
