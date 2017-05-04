@@ -149,7 +149,7 @@ function updateSelectionMenuContext() {
             flagDisableSetNetCDFFileType = true;
         }
 
-        if (fileExt.toUpperCase() != "SHP"  || logicalFileType != "GenericLogicalFile") {
+        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
             flagDisableSetGeoFeatureFileType = true;
         }
 
