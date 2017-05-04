@@ -407,7 +407,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     # some database error occurred
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
-                # TODO: it's brittle to embed validation logic at this level. 
+                # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
                     res.update_public_and_discoverable()
                 if is_update_success:
@@ -478,7 +478,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    hydroshare.delete_resource_file(shortkey, f, user)
+    hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -491,12 +491,12 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     for f_id in f_id_list:
         f_id = f_id.strip()
         try:
-            hydroshare.delete_resource_file(shortkey, f_id, user)
+            hydroshare.delete_resource_file(shortkey, f_id, user)  # calls resource_modified
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
-            # raising this specific exceptoin
+            # raising this specific exception
             logger.debug(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
@@ -1560,7 +1560,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
 
 def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
     """
-    Set flags 'public', 'discoverable', shareable'
+    Set flags 'public', 'discoverable', 'shareable'
 
     This routine generates appropriate messages for the REST API and thus differs from
     AbstractResource.set_public, set_discoverable, which raise exceptions.

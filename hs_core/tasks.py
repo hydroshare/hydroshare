@@ -126,6 +126,11 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
                 i, num_files)
             resource.save()
 
+        # This might make the resource unsuitable for public consumption 
+        resource.update_public_and_discoverable()
+        # TODO: this is a bit of a lie because a different user requested the bag overwrite 
+        utils.resource_modified(resource, resource.creator, overwrite_bag=False)
+
         # Call success callback
         resource.file_unpack_message = None
         resource.file_unpack_status = 'Done'

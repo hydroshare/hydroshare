@@ -139,11 +139,15 @@ def update_resource_file(pk, filename, f):
     for rf in ResourceFile.objects.filter(object_id=resource.id):
         if rf.short_path == filename:
             if rf.resource_file:
+                # TODO: should use delete_resource_file
                 rf.resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             if rf.fed_resource_file:
+                # TODO: should use delete_resource_file
                 rf.fed_resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
@@ -681,9 +685,14 @@ def update_science_metadata(pk, metadata):
 
     Returns:
     """
-
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
+
+    # set to private if metadata has become non-compliant
+    resource.update_public_and_discoverable()  # set to False if necessary
+
+    # TODO: This is a bit of a lie since the user initiating this is not the creator
+    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
 
 def delete_resource(pk):
