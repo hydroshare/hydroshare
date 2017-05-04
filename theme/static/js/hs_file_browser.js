@@ -457,9 +457,6 @@ function showFileTypeMetadata(){
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
 
-         $("#temporal_start_date").formatDate();
-         $("#temporal_end_date").formatDate();
-
          $("#txt-keyword-filetype").keypress(function (e) {
              e.which = e.which || e.keyCode;
              if (e.which == 13) {
