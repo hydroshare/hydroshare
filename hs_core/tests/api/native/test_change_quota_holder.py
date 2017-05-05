@@ -41,18 +41,18 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
             )
 
         self.assertTrue(res.creator == self.user1)
-        self.assertTrue(res.raccess.get_quota_holder() == self.user1)
+        self.assertTrue(res.get_quota_holder() == self.user1)
         self.assertFalse(res.raccess.public)
         self.assertFalse(res.raccess.discoverable)
 
         with self.assertRaises(PermissionDenied):
-            res.raccess.set_quota_holder(self.user1, self.user2)
+            res.set_quota_holder(self.user1, self.user2)
 
         # test to make sure one owner can transfer quota holder to another owner
         self.user1.uaccess.share_resource_with_user(res, self.user2, PrivilegeCodes.OWNER)
-        res.raccess.set_quota_holder(self.user1, self.user2)
-        self.assertTrue(res.raccess.get_quota_holder() == self.user2)
-        self.assertFalse(res.raccess.get_quota_holder() == self.user1)
+        res.set_quota_holder(self.user1, self.user2)
+        self.assertTrue(res.get_quota_holder() == self.user2)
+        self.assertFalse(res.get_quota_holder() == self.user1)
 
         # test to make sure quota holder cannot be removed from ownership
         with self.assertRaises(PermissionDenied):

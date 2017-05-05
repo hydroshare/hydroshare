@@ -462,10 +462,10 @@ def create_resource(
 
     # set the resource to private
     istorage = resource.get_irods_storage()
-    istorage.setAVU(resource.root_path, 'isPublic', str(resource.raccess.public).lower())
+    resource.setAVU('isPublic', str(resource.raccess.public).lower())
 
     # set quota of this resource to this creator
-    resource.raccess.set_quota_holder(owner, owner)
+    resource.set_quota_holder(owner, owner)
 
     return resource
 

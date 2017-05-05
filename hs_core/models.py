@@ -1615,6 +1615,33 @@ class AbstractResource(ResourcePermissionsMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def set_quota_holder(self, setter, new_holder):
+        # set quota holder of the resource to new_holder who must be an owner
+        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        if __debug__: 
+            assert(isinstance(setter, User))
+            assert(isinstance(new_holder, User))
+        if not setter.uaccess.owns_resource(self.resource) or \
+            not new_holder.uaccess.owns_resource(self.resource):
+            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        self.setAVU("quotaUserName", new_holder.username)
+
+    def get_quota_holder(self):
+        # get quota holder of the resource
+        # return User instance of the quota holder for the resource or None if it does not exist
+        istorage = self.resource.get_irods_storage()
+        try:
+            uname = self.getAVU("quotaUserName")
+        except SessionException:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+        if uname:
+            return User.objects.filter(username=uname).first()
+        else:
+            # quotaUserName AVU does not exist, return None
+            return None
+
     def setAVU(self, attribute, value):
         """
         set an AVU at the resource level
@@ -2190,13 +2217,13 @@ class AbstractResource(ResourcePermissionsMixin):
                     msg = "check_irods_files: resource {} public in irods, private in Django"\
                         .format(self.short_id)
                     if sync_ispublic:
-                        istorage.setAVU(self.root_path, 'isPublic', 'false')
+                        self.setAVU('isPublic', 'false')
                         msg += " (REPAIRED IN IRODS)"
                 else:  # django_public and not irods_public
                     msg = "check_irods_files: resource {} private in irods, public in Django"\
                         .format(self.short_id)
                     if sync_ispublic:
-                        istorage.setAVU(self.root_path, 'isPublic', 'true')
+                        self.setAVU('isPublic', 'true')
                         msg += " (REPAIRED IN IRODS)"
                 if msg != '':
                     if echo_errors:
