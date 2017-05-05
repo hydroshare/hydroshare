@@ -25,7 +25,7 @@ from mezzanine.conf import settings
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-                           ResourceFile, get_user
+    ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -631,6 +631,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         # remove empty folder in iRODS
         istorage.delete(res_coll_input)
 
+    # TODO: should check can_be_public_or_discoverable here
+
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
     return output_zip_fname, output_zip_size
 
@@ -664,6 +666,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
+
+    # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -711,11 +715,7 @@ def remove_folder(user, res_id, folder_path):
 
     remove_irods_folder_in_django(resource, istorage, coll_path, user)
 
-    if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public_or_discoverable:
-            resource.raccess.public = False
-            resource.raccess.discoverable = False
-            resource.raccess.save()
+    resource.update_public_and_discoverable()  # make private if required
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -783,6 +783,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     istorage.moveFile(src_full_path, tgt_full_path)
 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+
+    # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 

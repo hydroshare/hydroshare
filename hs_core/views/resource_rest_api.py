@@ -616,8 +616,10 @@ class AccessRulesUpdate(APIView):
 
         validated_request_data = access_rules_validator.validated_data
         res = get_resource_by_shortkey(pk)
-        res.raccess.public = validated_request_data['public']
-        res.raccess.save()
+        try:
+            res.set_public(validated_request_data['public'], request.user)
+        except ValidationError:
+            return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 
