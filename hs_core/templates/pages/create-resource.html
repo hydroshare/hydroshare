@@ -63,15 +63,8 @@
                     </div>
 
                     <ul class="dropdown-menu shadow-md" aria-labelledby="select-resource-type">
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A resource that holds a list of other resources in HydroShare."
-                               data-value="CollectionResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Collection</div>
-                            </a>
-                        </li>
+                        {# GENERAL #}
+                        <li class="dropdown-header">General</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A resource which can include multiple files without file format limitations."
@@ -92,6 +85,15 @@
                         </li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
+                               title="A resource that holds a list of other resources in HydroShare."
+                               data-value="CollectionResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                     alt="Collection Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Collection</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
                                title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
                                data-value="ToolResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
@@ -99,63 +101,10 @@
                                 <div class="resource-type-name">&nbsp;Web App</div>
                             </a>
                         </li>
-                        <li role="separator" class="divider"></li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
-                               data-value="ModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
-                               data-value="MODFLOWModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
-                               data-value="SWATModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Describes the software component of a generic model within the water domain."
-                               data-value="ModelProgramResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Program</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
-                               data-value="NetcdfResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
-                               data-value="ScriptResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                     alt="Script Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Script</div>
-                            </a>
-                        </li>
 
+                        {# GEOGRAPHIC RESOURCES #}
                         <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Geographic</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A set of point, line, or polygon features stored in ESRI Shapefile format. "
@@ -174,7 +123,69 @@
                                 <div class="resource-type-name">&nbsp;Geographic Raster</div>
                             </a>
                         </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
+                               data-value="NetcdfResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
+                            </a>
+                        </li>
+
+                        {# MODELING #}
                         <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Modeling</li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Describes the software component of a generic model within the water domain."
+                               data-value="ModelProgramResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Program</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
+                               data-value="ModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Instance</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
+                               data-value="SWATModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
+                               data-value="MODFLOWModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                     alt="Collection Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
+                               data-value="ScriptResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                     alt="Script Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Script</div>
+                            </a>
+                        </li>
+
+                        {# TIME SERIES RESOURCES #}
+                        <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Time Series</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A sequence of individual data values that are ordered in time to record the changing trend of a certain phenomenon."
@@ -199,7 +210,7 @@
 
             <div id="upload-content" class="col-xs-12">
                 <div class="row">
-                    <label for="title" class="col-xs-12 col-form-label">Add your files</label>
+                    <label for="hsDropzone" class="col-xs-12 col-form-label">Add your files</label>
 
                     <div class="col-xs-12 col-sm-8 col-md-9">
                         <form id="hsDropzone" class="dropzone" role="form" method="POST"
@@ -210,6 +221,7 @@
                             <div class="hs-dropzone-header">
                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                 <span class="hs-dropzone-header-help">Drop files below or click to upload.</span>
+
                                 <span id="btn-remove-all-files" class="btn btn-default pull-right">
                                     <i class="fa fa-trash-o btn-remove" aria-hidden="true"></i>
                                     <span>&nbsp;&nbsp;Remove All Files</span>
@@ -245,8 +257,8 @@
 
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <br>
-                                    <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
+                                    <hr>
+                                    <label>To load files from an iRODS server including your iRODS user HydroShare server:</label>
 
                                     <div id="irods-browse">
                                         <div id="log-into-irods">

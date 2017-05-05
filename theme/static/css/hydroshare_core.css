@@ -4690,7 +4690,7 @@ div#resource-content {
 }
 
 #dropdown-resource-type .dropdown-menu > li > a {
-	padding: 2px;
+	padding: 2px 16px;
 	cursor: default;
 }
 
