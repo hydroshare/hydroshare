@@ -25,7 +25,7 @@ from mezzanine.conf import settings
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-                           ResourceFile, get_user
+    ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -718,7 +718,7 @@ def remove_folder(user, res_id, folder_path):
 
     remove_irods_folder_in_django(resource, istorage, coll_path, user)
 
-    resource.update_public_and_discoverable()  # make private if required 
+    resource.update_public_and_discoverable()  # make private if required
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
