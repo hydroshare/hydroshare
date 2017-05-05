@@ -58,6 +58,7 @@ function formatBytes(bytes) {
 // Updates the state of toolbar and menu buttons when a selection is made
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
+    var resourceType = $("#resource-type").val();
 
     var flagDisableOpen = false;
     var flagDisableDownload = false;
@@ -90,6 +91,14 @@ function updateSelectionMenuContext() {
             }
         }
         $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
+
+        // Multiple folder deletion is not allowed for composite resource
+        // to avoid race condition that can occur with logical file objects especially
+        // if a folder has many files
+        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected")
+        if(resourceType === 'Composite Resource' && foldersSelected.length > 1){
+            flagDisableDelete = true;
+        }
     }
     else if (selected.length == 1) {    // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
@@ -413,7 +422,7 @@ function bindFileBrowserItemEvents() {
 
 function showFileTypeMetadata(){
      var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-     if (logical_file_id.length == 0){
+     if (logical_file_id && logical_file_id.length == 0){
          return;
      }
      var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
@@ -447,9 +456,6 @@ function showFileTypeMetadata(){
          $("#fileTypeMetaDataTab").html(json_response.metadata);
          $(".file-browser-container, #fb-files-container").css("cursor", "auto");
          $("#btn-add-keyword-filetype").click(onAddKeywordFileType);
-
-         $("#temporal_start_date").formatDate();
-         $("#temporal_end_date").formatDate();
 
          $("#txt-keyword-filetype").keypress(function (e) {
              e.which = e.which || e.keyCode;

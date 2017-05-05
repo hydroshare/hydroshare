@@ -1232,16 +1232,16 @@ class Coverage(AbstractMetaDataElement):
                             td(self.value['east'])
             else:
                 legend('Temporal Coverage')
+                start_date = parser.parse(self.value['start'])
+                end_date = parser.parse(self.value['end'])
                 with table(cls='custom-table'):
                     with tbody():
                         with tr():
                             get_th('Start Date')
-                            td(self.value['start'], id='temporal_start_date',
-                               data_date=self.value['start'])
+                            td(start_date.strftime('%m/%d/%Y'))
                         with tr():
                             get_th('End Date')
-                            td(self.value['end'], id='temporal_end_date',
-                               data_date=self.value['end'])
+                            td(end_date.strftime('%m/%d/%Y'))
 
         return root_div.render(pretty=pretty)
 
@@ -1471,6 +1471,181 @@ class AbstractResource(ResourcePermissionsMixin):
         """ returns whether folder operations are supported. Computed for polymorphic types"""
         return False
 
+    @property
+    def has_required_metadata(self):
+        """ return True only if all required metadata is present. """
+        if self.metadata is None or not self.metadata.has_all_required_elements():
+            return False
+        for f in self.logical_files:
+            if not f.metadata.has_all_required_elements():
+                return False
+        return True
+
+    @property
+    def can_be_public_or_discoverable(self):
+        """
+        Return True if the resource can be set to public or discoverable
+
+        This is True if
+
+        1. The resource has all metadata elements marked as required.
+        2. The resource has all files that are considered required.
+
+        and False otherwise
+        """
+        has_files = self.has_required_content_files
+        has_metadata = self.has_required_metadata
+        return has_files and has_metadata
+
+    def set_discoverable(self, value, user=None):
+        """
+        Set the discoverable flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the discoverable flag (self.raccess.discoverable) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control.
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `discoverable` to `False` also sets `public` to `False`
+        * setting `discoverable` to `True` does not change `public`
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
+        if value and not (has_metadata and has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be " + \
+                    "discoverable"
+                raise ValidationError(msg)
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be discoverable"
+                raise ValidationError(msg)
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be discoverable"
+                raise ValidationError(msg)
+
+        else:  # state change is allowed
+            self.raccess.discoverable = value
+            self.raccess.save()
+            if not value:  # not discoverable means also not public
+                self.set_public(value)  # This must be called, as it sets the AVU isPublic
+
+    def set_public(self, value, user=None):
+        """
+        set the public flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the public flag (self.raccess.public) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control.
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `public` to `True` also sets `discoverable` to `True`
+        * setting `public` to `False` does not change `discoverable`
+        * setting `public` to either also modifies the AVU isPublic for the resource.
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # avoid import loop
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
+
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        old_value = self.raccess.public  # is this a change?
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
+        if value and not (has_metadata and has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be public"
+                raise ValidationError(msg)
+
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be public"
+                raise ValidationError(msg)
+
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be public"
+                raise ValidationError(msg)
+
+        else:  # make valid state change
+            self.raccess.public = value
+            if value:  # can't be public without being discoverable
+                self.raccess.discoverable = value
+            self.raccess.save()
+
+            # public changed state: set isPublic metadata AVU accordingly
+            if value != old_value:
+                self.setAVU("isPublic", self.raccess.public)
+
+                # TODO: why does this only run when something becomes public?
+                # TODO: Should it be run when a NetcdfResource becomes private?
+                # run script to update hyrax input files when private netCDF resource changes state
+                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                    run_script_to_update_hyrax_input_files(self.short_id)
+
+    def update_public_and_discoverable(self):
+        """ update the settings of the public and discoverable flags for changes in metadata """
+        if self.raccess.discoverable and not self.can_be_public_or_discoverable:
+            self.set_discoverable(False)  # also sets Public
+
+    def setAVU(self, attribute, value):
+        """
+        set an AVU at the resource level
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        if isinstance(value, bool):
+            value = str(value).lower()  # normalize boolean values to strings
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.setAVU(root_path, attribute, value)
+
+    def getAVU(self, attribute):
+        """
+        get an AVU for a resource
+
+        This avoids mistakes in getting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        value = istorage.getAVU(root_path, attribute)
+        if attribute == 'isPublic':
+            if value.lower() == 'true':
+                return True
+            else:
+                return False
+        else:
+            return value
+
     # TODO: Why isn't this a regular method? Why does it need to be a class method?
     # It would seem to me that one only creates a bag after a resource has been created,
     # so that this would be an instance method....
@@ -1485,7 +1660,6 @@ class AbstractResource(ResourcePermissionsMixin):
         res = BaseResource.objects.get(short_id=resource_id)
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
-
         return bag_url
 
     @classmethod
@@ -1672,13 +1846,6 @@ class AbstractResource(ResourcePermissionsMixin):
             citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
-
-    @property
-    def can_be_public_or_discoverable(self):
-        if self.metadata.has_all_required_elements() and self.has_required_content_files():
-            return True
-
-        return False
 
     @classmethod
     def get_supported_upload_file_types(cls):

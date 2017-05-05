@@ -276,14 +276,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
         res.metadata.subjects.all().delete()
         is_add_success = True
-        if not res.can_be_public_or_discoverable:
-            res.raccess.public = False
-            res.raccess.discoverable = False
-            res.raccess.save()
-        elif not res.raccess.discoverable:
-            res.raccess.discoverable = True
-            res.raccess.save()
-
+        res.update_public_and_discoverable()
         resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
@@ -414,12 +407,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     # some database error occurred
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
+                # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
-                    if res.raccess.public:
-                        if not res.can_be_public_or_discoverable:
-                            res.raccess.public = False
-                            res.raccess.save()
-
+                    res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
@@ -480,6 +470,7 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
+    res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -487,7 +478,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    hydroshare.delete_resource_file(shortkey, f, user)
+    hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -500,12 +491,12 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     for f_id in f_id_list:
         f_id = f_id.strip()
         try:
-            hydroshare.delete_resource_file(shortkey, f_id, user)
+            hydroshare.delete_resource_file(shortkey, f_id, user)  # calls resource_modified
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
-            # raising this specific exceptoin
+            # raising this specific exception
             logger.debug(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
@@ -686,7 +677,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
@@ -1568,51 +1559,38 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
 
 
 def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
-    if not user.uaccess.can_change_resource_flags(resource):
-        messages.error(request, "You don't have permission to change resource sharing status")
-        return
+    """
+    Set flags 'public', 'discoverable', 'shareable'
 
-    if flag_to_set == 'shareable':
+    This routine generates appropriate messages for the REST API and thus differs from
+    AbstractResource.set_public, set_discoverable, which raise exceptions.
+    """
+
+    if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
+        # access control is separate from validation logic
+        if not user.uaccess.can_change_resource_flags(resource):
+            messages.error(request, "You don't have permission to change resource sharing status")
+            return
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()
             return
 
-    has_files = False
-    has_metadata = False
-    can_resource_be_public_or_discoverable = False
-    is_public = (flag_to_set == 'public' and flag_value)
-    is_discoverable = (flag_to_set == 'discoverable' and flag_value)
-    if is_public or is_discoverable:
-        has_files = resource.has_required_content_files()
-        has_metadata = resource.metadata.has_all_required_elements()
-        can_resource_be_public_or_discoverable = has_files and has_metadata
+    elif flag_to_set == 'discoverable':
+        try:
+            resource.set_discoverable(flag_value, user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
 
-    if is_public and not can_resource_be_public_or_discoverable:
-        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
+    elif flag_to_set == 'public':
+        try:
+            resource.set_public(flag_value, user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
+
     else:
-        if is_discoverable:
-            if can_resource_be_public_or_discoverable:
-                resource.raccess.public = False
-                resource.raccess.discoverable = True
-            else:
-                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
-                                                                               resource_flag='discoverable'))
-        else:
-            resource.raccess.public = is_public
-            resource.raccess.discoverable = is_public
-
-        resource.raccess.save()
-
-        # set isPublic metadata AVU accordingly
-        res_coll = resource.root_path
-        istorage = resource.get_irods_storage()
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public).lower())
-
-        # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
-                        resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files(resource.short_id)
+        messages.error(request,
+                       "unrecognized resource flag {}".format(flag_to_set))
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
