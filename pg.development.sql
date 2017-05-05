@@ -1,4 +1,39 @@
 --
+-- PostgreSQL database cluster dump
+--
+
+SET default_transaction_read_only = off;
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+
+--
+-- Roles
+--
+
+CREATE ROLE postgres;
+ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION;
+
+
+
+
+
+
+--
+-- Database creation
+--
+
+REVOKE ALL ON DATABASE template1 FROM PUBLIC;
+REVOKE ALL ON DATABASE template1 FROM postgres;
+GRANT ALL ON DATABASE template1 TO postgres;
+GRANT CONNECT ON DATABASE template1 TO PUBLIC;
+
+
+\connect postgres
+
+SET default_transaction_read_only = off;
+
+--
 -- PostgreSQL database dump
 --
 
@@ -2175,7 +2210,8 @@ CREATE TABLE hs_access_control_groupaccess (
     date_created timestamp with time zone NOT NULL,
     description text NOT NULL,
     picture character varying(100),
-    purpose text
+    purpose text,
+    auto_approve boolean NOT NULL
 );
 
 
@@ -2273,6 +2309,44 @@ ALTER TABLE hs_access_control_groupresourceprivilege_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_access_control_groupresourceprivilege_id_seq OWNED BY hs_access_control_groupresourceprivilege.id;
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_access_control_groupresourceprovenance (
+    id integer NOT NULL,
+    privilege integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    grantor_id integer,
+    group_id integer NOT NULL,
+    resource_id integer NOT NULL,
+    undone boolean NOT NULL
+);
+
+
+ALTER TABLE hs_access_control_groupresourceprovenance OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupresourceprovenance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_access_control_groupresourceprovenance_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_access_control_groupresourceprovenance_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupresourceprovenance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_access_control_groupresourceprovenance_id_seq OWNED BY hs_access_control_groupresourceprovenance.id;
 
 
 --
@@ -2385,6 +2459,44 @@ ALTER SEQUENCE hs_access_control_usergroupprivilege_id_seq OWNED BY hs_access_co
 
 
 --
+-- Name: hs_access_control_usergroupprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_access_control_usergroupprovenance (
+    id integer NOT NULL,
+    privilege integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    grantor_id integer,
+    group_id integer NOT NULL,
+    user_id integer NOT NULL,
+    undone boolean NOT NULL
+);
+
+
+ALTER TABLE hs_access_control_usergroupprovenance OWNER TO postgres;
+
+--
+-- Name: hs_access_control_usergroupprovenance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_access_control_usergroupprovenance_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_access_control_usergroupprovenance_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_usergroupprovenance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_access_control_usergroupprovenance_id_seq OWNED BY hs_access_control_usergroupprovenance.id;
+
+
+--
 -- Name: hs_access_control_userresourceprivilege; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -2422,11 +2534,50 @@ ALTER SEQUENCE hs_access_control_userresourceprivilege_id_seq OWNED BY hs_access
 
 
 --
+-- Name: hs_access_control_userresourceprovenance; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_access_control_userresourceprovenance (
+    id integer NOT NULL,
+    privilege integer NOT NULL,
+    start timestamp with time zone NOT NULL,
+    grantor_id integer,
+    resource_id integer NOT NULL,
+    user_id integer NOT NULL,
+    undone boolean NOT NULL
+);
+
+
+ALTER TABLE hs_access_control_userresourceprovenance OWNER TO postgres;
+
+--
+-- Name: hs_access_control_userresourceprovenance_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_access_control_userresourceprovenance_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_access_control_userresourceprovenance_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_userresourceprovenance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_access_control_userresourceprovenance_id_seq OWNED BY hs_access_control_userresourceprovenance.id;
+
+
+--
 -- Name: hs_app_netCDF_netcdfmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE TABLE "hs_app_netCDF_netcdfmetadata" (
-    coremetadata_ptr_id integer NOT NULL
+    coremetadata_ptr_id integer NOT NULL,
+    is_dirty boolean NOT NULL
 );
 
 
@@ -3840,11 +3991,9 @@ ALTER SEQUENCE hs_core_relation_id_seq OWNED BY hs_core_relation.id;
 CREATE TABLE hs_core_resourcefile (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    resource_file character varying(500),
+    resource_file character varying(4096),
     content_type_id integer NOT NULL,
-    fed_resource_file_name_or_path character varying(255),
-    fed_resource_file_size character varying(15),
-    fed_resource_file character varying(500),
+    fed_resource_file character varying(4096),
     file_folder character varying(4096),
     logical_file_content_type_id integer,
     logical_file_object_id integer,
@@ -4063,7 +4212,9 @@ ALTER SEQUENCE hs_core_type_id_seq OWNED BY hs_core_type.id;
 
 CREATE TABLE hs_file_types_genericfilemetadata (
     id integer NOT NULL,
-    extra_metadata hstore NOT NULL
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL
 );
 
 
@@ -4130,7 +4281,9 @@ ALTER SEQUENCE hs_file_types_genericlogicalfile_id_seq OWNED BY hs_file_types_ge
 
 CREATE TABLE hs_file_types_georasterfilemetadata (
     id integer NOT NULL,
-    extra_metadata hstore NOT NULL
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL
 );
 
 
@@ -4189,6 +4342,75 @@ ALTER TABLE hs_file_types_georasterlogicalfile_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_file_types_georasterlogicalfile_id_seq OWNED BY hs_file_types_georasterlogicalfile.id;
+
+
+--
+-- Name: hs_file_types_netcdffilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_netcdffilemetadata (
+    id integer NOT NULL,
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_netcdffilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_netcdffilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_netcdffilemetadata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_netcdffilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_netcdffilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_netcdffilemetadata_id_seq OWNED BY hs_file_types_netcdffilemetadata.id;
+
+
+--
+-- Name: hs_file_types_netcdflogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_netcdflogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_netcdflogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_netcdflogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_netcdflogicalfile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_netcdflogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_netcdflogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_netcdflogicalfile_id_seq OWNED BY hs_file_types_netcdflogicalfile.id;
 
 
 --
@@ -6071,6 +6293,7 @@ CREATE TABLE hs_tools_resource_toolicon (
     object_id integer NOT NULL,
     content_type_id integer NOT NULL,
     value character varying(1024) NOT NULL,
+    data_url text NOT NULL,
     CONSTRAINT hs_tools_resource_toolicon_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -6883,6 +7106,80 @@ ALTER SEQUENCE robots_url_id_seq OWNED BY robots_url.id;
 
 
 --
+-- Name: security_cspreport; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE security_cspreport (
+    id integer NOT NULL,
+    document_uri character varying(1000) NOT NULL,
+    referrer character varying(1000) NOT NULL,
+    blocked_uri character varying(1000) NOT NULL,
+    violated_directive character varying(1000) NOT NULL,
+    original_policy text,
+    date_received timestamp with time zone NOT NULL,
+    sender_ip inet NOT NULL,
+    user_agent character varying(1000) NOT NULL
+);
+
+
+ALTER TABLE security_cspreport OWNER TO postgres;
+
+--
+-- Name: security_cspreport_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE security_cspreport_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE security_cspreport_id_seq OWNER TO postgres;
+
+--
+-- Name: security_cspreport_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE security_cspreport_id_seq OWNED BY security_cspreport.id;
+
+
+--
+-- Name: security_passwordexpiry; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE security_passwordexpiry (
+    id integer NOT NULL,
+    password_expiry_date timestamp with time zone,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE security_passwordexpiry OWNER TO postgres;
+
+--
+-- Name: security_passwordexpiry_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE security_passwordexpiry_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE security_passwordexpiry_id_seq OWNER TO postgres;
+
+--
+-- Name: security_passwordexpiry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE security_passwordexpiry_id_seq OWNED BY security_passwordexpiry.id;
+
+
+--
 -- Name: theme_homepage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -6901,6 +7198,10 @@ CREATE TABLE theme_homepage (
     content text NOT NULL,
     recent_blog_heading character varying(100) NOT NULL,
     number_recent_posts integer NOT NULL,
+    message_end_date date,
+    message_start_date date,
+    message_type character varying(100) NOT NULL,
+    show_message boolean NOT NULL,
     CONSTRAINT theme_homepage_number_recent_posts_check CHECK ((number_recent_posts >= 0))
 );
 
@@ -6943,6 +7244,45 @@ ALTER TABLE theme_iconbox_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE theme_iconbox_id_seq OWNED BY theme_iconbox.id;
+
+
+--
+-- Name: theme_quotamessage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE theme_quotamessage (
+    id integer NOT NULL,
+    warning_content_prepend text NOT NULL,
+    grace_period_content_prepend text NOT NULL,
+    enforce_content_prepend text NOT NULL,
+    content text NOT NULL,
+    soft_limit_percent integer NOT NULL,
+    hard_limit_percent integer NOT NULL,
+    grace_period integer NOT NULL
+);
+
+
+ALTER TABLE theme_quotamessage OWNER TO postgres;
+
+--
+-- Name: theme_quotamessage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE theme_quotamessage_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE theme_quotamessage_id_seq OWNER TO postgres;
+
+--
+-- Name: theme_quotamessage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE theme_quotamessage_id_seq OWNED BY theme_quotamessage.id;
 
 
 --
@@ -7042,6 +7382,44 @@ ALTER TABLE theme_userprofile_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE theme_userprofile_id_seq OWNED BY theme_userprofile.id;
+
+
+--
+-- Name: theme_userquota; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE theme_userquota (
+    id integer NOT NULL,
+    allocated_value bigint NOT NULL,
+    used_value bigint NOT NULL,
+    unit character varying(10) NOT NULL,
+    zone character varying(100) NOT NULL,
+    remaining_grace_period integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE theme_userquota OWNER TO postgres;
+
+--
+-- Name: theme_userquota_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE theme_userquota_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE theme_userquota_id_seq OWNER TO postgres;
+
+--
+-- Name: theme_userquota_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE theme_userquota_id_seq OWNED BY theme_userquota.id;
 
 
 --
@@ -7433,6 +7811,13 @@ ALTER TABLE ONLY hs_access_control_groupresourceprivilege ALTER COLUMN id SET DE
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance ALTER COLUMN id SET DEFAULT nextval('hs_access_control_groupresourceprovenance_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_access_control_resourceaccess ALTER COLUMN id SET DEFAULT nextval('hs_access_control_resourceaccess_id_seq'::regclass);
 
 
@@ -7454,7 +7839,21 @@ ALTER TABLE ONLY hs_access_control_usergroupprivilege ALTER COLUMN id SET DEFAUL
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_access_control_usergroupprovenance ALTER COLUMN id SET DEFAULT nextval('hs_access_control_usergroupprovenance_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_access_control_userresourceprivilege ALTER COLUMN id SET DEFAULT nextval('hs_access_control_userresourceprivilege_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance ALTER COLUMN id SET DEFAULT nextval('hs_access_control_userresourceprovenance_id_seq'::regclass);
 
 
 --
@@ -7777,6 +8176,20 @@ ALTER TABLE ONLY hs_file_types_georasterfilemetadata ALTER COLUMN id SET DEFAULT
 --
 
 ALTER TABLE ONLY hs_file_types_georasterlogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_georasterlogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_netcdffilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_netcdffilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_netcdflogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_netcdflogicalfile_id_seq'::regclass);
 
 
 --
@@ -8273,7 +8686,28 @@ ALTER TABLE ONLY robots_url ALTER COLUMN id SET DEFAULT nextval('robots_url_id_s
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY security_cspreport ALTER COLUMN id SET DEFAULT nextval('security_cspreport_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY security_passwordexpiry ALTER COLUMN id SET DEFAULT nextval('security_passwordexpiry_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY theme_iconbox ALTER COLUMN id SET DEFAULT nextval('theme_iconbox_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY theme_quotamessage ALTER COLUMN id SET DEFAULT nextval('theme_quotamessage_id_seq'::regclass);
 
 
 --
@@ -8291,11 +8725,18 @@ ALTER TABLE ONLY theme_userprofile ALTER COLUMN id SET DEFAULT nextval('theme_us
 
 
 --
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY theme_userquota ALTER COLUMN id SET DEFAULT nextval('theme_userquota_id_seq'::regclass);
+
+
+--
 -- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY auth_group (id, name) FROM stdin;
-1	Hydroshare Author
+1	xDCIShare Author
 \.
 
 
@@ -8311,402 +8752,402 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-2137	1	412
-2138	1	413
-2139	1	414
-2140	1	415
-2141	1	416
-2142	1	417
-2143	1	418
-2144	1	419
-2145	1	420
-2146	1	421
-2147	1	422
-2148	1	423
-2149	1	424
-2150	1	425
-2151	1	426
-2152	1	427
-2153	1	428
-2154	1	429
-2155	1	430
-2156	1	431
-2157	1	432
-2158	1	433
-2159	1	434
-2160	1	435
-2161	1	436
-2162	1	437
-2163	1	438
-2164	1	439
-2165	1	440
-2166	1	441
-2167	1	442
-2168	1	443
-2169	1	444
-2170	1	445
-2171	1	446
-2172	1	447
-2173	1	448
-2174	1	449
-2175	1	450
-2176	1	451
-2177	1	452
-2178	1	453
-2179	1	454
-2180	1	455
-2181	1	456
-2182	1	457
-2183	1	458
-2184	1	459
-2185	1	460
-2186	1	461
-2187	1	462
-2188	1	463
-2189	1	464
-2190	1	465
-2191	1	476
-2192	1	477
-2193	1	478
-2194	1	479
-2195	1	480
-2196	1	481
-2197	1	482
-2198	1	483
-2199	1	484
-2200	1	485
-2201	1	486
-2202	1	487
-2203	1	488
-2204	1	489
-2205	1	490
-2206	1	491
-2207	1	492
-2208	1	493
-2209	1	494
-2210	1	495
-2211	1	496
-2212	1	497
-2213	1	498
-2214	1	499
-2215	1	500
-2216	1	501
-2217	1	502
-2218	1	503
-2219	1	504
-2220	1	505
-2221	1	506
-2222	1	507
-2223	1	508
-2224	1	509
-2225	1	510
-2226	1	511
-2227	1	512
-2228	1	513
-2229	1	514
-2230	1	522
-2231	1	523
-2232	1	524
-2233	1	528
-2234	1	529
-2235	1	530
-2236	1	531
-2237	1	532
-2238	1	533
-2239	1	543
-2240	1	544
-2241	1	545
-2242	1	552
-2243	1	553
-2244	1	554
-2245	1	555
-2246	1	556
-2247	1	557
-2248	1	558
-2249	1	559
-2250	1	560
-2251	1	561
-2252	1	562
-2253	1	563
-2254	1	564
-2255	1	565
-2256	1	566
-2257	1	567
-2258	1	568
-2259	1	569
-2260	1	570
-2261	1	571
-2262	1	572
-2263	1	573
-2264	1	574
-2265	1	575
-2266	1	576
-2267	1	577
-2268	1	578
-2269	1	579
-2270	1	580
-2271	1	581
-2272	1	582
-2273	1	583
-2274	1	584
-2275	1	585
-2276	1	586
-2277	1	587
-2278	1	588
-2279	1	589
-2280	1	590
-2281	1	591
-2282	1	592
-2283	1	593
-2284	1	594
-2285	1	595
-2286	1	596
-2287	1	597
-2288	1	598
-2289	1	599
-2290	1	600
-2291	1	601
-2292	1	602
-2293	1	603
-2294	1	604
-2295	1	605
-2296	1	606
-2297	1	607
-2298	1	608
-2299	1	609
-2300	1	610
-2301	1	611
-2302	1	612
-2303	1	613
-2304	1	614
-1957	1	139
-1958	1	140
-1959	1	141
-1960	1	142
-1961	1	143
-1962	1	144
-1963	1	145
-1964	1	146
-1965	1	147
-1966	1	148
-1967	1	149
-1968	1	150
-1969	1	151
-1970	1	152
-1971	1	153
-1972	1	154
-1973	1	155
-1974	1	156
-1975	1	157
-1976	1	158
-1977	1	159
-1978	1	160
-1979	1	161
-1980	1	162
-1981	1	163
-1982	1	164
-1983	1	165
-1984	1	166
-1985	1	167
-1986	1	168
-1987	1	169
-1988	1	170
-1989	1	171
-1990	1	172
-1991	1	173
-1992	1	174
-1993	1	175
-1994	1	176
-1995	1	177
-1996	1	178
-1997	1	179
-1998	1	180
-1999	1	181
-2000	1	182
-2001	1	183
-2002	1	184
-2003	1	185
-2004	1	186
-2005	1	187
-2006	1	188
-2007	1	189
-2008	1	190
-2009	1	191
-2010	1	192
-2011	1	193
-2012	1	194
-2013	1	195
-2014	1	196
-2015	1	197
-2016	1	198
-2017	1	199
-2018	1	200
-2019	1	201
-2020	1	202
-2021	1	203
-2022	1	204
-2023	1	271
-2024	1	272
-2025	1	273
-2026	1	274
-2027	1	275
-2028	1	276
-2029	1	277
-2030	1	278
-2031	1	279
-2032	1	280
-2033	1	281
-2034	1	282
-2035	1	283
-2036	1	284
-2037	1	285
-2038	1	313
-2039	1	314
-2040	1	315
-2041	1	316
-2042	1	317
-2043	1	318
-2044	1	319
-2045	1	320
-2046	1	321
-2047	1	322
-2048	1	323
-2049	1	324
-2050	1	325
-2051	1	326
-2052	1	327
-2053	1	328
-2054	1	329
-2055	1	330
-2056	1	331
-2057	1	332
-2058	1	333
-2059	1	334
-2060	1	335
-2061	1	336
-2062	1	337
-2063	1	338
-2064	1	339
-2065	1	340
-2066	1	341
-2067	1	342
-2068	1	343
-2069	1	344
-2070	1	345
-2071	1	346
-2072	1	347
-2073	1	348
-2074	1	349
-2075	1	350
-2076	1	351
-2077	1	352
-2078	1	353
-2079	1	354
-2080	1	355
-2081	1	356
-2082	1	357
-2083	1	358
-2084	1	359
-2085	1	360
-2086	1	361
-2087	1	362
-2088	1	363
-2089	1	364
-2090	1	365
-2091	1	366
-2092	1	367
-2093	1	368
-2094	1	369
-2095	1	370
-2096	1	371
-2097	1	372
-2098	1	373
-2099	1	374
-2100	1	375
-2101	1	376
-2102	1	377
-2103	1	378
-2104	1	379
-2105	1	380
-2106	1	381
-2107	1	382
-2108	1	383
-2109	1	384
-2110	1	385
-2111	1	386
-2112	1	387
-2113	1	388
-2114	1	389
-2115	1	390
-2116	1	391
-2117	1	392
-2118	1	393
-2119	1	394
-2120	1	395
-2121	1	396
-2122	1	397
-2123	1	398
-2124	1	399
-2125	1	400
-2126	1	401
-2127	1	402
-2128	1	403
-2129	1	404
-2130	1	405
-2131	1	406
-2132	1	407
-2133	1	408
-2134	1	409
-2135	1	410
-2136	1	411
-2305	1	615
-2306	1	616
-2307	1	617
-2308	1	618
-2309	1	619
-2310	1	620
-2311	1	621
-2312	1	622
-2313	1	623
-2314	1	624
-2315	1	625
-2316	1	626
-2317	1	627
-2318	1	628
-2319	1	629
-2320	1	630
-2321	1	631
-2322	1	632
-2323	1	633
-2324	1	634
-2325	1	635
-2326	1	636
-2327	1	637
-2328	1	638
-2329	1	639
-2330	1	640
-2331	1	641
-2332	1	642
-2333	1	643
-2334	1	644
-2335	1	645
-2336	1	646
-2337	1	647
-2338	1	648
-2339	1	649
-2340	1	650
-2341	1	651
-2342	1	652
-2343	1	653
-2344	1	654
-2345	1	655
-2346	1	656
-2347	1	657
-2348	1	658
-2349	1	659
-2350	1	660
-2351	1	661
-2352	1	662
+2749	1	139
+2750	1	140
+2751	1	141
+2752	1	142
+2753	1	143
+2754	1	144
+2755	1	145
+2756	1	146
+2757	1	147
+2758	1	148
+2759	1	149
+2760	1	150
+2761	1	151
+2762	1	152
+2763	1	153
+2764	1	154
+2765	1	155
+2766	1	156
+2767	1	157
+2768	1	158
+2769	1	159
+2770	1	160
+2771	1	161
+2772	1	162
+2773	1	163
+2774	1	164
+2775	1	165
+2776	1	166
+2777	1	167
+2778	1	168
+2779	1	169
+2780	1	170
+2781	1	171
+2782	1	172
+2783	1	173
+2784	1	174
+2785	1	175
+2786	1	176
+2787	1	177
+2788	1	178
+2789	1	179
+2790	1	180
+2791	1	181
+2792	1	182
+2793	1	183
+2794	1	184
+2795	1	185
+2796	1	186
+2797	1	187
+2798	1	188
+2799	1	189
+2800	1	190
+2801	1	191
+2802	1	192
+2803	1	193
+2804	1	194
+2805	1	195
+2806	1	196
+2807	1	197
+2808	1	198
+2809	1	199
+2810	1	200
+2811	1	201
+2812	1	202
+2813	1	203
+2814	1	204
+2815	1	271
+2816	1	272
+2817	1	273
+2818	1	274
+2819	1	275
+2820	1	276
+2821	1	277
+2822	1	278
+2823	1	279
+2824	1	280
+2825	1	281
+2826	1	282
+2827	1	283
+2828	1	284
+2829	1	285
+2830	1	313
+2831	1	314
+2832	1	315
+2833	1	316
+2834	1	317
+2835	1	318
+2836	1	319
+2837	1	320
+2838	1	321
+2839	1	322
+2840	1	323
+2841	1	324
+2842	1	325
+2843	1	326
+2844	1	327
+2845	1	328
+2846	1	329
+2847	1	330
+2848	1	331
+2849	1	332
+2850	1	333
+2851	1	334
+2852	1	335
+2853	1	336
+2854	1	337
+2855	1	338
+2856	1	339
+2857	1	340
+2858	1	341
+2859	1	342
+2860	1	343
+2861	1	344
+2862	1	345
+2863	1	346
+2864	1	347
+2865	1	348
+2866	1	349
+2867	1	350
+2868	1	351
+2869	1	352
+2870	1	353
+2871	1	354
+2872	1	355
+2873	1	356
+2874	1	357
+2875	1	358
+2876	1	359
+2877	1	360
+2878	1	361
+2879	1	362
+2880	1	363
+2881	1	364
+2882	1	365
+2883	1	366
+2884	1	367
+2885	1	368
+2886	1	369
+2887	1	370
+2888	1	371
+2889	1	372
+2890	1	373
+2891	1	374
+2892	1	375
+2893	1	376
+2894	1	377
+2895	1	378
+2896	1	379
+2897	1	380
+2898	1	381
+2899	1	382
+2900	1	383
+2901	1	384
+2902	1	385
+2903	1	386
+2904	1	387
+2905	1	388
+2906	1	389
+2907	1	390
+2908	1	391
+2909	1	392
+2910	1	393
+2911	1	394
+2912	1	395
+2913	1	396
+2914	1	397
+2915	1	398
+2916	1	399
+2917	1	400
+2918	1	401
+2919	1	402
+2920	1	403
+2921	1	404
+2922	1	405
+2923	1	406
+2924	1	407
+2925	1	408
+2926	1	409
+2927	1	410
+2928	1	411
+2929	1	412
+2930	1	413
+2931	1	414
+2932	1	415
+2933	1	416
+2934	1	417
+2935	1	418
+2936	1	419
+2937	1	420
+2938	1	421
+2939	1	422
+2940	1	423
+2941	1	424
+2942	1	425
+2943	1	426
+2944	1	427
+2945	1	428
+2946	1	429
+2947	1	430
+2948	1	431
+2949	1	432
+2950	1	433
+2951	1	434
+2952	1	435
+2953	1	436
+2954	1	437
+2955	1	438
+2956	1	439
+2957	1	440
+2958	1	441
+2959	1	442
+2960	1	443
+2961	1	444
+2962	1	445
+2963	1	446
+2964	1	447
+2965	1	448
+2966	1	449
+2967	1	450
+2968	1	451
+2969	1	452
+2970	1	453
+2971	1	454
+2972	1	455
+2973	1	456
+2974	1	457
+2975	1	458
+2976	1	459
+2977	1	460
+2978	1	461
+2979	1	462
+2980	1	463
+2981	1	464
+2982	1	465
+2983	1	476
+2984	1	477
+2985	1	478
+2986	1	479
+2987	1	480
+2988	1	481
+2989	1	482
+2990	1	483
+2991	1	484
+2992	1	485
+2993	1	486
+2994	1	487
+2995	1	488
+2996	1	489
+2997	1	490
+2998	1	491
+2999	1	492
+3000	1	493
+3001	1	494
+3002	1	495
+3003	1	496
+3004	1	497
+3005	1	498
+3006	1	499
+3007	1	500
+3008	1	501
+3009	1	502
+3010	1	503
+3011	1	504
+3012	1	505
+3013	1	506
+3014	1	507
+3015	1	508
+3016	1	509
+3017	1	510
+3018	1	511
+3019	1	512
+3020	1	513
+3021	1	514
+3022	1	522
+3023	1	523
+3024	1	524
+3025	1	528
+3026	1	529
+3027	1	530
+3028	1	531
+3029	1	532
+3030	1	533
+3031	1	543
+3032	1	544
+3033	1	545
+3034	1	552
+3035	1	553
+3036	1	554
+3037	1	555
+3038	1	556
+3039	1	557
+3040	1	558
+3041	1	559
+3042	1	560
+3043	1	561
+3044	1	562
+3045	1	563
+3046	1	564
+3047	1	565
+3048	1	566
+3049	1	567
+3050	1	568
+3051	1	569
+3052	1	570
+3053	1	571
+3054	1	572
+3055	1	573
+3056	1	574
+3057	1	575
+3058	1	576
+3059	1	577
+3060	1	578
+3061	1	579
+3062	1	580
+3063	1	581
+3064	1	582
+3065	1	583
+3066	1	584
+3067	1	585
+3068	1	586
+3069	1	587
+3070	1	588
+3071	1	589
+3072	1	590
+3073	1	591
+3074	1	592
+3075	1	593
+3076	1	594
+3077	1	595
+3078	1	596
+3079	1	597
+3080	1	598
+3081	1	599
+3082	1	600
+3083	1	601
+3084	1	602
+3085	1	603
+3086	1	604
+3087	1	605
+3088	1	606
+3089	1	607
+3090	1	608
+3091	1	609
+3092	1	610
+3093	1	611
+3094	1	612
+3095	1	613
+3096	1	614
+3097	1	615
+3098	1	616
+3099	1	617
+3100	1	618
+3101	1	619
+3102	1	620
+3103	1	621
+3104	1	622
+3105	1	623
+3106	1	624
+3107	1	625
+3108	1	626
+3109	1	627
+3110	1	628
+3111	1	629
+3112	1	630
+3113	1	631
+3114	1	632
+3115	1	633
+3116	1	634
+3117	1	635
+3118	1	636
+3119	1	637
+3120	1	638
+3121	1	639
+3122	1	640
+3123	1	641
+3124	1	642
+3125	1	643
+3126	1	644
+3127	1	645
+3128	1	646
+3129	1	647
+3130	1	648
+3131	1	649
+3132	1	650
+3133	1	651
+3134	1	652
+3135	1	653
+3136	1	654
+3137	1	655
+3138	1	656
+3139	1	657
+3140	1	658
+3141	1	659
+3142	1	660
+3143	1	661
+3144	1	662
 \.
 
 
@@ -8714,7 +9155,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 2352, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 3144, true);
 
 
 --
@@ -9381,6 +9822,33 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 660	Can add Composite Resource	206	add_compositeresource
 661	Can change Composite Resource	206	change_compositeresource
 662	Can delete Composite Resource	206	delete_compositeresource
+663	Can add quota message	207	add_quotamessage
+664	Can change quota message	207	change_quotamessage
+665	Can delete quota message	207	delete_quotamessage
+666	Can add User quota	208	add_userquota
+667	Can change User quota	208	change_userquota
+668	Can delete User quota	208	delete_userquota
+669	Can add user group provenance	209	add_usergroupprovenance
+670	Can change user group provenance	209	change_usergroupprovenance
+671	Can delete user group provenance	209	delete_usergroupprovenance
+672	Can add user resource provenance	210	add_userresourceprovenance
+673	Can change user resource provenance	210	change_userresourceprovenance
+674	Can delete user resource provenance	210	delete_userresourceprovenance
+675	Can add group resource provenance	211	add_groupresourceprovenance
+676	Can change group resource provenance	211	change_groupresourceprovenance
+677	Can delete group resource provenance	211	delete_groupresourceprovenance
+678	Can add net cdf file meta data	212	add_netcdffilemetadata
+679	Can change net cdf file meta data	212	change_netcdffilemetadata
+680	Can delete net cdf file meta data	212	delete_netcdffilemetadata
+681	Can add net cdf logical file	213	add_netcdflogicalfile
+682	Can change net cdf logical file	213	change_netcdflogicalfile
+683	Can delete net cdf logical file	213	delete_netcdflogicalfile
+684	Can add password expiry	214	add_passwordexpiry
+685	Can change password expiry	214	change_passwordexpiry
+686	Can delete password expiry	214	delete_passwordexpiry
+687	Can add csp report	215	add_cspreport
+688	Can change csp report	215	change_cspreport
+689	Can delete csp report	215	delete_cspreport
 \.
 
 
@@ -9388,7 +9856,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 662, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 689, true);
 
 
 --
@@ -9396,7 +9864,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 662, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-02-02 17:28:12.316836+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
+4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-05-05 13:43:51+00	t	admin	xDCIShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -9405,7 +9873,7 @@ COPY auth_user (id, password, last_login, is_superuser, username, first_name, la
 --
 
 COPY auth_user_groups (id, user_id, group_id) FROM stdin;
-2	4	1
+3	4	1
 \.
 
 
@@ -9413,7 +9881,7 @@ COPY auth_user_groups (id, user_id, group_id) FROM stdin;
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_user_groups_id_seq', 2, true);
+SELECT pg_catalog.setval('auth_user_groups_id_seq', 3, true);
 
 
 --
@@ -9597,12 +10065,23 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 32	2016-01-25 19:52:16.941687+00	4	Discover	2	Changed slug and keywords.	33	4
 33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
 34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
-35	2016-02-24 17:41:41.504891+00	1	Hydroshare Author	2	Changed permissions.	2	4
+35	2016-02-24 17:41:41.504891+00	1	xDCIShare Author	2	Changed permissions.	2	4
 36	2016-06-23 17:07:04.049586+00	13	Collaborate	1		33	4
-37	2017-02-02 17:25:53.744625+00	1	Hydroshare Author	2	Changed permissions.	2	4
-38	2017-02-02 17:26:10.173151+00	1	Hydroshare Author	2	Changed permissions.	2	4
-39	2017-02-02 17:26:32.707066+00	1	Hydroshare Author	2	Changed permissions.	2	4
-40	2017-02-02 17:26:47.958444+00	1	Hydroshare Author	2	Changed permissions.	2	4
+37	2017-02-02 17:25:53.744625+00	1	xDCIShare Author	2	Changed permissions.	2	4
+38	2017-02-02 17:26:10.173151+00	1	xDCIShare Author	2	Changed permissions.	2	4
+39	2017-02-02 17:26:32.707066+00	1	xDCIShare Author	2	Changed permissions.	2	4
+40	2017-02-02 17:26:47.958444+00	1	xDCIShare Author	2	Changed permissions.	2	4
+41	2017-05-05 13:47:22.842788+00	2	Home	2	Changed heading, content, message_start_date, message_end_date, message_type, in_menus and keywords.	17	4
+42	2017-05-05 13:49:03.819452+00	2	Home	2	Changed content, message_start_date, in_menus and keywords.	17	4
+43	2017-05-05 13:52:11.658026+00	6	Apps	2	Changed slug.	34	4
+44	2017-05-05 13:54:23.851527+00	7	Verify Account	2	Changed content, in_menus and keywords.	33	4
+45	2017-05-05 14:08:48.392883+00	9	Terms of Use	2	Changed content, in_menus, description and keywords.	33	4
+46	2017-05-05 14:13:10.186432+00	10	Statement of Privacy	2	Changed content, in_menus, description and keywords.	33	4
+47	2017-05-05 14:16:27.533827+00	4	admin	2	Changed first_name.	3	4
+48	2017-05-05 14:16:51.48684+00	1	xDCIshare Author	2	Changed name.	2	4
+49	2017-05-05 14:17:42.985039+00	1	xDCIShare Author	2	Changed name.	2	4
+50	2017-05-05 14:20:45.489007+00	1	QuotaMessage object	1		207	4
+51	2017-05-05 14:24:29.244065+00	1	SiteConfiguration object	2	Changed col1_content, col3_heading, col3_content, twitter_link, facebook_link, youtube_link, github_link, linkedin_link and copyright.	16	4
 \.
 
 
@@ -9610,7 +10089,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 40, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 51, true);
 
 
 --
@@ -9853,6 +10332,15 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 204	hs_file_types	georasterfilemetadata
 205	hs_file_types	georasterlogicalfile
 206	hs_composite_resource	compositeresource
+207	theme	quotamessage
+208	theme	userquota
+209	hs_access_control	usergroupprovenance
+210	hs_access_control	userresourceprovenance
+211	hs_access_control	groupresourceprovenance
+212	hs_file_types	netcdffilemetadata
+213	hs_file_types	netcdflogicalfile
+214	security	passwordexpiry
+215	security	cspreport
 \.
 
 
@@ -9860,7 +10348,7 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 206, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 215, true);
 
 
 --
@@ -10215,6 +10703,22 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 165	hs_tools_resource	0010_auto_20161203_1913	2017-02-02 16:15:54.219542+00
 166	hs_tracking	0004_auto_20161010_1402	2017-02-02 16:15:54.69361+00
 167	robots	0001_initial	2017-02-02 16:15:58.401584+00
+168	hs_access_control	0017_auto_add_provenance	2017-05-05 13:41:49.70712+00
+169	hs_access_control	0018_auto_tune_provenance	2017-05-05 13:41:50.912473+00
+170	hs_access_control	0019_manual_populate_provenance	2017-05-05 13:41:50.933487+00
+171	hs_access_control	0017_groupaccess_auto_approve	2017-05-05 13:41:51.095253+00
+172	hs_access_control	0020_merge	2017-05-05 13:41:51.098691+00
+173	hs_app_netCDF	0007_netcdfmetadata_is_dirty	2017-05-05 13:41:51.129644+00
+174	hs_core	0033_resourcefile_attributes	2017-05-05 13:41:51.717935+00
+175	hs_core	0034_manual_migrate_file_paths	2017-05-05 13:41:51.736427+00
+176	hs_core	0035_remove_deprecated_fields	2017-05-05 13:41:52.095568+00
+177	hs_file_types	0002_auto_20170216_1904	2017-05-05 13:41:52.203428+00
+178	hs_file_types	0003_auto_20170302_2257	2017-05-05 13:41:52.285303+00
+179	hs_tools_resource	0011_toolicon_data_url	2017-05-05 13:41:52.958208+00
+180	security	0001_initial	2017-05-05 13:41:53.970416+00
+181	theme	0005_userquota	2017-05-05 13:41:55.396172+00
+182	theme	0006_auto_20170309_1516	2017-05-05 13:41:55.432509+00
+183	theme	0007_auto_20170427_1553	2017-05-05 13:41:57.537779+00
 \.
 
 
@@ -10222,7 +10726,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 167, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 183, true);
 
 
 --
@@ -10250,6 +10754,7 @@ r95gvslruo55bqar11kco2o9ynh41mrq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmV
 yq96gavkvlu0skywfwgvdock65xnq3tc	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-03-09 17:40:31.568514+00
 5eflr6q0pn7qgkuu6mbo84kuqoxk5plt	ZjZmMTlkMThkOGJmNWIzY2IxODNjODM5ZTA2MmFjNTRmNTlmYTRkOTp7InF1ZXJ5X2NoYW5nZWQiOmZhbHNlLCJoc190cmFja2luZ19pZCI6ImV5SnBaQ0k2TW4wOjFiRzg2ZDpGNWs4M3pGcnQ2Mzg5WWMyZUhRc3BNRGVBR2siLCJmYWNldHNfaXRlbXMiOnsiZmllbGRzIjp7ImF1dGhvciI6W10sIm93bmVyc19uYW1lcyI6W10sInN1YmplY3RzIjpbXSwiZGlzY292ZXJhYmxlIjpbXSwicHVibGljIjpbXSwicmVzb3VyY2VfdHlwZSI6W119LCJkYXRlcyI6e30sInF1ZXJpZXMiOnt9fSwidG90YWxfcmVzdWx0cyI6MH0=	2016-07-07 17:17:57.67608+00
 yg9nko1xsebjvcc6wk4ynygw4m8l3ofk	ZTg1M2RhMWVmMzk3YTcwYTFlMWE5MDhlNWRiYjAyZGU0Yzk2YmVmYzp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZObjA6MWNaTEJZOnhCdHhZT3oxQ3RXb0lBVFR2aFVqcW5UaDBwOCJ9	2017-02-16 17:28:40.816975+00
+sbfc9qcoi728qf2c38jscng5q7ccra4a	ZWI2ZjgwZmQ3NmRhYTA3NDAyYzI4MzEyMzgwMjNmMGExODU3ZjNhMzp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOMzA6MWQ2ZFdIOmx4S0hCN1NrVWgwS3NaT2tqSHVEVndhMGcxbyIsIl9hdXRoX3VzZXJfaGFzaCI6IjBjZGYxNDBkN2Q1NDRhMGUyMWMwM2EyMTdjMDJlNGQyMjFhZjhiYTUiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjoiNCJ9	2017-05-19 13:43:51.032176+00
 \.
 
 
@@ -10609,7 +11114,7 @@ COPY generic_threadedcomment (comment_ptr_id, rating_count, rating_sum, rating_a
 -- Data for Name: hs_access_control_groupaccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id, date_created, description, picture, purpose) FROM stdin;
+COPY hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id, date_created, description, picture, purpose, auto_approve) FROM stdin;
 \.
 
 
@@ -10648,6 +11153,21 @@ COPY hs_access_control_groupresourceprivilege (id, privilege, start, grantor_id,
 --
 
 SELECT pg_catalog.setval('hs_access_control_groupresourceprivilege_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_access_control_groupresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_access_control_groupresourceprovenance (id, privilege, start, grantor_id, group_id, resource_id, undone) FROM stdin;
+\.
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_access_control_groupresourceprovenance_id_seq', 1, false);
 
 
 --
@@ -10697,6 +11217,21 @@ SELECT pg_catalog.setval('hs_access_control_usergroupprivilege_id_seq', 1, false
 
 
 --
+-- Data for Name: hs_access_control_usergroupprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_access_control_usergroupprovenance (id, privilege, start, grantor_id, group_id, user_id, undone) FROM stdin;
+\.
+
+
+--
+-- Name: hs_access_control_usergroupprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_access_control_usergroupprovenance_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_access_control_userresourceprivilege; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10712,10 +11247,25 @@ SELECT pg_catalog.setval('hs_access_control_userresourceprivilege_id_seq', 1, fa
 
 
 --
+-- Data for Name: hs_access_control_userresourceprovenance; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_access_control_userresourceprovenance (id, privilege, start, grantor_id, resource_id, user_id, undone) FROM stdin;
+\.
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_access_control_userresourceprovenance_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_app_netCDF_netcdfmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY "hs_app_netCDF_netcdfmetadata" (coremetadata_ptr_id) FROM stdin;
+COPY "hs_app_netCDF_netcdfmetadata" (coremetadata_ptr_id, is_dirty) FROM stdin;
 \.
 
 
@@ -11279,7 +11829,7 @@ SELECT pg_catalog.setval('hs_core_relation_id_seq', 1, false);
 -- Data for Name: hs_core_resourcefile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_resourcefile (id, object_id, resource_file, content_type_id, fed_resource_file_name_or_path, fed_resource_file_size, fed_resource_file, file_folder, logical_file_content_type_id, logical_file_object_id) FROM stdin;
+COPY hs_core_resourcefile (id, object_id, resource_file, content_type_id, fed_resource_file, file_folder, logical_file_content_type_id, logical_file_object_id) FROM stdin;
 \.
 
 
@@ -11369,7 +11919,7 @@ SELECT pg_catalog.setval('hs_core_type_id_seq', 1, false);
 -- Data for Name: hs_file_types_genericfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_file_types_genericfilemetadata (id, extra_metadata) FROM stdin;
+COPY hs_file_types_genericfilemetadata (id, extra_metadata, keywords, is_dirty) FROM stdin;
 \.
 
 
@@ -11399,7 +11949,7 @@ SELECT pg_catalog.setval('hs_file_types_genericlogicalfile_id_seq', 1, false);
 -- Data for Name: hs_file_types_georasterfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_file_types_georasterfilemetadata (id, extra_metadata) FROM stdin;
+COPY hs_file_types_georasterfilemetadata (id, extra_metadata, keywords, is_dirty) FROM stdin;
 \.
 
 
@@ -11423,6 +11973,36 @@ COPY hs_file_types_georasterlogicalfile (id, dataset_name, metadata_id) FROM std
 --
 
 SELECT pg_catalog.setval('hs_file_types_georasterlogicalfile_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_netcdffilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_netcdffilemetadata (id, extra_metadata, keywords, is_dirty) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_netcdffilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_netcdffilemetadata_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_netcdflogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_netcdflogicalfile (id, dataset_name, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_netcdflogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_netcdflogicalfile_id_seq', 1, false);
 
 
 --
@@ -12221,7 +12801,7 @@ SELECT pg_catalog.setval('hs_tools_resource_supportedsharingstatuschoices_id_seq
 -- Data for Name: hs_tools_resource_toolicon; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_tools_resource_toolicon (id, object_id, content_type_id, value) FROM stdin;
+COPY hs_tools_resource_toolicon (id, object_id, content_type_id, value, data_url) FROM stdin;
 \.
 
 
@@ -12266,6 +12846,7 @@ COPY hs_tracking_session (id, begin, visitor_id) FROM stdin;
 4	2017-02-02 17:23:27.983199+00	1
 5	2017-02-02 17:27:56.526549+00	1
 6	2017-02-02 17:28:40.81141+00	6
+7	2017-05-05 13:43:41.852248+00	1
 \.
 
 
@@ -12273,7 +12854,7 @@ COPY hs_tracking_session (id, begin, visitor_id) FROM stdin;
 -- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_session_id_seq', 6, true);
+SELECT pg_catalog.setval('hs_tracking_session_id_seq', 7, true);
 
 
 --
@@ -12357,6 +12938,223 @@ COPY hs_tracking_variable (id, "timestamp", name, type, value, session_id) FROM 
 74	2017-02-02 17:28:40.710661+00	logout	4	none	5
 75	2017-02-02 17:28:40.81281+00	begin_session	4	none	6
 76	2017-02-02 17:28:40.814548+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=None user_email_domain=None request_url=/	6
+77	2017-05-05 13:43:41.853727+00	begin_session	2	user_ip=192.168.56.1 user_type=None user_email_domain=None	7
+78	2017-05-05 13:43:41.855266+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=None user_email_domain=None request_url=/	7
+79	2017-05-05 13:43:45.585703+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=None user_email_domain=None request_url=/accounts/login/	7
+80	2017-05-05 13:43:51.029905+00	login	2	user_ip=192.168.56.1 user_type=Unspecified user_email_domain=com	7
+81	2017-05-05 13:43:51.133028+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/	7
+82	2017-05-05 13:44:00.211724+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/	7
+83	2017-05-05 13:44:05.248595+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+84	2017-05-05 13:44:05.303099+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+85	2017-05-05 13:44:08.980437+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/homepage/2/	7
+86	2017-05-05 13:44:09.03879+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+87	2017-05-05 13:44:48.768412+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+88	2017-05-05 13:44:49.032345+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/homepage/2/	7
+89	2017-05-05 13:44:49.080507+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+90	2017-05-05 13:47:22.753596+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+91	2017-05-05 13:47:23.105793+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+92	2017-05-05 13:47:23.168256+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+93	2017-05-05 13:47:27.280254+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/3/	7
+94	2017-05-05 13:47:27.34037+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+95	2017-05-05 13:47:48.585224+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+96	2017-05-05 13:47:59.344877+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/4/	7
+97	2017-05-05 13:47:59.405058+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+98	2017-05-05 13:48:13.538811+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+99	2017-05-05 13:48:13.586145+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+100	2017-05-05 13:48:18.744687+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/4/	7
+101	2017-05-05 13:48:18.798374+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+102	2017-05-05 13:48:29.287553+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+103	2017-05-05 13:48:29.34512+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+104	2017-05-05 13:48:32.489829+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/homepage/2/	7
+105	2017-05-05 13:48:32.543173+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+106	2017-05-05 13:49:03.739814+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+107	2017-05-05 13:49:04.092741+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+108	2017-05-05 13:49:04.147509+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+109	2017-05-05 13:49:08.788916+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/homepage/2/	7
+110	2017-05-05 13:49:15.98142+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+111	2017-05-05 13:49:16.663399+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/4/	7
+112	2017-05-05 13:49:17.547584+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+113	2017-05-05 13:49:18.242485+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/4/	7
+114	2017-05-05 13:49:19.187231+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+115	2017-05-05 13:49:30.619389+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+116	2017-05-05 13:49:35.672673+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+117	2017-05-05 13:49:35.711799+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+118	2017-05-05 13:49:38.329731+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/	7
+119	2017-05-05 13:49:58.739124+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+120	2017-05-05 13:49:58.790091+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+121	2017-05-05 13:50:02.460983+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/homepage/2/	7
+122	2017-05-05 13:50:02.509291+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+123	2017-05-05 13:50:18.132463+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+124	2017-05-05 13:50:22.057313+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/3/	7
+125	2017-05-05 13:50:22.114237+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+126	2017-05-05 13:50:25.083021+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/3/	7
+127	2017-05-05 13:50:25.130216+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+128	2017-05-05 13:50:51.812696+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+129	2017-05-05 13:50:51.869842+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+130	2017-05-05 13:50:55.913616+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/4/	7
+131	2017-05-05 13:50:55.961863+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+132	2017-05-05 13:51:00.778112+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+133	2017-05-05 13:51:00.824155+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+134	2017-05-05 13:51:03.244391+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/13/	7
+135	2017-05-05 13:51:03.291892+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+136	2017-05-05 13:51:10.798729+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+137	2017-05-05 13:51:10.853857+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+138	2017-05-05 13:51:13.171674+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/link/6/	7
+139	2017-05-05 13:51:13.224516+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+140	2017-05-05 13:52:11.917576+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+141	2017-05-05 13:52:11.963161+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+142	2017-05-05 13:52:15.156689+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/13/	7
+143	2017-05-05 13:52:15.20073+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+144	2017-05-05 13:52:18.172027+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+145	2017-05-05 13:52:18.228086+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+146	2017-05-05 13:52:23.716799+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/link/6/	7
+147	2017-05-05 13:52:23.763331+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+148	2017-05-05 13:52:27.949419+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+149	2017-05-05 13:52:27.998948+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+150	2017-05-05 13:52:32.584181+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/5/	7
+151	2017-05-05 13:52:32.632268+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+152	2017-05-05 13:52:35.036808+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+153	2017-05-05 13:52:35.086548+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+154	2017-05-05 13:52:36.773666+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/link/6/	7
+155	2017-05-05 13:52:36.817275+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+156	2017-05-05 13:52:42.024719+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+157	2017-05-05 13:52:42.076119+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+158	2017-05-05 13:52:44.527298+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/5/	7
+159	2017-05-05 13:52:44.585026+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+160	2017-05-05 13:52:48.292251+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+161	2017-05-05 13:52:48.343992+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+162	2017-05-05 13:52:50.890654+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/7/	7
+163	2017-05-05 13:52:50.94915+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+164	2017-05-05 13:54:23.795211+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+165	2017-05-05 13:54:24.1916+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+166	2017-05-05 13:54:24.243408+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+167	2017-05-05 13:54:27.799159+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/7/	7
+168	2017-05-05 13:54:27.847815+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+169	2017-05-05 13:54:30.966698+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+170	2017-05-05 13:54:31.020196+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+171	2017-05-05 13:54:33.427147+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/forms/form/8/	7
+172	2017-05-05 13:54:33.482389+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+173	2017-05-05 13:54:53.681968+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+174	2017-05-05 13:54:53.737525+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+175	2017-05-05 13:55:06.963533+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/forms/form/8/	7
+176	2017-05-05 13:55:07.019789+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+177	2017-05-05 13:55:10.738828+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+178	2017-05-05 13:55:21.129216+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/forms/form/8/	7
+179	2017-05-05 13:55:21.191685+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+180	2017-05-05 13:55:27.456913+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+181	2017-05-05 13:55:27.509513+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+182	2017-05-05 13:55:30.011032+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/9/	7
+183	2017-05-05 13:55:30.076627+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+184	2017-05-05 14:08:48.323384+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+185	2017-05-05 14:08:48.670997+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+186	2017-05-05 14:08:48.722271+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+187	2017-05-05 14:08:51.394672+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/10/	7
+188	2017-05-05 14:08:51.445102+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+189	2017-05-05 14:13:10.126391+00	visit	2	user_ip=192.168.56.1 http_method=POST http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin_keywords_submit/	7
+190	2017-05-05 14:13:10.456163+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+191	2017-05-05 14:13:10.522541+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+192	2017-05-05 14:13:15.837257+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/9/	7
+193	2017-05-05 14:13:15.893944+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+194	2017-05-05 14:13:32.111637+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+195	2017-05-05 14:13:32.170547+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+196	2017-05-05 14:13:35.372859+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/11/	7
+197	2017-05-05 14:13:35.430437+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+198	2017-05-05 14:13:40.72414+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/page/	7
+199	2017-05-05 14:13:40.788503+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+200	2017-05-05 14:13:42.511068+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/pages/richtextpage/12/	7
+201	2017-05-05 14:13:42.568646+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+202	2017-05-05 14:13:49.049127+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/sites/site/	7
+203	2017-05-05 14:13:49.098894+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+204	2017-05-05 14:13:51.688423+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/blog/blogpost/	7
+205	2017-05-05 14:13:51.731554+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+206	2017-05-05 14:13:53.299156+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/generic/threadedcomment/	7
+207	2017-05-05 14:13:53.343254+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+208	2017-05-05 14:13:54.951611+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/media-library/browse/	7
+209	2017-05-05 14:13:59.88942+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/media-library/rename/	7
+210	2017-05-05 14:14:03.117046+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/media-library/browse/	7
+211	2017-05-05 14:14:05.10835+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/media-library/browse/	7
+212	2017-05-05 14:14:07.920611+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/media-library/browse/	7
+213	2017-05-05 14:14:10.368129+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/sites/site/	7
+214	2017-05-05 14:14:10.417396+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+215	2017-05-05 14:14:15.042297+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/sites/site/1/	7
+216	2017-05-05 14:14:15.092063+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+217	2017-05-05 14:14:17.103009+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/sites/site/	7
+218	2017-05-05 14:14:18.451576+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/redirects/redirect/	7
+219	2017-05-05 14:14:18.493951+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+220	2017-05-05 14:14:20.809895+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/conf/setting/	7
+221	2017-05-05 14:14:20.854303+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+222	2017-05-05 14:15:16.638573+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/sites/site/	7
+223	2017-05-05 14:15:16.692813+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+224	2017-05-05 14:15:18.204349+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/redirects/redirect/	7
+225	2017-05-05 14:15:18.248944+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+226	2017-05-05 14:15:19.556301+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/conf/setting/	7
+227	2017-05-05 14:15:19.608698+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+228	2017-05-05 14:15:35.362452+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/	7
+229	2017-05-05 14:15:35.417085+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+230	2017-05-05 14:15:42.01467+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/4/	7
+231	2017-05-05 14:15:42.061876+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+232	2017-05-05 14:16:27.717945+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/	7
+233	2017-05-05 14:16:27.766535+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+234	2017-05-05 14:16:29.228224+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/	7
+235	2017-05-05 14:16:29.269878+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+236	2017-05-05 14:16:32.621664+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/1/	7
+237	2017-05-05 14:16:32.668351+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+238	2017-05-05 14:16:51.613413+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/	7
+239	2017-05-05 14:16:51.660561+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+240	2017-05-05 14:16:56.094141+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/	7
+241	2017-05-05 14:16:56.136741+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+242	2017-05-05 14:17:00.824456+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/	7
+243	2017-05-05 14:17:00.867035+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+244	2017-05-05 14:17:04.155813+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/	7
+245	2017-05-05 14:17:04.205097+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+246	2017-05-05 14:17:07.493521+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/4/	7
+247	2017-05-05 14:17:07.541823+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+248	2017-05-05 14:17:20.892518+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/	7
+249	2017-05-05 14:17:20.94119+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+250	2017-05-05 14:17:23.582906+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/1/	7
+251	2017-05-05 14:17:23.631642+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+252	2017-05-05 14:17:43.110817+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/group/	7
+253	2017-05-05 14:17:43.157939+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+254	2017-05-05 14:17:45.500007+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/	7
+255	2017-05-05 14:17:45.549392+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+256	2017-05-05 14:17:47.193115+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/auth/user/4/	7
+257	2017-05-05 14:17:47.244933+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+258	2017-05-05 14:18:01.971924+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/conf/setting/	7
+259	2017-05-05 14:18:02.022821+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+260	2017-05-05 14:18:13.815811+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/oauth2_provider/accesstoken/	7
+261	2017-05-05 14:18:13.864719+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+262	2017-05-05 14:18:16.504769+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/oauth2_provider/accesstoken/	7
+263	2017-05-05 14:18:16.542874+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+264	2017-05-05 14:18:19.346291+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/oauth2_provider/application/	7
+265	2017-05-05 14:18:19.393083+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+266	2017-05-05 14:18:20.854127+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/oauth2_provider/grant/	7
+267	2017-05-05 14:18:20.907772+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+268	2017-05-05 14:18:22.509487+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/oauth2_provider/refreshtoken/	7
+269	2017-05-05 14:18:22.55106+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+270	2017-05-05 14:18:25.098663+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/robots/rule/	7
+271	2017-05-05 14:18:25.141839+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+272	2017-05-05 14:18:27.347767+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/robots/rule/	7
+273	2017-05-05 14:18:27.386195+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+274	2017-05-05 14:18:29.161546+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/robots/url/	7
+275	2017-05-05 14:18:29.209823+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+276	2017-05-05 14:18:34.440133+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/security/cspreport/	7
+277	2017-05-05 14:18:34.481606+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+278	2017-05-05 14:18:38.079256+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/security/cspreport/	7
+279	2017-05-05 14:18:38.120411+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+280	2017-05-05 14:18:42.512666+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/security/passwordexpiry/	7
+281	2017-05-05 14:18:42.555206+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+282	2017-05-05 14:18:46.848188+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/quotamessage/add/	7
+283	2017-05-05 14:18:46.896695+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+284	2017-05-05 14:20:45.609969+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/	7
+285	2017-05-05 14:20:51.229753+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/quotamessage/1/	7
+286	2017-05-05 14:20:51.279809+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+287	2017-05-05 14:20:58.00192+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/siteconfiguration/1/	7
+288	2017-05-05 14:20:58.045984+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+289	2017-05-05 14:21:04.996446+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/userquota/	7
+290	2017-05-05 14:21:05.045538+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+291	2017-05-05 14:21:09.837984+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/theme/siteconfiguration/1/	7
+292	2017-05-05 14:21:09.893575+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/jsi18n/	7
+293	2017-05-05 14:24:29.356625+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=Unspecified user_email_domain=com request_url=/admin/	7
 \.
 
 
@@ -12364,7 +13162,7 @@ COPY hs_tracking_variable (id, "timestamp", name, type, value, session_id) FROM 
 -- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_variable_id_seq', 76, true);
+SELECT pg_catalog.setval('hs_tracking_variable_id_seq', 293, true);
 
 
 --
@@ -12378,6 +13176,7 @@ COPY hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 4	2017-02-02 17:23:27.980519+00	\N
 5	2017-02-02 17:27:56.524908+00	\N
 6	2017-02-02 17:28:40.809782+00	\N
+7	2017-05-05 13:43:41.849519+00	\N
 \.
 
 
@@ -12385,7 +13184,7 @@ COPY hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 -- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_visitor_id_seq', 6, true);
+SELECT pg_catalog.setval('hs_tracking_visitor_id_seq', 7, true);
 
 
 --
@@ -12464,16 +13263,16 @@ COPY pages_link (page_ptr_id) FROM stdin;
 COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, description, gen_description, created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order, parent_id, in_menus, titles, content_model, login_required) FROM stdin;
 11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	10	\N		Create Resource	richtextpage	f
 12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	11	\N		Sign Up	richtextpage	f
-2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
 3		1	My Resources	my-resources	My Resources	my-resources	t	2016-01-25 19:22:48.667099+00	2016-01-25 19:29:50.956511+00	2	2016-01-25 19:22:48+00	\N	\N	t	1	\N	1,2,3	My Resources	richtextpage	f
 4		1	Discover	search	Discover	Discover	t	2016-01-25 19:23:52.174668+00	2016-01-25 19:52:37.387455+00	2	2016-01-25 19:23:52+00	\N	\N	t	2	\N	1,2,3	Discover	richtextpage	f
 13		1	Collaborate	collaborate		collaborate	t	2016-06-23 17:07:04.042277+00	2016-06-23 17:07:04.042277+00	2	2016-06-23 17:07:04.008329+00	\N	\N	t	3	\N	1	Collaborate	richtextpage	f
-6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
 5		1	Help	help	Help	help	t	2016-01-25 19:25:35.644671+00	2016-01-25 19:25:35.644671+00	2	2016-01-25 19:25:35.643697+00	\N	\N	t	5	\N	1,2,3	Help	richtextpage	f
-7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	6	\N		Verify Account	richtextpage	f
 8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	7	\N		Resend Verification Email	form	f
-9		1	Terms of Use	terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2016-01-25 19:37:08.21102+00	2	2016-01-25 19:33:24+00	\N	\N	t	8	\N		Terms of Use	richtextpage	f
-10		1	Statement of Privacy	privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2016-01-25 19:36:36.646829+00	2	2016-01-25 19:34:22+00	\N	\N	t	9	\N		Statement of Privacy	richtextpage	f
+2		1	Home	/		xDCIShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2017-05-05 13:49:03.81146+00	2	2016-01-25 19:17:47+00	\N	\N	t	0	\N		Home	homepage	f
+6		1	Apps	https://appsdev.xdcishare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2017-05-05 13:52:11.655364+00	2	2016-01-25 19:26:44+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
+7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for xDCIShare! We have sent you an email from xdcishare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with xDCIShare.	t	2016-01-25 19:28:12.867432+00	2017-05-05 13:54:23.845+00	2	2016-01-25 19:28:12+00	\N	\N	t	6	\N		Verify Account	richtextpage	f
+9		1	Terms of Use	terms-of-use	Terms of Use	xDCIShare Terms of Use\nLast modified May 5, 2017	t	2016-01-25 19:33:24.439209+00	2017-05-05 14:08:48.384616+00	2	2016-01-25 19:33:24+00	\N	\N	t	8	\N		Terms of Use	richtextpage	f
+10		1	Statement of Privacy	privacy	Statement of Privacy	xDCIShare Statement of Privacy\nLast modified May 5, 2017	t	2016-01-25 19:34:22.084583+00	2017-05-05 14:13:10.178601+00	2	2016-01-25 19:34:22+00	\N	\N	t	9	\N		Statement of Privacy	richtextpage	f
 \.
 
 
@@ -12490,14 +13289,14 @@ SELECT pg_catalog.setval('pages_page_id_seq', 13, true);
 
 COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
 5	<p>help</p>
-7	<p class="p1">Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p class="p2"><a href="http://dev.hydroshare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
 3	<p>my-resources</p>
 11	<p>create resource</p>
-10	<h2 class="p1"><b>HydroShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
-9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
 12	<p>sign up</p>
 4	<p>Discover</p>
 13	<p>collaborate</p>
+7	<p class="p1">Thank you for signing up for xDCIShare! We have sent you an email from xdcishare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with xDCIShare.</p>\n<p class="p2"><a href="http://dev.xdcishare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
+9	<h2 class="p1"><b>xDCIShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified May 5, 2017<br></i></p>\n<p class="p2">Thank you for using the xDCIShare scientific data sharing system hosted at xdcishare.org.  xDCIShare services are provided by a team of researchers associated with the Renaissance Computing Institue of the University of North Carolina at Chapel Hill.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of the University of North Carolina at Chapel Hil. Your access to xdcishare.org is subject to your agreement to these Terms of Use. By using our services at xdcishare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of xdcishare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The xdcishare.org site is intended to support data and model sharing for scientific domains.  This is broadly interpreted to include any discipline or endeavor that has something to do with scientific domains.  You are responsible at all times for using xdcishare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to science. You agree that you will not in your use of xdcishare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use xdcishare.org to impersonate other parties or entities;</li>\n<li class="li2">Use xdcishare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of xdcishare.org or the hardware or software of any other person who accesses xdcishare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on xdcishare.org, except where such alterations or deletions are consistent with the access control settings of that content in xdcishare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of xdcishare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to xdcishare.org in these areas will be complete and accurate, and that you will neither register under the name of another person or entity of nor attempt to enter xdcishare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Xdcishare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of xdcishare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access xdcishare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">XDCISHARE.ORG AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Xdcishare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from xdcishare.org. Xdcishare.org and its participating institutions do not warrant that xdcishare.org will operate in an uninterrupted or error-free manner or that xdcishare.org is free of viruses or other harmful components. Use of xdcishare.org is at your own risk.</p>\n<p class="p2">You agree that xdcishare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of any resource that you access through xdcishare.org.</p>\n<p class="p2">The xdcishare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the xDCIShare research team or their sponsors, nor does their posting imply the endorsement of xDCIShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to xdcishare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
+10	<h2 class="p1"><b>xDCIShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified May 5, 2017<br></i></p>\n<p class="p2">XDCIShare is operated by a team of researchers associated with the Renaissance Computing Institute of the University of North Carolina at Chapel Hill.  The services are hosted at participating institutions including the Renaissance Computing Institute of the University of North Carolina at Chapel Hill.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of xdcioshare.org, including the use of tracking cookies to facilitate xdcishare.org security procedures. The xDCIShare participating institutions regularly request xdcishare.org usages statistics and other information. Usage of xdcishare.org is monitored and usage statistics are collected and reported on a regular basis. Xdcishare.org also reserves the right to contact you to request additional information or to keep you updated on changes to xdcishare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While xDCIoShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on xdcishare.org is potentially available to other users of xdcishare.org and the public. The xDCIShare participating institutions and xdcishare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on xdcishare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
 \.
 
 
@@ -12675,6 +13474,36 @@ SELECT pg_catalog.setval('robots_url_id_seq', 1, false);
 
 
 --
+-- Data for Name: security_cspreport; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY security_cspreport (id, document_uri, referrer, blocked_uri, violated_directive, original_policy, date_received, sender_ip, user_agent) FROM stdin;
+\.
+
+
+--
+-- Name: security_cspreport_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('security_cspreport_id_seq', 1, false);
+
+
+--
+-- Data for Name: security_passwordexpiry; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY security_passwordexpiry (id, password_expiry_date, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: security_passwordexpiry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('security_passwordexpiry_id_seq', 1, false);
+
+
+--
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -12686,8 +13515,8 @@ COPY spatial_ref_sys  FROM stdin;
 -- Data for Name: theme_homepage; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY theme_homepage (page_ptr_id, heading, slide_in_one_icon, slide_in_one, slide_in_two_icon, slide_in_two, slide_in_three_icon, slide_in_three, header_background, header_image, welcome_heading, content, recent_blog_heading, number_recent_posts) FROM stdin;
-2	HydroShare									Share and Collaborate	<p class="p1">HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.</p>	Latest blog posts	3
+COPY theme_homepage (page_ptr_id, heading, slide_in_one_icon, slide_in_one, slide_in_two_icon, slide_in_two, slide_in_three_icon, slide_in_three, header_background, header_image, welcome_heading, content, recent_blog_heading, number_recent_posts, message_end_date, message_start_date, message_type, show_message) FROM stdin;
+2	xDCIShare									Share and Collaborate	<p class="p1">xDCIShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.</p>	Latest blog posts	3	2047-05-05	2016-01-25	warning	f
 \.
 
 
@@ -12707,11 +13536,27 @@ SELECT pg_catalog.setval('theme_iconbox_id_seq', 1, false);
 
 
 --
+-- Data for Name: theme_quotamessage; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY theme_quotamessage (id, warning_content_prepend, grace_period_content_prepend, enforce_content_prepend, content, soft_limit_percent, hard_limit_percent, grace_period) FROM stdin;
+1	Your quota for xDCIShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in xDCIShare. 	You have exceeded your xDCIShare quota. Your quota for xDCIShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in xDCIShare. 	Your action to add content to xDCIShare was refused because you have exceeded your quota. Your quota for xDCIShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact support@xdcishare.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://pages.xdcishare.org/ for more information about the quota policy.	80	125	7
+\.
+
+
+--
+-- Name: theme_quotamessage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('theme_quotamessage_id_seq', 1, true);
+
+
+--
 -- Data for Name: theme_siteconfiguration; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY theme_siteconfiguration (id, col1_heading, col1_content, col2_heading, col2_content, col3_heading, col3_content, twitter_link, facebook_link, pinterest_link, youtube_link, github_link, linkedin_link, vk_link, gplus_link, has_social_network_links, copyright, site_id) FROM stdin;
-1	Contact us	<p class="p1">Email us at <a href="mailto:support@hydroshare.org">hydroshare.org</a></p>	Follow		Open Source	<p class="p1">HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"><b>Github</b></a>.</p>\n<p class="p1">Report a bug <a href="https://github.com/hydroshare/hydroshare/issues?state=open"><b>here</b></a></p>\n<p class="p1">This is HydroShare Version<b> DEVELOPMENT</b></p>	http://twitter.com/cuahsi 	https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590		http://www.youtube.com/user/CUAHSI	http://github.com/hydroshare	https://www.linkedin.com/company/2632114			t	&copy {% now "Y" %} CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.	1
+1	Contact us	<p class="p1">Email us at <a href="mailto:support@xdcishare.org">xdcishare.org</a></p>	Follow		Version	<p>This is xDCIShare Version<b> DEVELOPMENT</b></p>									f	&copy 2017-{% now "Y" %} University of North Carolina at Chapel Hill. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.\r\n\r\n&copy 2012-2016 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090.  Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.	1
 \.
 
 
@@ -12736,6 +13581,21 @@ COPY theme_userprofile (id, picture, title, subject_areas, organization, phone_1
 --
 
 SELECT pg_catalog.setval('theme_userprofile_id_seq', 4, true);
+
+
+--
+-- Data for Name: theme_userquota; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY theme_userquota (id, allocated_value, used_value, unit, zone, remaining_grace_period, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: theme_userquota_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('theme_userquota_id_seq', 1, false);
 
 
 --
@@ -13435,6 +14295,14 @@ ALTER TABLE ONLY hs_access_control_groupmembershiprequest
 
 
 --
+-- Name: hs_access_control_groupresourcep_group_id_157babc573be246e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance
+    ADD CONSTRAINT hs_access_control_groupresourcep_group_id_157babc573be246e_uniq UNIQUE (group_id, resource_id, start);
+
+
+--
 -- Name: hs_access_control_groupresourcepr_group_id_51ccf8b056500a7_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13448,6 +14316,14 @@ ALTER TABLE ONLY hs_access_control_groupresourceprivilege
 
 ALTER TABLE ONLY hs_access_control_groupresourceprivilege
     ADD CONSTRAINT hs_access_control_groupresourceprivilege_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance
+    ADD CONSTRAINT hs_access_control_groupresourceprovenance_pkey PRIMARY KEY (id);
 
 
 --
@@ -13499,6 +14375,22 @@ ALTER TABLE ONLY hs_access_control_usergroupprivilege
 
 
 --
+-- Name: hs_access_control_usergroupproven_user_id_548c10e220120a3e_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprovenance
+    ADD CONSTRAINT hs_access_control_usergroupproven_user_id_548c10e220120a3e_uniq UNIQUE (user_id, group_id, start);
+
+
+--
+-- Name: hs_access_control_usergroupprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprovenance
+    ADD CONSTRAINT hs_access_control_usergroupprovenance_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_access_control_userresourcepri_user_id_424814b34310c9d3_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13512,6 +14404,22 @@ ALTER TABLE ONLY hs_access_control_userresourceprivilege
 
 ALTER TABLE ONLY hs_access_control_userresourceprivilege
     ADD CONSTRAINT hs_access_control_userresourceprivilege_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_access_control_userresourcepro_user_id_52195a50359334ec_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance
+    ADD CONSTRAINT hs_access_control_userresourcepro_user_id_52195a50359334ec_uniq UNIQUE (user_id, resource_id, start);
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance
+    ADD CONSTRAINT hs_access_control_userresourceprovenance_pkey PRIMARY KEY (id);
 
 
 --
@@ -14048,6 +14956,30 @@ ALTER TABLE ONLY hs_file_types_georasterlogicalfile
 
 ALTER TABLE ONLY hs_file_types_georasterlogicalfile
     ADD CONSTRAINT hs_file_types_georasterlogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_netcdffilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_netcdffilemetadata
+    ADD CONSTRAINT hs_file_types_netcdffilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_netcdflogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_netcdflogicalfile
+    ADD CONSTRAINT hs_file_types_netcdflogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_netcdflogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_netcdflogicalfile
+    ADD CONSTRAINT hs_file_types_netcdflogicalfile_pkey PRIMARY KEY (id);
 
 
 --
@@ -15043,6 +15975,30 @@ ALTER TABLE ONLY robots_url
 
 
 --
+-- Name: security_cspreport_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY security_cspreport
+    ADD CONSTRAINT security_cspreport_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: security_passwordexpiry_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY security_passwordexpiry
+    ADD CONSTRAINT security_passwordexpiry_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: security_passwordexpiry_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY security_passwordexpiry
+    ADD CONSTRAINT security_passwordexpiry_user_id_key UNIQUE (user_id);
+
+
+--
 -- Name: theme_homepage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -15056,6 +16012,14 @@ ALTER TABLE ONLY theme_homepage
 
 ALTER TABLE ONLY theme_iconbox
     ADD CONSTRAINT theme_iconbox_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: theme_quotamessage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY theme_quotamessage
+    ADD CONSTRAINT theme_quotamessage_pkey PRIMARY KEY (id);
 
 
 --
@@ -15080,6 +16044,22 @@ ALTER TABLE ONLY theme_userprofile
 
 ALTER TABLE ONLY theme_userprofile
     ADD CONSTRAINT theme_userprofile_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: theme_userquota_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY theme_userquota
+    ADD CONSTRAINT theme_userquota_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: theme_userquota_user_id_329a4f07aa9f15a4_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY theme_userquota
+    ADD CONSTRAINT theme_userquota_user_id_329a4f07aa9f15a4_uniq UNIQUE (user_id, zone);
 
 
 --
@@ -15853,6 +16833,27 @@ CREATE INDEX hs_access_control_groupresourceprivilege_dc2a4728 ON hs_access_cont
 
 
 --
+-- Name: hs_access_control_groupresourceprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupresourceprovenance_0e939a4f ON hs_access_control_groupresourceprovenance USING btree (group_id);
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupresourceprovenance_7e847bf8 ON hs_access_control_groupresourceprovenance USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_groupresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupresourceprovenance_e2f3ef5b ON hs_access_control_groupresourceprovenance USING btree (resource_id);
+
+
+--
 -- Name: hs_access_control_usergroupprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -15874,6 +16875,27 @@ CREATE INDEX hs_access_control_usergroupprivilege_dc2a4728 ON hs_access_control_
 
 
 --
+-- Name: hs_access_control_usergroupprovenance_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_usergroupprovenance_0e939a4f ON hs_access_control_usergroupprovenance USING btree (group_id);
+
+
+--
+-- Name: hs_access_control_usergroupprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_usergroupprovenance_7e847bf8 ON hs_access_control_usergroupprovenance USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_usergroupprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_usergroupprovenance_e8701ad4 ON hs_access_control_usergroupprovenance USING btree (user_id);
+
+
+--
 -- Name: hs_access_control_userresourceprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -15892,6 +16914,27 @@ CREATE INDEX hs_access_control_userresourceprivilege_82c60f9f ON hs_access_contr
 --
 
 CREATE INDEX hs_access_control_userresourceprivilege_9e767b7c ON hs_access_control_userresourceprivilege USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprovenance_7e847bf8 ON hs_access_control_userresourceprovenance USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprovenance_e2f3ef5b ON hs_access_control_userresourceprovenance USING btree (resource_id);
+
+
+--
+-- Name: hs_access_control_userresourceprovenance_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprovenance_e8701ad4 ON hs_access_control_userresourceprovenance USING btree (user_id);
 
 
 --
@@ -16903,6 +17946,13 @@ CREATE INDEX theme_siteconfiguration_9365d6e7 ON theme_siteconfiguration USING b
 
 
 --
+-- Name: theme_userquota_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX theme_userquota_e8701ad4 ON theme_userquota USING btree (user_id);
+
+
+--
 -- Name: D06f823643368bccb48b891b95ec0ad8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -17231,6 +18281,14 @@ ALTER TABLE ONLY django_docker_processes_dockerenvvar
 
 
 --
+-- Name: D763f5ed6fe4d4d08ecfcae173cbca3d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance
+    ADD CONSTRAINT "D763f5ed6fe4d4d08ecfcae173cbca3d" FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D77a94435500366d22adf10c6c1c223f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -17415,6 +18473,14 @@ ALTER TABLE ONLY hs_swat_modelinstance_swatmodelinstancemetadata
 
 
 --
+-- Name: b517e4a4254c99705d2ef3b2b833cff4; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_netcdflogicalfile
+    ADD CONSTRAINT b517e4a4254c99705d2ef3b2b833cff4 FOREIGN KEY (metadata_id) REFERENCES hs_file_types_netcdffilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: b63b96a572d7b3efb2f8fb476540a554; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -17572,6 +18638,14 @@ ALTER TABLE ONLY djcelery_periodictask
 
 ALTER TABLE ONLY djcelery_taskstate
     ADD CONSTRAINT djcelery_taskstate_worker_id_fkey FOREIGN KEY (worker_id) REFERENCES djcelery_workerstate(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: e19cf6cec3169736eacf85ac0d3461fb; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance
+    ADD CONSTRAINT e19cf6cec3169736eacf85ac0d3461fb FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -17895,6 +18969,14 @@ ALTER TABLE ONLY hs_access_control_groupresourceprivilege
 
 
 --
+-- Name: hs_access_control_g_grantor_id_3e5d815f5ca90e8a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance
+    ADD CONSTRAINT hs_access_control_g_grantor_id_3e5d815f5ca90e8a_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_gr_group_id_1bd0754af26faaf7_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -17911,11 +18993,35 @@ ALTER TABLE ONLY hs_access_control_groupresourceprivilege
 
 
 --
+-- Name: hs_access_control_gro_group_id_71a5c4d23eb742c_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprovenance
+    ADD CONSTRAINT hs_access_control_gro_group_id_71a5c4d23eb742c_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_u_grantor_id_2b562b352020c1dd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance
+    ADD CONSTRAINT hs_access_control_u_grantor_id_2b562b352020c1dd_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_access_control_userresourceprivilege
     ADD CONSTRAINT hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_u_grantor_id_4f35ffdf779659db_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprovenance
+    ADD CONSTRAINT hs_access_control_u_grantor_id_4f35ffdf779659db_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -17935,11 +19041,35 @@ ALTER TABLE ONLY hs_access_control_usergroupprivilege
 
 
 --
+-- Name: hs_access_control_user_group_id_e4144ab68f857d_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprovenance
+    ADD CONSTRAINT hs_access_control_user_group_id_e4144ab68f857d_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_access_control_useraccess
     ADD CONSTRAINT hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_user_user_id_2f4a1c58f99f6ed2_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprovenance
+    ADD CONSTRAINT hs_access_control_user_user_id_2f4a1c58f99f6ed2_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_user_user_id_4569a2ddb14e3c0a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprovenance
+    ADD CONSTRAINT hs_access_control_user_user_id_4569a2ddb14e3c0a_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -18647,6 +19777,14 @@ ALTER TABLE ONLY robots_rule_sites
 
 
 --
+-- Name: security_passwordexpiry_user_id_64321ff9e3cc9b_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY security_passwordexpiry
+    ADD CONSTRAINT security_passwordexpiry_user_id_64321ff9e3cc9b_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: sitepermission_id_refs_id_7dccdcbd; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18687,6 +19825,14 @@ ALTER TABLE ONLY theme_userprofile
 
 
 --
+-- Name: theme_userquota_user_id_4ef704d14e5a5ddd_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY theme_userquota
+    ADD CONSTRAINT theme_userquota_user_id_4ef704d14e5a5ddd_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: to_blogpost_id_refs_id_6404941b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18706,5 +19852,97 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 --
 -- PostgreSQL database dump complete
+--
+
+\connect template1
+
+SET default_transaction_read_only = off;
+
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: template1; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON DATABASE template1 IS 'default template for new databases';
+
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs';
+
+
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
+
+
+SET search_path = public, pg_catalog;
+
+--
+-- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY spatial_ref_sys  FROM stdin;
+\.
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+--
+-- PostgreSQL database cluster dump complete
 --
 
