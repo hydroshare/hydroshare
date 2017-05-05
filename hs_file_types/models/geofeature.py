@@ -306,11 +306,11 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
 
     :param resource: an instance of BaseResource
     :param res_file: an instance of ResourceFile
-    :param file_type: A flag to control if extraction being done for file type or not
+    :param file_type: A flag to control if extraction being done for file type or resource type
     :return: a dict of extracted metadata, a list file paths of shape related files on the
     temp directory, a list of resource files retrieved from iRODS for this processing
     """
-    shape_files, shp_res_files = _get_all_related_shp_files(resource, res_file)
+    shape_files, shp_res_files = _get_all_related_shp_files(resource, res_file, file_type=file_type)
     temp_dir = os.path.dirname(shape_files[0])
     if not _check_if_shape_files(shape_files):
         if res_file.extension == '.shp':
@@ -341,7 +341,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
         else:
             msg = "Failed to parse the .shp file. Error{}"
 
-        msg = msg.format(ex.message)      
+        msg = msg.format(ex.message)
         raise ValidationError(msg)
 
 
@@ -406,7 +406,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
                     logical_file.metadata.save()
 
 
-def _get_all_related_shp_files(resource, selected_resource_file):
+def _get_all_related_shp_files(resource, selected_resource_file, file_type):
     """
     This helper function copies all the related shape files to a temp directory
     and return a list of those temp file paths as well as a list of existing related
@@ -414,6 +414,7 @@ def _get_all_related_shp_files(resource, selected_resource_file):
     :param resource: an instance of BaseResource to which the *selecetd_resource_file* belongs
     :param selected_resource_file: an instance of ResourceFile selected by the user to set
     GeoFeaureFile type (the file must be a .shp or a .zip file)
+    :param file_type: a flag (True/False) to control resource VS file type actions
     :return: a list of temp file paths for all related shape files, and a list of corresponding
      resource file objects
     """
@@ -422,11 +423,16 @@ def _get_all_related_shp_files(resource, selected_resource_file):
     temp_dir = ''
     if selected_resource_file.extension == '.shp':
         for f in resource.files.all():
-            if f.extension in GeoFeatureLogicalFile.get_allowed_storage_file_types() and \
-                    f.has_generic_logical_file:
-                # compare without the file extension (-4)
-                if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
-                    shape_res_files.append(f)
+            if f.extension in GeoFeatureLogicalFile.get_allowed_storage_file_types():
+                if file_type:
+                    if f.has_generic_logical_file:
+                        # compare without the file extension (-4)
+                        if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
+                            shape_res_files.append(f)
+                else:
+                    # compare without the file extension (-4)
+                    if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
+                        shape_res_files.append(f)
 
         for f in shape_res_files:
             temp_file = utils.get_file_from_irods(f)

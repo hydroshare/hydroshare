@@ -5,13 +5,15 @@ import zipfile
 import json
 import logging
 
+from django.db import transaction
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
+from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile, \
     get_resource_file_name, delete_resource_file_only
-from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
+from hs_core.signals import pre_create_resource, post_create_resource, pre_metadata_element_create,\
                             pre_metadata_element_update, pre_delete_file_from_resource,\
                             pre_add_files_to_resource, post_add_files_to_resource
 
@@ -20,6 +22,8 @@ from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
 from hs_geographic_feature_resource.models import GeographicFeatureResource
+
+from hs_file_types.models import geofeature
 
 logger = logging.getLogger(__name__)
 
@@ -263,8 +267,72 @@ def parse_shp_zshp(uploadedFileType, baseFilename,
         raise Exception("Parse Shapefiles Failed!")
 
 
+@receiver(post_create_resource, sender=GeographicFeatureResource)
+def geofeature_post_create_resource(sender, **kwargs):
+    # here we need to check if the resource has any files
+    # and make sure the resource then has the 3 required files
+    # if any of the required shape file is missing then we will delete all files
+
+    resource = kwargs['resource']
+    res_file = None
+    err_msg = "Required shape files are missing. Files were not uploaded."
+    if resource.files.all().count() == 0:
+        return
+    elif resource.files.all().count() == 1:
+        # this file has to be a zip file
+        res_file = resource.files.all().first()
+        if res_file.extension != '.zip':
+            res_file.delete()
+            raise ValidationError(err_msg)
+    elif resource.files.all().count() < 3:
+        # there needs to be 3 file at least
+        for f in resource.files.all():
+            f.delete()
+        raise ValidationError(err_msg)
+
+    # process the uploaded files
+    if res_file is None:
+        # find the shp file
+        for f in resource.files.all():
+            if f.extension == '.shp':
+                res_file = f
+                break
+        # if shp file doesn't exist then delete all uploaded files
+        if res_file is None:
+            for f in resource.files.all():
+                f.delete()
+            raise ValidationError(err_msg)
+    try:
+        # validate files and extract metadata
+        meta_dict, shape_files, shp_res_files = geofeature.extract_metadata_and_files(
+            resource, res_file, file_type=False)
+    except Exception:
+        # need to delete all resource files as these files failed validation
+        for f in resource.files.all():
+            f.delete()
+        raise ValidationError(err_msg)
+    # upload generated files in case of zip file
+    if res_file.extension == '.zip':
+        with transaction.atomic():
+            # delete the zip file
+            res_file.delete()
+            # uploaded the extracted files
+            for fl in shape_files:
+                uploaded_file = UploadedFile(file=open(fl, 'rb'),
+                                             name=os.path.basename(fl))
+                utils.add_file_to_resource(resource, uploaded_file)
+    # add extracted metadata to the resource
+    xml_file = ''
+    for f in shape_files:
+        if f.endswith('.xml'):
+            xml_file = f
+            break
+    geofeature.add_metadata(resource, meta_dict, xml_file)
+
+
+# TODO: Pabitra - delete the pre resource create handler
 # receiver used to extract metadata after user click on "create resource"
-@receiver(pre_create_resource, sender=GeographicFeatureResource)
+# @receiver(pre_create_resource, sender=GeographicFeatureResource)
 def geofeature_pre_create_resource(sender, **kwargs):
 
     tmp_dir = None
