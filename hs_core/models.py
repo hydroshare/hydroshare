@@ -1232,16 +1232,16 @@ class Coverage(AbstractMetaDataElement):
                             td(self.value['east'])
             else:
                 legend('Temporal Coverage')
+                start_date = parser.parse(self.value['start'])
+                end_date = parser.parse(self.value['end'])
                 with table(cls='custom-table'):
                     with tbody():
                         with tr():
                             get_th('Start Date')
-                            td(self.value['start'], id='temporal_start_date',
-                               data_date=self.value['start'])
+                            td(start_date.strftime('%m/%d/%Y'))
                         with tr():
                             get_th('End Date')
-                            td(self.value['end'], id='temporal_end_date',
-                               data_date=self.value['end'])
+                            td(end_date.strftime('%m/%d/%Y'))
 
         return root_div.render(pretty=pretty)
 
