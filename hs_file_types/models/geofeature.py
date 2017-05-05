@@ -200,21 +200,17 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @classmethod
     def set_file_type(cls, resource, file_id, user):
         """
-            Sets a tif or zip raster resource file to GeoRasterFile type
-            :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as GeoRasterFile type
-            :param user: user who is setting the file type
-            :return:
-            """
+        Sets a tif or zip raster resource file to GeoRasterFile type
+        :param resource: an instance of resource type CompositeResource
+        :param file_id: id of the resource file to be set as GeoFeatureFile type
+        :param user: user who is setting the file type
+        :return:
+        """
 
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder
 
         log = logging.getLogger()
-
-        def clean_up_temp_dir(temp_dir):
-            if os.path.isdir(temp_dir):
-                shutil.rmtree(temp_dir)
 
         # get the file from irods
         res_file = utils.get_resource_file_by_id(resource, file_id)
@@ -226,55 +222,24 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
             raise ValidationError("Not a valid geographic feature file.")
 
         if not res_file.has_generic_logical_file:
-            raise ValidationError("Selected file must be generic file type.")
+            raise ValidationError("Selected file must be part of a generic file type.")
 
-        is_selected_file_shp_file = False
-        xml_file = ''
-        shp_file = ''
-        # get all the geo feature related files on to temp dir as well as the list of
-        # related resource file objects
-        if res_file.extension == '.shp':
-            is_selected_file_shp_file = True
-            shape_files, shp_res_files = cls.get_all_related_shp_files(resource, res_file)
-        elif res_file.extension == '.zip':
-            shape_files, shp_res_files = cls.get_all_related_shp_files(resource, res_file)
-        else:
-            raise ValidationError("Selected file must be a .shp file or a .zip file")
+        try:
+            meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
+        except ValidationError as ex:
+            log.exception(ex.message)
+            raise ex
 
         # hold on to temp dir for final clean up
         temp_dir = os.path.dirname(shape_files[0])
-        if not check_if_shape_files(shape_files):
-            if is_selected_file_shp_file:
-                err_msg = "One or more dependent shape files are missing at location: " \
-                          "{folder_path} or one or more files are of not shape file type."
-                err_msg = err_msg.format(folder_path=res_file.short_path)
-            else:
-                err_msg = "One or more dependent shape files are missing in the selected zip file" \
-                          "or one or more files are of not shape file type."
-            clean_up_temp_dir(temp_dir)
-            raise ValidationError(err_msg)
-        # base file name (no path included)
         file_name = res_file.file_name
         # file name without the extension
         base_file_name = file_name.split(".")[0]
+        xml_file = ''
         for f in shape_files:
-            if f.endswith('.shp'):
-                shp_file = f
-            elif f.endswith('.xml'):
+            if f.endswith('.xml'):
                 xml_file = f
-            if shp_file and xml_file:
                 break
-        try:
-            meta_dict = parse_shp_zshp(shp_file_full_path=shp_file)
-        except Exception as ex:
-            # remove temp dir
-            clean_up_temp_dir(temp_dir)
-            msg = "GeoFeature file type. Error when setting file type. Error:{}"
-            msg = msg.format(ex.message)
-            log.exception(msg)
-            # TODO: in case of any error put the original file back and
-            # delete the folder that was created
-            raise ValidationError(msg)
 
         file_folder = res_file.file_folder
         with transaction.atomic():
@@ -326,114 +291,179 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 raise ValidationError(msg)
             finally:
                 # remove temp dir
-                clean_up_temp_dir(temp_dir)
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
 
             log.info("GeoFeature file type was created.")
-            # populate logical file level metadata
-            if "coverage" in meta_dict.keys():
-                coverage_dict = meta_dict["coverage"]['Coverage']
-                logical_file.metadata.create_element('coverage',
-                                                     type=coverage_dict['type'],
-                                                     value=coverage_dict['value'])
-            originalcoverage_dict = meta_dict["originalcoverage"]['originalcoverage']
-            logical_file.metadata.create_element('originalcoverage',
-                                                 **originalcoverage_dict)
-            field_info_array = meta_dict["field_info_array"]
-            for field_info in field_info_array:
-                field_info_dict = field_info["fieldinformation"]
-                logical_file.metadata.create_element('fieldinformation',
-                                                     **field_info_dict)
-            geometryinformation_dict = meta_dict["geometryinformation"]
-            logical_file.metadata.create_element('geometryinformation',
-                                                 **geometryinformation_dict)
-            if xml_file:
-                shp_xml_metadata_list = parse_shp_xml(xml_file)
-                for shp_xml_metadata in shp_xml_metadata_list:
-                    if 'description' in shp_xml_metadata:
-                        # overwrite existing description metadata - at the resource level
-                        if not resource.metadata.description:
-                            abstract = shp_xml_metadata['description']['abstract']
-                            resource.metadata.create_element('description',
-                                                             abstract=abstract)
-                    elif 'title' in shp_xml_metadata:
-                        title = shp_xml_metadata['title']['value']
-                        if resource.metadata.title.value.lower() == 'untitled resource':
-                            resource.metadata.create_element('title', value=title)
-                        else:
-                            logical_file.dataset_name = title
-                            logical_file.save()
-                    elif 'subject' in shp_xml_metadata:
-                        # append new keywords to existing keywords - at the resource level
-                        existing_keywords = [subject.value.lower() for
-                                             subject in resource.metadata.subjects.all()]
-                        keyword = shp_xml_metadata['subject']['value']
-                        if keyword.lower() not in existing_keywords:
-                            resource.metadata.create_element('subject', value=keyword)
-                        # add keywords at the file level
-                        logical_file.metadata.keywords += [keyword]
-                        logical_file.metadata.save()
+            add_metadata(resource, meta_dict, xml_file, logical_file)
 
             log.info("GeoFeature file type and resource level metadata updated.")
 
-    @classmethod
-    def get_all_related_shp_files(cls, resource, selected_resource_file):
-        """
-        This helper function copies all the related shape files to a temp directory
-        and return a list of those temp file paths as well as a list of existing related
-        resource file objects
-        :param resource: an instance of BaseResource to which the *selecetd_resource_file* belongs
-        :param selected_resource_file: an instance of ResourceFile selected by the user to set
-        GeoFeaureFile type (the file must be a .shp or a .zip file)
-        :return: a list of temp file paths for all related shape files, and a list of corresponding
-         resource file objects
-        """
-        shape_temp_files = []
-        shape_res_files = []
-        temp_dir = ''
-        if selected_resource_file.extension == '.shp':
-            for f in resource.files.all():
-                if f.extension in cls.get_allowed_storage_file_types() and \
-                        f.has_generic_logical_file:
-                    # compare without the file extension (-4)
-                    if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
-                        shape_res_files.append(f)
 
-            for f in shape_res_files:
-                temp_file = utils.get_file_from_irods(f)
-                if not temp_dir:
-                    temp_dir = os.path.dirname(temp_file)
-                else:
-                    file_temp_dir = os.path.dirname(temp_file)
-                    dst_dir = os.path.join(temp_dir, os.path.basename(temp_file))
-                    shutil.copy(temp_file, dst_dir)
-                    shutil.rmtree(file_temp_dir)
-                    temp_file = dst_dir
-                shape_temp_files.append(temp_file)
+def extract_metadata_and_files(resource, res_file, file_type=True):
+    """
+    validates shape files and extracts metadata
 
-        elif selected_resource_file.extension == '.zip':
-            temp_file = utils.get_file_from_irods(selected_resource_file)
-            temp_dir = os.path.dirname(temp_file)
-            if not zipfile.is_zipfile(temp_file):
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
-                raise ValidationError('Selected file is not a zip file')
-            zf = zipfile.ZipFile(temp_file, 'r')
-            zf.extractall(temp_dir)
-            zf.close()
-            for dirpath, _, filenames in os.walk(temp_dir):
-                for name in filenames:
-                    if name == selected_resource_file.file_name:
-                        # skip the user selected zip file
-                        continue
-                    file_path = os.path.abspath(os.path.join(dirpath, name))
-                    shape_temp_files.append(file_path)
+    :param resource: an instance of BaseResource
+    :param res_file: an instance of ResourceFile
+    :param file_type: A flag to control if extraction being done for file type or not
+    :return: a dict of extracted metadata, a list file paths of shape related files on the
+    temp directory, a list of resource files retrieved from iRODS for this processing
+    """
+    shape_files, shp_res_files = _get_all_related_shp_files(resource, res_file)
+    temp_dir = os.path.dirname(shape_files[0])
+    if not _check_if_shape_files(shape_files):
+        if res_file.extension == '.shp':
+            err_msg = "One or more dependent shape files are missing at location: " \
+                      "{folder_path} or one or more files are of not shape file type."
+            err_msg = err_msg.format(folder_path=res_file.short_path)
+        else:
+            err_msg = "One or more dependent shape files are missing in the selected zip file" \
+                      "or one or more files are of not shape file type."
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir)
+        raise ValidationError(err_msg)
 
-            shape_res_files.append(selected_resource_file)
+    shp_file = ''
+    for f in shape_files:
+        if f.endswith('.shp'):
+            shp_file = f
+            break
+    try:
+        meta_dict = _parse_shp_zshp(shp_file_full_path=shp_file)
+        return meta_dict, shape_files, shp_res_files
+    except Exception as ex:
+        # remove temp dir
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir)
+        if file_type:
+            msg = "GeoFeature file type. Error when setting file type. Error:{}"
+        else:
+            msg = "Failed to parse the .shp file. Error{}"
 
-        return shape_temp_files, shape_res_files
+        msg = msg.format(ex.message)      
+        raise ValidationError(msg)
 
 
-def check_if_shape_files(files):
+def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
+    """
+
+    :param resource: an instance of BaseResource
+    :param metadata_dict: dict containing extracted metadata
+    :param xml_file: file path (on temp directory) of the xml file that is part of the
+    geo feature files
+    :param logical_file: an instance of GeoFeatureLogicalFile if metadata needs to be part of the
+    logical file
+    :return:
+    """
+    # populate resource and logical file level metadata
+    is_file_type = logical_file is not None
+    if logical_file is None:
+        logical_file = resource
+
+    if "coverage" in metadata_dict.keys():
+        coverage_dict = metadata_dict["coverage"]['Coverage']
+        logical_file.metadata.create_element('coverage',
+                                             type=coverage_dict['type'],
+                                             value=coverage_dict['value'])
+    originalcoverage_dict = metadata_dict["originalcoverage"]['originalcoverage']
+    logical_file.metadata.create_element('originalcoverage',
+                                         **originalcoverage_dict)
+    field_info_array = metadata_dict["field_info_array"]
+    for field_info in field_info_array:
+        field_info_dict = field_info["fieldinformation"]
+        logical_file.metadata.create_element('fieldinformation',
+                                             **field_info_dict)
+    geometryinformation_dict = metadata_dict["geometryinformation"]
+    logical_file.metadata.create_element('geometryinformation',
+                                         **geometryinformation_dict)
+    if xml_file:
+        shp_xml_metadata_list = _parse_shp_xml(xml_file)
+        for shp_xml_metadata in shp_xml_metadata_list:
+            if 'description' in shp_xml_metadata:
+                # overwrite existing description metadata - at the resource level
+                if not resource.metadata.description:
+                    abstract = shp_xml_metadata['description']['abstract']
+                    resource.metadata.create_element('description',
+                                                     abstract=abstract)
+            elif 'title' in shp_xml_metadata:
+                title = shp_xml_metadata['title']['value']
+                if resource.metadata.title.value.lower() == 'untitled resource':
+                    resource.metadata.create_element('title', value=title)
+                if is_file_type:
+                    logical_file.dataset_name = title
+                    logical_file.save()
+            elif 'subject' in shp_xml_metadata:
+                # append new keywords to existing keywords - at the resource level
+                existing_keywords = [subject.value.lower() for
+                                     subject in resource.metadata.subjects.all()]
+                keyword = shp_xml_metadata['subject']['value']
+                if keyword.lower() not in existing_keywords:
+                    resource.metadata.create_element('subject', value=keyword)
+                # add keywords at the logical file level
+                if is_file_type:
+                    logical_file.metadata.keywords += [keyword]
+                    logical_file.metadata.save()
+
+
+def _get_all_related_shp_files(resource, selected_resource_file):
+    """
+    This helper function copies all the related shape files to a temp directory
+    and return a list of those temp file paths as well as a list of existing related
+    resource file objects
+    :param resource: an instance of BaseResource to which the *selecetd_resource_file* belongs
+    :param selected_resource_file: an instance of ResourceFile selected by the user to set
+    GeoFeaureFile type (the file must be a .shp or a .zip file)
+    :return: a list of temp file paths for all related shape files, and a list of corresponding
+     resource file objects
+    """
+    shape_temp_files = []
+    shape_res_files = []
+    temp_dir = ''
+    if selected_resource_file.extension == '.shp':
+        for f in resource.files.all():
+            if f.extension in GeoFeatureLogicalFile.get_allowed_storage_file_types() and \
+                    f.has_generic_logical_file:
+                # compare without the file extension (-4)
+                if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
+                    shape_res_files.append(f)
+
+        for f in shape_res_files:
+            temp_file = utils.get_file_from_irods(f)
+            if not temp_dir:
+                temp_dir = os.path.dirname(temp_file)
+            else:
+                file_temp_dir = os.path.dirname(temp_file)
+                dst_dir = os.path.join(temp_dir, os.path.basename(temp_file))
+                shutil.copy(temp_file, dst_dir)
+                shutil.rmtree(file_temp_dir)
+                temp_file = dst_dir
+            shape_temp_files.append(temp_file)
+
+    elif selected_resource_file.extension == '.zip':
+        temp_file = utils.get_file_from_irods(selected_resource_file)
+        temp_dir = os.path.dirname(temp_file)
+        if not zipfile.is_zipfile(temp_file):
+            if os.path.isdir(temp_dir):
+                shutil.rmtree(temp_dir)
+            raise ValidationError('Selected file is not a zip file')
+        zf = zipfile.ZipFile(temp_file, 'r')
+        zf.extractall(temp_dir)
+        zf.close()
+        for dirpath, _, filenames in os.walk(temp_dir):
+            for name in filenames:
+                if name == selected_resource_file.file_name:
+                    # skip the user selected zip file
+                    continue
+                file_path = os.path.abspath(os.path.join(dirpath, name))
+                shape_temp_files.append(file_path)
+
+        shape_res_files.append(selected_resource_file)
+
+    return shape_temp_files, shape_res_files
+
+
+def _check_if_shape_files(files):
     """
     checks if the list of file temp paths in *files* are part of shape files
     must have all these file extensions: (shp, shx, dbf)
@@ -462,10 +492,18 @@ def check_if_shape_files(files):
     else:
         return False
 
+    # test if we can open the shp file
+    shp_file = [f for f in files if f.endswith('.shp')][0]
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    dataset = driver.Open(shp_file)
+    if dataset is None:
+        return False
+    dataset = None
+
     return True
 
 
-def parse_shp_zshp(shp_file_full_path):
+def _parse_shp_zshp(shp_file_full_path):
     """
     Collects metadata from a .shp file specified by *shp_file_full_path*
     :param shp_file_full_path:
@@ -477,7 +515,7 @@ def parse_shp_zshp(shp_file_full_path):
         metadata_dict = {}
 
         # wgs84 extent
-        parsed_md_dict = parse_shp(shp_file_full_path)
+        parsed_md_dict = _parse_shp(shp_file_full_path)
         if parsed_md_dict["wgs84_extent_dict"]["westlimit"] != UNKNOWN_STR:
             wgs84_dict = parsed_md_dict["wgs84_extent_dict"]
             # if extent is a point, create point type coverage
@@ -541,7 +579,7 @@ def parse_shp_zshp(shp_file_full_path):
         raise ValidationError("Parse Shapefiles Failed!")
 
 
-def parse_shp(shp_file_path):
+def _parse_shp(shp_file_path):
     """
     :param shp_file_path: full file path fo the .shp file
 
@@ -677,7 +715,7 @@ def parse_shp(shp_file_path):
     return shp_metadata_dict
 
 
-def parse_shp_xml(shp_xml_full_path):
+def _parse_shp_xml(shp_xml_full_path):
     """
     Parse ArcGIS 10.X ESRI Shapefile Metadata XML.
     :param shp_xml_full_path: Expected fullpath to the .shp.xml file
