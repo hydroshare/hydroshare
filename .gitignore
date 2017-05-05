@@ -27,3 +27,5 @@ schema.xml
 .pycharm_helpers
 celerybeat.pid
 .config
+*~
+#*#
