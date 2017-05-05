@@ -46,10 +46,6 @@ def create_driver(platform='desktop', driver_name='phantomjs'):
         driver = webdriver.Firefox(profile, capabilities=cap)
         driver.implicitly_wait(15)
         driver.set_page_load_timeout(20)
-    elif driver_name is 'dockerhost-firefox':
-        driver = webdriver.Remote(
-            command_executor='http://172.17.0.1:4444/wd/hub',
-            desired_capabilities=desired_capabilities.DesiredCapabilities.FIREFOX)
     else:
         raise ValueError('Unknown driver')
 
