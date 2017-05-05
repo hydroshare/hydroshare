@@ -100,7 +100,7 @@ def change_quota_holder(request, shortkey):
 
     res = utils.get_resource_by_shortkey(shortkey)
     try:
-        res.raccess.set_quota_holder(request.user, new_holder_u)
+        res.set_quota_holder(request.user, new_holder_u)
 
         # send notification to the new quota holder
         context = {
