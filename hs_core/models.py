@@ -1622,8 +1622,8 @@ class AbstractResource(ResourcePermissionsMixin):
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
-        if not setter.uaccess.owns_resource(self.resource) or \
-                not new_holder.uaccess.owns_resource(self.resource):
+        if not setter.uaccess.owns_resource(self) or \
+                not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
         self.setAVU("quotaUserName", new_holder.username)
 
