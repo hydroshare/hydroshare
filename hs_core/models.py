@@ -22,7 +22,8 @@ from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
+    SuspiciousFileOperation, PermissionDenied
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -1618,18 +1619,17 @@ class AbstractResource(ResourcePermissionsMixin):
     def set_quota_holder(self, setter, new_holder):
         # set quota holder of the resource to new_holder who must be an owner
         # setter is the requesting user to transfer quota holder and setter must also be an owner
-        if __debug__: 
+        if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self.resource) or \
-            not new_holder.uaccess.owns_resource(self.resource):
+                not new_holder.uaccess.owns_resource(self.resource):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
         self.setAVU("quotaUserName", new_holder.username)
 
     def get_quota_holder(self):
         # get quota holder of the resource
         # return User instance of the quota holder for the resource or None if it does not exist
-        istorage = self.resource.get_irods_storage()
         try:
             uname = self.getAVU("quotaUserName")
         except SessionException:
