@@ -2209,7 +2209,8 @@ class AbstractResource(ResourcePermissionsMixin):
                     raise ValidationError(msg)
 
             if irods_public is not None:
-                irods_public = irods_public.lower() == 'true'
+                # convert to boolean
+                irods_public = str(irods_public).lower() == 'true'
 
             if irods_public is None or irods_public != django_public:
                 ecount += 1
