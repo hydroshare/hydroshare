@@ -64,7 +64,7 @@ class Command(BaseCommand):
             '--sync_ispublic',
             action='store_true',  # True for presence, False for absence
             dest='sync_ispublic',
-            help='delete unreferenced iRODS files',
+            help='synchronize iRODS isPublic AVU with Django',
         )
         parser.add_argument(
             '--clean_irods',

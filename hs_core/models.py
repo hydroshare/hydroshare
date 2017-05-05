@@ -2194,7 +2194,7 @@ class AbstractResource(ResourcePermissionsMixin):
             django_public = self.raccess.public
             irods_public = None
             try:
-                irods_public = istorage.getAVU(self.root_path, 'isPublic')
+                irods_public = self.getAVU('isPublic')
             except SessionException as ex:
                 msg = "cannot read isPublic attribute of {}: {}"\
                     .format(self.short_id, ex.stderr)
@@ -2217,14 +2217,24 @@ class AbstractResource(ResourcePermissionsMixin):
                     msg = "check_irods_files: resource {} public in irods, private in Django"\
                         .format(self.short_id)
                     if sync_ispublic:
-                        self.setAVU('isPublic', 'false')
-                        msg += " (REPAIRED IN IRODS)"
+                        try:
+                            self.setAVU('isPublic', 'false')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
                 else:  # django_public and not irods_public
                     msg = "check_irods_files: resource {} private in irods, public in Django"\
                         .format(self.short_id)
                     if sync_ispublic:
-                        self.setAVU('isPublic', 'true')
-                        msg += " (REPAIRED IN IRODS)"
+                        try:
+                            self.setAVU('isPublic', 'true')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
                 if msg != '':
                     if echo_errors:
                         print(msg)
@@ -2277,8 +2287,12 @@ class AbstractResource(ResourcePermissionsMixin):
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
                     if clean:
-                        istorage.delete(fullpath)
-                        msg += " (DELETED FROM IRODS)"
+                        try:
+                            istorage.delete(fullpath)
+                            msg += " (DELETED FROM IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT DELETE: {})"\
+                                .format(ex.stderr)
                     if echo_errors:
                         print(msg)
                     if log_errors:
