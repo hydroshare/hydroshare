@@ -46,6 +46,10 @@ def create_driver(platform='desktop', driver_name='phantomjs'):
         driver = webdriver.Firefox(profile, capabilities=cap)
         driver.implicitly_wait(15)
         driver.set_page_load_timeout(20)
+    elif driver_name is 'dockerhost-firefox':
+        driver = webdriver.Remote(
+            command_executor='http://172.17.0.1:4444/wd/hub',
+            desired_capabilities=desired_capabilities.DesiredCapabilities.FIREFOX)
     else:
         raise ValueError('Unknown driver')
 
@@ -80,14 +84,13 @@ class SeleniumTestsParentClass(object):
         def setUp(self):
             super(SeleniumTestsParentClass.MultiPlatformTests, self).setUp()
             self.driver = None
-            self.user_password = "Users_Cats_FirstName"
+            self.user_password = 'Users_Cats_FirstName'
             if not User.objects.filter(email='user30@example.com'):
                 group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
                 # Model level permissions are required for some actions bc of legacy Mezzanine
                 # Also relies on the magic "Hydroshare Author" group
-                hs_perms = Permission.objects.filter(content_type__app_label__startswith="hs_")
-
+                hs_perms = Permission.objects.all()
                 group.permissions.add(*list(hs_perms))
                 self.user = hydroshare.create_account(
                     'user30@example.com',
@@ -98,6 +101,7 @@ class SeleniumTestsParentClass(object):
                     groups=[group]
                 )
                 self.user.save()
+                group.save()
             else:
                 self.user = User.objects.get(email='user30@example.com')
 
@@ -117,7 +121,7 @@ class SeleniumTestsParentClass(object):
                     self.driver.save_screenshot('visible' + selector[1].replace(' ', '') + '.png')
                     err_msg = '{} not visible within timeout. Screenshot saved'.format(selector[1])
                     # if there is an issue with the selector, raise a relevant an error.
-                    self.assertTrue(self.driver.find_element(*selector).is_visible(), err_msg)
+                    self.assertTrue(self.driver.find_element(*selector).is_displayed(), err_msg)
                     # failsafe just in case it became visible while we were writing the screenshot
                     self.fail(err_msg)
                 else:
@@ -142,21 +146,23 @@ class SeleniumTestsParentClass(object):
         def _logout_helper(self):
             raise NotImplementedError
 
-        def _create_resource_helper(self, upload_file_path, resource_title=None):
+        def _create_resource_helper(self, resource_title='Default Title'):
             if not resource_title:
                 resource_title = str(uuid4())
-            upload_file_path = os.path.abspath(upload_file_path)
 
             # load my resources & click create new
             self.wait_for_visible(By.XPATH, '//a[contains(text(),"My Resources")]').click()
             self.wait_for_visible(By.LINK_TEXT, 'Create new').click()
 
             # complete new resource form
+            self.wait_for_visible(By.CSS_SELECTOR, '#select-resource-type').click()
+            self.wait_for_visible(By.CSS_SELECTOR, 'a[data-value="GenericResource"]').click()
             self.wait_for_visible(By.CSS_SELECTOR, '#txtTitle').send_keys(resource_title)
+            self.wait_for_visible(By.CSS_SELECTOR, '#hsDropzone')
             self.driver.execute_script("""
                 var myZone = Dropzone.forElement('#hsDropzone');
                 var blob = new Blob(new Array(), {type: 'image/png'});
-                blob.name = 'filename.png'
+                blob.name = 'file.png'
                 myZone.addFile(blob);
             """)
             time.sleep(1)
@@ -191,7 +197,7 @@ class SeleniumTestsParentClass(object):
 
         def test_create_resource(self):
             self._login_helper(self.user.email, self.user_password)
-            resource_title = self._create_resource_helper('./manage.py')
+            resource_title = self._create_resource_helper()
 
             title = self.wait_for_visible(By.CSS_SELECTOR, '#resource-title').text
             self.assertEqual(title, resource_title)
