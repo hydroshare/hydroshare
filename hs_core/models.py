@@ -22,7 +22,8 @@ from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
+    SuspiciousFileOperation, PermissionDenied
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -1615,6 +1616,32 @@ class AbstractResource(ResourcePermissionsMixin):
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
+    def set_quota_holder(self, setter, new_holder):
+        # set quota holder of the resource to new_holder who must be an owner
+        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        if __debug__:
+            assert(isinstance(setter, User))
+            assert(isinstance(new_holder, User))
+        if not setter.uaccess.owns_resource(self) or \
+                not new_holder.uaccess.owns_resource(self):
+            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        self.setAVU("quotaUserName", new_holder.username)
+
+    def get_quota_holder(self):
+        # get quota holder of the resource
+        # return User instance of the quota holder for the resource or None if it does not exist
+        try:
+            uname = self.getAVU("quotaUserName")
+        except SessionException:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+        if uname:
+            return User.objects.filter(username=uname).first()
+        else:
+            # quotaUserName AVU does not exist, return None
+            return None
+
     def setAVU(self, attribute, value):
         """
         set an AVU at the resource level
@@ -2068,7 +2095,7 @@ class AbstractResource(ResourcePermissionsMixin):
                         actions.append(msg)
 
         if ecount > 0:  # print information about the affected resource (not really an error)
-            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+            msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
                 .format(self.short_id, self.resource_type, self.metadata.title.value)
             if log_actions:
                 logger.info(msg)
@@ -2081,7 +2108,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def check_irods_files(self, stop_on_error=False, log_errors=True,
                           echo_errors=False, return_errors=False,
-                          repair=False):
+                          sync_ispublic=False, clean_irods=False, clean_django=False):
         """
         Check whether files in self.files and on iRODS agree
 
@@ -2089,8 +2116,12 @@ class AbstractResource(ResourcePermissionsMixin):
         :param log_errors: whether to log errors to Django log
         :param echo_errors: whether to print errors on stdout
         :param return_errors: whether to collect errors in an array and return them.
-        :param repair: whether to repair errors that can be repaired
+        :param sync_ispublic: whether to repair deviations between ResourceAccess.public
+               and AVU isPublic
+        :param clean_irods: whether to delete files in iRODs that are not in Django
+        :param clean_django: whether to delete files in Django that are not in iRODs
         """
+        from hs_core.hydroshare.resource import delete_resource_file
 
         logger = logging.getLogger(__name__)
         istorage = self.get_irods_storage()
@@ -2101,16 +2132,27 @@ class AbstractResource(ResourcePermissionsMixin):
 
         # skip federated resources if not configured to handle these
         if self.is_federated and not settings.REMOTE_USE_IRODS:
-            msg = "check_irods_files: skipping check of federated resource {}"\
+            msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
                 .format(self.short_id)
             if echo_errors:
                 print(msg)
             if log_errors:
                 logger.info(msg)
-        else:
 
-            # Step 0: repair irods user file paths if necessary
-            if repair:
+        # skip resources that do not exist in iRODS
+        elif not istorage.exists(self.root_path):
+                msg = "root path {} does not exist in iRODS".format(self.root_path)
+                ecount += 1
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+        else:
+            # Step 1: repair irods user file paths if necessary
+            if clean_irods or clean_django:
                 # fix user paths before check (required). This is an idempotent step.
                 if self.resource_federation_path == defaultpath:
                     error2, ecount2 = self.fix_irods_user_paths(log_actions=log_errors,
@@ -2119,12 +2161,16 @@ class AbstractResource(ResourcePermissionsMixin):
                     errors.extend(error2)
                     ecount += ecount2
 
-            # Step 1: does every file here refer to an existing file in iRODS?
+            # Step 2: does every file here refer to an existing file in iRODS?
             for f in self.files.all():
                 if not istorage.exists(f.storage_path):
                     ecount += 1
                     msg = "check_irods_files: django file {} does not exist in iRODS"\
                         .format(f.storage_path)
+                    if clean_django:
+                        delete_resource_file(self.short_id, f.short_path, self.creator,
+                                             delete_logical_file=False)
+                        msg += " (DELETED FROM DJANGO)"
                     if echo_errors:
                         print(msg)
                     if log_errors:
@@ -2134,59 +2180,21 @@ class AbstractResource(ResourcePermissionsMixin):
                     if stop_on_error:
                         raise ValidationError(msg)
 
-            # Step 2: does every iRODS file correspond to a record in files?
+            # Step 3: does every iRODS file correspond to a record in files?
             error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
                                                            stop_on_error=stop_on_error,
                                                            log_errors=log_errors,
                                                            echo_errors=echo_errors,
-                                                           return_errors=return_errors)
+                                                           return_errors=return_errors,
+                                                           clean=clean_irods)
             errors.extend(error2)
             ecount += ecount2
 
-            # Step 3: does the resource contain required file elements?
-            if not istorage.exists(self.root_path):
-                msg = "root path {} does not exist".format(self.root_path)
-                if echo_errors:
-                    print(msg)
-                if log_errors:
-                    logger.error(msg)
-                if return_errors:
-                    errors.append(msg)
-
-            # finally, check whether the iRODS public flag agrees with Django
+            # Step 4: check whether the iRODS public flag agrees with Django
             django_public = self.raccess.public
+            irods_public = None
             try:
-                irods_public = istorage.getAVU(self.root_path, 'isPublic')
-                if irods_public is not None:
-                    irods_public = irods_public.lower() == 'true'
-                else:
-                    irods_public = False
-                # print("{} irods isPublic={}, django public={}"
-                #       .format(self.root_path, str(irods_public), str(django_public)))
-                if irods_public != django_public:
-                    ecount += 1
-                    if irods_public:  # and not django_public
-                        msg = "check_irods_files: resource {} public in irods, private in Django"\
-                            .format(self.short_id)
-                        if repair:
-                            istorage.setAVU(self.root_path, 'isPublic', 'false')
-                            msg += " REPAIRED"
-                    else:  # django_public and not irods_public
-                        msg = "check_irods_files: resource {} private in irods, public in Django"\
-                            .format(self.short_id)
-                        if repair:
-                            istorage.setAVU(self.root_path, 'isPublic', 'true')
-                            msg += " REPAIRED"
-                    if msg != '':
-                        if echo_errors:
-                            print(msg)
-                        if log_errors:
-                            logger.error(msg)
-                        if return_errors:
-                            errors.append(msg)
-                        if stop_on_error:
-                            raise ValidationError(msg)
-
+                irods_public = self.getAVU('isPublic')
             except SessionException as ex:
                 msg = "cannot read isPublic attribute of {}: {}"\
                     .format(self.short_id, ex.stderr)
@@ -2199,6 +2207,44 @@ class AbstractResource(ResourcePermissionsMixin):
                     errors.append(msg)
                 if stop_on_error:
                     raise ValidationError(msg)
+
+            if irods_public is not None:
+                # convert to boolean
+                irods_public = str(irods_public).lower() == 'true'
+
+            if irods_public is None or irods_public != django_public:
+                ecount += 1
+                if not django_public:  # and irods_public
+                    msg = "check_irods_files: resource {} public in irods, private in Django"\
+                        .format(self.short_id)
+                    if sync_ispublic:
+                        try:
+                            self.setAVU('isPublic', 'false')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
+                else:  # django_public and not irods_public
+                    msg = "check_irods_files: resource {} private in irods, public in Django"\
+                        .format(self.short_id)
+                    if sync_ispublic:
+                        try:
+                            self.setAVU('isPublic', 'true')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
+                if msg != '':
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
 
         if ecount > 0:  # print information about the affected resource (not really an error)
             msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
@@ -2214,7 +2260,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def __check_irods_directory(self, dir, logger,
                                 stop_on_error=False, log_errors=True,
-                                echo_errors=False, return_errors=False):
+                                echo_errors=False, return_errors=False,
+                                clean=False):
         """
         list a directory and check files there for conformance with django ResourceFiles
 
@@ -2240,6 +2287,13 @@ class AbstractResource(ResourcePermissionsMixin):
                     ecount += 1
                     msg = "check_irods_files: file {} in iRODs does not exist in Django"\
                         .format(fullpath)
+                    if clean:
+                        try:
+                            istorage.delete(fullpath)
+                            msg += " (DELETED FROM IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT DELETE: {})"\
+                                .format(ex.stderr)
                     if echo_errors:
                         print(msg)
                     if log_errors:
@@ -2254,7 +2308,8 @@ class AbstractResource(ResourcePermissionsMixin):
                                                                stop_on_error=stop_on_error,
                                                                echo_errors=echo_errors,
                                                                log_errors=log_errors,
-                                                               return_errors=return_errors)
+                                                               return_errors=return_errors,
+                                                               clean=clean)
                 errors.extend(error2)
                 ecount += ecount2
 
@@ -3629,12 +3684,12 @@ class CoreMetaData(models.Model):
         else:
             element_name = md_element.term
 
-        hsterms_newElem = etree.SubElement(root, "{{{ns}}}{new_element}"
+        hsterms_newElem = etree.SubElement(root,
+                                           "{{{ns}}}{new_element}"
                                            .format(ns=self.NAMESPACES['hsterms'],
                                                    new_element=element_name))
-        hsterms_newElem_rdf_Desc = etree.SubElement(hsterms_newElem,
-                                                    "{{{ns}}}Description"
-                                                    .format(ns=self.NAMESPACES['rdf']))
+        hsterms_newElem_rdf_Desc = etree.SubElement(
+            hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
             if isinstance(md_field, tuple):
                 field_name = md_field[0]

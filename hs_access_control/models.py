@@ -47,7 +47,6 @@ from django.db import transaction
 from django.core.exceptions import PermissionDenied
 
 from hs_core.models import BaseResource
-from django_irods.icommands import SessionException
 
 ######################################
 # Access control subsystem
@@ -1328,12 +1327,12 @@ class UserAccess(models.Model):
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
                 raise PermissionDenied(
-                        "You need to be a group owner to send invitation to join a group")
+                    "You need to be a group owner to send invitation to join a group")
 
             if GroupMembershipRequest.objects.filter(group_to_join=this_group,
                                                      invitation_to=this_user).exists():
                 raise PermissionDenied(
-                        "You already have a pending invitation for this user to join this group")
+                    "You already have a pending invitation for this user to join this group")
             else:
                 return GroupMembershipRequest.objects.create(request_from=self.user,
                                                              invitation_to=this_user,
@@ -1379,7 +1378,7 @@ class UserAccess(models.Model):
                 pass
             else:
                 raise PermissionDenied(
-                        "You don't have permission to act on the group membership request")
+                    "You don't have permission to act on the group membership request")
         # invited user acting on membership invitation from a group owner
         elif this_request.invitation_to == self.user:
             membership_grantor = this_request.request_from.uaccess
@@ -1389,7 +1388,7 @@ class UserAccess(models.Model):
                 pass
         else:
             raise PermissionDenied(
-                    "You don't have permission to act on the group membership request")
+                "You don't have permission to act on the group membership request")
 
         if accept_request and membership_grantor is not None:
             # user initially joins a group with 'VIEW' privilege
@@ -2312,11 +2311,12 @@ class UserAccess(models.Model):
 
             if via_user and via_group:
 
-                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
-                           r2urp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2urp__privilege=PrivilegeCodes.CHANGE,
-                           r2urp__user=self.user)
+                uquery = \
+                    Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                      r2urp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user)
 
                 gquery = \
                     Q(r2grp__privilege=PrivilegeCodes.VIEW,
@@ -2348,22 +2348,24 @@ class UserAccess(models.Model):
 
             elif via_user:
 
-                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
-                           r2urp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2urp__privilege=PrivilegeCodes.CHANGE,
-                           r2urp__user=self.user)
+                uquery = \
+                    Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                      r2urp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user)
 
                 return BaseResource.objects\
                     .filter(uquery).distinct()
 
             elif via_group:
 
-                gquery = Q(r2grp__privilege=PrivilegeCodes.VIEW,
-                           r2grp__group__g2ugp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2grp__privilege=PrivilegeCodes.CHANGE,
-                           r2grp__group__g2ugp__user=self.user)
+                gquery = \
+                    Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                      r2grp__group__g2ugp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2grp__privilege=PrivilegeCodes.CHANGE,
+                      r2grp__group__g2ugp__user=self.user)
 
                 return BaseResource.objects\
                     .filter(gquery).distinct()
@@ -2644,7 +2646,7 @@ class UserAccess(models.Model):
             if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
                 if access_resource.owners.count() == 1:
                     raise PermissionDenied("Cannot remove sole owner of resource")
-                qholder = access_resource.get_quota_holder()
+                qholder = this_resource.get_quota_holder()
                 if qholder:
                     if qholder == user:
                         raise PermissionDenied("Cannot remove this resource's quota holder from "
@@ -2871,7 +2873,7 @@ class UserAccess(models.Model):
                 and not this_user == self.user:
             raise PermissionDenied("You do not have permission to remove this sharing setting")
 
-        qholder = this_resource.raccess.get_quota_holder()
+        qholder = this_resource.get_quota_holder()
         if qholder:
             if qholder == this_user:
                 raise PermissionDenied("Cannot remove this resource's quota holder from "
@@ -3017,7 +3019,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-        qholder = access_resource.get_quota_holder()
+        qholder = this_resource.get_quota_holder()
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
@@ -3628,18 +3630,18 @@ class GroupAccess(models.Model):
         if this_privilege == PrivilegeCodes.OWNER:
             return BaseResource.objects.filter(r2grp__privilege=this_privilege,
                                                r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects.filter(
-                                                    r2grp__group=self.group,
-                                                    r2grp__privilege__lt=this_privilege))
+                                       .exclude(pk__in=BaseResource.objects
+                                                .filter(r2grp__group=self.group,
+                                                        r2grp__privilege__lt=this_privilege))
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
             return BaseResource.objects.filter(raccess__immutable=False,
                                                r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group).exclude(
-                                                        pk__in=BaseResource.objects.filter(
-                                                            r2grp__group=self.group,
-                                                            r2grp__privilege__lt=this_privilege))
+                                               r2grp__group=self.group)\
+                                       .exclude(pk__in=BaseResource.objects
+                                                .filter(r2grp__group=self.group,
+                                                        r2grp__privilege__lt=this_privilege))
 
         else:  # this_privilege == PrivilegeCodes.ViEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
@@ -3812,31 +3814,6 @@ class ResourceAccess(models.Model):
                                    u2urp__privilege=PrivilegeCodes.OWNER,
                                    u2urp__resource=self.resource)
 
-    def set_quota_holder(self, setter, new_holder):
-        # set quota holder of the resource to new_holder who must be an owner
-        # setter is the requesting user to transfer quota holder and setter must also be an owner
-        if not setter.uaccess.owns_resource(self.resource) or \
-                not new_holder.uaccess.owns_resource(self.resource):
-            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
-        istorage = self.resource.get_irods_storage()
-        istorage.setAVU(self.resource.root_path, "quotaUserName", new_holder.username)
-
-    def get_quota_holder(self):
-        # get quota holder of the resource
-        # return User instance of the quota holder for the resource or None if it does not exist
-        istorage = self.resource.get_irods_storage()
-        try:
-            uname = istorage.getAVU(self.resource.root_path, "quotaUserName")
-        except SessionException:
-            # quotaUserName AVU does not exist, return None
-            return None
-
-        if uname:
-            return User.objects.filter(username=uname).first()
-        else:
-            # quotaUserName AVU does not exist, return None
-            return None
-
     def get_users_with_explicit_access(self, this_privilege, include_user_granted_access=True,
                                        include_group_granted_access=True):
 
@@ -3857,8 +3834,8 @@ class ResourceAccess(models.Model):
             return User.objects.filter(Q(is_active=True) &
                                        (Q(u2urp__resource=self.resource,
                                           u2urp__privilege=this_privilege) |
-                                       Q(u2ugp__group__g2grp__resource=self.resource,
-                                         u2ugp__group__g2grp__privilege=this_privilege)))\
+                                        Q(u2ugp__group__g2grp__resource=self.resource,
+                                          u2ugp__group__g2grp__privilege=this_privilege)))\
                                .distinct()
         elif include_user_granted_access:
             return User.objects.filter(Q(is_active=True) &
