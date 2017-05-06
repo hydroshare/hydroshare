@@ -13,9 +13,9 @@ def debug_resource(request, shortkey):
     template = loader.get_template('debug/debug_resource.html')
     context = {
         'shortkey': shortkey,
-        'creator': resource.creator, 
-        'resource': resource, 
-        'raccess': resource.raccess, 
+        'creator': resource.creator,
+        'resource': resource,
+        'raccess': resource.raccess,
         'owners': resource.raccess.owners,
         'editors': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
         'viewers': resource.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
