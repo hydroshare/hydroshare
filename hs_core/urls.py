@@ -109,11 +109,6 @@ urlpatterns = patterns('',
         views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
         name='get_update_delete_resource_access'),
 
-    # Resource Debugging 
-    url(r'^resource/(?P<shortkey>[0-9a-f-]+)/debug/$',
-        views.debug_resource_view.debug_resource,
-        name='debug_resource'),
-
     # internal API
 
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$',
