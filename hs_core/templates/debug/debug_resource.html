@@ -29,18 +29,21 @@
 </ul>
 </ul>
 
+<h2>Resource flags</h2> 
 <table border='1'>
 <tbody> 
-<tr><th colspan='2'>Resource Flags</th></tr> 
-<tr><td>public</td><td>{{ raccess.public }}</td></tr>
-<tr><td>discoverable</td><td>{{ raccess.discoverable }}</td></tr>
-<tr><td>immutable</td><td>{{ raccess.immutable }}</td></tr>
+<tr><th colspan='2'>Resource Flags</th><th colspan='2'>iRODs AVUs</th></tr> 
+<tr><td>resource_type</td><td>{{ resource.resource_type }}</td>
+    <td>resourceType</td><td>{{ type_AVU }}</td></tr>
+<tr><td>public</td><td>{{ raccess.public }}</td>
+    <td>isPublic</td><td>{{ public_AVU }}</td></tr>
+<tr><th colspan='2'>Resource Flags</th>
+    <th colspan='2'>iRODs AVUs</th></tr> 
+<tr><td>discoverable</td><td>{{ raccess.discoverable }}</td>
+    <td>bag_modified</td><td>{{ modified_AVU }}</td></tr>
+<tr><td>immutable</td><td>{{ raccess.immutable }}</td>
+    <td>quotaUserName</td><td>{{ quota_AVU }}</td></tr>
 <tr><td>published</td><td>{{ raccess.published }}</td></tr>
-<tr><th colspan='2'>Resource AVUs</th></tr> 
-<tr><td>isPublic</td><td>{{ public_AVU }}</td></tr>
-<tr><td>bag_modified</td><td>{{ modified_AVU }}</td></tr>
-<tr><td>quotaUserName</td><td>{{ quota_AVU }}</td></tr>
-<tr><td>resourceType</td><td>{{ type_AVU }}</td></tr>
 </tbody> 
 </table>
 
