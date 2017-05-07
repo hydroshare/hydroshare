@@ -210,6 +210,12 @@ class GeographicFeatureResource(BaseResource):
                 ".fbx", ".ain", ".aih", ".atx", ".ixs",
                 ".mxs")
 
+    def has_required_content_files(self):
+        if self.files.all().count < 3:
+            return False
+        file_extensions = [f.extension for f in self.files.all()]
+        return all(ext in file_extensions for ext in ['.shp', '.shx', '.dbf'])
+
     def get_hs_term_dict(self):
         # get existing hs_term_dict from base class
         hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()
@@ -283,6 +289,14 @@ class GeographicFeatureMetaDataMixin(models.Model):
 
     def delete_all_elements(self):
         super(GeographicFeatureMetaDataMixin, self).delete_all_elements()
+        self.reset()
+
+    def reset(self):
+        """
+        This helper method should be used to reset metadata when essential files are removed
+        from the resource
+        :return:
+        """
         self.geometryinformations.all().delete()
         self.fieldinformations.all().delete()
         self.originalcoverages.all().delete()
