@@ -69,7 +69,7 @@ def data_store_structure(request):
     try:
         store = istorage.listdir(res_coll)
         files = []
-        for fname in store[1]:
+        for fname in store[1]:  # files 
             name_with_full_path = os.path.join(res_coll, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
@@ -96,7 +96,7 @@ def data_store_structure(request):
             else:
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
                              .format(name_with_full_path))
-            # TODO: flag when files in Django have no analogue in iRODs 
+            # TODO: flag when files in Django have no analogue in iRODs
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -505,6 +505,15 @@ def data_store_move_to_folder(request, res_id=None):
         return HttpResponse('Bad request - tgt_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    # check that the target is a folder in iRODs or doesn't exist 
+    # (and will be created as a folder) 
+    tgt_folder, tgt_base = os.path.split(tgt_path)
+    tgt_folder = tgt_folder[len('data/contents/'):]
+    abspath = get_path(resource, tgt_base, folder=tgt_folder)
+    if istorage.exists(abspath) and not is_folder(istorage, abspath):
+        return HttpResponse('Bad request - tgt_path is not a folder',
+                            status=status.HTTP_400_BAD_REQUEST)
+
     try:
         move_to_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
@@ -523,3 +532,15 @@ def data_store_move_to_folder(request, res_id=None):
 @api_view(['POST'])
 def data_store_move_to_folder_public(request, pk):
     return data_store_move_to_folder(request, res_id=pk)
+
+def is_folder(istorage, path): 
+    """ return True if the thing is a folder """
+    dir, base = os.path.split(path)
+    try: 
+        contents = istorage.listdir(dir)
+        if base in contents[0]:  # folders
+            return True
+        else:
+            return False
+    except SessionException: 
+        return False 
