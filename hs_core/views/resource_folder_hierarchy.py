@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view
 
 from django_irods.icommands import SessionException
 
-from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
+from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
@@ -19,7 +19,7 @@ from hs_core.models import ResourceFile
 logger = logging.getLogger(__name__)
 
 
-# TODO: this does not document folders and does not correlate iRODs and Django views of files. 
+# TODO: this does not document folders and does not correlate iRODs and Django views of files.
 def data_store_structure(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
@@ -62,18 +62,15 @@ def data_store_structure(request):
     # this is federated if warranted, automatically, by choosing an appropriate session.
     istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        # This implies that the path starts with data/contents
+        # This implies that store_path starts with data/contents
         res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
-        rel_path = store_path
     else:
         res_coll = os.path.join(res_id, store_path)
-        rel_path = res_coll
     try:
         store = istorage.listdir(res_coll)
         files = []
         for fname in store[1]:
             name_with_full_path = os.path.join(res_coll, fname)
-            name_with_rel_path = os.path.join(rel_path, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
             idx = mtype.find('/')
@@ -83,9 +80,8 @@ def data_store_structure(request):
             f_url = ''
             logical_file_type = ''
             logical_file_id = ''
-            # TODO: #2105: there is no error if the file doesn't exist in Django; fields are blank
             for f in ResourceFile.objects.filter(object_id=resource.id):
-                if name_with_rel_path == get_resource_file_name_and_extension(f)[0]:
+                if name_with_full_path == f.storage_path:
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
                     if resource.resource_type == "CompositeResource":
@@ -93,8 +89,14 @@ def data_store_structure(request):
                         logical_file_id = f.logical_file.id
                     break
 
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
-                          'logical_type': logical_file_type, 'logical_file_id': logical_file_id})
+            if f_pk != '':
+                files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                              'logical_type': logical_file_type,
+                              'logical_file_id': logical_file_id})
+            else:
+                logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
+                             .format(name_with_full_path))
+            # TODO: flag when files in Django have no analogue in iRODs 
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -454,3 +456,70 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
 @api_view(['POST'])
 def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
+
+def data_store_move_to_folder(request, res_id=None):
+    """
+    Move or file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the target file or folder being moved to if succeeds, and return empty string
+    if fails. The AJAX request must be a POST request with input data passed in for res_id,
+    source_path, and target_path where source_path and target_path are the relative paths for the
+    source and target file or folder under res_id collection/directory.
+    """
+    res_id = request.POST.get('res_id', res_id)
+    if res_id is None:
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, user = authorize(request, res_id,
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    src_path = resolve_request(request).get('source_path', None)
+    tgt_path = resolve_request(request).get('target_path', None)
+    if src_path is None or tgt_path is None:
+        return HttpResponse('Bad request - src_path or tgt_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    src_path = str(src_path).strip()
+    tgt_path = str(tgt_path).strip()
+    if not src_path or not tgt_path:
+        return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not src_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - src_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+        return HttpResponse('Bad request - src_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not tgt_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
+        return HttpResponse('Bad request - tgt_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        move_to_folder(user, res_id, src_path, tgt_path)
+    except SessionException as ex:
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+
+    return_object = {'target_rel_path': tgt_path}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type='application/json'
+    )
+
+
+@api_view(['POST'])
+def data_store_move_to_folder_public(request, pk):
+    return data_store_move_to_folder(request, res_id=pk)
