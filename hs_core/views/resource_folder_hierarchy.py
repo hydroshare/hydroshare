@@ -13,8 +13,9 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, move_or_rename_file_or_folder, get_coverage_data_dict
-from hs_core.models import ResourceFile
+    create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
+    rename_file_or_folder, get_coverage_data_dict
+from hs_core.models import ResourceFile, get_path
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ def data_store_structure(request):
     try:
         store = istorage.listdir(res_coll)
         files = []
-        for fname in store[1]:  # files 
+        for fname in store[1]:  # files
             name_with_full_path = os.path.join(res_coll, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
@@ -457,6 +458,7 @@ def data_store_file_or_folder_move_or_rename(request, res_id=None):
 def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
+
 def data_store_move_to_folder(request, res_id=None):
     """
     Move or file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
@@ -505,8 +507,9 @@ def data_store_move_to_folder(request, res_id=None):
         return HttpResponse('Bad request - tgt_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # check that the target is a folder in iRODs or doesn't exist 
-    # (and will be created as a folder) 
+    # check that the target is a folder in iRODs or doesn't exist
+    # (and will be created as a folder)
+    istorage = resource.get_irods_storage()
     tgt_folder, tgt_base = os.path.split(tgt_path)
     tgt_folder = tgt_folder[len('data/contents/'):]
     abspath = get_path(resource, tgt_base, folder=tgt_folder)
@@ -533,14 +536,120 @@ def data_store_move_to_folder(request, res_id=None):
 def data_store_move_to_folder_public(request, pk):
     return data_store_move_to_folder(request, res_id=pk)
 
-def is_folder(istorage, path): 
+
+def data_store_rename_file_or_folder(request, res_id=None):
+    """
+    Move or file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the target file or folder being moved to if succeeds, and return empty string
+    if fails. The AJAX request must be a POST request with input data passed in for res_id,
+    source_path, and target_path where source_path and target_path are the relative paths for the
+    source and target file or folder under res_id collection/directory.
+    """
+    res_id = request.POST.get('res_id', res_id)
+    if res_id is None:
+        return HttpResponse('Bad request - resource id is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, user = authorize(request, res_id,
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except NotFound:
+        return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
+    except PermissionDenied:
+        return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
+
+    src_path = resolve_request(request).get('source_path', None)
+    tgt_path = resolve_request(request).get('target_path', None)
+    if src_path is None or tgt_path is None:
+        return HttpResponse('Bad request - src_path or tgt_path is not included',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not src_path or not tgt_path:
+        return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    src_path = str(src_path).strip()
+    tgt_path = str(tgt_path).strip()
+    src_folder, src_base = os.path.split(src_path)
+    tgt_folder, tgt_base = os.path.split(tgt_path)
+    if src_folder != tgt_folder:
+        return HttpResponse('Bad request -- src_path and tgt_path must be in same folder',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not src_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - src_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+    if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+        return HttpResponse('Bad request - src_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if not tgt_path.startswith('data/contents/'):
+        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
+        return HttpResponse('Bad request - tgt_path cannot contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    istorage = resource.get_irods_storage()
+
+    # check that the target doesn't exist
+    tgt_folder, tgt_base = os.path.split(tgt_path)
+    tgt_folder = tgt_folder[len('data/contents/'):]
+    tgt_abspath = get_path(resource, tgt_base, folder=tgt_folder)
+    if istorage.exists(tgt_abspath):
+        return HttpResponse('Bad request - tgt_path already exists', 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # check that the source exists
+    src_folder, src_base = os.path.split(src_path)
+    src_folder = src_folder[len('data/contents/'):]
+    src_abspath = get_path(resource, src_base, folder=src_folder)
+    if istorage.exists(src_abspath):
+        return HttpResponse('Bad request - src_path doesn't exist', 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        rename_file_or_folder(user, res_id, src_path, tgt_path)
+    except SessionException as ex:
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+
+    return_object = {'target_rel_path': tgt_path}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type='application/json'
+    )
+
+
+@api_view(['POST'])
+def data_store_rename_file_or_folder_public(request, pk):
+    return data_store_rename_file_or_folder(request, res_id=pk)
+
+def is_folder(istorage, path):
     """ return True if the thing is a folder """
     dir, base = os.path.split(path)
-    try: 
+    try:
         contents = istorage.listdir(dir)
         if base in contents[0]:  # folders
             return True
         else:
             return False
-    except SessionException: 
-        return False 
+    except SessionException:
+        return False
+
+
+def is_folder(istorage, path):
+    """ return True if the thing is a folder """
+    dir, base = os.path.split(path)
+    try:
+        contents = istorage.listdir(dir)
+        if base in contents[0]:  # folders
+            return True
+        else:
+            return False
+    except SessionException:
+        return False

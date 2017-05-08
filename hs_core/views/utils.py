@@ -25,7 +25,7 @@ from mezzanine.conf import settings
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, BaseResource, GenericResource, Relation, \
-                           ResourceFile, get_user
+    ResourceFile, get_user
 from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -775,12 +775,12 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     # ensure the target_full_path contains the file name to be moved or renamed to
     # if we are moving to a directory, put the filename into the request.
-    # TODO: #2105: this is not a sufficient check that the move is sane. 
+    # TODO: #2105: this is not a sufficient check that the move is sane.
     # TODO: #2105: separate the two use cases in this situation to avoid confusion
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
-    # TODO: why is this optional? 
+    # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -819,12 +819,12 @@ def move_to_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
+    # tgt_file_name = os.path.basename(tgt_full_path)
+    # tgt_file_dir = os.path.dirname(tgt_full_path)
+    # src_file_name = os.path.basename(src_full_path)
+    # src_file_dir = os.path.dirname(src_full_path)
 
-    # TODO: why is this optional? 
+    # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -847,7 +847,7 @@ def irods_path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
-def irods_path_is_directory(istorage, path): 
+def irods_path_is_directory(istorage, path):
     """ return True if the path is a directory. """
     folder, base = os.path.split(path)
     listing = istorage.listdir(folder)
