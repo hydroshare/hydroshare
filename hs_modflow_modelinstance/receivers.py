@@ -101,9 +101,11 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().first()
+    res_file = resource.files.all().last()
     if res_file:
-        _process_package_info(resource)
+        # process_package_info(resource)
+        if res_file.extension == '.dis':
+            add_metadata_from_dis_file(res_file, resource)
 
 
 @receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
@@ -112,12 +114,14 @@ def post_create_resource_handler(sender, **kwargs):
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().first()
+    res_file = resource.files.all().last()
     if res_file:
-        _process_package_info(resource)
+        # process_package_info(resource)
+        if res_file.extension == '.dis':
+            add_metadata_from_dis_file(res_file, resource)
 
 
-def _process_package_info(resource):
+def process_package_info(resource):
     # check if only one .nam file is uploaded
     nam_file_count, reqd_files, existing_files, packages = resource.find_content_files()
     if nam_file_count == 1:
@@ -131,87 +135,87 @@ def _process_package_info(resource):
             packages = list(itertools.chain(*packages))
             # loop through packages from .nam file to see if they match any of the controlled terms
             if 'UZF' in packages:
-                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
-                                               unsaturatedZonePackage=True)
+                create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                              unsaturatedZonePackage=True)
             if 'HFB6' in packages:
-                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
-                                               horizontalFlowBarrierPackage=True)
+                create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                              horizontalFlowBarrierPackage=True)
             if 'SWI2' in packages:
-                _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
-                                               seawaterIntrusionPackage=True)
+                create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                              seawaterIntrusionPackage=True)
             for p in packages:
                 # check each term
                 # StressPeriod
                 if p in modflow_models.uncouple(
                         modflow_models.StressPeriod.stressPeriodTypeChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.StressPeriod,
-                                                   stressPeriodType=p)
+                    create_or_update_from_package(resource, modflow_models.StressPeriod,
+                                                  stressPeriodType=p)
                 if p in modflow_models.uncouple(
                         modflow_models.StressPeriod.transientStateValueTypeChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.StressPeriod,
-                                                   transientStateValueType=p)
+                    create_or_update_from_package(resource, modflow_models.StressPeriod,
+                                                  transientStateValueType=p)
                 # GroundWaterFlow
                 if p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowPackageChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
-                                                   flowPackage=p)
+                    create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                                  flowPackage=p)
                 if p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowParameterChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
-                                                   flowParameter=p)
+                    create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                                  flowParameter=p)
                 # BoundaryCondition
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedHeadBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     specified_head_boundary_package_list.append(p)
-                    _create_or_update_from_package(
+                    create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_head_boundary_packages=specified_head_boundary_package_list)
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     specified_flux_boundary_packages_list.append(p)
-                    _create_or_update_from_package(
+                    create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_flux_boundary_packages=specified_flux_boundary_packages_list)
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.headDependentFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     head_dependent_flux_boundary_packages.append(p)
-                    _create_or_update_from_package(
+                    create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         head_dependent_flux_boundary_packages=head_dependent_flux_boundary_packages)
                 # ModelCalibration
                 if p in modflow_models.uncouple(
                         modflow_models.ModelCalibration.observationProcessPackageChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.ModelCalibration,
-                                                   observationProcessPackage=p)
+                    create_or_update_from_package(resource, modflow_models.ModelCalibration,
+                                                  observationProcessPackage=p)
                 # GeneralElements
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.modelSolverChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.GeneralElements,
-                                                   modelSolver=p)
+                    create_or_update_from_package(resource, modflow_models.GeneralElements,
+                                                  modelSolver=p)
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.outputControlPackageChoices):
                     # create if does not exist, update if it does exist
                     output_control_package_list.append(p)
-                    _create_or_update_from_package(
+                    create_or_update_from_package(
                         resource, modflow_models.GeneralElements,
                         output_control_package=output_control_package_list)
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.subsidencePackageChoices):
                     # create if does not exist, update if it does exist
-                    _create_or_update_from_package(resource, modflow_models.GeneralElements,
-                                                   subsidencePackage=p)
+                    create_or_update_from_package(resource, modflow_models.GeneralElements,
+                                                  subsidencePackage=p)
 
 
-def _create_or_update_from_package(resource, term, **kwargs):
+def create_or_update_from_package(resource, term, **kwargs):
     if term.term == 'StressPeriod':
         t = 'stress_period'
     if term.term == 'GroundWaterFlow':
@@ -222,6 +226,8 @@ def _create_or_update_from_package(resource, term, **kwargs):
         t = 'model_calibration'
     if term.term == 'GeneralElements':
         t = 'general_elements'
+    if term.term == 'GridDimensions':
+        t = 'grid_dimensions'
     metadata_term_obj = getattr(resource.metadata, t)
     if not metadata_term_obj:
         resource.metadata.create_element(
@@ -235,3 +241,30 @@ def _create_or_update_from_package(resource, term, **kwargs):
             **kwargs
         )
     create_bag_files(resource)
+
+
+def add_metadata_from_dis_file(dis_file, res):
+    """
+      
+    :param dis_file: 
+    :return: 
+    """
+    for row in dis_file.resource_file.file:
+        row = row.strip()
+        row = row.split()
+        r = row[0].strip()
+        if not r.startswith('#'):
+            # raise Exception(str(row))
+            grid_dimension_info = dict(
+                numberOfLayers=row[0],
+                numberOfRows=row[1],
+                numberOfColumns=row[2],
+            )
+            stress_period_info = dict(
+                Nper=row[3],
+                tmuni=row[4],
+            )
+            lenuni=row[5]
+            create_or_update_from_package(res, modflow_models.GridDimensions, **grid_dimension_info)
+            break
+
