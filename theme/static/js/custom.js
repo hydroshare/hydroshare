@@ -143,7 +143,7 @@ $(document).ready(function () {
     });
 
     // Make apps link open in new tab
-    $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
+    $('a[href^="https://appsdev.xdcishare.org/apps"]').attr('target', '_blank');
 
 	// Close buttons for notification messages
 	$(".btn-close-message").click(function() {

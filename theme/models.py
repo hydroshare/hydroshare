@@ -149,15 +149,15 @@ class QuotaMessage(models.Model):
     # content when over quota within grace period and less than 125% of hard limit quota;
     # enforce_content_prepend prepends the content to form an enforcement message to inform users
     # after grace period or when they are over hard limit quota
-    warning_content_prepend = models.TextField(default='Your quota for HydroShare resources is '
+    warning_content_prepend = models.TextField(default='Your quota for xDCIShare resources is '
                                                        '{allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. '
                                                        'Once your quota reaches 100% you will no '
                                                        'longer be able to create new resources in '
-                                                       'HydroShare. ')
-    grace_period_content_prepend = models.TextField(default='You have exceeded your HydroShare '
-                                                            'quota. Your quota for HydroShare '
+                                                       'xDCIShare. ')
+    grace_period_content_prepend = models.TextField(default='You have exceeded your xDCIShare '
+                                                            'quota. Your quota for xDCIShare '
                                                             'resources is {allocated}{unit} in '
                                                             '{zone} zone. You currently have '
                                                             'resources that consume {used}{unit}, '
@@ -166,19 +166,19 @@ class QuotaMessage(models.Model):
                                                             'reduce your use to below your quota, '
                                                             'or to acquire additional quota, after '
                                                             'which you will no longer be able to '
-                                                            'create new resources in HydroShare. ')
-    enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
+                                                            'create new resources in xDCIShare. ')
+    enforce_content_prepend = models.TextField(default='Your action to add content to xDCIShare '
                                                        'was refused because you have exceeded your '
-                                                       'quota. Your quota for HydroShare resources '
+                                                       'quota. Your quota for xDCIShare resources '
                                                        'is {allocated}{unit} in {zone} zone. You '
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
-                                       'support@hydroshare.org. We will try to accommodate '
+                                       'support@xdcishare.org. We will try to accommodate '
                                        'reasonable requests for additional quota. If you have a '
                                        'large quota request you may need to contribute toward the '
                                        'costs of providing the additional space you need. See '
-                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'https://pages.xdcishare.org/about-xdcisshare/policies/'
                                        'quota/ for more information about the quota policy.')
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
@@ -204,7 +204,7 @@ class UserQuota(models.Model):
     allocated_value = models.BigIntegerField(default=20)
     used_value = models.BigIntegerField(default=0)
     unit = models.CharField(max_length=10, default="GB")
-    zone = models.CharField(max_length=100, default="hydroshare_internal")
+    zone = models.CharField(max_length=100, default="xdcishare_internal")
     # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
     # soft quota limit and thus grace period has not started. When grace period is 0, quota
     # enforcement takes place
@@ -254,14 +254,14 @@ class UserProfile(models.Model):
     cv = models.FileField(upload_to='profile',
                           help_text='Upload your Curriculum Vitae if you wish people to be able to download it.',
                           null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
+    details = models.TextField("Description", help_text='Tell the xDCIShare community a little about yourself.',
                                null=True, blank=True)
 
     state = models.CharField(max_length=1024, null=True, blank=True)
     country = models.CharField(max_length=1024, null=True, blank=True)
 
     create_irods_user_account = models.BooleanField(default=False,
-                                                    help_text='Check to create an iRODS user account in HydroShare user '
+                                                    help_text='Check to create an iRODS user account in xDCIShare user '
                                                               'iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck '
                                                               '(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).'
                                                               'Uncheck to delete your iRODS user account. Note that deletion of your iRODS user '

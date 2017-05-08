@@ -82,10 +82,10 @@ class SeleniumTestsParentClass(object):
             self.driver = None
             self.user_password = "Users_Cats_FirstName"
             if not User.objects.filter(email='user30@example.com'):
-                group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+                group, _ = Group.objects.get_or_create(name='xDCIshare Author')
 
                 # Model level permissions are required for some actions bc of legacy Mezzanine
-                # Also relies on the magic "Hydroshare Author" group
+                # Also relies on the magic "xDCIshare Author" group
                 hs_perms = Permission.objects.filter(content_type__app_label__startswith="hs_")
 
                 group.permissions.add(*list(hs_perms))
@@ -196,7 +196,7 @@ class SeleniumTestsParentClass(object):
             title = self.wait_for_visible(By.CSS_SELECTOR, '#resource-title').text
             self.assertEqual(title, resource_title)
             citation_text = self.wait_for_visible(By.CSS_SELECTOR, 'div#citation-text').text
-            m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
+            m = re.search('xDCIShare, http.*/resource/(.*)$', citation_text)
             shortkey = m.groups(0)[0]
             resource = BaseResource.objects.get()
             self.assertEqual(resource.title, resource_title)

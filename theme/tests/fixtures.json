@@ -1,7 +1,7 @@
 [
   {
    "fields": {
-     "domain": "www.hydroshare.org",
+     "domain": "www.xdcishare.org",
      "name": "Default"
     },
     "model": "sites.site",
@@ -14,7 +14,7 @@
       "updated": "2017-02-15T19:53:42.983Z",
       "_order": 0,
       "titles": "Home",
-      "description": "Planned HydroShare Maintenance.  HydroShare will be offline Friday February 17 from 8 am to 11 am Eastern US Standard time for system wide storage maintenance at the RENCI data center.  We apologize for any inconvenience.",
+      "description": "Planned xDCIShare Maintenance.  xDCIShare will be offline Friday February 17 from 8 am to 11 am Eastern US Standard time for system wide storage maintenance at the RENCI data center.  We apologize for any inconvenience.",
       "parent": null,
       "title": "Home",
       "short_url": null,
@@ -78,9 +78,9 @@
     "slide_in_three": "",
     "header_background": "uploads/homepage/homepage_1.jpg",
     "recent_blog_heading": "Latest blog posts",
-    "content": "<p class=\"p1\"><span>Planned HydroShare Maintenance. \u00a0HydroShare will be offline Friday February 17 from 8 am to 11 am Eastern US Standard time for system wide storage maintenance at the RENCI data center. \u00a0We apologize for any inconvenience.</span></p>",
+    "content": "<p class=\"p1\"><span>Planned xDCIShare Maintenance. \u00a0xDCIShare will be offline Friday February 17 from 8 am to 11 am Eastern US Standard time for system wide storage maintenance at the RENCI data center. \u00a0We apologize for any inconvenience.</span></p>",
     "welcome_heading": "Share and Collaborate",
-    "heading": "HydroShare"
+    "heading": "xDCIShare"
    },
    "model": "theme.homepage",
    "pk": 2

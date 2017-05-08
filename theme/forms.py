@@ -151,7 +151,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = "[HydroShare Support] New comment by {c_name} for: {res_obj}".format(
+            subject = "[xDCIShare Support] New comment by {c_name} for: {res_obj}".format(
                 c_name=comment.user_name, res_obj=str(obj))
             context = {
                 "comment": comment,

@@ -8,12 +8,12 @@ input_fields = INPUT_FIELDS(0, 1, 2)
 
 
 class Command(BaseCommand):
-    help = "Update used storage space in UserQuota table for all users in HydroShare by reading " \
+    help = "Update used storage space in UserQuota table for all users in xDCIShare by reading " \
            "an input file with updated values for users. Each row of the input file should list" \
            "information in the format of 'User name' 'Used value' 'Storage zone' " \
            "separated by comma. A header may also be included for informational purposes." \
            "This input file is created by a quota calculation script that runs nightly on a " \
-           "HydroShare server."
+           "xDCIShare server."
 
     def add_arguments(self, parser):
         parser.add_argument('input_file_name_with_path', help='input file name with path')
