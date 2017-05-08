@@ -19,6 +19,7 @@ from hs_core.models import ResourceFile
 logger = logging.getLogger(__name__)
 
 
+# TODO: this does not document folders and does not correlate iRODs and Django views of files. 
 def data_store_structure(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
@@ -82,6 +83,7 @@ def data_store_structure(request):
             f_url = ''
             logical_file_type = ''
             logical_file_id = ''
+            # TODO: #2105: there is no error if the file doesn't exist in Django; fields are blank
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if name_with_rel_path == get_resource_file_name_and_extension(f)[0]:
                     f_pk = f.pk

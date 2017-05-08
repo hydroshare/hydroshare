@@ -1077,6 +1077,7 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var targetPath = $("#hs-file-browser").attr("data-current-path");
 
+        // TODO: #2105: this wreaks havoc if folder names contain '.'
         if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
             targetPath = targetPath + "/" + folderName
         }
@@ -1084,6 +1085,7 @@ $(document).ready(function () {
         var calls = [];
         for (var i = 0; i < sourcePaths.length; i++) {
             var sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
+            # TODO: #2105: if this rejects files, then the above is unnecessary 
             calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath+'/'+sourceName));
         }
 

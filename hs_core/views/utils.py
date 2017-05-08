@@ -775,9 +775,12 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     # ensure the target_full_path contains the file name to be moved or renamed to
     # if we are moving to a directory, put the filename into the request.
+    # TODO: #2105: this is not a sufficient check that the move is sane. 
+    # TODO: #2105: separate the two use cases in this situation to avoid confusion
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
+    # TODO: why is this optional? 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -798,6 +801,13 @@ def irods_path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/../'")
     if '/./' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
+
+
+def irods_path_is_directory(istorage, path): 
+    """ return True if the path is a directory. """
+    folder, base = os.path.split(path)
+    listing = istorage.listdir(folder)
+    return base in listing[0]
 
 
 def get_coverage_data_dict(resource, coverage_type='spatial'):

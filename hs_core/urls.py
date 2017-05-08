@@ -180,6 +180,7 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
         views.is_multiple_file_upload_allowed, name="resource_type_multiple_file_upload"),
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
+    # TODO: #2105: called when drag-and-drop interface needs structure
     url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
     url(r'^_internal/data-store-folder-zip/$',
         views.resource_folder_hierarchy.data_store_folder_zip),
