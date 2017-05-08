@@ -269,7 +269,7 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
-    $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
+    $("title").text($(".group-title").text() + " | xDCIShare"); // Fix page title
 
     // Abstract collapse toggle
     $(".show-more-btn").click(function () {

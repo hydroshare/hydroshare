@@ -861,7 +861,7 @@ $(document).ready(function () {
 
     $("#covereage-search-fields input, #date-search-fields input, #id_q").addClass("form-control");
 
-    $("title").text("Discover | HydroShare");   // Set browser tab title
+    $("title").text("Discover | xDCIShare");   // Set browser tab title
 
     initializeTable();
     popCheckboxes();

@@ -23,7 +23,7 @@ $(document).on('change', '.btn-file :file', function () {
 });
 
 $(document).ready(function () {
-    $("title").text("My Groups | HydroShare"); // Fix page title
+    $("title").text("My Groups | xDCIShare"); // Fix page title
 
     // File name preview for picture field, file select method
     $('.btn-file :file').on('fileselect', function (event, numFiles, label) {

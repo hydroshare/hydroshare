@@ -160,7 +160,7 @@
                             </div>
                             {% if contributor.description %}
                                 <div id="div_id_description" class="control-group">
-                                    <label class="control-label">HydroShare User Identifier (URL)</label>
+                                    <label class="control-label">xDCIShare User Identifier (URL)</label>
 
                                     <div class="controls"><input
                                             class="form-control input-sm urlinput"
@@ -289,7 +289,7 @@
                             {% endif %}
                             {% if author.description %}
                                 <div id="div_id_description" class="control-group">
-                                    <label class="control-label">HydroShare User Identifier (URL)</label>
+                                    <label class="control-label">xDCIShare User Identifier (URL)</label>
 
                                     <div class="controls"><input
                                             class="form-control input-sm urlinput"
@@ -413,7 +413,7 @@
                     user zone, then download the large file via iRODS clients such as
                     <a href="https://docs.irods.org/master/icommands/user/" target="_blank">
                     icommands</a> and
-                    <a href="https://pages.hydroshare.org/accessing-hydroshare-irods-from-a-windows-pc-or-mac/"
+                    <a href="https://pages.xdcishare.org/accessing-xdcishare-irods-from-a-windows-pc-or-mac/"
                        target="_blank">Cyberduck</a>.
                 </p>
             </div>
@@ -439,12 +439,12 @@
                     on a new version (copy) of the resource.
                 </p>
                 <p>
-                     Please confirm that you accept the HydroShare Publication Agreement shown below.
+                     Please confirm that you accept the xDCIShare Publication Agreement shown below.
                 </p>
                 <div class="iframe-border">
-                    <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
+                    <iframe id="pub-agreement-frame" scrolling="no" src="https://www.xdcishare.org/publication-agreement/"></iframe>
                 </div>
-                <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
+                <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the xDCIShare Publication Agreement.</label>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -469,7 +469,7 @@
                     be done when you are finished modifying your resource and you are ready to formally publish it.
                 </p>
                 <p>
-                    If you want to make your resource public or share with specific HydroShare users without formally
+                    If you want to make your resource public or share with specific xDCIShare users without formally
                     publishing it, click <strong>"Cancel"</strong> and use the manage access panel or toggle your resource
                     to be public instead.
                 </p>
@@ -490,8 +490,8 @@
                 <h4 class="modal-title" id="new-version-resource-title">Create New Version of This Resource</h4>
             </div>
             <div class="modal-body">
-                Creating a new version will obsolete this resource. This resource will be still available in HydroShare,
-                but only the newer version will be discoverable via the HydroShare search interface. The new version is
+                Creating a new version will obsolete this resource. This resource will be still available in xDCIShare,
+                but only the newer version will be discoverable via the xDCIShare search interface. The new version is
                 a complete new resource with new identifier. It will contain a link back to the previous version and the
                 previous version will have a link to the next version. This can be repeated resulting in a sequence of
                 multiple versions each linked to next and previous versions. Only the most recent version can be edited
@@ -652,7 +652,7 @@
                     <strong>THIS IS A PERMANENT ACTION. </strong>
                     <ul>
                         <li>This will delete the resource file.</li>
-                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
+                        <li>A copy of your resource file will not be retained by xDCIshare.</li>
                         <li>We highly recommend that you download the latest copy of your resource file before
                             confirming this action.
                         </li>
@@ -760,7 +760,7 @@
                         <div class="col-sm-5 text-center">
                             <div class="radio-inline center-radio-inline text-center">
                                 <label>
-                                    <div>Existing HydroShare User</div>
+                                    <div>Existing xDCIShare User</div>
                                     <input type="radio" checked name="add_author_person" value="hs_user">
                                 </label>
                             </div>
@@ -786,7 +786,7 @@
                         </div>
                     </div>
                 </div>
-                {#  Existing HydroShare User  #}
+                {#  Existing xDCIShare User  #}
                 <div data-hs-person-type="hs_user">
                     <div class="modal-body">
                         {{ add_view_user_form.user }}
@@ -809,7 +809,7 @@
                                     </div>
 
                                     <div id="div_id_description" class="control-group">
-                                        <label for="id_description" class="control-label">HydroShare User Identifier
+                                        <label for="id_description" class="control-label">xDCIShare User Identifier
                                             (URL)</label>
                                         <div class="controls"><input class="form-control input-sm urlinput"
                                                                      id="id_description" maxlength="200"
@@ -986,7 +986,7 @@
                                     </div>
 
                                     <div id="div_id_description" class="control-group">
-                                        <label for="id_description" class="control-label">HydroShare User Identifier
+                                        <label for="id_description" class="control-label">xDCIShare User Identifier
                                             (URL)</label>
                                         <div class="controls"><input class="form-control input-sm urlinput"
                                                                      id="id_description" maxlength="200"
@@ -1130,7 +1130,7 @@
                     <div class="col-sm-5 text-center">
                         <div class="radio-inline center-radio-inline text-center">
                             <label>
-                                <div>Existing HydroShare User</div>
+                                <div>Existing xDCIShare User</div>
                                 <input type="radio" name="add_contributor_user_type" value="hs_user" checked>
                             </label>
                         </div>
@@ -1158,7 +1158,7 @@
 
             </div>
 
-            {#  Existing HydroShare User  #}
+            {#  Existing xDCIShare User  #}
             <div data-hs-user-type="hs_user">
                 <div class="modal-body">
                     {{ add_view_user_form.user }}
@@ -1181,7 +1181,7 @@
                                 </div>
 
                                 <div id="div_id_description" class="control-group">
-                                    <label for="id_description" class="control-label">HydroShare User Identifier
+                                    <label for="id_description" class="control-label">xDCIShare User Identifier
                                         (URL)</label>
                                     <div class="controls"><input class="form-control input-sm urlinput"
                                                                  id="id_description" maxlength="200"
@@ -1359,7 +1359,7 @@
 
                 <div class="modal-body">
                     <div class="alert alert-info" role="alert">
-                        <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse" data-target="#usage-info">&nbsp;</span>Use this window to share your resource with specific HydroShare users. You can give other
+                        <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse" data-target="#usage-info">&nbsp;</span>Use this window to share your resource with specific xDCIShare users. You can give other
                             users the ability to view or edit this resource. You can also add additional owners who
                             will
                             have full permissions.</p>

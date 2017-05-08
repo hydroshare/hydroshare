@@ -4,7 +4,7 @@ from theme.models import UserQuota, QuotaMessage
 
 
 class Command(BaseCommand):
-    help = "Output quota allocations for all users in HydroShare"
+    help = "Output quota allocations for all users in xDCIShare"
 
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')

@@ -1,2 +1,2 @@
 {% load i18n %}
-{% trans "Activate your account in HydroShare" %}
+{% trans "Activate your account in xDCIShare" %}
