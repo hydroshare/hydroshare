@@ -75,14 +75,14 @@ function updateSelectionMenuContext() {
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {          // Multiple files selected
-        flagDisableRename = true; 
+        flagDisableRename = true;
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetNetCDFFileType = true;
         flagDisableGetLink = true;
-        
+
         for (var i = 0; i < selected.length; i++) {
             var size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
             if (size > maxSize) {
@@ -252,7 +252,7 @@ function bindFileBrowserItemEvents() {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
-                
+
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
@@ -286,7 +286,7 @@ function bindFileBrowserItemEvents() {
             $(this).addClass("ui-last-selected");
         }
     });
-    
+
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
@@ -462,7 +462,7 @@ function showFileTypeMetadata(){
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields(logical_type);
          setFileTypeMetadataFormsClickHandlers();
-         
+
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
          if (logical_type === "NetCDFLogicalFile") {
@@ -1073,21 +1073,26 @@ $(document).ready(function () {
 
     $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
 
+    // TODO: what happens if one 'pastes' twice for same cut buffer? Cut buffer should be cleared. 
     function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var targetPath = $("#hs-file-browser").attr("data-current-path");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        // TODO: #2105: this wreaks havoc if folder names contain '.'
-        if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
-            targetPath = targetPath + "/" + folderName
-        }
+        targetPath = currentPath + "/" + folderName  # must be a folder or move commands fail. 
+        // TODO: check that this path doesn't exist or is a directory via an iRODs call
+        
+        // //  TODO: issue #2105: this wreaks havoc if foldername contains a '.' and it is a folder!
+        // if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
+        //     targetPath = targetPath + "/" + folderName
+        // }
 
         var calls = [];
         for (var i = 0; i < sourcePaths.length; i++) {
             var sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
-            # TODO: #2105: if this rejects files, then the above is unnecessary 
-            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath+'/'+sourceName));
+            // use move_to_folder to avoid ambiguity in move_or_rename_file_or_folder
+            calls.push(move_to_folder_ajax_submit(resID, sourcePaths[i], targetPath));
         }
+        // TODO: check error returns for REST API calls here! 
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {

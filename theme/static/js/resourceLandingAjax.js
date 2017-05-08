@@ -1058,7 +1058,8 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
-// TODO: #2105: ambiguous function based upon conflation in REST API
+// TODO: #2105: replace with move-to-folder and rename-file-or-folder: 
+// TODO: ambiguous function based upon conflation in REST API
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
@@ -1078,6 +1079,54 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         },
         error: function(xhr, errmsg, err){
             display_error_message('File Moving/Renaming Failed', xhr.responseText);
+        }
+    });
+}
+
+// target_path must be a folder
+function move_to_folder_ajax_submit(res_id, source_path, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-move-to-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Moving Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path 
+function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-rename-file-or-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Renaming Failed', xhr.responseText);
         }
     });
 }
