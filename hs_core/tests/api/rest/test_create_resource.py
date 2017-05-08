@@ -65,7 +65,7 @@ class TestCreateResource(HSRESTTestCase):
                   'file': ('cea.tif',
                            open('hs_core/tests/data/cea.tif'),
                            'image/tiff')}
-        url = root + '/'
+        url = '/hsapi/resource/'
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)

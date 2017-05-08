@@ -97,16 +97,14 @@ class TestSetAccessRules(HSRESTTestCase):
         self.resources_to_delete.append(res_id)
 
         access_url = root + "/{res_id}/access/".format(res_id=res_id)
-        print(access_url)
         response = self.client.get(access_url)
-        print(response)
         self.assertEqual(1, len(response.data['users']))
         self.assertEqual(0, len(response.data['groups']))
         self.assertEqual("Owner", response.data['users'][0]['privilege'])
         self.assertEqual(self.user.id, response.data['users'][0]['user'])
 
     def test_get_resource_access(self):
-        self.test_DEPRECATED_get_resource_access("/api/v2/resources")
+        self.test_DEPRECATED_get_resource_access(self.V2_API_ROOT)
 
     def test_DEPRECATED_set_and_delete_user_resource_access(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
@@ -172,7 +170,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual(0, len(get_response.data['groups']))
 
     def test_set_and_delete_group_resource_access(self):
-        self.test_DEPRECATED_set_and_delete_group_resource_access(root=self.NEW_API_ROOT)
+        self.test_DEPRECATED_set_and_delete_group_resource_access(root=self.V2_API_ROOT)
 
     def test_DEPRECATED_no_access(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
@@ -196,7 +194,7 @@ class TestSetAccessRules(HSRESTTestCase):
         self.assertEqual("You do not have permission to perform this action.", put_response.data['detail'])
 
     def test_no_access(self):
-        self.test_DEPRECATED_no_access(root=self.NEW_API_ROOT)
+        self.test_DEPRECATED_no_access(root=self.V2_API_ROOT)
 
     def test_DEPRECATED_errors(self, root="/hsapi/resource"):
         rtype = 'GenericResource'
@@ -242,4 +240,4 @@ class TestSetAccessRules(HSRESTTestCase):
             put_response.data['error'])
 
     def test_errors(self):
-        self.test_DEPRECATED_errors(root=self.NEW_API_ROOT)
+        self.test_DEPRECATED_errors(root=self.V2_API_ROOT)
