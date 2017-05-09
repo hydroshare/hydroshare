@@ -1080,7 +1080,7 @@
                                     {% if not metadata_form %}
                                         {% for tool in relevant_tools %}
                                             <div title="{{ tool.title }}" id="web-app-item">
-                                                <a href="{{ tool.url }}" target="_blank">
+						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
                                                     {% if tool.title|length > 20 %}
                                                         <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                     {% else %}
