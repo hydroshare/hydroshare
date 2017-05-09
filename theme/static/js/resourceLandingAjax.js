@@ -1084,7 +1084,7 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
 }
 
 // target_path must be a folder
-function move_to_folder_ajax_submit(res_id, source_path, target_path) {
+function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
@@ -1092,7 +1092,7 @@ function move_to_folder_ajax_submit(res_id, source_path, target_path) {
         async: true,
         data: {
             res_id: res_id,
-            source_path: source_path,
+            source_paths: source_paths,
             target_path: target_path
         },
         success: function (result) {

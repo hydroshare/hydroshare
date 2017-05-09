@@ -1073,28 +1073,16 @@ $(document).ready(function () {
 
     $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
 
-    // TODO: what happens if one 'pastes' twice for same cut buffer? Cut buffer should be cleared. 
     function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
         targetPath = currentPath + "/" + folderName  # must be a folder or move commands fail. 
-        // TODO: check that this path doesn't exist or is a directory via an iRODs call
         
-        // //  TODO: issue #2105: this wreaks havoc if foldername contains a '.' and it is a folder!
-        // if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
-        //     targetPath = targetPath + "/" + folderName
-        // }
-
         var calls = [];
-        for (var i = 0; i < sourcePaths.length; i++) {
-            var sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
-            // use move_to_folder to avoid ambiguity in move_or_rename_file_or_folder
-            calls.push(move_to_folder_ajax_submit(resID, sourcePaths[i], targetPath));
-        }
-        // TODO: check error returns for REST API calls here! 
+        calls.push(move_to_folder_ajax_submit(resID, sourcePaths, targetPath));
 
-        // Wait for the asynchronous calls to finish to get new folder structure
+        // Wait for the asynchronous call to finish to get new folder structure
         $.when.apply($, calls).done(function () {
             refreshFileBrowser();
             sourcePaths = [];
