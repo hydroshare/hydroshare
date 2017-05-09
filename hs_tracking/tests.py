@@ -5,11 +5,93 @@ from cStringIO import StringIO
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.test import Client
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict, response
 from mock import patch, Mock
 
 from .models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
+from .views import AppLaunch
 import utils
+import urllib
+
+
+class ViewTests(TestCase):
+    
+    def setUp(self):
+        self.user = User.objects.create(username='testuser', email='testuser@example.com')
+        self.user.set_password('password')
+        self.user.save()
+        profile = self.user.userprofile
+        profile_data = {
+            'country': 'USA',
+        }
+        for field in profile_data:
+            setattr(profile, field, profile_data[field])
+        profile.save()
+        self.visitor = Visitor.objects.create()
+        self.session = Session.objects.create(visitor=self.visitor)
+
+    def createRequest(self, user=None):
+        self.request = Mock()
+        if user is not None:
+            self.request.user = user
+
+        # sample request with mocked ip address
+        self.request.META = {
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, 127.0.0.1, 198.84.193.157, '
+            '177.139.233.139',
+            'HTTP_X_REAL_IP': '177.139.233.132',
+            'REMOTE_ADDR': '177.139.233.133',
+        }
+        self.request.method = 'GET'
+        self.request.session = {}
+        return self.request
+
+    def test_get(self):
+        
+        # check that there are no logs for app_launch
+        app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
+        self.assertEqual(app_lauch_cnt, 0)
+        
+        # create a mock request object
+        r = self.createRequest(self.user)
+       
+        # build request 'GET'
+        res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
+        res_type = 'GenericResource'
+        app_name = 'test'
+        request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' +
+                      '?res_id=%s&res_type=%s' % (res_id, res_type)
+        app_url = urllib.quote(request_url)
+        href = 'url=%s;name=%s' % (app_url, app_name)
+        r.GET = QueryDict(href)
+        
+        # invoke the app logging endpoint
+        app_logging = AppLaunch()
+        url_redirect = app_logging.get(r)
+
+        # validate response
+        self.assertTrue(type(url_redirect) == response.HttpResponseRedirect)
+        self.assertTrue(url_redirect.url == request_url)
+
+        # validate logged data
+        app_lauch_cnt= Variable.objects.filter(name='app_launch').count()
+        self.assertEqual(app_lauch_cnt, 1)
+        data = list(Variable.objects.filter(name='app_launch'))
+        values = dict(item.split("=") for item in data[0].value.split(" "))
+
+        self.assertTrue('res_type' in values.keys())
+        self.assertTrue('name' in values.keys())
+        self.assertTrue('user_email_domain' in values.keys())
+        self.assertTrue('user_type' in values.keys())
+        self.assertTrue('user_ip' in values.keys())
+        self.assertTrue('res_id' in values.keys())
+
+        self.assertTrue(values['res_type'] == res_type)
+        self.assertTrue(values['name'] == app_name)
+        self.assertTrue(values['user_email_domain'] == self.user.email[-3:])
+        self.assertTrue(values['user_type'] == 'Unspecified')
+        self.assertTrue(values['user_ip'] == '198.84.193.157')
+        self.assertTrue(values['res_id'] == res_id)
 
 
 class TrackingTests(TestCase):
