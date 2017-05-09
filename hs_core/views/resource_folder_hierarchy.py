@@ -460,7 +460,7 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
 
 
 @api_view(['POST'])
-def data_store_move_to_folder(request, pk):
+def data_store_move_to_folder(request, pk=None):
     """
     Move a list of files and/or folders to another folder in a resource file hierarchy.  
 
@@ -473,7 +473,7 @@ def data_store_move_to_folder(request, pk):
     and target_path are the relative paths for the source and target file or folder in the
     res_id file directory.
     """
-    # pk = request.POST.get('res_id', pk)
+    pk = request.POST.get('res_id', pk)
     if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -545,7 +545,7 @@ def data_store_move_to_folder(request, pk):
 
 
 @api_view(['POST'])
-def data_store_rename_file_or_folder(request, pk):
+def data_store_rename_file_or_folder(request, pk=None):
     """
     Rename one file or folder in a resource file hierarchy.  It is invoked by an AJAX call 
 
@@ -557,7 +557,7 @@ def data_store_rename_file_or_folder(request, pk):
     request with input data for source_path and target_path where source_path
     and target_path are the relative paths for the source and target file or folder.  
     """
-    # pk = request.POST.get('res_id', pk)
+    pk = request.POST.get('res_id', pk)
     if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)

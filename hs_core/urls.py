@@ -93,14 +93,6 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
 
-    # public move
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-to-folder/$',
-        views.resource_folder_hierarchy.data_store_move_to_folder_public),
-
-    # public rename
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/rename-file-or-folder/$',
-        views.resource_folder_hierarchy.data_store_rename_file_or_folder_public),
-
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
