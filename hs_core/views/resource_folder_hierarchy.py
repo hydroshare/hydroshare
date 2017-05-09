@@ -90,11 +90,11 @@ def data_store_structure(request):
                         logical_file_id = f.logical_file.id
                     break
 
-            if f_pk:  # file is found in Django 
+            if f_pk:  # file is found in Django
                 files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
                               'logical_type': logical_file_type,
                               'logical_file_id': logical_file_id})
-            else:  # file is not found in Django 
+            else:  # file is not found in Django
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
                              .format(name_with_full_path))
 
@@ -462,13 +462,13 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
 @api_view(['POST'])
 def data_store_move_to_folder(request, pk=None):
     """
-    Move a list of files and/or folders to another folder in a resource file hierarchy.  
+    Move a list of files and/or folders to another folder in a resource file hierarchy.
 
     :param request: a REST request
-    :param pk: the short_id of a resource to modify, from REST URL. 
+    :param pk: the short_id of a resource to modify, from REST URL.
 
-    It is invoked by an AJAX call and returns a json object that has the relative paths of 
-    the target files or folders to which files have been moved. The AJAX request must be a POST 
+    It is invoked by an AJAX call and returns a json object that has the relative paths of
+    the target files or folders to which files have been moved. The AJAX request must be a POST
     request with input data passed in for source_paths and target_path where source_paths
     and target_path are the relative paths for the source and target file or folder in the
     res_id file directory.
@@ -506,15 +506,15 @@ def data_store_move_to_folder(request, pk=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
-    tgt_abspath = os.path.join(resource.root_path, tgt_path) 
+    tgt_abspath = os.path.join(resource.root_path, tgt_path)
 
     if not is_folder(istorage, tgt_abspath):
         return HttpResponse('Bad request - tgt_path is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    src_paths = json.loads(src_paths) 
+    src_paths = json.loads(src_paths)
 
-    for src_path in src_paths: 
+    for src_path in src_paths:
         src_path = str(src_path).strip()
 
         if not src_path.startswith('data/contents/'):
@@ -526,9 +526,9 @@ def data_store_move_to_folder(request, pk=None):
                                 status=status.HTTP_400_BAD_REQUEST)
 
     # TODO: validate that move makes sense and that things are not being moved to subdirectories
-    # of themselves. 
+    # of themselves.
 
-    for src_path in src_paths: 
+    for src_path in src_paths:
         try:
             move_to_folder(user, pk, src_path, tgt_path)
         except SessionException as ex:
@@ -547,15 +547,15 @@ def data_store_move_to_folder(request, pk=None):
 @api_view(['POST'])
 def data_store_rename_file_or_folder(request, pk=None):
     """
-    Rename one file or folder in a resource file hierarchy.  It is invoked by an AJAX call 
+    Rename one file or folder in a resource file hierarchy.  It is invoked by an AJAX call
 
     :param request: a REST request
-    :param pk: the short_id of a resource to modify, from REST URL. 
+    :param pk: the short_id of a resource to modify, from REST URL.
 
-    This is invoked by an AJAX call and returns a json object that has the relative path of 
-    the target file or folder that has been renamed. The AJAX request must be a POST 
+    This is invoked by an AJAX call and returns a json object that has the relative path of
+    the target file or folder that has been renamed. The AJAX request must be a POST
     request with input data for source_path and target_path where source_path
-    and target_path are the relative paths for the source and target file or folder.  
+    and target_path are the relative paths for the source and target file or folder.
     """
     pk = request.POST.get('res_id', pk)
     if pk is None:
@@ -611,7 +611,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     tgt_folder = tgt_folder[len('data/contents/'):]
     tgt_abspath = get_path(resource, tgt_base, folder=tgt_folder)
     if istorage.exists(tgt_abspath):
-        return HttpResponse('Bad request - tgt_path already exists', 
+        return HttpResponse('Bad request - tgt_path already exists',
                             status=status.HTTP_400_BAD_REQUEST)
 
     # check that the source exists
@@ -619,7 +619,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     src_folder = src_folder[len('data/contents/'):]
     src_abspath = get_path(resource, src_base, folder=src_folder)
     if istorage.exists(src_abspath):
-        return HttpResponse('Bad request - src_path doesn't exist', 
+        return HttpResponse("Bad request - src_path does not exist",
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:

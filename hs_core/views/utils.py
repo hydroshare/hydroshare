@@ -811,7 +811,7 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
     if __debug__:
-        for s in src_paths: 
+        for s in src_paths:
             assert(s.startswith("data/contents/"))
         assert(tgt_path.startswith("data/contents/"))
 
@@ -822,12 +822,12 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
-        for src_path in src_paths: 
+        for src_path in src_paths:
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
                 raise ValidationError("File/folder move/rename is not allowed.")
 
-    for src_path in src_paths: 
+    for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
         istorage.moveFile(src_full_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
