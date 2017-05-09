@@ -23,44 +23,82 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_create_resource, sender=GeographicFeatureResource)
 def post_create_resource(sender, **kwargs):
-    # here we need to check if the resource has any files
-    # and make sure the resource then has the 3 required files
-    # if any of the required shape file is missing then we will delete all files
+    # if there are files in the resource validate those files. If validation fails
+    # all or some of the files get deleted.
+    # if validation is successful extract metadata
 
     resource = kwargs['resource']
     res_file = None
-    err_msg = "Required shape files are missing. Files were not uploaded."
+    base_err_msg = "Files failed validation. Files not uploaded are: {}"
+    files_failed_validation = []
     if resource.files.all().count() == 0:
+        # resource was created without any uploaded files
         return
     elif resource.files.all().count() == 1:
         # this file has to be a zip file
         res_file = resource.files.all().first()
         if res_file.extension != '.zip':
+            files_failed_validation.append(res_file.file_name)
             res_file.delete()
+            err_msg = base_err_msg.format(", ".join(files_failed_validation))
             raise ValidationError(err_msg)
-    elif resource.files.all().count() < 3:
-        # there needs to be 3 file at least
+    elif not resource.has_required_content_files():
         for f in resource.files.all():
+            files_failed_validation.append(f.file_name)
             f.delete()
+        err_msg = base_err_msg.format(", ".join(files_failed_validation))
         raise ValidationError(err_msg)
+    else:
+        # validate files by extension
+        for f in resource.files.all():
+            if f.extension not in geofeature.GeoFeatureLogicalFile.get_allowed_storage_file_types():
+                files_failed_validation.append(f.file_name)
+                f.delete()
+        # check that there are no files with duplicate extension, otherwise delete all files
+        file_extensions = set([f.extension for f in resource.files.all()])
+        if len(file_extensions) != resource.files.count():
+            for f in resource.files.all():
+                if f.file_name not in files_failed_validation:
+                    files_failed_validation.append(f.file_name)
+                f.delete()
+            err_msg = base_err_msg.format(", ".join(files_failed_validation))
+            raise ValidationError(err_msg)
+        # check that there are no files with duplicate name (without extension),
+        # otherwise delete all files
+        file_names = set([f.file_name[:-4] for f in resource.files.all() if f.extension != '.xml'])
+        if len(file_names) > 1:
+            for f in resource.files.all():
+                if f.file_name not in files_failed_validation:
+                    files_failed_validation.append(f.file_name)
+                f.delete()
+            err_msg = base_err_msg.format(", ".join(files_failed_validation))
+            raise ValidationError(err_msg)
+        # validate .shp.xml file
+        xml_files = [f for f in resource.files.all() if f.extension == '.xml']
+        if xml_files:
+            xml_file = xml_files[0]
+            if not xml_file.file_name.endswith('.shp.xml') or xml_file.file_name[:-8] not \
+                    in file_names:
+                if xml_file.file_name not in files_failed_validation:
+                    files_failed_validation.append(xml_file.file_name)
+                xml_file.delete()
 
     # process the uploaded files
     if res_file is None:
-        # find the shp file
+        # find the shp file - at this point there must be a .shp file
         for f in resource.files.all():
             if f.extension == '.shp':
                 res_file = f
                 break
-        # if shp file doesn't exist then delete all uploaded files
-        if res_file is None:
-            for f in resource.files.all():
-                f.delete()
-            raise ValidationError(err_msg)
-
     try:
-        _process_uploaded_file(resource, res_file, err_msg)
+        _process_uploaded_file(resource, res_file, base_err_msg)
     except Exception as ex:
         raise ValidationError(ex.message)
+
+    if files_failed_validation:
+        # some files got deleted
+        err_msg = base_err_msg.format(", ".join(files_failed_validation))
+        raise ValidationError(err_msg)
 
 
 # This handler is executed only when a metadata element is added as part of editing a resource
@@ -105,7 +143,7 @@ def pre_delete_file_from_resource(sender, **kwargs):
 
 @receiver(post_add_files_to_resource, sender=GeographicFeatureResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
-    err_msg = "Required shape files are missing. Files were not uploaded."
+    base_err_msg = "Files failed validation. Files not uploaded are: {}."
     resource = kwargs['resource']
     added_res_files = kwargs['res_files']
     validate_files_dict = kwargs['validate_files']
@@ -114,12 +152,15 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     zip_file_added = False
     shp_file_added = False
     prj_file_added = False
+    files_failed_validation = []
     if resource.files.all().count() == 1:
         # this file has to be a zip file
         res_file = resource.files.all().first()
         if res_file.extension != '.zip':
+            files_failed_validation.append(res_file.file_name)
             res_file.delete()
             validate_files_dict['are_files_valid'] = False
+            err_msg = base_err_msg.format(", ".join(files_failed_validation))
             validate_files_dict['message'] = err_msg
             return
         zip_file_added = True
@@ -128,48 +169,105 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     # check if we have the required content files - otherwise delete all files
     elif not resource.has_required_content_files():
         for f in resource.files.all():
+            files_failed_validation.append(f.file_name)
             f.delete()
         resource.metadata.reset()
         validate_files_dict['are_files_valid'] = False
+        err_msg = base_err_msg.format(", ".join(files_failed_validation))
         validate_files_dict['message'] = err_msg
         return
     else:
         for f in added_res_files:
             # if there are already other files, a zip file can't be added
             if f.extension == '.zip':
-                # delete all files that just get added
-                for fl in added_res_files:
-                    fl.delete()
-                validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = err_msg
-                return
+                files_failed_validation.append(f.file_name)
+                f.delete()
+                added_res_files.remove(f)
 
-    # validate files by extension
     if not zip_file_added:
         for f in added_res_files:
+            # validate files by extension
             if f.extension not in geofeature.GeoFeatureLogicalFile.get_allowed_storage_file_types():
+                files_failed_validation.append(f.file_name)
                 f.delete()
                 added_res_files.remove(f)
             # check that we din't add a file with existing extension
             files_with_same_extension = [fl for fl in resource.files.exclude(id=f.id) if
                                          fl.extension == f.extension]
             if len(files_with_same_extension) > 0:
+                files_failed_validation.append(f.file_name)
                 f.delete()
                 added_res_files.remove(f)
-
+            elif f.extension == '.xml' and not f.file_name.endswith('.shp.xml'):
+                files_failed_validation.append(f.file_name)
+                f.delete()
+                added_res_files.remove(f)
         if not added_res_files:
             validate_files_dict['are_files_valid'] = False
+            err_msg = base_err_msg.format(", ".join(files_failed_validation))
             validate_files_dict['message'] = err_msg
             return
 
         # test file names (without extension) are same for the newly added files
-        file_names = set([f.file_name[:-4] for f in added_res_files])
-        if len(file_names) > 1:
-            for f in added_res_files:
-                f.delete()
-            validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = err_msg
-            return
+        if len(added_res_files) > 1:
+            file_names = set([f.file_name[:-4] for f in added_res_files if f.extension != '.xml'])
+            # if one of the added files has a different name then we going to delete all added
+            # files
+            if len(file_names) > 1:
+                for f in added_res_files:
+                    files_failed_validation.append(f.file_name)
+                    f.delete()
+                validate_files_dict['are_files_valid'] = False
+                err_msg = base_err_msg.format(", ".join(files_failed_validation))
+                validate_files_dict['message'] = err_msg
+                return
+            if len(added_res_files) < resource.files.count():
+                # added file name must match with existing file name
+                added_file_ids = [f.id for f in added_res_files]
+                file_name_to_match = [f.file_name for f in resource.files.all() if f.id not
+                                      in added_file_ids][0]
+                added_file_non_xml = [f for f in added_res_files if
+                                      f.extension != '.xml'][0]
+                match_file_offset = -4
+                if file_name_to_match.endswith('.shp.xml'):
+                    match_file_offset = -8
+
+                if added_file_non_xml.file_name[:-4] != file_name_to_match[:match_file_offset]:
+                    files_failed_validation.append(added_file_non_xml.file_name)
+                    added_file_non_xml.delete()
+                    added_res_files.remove(added_file_non_xml)
+
+                added_files_xml = [f for f in added_res_files if f.extension == '.xml']
+                if added_files_xml:
+                    added_xml_file = added_files_xml[0]
+                    if added_xml_file.file_name[:-8] != file_name_to_match[:match_file_offset]:
+                        files_failed_validation.append(added_xml_file.file_name)
+                        added_xml_file.delete()
+                        added_res_files.remove(added_xml_file)
+
+        elif resource.files.count() > 1:
+            # case of one non zip file got added
+            xml_files = [f for f in added_res_files if f.extension == '.xml']
+            if xml_files:
+                # compare without '.shp.xml' (-8)
+                xml_file = xml_files[0]
+                file_name_to_match = [f.file_name for f in resource.files.all() if
+                                      f.id != xml_file.id][0]
+                if xml_file.file_name[:-8] != file_name_to_match[:-4]:
+                    files_failed_validation.append(xml_file.file_name)
+                    xml_file.delete()
+                    added_res_files.remove(xml_file)
+            else:
+                non_xml_file = [f for f in added_res_files if f.extension != '.xml'][0]
+                file_name_to_match = [f.file_name for f in resource.files.all() if
+                                      f.id != non_xml_file.id][0]
+                match_file_offset = -4
+                if file_name_to_match.endswith('.shp.xml'):
+                    match_file_offset = -8
+                if non_xml_file.file_name[:-4] != file_name_to_match[:match_file_offset]:
+                    files_failed_validation.append(non_xml_file.file_name)
+                    non_xml_file.delete()
+                    added_res_files.remove(non_xml_file)
 
         # check if a shp file got added - in that case resource specific metadata needs
         # to be created
@@ -196,10 +294,16 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         else:
             res_file = shp_res_file
         try:
-            _process_uploaded_file(resource, res_file, err_msg)
+            _process_uploaded_file(resource, res_file, base_err_msg)
         except Exception as ex:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = ex.message
+
+    if files_failed_validation:
+        # some of the uploaded files did not pass validation
+        validate_files_dict['are_files_valid'] = False
+        err_msg = base_err_msg.format(", ".join(files_failed_validation))
+        validate_files_dict['message'] = err_msg
 
 
 def validate_form(request, element_name):
@@ -218,6 +322,7 @@ def validate_form(request, element_name):
 
 
 def _process_uploaded_file(resource, res_file, err_msg):
+    files_failed_validation = []
     try:
         # validate files and extract metadata
         meta_dict, shape_files, shp_res_files = geofeature.extract_metadata_and_files(
@@ -225,7 +330,9 @@ def _process_uploaded_file(resource, res_file, err_msg):
     except Exception:
         # need to delete all resource files as these files failed validation
         for f in resource.files.all():
+            files_failed_validation.append(f.file_name)
             f.delete()
+        err_msg = err_msg,format(", ".join(files_failed_validation))
         raise ValidationError(err_msg)
     # upload generated files in case of zip file
     if res_file.extension == '.zip':
@@ -240,7 +347,7 @@ def _process_uploaded_file(resource, res_file, err_msg):
     # add extracted metadata to the resource
     xml_file = ''
     for f in shape_files:
-        if f.endswith('.xml'):
+        if f.endswith('.shp.xml'):
             xml_file = f
             break
     geofeature.add_metadata(resource, meta_dict, xml_file)
