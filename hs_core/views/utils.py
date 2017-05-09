@@ -787,9 +787,46 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
             raise ValidationError("File/folder move/rename is not allowed.")
 
     istorage.moveFile(src_full_path, tgt_full_path)
-
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
+
+# TODO: modify this to take short paths not including data/contents
+def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
+    """
+    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param src_path: the relative path for the source file or folder under res_id collection
+    :param tgt_path: the relative path for the target file or folder under res_id collection
+    :param validate_move_rename: if True, then only ask resource type to check if this action is
+            allowed. Sometimes resource types internally want to take this action but disallow
+            this action by a user. In that case resource types set this parameter to False to allow
+            this action.
+    :return:
+
+    Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'.
+    Also, this foregoes extensive antibugging of arguments because that is done in the
+    REST API.
+    """
+    if __debug__:
+        assert(src_path.startswith("data/contents/"))
+        assert(tgt_path.startswith("data/contents/"))
+
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    src_full_path = os.path.join(resource.root_path, src_path)
+    tgt_full_path = os.path.join(resource.root_path, tgt_path)
+
+    # TODO: why is this optional?
+    if validate_move_rename:
+        # this must raise ValidationError if move/rename is not allowed by specific resource type
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
+
+    istorage.moveFile(src_full_path, tgt_full_path)
+    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
 
@@ -809,6 +846,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     :return:
 
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
+    Also, this foregoes extensive antibugging of arguments because that is done in the
+    REST API.
     """
     if __debug__:
         for s in src_paths:
