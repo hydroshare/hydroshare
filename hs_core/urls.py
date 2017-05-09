@@ -194,7 +194,7 @@ urlpatterns = patterns(
     url(r'^_internal/data-store-move-to-folder/$',
         views.resource_folder_hierarchy.data_store_move_to_folder),
     url(r'^_internal/data-store-rename-file-or-folder/$',
-        views.resource_folder_hierarchy.data_rename_file_or_folder),
+        views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
 )
