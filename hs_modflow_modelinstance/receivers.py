@@ -101,11 +101,12 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().last()
-    if res_file:
-        # process_package_info(resource)
-        if res_file.extension == '.dis':
-            add_metadata_from_dis_file(res_file, resource)
+    res_files = resource.files.all()
+    if res_files.first():
+        process_package_info(resource)
+        for f in res_files:
+            if f.extension == '.dis':
+                add_metadata_from_dis_file(f, resource)
 
 
 @receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
@@ -114,11 +115,13 @@ def post_create_resource_handler(sender, **kwargs):
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().last()
-    if res_file:
-        # process_package_info(resource)
-        if res_file.extension == '.dis':
-            add_metadata_from_dis_file(res_file, resource)
+    res_files = resource.files.all()
+    if res_files.first():
+        process_package_info(resource)
+        for f in res_files:
+            if f.extension == '.dis':
+                add_metadata_from_dis_file(f, resource)
+
 
 
 def process_package_info(resource):
@@ -228,6 +231,8 @@ def create_or_update_from_package(resource, term, **kwargs):
         t = 'general_elements'
     if term.term == 'GridDimensions':
         t = 'grid_dimensions'
+    if term.term == 'StudyArea':
+        t = 'study_area'
     metadata_term_obj = getattr(resource.metadata, t)
     if not metadata_term_obj:
         resource.metadata.create_element(
@@ -245,26 +250,84 @@ def create_or_update_from_package(resource, term, **kwargs):
 
 def add_metadata_from_dis_file(dis_file, res):
     """
-      
+    
     :param dis_file: 
+    :param res: 
     :return: 
     """
-    for row in dis_file.resource_file.file:
-        row = row.strip()
-        row = row.split()
-        r = row[0].strip()
-        if not r.startswith('#'):
-            # raise Exception(str(row))
-            grid_dimension_info = dict(
-                numberOfLayers=row[0],
-                numberOfRows=row[1],
-                numberOfColumns=row[2],
-            )
-            stress_period_info = dict(
-                Nper=row[3],
-                tmuni=row[4],
-            )
-            lenuni=row[5]
-            create_or_update_from_package(res, modflow_models.GridDimensions, **grid_dimension_info)
-            break
+    lines = dis_file.resource_file.readlines()
+    first_line = True
+    ss = False
+    tr = False
+    total_y_length = None
+    total_x_length = None
+    study_area_info = dict()
+    stress_period_info = dict()
+    for l in lines:
+        l = l.strip()
+        l = l.split()
+        first_char = l[0].strip()
+        l = [c.lower() for c in l]
+        if not first_char.startswith('#'):
+            if first_line:
+                grid_dimension_info = dict(
+                    numberOfLayers=l[0],
+                    numberOfRows=l[1],
+                    numberOfColumns=l[2],
+                )
+                Nper=l[3],
+                tmuni=l[4],
+                lenuni = l[5]
+                first_line = False
+            unit_con_factor = get_unit_conversion_factor(int(lenuni))
+            if 'delr' in l:
+                if 'constant' in l:
+                    grid_dimension_info['typeOfRows'] = 'Regular'
+                    row_len = l[1]
+                    if int(lenuni) > 0:
+                        total_y_length = float(row_len) * float(
+                            grid_dimension_info['numberOfRows']) * unit_con_factor
+                elif 'internal' in l:
+                    grid_dimension_info['typeOfRows'] = 'Irregular'
+            if 'delc' in l:
+                if 'constant' in l:
+                    grid_dimension_info['typeOfColumns'] = 'Regular'
+                    col_len = l[1]
+                    if int(lenuni) > 0:
+                        total_x_length = float(col_len) * float(
+                            grid_dimension_info['numberOfColumns']) * unit_con_factor
+                elif 'internal' in l:
+                    grid_dimension_info['typeOfColumns'] = 'Irregular'
+            if 'ss' in l:
+                ss = True
+            if 'tr' in l:
+                tr = True
+            if total_y_length and total_x_length:
+                study_area_info['totalLength'] = max(total_y_length, total_x_length)
+                study_area_info['totalWidth'] = min(total_y_length, total_x_length)
+    if ss and not tr:
+        stress_period_info['stressPeriodType'] = 'Steady'
+    elif tr and not ss:
+        stress_period_info['stressPeriodType'] = 'Transient'
+    elif ss and tr:
+        stress_period_info['stressPeriodType'] = 'Steady and Transient'
+    create_or_update_from_package(res, modflow_models.StressPeriod, **stress_period_info)
+    create_or_update_from_package(res, modflow_models.GridDimensions, **grid_dimension_info)
+    create_or_update_from_package(res, modflow_models.StudyArea, **study_area_info)
 
+def get_unit_conversion_factor(unit_id):
+    """
+    
+    :param unit_id: 
+    :return: 
+    """
+    factor = None
+    if unit_id == 0:
+        factor = 'length units are undefined'
+    elif unit_id == 1:  # units are in feet
+        factor = 0.3048
+    elif unit_id == 2:
+        factor = 1.
+    elif unit_id == 3:
+        factor = .01
+    return factor
