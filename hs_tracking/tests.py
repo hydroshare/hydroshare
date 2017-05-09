@@ -15,9 +15,10 @@ import urllib
 
 
 class ViewTests(TestCase):
-    
+
     def setUp(self):
-        self.user = User.objects.create(username='testuser', email='testuser@example.com')
+        self.user = User.objects.create(username='testuser',
+                                        email='testuser@example.com')
         self.user.set_password('password')
         self.user.save()
         profile = self.user.userprofile
@@ -37,7 +38,8 @@ class ViewTests(TestCase):
 
         # sample request with mocked ip address
         self.request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, 127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0,' +
+                                    '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
@@ -47,24 +49,25 @@ class ViewTests(TestCase):
         return self.request
 
     def test_get(self):
-        
+
         # check that there are no logs for app_launch
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
         self.assertEqual(app_lauch_cnt, 0)
-        
+
         # create a mock request object
         r = self.createRequest(self.user)
-       
+
         # build request 'GET'
         res_id = 'D7a7de92941a044049a7b8ad09f4c75bb'
         res_type = 'GenericResource'
         app_name = 'test'
-        request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' +
+        request_url = 'https://apps.hydroshare.org/apps/hydroshare-gis/' \
                       '?res_id=%s&res_type=%s' % (res_id, res_type)
+
         app_url = urllib.quote(request_url)
         href = 'url=%s;name=%s' % (app_url, app_name)
         r.GET = QueryDict(href)
-        
+
         # invoke the app logging endpoint
         app_logging = AppLaunch()
         url_redirect = app_logging.get(r)
@@ -74,7 +77,7 @@ class ViewTests(TestCase):
         self.assertTrue(url_redirect.url == request_url)
 
         # validate logged data
-        app_lauch_cnt= Variable.objects.filter(name='app_launch').count()
+        app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
         self.assertEqual(app_lauch_cnt, 1)
         data = list(Variable.objects.filter(name='app_launch'))
         values = dict(item.split("=") for item in data[0].value.split(" "))
@@ -97,7 +100,8 @@ class ViewTests(TestCase):
 class TrackingTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create(username='testuser', email='testuser@example.com')
+        self.user = User.objects.create(username='testuser',
+                                        email='testuser@example.com')
         self.user.set_password('password')
         self.user.save()
         profile = self.user.userprofile
@@ -117,7 +121,8 @@ class TrackingTests(TestCase):
 
         # sample request with mocked ip address
         request.META = {
-            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, 127.0.0.1, 198.84.193.157, '
+            'HTTP_X_FORWARDED_FOR': '192.168.255.182, 10.0.0.0, ' +
+                                    '127.0.0.1, 198.84.193.157, '
             '177.139.233.139',
             'HTTP_X_REAL_IP': '177.139.233.132',
             'REMOTE_ADDR': '177.139.233.133',
