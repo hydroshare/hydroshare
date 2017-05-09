@@ -915,7 +915,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
-    # TODO: #2105: doesn't return enough information for intelligent decision 
+    // TODO: 2105: doesn't return enough information for intelligent decision 
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',

@@ -819,11 +819,6 @@ def move_to_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    # tgt_file_name = os.path.basename(tgt_full_path)
-    # tgt_file_dir = os.path.dirname(tgt_full_path)
-    # src_file_name = os.path.basename(src_full_path)
-    # src_file_dir = os.path.dirname(src_full_path)
-
     # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type

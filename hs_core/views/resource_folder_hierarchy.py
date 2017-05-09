@@ -90,14 +90,14 @@ def data_store_structure(request):
                         logical_file_id = f.logical_file.id
                     break
 
-            if f_pk != '':
+            if f_pk:  # file is found in Django 
                 files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
                               'logical_type': logical_file_type,
                               'logical_file_id': logical_file_id})
-            else:
+            else:  # file is not found in Django 
                 logger.error("data_store_structure: filename {} in iRODs has no analogue in Django"
                              .format(name_with_full_path))
-            # TODO: flag when files in Django have no analogue in iRODs
+
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -459,22 +459,27 @@ def data_store_file_or_folder_move_or_rename_public(request, pk):
     return data_store_file_or_folder_move_or_rename(request, res_id=pk)
 
 
-def data_store_move_to_folder(request, res_id=None):
+@api_view(['POST'])
+def data_store_move_to_folder(request, pk):
     """
-    Move or file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
-    resource backend store. It is invoked by an AJAX call and returns json object that has the
-    relative path of the target file or folder being moved to if succeeds, and return empty string
-    if fails. The AJAX request must be a POST request with input data passed in for res_id,
-    source_path, and target_path where source_path and target_path are the relative paths for the
-    source and target file or folder under res_id collection/directory.
+    Move a list of files and/or folders to another folder in a resource file hierarchy.  
+
+    :param request: a REST request
+    :param pk: the short_id of a resource to modify, from REST URL. 
+
+    It is invoked by an AJAX call and returns a json object that has the relative paths of 
+    the target files or folders to which files have been moved. The AJAX request must be a POST 
+    request with input data passed in for source_paths and target_path where source_paths
+    and target_path are the relative paths for the source and target file or folder in the
+    res_id file directory.
     """
-    res_id = request.POST.get('res_id', res_id)
-    if res_id is None:
+    # pk = request.POST.get('res_id', pk)
+    if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
-    res_id = str(res_id).strip()
+    pk = str(pk).strip()
     try:
-        resource, _, user = authorize(request, res_id,
+        resource, _, user = authorize(request, pk,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
         return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
@@ -518,7 +523,7 @@ def data_store_move_to_folder(request, res_id=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        move_to_folder(user, res_id, src_path, tgt_path)
+        move_to_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
@@ -533,33 +538,33 @@ def data_store_move_to_folder(request, res_id=None):
 
 
 @api_view(['POST'])
-def data_store_move_to_folder_public(request, pk):
-    return data_store_move_to_folder(request, res_id=pk)
-
-
-def data_store_rename_file_or_folder(request, res_id=None):
+def data_store_rename_file_or_folder(request, pk):
     """
-    Move or file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
-    resource backend store. It is invoked by an AJAX call and returns json object that has the
-    relative path of the target file or folder being moved to if succeeds, and return empty string
-    if fails. The AJAX request must be a POST request with input data passed in for res_id,
-    source_path, and target_path where source_path and target_path are the relative paths for the
-    source and target file or folder under res_id collection/directory.
+    Rename one file or folder in a resource file hierarchy.  It is invoked by an AJAX call 
+
+    :param request: a REST request
+    :param pk: the short_id of a resource to modify, from REST URL. 
+
+    This is invoked by an AJAX call and returns a json object that has the relative path of 
+    the target file or folder that has been renamed. The AJAX request must be a POST 
+    request with input data for source_path and target_path where source_path
+    and target_path are the relative paths for the source and target file or folder.  
     """
-    res_id = request.POST.get('res_id', res_id)
-    if res_id is None:
+    # pk = request.POST.get('res_id', pk)
+    if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
-    res_id = str(res_id).strip()
+    pk = str(pk).strip()
     try:
-        resource, _, user = authorize(request, res_id,
+        resource, _, user = authorize(request, pk,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
         return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    src_path = resolve_request(request).get('source_path', None)
+    # multiple source paths
+    src_path = resolve_request(request).get('source_paths', None)
     tgt_path = resolve_request(request).get('target_path', None)
     if src_path is None or tgt_path is None:
         return HttpResponse('Bad request - src_path or tgt_path is not included',
@@ -611,7 +616,7 @@ def data_store_rename_file_or_folder(request, res_id=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        rename_file_or_folder(user, res_id, src_path, tgt_path)
+        rename_file_or_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
@@ -623,23 +628,6 @@ def data_store_rename_file_or_folder(request, res_id=None):
         json.dumps(return_object),
         content_type='application/json'
     )
-
-
-@api_view(['POST'])
-def data_store_rename_file_or_folder_public(request, pk):
-    return data_store_rename_file_or_folder(request, res_id=pk)
-
-def is_folder(istorage, path):
-    """ return True if the thing is a folder """
-    dir, base = os.path.split(path)
-    try:
-        contents = istorage.listdir(dir)
-        if base in contents[0]:  # folders
-            return True
-        else:
-            return False
-    except SessionException:
-        return False
 
 
 def is_folder(istorage, path):
