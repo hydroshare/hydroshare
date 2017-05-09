@@ -2,6 +2,7 @@ import os
 import logging
 import shutil
 import zipfile
+import xmltodict
 
 from osgeo import ogr, osr
 try:
@@ -23,6 +24,7 @@ from hs_core.models import Title
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm
+
 
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
     OriginalCoverage, GeometryInformation, OriginalFileInfo, FieldInformation
@@ -208,7 +210,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
+        from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
 
         log = logging.getLogger()
 
@@ -224,12 +226,15 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         if not res_file.has_generic_logical_file:
             raise ValidationError("Selected file must be part of a generic file type.")
 
+        file_names = []
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
         except ValidationError as ex:
             log.exception(ex.message)
             raise ex
-
+        # store file names in case we have to rollback
+        for f in shp_res_files:
+            file_names.append(f.file_name)
         # hold on to temp dir for final clean up
         temp_dir = os.path.dirname(shape_files[0])
         file_name = res_file.file_name
@@ -237,11 +242,14 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         base_file_name = file_name.split(".")[0]
         xml_file = ''
         for f in shape_files:
-            if f.endswith('.xml'):
+            if f.endswith('.shp.xml'):
                 xml_file = f
                 break
 
         file_folder = res_file.file_folder
+        file_type_success = False
+        upload_folder = ''
+        msg = "GeoFeature file type. Error when setting file type. Error:{}"
         with transaction.atomic():
             # first delete all the shape files that we retrieved from irods
             # for setting it to GeoFeature file type
@@ -282,22 +290,37 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     logical_file.add_resource_file(new_res_file)
 
                 log.info("GeoFeature file type - files were added to the file type.")
+                add_metadata(resource, meta_dict, xml_file, logical_file)
+                log.info("GeoFeature file type and resource level metadata updated.")
+                file_type_success = True
             except Exception as ex:
-                msg = "GeoFeature file type. Error when setting file type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
-                # TODO: in case of any error put the original file back and
-                # delete the folder that was created
-                raise ValidationError(msg)
             finally:
                 # remove temp dir
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
 
-            log.info("GeoFeature file type was created.")
-            add_metadata(resource, meta_dict, xml_file, logical_file)
+        if not file_type_success and upload_folder:
+            # roll back files to their original state
+            log.info("File type setting failed. Trying to roll back files to the original state.")
+            # TODO: refactor the following code to a class method of the AbstractLogicalFile
+            # and use it in other file type set_file_type() function
+            try:
+                tgt_path = 'data/contents'
+                if file_folder is not None:
+                    tgt_path = os.path.join(tgt_path, file_folder)
 
-            log.info("GeoFeature file type and resource level metadata updated.")
+                for fn in file_names:
+                    src_path = os.path.join(tgt_path, upload_folder, fn)
+                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path,
+                                                  validate_move_rename=False)
+                folder_to_remove = os.path.join(tgt_path, upload_folder)
+                remove_folder(user, resource.short_id, folder_to_remove)
+            except Exception as ex:
+                log.exception(ex.message)
+                msg += " .{}".format("Failed to roll back files to their original state.")
+                raise ValidationError(ex.message)
 
 
 def extract_metadata_and_files(resource, res_file, file_type=True):
@@ -310,7 +333,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
     :return: a dict of extracted metadata, a list file paths of shape related files on the
     temp directory, a list of resource files retrieved from iRODS for this processing
     """
-    shape_files, shp_res_files = _get_all_related_shp_files(resource, res_file, file_type=file_type)
+    shape_files, shp_res_files = get_all_related_shp_files(resource, res_file, file_type=file_type)
     temp_dir = os.path.dirname(shape_files[0])
     if not _check_if_shape_files(shape_files):
         if res_file.extension == '.shp':
@@ -330,7 +353,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
             shp_file = f
             break
     try:
-        meta_dict = _parse_shp_zshp(shp_file_full_path=shp_file)
+        meta_dict = extract_metadata(shp_file_full_path=shp_file)
         return meta_dict, shape_files, shp_res_files
     except Exception as ex:
         # remove temp dir
@@ -347,7 +370,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
 
 def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     """
-
+    creates/updates metadata at resource and file level
     :param resource: an instance of BaseResource
     :param metadata_dict: dict containing extracted metadata
     :param xml_file: file path (on temp directory) of the xml file that is part of the
@@ -357,26 +380,27 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
     :return:
     """
     # populate resource and logical file level metadata
-    is_file_type = logical_file is not None
-    if logical_file is None:
-        logical_file = resource
+    target_obj = logical_file if logical_file is not None else resource
 
     if "coverage" in metadata_dict.keys():
         coverage_dict = metadata_dict["coverage"]['Coverage']
-        logical_file.metadata.create_element('coverage',
-                                             type=coverage_dict['type'],
-                                             value=coverage_dict['value'])
+        target_obj.metadata.coverages.all().filter(type='box').delete()
+        target_obj.metadata.create_element('coverage',
+                                           type=coverage_dict['type'],
+                                           value=coverage_dict['value'])
     originalcoverage_dict = metadata_dict["originalcoverage"]['originalcoverage']
-    logical_file.metadata.create_element('originalcoverage',
-                                         **originalcoverage_dict)
+    if target_obj.metadata.originalcoverage is not None:
+        target_obj.metadata.originalcoverage.delete()
+    target_obj.metadata.create_element('originalcoverage', **originalcoverage_dict)
     field_info_array = metadata_dict["field_info_array"]
+    target_obj.metadata.fieldinformations.all().delete()
     for field_info in field_info_array:
         field_info_dict = field_info["fieldinformation"]
-        logical_file.metadata.create_element('fieldinformation',
-                                             **field_info_dict)
+        target_obj.metadata.create_element('fieldinformation', **field_info_dict)
     geometryinformation_dict = metadata_dict["geometryinformation"]
-    logical_file.metadata.create_element('geometryinformation',
-                                         **geometryinformation_dict)
+    if target_obj.metadata.geometryinformation is not None:
+        target_obj.metadata.geometryinformation.delete()
+    target_obj.metadata.create_element('geometryinformation', **geometryinformation_dict)
     if xml_file:
         shp_xml_metadata_list = _parse_shp_xml(xml_file)
         for shp_xml_metadata in shp_xml_metadata_list:
@@ -388,9 +412,10 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
                                                      abstract=abstract)
             elif 'title' in shp_xml_metadata:
                 title = shp_xml_metadata['title']['value']
-                if resource.metadata.title.value.lower() == 'untitled resource':
-                    resource.metadata.create_element('title', value=title)
-                if is_file_type:
+                title_element = resource.metadata.title
+                if title_element.value.lower() == 'untitled resource':
+                    resource.metadata.update_element('title', title_element.id, value=title)
+                if logical_file is not None:
                     logical_file.dataset_name = title
                     logical_file.save()
             elif 'subject' in shp_xml_metadata:
@@ -401,12 +426,13 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
                 if keyword.lower() not in existing_keywords:
                     resource.metadata.create_element('subject', value=keyword)
                 # add keywords at the logical file level
-                if is_file_type:
-                    logical_file.metadata.keywords += [keyword]
-                    logical_file.metadata.save()
+                if logical_file is not None:
+                    if keyword not in logical_file.metadata.keywords:
+                        logical_file.metadata.keywords += [keyword]
+                        logical_file.metadata.save()
 
 
-def _get_all_related_shp_files(resource, selected_resource_file, file_type):
+def get_all_related_shp_files(resource, selected_resource_file, file_type):
     """
     This helper function copies all the related shape files to a temp directory
     and return a list of those temp file paths as well as a list of existing related
@@ -418,6 +444,15 @@ def _get_all_related_shp_files(resource, selected_resource_file, file_type):
     :return: a list of temp file paths for all related shape files, and a list of corresponding
      resource file objects
     """
+
+    def collect_shape_resource_files(res_file):
+        # compare without the file extension (-4)
+        if res_file.short_path.endswith('.shp.xml'):
+            if selected_resource_file.short_path[:-4] == res_file.short_path[:-8]:
+                shape_res_files.append(f)
+        elif selected_resource_file.short_path[:-4] == res_file.short_path[:-4]:
+            shape_res_files.append(res_file)
+
     shape_temp_files = []
     shape_res_files = []
     temp_dir = ''
@@ -426,13 +461,9 @@ def _get_all_related_shp_files(resource, selected_resource_file, file_type):
             if f.extension in GeoFeatureLogicalFile.get_allowed_storage_file_types():
                 if file_type:
                     if f.has_generic_logical_file:
-                        # compare without the file extension (-4)
-                        if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
-                            shape_res_files.append(f)
+                        collect_shape_resource_files(f)
                 else:
-                    # compare without the file extension (-4)
-                    if selected_resource_file.short_path[:-4] == f.short_path[:-4]:
-                        shape_res_files.append(f)
+                    collect_shape_resource_files(f)
 
         for f in shape_res_files:
             temp_file = utils.get_file_from_irods(f)
@@ -481,14 +512,26 @@ def _check_if_shape_files(files):
 
     # at least needs to have 3 mandatory files: shp, shx, dbf
     if len(files) >= 3:
+        # check that there are no files with same extension
         file_extensions = set([os.path.splitext(os.path.basename(f).lower())[1] for f in files])
         if len(file_extensions) != len(files):
             return False
-        file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files])
-        if len(file_names) > 1:
-            # file names are not same
-            return False
+        # check if there is the xml file
+        xml_file = ''
+        for f in files:
+            if f.endswith('.shp.xml'):
+                xml_file = f
 
+        file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
+                          not f.endswith('.shp.xml')])
+        if len(file_names) > 1:
+            # file names are not the same
+            return False
+        # check if xml file name matches with other file names
+        if xml_file:
+            # -8 for '.shp.xml'
+            if os.path.basename(xml_file)[:-8] not in file_names:
+                return False
         for ext in file_extensions:
             if ext not in GeoFeatureLogicalFile.get_allowed_storage_file_types():
                 return False
@@ -509,7 +552,7 @@ def _check_if_shape_files(files):
     return True
 
 
-def _parse_shp_zshp(shp_file_full_path):
+def extract_metadata(shp_file_full_path):
     """
     Collects metadata from a .shp file specified by *shp_file_full_path*
     :param shp_file_full_path:
@@ -723,7 +766,11 @@ def _parse_shp(shp_file_path):
 
 def _parse_shp_xml(shp_xml_full_path):
     """
-    Parse ArcGIS 10.X ESRI Shapefile Metadata XML.
+    Parse ArcGIS 10.X ESRI Shapefile Metadata XML. file to extract metadata for the following
+    elements:
+        title
+        abstract
+        keywords
     :param shp_xml_full_path: Expected fullpath to the .shp.xml file
     :return: a list of metadata dict
     """

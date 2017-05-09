@@ -566,19 +566,18 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
             folderpath += '/'
         res_file_set = ResourceFile.objects.filter(object_id=resource.id)
 
-        # TODO: integrate this with ResourceFile.delete
-        # delete all unique logical file objects associated with any resource files to be deleted
-        # from django as they need to be deleted differently
-        logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
-        for lf in logical_files:
-            # this should delete the logical file and any associated metadata
-            # but does not delete the resource files that are part of the logical file
-            lf.logical_delete(user, delete_res_files=False)
-
         # then delete resource file objects
         for f in res_file_set:
             filename = f.storage_path
             if filename.startswith(folderpath):
+                # Pabitra - This code related to logical file has been implemented as a hotfix to
+                # release-candidate-1.10.0. Expect get conflicts when updating to develop
+                # TODO: integrate deletion of logical file with ResourceFile.delete
+                # delete the logical file object if the resource file has one
+                if f.has_logical_file:
+                    # this should delete the logical file and any associated metadata
+                    # but does not delete the resource files that are part of the logical file
+                    f.logical_file.logical_delete(user, delete_res_files=False)
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
@@ -702,8 +701,8 @@ def remove_folder(user, res_id, folder_path):
     :param folder_path: the relative path for the folder to be removed under res_id collection.
     :return:
     """
-    if __debug__:
-        assert(folder_path.startswith("data/contents/"))
+    # if __debug__:
+    #     assert(folder_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -759,9 +758,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
     """
-    if __debug__:
-        assert(src_path.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
+    # if __debug__:
+    #     assert(src_path.startswith("data/contents/"))
+    #     assert(tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
