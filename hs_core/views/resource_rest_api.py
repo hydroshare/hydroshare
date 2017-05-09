@@ -19,6 +19,7 @@ from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.exceptions import ValidationError, NotAuthenticated, PermissionDenied, NotFound
 
+from hs_api import resources
 from hs_core import hydroshare
 from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
@@ -292,6 +293,8 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 
     def get_serializer_class(self):
+        if self.request.version == "v2":
+            return resources.ResourceSerializer
         return serializers.ResourceListItemSerializer
 
 
@@ -387,36 +390,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             ]
         }
     """
-    def initialize_request(self, request, *args, **kwargs):
-        """
-        Hack to work around the following issue in django-rest-framework:
-
-        https://github.com/tomchristie/django-rest-framework/issues/3951
-
-        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
-        and is slated to be incorporated in the Django REST API 3.5.0 release.
-        At that time, we should remove this hack.
-
-        :param request:
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if not isinstance(request, Request):
-            # Don't deep copy the file data as it may contain an open file handle
-            old_file_data = copy.copy(request.FILES)
-            old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
-            request.POST.update(old_post_data)
-            request.FILES.update(old_file_data)
-        return request
-
-    # Couch: This is called explicitly in the overrided create() method and thus this
-    # declaration does nothing. Thus, it can be changed to whatever is convenient.
-    # Currently, it is convenient to use the listing serializer instead, so that
-    # it will be the default output serializer.
-    # def get_serializer_class(self):
-    #     return serializers.ResourceCreateRequestValidator
 
     def post(self, request):
         return self.create(request)
@@ -537,6 +510,8 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
     # covers serialization of output from GET request
     def get_serializer_class(self):
+        # if self.request.version == "v2":
+        #     return resources.ResourceListItemSerializer
         return serializers.ResourceListItemSerializer
 
 
@@ -756,7 +731,7 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET')
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
@@ -1001,31 +976,6 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
 
     """
     allowed_methods = ('GET', 'POST')
-
-    def initialize_request(self, request, *args, **kwargs):
-        """
-        Hack to work around the following issue in django-rest-framework:
-
-        https://github.com/tomchristie/django-rest-framework/issues/3951
-
-        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
-        and is slated to be incorporated in the Django REST API 3.5.0 release.
-        At that time, we should remove this hack.
-
-        :param request:
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        if not isinstance(request, Request):
-            # Don't deep copy the file data as it may contain an open file handle
-            old_file_data = copy.copy(request.FILES)
-            old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceFileListCreate, self).initialize_request(
-                                request, *args, **kwargs)
-            request.POST.update(old_post_data)
-            request.FILES.update(old_file_data)
-        return request
 
     def get(self, request, pk):
         """

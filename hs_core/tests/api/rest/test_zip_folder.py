@@ -10,6 +10,8 @@ from .base import HSRESTTestCase
 
 
 class TestPublicZipEndpoint(HSRESTTestCase):
+    V2_API_ROOT = "/api/v2/resource"
+
     def setUp(self):
         super(TestPublicZipEndpoint, self).setUp()
 
@@ -40,14 +42,14 @@ class TestPublicZipEndpoint(HSRESTTestCase):
         self.client.put(url, {})
 
         # put a file 'test.txt' into folder 'foo'
-        url2 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
+        url2 = str.format('/api/v2/resource/{}/files/foo/', self.pid)
         params = {'file': ('text.txt',
                            open(self.txt_file_path, 'rb'),
                            'text/plain')}
         self.client.post(url2, params)
 
         # put a file 'cea.tif' into folder 'foo'
-        url3 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
+        url3 = str.format('/api/v2/resource/{}/files/foo/', self.pid)
         params = {'file': (self.raster_file_name,
                            open(self.raster_file_path, 'rb'),
                            'image/tiff')}

@@ -12,6 +12,7 @@ from .base import HSRESTTestCase
 
 
 class TestResourceFile(HSRESTTestCase):
+    V2_API_ROOT = "/api/v2/resource"
 
     def setUp(self):
         super(TestResourceFile, self).setUp()
@@ -62,8 +63,8 @@ class TestResourceFile(HSRESTTestCase):
         self.assertIn(self.txt_file_name, content_list)
         self.assertIn(self.raster_file_name, content_list)
 
-    def test_resource_file_list(self):
-        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
+    def test_DEPRECATED_resource_file_list(self, root="/hsapi/resource"):
+        response = self.client.get(root + "/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -73,10 +74,13 @@ class TestResourceFile(HSRESTTestCase):
         self.assertIn(self.txt_file_name, content_list)
         self.assertIn(self.raster_file_name, content_list)
 
+    def test_resource_file_list(self):
+        self.test_DEPRECATED_resource_file_list(root=self.V2_API_ROOT)
+
     def test_get_resource_file(self):
         file_response = self.getResourceFile(self.pid, self.txt_file_name)
 
-    def test_create_resource_file(self):
+    def test_DEPRECATED_create_resource_file(self, root="/hsapi/resource"):
         # Make a new text file
         txt_file_name = 'text2.txt'
         txt_file_path = os.path.join(self.tmp_dir, txt_file_name)
@@ -87,14 +91,14 @@ class TestResourceFile(HSRESTTestCase):
         params = {'file': (txt_file_name,
                            open(txt_file_path),
                            'text/plain')}
-        url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
+        url = root + "/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
         self.assertEquals(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
-        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
+        response = self.client.get(root + "/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -104,7 +108,10 @@ class TestResourceFile(HSRESTTestCase):
                         os.path.basename(content['results'][2]['url'])]
         self.assertIn(txt_file_name, content_list)
 
-    def test_create_resource_file_with_custom_folder(self):
+    def test_create_resource_file(self):
+        self.test_DEPRECATED_create_resource_file(root=self.V2_API_ROOT)
+
+    def test_DEPRECATED_create_resource_file_with_custom_folder(self, root="/hsapi/resource"):
         # Make a new text file
         txt_file_name = 'text2.txt'
         txt_file_path = os.path.join(self.tmp_dir, txt_file_name)
@@ -118,7 +125,7 @@ class TestResourceFile(HSRESTTestCase):
             'folder': "folder/path"
         }
 
-        url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
+        url = root + "/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -130,7 +137,7 @@ class TestResourceFile(HSRESTTestCase):
         self.assertEquals(content['resource_id'], self.pid)
 
         # Make sure the new file appears in the file list
-        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
+        response = self.client.get(root + "/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -139,3 +146,6 @@ class TestResourceFile(HSRESTTestCase):
                         os.path.basename(content['results'][1]['url']),
                         os.path.basename(content['results'][2]['url'])]
         self.assertIn(txt_file_name, content_list)
+
+    def test_create_resource_file_with_custom_folder(self):
+        self.test_DEPRECATED_create_resource_file_with_custom_folder(root=self.V2_API_ROOT)

@@ -10,6 +10,7 @@ from .base import ResMapTestCase
 
 
 class TestResourceMap(ResMapTestCase):
+    V2_API_ROOT = "/api/v2/resource"
 
     def setUp(self):
         super(TestResourceMap, self).setUp()
@@ -28,8 +29,8 @@ class TestResourceMap(ResMapTestCase):
         shutil.rmtree(self.tmp_dir)
         super(TestResourceMap, self).tearDown()
 
-    def test_get_resmap(self):
-        response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid),
+    def test_DEPRECATED_get_resmap(self, root="/hsapi/resource"):
+        response = self.client.get(root + "/{pid}/map/".format(pid=self.pid),
                                    format='json')
         # Note: this presumes that there is always a single redirection.
         # This might not be true if we utilize systems other than iRODS.
@@ -81,14 +82,14 @@ class TestResourceMap(ResMapTestCase):
         params = {'file': (txt_file_name,
                            open(txt_file_path),
                            'text/plain')}
-        url = "/hsapi/resource/{pid}/files/".format(pid=self.pid)
+        url = root + "/{pid}/files/".format(pid=self.pid)
         response = self.client.post(url, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
         self.assertEquals(content['resource_id'], self.pid)
 
         # download the resource map and # make sure the new file appears
-        response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid))
+        response = self.client.get(root + "/{pid}/map/".format(pid=self.pid))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
@@ -144,3 +145,6 @@ class TestResourceMap(ResMapTestCase):
 
         # pidgeonhole principle: if there are three, then one is the file in question
         self.assertEqual(fmtlen, 3)
+
+    def test_get_resmap(self):
+        self.test_DEPRECATED_get_resmap(self.V2_API_ROOT)

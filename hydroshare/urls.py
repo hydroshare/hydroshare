@@ -72,6 +72,7 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
+    url('^api/v2/', include('hs_api.urls', namespace="v2")),
     url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),

@@ -7,6 +7,7 @@ from .base import HSRESTTestCase
 
 
 class TestResourceScienceMetadata(HSRESTTestCase):
+    V2_API_ROOT="/api/v2/resource"
 
     def setUp(self):
         super(TestResourceScienceMetadata, self).setUp()
@@ -19,15 +20,18 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
-    def test_get_scimeta(self):
+    def test_DEPRECATED_get_scimeta(self, root="/hsapi/resource"):
         # Get the resource system metadata
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+        sysmeta_url = root + "/{res_id}/scimeta/elements/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # content = json.loads(response.content)
 
-    def test_put_scimeta(self):
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+    def test_get_scimeta(self):
+        self.test_DEPRECATED_get_scimeta(root=self.V2_API_ROOT)
+
+    def test_DEPRECATED_put_scimeta(self, root="/hsapi/resource"):
+        sysmeta_url = root + "/{res_id}/scimeta/elements/".format(res_id=self.pid)
         put_data = {
             "title": "New Title",
             "description": "New Description",
@@ -81,8 +85,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         # content = json.loads(response.content)
 
-    def test_put_scimeta_double_none(self):
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
+    def test_put_scimeta(self):
+        self.test_DEPRECATED_put_scimeta(root=self.V2_API_ROOT)
+
+    def test_DEPRECATED_put_scimeta_double_none(self, root="/hsapi/resource"):
+        sysmeta_url = root + "/{res_id}/scimeta/elements/".format(res_id=self.pid)
         put_data = {
             "title": "New Title",
             "description": "New Description",
@@ -141,3 +148,6 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         # content = json.loads(response.content)
+
+    def test_put_scimeta_double_none(self):
+        self.test_DEPRECATED_put_scimeta_double_none(root=self.V2_API_ROOT)

@@ -181,6 +181,9 @@ ROBOTS_SITEMAP_URLS = [
     'http://localhost:8000/sitemap/',
 ]
 
+# Alternative tmp folder
+FILE_UPLOAD_TEMP_DIR = "/hs_tmp"
+
 #############
 # DATABASES #
 #############
@@ -290,6 +293,7 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
+    "rest_framework_swagger",
     "robots",
     "hs_core",
     "hs_access_control",
@@ -490,6 +494,15 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'oauth2_provider.ext.rest_framework.OAuth2Authentication',
     ),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning'
+}
+
+
+SWAGGER_SETTINGS = {
+    'VALIDATOR_URL': None,
+    'JSON_EDITOR': True,
+    'OPERATIONS_SORTER': 'alpha',
+    'APIS_SORTER': 'alpha'
 }
 
 SOLR_HOST = os.environ.get('SOLR_PORT_8983_TCP_ADDR', 'localhost')

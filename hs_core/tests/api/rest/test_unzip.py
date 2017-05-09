@@ -52,7 +52,7 @@ class TestPublicUnzipEndpoint(HSRESTTestCase):
         self.client.put(url2, {})
 
         # put the file 'test.zip' into folder 'foo'
-        url4 = str.format('/hsapi/resource/{}/files/foo/', self.pid)
+        url4 = str.format('/api/v2/resource/{}/files/foo/', self.pid)
         params = {'file': (payload,)}
         self.client.post(url4, params)
 

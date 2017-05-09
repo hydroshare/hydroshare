@@ -8,6 +8,7 @@ from .base import HSRESTTestCase
 
 
 class TestFolders(HSRESTTestCase):
+    V2_API_ROOT = "/api/v2/resource"
 
     def test_create_folder(self):
         rtype = 'GenericResource'
@@ -62,7 +63,7 @@ class TestFolders(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content, 'Cannot list path')
 
-    def test_file_in_folder(self):
+    def test_DEPRECATED_file_in_folder(self, root='/hsapi/resource'):
         rtype = 'GenericResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
@@ -88,7 +89,7 @@ class TestFolders(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # put a file 'test.txt' into folder 'foo'
-        url4 = str.format('/hsapi/resource/{}/files/foo/', res_id)
+        url4 = str.format(root + '/{}/files/foo/', res_id)
         params = {'file': ('test.txt',
                            open('hs_core/tests/data/test.txt'),
                            'text/plain')}
@@ -108,3 +109,6 @@ class TestFolders(HSRESTTestCase):
         self.assertEqual(content['folders'][0], 'bar')
         self.assertEqual(len(content['files']), 1)
         self.assertEqual(content['files'][0], 'test.txt')
+
+    def test_file_in_folder(self):
+        self.test_DEPRECATED_file_in_folder(root=self.V2_API_ROOT)
