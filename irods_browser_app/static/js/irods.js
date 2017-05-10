@@ -1,5 +1,5 @@
 $('#btn-select-irods-file').on('click',function(event) {
-    $('#res_type').val($('#resource-type').val());
+    $('#res_type').val($("#form-resource-type").val());
     $('#file_struct').children().remove();
     $('.ajax-loader').hide();
     var store = '';
@@ -214,7 +214,7 @@ function irods_upload() {
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("#irods-sel-file").text("No file selected");
+            $("#irods-sel-file").text("No file selected.");
             $('#irodsContent').modal('hide');
         }
     });

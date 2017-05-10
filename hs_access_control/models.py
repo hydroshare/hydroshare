@@ -1327,12 +1327,12 @@ class UserAccess(models.Model):
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
                 raise PermissionDenied(
-                        "You need to be a group owner to send invitation to join a group")
+                    "You need to be a group owner to send invitation to join a group")
 
             if GroupMembershipRequest.objects.filter(group_to_join=this_group,
                                                      invitation_to=this_user).exists():
                 raise PermissionDenied(
-                        "You already have a pending invitation for this user to join this group")
+                    "You already have a pending invitation for this user to join this group")
             else:
                 return GroupMembershipRequest.objects.create(request_from=self.user,
                                                              invitation_to=this_user,
@@ -1378,7 +1378,7 @@ class UserAccess(models.Model):
                 pass
             else:
                 raise PermissionDenied(
-                        "You don't have permission to act on the group membership request")
+                    "You don't have permission to act on the group membership request")
         # invited user acting on membership invitation from a group owner
         elif this_request.invitation_to == self.user:
             membership_grantor = this_request.request_from.uaccess
@@ -1388,7 +1388,7 @@ class UserAccess(models.Model):
                 pass
         else:
             raise PermissionDenied(
-                    "You don't have permission to act on the group membership request")
+                "You don't have permission to act on the group membership request")
 
         if accept_request and membership_grantor is not None:
             # user initially joins a group with 'VIEW' privilege
@@ -2311,11 +2311,12 @@ class UserAccess(models.Model):
 
             if via_user and via_group:
 
-                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
-                           r2urp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2urp__privilege=PrivilegeCodes.CHANGE,
-                           r2urp__user=self.user)
+                uquery = \
+                    Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                      r2urp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user)
 
                 gquery = \
                     Q(r2grp__privilege=PrivilegeCodes.VIEW,
@@ -2347,22 +2348,24 @@ class UserAccess(models.Model):
 
             elif via_user:
 
-                uquery = Q(r2urp__privilege=PrivilegeCodes.VIEW,
-                           r2urp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2urp__privilege=PrivilegeCodes.CHANGE,
-                           r2urp__user=self.user)
+                uquery = \
+                    Q(r2urp__privilege=PrivilegeCodes.VIEW,
+                      r2urp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2urp__privilege=PrivilegeCodes.CHANGE,
+                      r2urp__user=self.user)
 
                 return BaseResource.objects\
                     .filter(uquery).distinct()
 
             elif via_group:
 
-                gquery = Q(r2grp__privilege=PrivilegeCodes.VIEW,
-                           r2grp__group__g2ugp__user=self.user) | \
-                         Q(raccess__immutable=True,
-                           r2grp__privilege=PrivilegeCodes.CHANGE,
-                           r2grp__group__g2ugp__user=self.user)
+                gquery = \
+                    Q(r2grp__privilege=PrivilegeCodes.VIEW,
+                      r2grp__group__g2ugp__user=self.user) | \
+                    Q(raccess__immutable=True,
+                      r2grp__privilege=PrivilegeCodes.CHANGE,
+                      r2grp__group__g2ugp__user=self.user)
 
                 return BaseResource.objects\
                     .filter(gquery).distinct()
@@ -2604,6 +2607,7 @@ class UserAccess(models.Model):
         #   Owner
         #   Permission for self
         # cannot downgrade privilege just by having sharing privilege.
+        # also note the quota holder cannot be downgraded from owner privilege
 
         # grantor is assumed to have total privilege
         grantor_priv = access_resource.get_effective_privilege(self.user)
@@ -2637,12 +2641,16 @@ class UserAccess(models.Model):
         else:
             raise PermissionDenied("User must own resource or have sharing privilege")
 
-        # regardless of privilege, cannot remove last owner
+        # regardless of privilege, cannot remove last owner or quota holder
         if user is not None:
-            if grantee_priv == PrivilegeCodes.OWNER \
-                    and this_privilege != PrivilegeCodes.OWNER \
-                    and access_resource.owners.count() == 1:
-                raise PermissionDenied("Cannot remove sole owner of resource")
+            if grantee_priv == PrivilegeCodes.OWNER and this_privilege != PrivilegeCodes.OWNER:
+                if access_resource.owners.count() == 1:
+                    raise PermissionDenied("Cannot remove sole owner of resource")
+                qholder = this_resource.get_quota_holder()
+                if qholder:
+                    if qholder == user:
+                        raise PermissionDenied("Cannot remove this resource's quota holder from "
+                                               "ownership")
 
         return True
 
@@ -2865,6 +2873,12 @@ class UserAccess(models.Model):
                 and not this_user == self.user:
             raise PermissionDenied("You do not have permission to remove this sharing setting")
 
+        qholder = this_resource.get_quota_holder()
+        if qholder:
+            if qholder == this_user:
+                raise PermissionDenied("Cannot remove this resource's quota holder from "
+                                       "ownership")
+
         # if this_user is not an OWNER, or there is another OWNER, OK.
         if not UserResourcePrivilege.objects.filter(resource=this_resource,
                                                     privilege=PrivilegeCodes.OWNER,
@@ -2995,7 +3009,7 @@ class UserAccess(models.Model):
         Users who can be removed fall into three catagories
 
         a) self is admin: everyone.
-        b) self is resource owner: everyone.
+        b) self is resource owner: everyone except resource's quota holder.
         c) self is beneficiary: self only
         """
         if __debug__:  # during testing only, check argument types and preconditions
@@ -3005,7 +3019,7 @@ class UserAccess(models.Model):
             raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-
+        qholder = this_resource.get_quota_holder()
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
@@ -3016,6 +3030,8 @@ class UserAccess(models.Model):
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)
                 return access_resource.view_users.exclude(pk__in=users_to_exclude)
+            elif qholder:
+                return access_resource.view_users.exclude(id=qholder.id)
             else:
                 return access_resource.view_users
 
@@ -3614,18 +3630,18 @@ class GroupAccess(models.Model):
         if this_privilege == PrivilegeCodes.OWNER:
             return BaseResource.objects.filter(r2grp__privilege=this_privilege,
                                                r2grp__group=self.group)\
-                                       .exclude(pk__in=BaseResource.objects.filter(
-                                                    r2grp__group=self.group,
-                                                    r2grp__privilege__lt=this_privilege))
+                                       .exclude(pk__in=BaseResource.objects
+                                                .filter(r2grp__group=self.group,
+                                                        r2grp__privilege__lt=this_privilege))
 
         elif this_privilege == PrivilegeCodes.CHANGE:
             # CHANGE does not include immutable resources
             return BaseResource.objects.filter(raccess__immutable=False,
                                                r2grp__privilege=this_privilege,
-                                               r2grp__group=self.group).exclude(
-                                                        pk__in=BaseResource.objects.filter(
-                                                            r2grp__group=self.group,
-                                                            r2grp__privilege__lt=this_privilege))
+                                               r2grp__group=self.group)\
+                                       .exclude(pk__in=BaseResource.objects
+                                                .filter(r2grp__group=self.group,
+                                                        r2grp__privilege__lt=this_privilege))
 
         else:  # this_privilege == PrivilegeCodes.ViEW
             # VIEW includes CHANGE & immutable as well as explicit VIEW
@@ -3818,8 +3834,8 @@ class ResourceAccess(models.Model):
             return User.objects.filter(Q(is_active=True) &
                                        (Q(u2urp__resource=self.resource,
                                           u2urp__privilege=this_privilege) |
-                                       Q(u2ugp__group__g2grp__resource=self.resource,
-                                         u2ugp__group__g2grp__privilege=this_privilege)))\
+                                        Q(u2ugp__group__g2grp__resource=self.resource,
+                                          u2ugp__group__g2grp__privilege=this_privilege)))\
                                .distinct()
         elif include_user_granted_access:
             return User.objects.filter(Q(is_active=True) &

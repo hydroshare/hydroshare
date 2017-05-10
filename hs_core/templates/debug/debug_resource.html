@@ -1,0 +1,59 @@
+<h1>Debugging information for resource <a href='/resource/{{ shortkey}}/'>{{ shortkey }}</a></h1>
+
+<ul>
+<li> Title: <b>{{ resource.metadata.title.value }}</b> </li>
+<li> Creator:
+{% if creator.first_name %}
+    <a href='/user/{{ creator.pk }}/'
+        target="_blank">{{ creator.first_name }} {{ creator.last_name }}
+                        ({{ creator.username }}) </a>
+{% else %}
+    <a href='/user/{{ creator.pk }}/' target="_blank">{{ creator.username }}</a>
+{% endif %}
+</li>
+<li> Owners:
+<ul>
+{% for owner in owners %}
+    <li> 
+    {% if owner.first_name %}
+        <a href='/user/{{ owner.pk }}/'
+            target="_blank">{{ owner.first_name }} {{ owner.last_name }}
+                            ({{ owner.username }}) </a>
+    {% else %}
+        <a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a>
+    {% endif %}
+    </li> 
+{% endfor %}
+
+</li>
+</ul>
+</ul>
+
+<h2>Resource flags</h2> 
+<table border='1'>
+<tbody> 
+<tr><th colspan='2'>Resource Flags</th><th colspan='2'>iRODs AVUs</th></tr> 
+<tr><td>resource_type</td><td>{{ resource.resource_type }}</td>
+    <td>resourceType</td><td>{{ type_AVU }}</td></tr>
+<tr><td>public</td><td>{{ raccess.public }}</td>
+    <td>isPublic</td><td>{{ public_AVU }}</td></tr>
+<tr><th colspan='2'>Resource Flags</th>
+    <th colspan='2'>iRODs AVUs</th></tr> 
+<tr><td>discoverable</td><td>{{ raccess.discoverable }}</td>
+    <td>bag_modified</td><td>{{ modified_AVU }}</td></tr>
+<tr><td>immutable</td><td>{{ raccess.immutable }}</td>
+    <td>quotaUserName</td><td>{{ quota_AVU }}</td></tr>
+<tr><td>published</td><td>{{ raccess.published }}</td></tr>
+</tbody> 
+</table>
+
+{% if irods_issues %}
+    <h2>iRODs issues found</h2>
+    <ul>
+    {% for issue in irods_issues %}
+        <li><code>{{ issue }}</code></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <h2>No irods issues found.</h2>
+{% endif %}

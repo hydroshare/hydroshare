@@ -120,7 +120,9 @@ class Variable(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)
-    value = models.CharField(max_length=500)
+    # change value to TextField to be less restrictive as max_length of CharField has been
+    # exceeded a couple of times
+    value = models.TextField()
 
     def get_value(self):
         v = self.value
