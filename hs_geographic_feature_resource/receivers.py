@@ -32,7 +32,7 @@ def post_create_resource(sender, **kwargs):
     base_err_msg = "Files failed validation. Files not uploaded are: {}"
     files_failed_validation = []
     if resource.files.all().count() == 0:
-        # resource was created without any uploaded files
+        # resource was created without any uploaded files - no file validation needed
         return
     elif resource.files.all().count() == 1:
         # this file has to be a zip file
@@ -153,6 +153,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     shp_file_added = False
     prj_file_added = False
     files_failed_validation = []
+    files_existed_before = len(added_res_files) < resource.files.count()
     if resource.files.all().count() == 1:
         # this file has to be a zip file
         res_file = resource.files.all().first()
@@ -221,7 +222,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 err_msg = base_err_msg.format(", ".join(files_failed_validation))
                 validate_files_dict['message'] = err_msg
                 return
-            if len(added_res_files) < resource.files.count():
+            if files_existed_before:
                 # added file name must match with existing file name
                 added_file_ids = [f.id for f in added_res_files]
                 file_name_to_match = [f.file_name for f in resource.files.all() if f.id not
@@ -246,28 +247,23 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                         added_res_files.remove(added_xml_file)
 
         elif resource.files.count() > 1:
-            # case of one non zip file got added
-            xml_files = [f for f in added_res_files if f.extension == '.xml']
-            if xml_files:
-                # compare without '.shp.xml' (-8)
-                xml_file = xml_files[0]
-                file_name_to_match = [f.file_name for f in resource.files.all() if
-                                      f.id != xml_file.id][0]
-                if xml_file.file_name[:-8] != file_name_to_match[:-4]:
-                    files_failed_validation.append(xml_file.file_name)
-                    xml_file.delete()
-                    added_res_files.remove(xml_file)
-            else:
-                non_xml_file = [f for f in added_res_files if f.extension != '.xml'][0]
-                file_name_to_match = [f.file_name for f in resource.files.all() if
-                                      f.id != non_xml_file.id][0]
-                match_file_offset = -4
-                if file_name_to_match.endswith('.shp.xml'):
-                    match_file_offset = -8
-                if non_xml_file.file_name[:-4] != file_name_to_match[:match_file_offset]:
-                    files_failed_validation.append(non_xml_file.file_name)
-                    non_xml_file.delete()
-                    added_res_files.remove(non_xml_file)
+            # case of only one non-zip file got added - this file must be one of the optional files
+            # validate the name of the added file
+            added_res_file = added_res_files[0]
+            file_name_to_match = [f.file_name for f in resource.files.all() if
+                                  f.extension == '.shp'][0]
+            file_offset = -4
+            if added_res_file.extension == '.xml':
+                # compare the xml file without '.shp.xml' part (-8)
+                file_offset = -8
+            if added_res_file.file_name[:file_offset] != file_name_to_match[:-4]:
+                files_failed_validation.append(added_res_file.file_name)
+                added_res_file.delete()
+                added_res_files.remove(added_res_file)
+                validate_files_dict['are_files_valid'] = False
+                err_msg = base_err_msg.format(", ".join(files_failed_validation))
+                validate_files_dict['message'] = err_msg
+                return
 
         # check if a shp file got added - in that case resource specific metadata needs
         # to be created
