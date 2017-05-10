@@ -566,19 +566,16 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
             folderpath += '/'
         res_file_set = ResourceFile.objects.filter(object_id=resource.id)
 
-        # TODO: integrate this with ResourceFile.delete
-        # delete all unique logical file objects associated with any resource files to be deleted
-        # from django as they need to be deleted differently
-        logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
-        for lf in logical_files:
-            # this should delete the logical file and any associated metadata
-            # but does not delete the resource files that are part of the logical file
-            lf.logical_delete(user, delete_res_files=False)
-
         # then delete resource file objects
         for f in res_file_set:
             filename = f.storage_path
             if filename.startswith(folderpath):
+                # TODO: integrate deletion of logical file with ResourceFile.delete
+                # delete the logical file object if the resource file has one
+                if f.has_logical_file:
+                    # this should delete the logical file and any associated metadata
+                    # but does not delete the resource files that are part of the logical file
+                    f.logical_file.logical_delete(user, delete_res_files=False)
                 f.delete()
                 hydroshare.delete_format_metadata_after_delete_file(resource, filename)
 
@@ -634,6 +631,8 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         # remove empty folder in iRODS
         istorage.delete(res_coll_input)
 
+    # TODO: should check can_be_public_or_discoverable here
+
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
     return output_zip_fname, output_zip_size
 
@@ -667,6 +666,8 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
     if bool_remove_original:
         delete_resource_file(res_id, zip_fname, user)
+
+    # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -714,11 +715,7 @@ def remove_folder(user, res_id, folder_path):
 
     remove_irods_folder_in_django(resource, istorage, coll_path, user)
 
-    if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public_or_discoverable:
-            resource.raccess.public = False
-            resource.raccess.discoverable = False
-            resource.raccess.save()
+    resource.update_public_and_discoverable()  # make private if required
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -870,6 +867,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
         src_full_path = os.path.join(resource.root_path, src_path)
         istorage.moveFile(src_full_path, tgt_full_path)
         rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+
+    # TODO: should check can_be_public_or_discoverable here
 
     hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
 

@@ -11,7 +11,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
-from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
 
 from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
 
@@ -58,6 +58,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
         self.assertEqual(self.composite_resource.resource_type, "CompositeResource")
+        self.composite_resource.delete()
 
     def test_create_composite_resource_with_file_upload(self):
         # test that when we create composite resource with an uploaded file, then the uploaded file
@@ -90,6 +91,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
 
     def test_file_add_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file
@@ -117,6 +119,50 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
+
+    def test_raster_file_type_folder_delete(self):
+        # here we are testing that when a folder is deleted containing
+        # files for a logical file type, other files in the composite resource are still associated
+        # with their respective logical file types
+        self.assertEqual(BaseResource.objects.count(), 0)
+        self.raster_file_obj = open(self.raster_file, 'r')
+
+        self._create_composite_resource()
+        # add the raster file to the resource
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.raster_file_obj,), user=self.user)
+
+        tif_res_file = [f for f in self.composite_resource.files.all()
+                        if f.extension == ".tif"][0]
+
+        # add a generic file type
+        self.generic_file_obj = open(self.generic_file, 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.generic_file_obj,), user=self.user)
+        # there should be 2 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 2)
+        # there should not be any GeoRasterLogicalFile object
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
+        # there should be 1 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # there should be 1 GeoRasterLogicalFile object
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        txt_res_file = [f for f in self.composite_resource.files.all()
+                        if f.extension == ".txt"][0]
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+
+        # now delete the folder small_logan that contains files associated with raster file type
+        folder_path = "data/contents/small_logan"
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        txt_res_file.refresh_from_db()
+        self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
+        # there should not be any GeoRasterLogicalFile object
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # there should be 1 GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
 
     def test_core_metadata_CRUD(self):
         """test that all core metadata elements work for this resource type"""
@@ -325,6 +371,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         metadata.update_element('contributor', contributor.id, email='LSmith@gmail.com')
         contributor = self.composite_resource.metadata.contributors.first()
         self.assertEqual(contributor.email, 'LSmith@gmail.com')
+        self.composite_resource.delete()
 
     def test_metadata_xml(self):
         """test that the call to resource.get_metadata_xml() doesn't raise exception
@@ -420,6 +467,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         except Exception as ex:
             self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
 
+        self.composite_resource.delete()
+
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage
         # for composite resource get updated by the system based on the
@@ -473,7 +522,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(raster_logical_file.metadata.coverages.all().filter(
             type='period').count(), 0)
 
-        # addding temporal coverage to the logical file should add the temporal coverage to the
+        # adding temporal coverage to the logical file should add the temporal coverage to the
         # resource
         value_dict = {'start': '1/1/2010', 'end': '12/12/2015'}
         raster_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
@@ -591,6 +640,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         hydroshare.delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
         self.assertEqual(self.composite_resource.files.count(), 0)
         self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
+        self.composite_resource.delete()
 
     def test_can_be_public_or_discoverable(self):
         self._create_composite_resource()
@@ -629,6 +679,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         metadata.create_element('subject', value='sub-1')
         # at this point resource can be public or discoverable
         self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
+        self.composite_resource.delete()
 
     def test_supports_folder_creation(self):
         """Here we are testing the function supports_folder_creation()
@@ -672,6 +723,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         new_folder_path = "{}/data/contents/small_logan/my-new-folder"
         new_folder_path = new_folder_path.format(self.composite_resource.short_id)
         self.assertEqual(self.composite_resource.supports_folder_creation(new_folder_path), False)
+        self.composite_resource.delete()
 
     def test_supports_move_or_rename_file_or_folder(self):
         """here we are testing the function supports_move_or_rename_file_or_folder() of the
@@ -762,6 +814,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # this is the function we are testing
         self.assertEqual(self.composite_resource.supports_rename_path(
             src_full_path, tgt_full_path), False)
+        self.composite_resource.delete()
 
     def test_supports_zip(self):
         """Here we are testing the function supports_zip()"""
@@ -799,6 +852,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         folder_to_zip = self.composite_resource.short_id + '/data/contents/small_logan'
         # test that we can zip the folder small_logan
         self.assertEqual(self.composite_resource.supports_zip(folder_to_zip), True)
+        self.composite_resource.delete()
 
     def test_supports_delete_original_folder_on_zip(self):
         """Here we are testing the function supports_delete_original_folder_on_zip() of the
@@ -846,6 +900,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # this is the function we are testing - small_logan folder can't be deleted
         self.assertEqual(self.composite_resource.supports_delete_folder_on_zip(
             folder_to_zip), False)
+        self.composite_resource.delete()
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(

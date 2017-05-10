@@ -383,6 +383,8 @@ def data_store_remove_folder(request):
         remove_folder(user, res_id, folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as ex:
+        return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'status': 'success'}
     return HttpResponse(
