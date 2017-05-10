@@ -140,26 +140,32 @@ var initMap = function(json_results, view_type) {
         geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
     });
 
-    if (view_type == "area_map") {
-        google.maps.event.addListener(maps[view_type],'click',function(e){
-            shade_rects.forEach(function(box){
-                var rect = box.rect;
-                if (!box.checked){
-                    rect.setOptions({fillOpacity: 0});
-                }
-            });
+    // if (view_type == "area_map") {
+    //     google.maps.event.addListener(maps[view_type],'click',function(e){
+    //         shade_rects.forEach(function(box){
+    //             var rect = box.rect;
+    //             if (!box.checked){
+    //                 rect.setOptions({fillOpacity: 0});
+    //             }
+    //         });
+    //
+    //         var filtered_results = [];
+    //         clientUpdateMarkers(filtered_results, view_type);
+    //         var map_resources = [];
+    //         setBoxes(filtered_results);
+    //         buildMapItemsTableData(filtered_results, map_resources, null);
+    //         var map_items_table = $('#area-map-items').DataTable();
+    //         map_items_table.clear();
+    //         map_items_table.rows.add(map_resources);
+    //         map_items_table.draw();
+    //     });
+    // }
 
-            var filtered_results = [];
-            clientUpdateMarkers(filtered_results, view_type);
-            var map_resources = [];
-            setBoxes(filtered_results);
-            buildMapItemsTableData(filtered_results, map_resources, null);
-            var map_items_table = $('#area-map-items').DataTable();
-            map_items_table.clear();
-            map_items_table.rows.add(map_resources);
-            map_items_table.draw();
-        });
-    }
+
+    google.maps.event.addListener(maps[view_type],'click',function(e){
+        updateMapView(view_type);
+
+    });
 
 };
 
@@ -1076,7 +1082,8 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
+    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names',
+        'variable_names', 'sample_mediums', 'units_names', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
         var faceting_div = "faceting-"+field;
