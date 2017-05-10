@@ -11,29 +11,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 from lxml import etree
 
 
-class OriginalFileInfo(AbstractMetaDataElement):
-
-    term = 'OriginalFileInfo'
-
-    fileTypeEnum = (
-                    (None, 'Unknown'),
-                    ("SHP", "ESRI Shapefiles"),
-                    ("ZSHP", "Zipped ESRI Shapefiles"),
-                    ("KML", "KML"),
-                    ("KMZ", "KMZ"),
-                    ("GML", "GML"),
-                    ("SQLITE", "SQLite")
-                   )
-    fileType = models.TextField(max_length=128, choices=fileTypeEnum, default=None)
-    baseFilename = models.TextField(max_length=256, null=False, blank=False)
-    fileCount = models.IntegerField(null=False, blank=False, default=0)
-    filenameString = models.TextField(null=True, blank=True)
-
-    class Meta:
-        # OriginalFileInfo element is not repeatable
-        unique_together = ("content_type", "object_id")
-
-
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -239,7 +216,6 @@ class GeographicFeatureMetaDataMixin(models.Model):
     geometryinformations = GenericRelation(GeometryInformation)
     fieldinformations = GenericRelation(FieldInformation)
     originalcoverages = GenericRelation(OriginalCoverage)
-    originalfileinfos = GenericRelation(OriginalFileInfo)
 
     class Meta:
         abstract = True
@@ -252,10 +228,6 @@ class GeographicFeatureMetaDataMixin(models.Model):
     def originalcoverage(self):
         return self.originalcoverages.all().first()
 
-    @property
-    def originalfileinfo(self):
-        return self.originalfileinfos.all().first()
-
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -264,7 +236,6 @@ class GeographicFeatureMetaDataMixin(models.Model):
         elements.append('FieldInformation')
         elements.append('OriginalCoverage')
         elements.append('GeometryInformation')
-        elements.append('OriginalFileInfo')
         return elements
 
     def has_all_required_elements(self):
@@ -282,8 +253,6 @@ class GeographicFeatureMetaDataMixin(models.Model):
             missing_required_elements.append('Spatial Reference')
         if not self.geometryinformation:
             missing_required_elements.append('Geometry Information')
-        if not self.originalfileinfo:
-            missing_required_elements.append('Resource File Information')
 
         return missing_required_elements
 
@@ -300,7 +269,6 @@ class GeographicFeatureMetaDataMixin(models.Model):
         self.geometryinformations.all().delete()
         self.fieldinformations.all().delete()
         self.originalcoverages.all().delete()
-        self.originalfileinfos.all().delete()
 
 
 class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
@@ -318,12 +286,6 @@ class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-        if self.originalfileinfo:
-            originalfileinfo_fields = ['fileType', 'fileCount', 'baseFilename', 'filenameString']
-            self.add_metadata_element_to_xml(container,
-                                             self.originalfileinfo,
-                                             originalfileinfo_fields)
 
         if self.geometryinformation:
             geometryinformation_fields = ['geometryType', 'featureCount']

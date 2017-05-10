@@ -27,7 +27,7 @@ from hs_core.forms import CoverageTemporalForm
 
 
 from hs_geographic_feature_resource.models import GeographicFeatureMetaDataMixin, \
-    OriginalCoverage, GeometryInformation, OriginalFileInfo, FieldInformation
+    OriginalCoverage, GeometryInformation, FieldInformation
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
@@ -40,7 +40,7 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
 
     def get_metadata_elements(self):
         elements = super(GeoFeatureFileMetaData, self).get_metadata_elements()
-        elements += [self.originalcoverage, self.geometryinformation, self.originalfileinfo]
+        elements += [self.originalcoverage, self.geometryinformation]
         elements += list(self.fieldinformations.all())
         return elements
 
@@ -49,7 +49,6 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         metadata_model_classes = super(GeoFeatureFileMetaData, cls).get_metadata_model_classes()
         metadata_model_classes['originalcoverage'] = OriginalCoverage
         metadata_model_classes['geometryinformation'] = GeometryInformation
-        metadata_model_classes['originalfileinfo'] = OriginalFileInfo
         metadata_model_classes['fieldinformation'] = FieldInformation
         return metadata_model_classes
 
