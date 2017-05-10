@@ -932,7 +932,7 @@ li.account p{
 }
 
 .contact-table td.drag-indicator, .contact-table th.drag-indicator {
-	width: 20px;
+	width: 45px;
 }
 
 .contact-table td:last-child{
@@ -1045,6 +1045,11 @@ table.info-table {
 	padding-bottom: 8px;
 }
 
+.custom-table td {
+	word-break: break-all;
+	word-wrap: break-word;
+}
+
 #txt-title {
 	font-size: 27px;
 	height: auto;
@@ -1055,13 +1060,9 @@ table.info-table {
 }
 
 span.remove {
-	position: absolute;
-	left: 0;
-	top: 0;
-	height: calc(100% - 2px) !important;
-	background: #EEE;
-	background-position-y: 7px !important;
-	margin: 1px;
+    position: absolute;
+    right: 1px;
+    top: 4px;
 }
 
 .form-control, .controls .input-group .form-control {
@@ -1197,41 +1198,32 @@ a[data-toggle='tab']{
 
 #id_user-wrapper, #id_group-wrapper {
 	width: 100%;
-	padding: 1px;
 	border: 1px solid #CCC;
-	height: 34px;
-	float: left;
-	-webkit-border-radius: 3px;
-	-webkit-border-top-left-radius: 0;
-	-webkit-border-bottom-left-radius: 0;
-	-moz-border-radius: 3px;
-	-moz-border-radius-topleft: 0;
-	-moz-border-radius-bottomleft: 0;
-	border-radius: 0;
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
+	min-height: 34px;
 }
 
 #invite-to-group #id_user-wrapper {
-	width: calc(100% - 139px);
-}
-
-#id_user-autocomplete, #id_group-autocomplete {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    padding: 0 4px;
+    width: calc(100% - 142px);
 }
 
 #permission-panel .panel-body{
     padding: 15px 0;
 }
 
-span.hilight {
+#id_user-deck > span.hilight, #id_group-deck > span.hilight {
 	background: #EEE;
-	margin-left: 16px;
-	width: calc(100% - 16px);
-	height: 100%;
+	padding: 6px 12px;
+	padding-right: 16px !important;
+	width: 100%;
+	min-height: 34px;
+}
+
+.autocomplete-light-widget input, .autocomplete-light-widget input:focus {
+    width: 100% !important;
+}
+
+.autocomplete-light-widget input{
+	border: 0;
 }
 
 #form-sharing{
@@ -1949,8 +1941,8 @@ td.user-actions > span:hover {
     border-bottom: 1px solid #ddd;
 }
 
-.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .caret {
-	display:none;
+.access-table tr.hide-actions .remove-user-form, .access-table tr.hide-actions .undo-share-form, .access-table tr.hide-actions .caret {
+	display: none;
 }
 
 .access-table tr.hide-actions .user-roles {
@@ -2910,6 +2902,14 @@ span.you-flag {
 	color: #AAA;
 }
 
+.table-icon {
+	padding-top: 3px;
+	margin-left: 4px;
+	margin-right: 4px;
+	font-size: 16px;
+	cursor: pointer;
+}
+
 .btn-inline-label:hover, .has-labels {
 	color: #0A91AB;
 }
@@ -2993,9 +2993,9 @@ span.you-flag {
 }
 
 .no-items-found {
-    font-style: italic;
-    font-size: 14px;
-    pointer-events: none;
+	font-style: italic;
+	font-size: 14px;
+	pointer-events: none;
 	border: 0;
 }
 
@@ -4445,6 +4445,21 @@ span.caption-file-type {
 	resize: vertical;
 	border: 0;
 }
+
+.hs-upload-indicator {
+	position: absolute;
+	color: #777;
+	top: 125px;
+	padding: 20px;
+	width: calc(100% - 20px);
+	pointer-events: none;
+	text-shadow: 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.hs-upload-indicator > i {
+	font-size: 40px;
+}
+
 .fb-loading-spinner {
 	list-style: none;
     width: 100%;
@@ -4599,10 +4614,6 @@ div#resource-content {
     margin-bottom: 35px
 }
 
-#resource-title {
-	border-bottom: 1px solid #DDD;
-}
-
 #resource-content .resource-type {
 	border-radius: 4px;
 	display: inline-block;
@@ -4679,7 +4690,7 @@ div#resource-content {
 }
 
 #dropdown-resource-type .dropdown-menu > li > a {
-	padding: 2px;
+	padding: 2px 16px;
 	cursor: default;
 }
 

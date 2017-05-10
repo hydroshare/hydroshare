@@ -271,6 +271,8 @@ $(document).on('change', '.btn-file :file', function () {
 $(document).ready(function () {
     $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
 
+     $("#id_user-autocomplete").addClass("form-control");
+
     // Abstract collapse toggle
     $(".show-more-btn").click(function () {
         if ($(this).parent().find(".activity-description").css("max-height") == "50px") {

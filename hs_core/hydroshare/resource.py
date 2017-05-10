@@ -139,11 +139,15 @@ def update_resource_file(pk, filename, f):
     for rf in ResourceFile.objects.filter(object_id=resource.id):
         if rf.short_path == filename:
             if rf.resource_file:
+                # TODO: should use delete_resource_file
                 rf.resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             if rf.fed_resource_file:
+                # TODO: should use delete_resource_file
                 rf.fed_resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
@@ -456,8 +460,11 @@ def create_resource(
         if create_bag:
             hs_bagit.create_bag(resource)
 
+    # set the resource to private
+    resource.setAVU('isPublic', str(resource.raccess.public).lower())
+
     # set quota of this resource to this creator
-    resource.raccess.set_quota_holder(owner, owner)
+    resource.set_quota_holder(owner, owner)
 
     return resource
 
@@ -681,9 +688,14 @@ def update_science_metadata(pk, metadata):
 
     Returns:
     """
-
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
+
+    # set to private if metadata has become non-compliant
+    resource.update_public_and_discoverable()  # set to False if necessary
+
+    # TODO: This is a bit of a lie since the user initiating this is not the creator
+    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
 
 def delete_resource(pk):
@@ -854,13 +866,11 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             # This presumes that the file is no longer in django
             delete_format_metadata_after_delete_file(resource, file_name)
 
-            if resource.raccess.public or resource.raccess.discoverable:
-                if not resource.can_be_public_or_discoverable:
-                    resource.raccess.public = False
-                    resource.raccess.discoverable = False
-                    resource.raccess.save()
-
             signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+            # set to private if necessary -- AFTER post_delete_file handling
+            resource.update_public_and_discoverable()  # set to False if necessary
+
             # generate bag
             utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -960,6 +970,8 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
+    # TODO: whether a resource can be published is not considered in can_be_published
+    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
                               "metadata or content files or this resource type is not allowed "
@@ -977,7 +989,7 @@ def publish_resource(user, pk):
         resource.doi = get_resource_doi(pk, 'failure')
         resource.save()
 
-    resource.raccess.public = True
+    resource.set_public(True)  # also sets discoverable to True
     resource.raccess.immutable = True
     resource.raccess.shareable = False
     resource.raccess.published = True

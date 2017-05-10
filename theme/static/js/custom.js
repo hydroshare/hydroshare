@@ -50,6 +50,18 @@
     }
 })(jQuery);
 
+// Formats dates from "yyyy-mm-dd" to "mm/dd/yyyy"
+(function ($) {
+    $.fn.formatDate = function () {
+        var item = $(this);
+        var dateString = item.attr("data-date").trim().substr(0, 10).split("-");    // original format: yyyy-mm-dd (10 characters)
+        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
+        item.text(formattedDate);
+
+        return item;
+    }
+})(jQuery);
+
 
 $(document).ready(function () {
     // Search box toggle
@@ -152,4 +164,9 @@ $(document).ready(function () {
 
 	// Initialize tooltips
 	$('[data-toggle="tooltip"]').tooltip();
+
+    // Format the dates before displaying them
+    $(".format-date").each(function () {
+        $(this).formatDate();
+    });
 });

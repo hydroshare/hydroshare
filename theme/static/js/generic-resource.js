@@ -22,6 +22,22 @@ function setPointerEvents(flag) {
     }
 }
 
+function ownersConstrain() {
+    // Constrains: 1 - At least one owner. 2 - Quota holders cannot be removed
+    if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {
+        var owners = $(".access-table li.active[data-access-type='Is owner']").closest("tr");
+        owners.each(function () {
+            var owner = $(this);
+            if (!owner.find("[quota-holder]").length && owners.length > 1) {
+                owner.toggleClass("hide-actions", false);
+            }
+            else {
+                owner.toggleClass("hide-actions", true);
+            }
+        });
+    }
+}
+
 // Enables and disables granting access buttons accordingly to the current access level
 function updateActionsState(privilege){
     // Set the state of dropdown menu items and remove buttons to false by default
@@ -63,9 +79,8 @@ function updateActionsState(privilege){
         // Remove buttons
         $(".access-table li.active[data-access-type='Can view']").closest("tr").removeClass("hide-actions");
         $(".access-table li.active[data-access-type='Can edit']").closest("tr").removeClass("hide-actions");
-        if ($(".access-table li.active[data-access-type='Is owner']").length > 1) {     // At least one owner constrain
-            $(".access-table li.active[data-access-type='Is owner']").closest("tr").removeClass("hide-actions");
-        }
+
+        ownersConstrain();
     }
 }
 
@@ -230,10 +245,15 @@ function addEditExtraMeta2Table() {
     if (edit_extra_meta_row_id == "") {
         // Add new
         var new_row_id_0_base = findMaxRowID(t) + 1;
-        var edit_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-edit-icon glyphicon glyphicon-edit btn-inline-favorite"></span>';
-        var remove_icon_str = '<span data-arg="' + new_row_id_0_base + '" class="btn-remove-icon glyphicon glyphicon-remove btn-inline-favorite"></span>';
-        var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
-        $(row_ele).attr( 'id', new_row_id_0_base);
+        var edit_icon_str = '<span data-arg="' + new_row_id_0_base +
+            '" class="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon"' +
+            'data-toggle="tooltip" data-placement="top" title="Edit"></span>';
+        var remove_icon_str = '<span data-arg="' + new_row_id_0_base +
+            '" class="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon"' +
+            'data-toggle="tooltip" data-placement="top" title="Remove"></span>';
+        var row_ele = t.row.add([extra_meta_name, extra_meta_value, edit_icon_str +
+            " " + remove_icon_str]).node();
+        $(row_ele).attr('id', new_row_id_0_base);
     }
     else {
         // Edit existing
@@ -247,6 +267,8 @@ function addEditExtraMeta2Table() {
     $("#extraMetaTable").find("td:nth-child(2)").each(function() {
         $(this).urlClickable();
     });
+
+    $("#extraMetaTable [data-toggle='tooltip']").tooltip();
 
     $('#extraMetaDialog').modal('hide');
     $('#save-extra-meta-btn').show();
@@ -543,8 +565,8 @@ $(document).ready(function () {
     });
 
     $("#list-roles a").click(onRoleSelect);
-    $("#add-access-form #id_user-autocomplete").attr("placeholder", "Search by name or username");
-    $("#id_group-autocomplete").attr("placeholder", "Search by group name");
+    $("#add-access-form #id_user-autocomplete").attr("placeholder", "Search by name or username").addClass("form-control");
+    $("#id_group-autocomplete").attr("placeholder", "Search by group name").addClass("form-control");
 
     var file_types = $("#supported-file-types").attr('value');
     if (file_types != ".*") {

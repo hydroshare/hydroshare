@@ -188,6 +188,8 @@ function undo_share_ajax_submit(form_id) {
                     return;
                 }
 
+                ownersConstrain();
+
                 userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
                 $(".role-dropdown").removeClass("open");
                 $form.toggleClass("hidden", true);
@@ -395,7 +397,7 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     unshareUrl =
-                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-group")
+                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
                         + share_with + "/";
 
                     undoUrl = rowTemplate.find(".undo-share-form").attr("action")
@@ -1380,17 +1382,10 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 function setFileTypeMetadataFormsClickHandlers(){
     $("#fileTypeMetaDataTab").find('form').each(function () {
         var formId = $(this).attr('id');
-        if(formId === "add-keyvalue-filetype-metadata"){
-            $(this).find("button.btn-primary").click(function () {
-                addFileTypeExtraMetadata();
-          });
-        }
-        else {
-            if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype"){
+        if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {
                 metadata_update_ajax_submit(formId);
               });
-            }
         }
     });
     BindKeyValueFileTypeClickHandlers();
