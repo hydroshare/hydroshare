@@ -1,7 +1,3 @@
-/**
-* Created by Mauriel on 3/9/2017.
-*/
-
 var minFloatingNumber = 0.0001;
 var maps = {};
 maps["point_map"] = null;
@@ -15,12 +11,13 @@ var current_map_zoom = 2;
 var current_map_center = new google.maps.LatLng(0, 0);
 var markers = [];
 var box_centers = [];
+var small_box_markers = [];
 var raw_box_results = [];
 var raw_point_results = [];
 var markers_cluster = null;
+var box_centers_cluster = null;
 var info_window = null;
 var shade_rects = [];
-
 
 var initMap = function(json_results, view_type) {
     var map_view_option = "";
@@ -59,9 +56,9 @@ var initMap = function(json_results, view_type) {
     } else {
         var bounds = null;
         if (view_type == "point_map") {
-            bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
+            bounds = (markers.length > 0) ? createBoundsForMarkers(markers, view_type) : maps[view_type].setZoom(2);
         } else {
-            bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+            bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers, view_type) : maps[view_type].setZoom(2);
         }
 
         if (bounds) {
@@ -78,6 +75,7 @@ var initMap = function(json_results, view_type) {
             current_map_zoom = map_default_zoom;
             map_default_center = map_default_bounds.getCenter();
             current_map_center = map_default_center;
+
         }
     }
 
@@ -140,38 +138,17 @@ var initMap = function(json_results, view_type) {
         geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
     });
 
-    // if (view_type == "area_map") {
-    //     google.maps.event.addListener(maps[view_type],'click',function(e){
-    //         shade_rects.forEach(function(box){
-    //             var rect = box.rect;
-    //             if (!box.checked){
-    //                 rect.setOptions({fillOpacity: 0});
-    //             }
-    //         });
-    //
-    //         var filtered_results = [];
-    //         clientUpdateMarkers(filtered_results, view_type);
-    //         var map_resources = [];
-    //         setBoxes(filtered_results);
-    //         buildMapItemsTableData(filtered_results, map_resources, null);
-    //         var map_items_table = $('#area-map-items').DataTable();
-    //         map_items_table.clear();
-    //         map_items_table.rows.add(map_resources);
-    //         map_items_table.draw();
-    //     });
-    // }
-
 
     google.maps.event.addListener(maps[view_type],'click',function(e){
         updateMapView(view_type);
 
     });
 
+
 };
 
 var setMarkers = function(json_results) {
     var modified_points_data = [];
-    var view_type = "point_map";
     for (var i = 0; i < json_results.length; i++ ) {
         if (json_results[i].coverage_type == 'point') {
             checkDuplicatePointResults(modified_points_data, json_results[i]);
@@ -180,7 +157,7 @@ var setMarkers = function(json_results) {
     modified_points_data.forEach(function(point){
         createPointResourceMarker(point);
     });
-    markers_cluster = new MarkerClusterer(maps[view_type], markers, {
+    markers_cluster = new MarkerClusterer(maps["point_map"], markers, {
         styles:[{
             height: 55,
             width: 56,
@@ -190,7 +167,7 @@ var setMarkers = function(json_results) {
 };
 
 var setBoxes = function(json_results) {
-    var modified_points_data = [];
+
     var modified_boxes_data = [];
     var boxes_data = [];
     for (var i = 0; i < json_results.length; i++ ) {
@@ -209,27 +186,41 @@ var setBoxes = function(json_results) {
         var rect = box.rect;
         google.maps.event.addListener(rect,'click',function(e){
             highlightOverlapping(e.latLng);
-            var map_resources = [];
-            buildMapItemsTableData(boxes_data, map_resources, e.latLng);
-            var map_items_table = $('#area-map-items').DataTable();
-            map_items_table.clear();
-            map_items_table.rows.add(map_resources);
-            map_items_table.draw();
         });
+    });
+
+    box_centers_cluster = new MarkerClusterer(maps["area_map"], box_centers, {
+        styles:[{
+            height: 55,
+            width: 56,
+            url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
+        }]
     });
 };
 
 var highlightOverlapping = function(position) {
-    shade_rects.forEach(function(box){
-        var rect = box.rect;
-        var rect_bound = new google.maps.LatLngBounds();
-        calShadeRectBounds(rect, rect_bound);
-        if (rect_bound.contains(position)) {
-            rect.setOptions({fillOpacity: 0.15});
+    var map_items_table = $('#area-map-items').DataTable();
+    map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+        var data = this.data();
+        var resource = data[1];
+
+        var node_data = this.node();
+        var northlimit = parseFloat(resource.northlimit);
+        var southlimit = parseFloat(resource.southlimit);
+        var eastlimit = parseFloat(resource.eastlimit);
+        var westlimit = parseFloat(resource.westlimit);
+        var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+        var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+        var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+
+        if (resource_bound.contains(position)) {
+            $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
         } else {
-            rect.setOptions({fillOpacity: 0});
+            $(node_data).find("input[type=checkbox]:checked").trigger("click");
         }
+
     });
+
 };
 
 var drawShadeRectangles = function(boxes) {
@@ -253,15 +244,17 @@ var drawShadeRectangles = function(boxes) {
             rect: new google.maps.Polygon({
                     paths: [rectCoords],
                     strokeColor: '#FF0000',
-                    strokeOpacity: 0.15,
+                    strokeOpacity: 0.35,
                     strokeWeight: 2,
                     fillColor: '#FF0000',
                     fillOpacity: 0
                     }),
-            checked: false
-        }
+            checked: false,
+            rect_id: box.short_id
+        };
 
         shade_rects[i].rect.setMap(maps["area_map"]);
+
     }
 };
 
@@ -284,7 +277,7 @@ var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
                 author_name = resource.first_author;
             }
             var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
-            var map_resource = [resource, resource, resource.resource_type, resource_title, author_name];
+            var map_resource = [resource.short_id, resource, resource.resource_type, resource_title, author_name];
             map_resources.push(map_resource);
         }
     });
@@ -300,7 +293,7 @@ var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) 
             author_name = resource.first_author;
         }
         var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
-        var map_resource = [resource, resource, resource.resource_type, resource_title, author_name];
+        var map_resource = [resource.short_id, resource, resource.resource_type, resource_title, author_name];
         map_resources.push(map_resource);
     });
 };
@@ -339,13 +332,17 @@ var setMapItemsList = function(json_results, view_type, latLng) {
         },
         {
             "targets": [1],
-            "width": "90px",
+            "width": "60px",
             "data": null,
             "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
         },
         {
            "targets": [2],     // Resource type
-            "width": "110px"
+            "width": "60px"
+        },
+        {
+           "targets": [4],     // First author
+            "width": "70px"
         }]
     });
     if (view_type == "area_map") {
@@ -359,25 +356,27 @@ var setMapFunctions = function (datatable, view_type) {
     if (view_type == "area_map") {
         $('#area-map-items tbody').on('click', '[role="button"]', function () {
             var data = datatable.row($(this).parents('tr')).data();
-            showBoxMarker(data[0], true);
+            showBoxOnMap(data[1], true);
         });
         $('#area-map-items tbody').on('hover', 'tr', function () {
             var data = datatable.row(this).data();
             if (data) {
-                showBoxMarker(data[0], false);
+                showBoxOnMap(data[1], false);
             }
         });
 
         $('#area-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
             var $row = $(this).closest('tr');
             var data = datatable.row($row).data();
+            //console.log(datatable.row($row).index());
             if (this.checked) {
-                highlightOrHideBox(data[0], 0);
+                highlightOrHideBox(data[1], 0);
+                //datatable.row(datatable.row($row).index()).scrollTo();
             } else {
-                highlightOrHideBox(data[0], 1);
+                highlightOrHideBox(data[1], 1);
             }
             // Update state of "Select all" control
-            updateDataTableSelectAllCtrl(datatable);
+            updateDataTableSelectAllCtrl(datatable, view_type);
         });
 
         // Handle click on "Select all" control
@@ -387,13 +386,13 @@ var setMapFunctions = function (datatable, view_type) {
             } else {
                 $('#area-map-items tbody input[type="checkbox"]:checked').trigger('click');
             }
-            updateDataTableSelectAllCtrl(datatable);
+            updateDataTableSelectAllCtrl(datatable, view_type);
         });
 
     } else {
         $('#point-map-items tbody').on('click', '[role="button"]', function () {
             var data = datatable.row($(this).parents('tr')).data();
-            showPointMarker(data[0]);
+            showPointMarker(data[1]);
         });
         // Handle click on checkbox
         $('#point-map-items tbody').on('change', 'input[type="checkbox"]', function(e){
@@ -415,7 +414,6 @@ var setMapFunctions = function (datatable, view_type) {
 
         // Handle click on "Select all" control
         $('thead input[name="select_all"]', datatable.table().container()).on('click', function(e){
-            console.log("select all");
             if(this.checked){
                 $('#point-map-items tbody input[type="checkbox"]:not(:checked)').trigger('click');
             } else {
@@ -463,23 +461,10 @@ var updateDataTableSelectAllCtrl = function(table, view_type) {
     }
 };
 
-var highlightOrHideBox = function(box, option) {
-    var northlimit = parseFloat(box.northlimit);
-    var southlimit = parseFloat(box.southlimit);
-    var eastlimit = parseFloat(box.eastlimit);
-    var westlimit = parseFloat(box.westlimit);
-    var view_type = "area_map";
-    var rectBounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(southlimit, westlimit),
-            new google.maps.LatLng(northlimit, eastlimit)
-    );
-
-    var found = 0;
-    shade_rects.forEach(function(box){
+var highlightOrHideBox = function(target, option) {
+    shade_rects.forEach(function(box) {
         var rect = box.rect;
-        var shade_rect_bound = new google.maps.LatLngBounds();
-        calShadeRectBounds(rect, shade_rect_bound);
-        if (rectBounds.equals(shade_rect_bound) && found == 0) {
+        if (box.rect_id == target.short_id) {
             if (option == 0) {
                 rect.setOptions({fillOpacity: 0.15});
                 box.checked = true;
@@ -487,29 +472,24 @@ var highlightOrHideBox = function(box, option) {
                 rect.setOptions({fillOpacity: 0});
                 box.checked = false;
             }
-            found = 1;
         }
     });
 };
 
-var popMarkerWindow = function(point, option) {
-    var lat = parseFloat(point.north);
-    var lng = parseFloat(point.east);
-    var point_latlng = new google.maps.LatLng(lat, lng);
+var popMarkerWindow = function(point_id, option) {
     for(var i = 0; i < markers.length; i++){
-        var marker_latlng = markers[i].getPosition();
-        if(point_latlng.equals(marker_latlng)) {
+        if(markers[i].short_id == point_id) {
             if (option == 0){
-                markers[i].infowindow.open(maps["point_map"], markers[i]);
+                markers[i].info_window.open(maps["point_map"], markers[i]);
             } else {
-                markers[i].infowindow.close();
+                markers[i].info_window.close();
             }
             break;
         }
     }
 }
 
-var showBoxMarker = function(box, zoom_on_map) {
+var showBoxOnMap = function(box, zoom_on_map) {
     var northlimit = parseFloat(box.northlimit);
     var southlimit = parseFloat(box.southlimit);
     var eastlimit = parseFloat(box.eastlimit);
@@ -523,8 +503,21 @@ var showBoxMarker = function(box, zoom_on_map) {
     if (zoom_on_map) {
         maps["area_map"].fitBounds(rectBounds);
         updateMapView(view_type);
+
+        var map_items_table = $('#area-map-items').DataTable();
+        map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+            var data = this.data();
+            var resource_id = data[0];
+            var node_data = this.node();
+            if (box.short_id == resource_id) {
+                $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+            }
+
+        });
+    } else {
+
+        findShadeRectById(box);
     }
-    findShadeRect(rectBounds);
 };
 
 var showPointMarker = function(point) {
@@ -575,6 +568,17 @@ var clientUpdateMarkers = function(filtered_results, view_type) {
 
 
 var removeBoxes = function() {
+    if (box_centers_cluster) {
+        box_centers_cluster.clearMarkers(box_centers);
+    }
+    for (var i = 0; i < box_centers.length; i++) {
+        if (box_centers[i].getMap() != null) {
+            box_centers[i].setMap(null);
+        }
+    }
+
+    box_centers = [];
+
     for (var n = 0; n < shade_rects.length; n++) {
         if (shade_rects[n].rect.getMap() != null) {
             shade_rects[n].rect.setMap(null);
@@ -582,7 +586,7 @@ var removeBoxes = function() {
         shade_rects[n].checked = false;
     }
     shade_rects = [];
-    box_centers = [];
+
 }
 
 var removeMarkers = function() {
@@ -609,7 +613,7 @@ var checkDuplicatePointResults = function (modified_points_data, test){
         var lat_diff = Math.abs(test_lat - item_lat);
         var lng_diff = Math.abs(test_lng - item_lng);
         if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-            item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
+            item.info_link = item.info_link + '<br />' + '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title +'</a>';
             item.counter++;
             item.resources_list.push(test);
             existed = true;
@@ -618,7 +622,7 @@ var checkDuplicatePointResults = function (modified_points_data, test){
     if (!existed) {
         test.resources_list = [];
         test.resources_list.push(test);
-        test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+        test.info_link = '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
         test.counter = 1;
         modified_points_data.push(test);
     }
@@ -636,7 +640,7 @@ var checkDuplicateBoxResults = function (modified_boxes_data, test){
         var lng_diff = Math.abs(test_lng - item_lng);
 
         if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-            item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+            item.info_link = item.info_link + '<br />' + '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
             item.counter++;
             item.resources_list.push(test);
             existed = true;
@@ -645,7 +649,7 @@ var checkDuplicateBoxResults = function (modified_boxes_data, test){
     if (!existed) {
         test.resources_list = [];
         test.resources_list.push(test);
-        test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+        test.info_link = '<a target="_blank" href="' + test.get_absolute_url + '">' + test.title + '</a>';
         test.counter = 1;
         modified_boxes_data.push(test);
     }
@@ -657,22 +661,52 @@ var createPointResourceMarker = function (point) {
     var lng = parseFloat(point.east);
     var counter = point.counter.toString();
     var latlng = new google.maps.LatLng(lat, lng);
-    var marker = new google.maps.Marker({
+    var marker =  new google.maps.Marker({
         map: maps["point_map"],
         icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
-        position: latlng
+        position: latlng,
+        short_id: point.short_id
     });
-    marker.infowindow = new google.maps.InfoWindow({
+
+    marker.info_window = new google.maps.InfoWindow({
         content: info_content
     });
-    markers.push(marker);
-    google.maps.event.addListener(marker, 'click', function() {
-        marker.infowindow.open(maps["point_map"], marker);
 
+    markers.push(marker);
+
+    var map_items_table = $('#point-map-items').DataTable();
+    google.maps.event.addListener(marker, 'click', function() {
+        marker.info_window.open(maps["point_map"], marker);
+
+        map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+            var data = this.data();
+            var resource_id = data[0];
+            var node_data = this.node();
+            if (resource_id == marker.short_id) {
+                $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+            }
+
+        });
+
+
+    });
+
+    google.maps.event.addListener(marker.info_window,'closeclick',function(){
+
+        map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+            var data = this.data();
+            var resource_id = data[0];
+            var node_data = this.node();
+            if (resource_id == marker.short_id) {
+                $(node_data).find("input[type=checkbox]:checked").trigger("click");
+            }
+
+        });
     });
 };
 
 var createBoxResourceMarker = function(box) {
+
     var info_content = box.info_link;
     var northlimit = parseFloat(box.northlimit);
     var southlimit = parseFloat(box.southlimit);
@@ -682,53 +716,77 @@ var createBoxResourceMarker = function(box) {
     var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
     var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
     var latlng = new google.maps.LatLng(lat, lng);
+    var resources_ids = [];
+    box.resources_list.forEach(function(resource){
+        resources_ids.push(resource.short_id);
+    });
+
 
     var box_center = new google.maps.Marker({
-        map: null,
+        map: maps["area_map"],
         icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
         position: latlng
     });
+
+    box_center.info_window = new google.maps.InfoWindow({
+        content: info_content
+    });
+
     box_centers.push(box_center);
+
+    var map_items_table = $('#area-map-items').DataTable();
+
+    google.maps.event.addListener(box_center, 'click', function() {
+        createBoundsForResources(box.resources_list);
+        updateMapView("area_map");
+
+        box_center.info_window.open(maps["area_map"], box_center);
+        map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+            var data = this.data();
+            var resource_id = data[0];
+            var node_data = this.node();
+            if (resources_ids.indexOf(resource_id) > -1) {
+                $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
+            }
+
+        });
+
+    });
+
+    google.maps.event.addListener(box_center.info_window,'closeclick',function(){
+        map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
+            var data = this.data();
+            var resource_id = data[0];
+            var node_data = this.node();
+            if (resources_ids.indexOf(resource_id) > -1) {
+                $(node_data).find("input[type=checkbox]:checked").trigger("click");
+            }
+
+        });
+    });
+
+
 };
 
-// var isSmallArea = function(box) {
-//     var box_north = parseFloat(box.northlimit);
-//     var box_south = parseFloat(box.southlimit);
-//     var box_east = parseFloat(box.eastlimit);
-//     var box_west = parseFloat(box.westlimit);
-//     if (maps["area_map"].getBounds() == null) {
-//         return false;
-//     } else {
-//         var map_view_bound = maps["area_map"].getBounds();
-//         var map_north = map_view_bound.getNorthEast().lat();
-//         var map_east = map_view_bound.getNorthEast().lng();
-//         var map_south = map_view_bound.getSouthWest().lat();
-//         var map_west = map_view_bound.getSouthWest().lng();
-//         var box_coords = [
-//             {lat: box_north, lng: box_west},
-//             {lat: box_north, lng: box_east},
-//             {lat: box_south, lng: box_east},
-//             {lat: box_south, lng: box_west}
-//         ];
-//         var map_coords = [
-//             {lat: map_north, lng: map_west},
-//             {lat: map_north, lng: map_east},
-//             {lat: map_south, lng: map_east},
-//             {lat: map_south, lng: map_west}
-//         ];
+var createBoundsForResources = function (resources_list) {
+    var bounds = new google.maps.LatLngBounds();
 
-//         var box_area = google.maps.geometry.spherical.computeArea(box_coords);
-//         var map_area = google.maps.geometry.spherical.computeArea(map_coords);
-//         var ratio = box_area/map_area;
-//         if (ratio < 0.01) {
-//             return true;
-//         } else {
-//             return false;
-//         }
-//     }
-// }
+    resources_list.forEach(function(resource){
+        var northlimit = parseFloat(resource.northlimit);
+        var southlimit = parseFloat(resource.southlimit);
+        var eastlimit = parseFloat(resource.eastlimit);
+        var westlimit = parseFloat(resource.westlimit);
+        var rectBounds = new google.maps.LatLngBounds(
+            new google.maps.LatLng(southlimit, westlimit),
+            new google.maps.LatLng(northlimit, eastlimit)
+        );
+        bounds.union(rectBounds);
 
-var createBoundsForMarkers = function(markers) {
+    });
+    maps["area_map"].fitBounds(bounds);
+};
+
+var createBoundsForMarkers = function(markers, view_type) {
     var bounds = new google.maps.LatLngBounds();
     $.each(markers, function() {
         bounds.extend(this.getPosition());
@@ -821,7 +879,6 @@ var geocodeAddress = function(geocoder, resultsMap, mapDim, view_type) {
         geocoder_address_input = "area-geocoder-address";
     }
     var address = document.getElementById(geocoder_address_input).value;
-    //var view_type = "area_map";
     geocoder.geocode({'address': address}, function(results, status) {
         if (status === google.maps.GeocoderStatus.OK) {
             resultsMap.setCenter(results[0].geometry.location);
@@ -870,9 +927,9 @@ var resetMapZoom = function(option) {
 
     var bounds = null;
     if (view_type == "point_map") {
-        bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : maps[view_type].setZoom(2);
+        bounds = (markers.length > 0) ? createBoundsForMarkers(markers, view_type) : maps[view_type].setZoom(2);
     } else {
-        bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers) : maps[view_type].setZoom(2);
+        bounds = (box_centers.length > 0) ? createBoundsForMarkers(box_centers, view_type) : maps[view_type].setZoom(2);
     }
     maps[view_type].fitBounds(bounds);
     var zoom_level = getBoundsZoomLevel(bounds, mapDim);
@@ -901,6 +958,7 @@ var updateMapView = function(view_type) {
         map_items_table.clear();
         map_items_table.rows.add(map_resources);
         map_items_table.draw();
+        select_all_id = "#point_select_all";
     } else {
         setBoxes(filtered_results);
         buildMapItemsTableData(filtered_results, map_resources, null);
@@ -908,7 +966,13 @@ var updateMapView = function(view_type) {
         map_items_table.clear();
         map_items_table.rows.add(map_resources);
         map_items_table.draw();
+        select_all_id = "#area_select_all";
     }
+
+    var chkbox_select_all = $(select_all_id)[0];
+    chkbox_select_all.checked = false;
+    chkbox_select_all.indeterminate = false;
+
     current_map_bounds = maps[view_type].getBounds();
     current_map_center = maps[view_type].getCenter();
     current_map_zoom = maps[view_type].getZoom();
@@ -920,16 +984,13 @@ var updateListView = function (data) {
 
     if (window.location.search.length == 0) {
         requestURL += "?q=";
-    }
-    else {
+    } else {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
         requestURL += searchURL;
         requestURL += buildURLOnCheckboxes();
     }
-
     $("#discover-list-loading-spinner").show();
-
     $.ajax({
         type: "GET",
         url: requestURL,
@@ -1055,15 +1116,11 @@ var calShadeRectBounds = function (rect, shade_rect_bound) {
     });
 };
 
-var findShadeRect = function(rectBounds) {
-    var found = 0;
-    shade_rects.forEach(function(box){
+var findShadeRectById = function(target) {
+    shade_rects.forEach(function(box) {
         var rect = box.rect;
-        var shade_rect_bound = new google.maps.LatLngBounds();
-        calShadeRectBounds(rect, shade_rect_bound);
-        if (rectBounds.equals(shade_rect_bound) && found == 0) {
+        if (box.rect_id == target.short_id) {
             rect.setOptions({fillOpacity: 0.15});
-            found = 1;
         } else if (!box.checked) {
             rect.setOptions({fillOpacity: 0});
         }
@@ -1205,13 +1262,13 @@ function initializeTable() {
 }
 
 $(document).ready(function () {
+
     $("#id_start_date").datepicker({
         dateFormat: 'mm/dd/yy',
         changeMonth: true,
         changeYear: true,
         yearRange: '1950:'
     });
-
     $("#id_end_date").datepicker({
         dateFormat: 'mm/dd/yy',
         changeMonth: true,
@@ -1222,7 +1279,6 @@ $(document).ready(function () {
     if (window.location.search.length == 0) {
         clearCheckboxes();
     }
-
     $(".search-field").keypress(function(event) {
         if (event.which == 13) {
             event.preventDefault();
@@ -1420,7 +1476,4 @@ $(document).ready(function () {
         content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
         trigger: 'click'
     });
-
-    $("#btn-show-all").click(clearAllFaceted);
-    $("#clear-dates-options").click(clearDates);
 });
