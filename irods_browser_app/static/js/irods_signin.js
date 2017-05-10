@@ -65,7 +65,7 @@ function irods_login() {
                 $("#log-into-irods").hide();
                 $("#btn-signout-irods").show();
                 $("#btn-select-irods-file").toggleClass("hidden", false);
-                $("#irods-sel-file").text("No file selected");
+                $("#irods-sel-file").text("No file selected.");
                 sessionStorage.IRODS_signininfo = signInStr;
                 sessionStorage.IRODS_datastore = json.datastore;
                 sessionStorage.IRODS_username = json.user;

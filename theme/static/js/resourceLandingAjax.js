@@ -188,6 +188,8 @@ function undo_share_ajax_submit(form_id) {
                     return;
                 }
 
+                ownersConstrain();
+
                 userRoles.find(".dropdown-toggle").append(" <span class='caret'></span>");
                 $(".role-dropdown").removeClass("open");
                 $form.toggleClass("hidden", true);
@@ -395,7 +397,7 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     unshareUrl =
-                        $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-group")
+                        $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group")
                         + share_with + "/";
 
                     undoUrl = rowTemplate.find(".undo-share-form").attr("action")
@@ -915,6 +917,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    // TODO: 2105: doesn't return enough information for intelligent decision 
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
@@ -1057,6 +1060,8 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
     });
 }
 
+// TODO: #2105: replace with move-to-folder and rename-file-or-folder: 
+// TODO: ambiguous function based upon conflation in REST API
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
     $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
@@ -1076,6 +1081,54 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         },
         error: function(xhr, errmsg, err){
             display_error_message('File Moving/Renaming Failed', xhr.responseText);
+        }
+    });
+}
+
+// target_path must be a folder
+function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-move-to-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_paths: source_paths,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Moving Failed', xhr.responseText);
+        }
+    });
+}
+
+// prefixes must be the same on source_path and target_path 
+function rename_file_or_folder_ajax_submit(res_id, source_path, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-rename-file-or-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File/Folder Renaming Failed', xhr.responseText);
         }
     });
 }
@@ -1380,17 +1433,10 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 function setFileTypeMetadataFormsClickHandlers(){
     $("#fileTypeMetaDataTab").find('form').each(function () {
         var formId = $(this).attr('id');
-        if(formId === "add-keyvalue-filetype-metadata"){
-            $(this).find("button.btn-primary").click(function () {
-                addFileTypeExtraMetadata();
-          });
-        }
-        else {
-            if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype"){
+        if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {
                 metadata_update_ajax_submit(formId);
               });
-            }
         }
     });
     BindKeyValueFileTypeClickHandlers();
