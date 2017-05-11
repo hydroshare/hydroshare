@@ -848,8 +848,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     """
     if __debug__:
         for s in src_paths:
-            assert(s.startswith("data/contents/"))
-        assert(tgt_path.startswith("data/contents/"))
+            assert(s.startswith('data/contents/'))
+        assert(tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
 
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
     istorage = resource.get_irods_storage()
@@ -865,8 +865,13 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
 
     for src_path in src_paths:
         src_full_path = os.path.join(resource.root_path, src_path)
-        istorage.moveFile(src_full_path, tgt_full_path)
-        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+        src_base_name = os.path.basename(src_path)
+        tgt_qual_path = os.path.join(tgt_full_path, src_base_name)
+        # logger = logging.getLogger(__name__)
+        # logger.info("moving file {} to {}".format(src_full_path, tgt_qual_path))
+
+        istorage.moveFile(src_full_path, tgt_qual_path)
+        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
 
     # TODO: should check can_be_public_or_discoverable here
 

@@ -1082,7 +1082,7 @@ $(document).ready(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        targetPath = currentPath + "/" + folderName  # must be a folder or move commands fail. 
+        targetPath = currentPath + "/" + folderName
         
         var calls = [];
         calls.push(move_to_folder_ajax_submit(resID, sourcePaths, targetPath));

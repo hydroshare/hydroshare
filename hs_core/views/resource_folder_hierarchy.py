@@ -32,41 +32,45 @@ def data_store_structure(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
+        # logger.info('data store structure: no res_id found')
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # logger.info('data store structure: res_id = {}'.format(res_id))
     res_id = str(res_id).strip()
     try:
         resource, _, _ = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     except NotFound:
+        # logger.info('data store structure: not found {}'.format(res_id))
         return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
+        # logger.info('data store structure: permission denied {}'.format(res_id))
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     store_path = request.POST.get('store_path', None)
     if store_path is None:
+        # logger.info('data store structure: no store path for {}'.format(res_id))
         return HttpResponse('Bad request - store_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
     store_path = str(store_path).strip()
     if not store_path:
+        # logger.info('data store structure: store path empty for {}'.format(res_id))
         return HttpResponse('Bad request - store_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not store_path.startswith('data/contents'):
+        # logger.info('data store structure: store path {} must start with data/contents'
+                    .format(store_path))
         return HttpResponse('Bad request - store_path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if store_path.find('/../') >= 0 or store_path.endswith('/..'):
+        # logger.info('data store structure: bad path {}'.format(store_path))
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # this is federated if warranted, automatically, by choosing an appropriate session.
     istorage = resource.get_irods_storage()
-    if resource.resource_federation_path:
-        # This implies that store_path starts with data/contents
-        res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
-    else:
-        res_coll = os.path.join(res_id, store_path)
+    res_coll = os.path.join(resource.root_path, store_path)
     try:
         store = istorage.listdir(res_coll)
         files = []
@@ -476,6 +480,7 @@ def data_store_move_to_folder(request, pk=None):
     res_id file directory.
     """
     pk = request.POST.get('res_id', pk)
+    # logger.info('move to folder: pk is {}'.format(pk))
     if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -484,12 +489,15 @@ def data_store_move_to_folder(request, pk=None):
         resource, _, user = authorize(request, pk,
                                       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except NotFound:
+        # logger.info('move to folder: resource not found {}'.format(pk))
         return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
+        # logger.info('move to folder: unauthorized {}'.format(pk))
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     tgt_path = resolve_request(request).get('target_path', None)
     src_paths = resolve_request(request).get('source_paths', None)
+    # logger.info('move to folder: tgt_path={}, src_paths={}'.format(tgt_path, src_paths))
     if src_paths is None or tgt_path is None:
         return HttpResponse('Bad request - src_paths or tgt_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -509,37 +517,53 @@ def data_store_move_to_folder(request, pk=None):
 
     istorage = resource.get_irods_storage()
     tgt_abspath = os.path.join(resource.root_path, tgt_path)
+    tgt_abspath = tgt_abspath.rstrip('/')
+    # logger.info('move to folder: tgt_abspath is {}'.format(tgt_abspath))
 
     if not is_folder(istorage, tgt_abspath):
+        # logger.info('move to folder: tgt_abspath is not an existing folder')
         return HttpResponse('Bad request - tgt_path is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    # logger.info('src_paths are {}'.format(src_paths))
+    # logger.info('type of src_paths is {}'.format(type(src_paths)))
     src_paths = json.loads(src_paths)
+    # logger.info('after loads, type of src_paths is {}'.format(type(src_paths)))
 
     for src_path in src_paths:
         src_path = str(src_path).strip()
 
         if not src_path.startswith('data/contents/'):
+            # logger.info('move to folder: src_path does not start properly')
             return HttpResponse('Bad request - src_path must start with data/contents/',
                                 status=status.HTTP_400_BAD_REQUEST)
 
         if src_path.find('/../') >= 0 or src_path.endswith('/..'):
+            # logger.info('move to folder: src_path cannot contain ..')
             return HttpResponse('Bad request - src_path cannot contain /../',
                                 status=status.HTTP_400_BAD_REQUEST)
 
     # TODO: validate that move makes sense and that things are not being moved to subdirectories
     # of themselves.
 
-    for src_path in src_paths:
-        try:
-            move_to_folder(user, pk, src_path, tgt_path)
-        except SessionException as ex:
-            return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except DRF_ValidationError as ex:
-            return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
+    tgt_path = tgt_path.rstrip('/')
+    src_paths_2 = []
+    for s in src_paths:
+        s2 = s.rstrip('/')
+        src_paths_2.append(s2)
+
+    try:
+        move_to_folder(user, pk, src_paths_2, tgt_path)
+    except SessionException as ex:
+        # logger.info('move to folder: session exception')
+        return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except DRF_ValidationError as ex:
+        # logger.info('move to folder: validation error')
+        return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
 
+    # logger.info('move to folder: returning correct response')
     return HttpResponse(
         json.dumps(return_object),
         content_type='application/json'
