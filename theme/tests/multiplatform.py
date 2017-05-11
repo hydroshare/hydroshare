@@ -6,7 +6,6 @@ from uuid import uuid4
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.urlresolvers import reverse
-from django.utils.html import escape
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
@@ -210,7 +209,7 @@ class SeleniumTestsParentClass(object):
             comment_link_text = '<a href="http://example.com/">Comment Link Test</a>'
 
             self._login_helper(self.user.email, self.user_password)
-            resource_title = self._create_resource_helper('./manage.py')
+            self._create_resource_helper('./manage.py')
 
             self.wait_for_visible(By.CSS_SELECTOR, '#id_comment').send_keys(comment_link_text)
             self.driver.find_element(By.CSS_SELECTOR, 'input[value="Comment"]').click()
