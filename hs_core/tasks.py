@@ -175,7 +175,7 @@ def create_bag_by_irods(resource_id):
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty.lower() == "true":
+    if metadata_dirty is None or metadata_dirty.lower() == "true":
         try:
             create_bag_files(res)
         except Exception as ex:
