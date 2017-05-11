@@ -1,17 +1,18 @@
 from django.conf.urls import patterns, url
 from hs_core import views
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
 
     # resource API
-     url(r'^resource/types/$', views.resource_rest_api.ResourceTypes.as_view(),
+    url(r'^resource/types/$', views.resource_rest_api.ResourceTypes.as_view(),
         name='list_resource_types'),
 
-     # DEPRECATED: use from above instead
-     url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
+    # DEPRECATED: use from above instead
+    url(r'^resourceTypes/$', views.resource_rest_api.ResourceTypes.as_view(),
         name='DEPRECATED_list_resource_types'),
 
-    # DEPRECATED: use GET /resource/ instead 
+    # DEPRECATED: use GET /resource/ instead
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='DEPRECATED_list_resources'),
 
@@ -62,21 +63,21 @@ urlpatterns = patterns('',
         name='get_resource_map'),
 
     # Unused. See ResourceFileListCreate. This is now implemented there.
-    # Older version based upon polymorphism of ResourceFileCRUD. 
-    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', 
+    # Older version based upon polymorphism of ResourceFileCRUD.
+    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$',
     #     views.resource_rest_api.ResourceFileCRUD.as_view(),
     #     name='add_resource_file'),
 
     # Patterns are now checked in the view class.
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
-        views.resource_rest_api.ResourceFileCRUD.as_view(), 
+        views.resource_rest_api.ResourceFileCRUD.as_view(),
         name='get_update_delete_resource_file'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$', 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<pathname>.*)/$',
         views.resource_folder_rest_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
 
@@ -93,7 +94,7 @@ urlpatterns = patterns('',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$', 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='DEPRECATED_get_resource_file_list'),
 
@@ -113,8 +114,8 @@ urlpatterns = patterns('',
 
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/add-files-to-resource/$',
         views.add_files_to_resource, name='add_files_to_resource'),
-	url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/change-quota-holder/$', 
-		views.change_quota_holder, name='change_quota_holder'),	
+    url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/change-quota-holder/$',
+        views.change_quota_holder, name='change_quota_holder'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/add-metadata/$',
         views.add_metadata_element, name='add_metadata_element'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$',
@@ -169,7 +170,8 @@ urlpatterns = patterns('',
     url(r'^_internal/group_membership/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/(?P<membership_request_id>[0-9]+)/',
         views.group_membership,
         name='group_membership'),
-    url(r'^_internal/get-user-or-group-data/(?P<user_or_group_id>[0-9]+)/(?P<is_group>[a-z]+)$', views.get_user_or_group_data, name='get_user_or_group_data'),
+    url(r'^_internal/get-user-or-group-data/(?P<user_or_group_id>[0-9]+)/(?P<is_group>[a-z]+)$',
+        views.get_user_or_group_data, name='get_user_or_group_data'),
     url(r'^_internal/(?P<shortkey>[0-9a-f-]+)/publish/$', views.publish),
     url(r'^_internal/create-resource/$', views.create_resource_select_resource_type),
     url(r'^_internal/create-resource/do/$', views.create_resource, name='create_resource'),
@@ -189,6 +191,10 @@ urlpatterns = patterns('',
         views.resource_folder_hierarchy.data_store_create_folder),
     url(r'^_internal/data-store-move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename),
+    url(r'^_internal/data-store-move-to-folder/$',
+        views.resource_folder_hierarchy.data_store_move_to_folder),
+    url(r'^_internal/data-store-rename-file-or-folder/$',
+        views.resource_folder_hierarchy.data_store_rename_file_or_folder),
     url(r'^_internal/data-store-delete-folder/$',
         views.resource_folder_hierarchy.data_store_remove_folder),
 )
