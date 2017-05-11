@@ -1540,11 +1540,12 @@ class AbstractResource(ResourcePermissionsMixin):
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
 
-    def get_metadata_xml(self, pretty_print=True):
+    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
         # Resource types that support file types
         # must override this method. See Composite Resource
         # type as an example
-        return self.metadata.get_xml(pretty_print=pretty_print)
+        return self.metadata.get_xml(pretty_print=pretty_print,
+                                     include_format_elements=include_format_elements)
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)
@@ -3158,7 +3159,7 @@ class CoreMetaData(models.Model):
                             self.create_element(element_model_name=element_name,
                                                 **id_item[element_name])
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url, get_resource_types
 
@@ -3242,9 +3243,10 @@ class CoreMetaData(models.Model):
                 else:
                     rdf_date_value.text = dt.start_date.isoformat()
 
-        for fmt in self.formats.all():
-            dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
-            dc_format.text = fmt.value
+        if include_format_elements:
+            for fmt in self.formats.all():
+                dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
+                dc_format.text = fmt.value
 
         for res_id in self.identifiers.all():
             dc_identifier = etree.SubElement(rdf_Description,

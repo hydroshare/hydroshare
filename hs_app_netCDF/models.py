@@ -429,7 +429,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             self.is_dirty = flag
             self.save()
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)

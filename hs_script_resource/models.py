@@ -96,7 +96,7 @@ class ScriptMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string for R Script
         xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)

@@ -116,8 +116,7 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def get_xml(self, pretty_print=True):
-
+    def get_xml(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string for Model Program
         xml_string = super(ModelProgramMetaData, self).get_xml(pretty_print=pretty_print)

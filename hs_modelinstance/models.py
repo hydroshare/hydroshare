@@ -144,7 +144,7 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         return elements
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
 
