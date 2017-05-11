@@ -152,6 +152,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     zip_file_added = False
     shp_file_added = False
     prj_file_added = False
+    xml_file_added = False
     files_failed_validation = []
     files_existed_before = len(added_res_files) < resource.files.count()
     if resource.files.all().count() == 1:
@@ -274,17 +275,19 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 shp_file_added = True
                 break
         if not shp_file_added:
-            # metadata needs to be re-extracted and updated only if a prj file has been added
-            for f in added_res_files:
-                if f.extension == '.prj':
-                    prj_file_added = True
-                    break
+            # metadata needs to be re-extracted and updated only if a prj or a xml file has
+            # been added
+            file_extensions = [f.extension for f in added_res_files]
+            prj_file_added = '.prj' in file_extensions
+            shp_file_added = '.shp' in file_extensions
+            xml_file_added = '.xml' in file_extensions
+
             for f in resource.files.all():
                 if f.extension == '.shp':
                     shp_res_file = f
                     break
 
-    if zip_file_added or shp_file_added or prj_file_added:
+    if any([zip_file_added, shp_file_added, prj_file_added, xml_file_added]):
         if zip_file_added:
             res_file = zip_res_file
         else:

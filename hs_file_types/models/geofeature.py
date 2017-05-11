@@ -415,7 +415,7 @@ def add_metadata(resource, metadata_dict, xml_file, logical_file=None):
         target_obj.metadata.geometryinformation.delete()
     target_obj.metadata.create_element('geometryinformation', **geometryinformation_dict)
     if xml_file:
-        shp_xml_metadata_list = _parse_shp_xml(xml_file)
+        shp_xml_metadata_list = parse_shp_xml(xml_file)
         for shp_xml_metadata in shp_xml_metadata_list:
             if 'description' in shp_xml_metadata:
                 # overwrite existing description metadata - at the resource level
@@ -577,7 +577,7 @@ def extract_metadata(shp_file_full_path):
         metadata_dict = {}
 
         # wgs84 extent
-        parsed_md_dict = _parse_shp(shp_file_full_path)
+        parsed_md_dict = parse_shp(shp_file_full_path)
         if parsed_md_dict["wgs84_extent_dict"]["westlimit"] != UNKNOWN_STR:
             wgs84_dict = parsed_md_dict["wgs84_extent_dict"]
             # if extent is a point, create point type coverage
@@ -641,7 +641,7 @@ def extract_metadata(shp_file_full_path):
         raise ValidationError("Parse Shapefiles Failed!")
 
 
-def _parse_shp(shp_file_path):
+def parse_shp(shp_file_path):
     """
     :param shp_file_path: full file path fo the .shp file
 
@@ -777,7 +777,7 @@ def _parse_shp(shp_file_path):
     return shp_metadata_dict
 
 
-def _parse_shp_xml(shp_xml_full_path):
+def parse_shp_xml(shp_xml_full_path):
     """
     Parse ArcGIS 10.X ESRI Shapefile Metadata XML. file to extract metadata for the following
     elements:
