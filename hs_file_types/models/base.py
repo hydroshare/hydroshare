@@ -14,7 +14,7 @@ from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, 
 
 from lxml import etree
 
-from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension, current_site_url
 from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 
 
@@ -252,12 +252,13 @@ class AbstractFileMetaData(models.Model):
         dataset_container = etree.SubElement(
             container, '{%s}Dataset' % NAMESPACES['hsterms'])
         rdf_Description = etree.SubElement(dataset_container, '{%s}Description' % NAMESPACES['rdf'])
-        hsterms_datatype = etree.SubElement(rdf_Description, '{%s}dataType' % NAMESPACES['hsterms'])
-        hsterms_datatype.text = self.logical_file.data_type
+        dc_datatype = etree.SubElement(rdf_Description, '{%s}type' % NAMESPACES['dc'])
+        data_type = current_site_url() + "/terms/" + self.logical_file.data_type
+        dc_datatype.set('{%s}resource' % NAMESPACES['rdf'], data_type)
+
         if self.logical_file.dataset_name:
-            hsterms_datatitle = etree.SubElement(rdf_Description,
-                                                 '{%s}dataTitle' % NAMESPACES['hsterms'])
-            hsterms_datatitle.text = self.logical_file.dataset_name
+            dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' % NAMESPACES['dc'])
+            dc_datatitle.text = self.logical_file.dataset_name
 
         # add fileType node
         for res_file in self.logical_file.files.all():
@@ -265,6 +266,11 @@ class AbstractFileMetaData(models.Model):
                                                 '{%s}dataFile' % NAMESPACES['hsterms'])
             rdf_dataFile_Description = etree.SubElement(hsterms_datafile,
                                                         '{%s}Description' % NAMESPACES['rdf'])
+            file_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url(),
+                res_id=self.logical_file.resource.short_id,
+                file_name=res_file.short_path)
+            rdf_dataFile_Description.set('{%s}about' % NAMESPACES['rdf'], file_uri)
             dc_title = etree.SubElement(rdf_dataFile_Description,
                                         '{%s}title' % NAMESPACES['dc'])
 
@@ -562,9 +568,10 @@ class AbstractLogicalFile(models.Model):
                             object_id_field='logical_file_object_id')
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
-    # this will be used for hsterms:dataType in resourcemetadata.xml
+    # this will be used for dc:type in resourcemetadata.xml
     # each specific logical type needs to reset this field
-    data_type = "Generic data"
+    # also this data type needs to be defined in in terms.html page
+    data_type = "Generic"
 
     class Meta:
         abstract = True
@@ -646,6 +653,23 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+
+    # TODO: unit test this
+    def reset_to_generic(self, user):
+        """
+        This sets all files in this logical file group to GenericLogicalFile type
+
+        :param  user: user who is re-setting to generic file type
+        :return:
+        """
+        from .generic import GenericLogicalFile
+
+        for res_file in self.files.all():
+            if res_file.has_logical_file:
+                res_file.logical_file.logical_delete(user=user, delete_res_files=False)
+            logical_file = GenericLogicalFile.create()
+            res_file.logical_file_content_object = logical_file
+            res_file.save()
 
     def get_copy(self):
         """creates a copy of this logical file object with associated metadata needed to support
