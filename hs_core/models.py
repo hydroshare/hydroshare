@@ -3420,23 +3420,21 @@ class CoreMetaData(models.Model):
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
     def update(self, metadata):
+        """
+        :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
+        element_name must be in lowercase.
+        example of a dict in metadata list:
+            {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :return:
+        """
+
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
-                for dict_item in metadata:
-                    if element_name in dict_item:
-                        element = getattr(self, element_name, None)
-                        if element:
-                            self.update_element(element_id=element.id,
-                                                element_model_name=element_name,
-                                                **dict_item[element_name])
-                        else:
-                            self.create_element(element_model_name=element_name,
-                                                **dict_item[element_name])
-
+                self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
-                self._update_repeatable_element(element_name=element_name, metadata=metadata)
+                self.update_repeatable_element(element_name=element_name, metadata=metadata)
 
             # allow only updating or creating date element of type valid
             element_name = 'date'
@@ -3805,11 +3803,76 @@ class CoreMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
-    def _update_repeatable_element(self, element_name, metadata):
-        # make a list of dict that are for a specific element as specified by element_name
+    def update_non_repeatable_element(self, element_name, metadata, property_name=None):
+        """
+        This helper function is to create/update a specific metadata element as specified by
+        *element_name*
+        :param element_name: metadata element class name (e.g. title)
+        :param metadata: a list of dicts - each dict has data to update/create a specific metadata
+        element (e.g. {'title': {'value': 'my resource title'}}
+        :param property_name: name of the property/attribute name in this class or its sub class
+        to access the metadata element instance of *metadata_element*. This is needed only when
+        the property/attribute name differs from the element class name
+
+            Example:
+            class ModelProgramMetaData(CoreMetaData):
+                _mpmetadata = GenericRelation(MpMetadata)
+
+                @property
+                def program(self):
+                    return self._mpmetadata.all().first()
+
+            For the above class to update the metadata element MpMetadata, this function needs to
+            be called with element_name='mpmetadata' and property_name='program'
+        :return:
+        """
+        for dict_item in metadata:
+            if element_name in dict_item:
+                if property_name is None:
+                    element = getattr(self, element_name, None)
+                else:
+                    element = getattr(self, property_name, None)
+                if element:
+                    self.update_element(element_id=element.id,
+                                        element_model_name=element_name,
+                                        **dict_item[element_name])
+                else:
+                    self.create_element(element_model_name=element_name,
+                                        **dict_item[element_name])
+
+    def update_repeatable_element(self, element_name, metadata, property_name=None):
+        """
+        Creates new metadata elements of type *element_name*. Any existing metadata elements of
+        matching type get deleted first.
+        :param element_name: class name of the metadata element (e.g. creator)
+        :param metadata: a list of dicts containing data for each of the metadata elements that
+        needs to be created/updated as part of bulk update
+        :param property_name: (Optional) the property/attribute name used in this instance of
+        CoreMetaData (or its sub class) to access all the objects of type *element_type*
+            Example:
+            class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
+                 _model_input = GenericRelation(ModelInput)
+
+                @property
+                def model_inputs(self):
+                    return self._model_input.all()
+
+            For the above class to update the metadata element ModelInput, this function needs to
+            be called with element_name='modelinput' and property_name='model_inputs'. If in the
+            above class instead of using the attribute name '_model_inputs' we have used
+            'modelinputs' then this function needs to be called with element_name='modelinput' and
+            no need to pass a value for the property_name.
+
+        :return:
+        """
+
         element_list = [element_dict for element_dict in metadata if element_name in element_dict]
         if len(element_list) > 0:
-            elements = getattr(self, element_name + 's')
+            if property_name is None:
+                elements = getattr(self, element_name + 's')
+            else:
+                elements = getattr(self, property_name)
+
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
