@@ -148,10 +148,24 @@ class GeoFeatureFileMetaData(GeographicFeatureMetaDataMixin, AbstractFileMetaDat
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all metadata elements associated with this
+        logical file type instance"""
+
+        container_to_add_to = super(GeoFeatureFileMetaData, self).add_to_xml_container(container)
+        if self.geometryinformation:
+            self.geometryinformation.add_to_xml_container(container_to_add_to)
+
+        for fieldinfo in self.fieldinformations.all():
+            fieldinfo.add_to_xml_container(container_to_add_to)
+
+        if self.originalcoverage:
+            self.originalcoverage.add_to_xml_container(container_to_add_to)
+
 
 class GeoFeatureLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
-    data_type = "Geo feature data"
+    data_type = "GeographicFeature"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):

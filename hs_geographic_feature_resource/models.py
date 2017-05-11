@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 
@@ -5,10 +7,10 @@ from mezzanine.pages.page_processors import processor_for
 
 from dominate.tags import legend, table, tbody, tr, td, th, h4, div
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor,\
-                           CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, \
+    CoreMetaData, AbstractMetaDataElement
 
-from lxml import etree
+from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
 
 class OriginalCoverage(AbstractMetaDataElement):
@@ -95,6 +97,32 @@ class OriginalCoverage(AbstractMetaDataElement):
                                                   file_type=file_type)
         return orig_coverage_form
 
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        cov = etree.SubElement(container, '{%s}spatialReference' % NAMESPACES['hsterms'])
+        cov_term = '{%s}' + 'box'
+        coverage_terms = etree.SubElement(cov, cov_term % NAMESPACES['hsterms'])
+        rdf_coverage_value = etree.SubElement(coverage_terms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        # original coverage is of box type
+        cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                    % (self.northlimit, self.eastlimit,
+                       self.southlimit, self.westlimit,
+                       self.unit)
+
+        if self.projection_name:
+            cov_value += '; projection_name={}'.format(self.projection_name)
+
+        if self.projection_string:
+            cov_value += '; projection_string={}'.format(self.projection_string)
+
+        if self.datum:
+            cov_value += '; datum={}'.format(self.datum)
+
+        rdf_coverage_value.text = cov_value
+
 
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
@@ -117,6 +145,19 @@ class FieldInformation(AbstractMetaDataElement):
         if pretty:
             return field_infor_tr.render(pretty=pretty)
         return field_infor_tr
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        # element attribute name : name in xml
+        md_fields = {
+            "fieldName": "fieldName",
+            "fieldType": "fieldType",
+            "fieldTypeCode": "fieldTypeCode",
+            "fieldWidth": "fieldWidth",
+            "fieldPrecision": "fieldPrecision"
+        }
+        add_metadata_element_to_xml(container, self, md_fields)
 
 
 class GeometryInformation(AbstractMetaDataElement):
@@ -168,6 +209,18 @@ class GeometryInformation(AbstractMetaDataElement):
                                                         element_id=element.id if element else None,
                                                         file_type=file_type)
         return geom_information_form
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of the metadata element"""
+
+        # element attribute name : name in xml
+        md_fields = {
+            "geometryType": "geometryType",
+            "featureCount": "featureCount"
+        }
+
+        add_metadata_element_to_xml(container, self, md_fields)
+
 
 class GeographicFeatureResource(BaseResource):
     objects = ResourceManager("GeographicFeatureResource")
@@ -272,12 +325,11 @@ class GeographicFeatureMetaDataMixin(models.Model):
 
 
 class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
-
     @property
     def resource(self):
         return GeographicFeatureResource.objects.filter(object_id=self.id).first()
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(GeographicFeatureMetaData, self).get_xml(pretty_print=False)
 
@@ -288,33 +340,12 @@ class GeographicFeatureMetaData(GeographicFeatureMetaDataMixin, CoreMetaData):
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
         if self.geometryinformation:
-            geometryinformation_fields = ['geometryType', 'featureCount']
-            self.add_metadata_element_to_xml(container,
-                                             self.geometryinformation,
-                                             geometryinformation_fields)
+            self.geometryinformation.add_to_xml_container(container)
 
         for field_info in self.fieldinformations.all():
-            field_info_fields = ['fieldName', 'fieldType',
-                                 'fieldTypeCode', 'fieldWidth', 'fieldPrecision']
-            self.add_metadata_element_to_xml(container, field_info, field_info_fields)
+            field_info.add_to_xml_container(container)
 
         if self.originalcoverage:
-            ori_coverage = self.originalcoverage
-            cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            cov_term = '{%s}' + 'box'
-            coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms,
-                                                  '{%s}value' % self.NAMESPACES['rdf'])
-            # original coverage is of box type
-            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        % (ori_coverage.northlimit, ori_coverage.eastlimit,
-                           ori_coverage.southlimit, ori_coverage.westlimit, ori_coverage.unit)
-
-            cov_value = cov_value + '; projection_name=%s' % \
-                                    ori_coverage.projection_name + '; datum=%s' % \
-                                    ori_coverage.datum + '; projection_string=%s' % \
-                                    ori_coverage.projection_string
-
-            rdf_coverage_value.text = cov_value
+            self.originalcoverage.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
