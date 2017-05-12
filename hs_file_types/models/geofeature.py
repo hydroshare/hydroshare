@@ -215,7 +215,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @classmethod
     def set_file_type(cls, resource, file_id, user):
         """
-        Sets a tif or zip raster resource file to GeoRasterFile type
+        Sets a .shp or .zip resource file to GeoFeatureFile type
         :param resource: an instance of resource type CompositeResource
         :param file_id: id of the resource file to be set as GeoFeatureFile type
         :param user: user who is setting the file type
@@ -315,8 +315,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     shutil.rmtree(temp_dir)
 
         if not file_type_success and upload_folder:
-            # roll back files to their original state
-            log.info("File type setting failed. Trying to roll back files to the original state.")
+            # rollback files to their original state
+            log.info("File type setting failed. Trying to rollback files to the original state.")
             # TODO: refactor the following code to a class method of the AbstractLogicalFile
             # and use it in other file type set_file_type() function
             try:
