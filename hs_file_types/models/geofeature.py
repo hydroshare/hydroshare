@@ -233,7 +233,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         if res_file is None or not res_file.exists:
             raise ValidationError("File not found.")
 
-        if res_file.extension not in ('.zip', '.shp'):
+        if res_file.extension.lower() not in ('.zip', '.shp'):
             raise ValidationError("Not a valid geographic feature file.")
 
         if not res_file.has_generic_logical_file:
@@ -255,7 +255,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         base_file_name = file_name[:-len(res_file.extension)]
         xml_file = ''
         for f in shape_files:
-            if f.endswith('.shp.xml'):
+            if f.lower().endswith('.shp.xml'):
                 xml_file = f
                 break
 
@@ -349,7 +349,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
     shape_files, shp_res_files = get_all_related_shp_files(resource, res_file, file_type=file_type)
     temp_dir = os.path.dirname(shape_files[0])
     if not _check_if_shape_files(shape_files):
-        if res_file.extension == '.shp':
+        if res_file.extension.lower() == '.shp':
             err_msg = "One or more dependent shape files are missing at location: " \
                       "{folder_path} or one or more files are of not shape file type."
             err_msg = err_msg.format(folder_path=res_file.short_path)
@@ -460,7 +460,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
 
     def collect_shape_resource_files(res_file):
         # compare without the file extension (-4)
-        if res_file.short_path.endswith('.shp.xml'):
+        if res_file.short_path.lower().endswith('.shp.xml'):
             if selected_resource_file.short_path[:-4] == res_file.short_path[:-8]:
                 shape_res_files.append(f)
         elif selected_resource_file.short_path[:-4] == res_file.short_path[:-4]:
@@ -469,9 +469,9 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
     shape_temp_files = []
     shape_res_files = []
     temp_dir = ''
-    if selected_resource_file.extension == '.shp':
+    if selected_resource_file.extension.lower() == '.shp':
         for f in resource.files.all():
-            if f.extension in GeoFeatureLogicalFile.get_allowed_storage_file_types():
+            if f.extension.lower() in GeoFeatureLogicalFile.get_allowed_storage_file_types():
                 if file_type:
                     if f.has_generic_logical_file:
                         collect_shape_resource_files(f)
@@ -490,7 +490,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                 temp_file = dst_dir
             shape_temp_files.append(temp_file)
 
-    elif selected_resource_file.extension == '.zip':
+    elif selected_resource_file.extension.lower() == '.zip':
         temp_file = utils.get_file_from_irods(selected_resource_file)
         temp_dir = os.path.dirname(temp_file)
         if not zipfile.is_zipfile(temp_file):
@@ -532,11 +532,11 @@ def _check_if_shape_files(files):
         # check if there is the xml file
         xml_file = ''
         for f in files:
-            if f.endswith('.shp.xml'):
+            if f.lower().endswith('.shp.xml'):
                 xml_file = f
 
         file_names = set([os.path.splitext(os.path.basename(f))[0] for f in files if
-                          not f.endswith('.shp.xml')])
+                          not f.lower().endswith('.shp.xml')])
         if len(file_names) > 1:
             # file names are not the same
             return False
@@ -555,7 +555,7 @@ def _check_if_shape_files(files):
         return False
 
     # test if we can open the shp file
-    shp_file = [f for f in files if f.endswith('.shp')][0]
+    shp_file = [f for f in files if f.lower().endswith('.shp')][0]
     driver = ogr.GetDriverByName('ESRI Shapefile')
     dataset = driver.Open(shp_file)
     if dataset is None:
