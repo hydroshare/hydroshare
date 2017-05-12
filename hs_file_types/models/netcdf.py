@@ -366,7 +366,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         # base file name (no path included)
         file_name = res_file.file_name
         # file name without the extension
-        nc_file_name = file_name.split(".")[0]
+        nc_file_name = file_name[:-len(res_file.extension)]
 
         resource_metadata = []
         file_type_metadata = []

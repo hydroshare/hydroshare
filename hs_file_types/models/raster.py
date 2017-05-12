@@ -268,7 +268,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         # base file name (no path included)
         file_name = utils.get_resource_file_name_and_extension(res_file)[1]
         # file name without the extension
-        file_name = file_name.split(".")[0]
+        file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
 
         if res_file is not None and res_file.has_generic_logical_file:
