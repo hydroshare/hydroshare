@@ -3,6 +3,7 @@ from dateutil import parser
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest
 
 from hs_core.hydroshare import resource
@@ -315,6 +316,29 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.resGeoFeature.delete()
 
+    def test_create_resource_with_invalid_zip_file(self):
+        # test that file upload will fail when an invalid zip file is used to create a resource
+
+        files = []
+        target = 'hs_geographic_feature_resource/tests/states_invalid.zip'
+        files.append(UploadedFile(file=open(target, 'r'), name='states_invalid.zip'))
+
+        self.resGeoFeature = hydroshare.create_resource(
+            resource_type='GeographicFeatureResource',
+            owner=self.user,
+            title='Test Geographic Feature (shapefiles)',
+            keywords=['kw1', 'kw2'],
+            files=files
+        )
+        # uploaded file validation and metadata extraction happens in post resource
+        # creation handler - should fail - no file get uploaded
+        with self.assertRaises(ValidationError):
+            hydroshare.utils.resource_post_create_actions(resource=self.resGeoFeature,
+                                                          user=self.user, metadata=[])
+
+        # check that the resource has no files
+        self.assertEqual(self.resGeoFeature.files.count(), 0)
+
     def test_add_zip_file_to_resource(self):
         # here we are using a zip file that has all the 15 (3 required + 12 optional) files
 
@@ -325,7 +349,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_all_files.zip'
         files.append(UploadedFile(file=open(target, 'r'),
                                   name='gis.osm_adminareas_v06_all_files.zip'))
-        hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user,)
+        hydroshare.utils.resource_file_add_process(self.resGeoFeature, files, self.user)
 
         # check that the resource has 15 files
         self.assertEqual(self.resGeoFeature.files.count(), 15)
