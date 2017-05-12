@@ -252,7 +252,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         temp_dir = os.path.dirname(shape_files[0])
         file_name = res_file.file_name
         # file name without the extension
-        base_file_name = file_name.split(".")[0]
+        base_file_name = file_name[:-len(res_file.extension)]
         xml_file = ''
         for f in shape_files:
             if f.endswith('.shp.xml'):
