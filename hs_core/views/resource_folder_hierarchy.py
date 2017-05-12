@@ -537,7 +537,8 @@ def data_store_move_to_folder(request, pk=None):
             folder, file = ResourceFile.resource_path_is_acceptable(resource,
                                                                     abs_path,
                                                                     test_exists=True)
-            ResourceFile.get(resource, file, folder=folder)
+            if not is_folder(istorage, abs_path):
+                ResourceFile.get(resource, file, folder=folder)
         except ValidationError:
             return HttpResponse('One or more files to be moved do not exist',
                                 status=status.HTTP_400_BAD_REQUEST)
