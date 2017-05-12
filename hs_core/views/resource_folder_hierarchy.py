@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from rest_framework.exceptions import NotFound, status, PermissionDenied, \
     ValidationError as DRF_ValidationError
 from rest_framework.decorators import api_view
+from django.core.exceptions import ValidationError
 
 from django_irods.icommands import SessionException
 
@@ -491,13 +492,13 @@ def data_store_move_to_folder(request, pk=None):
 
     tgt_path = str(tgt_path).strip()
     if not tgt_path:
-        return HttpResponse('Bad request - tgt_path cannot be empty',
+        return HttpResponse('Target directory not specified',
                             status=status.HTTP_400_BAD_REQUEST)
 
+    # protect against common hacking attacks
     if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+        return HttpResponse('Target directory path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
-
     if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
         return HttpResponse('Bad request - tgt_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
@@ -507,33 +508,60 @@ def data_store_move_to_folder(request, pk=None):
     tgt_abspath = tgt_abspath.rstrip('/')
 
     if not is_folder(istorage, tgt_abspath):
-        return HttpResponse('Bad request - tgt_path is not an existing folder',
+        return HttpResponse('Target of move is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
     src_paths = json.loads(src_paths)
 
+    # protect against common hacking attacks
     for src_path in src_paths:
         src_path = str(src_path).strip()
 
         if not src_path.startswith('data/contents/'):
-            return HttpResponse('Bad request - src_path must start with data/contents/',
+            return HttpResponse('Paths to be moved must start with data/contents/',
                                 status=status.HTTP_400_BAD_REQUEST)
-
         if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-            return HttpResponse('Bad request - src_path cannot contain /../',
+            return HttpResponse('Paths to be moved cannot contain /../',
                                 status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO: validate that move makes sense and that things are not being moved to subdirectories
-    # of themselves.
-
+    # strip trailing slashes (if any)
     tgt_path = tgt_path.rstrip('/')
-    src_paths_2 = []
+    for i in range(len(src_paths)):
+        src_paths[i] = src_paths[i].rstrip('/')
+
     for s in src_paths:
-        s2 = s.rstrip('/')
-        src_paths_2.append(s2)
+        abs_path = os.path.join(resource.root_path, s)
+
+        # protect against stale data botches: source files should exist
+        try:
+            folder, file = ResourceFile.resource_path_is_acceptable(resource,
+                                                                    abs_path,
+                                                                    test_exists=True)
+            ResourceFile.get(resource, file, folder=folder)
+        except ValidationError:
+            return HttpResponse('One or more files to be moved do not exist',
+                                status=status.HTTP_400_BAD_REQUEST)
+        except ResourceFile.DoesNotExist:
+            return HttpResponse('One or more files to be moved do not exist',
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        # protect against inadvertent overwrite
+        base = os.path.basename(abs_path)
+        tgt_overwrite = os.path.join(tgt_path, base)
+        if istorage.exists(tgt_overwrite):
+            return HttpResponse('Move will overwrite an existing file',
+                                status=status.HTTP_400_BAD_REQUEST)
+        try:
+            ResourceFile.get(resource, base, folder=tgt_path)
+            return HttpResponse('Move will overwrite an existing file',
+                                status=status.HTTP_400_BAD_REQUEST)
+        except ResourceFile.DoesNotExist:
+            pass  # expected response
+
+    # TODO: validate that things are not being moved to subdirectories of themselves.
 
     try:
-        move_to_folder(user, pk, src_paths_2, tgt_path)
+        move_to_folder(user, pk, src_paths, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
