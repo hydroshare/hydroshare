@@ -244,14 +244,16 @@ function bindFileBrowserItemEvents() {
                 var destFolderPath = currentPath + "/" + destName;
 
                 var calls = [];
+                var callSources = []
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
                     var destPath = destFolderPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
-                        // use same entry point as cut/paste
-                        calls.push(move_to_folder_ajax_submit(resID, [sourcePath], destFolderPath));
+                        callSources.push(sourcePath) 
                     }
                 }
+                // use same entry point as cut/paste
+                calls.push(move_to_folder_ajax_submit(resID, callSources, destFolderPath));
 
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
