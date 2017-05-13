@@ -890,7 +890,7 @@ def irods_path_is_allowed(path):
 
 def irods_path_is_directory(istorage, path):
     """ return True if the path is a directory. """
-    folder, base = os.path.split(path)
+    folder, base = os.path.split(path.rstrip('/'))
     listing = istorage.listdir(folder)
     return base in listing[0]
 

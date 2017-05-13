@@ -25,7 +25,6 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
             'test resource',
         )
 
-        resource.doi = 'doi1000100010001'
         resource.save()
 
         open('myfile.txt', "w").close()
@@ -40,7 +39,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
                        validate_move_rename=True)
 
         folder_contents = list_folder(resource.short_id, "data/contents/test_folder")
-        self.assertEquals(True, ['myfile.txt'] in folder_contents)
+        self.assertTrue(['myfile.txt'] in folder_contents)
 
     def test_rename_file_or_folder(self):
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -60,7 +59,6 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
             'test resource',
         )
 
-        resource.doi = 'doi1000100010001'
         resource.save()
 
         open('myfile.txt', "w").close()
@@ -80,8 +78,5 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
                               validate_move_rename=True)
 
         folder_contents = list_folder(resource.short_id, "data/contents/")
-        self.assertEquals(True, ['myfile2.txt'] in folder_contents)
-        self.assertEquals(True, ['test_folder2'] in folder_contents)
-
-    def test_irods_path_is_directory(self):
-        pass
+        self.assertTrue(['myfile2.txt'] in folder_contents)
+        self.assertTrue(['test_folder2'] in folder_contents)

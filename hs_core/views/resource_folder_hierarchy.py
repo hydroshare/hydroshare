@@ -15,7 +15,7 @@ from hs_core.hydroshare.utils import get_file_mime_type, \
     get_resource_file_url, resolve_request
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
-    rename_file_or_folder, get_coverage_data_dict
+    rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
 from hs_core.models import ResourceFile, get_path
 
 logger = logging.getLogger(__name__)
@@ -470,6 +470,9 @@ def data_store_move_to_folder(request, pk=None):
     request with input data passed in for source_paths and target_path where source_paths
     and target_path are the relative paths for the source and target file or folder in the
     res_id file directory.
+
+    This routine is **specifically** targeted at validating requests from the UI.
+    Thus it is much more limiting than a general purpose REST responder.
     """
     pk = request.POST.get('res_id', pk)
     if pk is None:
@@ -507,7 +510,7 @@ def data_store_move_to_folder(request, pk=None):
     tgt_abspath = os.path.join(resource.root_path, tgt_path)
     tgt_abspath = tgt_abspath.rstrip('/')
 
-    if not is_folder(istorage, tgt_abspath):
+    if not irods_path_is_directory(istorage, tgt_abspath):
         return HttpResponse('Target of move is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -537,7 +540,7 @@ def data_store_move_to_folder(request, pk=None):
             folder, file = ResourceFile.resource_path_is_acceptable(resource,
                                                                     abs_path,
                                                                     test_exists=True)
-            if not is_folder(istorage, abs_path):
+            if not irods_path_is_directory(istorage, abs_path):
                 ResourceFile.get(resource, file, folder=folder)
         except ValidationError:
             return HttpResponse('One or more files to be moved do not exist',
@@ -584,10 +587,13 @@ def data_store_rename_file_or_folder(request, pk=None):
     :param request: a REST request
     :param pk: the short_id of a resource to modify, from REST URL.
 
-    This is invoked by an AJAX call and returns a json object that has the relative path of
-    the target file or folder that has been renamed. The AJAX request must be a POST
-    request with input data for source_path and target_path where source_path
+    This is invoked by an AJAX call in the UI. It returns a json object that has the
+    relative path of the target file or folder that has been renamed. The AJAX request
+    must be a POST request with input data for source_path and target_path, where source_path
     and target_path are the relative paths for the source and target file or folder.
+
+    This routine is **specifically** targeted at validating requests from the UI.
+    Thus it is much more limiting than a general purpose REST responder.
     """
     pk = request.POST.get('res_id', pk)
     if pk is None:
@@ -603,14 +609,14 @@ def data_store_rename_file_or_folder(request, pk=None):
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     # multiple source paths
-    src_path = resolve_request(request).get('source_paths', None)
+    src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
     if src_path is None or tgt_path is None:
-        return HttpResponse('Bad request - src_path or tgt_path is not included',
+        return HttpResponse('Source or target name is not specified',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not src_path or not tgt_path:
-        return HttpResponse('Bad request - src_path or tgt_path cannot be empty',
+        return HttpResponse('Source or target name is empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
     src_path = str(src_path).strip()
@@ -618,22 +624,22 @@ def data_store_rename_file_or_folder(request, pk=None):
     src_folder, src_base = os.path.split(src_path)
     tgt_folder, tgt_base = os.path.split(tgt_path)
     if src_folder != tgt_folder:
-        return HttpResponse('Bad request -- src_path and tgt_path must be in same folder',
+        return HttpResponse('Source and target names must be in same folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not src_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - src_path must start with data/contents/',
+        return HttpResponse('Source path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
     if src_path.find('/../') >= 0 or src_path.endswith('/..'):
         return HttpResponse('Bad request - src_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Bad request - tgt_path must start with data/contents/',
+        return HttpResponse('Target path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Bad request - tgt_path cannot contain /../',
+        return HttpResponse('Target path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
@@ -643,7 +649,7 @@ def data_store_rename_file_or_folder(request, pk=None):
     tgt_folder = tgt_folder[len('data/contents/'):]
     tgt_abspath = get_path(resource, tgt_base, folder=tgt_folder)
     if istorage.exists(tgt_abspath):
-        return HttpResponse('Bad request - tgt_path already exists',
+        return HttpResponse('Target name already exists',
                             status=status.HTTP_400_BAD_REQUEST)
 
     # check that the source exists
@@ -651,9 +657,8 @@ def data_store_rename_file_or_folder(request, pk=None):
     src_folder = src_folder[len('data/contents/'):]
     src_abspath = get_path(resource, src_base, folder=src_folder)
     if istorage.exists(src_abspath):
-        return HttpResponse("Bad request - src_path does not exist",
+        return HttpResponse("Source file does not exist",
                             status=status.HTTP_400_BAD_REQUEST)
-
     try:
         rename_file_or_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
@@ -667,16 +672,3 @@ def data_store_rename_file_or_folder(request, pk=None):
         json.dumps(return_object),
         content_type='application/json'
     )
-
-
-def is_folder(istorage, path):
-    """ return True if the thing is a folder """
-    dir, base = os.path.split(path)
-    try:
-        contents = istorage.listdir(dir)
-        if base in contents[0]:  # folders
-            return True
-        else:
-            return False
-    except SessionException:
-        return False
