@@ -772,8 +772,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     # ensure the target_full_path contains the file name to be moved or renamed to
     # if we are moving to a directory, put the filename into the request.
-    # TODO: #2105: this is not a sufficient check that the move is sane.
-    # TODO: #2105: separate the two use cases in this situation to avoid confusion
+    # This created some confusion in the UI, so we use it only in the public REST API
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
