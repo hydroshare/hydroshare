@@ -570,7 +570,6 @@ def data_store_move_to_folder(request, pk=None):
     if skipped_tgt_paths:
         if atomic:
             message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
-            logger.error(message)
             return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
 
     # if not atomic, then try to move the files that don't have conflicts
@@ -586,8 +585,7 @@ def data_store_move_to_folder(request, pk=None):
     return_object = {'target_rel_path': tgt_path}
 
     if skipped_tgt_paths:  # add information on skipped steps
-        message = '[Warn] skipped moves to existing {}'.format(', '.join(skipped_tgt_paths))
-        logger.error(message)
+        message = '[Warn] skipped move to existing {}'.format(', '.join(skipped_tgt_paths))
         return_object['additional_status'] = message
 
     return HttpResponse(
