@@ -16,7 +16,7 @@ from hs_core.hydroshare.utils import get_file_mime_type, \
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
     create_folder, remove_folder, move_or_rename_file_or_folder, move_to_folder, \
     rename_file_or_folder, get_coverage_data_dict, irods_path_is_directory
-from hs_core.models import ResourceFile, get_path
+from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
 
@@ -523,6 +523,7 @@ def data_store_move_to_folder(request, pk=None):
         if not src_path.startswith('data/contents/'):
             return HttpResponse('Paths to be moved must start with data/contents/',
                                 status=status.HTTP_400_BAD_REQUEST)
+
         if src_path.find('/../') >= 0 or src_path.endswith('/..'):
             return HttpResponse('Paths to be moved cannot contain /../',
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -540,14 +541,16 @@ def data_store_move_to_folder(request, pk=None):
             folder, file = ResourceFile.resource_path_is_acceptable(resource,
                                                                     abs_path,
                                                                     test_exists=True)
-            if not irods_path_is_directory(istorage, abs_path):
-                ResourceFile.get(resource, file, folder=folder)
         except ValidationError:
             return HttpResponse('One or more files to be moved do not exist',
                                 status=status.HTTP_400_BAD_REQUEST)
-        except ResourceFile.DoesNotExist:
-            return HttpResponse('One or more files to be moved do not exist',
-                                status=status.HTTP_400_BAD_REQUEST)
+
+        if not irods_path_is_directory(istorage, abs_path):
+            try:
+                ResourceFile.get(resource, file, folder=folder)
+            except ResourceFile.DoesNotExist:
+                return HttpResponse('One or more files to be moved do not exist',
+                                    status=status.HTTP_400_BAD_REQUEST)
 
         # protect against inadvertent overwrite
         base = os.path.basename(abs_path)
@@ -561,8 +564,6 @@ def data_store_move_to_folder(request, pk=None):
                                 status=status.HTTP_400_BAD_REQUEST)
         except ResourceFile.DoesNotExist:
             pass  # expected response
-
-    # TODO: validate that things are not being moved to subdirectories of themselves.
 
     try:
         move_to_folder(user, pk, src_paths, tgt_path)
@@ -608,7 +609,6 @@ def data_store_rename_file_or_folder(request, pk=None):
     except PermissionDenied:
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
-    # multiple source paths
     src_path = resolve_request(request).get('source_path', None)
     tgt_path = resolve_request(request).get('target_path', None)
     if src_path is None or tgt_path is None:
@@ -623,42 +623,65 @@ def data_store_rename_file_or_folder(request, pk=None):
     tgt_path = str(tgt_path).strip()
     src_folder, src_base = os.path.split(src_path)
     tgt_folder, tgt_base = os.path.split(tgt_path)
+
     if src_folder != tgt_folder:
-        return HttpResponse('Source and target names must be in same folder',
+        return HttpResponse('Rename: Source and target names must be in same folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not src_path.startswith('data/contents/'):
-        return HttpResponse('Source path must start with data/contents/',
+        return HttpResponse('Rename: Source path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
+
     if src_path.find('/../') >= 0 or src_path.endswith('/..'):
-        return HttpResponse('Bad request - src_path cannot contain /../',
+        return HttpResponse('Rename: Source path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not tgt_path.startswith('data/contents/'):
-        return HttpResponse('Target path must start with data/contents/',
+        return HttpResponse('Rename: Target path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if tgt_path.find('/../') >= 0 or tgt_path.endswith('/..'):
-        return HttpResponse('Target path cannot contain /../',
+        return HttpResponse('Rename: Target path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
 
-    # check that the target doesn't exist
-    tgt_folder, tgt_base = os.path.split(tgt_path)
-    tgt_folder = tgt_folder[len('data/contents/'):]
-    tgt_abspath = get_path(resource, tgt_base, folder=tgt_folder)
-    if istorage.exists(tgt_abspath):
-        return HttpResponse('Target name already exists',
+    # protect against stale data botches: source files should exist
+    src_abspath = os.path.join(resource.root_path, src_path)
+    try:
+        folder, base = ResourceFile.resource_path_is_acceptable(resource,
+                                                                src_abspath,
+                                                                test_exists=True)
+    except ValidationError:
+        return HttpResponse('Object to be renamed does not exist',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    # check that the source exists
-    src_folder, src_base = os.path.split(src_path)
-    src_folder = src_folder[len('data/contents/'):]
-    src_abspath = get_path(resource, src_base, folder=src_folder)
-    if istorage.exists(src_abspath):
-        return HttpResponse("Source file does not exist",
+    if not irods_path_is_directory(istorage, src_abspath):
+        try:
+            ResourceFile.get(resource, base, folder=folder)
+        except ResourceFile.DoesNotExist:
+            return HttpResponse('Object to be renamed does not exist',
+                                status=status.HTTP_400_BAD_REQUEST)
+
+    # check that the target doesn't exist
+    tgt_abspath = os.path.join(resource.root_path, tgt_path)
+    if istorage.exists(tgt_abspath):
+        return HttpResponse('Desired name is already in use',
                             status=status.HTTP_400_BAD_REQUEST)
+    try:
+        folder, base = ResourceFile.resource_path_is_acceptable(resource,
+                                                                tgt_abspath,
+                                                                test_exists=False)
+    except ValidationError:
+        return HttpResponse('Poorly structured desired name',
+                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        ResourceFile.get(resource, base, folder=tgt_path)
+        return HttpResponse('Desired name is already in use',
+                            status=status.HTTP_400_BAD_REQUEST)
+    except ResourceFile.DoesNotExist:
+        pass  # correct response
+
     try:
         rename_file_or_folder(user, pk, src_path, tgt_path)
     except SessionException as ex:
