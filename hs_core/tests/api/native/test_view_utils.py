@@ -44,6 +44,10 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         folder_contents = list_folder(resource.short_id, "data/contents/test_folder")
         self.assertEquals(True, ['myfile.txt'] in folder_contents)
 
+        resource.delete()
+        group.delete()
+        user.delete()
+
     def test_rename_file_or_folder(self):
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
@@ -84,6 +88,10 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         folder_contents = list_folder(resource.short_id, "data/contents/")
         self.assertEquals(True, ['myfile2.txt'] in folder_contents)
         self.assertEquals(True, ['test_folder2'] in folder_contents)
+
+        resource.delete()
+        group.delete()
+        user.delete()
 
     def test_irods_path_is_directory(self):
         pass
