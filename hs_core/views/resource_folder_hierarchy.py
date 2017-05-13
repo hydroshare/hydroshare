@@ -21,7 +21,6 @@ from hs_core.models import ResourceFile
 logger = logging.getLogger(__name__)
 
 
-# TODO: this does not document folders and does not correlate iRODs and Django views of files.
 def data_store_structure(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
@@ -478,6 +477,10 @@ def data_store_move_to_folder(request, pk=None):
     if pk is None:
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_400_BAD_REQUEST)
+
+    # whether to treat request as atomic: skip overwrites for valid request
+    atomic = request.POST.get('atomic', 'false') == 'true'  # False by default
+
     pk = str(pk).strip()
     try:
         resource, _, user = authorize(request, pk,
@@ -507,18 +510,23 @@ def data_store_move_to_folder(request, pk=None):
                             status=status.HTTP_400_BAD_REQUEST)
 
     istorage = resource.get_irods_storage()
-    tgt_abspath = os.path.join(resource.root_path, tgt_path)
-    tgt_abspath = tgt_abspath.rstrip('/')
 
-    if not irods_path_is_directory(istorage, tgt_abspath):
+    # strip trailing slashes (if any)
+    tgt_path = tgt_path.rstrip('/')
+    tgt_short_path = tgt_path[len('data/contents/'):]
+    tgt_storage_path = os.path.join(resource.root_path, tgt_path)
+
+    if not irods_path_is_directory(istorage, tgt_storage_path):
         return HttpResponse('Target of move is not an existing folder',
                             status=status.HTTP_400_BAD_REQUEST)
 
     src_paths = json.loads(src_paths)
 
+    for i in range(len(src_paths)):
+        src_paths[i] = str(src_paths[i]).strip().rstrip('/')
+
     # protect against common hacking attacks
     for src_path in src_paths:
-        src_path = str(src_path).strip()
 
         if not src_path.startswith('data/contents/'):
             return HttpResponse('Paths to be moved must start with data/contents/',
@@ -528,51 +536,59 @@ def data_store_move_to_folder(request, pk=None):
             return HttpResponse('Paths to be moved cannot contain /../',
                                 status=status.HTTP_400_BAD_REQUEST)
 
-    # strip trailing slashes (if any)
-    tgt_path = tgt_path.rstrip('/')
-    for i in range(len(src_paths)):
-        src_paths[i] = src_paths[i].rstrip('/')
+    valid_src_paths = []
+    skipped_tgt_paths = []
 
-    for s in src_paths:
-        abs_path = os.path.join(resource.root_path, s)
+    for src_path in src_paths:
+        src_storage_path = os.path.join(resource.root_path, src_path)
+        src_short_path = src_path[len('data/contents/'):]
 
         # protect against stale data botches: source files should exist
         try:
             folder, file = ResourceFile.resource_path_is_acceptable(resource,
-                                                                    abs_path,
+                                                                    src_storage_path,
                                                                     test_exists=True)
         except ValidationError:
-            return HttpResponse('One or more files to be moved do not exist',
+            return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        if not irods_path_is_directory(istorage, abs_path):
+        if not irods_path_is_directory(istorage, src_storage_path):  # there is django record
             try:
                 ResourceFile.get(resource, file, folder=folder)
             except ResourceFile.DoesNotExist:
-                return HttpResponse('One or more files to be moved do not exist',
+                return HttpResponse('Source file {} does not exist'.format(src_short_path),
                                     status=status.HTTP_400_BAD_REQUEST)
 
         # protect against inadvertent overwrite
-        base = os.path.basename(abs_path)
-        tgt_overwrite = os.path.join(tgt_path, base)
-        if istorage.exists(tgt_overwrite):
-            return HttpResponse('Move will overwrite an existing file',
-                                status=status.HTTP_400_BAD_REQUEST)
-        try:
-            ResourceFile.get(resource, base, folder=tgt_path)
-            return HttpResponse('Move will overwrite an existing file',
-                                status=status.HTTP_400_BAD_REQUEST)
-        except ResourceFile.DoesNotExist:
-            pass  # expected response
+        base = os.path.basename(src_storage_path)
+        tgt_overwrite = os.path.join(tgt_storage_path, base)
+        if not istorage.exists(tgt_overwrite):
+            valid_src_paths.append(src_path)  # partly qualified path for operation
+        else:  # skip pre-existing objects
+            skipped_tgt_paths.append(os.path.join(tgt_short_path, base))
+
+    if skipped_tgt_paths:
+        if atomic:
+            message = 'move would overwrite {}'.format(', '.join(skipped_tgt_paths))
+            logger.error(message)
+            return HttpResponse(message, status=status.HTTP_400_BAD_REQUEST)
+
+    # if not atomic, then try to move the files that don't have conflicts
+    # stop immediately on error.
 
     try:
-        move_to_folder(user, pk, src_paths, tgt_path)
+        move_to_folder(user, pk, valid_src_paths, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except DRF_ValidationError as ex:
         return HttpResponse(ex.detail, status=status.HTTP_400_BAD_REQUEST)
 
     return_object = {'target_rel_path': tgt_path}
+
+    if skipped_tgt_paths:  # add information on skipped steps
+        message = '[Warn] skipped moves to existing {}'.format(', '.join(skipped_tgt_paths))
+        logger.error(message)
+        return_object['additional_status'] = message
 
     return HttpResponse(
         json.dumps(return_object),
@@ -647,37 +663,40 @@ def data_store_rename_file_or_folder(request, pk=None):
     istorage = resource.get_irods_storage()
 
     # protect against stale data botches: source files should exist
-    src_abspath = os.path.join(resource.root_path, src_path)
+    src_storage_path = os.path.join(resource.root_path, src_path)
     try:
         folder, base = ResourceFile.resource_path_is_acceptable(resource,
-                                                                src_abspath,
+                                                                src_storage_path,
                                                                 test_exists=True)
     except ValidationError:
         return HttpResponse('Object to be renamed does not exist',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    if not irods_path_is_directory(istorage, src_abspath):
-        try:
+    if not irods_path_is_directory(istorage, src_storage_path):
+        try:  # Django record should exist for each file
             ResourceFile.get(resource, base, folder=folder)
         except ResourceFile.DoesNotExist:
             return HttpResponse('Object to be renamed does not exist',
                                 status=status.HTTP_400_BAD_REQUEST)
 
     # check that the target doesn't exist
-    tgt_abspath = os.path.join(resource.root_path, tgt_path)
-    if istorage.exists(tgt_abspath):
+    tgt_storage_path = os.path.join(resource.root_path, tgt_path)
+    tgt_short_path = tgt_path[len('data/contents/'):]
+    if istorage.exists(tgt_storage_path):
         return HttpResponse('Desired name is already in use',
                             status=status.HTTP_400_BAD_REQUEST)
     try:
         folder, base = ResourceFile.resource_path_is_acceptable(resource,
-                                                                tgt_abspath,
+                                                                tgt_storage_path,
                                                                 test_exists=False)
     except ValidationError:
-        return HttpResponse('Poorly structured desired name',
+        return HttpResponse('Poorly structured desired name {}'
+                            .format(tgt_short_path),
                             status=status.HTTP_400_BAD_REQUEST)
     try:
-        ResourceFile.get(resource, base, folder=tgt_path)
-        return HttpResponse('Desired name is already in use',
+        ResourceFile.get(resource, base, folder=tgt_short_path)
+        return HttpResponse('Desired name {} is already in use'
+                            .format(tgt_short_path),
                             status=status.HTTP_400_BAD_REQUEST)
     except ResourceFile.DoesNotExist:
         pass  # correct response
