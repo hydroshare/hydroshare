@@ -777,7 +777,6 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
-    # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -816,7 +815,6 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
@@ -855,7 +853,6 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     istorage = resource.get_irods_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    # TODO: why is this optional?
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         for src_path in src_paths:
