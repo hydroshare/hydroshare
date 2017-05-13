@@ -248,7 +248,8 @@ function bindFileBrowserItemEvents() {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
                     var destPath = destFolderPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
-                        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+                        // use same entry point as cut/paste
+                        calls.push(move_to_folder_ajax_submit(resID, [sourcePath], destFolderPath));
                     }
                 }
 
@@ -1174,7 +1175,7 @@ $(document).ready(function () {
         }
 
         var calls = [];
-        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
+        calls.push(rename_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
