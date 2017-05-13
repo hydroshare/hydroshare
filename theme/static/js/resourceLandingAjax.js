@@ -1094,7 +1094,7 @@ function move_to_folder_ajax_submit(res_id, source_paths, target_path) {
         async: true,
         data: {
             res_id: res_id,
-            source_paths: source_paths,
+            source_paths: JSON.stringify(source_paths),
             target_path: target_path
         },
         success: function (result) {

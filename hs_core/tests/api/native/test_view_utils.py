@@ -1,12 +1,10 @@
-import os
-
 from django.contrib.auth.models import Group
-from django.contrib.sites.models import Site
 from django.test import TestCase
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.views.utils import create_folder, move_to_folder, list_folder, rename_file_or_folder
+
 
 class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
     def test_move_to_folder_basic(self):
@@ -27,7 +25,6 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
             'test resource',
         )
 
-        resource.doi = 'doi1000100010001'
         resource.save()
 
         open('myfile.txt', "w").close()
@@ -42,7 +39,7 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
                        validate_move_rename=True)
 
         folder_contents = list_folder(resource.short_id, "data/contents/test_folder")
-        self.assertEquals(True, ['myfile.txt'] in folder_contents)
+        self.assertTrue(['myfile.txt'] in folder_contents)
 
         resource.delete()
         group.delete()
@@ -66,7 +63,6 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
             'test resource',
         )
 
-        resource.doi = 'doi1000100010001'
         resource.save()
 
         open('myfile.txt', "w").close()
