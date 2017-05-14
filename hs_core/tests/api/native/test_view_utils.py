@@ -89,5 +89,4 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         group.delete()
         user.delete()
 
-    def test_irods_path_is_directory(self):
-        pass
+    # TODO: test_irods_path_is_directory(self):
