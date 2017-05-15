@@ -425,11 +425,17 @@ function bindFileBrowserItemEvents() {
 
 function showFileTypeMetadata(){
      var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-     if (logical_file_id && logical_file_id.length == 0){
+     if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
      }
      var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+     if (!logical_type){
+        return; 
+     } 
      var resource_mode = $("#resource-mode").val();
+     if (!resource_mode){ 
+        return; 
+     } 
      resource_mode = resource_mode.toLowerCase();
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
@@ -1088,7 +1094,8 @@ $(document).ready(function () {
         targetPath = currentPath + "/" + folderName
         
         var calls = [];
-        calls.push(move_to_folder_ajax_submit(resID, sourcePaths, targetPath));
+        var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
+        calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
 
         // Wait for the asynchronous call to finish to get new folder structure
         $.when.apply($, calls).done(function () {

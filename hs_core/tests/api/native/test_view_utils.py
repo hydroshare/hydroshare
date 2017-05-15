@@ -36,14 +36,12 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         move_to_folder(user, resource.short_id,
                        src_paths=['data/contents/myfile.txt'],
                        tgt_path="data/contents/test_folder",
-                       validate_move_rename=True)
+                       validate_move=True)
 
         folder_contents = list_folder(resource.short_id, "data/contents/test_folder")
         self.assertTrue(['myfile.txt'] in folder_contents)
 
         resource.delete()
-        group.delete()
-        user.delete()
 
     def test_rename_file_or_folder(self):
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -74,19 +72,17 @@ class TestViewUtils(MockIRODSTestCaseMixin, TestCase):
         rename_file_or_folder(user, resource.short_id,
                               src_path="data/contents/myfile.txt",
                               tgt_path="data/contents/myfile2.txt",
-                              validate_move_rename=True)
+                              validate_rename=True)
 
         rename_file_or_folder(user, resource.short_id,
                               src_path="data/contents/test_folder",
                               tgt_path="data/contents/test_folder2",
-                              validate_move_rename=True)
+                              validate_rename=True)
 
         folder_contents = list_folder(resource.short_id, "data/contents/")
-        self.assertEquals(True, ['myfile2.txt'] in folder_contents)
-        self.assertEquals(True, ['test_folder2'] in folder_contents)
+        self.assertTrue(['myfile2.txt'] in folder_contents)
+        self.assertTrue(['test_folder2'] in folder_contents)
 
         resource.delete()
-        group.delete()
-        user.delete()
 
     # TODO: test_irods_path_is_directory(self):

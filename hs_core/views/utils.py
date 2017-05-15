@@ -787,15 +787,15 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
 
 # TODO: modify this to take short paths not including data/contents
-def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
+def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True):
     """
-    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    Rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
     :param src_path: the relative path for the source file or folder under res_id collection
     :param tgt_path: the relative path for the target file or folder under res_id collection
-    :param validate_move_rename: if True, then only ask resource type to check if this action is
+    :param validate_rename: if True, then only ask resource type to check if this action is
             allowed. Sometimes resource types internally want to take this action but disallow
             this action by a user. In that case resource types set this parameter to False to allow
             this action.
@@ -814,7 +814,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename
     src_full_path = os.path.join(resource.root_path, src_path)
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    if validate_move_rename:
+    if validate_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         if not resource.supports_rename_path(src_full_path, tgt_full_path):
             raise ValidationError("File/folder move/rename is not allowed.")
@@ -825,15 +825,15 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename
 
 
 # TODO: modify this to take short paths not including data/contents
-def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True):
+def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     """
-    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    Move a file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
     :param src_paths: the relative paths for the source files and/or folders under res_id collection
     :param tgt_path: the relative path for the target folder under res_id collection
-    :param validate_move_rename: if True, then only ask resource type to check if this action is
+    :param validate_move: if True, then only ask resource type to check if this action is
             allowed. Sometimes resource types internally want to take this action but disallow
             this action by a user. In that case resource types set this parameter to False to allow
             this action.
@@ -852,8 +852,8 @@ def move_to_folder(user, res_id, src_paths, tgt_path, validate_move_rename=True)
     istorage = resource.get_irods_storage()
     tgt_full_path = os.path.join(resource.root_path, tgt_path)
 
-    if validate_move_rename:
-        # this must raise ValidationError if move/rename is not allowed by specific resource type
+    if validate_move:
+        # this must raise ValidationError if move is not allowed by specific resource type
         for src_path in src_paths:
             src_full_path = os.path.join(resource.root_path, src_path)
             if not resource.supports_rename_path(src_full_path, tgt_full_path):
