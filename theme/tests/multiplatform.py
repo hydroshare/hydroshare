@@ -8,7 +8,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.urlresolvers import reverse
 
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common import desired_capabilities, keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.command import Command
@@ -78,7 +78,7 @@ class SeleniumTestsParentClass(object):
         fixtures = ['theme/tests/fixtures.json']
 
         def setUp(self):
-            super(SeleniumTestsParentClass.MultiPlatformTests, self).setUp()
+            super(StaticLiveServerTestCase, self).setUp()
             self.driver = None
             self.user_password = "Users_Cats_FirstName"
             if not User.objects.filter(email='user30@example.com'):
@@ -104,7 +104,7 @@ class SeleniumTestsParentClass(object):
         def tearDown(self):
             self.driver.save_screenshot('teardown.png')
             self.driver.quit()
-            super(SeleniumTestsParentClass.MultiPlatformTests, self).tearDown()
+            super(StaticLiveServerTestCase, self).tearDown()
 
         def wait_for_visible(self, selector_method, selector_str, timeout=10, except_fail=True):
             selector = (selector_method, selector_str)
@@ -117,7 +117,7 @@ class SeleniumTestsParentClass(object):
                     self.driver.save_screenshot('visible' + selector[1].replace(' ', '') + '.png')
                     err_msg = '{} not visible within timeout. Screenshot saved'.format(selector[1])
                     # if there is an issue with the selector, raise a relevant an error.
-                    self.assertTrue(self.driver.find_element(*selector).is_visible(), err_msg)
+                    self.assertTrue(self.driver.find_element(*selector).is_displayed(), err_msg)
                     # failsafe just in case it became visible while we were writing the screenshot
                     self.fail(err_msg)
                 else:
@@ -202,3 +202,30 @@ class SeleniumTestsParentClass(object):
             self.assertEqual(resource.title, resource_title)
             self.assertEqual(resource.short_id, shortkey)
             self.assertEqual(resource.creator, self.user)
+
+        def test_create_comment(self):
+            self.user.first_name = '<strong>First Name</strong>'
+            self.user.save()
+            comment_link_text = '<a href="http://example.com/">Comment Link Test</a>'
+
+            self._login_helper(self.user.email, self.user_password)
+            self._create_resource_helper('./manage.py')
+
+            self.wait_for_visible(By.CSS_SELECTOR, '#id_comment').send_keys(comment_link_text)
+            self.driver.find_element(By.CSS_SELECTOR, 'input[value="Comment"]').click()
+
+            self.wait_for_visible(By.CSS_SELECTOR, '.comment-form')
+            self.assertTrue('#comment-' in self.driver.current_url)
+
+            # Our new comment link should not look like HTML to our parser.
+            with self.assertRaises(NoSuchElementException):
+                self.driver.find_element(By.LINK_TEXT, 'Comment Link Test')
+
+            # Add the author name should not have a <strong> element
+            comment_div = self.driver.find_element(By.CSS_SELECTOR, 'div.comment-author div')
+            author_link = comment_div.find_element(By.CSS_SELECTOR, 'h4 a')
+            self.assertEqual("{} {}".format(self.user.first_name, self.user.last_name),
+                             author_link.text)
+            with self.assertRaises(NoSuchElementException):
+                author_link.find_element(By.CSS_SELECTOR, 'strong')
+            self.assertTrue(unicode(self.user.id) in author_link.get_attribute('href'))
