@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -103,6 +103,7 @@ class ExecutedBy(AbstractMetaDataElement):
             title = obj.title
             return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
 
+
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
     objects = ResourceManager("ModelInstanceResource")
@@ -117,6 +118,7 @@ class ModelInstanceResource(BaseResource):
         return self._get_metadata(md)
 
 processor_for(ModelInstanceResource)(resource_processor)
+
 
 # metadata container class
 class ModelInstanceMetaData(CoreMetaData):
@@ -143,6 +145,17 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ModelOutput')
         elements.append('ExecutedBy')
         return elements
+
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+        super(ModelInstanceMetaData, self).update(metadata)
+        attribute_mappings = {'modeloutput': 'model_output', 'executedby': 'executed_by'}
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in attribute_mappings.keys():
+                element_property_name = attribute_mappings[element_name]
+                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+
 
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements

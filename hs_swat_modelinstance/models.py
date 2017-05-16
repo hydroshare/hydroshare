@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
@@ -432,6 +432,22 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         if not self.model_objective:
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
+
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+        super(SWATModelInstanceMetaData, self).update(metadata)
+        attribute_mappings = {'modelobjective': 'model_objective',
+                              'simulationtype': 'simulation_type',
+                              'modelmethod': 'model_method',
+                              'modelparameter': 'model_parameter',
+                              'modelinput': 'model_input',
+                              'modeloutput': 'model_output',
+                              'executedby': 'executed_by'}
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in attribute_mappings.keys():
+                element_property_name = attribute_mappings[element_name]
+                self.update_non_repeatable_element(element_name, metadata, element_property_name)
 
     def get_xml(self, pretty_print=True):
 
