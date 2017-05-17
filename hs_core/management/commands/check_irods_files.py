@@ -55,16 +55,35 @@ class Command(BaseCommand):
         parser.add_argument(
             '--log',
             action='store_true',  # True for presence, False for absence
-            dest='log',           # value is options['log']
+            dest='log',  # value is options['log']
             help='log errors to system log',
         )
 
         # Named (optional) arguments
         parser.add_argument(
+            '--sync_ispublic',
+            action='store_true',  # True for presence, False for absence
+            dest='sync_ispublic',
+            help='synchronize iRODS isPublic AVU with Django',
+        )
+        parser.add_argument(
+            '--clean_irods',
+            action='store_true',  # True for presence, False for absence
+            dest='clean_irods',
+            help='delete unreferenced iRODS files',
+        )
+        parser.add_argument(
+            '--clean_django',
+            action='store_true',  # True for presence, False for absence
+            dest='clean_django',
+            help='delete unreferenced Django file objects',
+        )
+        # Named (optional) arguments
+        parser.add_argument(
             '--unreferenced',
             action='store_true',  # True for presence, False for absence
-            dest='unreferenced',           # value is options['log']
-            help='check for local unreferenced iRODS files',
+            dest='unreferenced',
+            help='check for unreferenced iRODS directories',
         )
 
     def handle(self, *args, **options):
@@ -83,15 +102,33 @@ class Command(BaseCommand):
                     print(msg)
 
                 print("LOOKING FOR FILE ERRORS FOR RESOURCE {}".format(rid))
+                if options['clean_irods']:
+                    print(' (deleting unreferenced iRODs files)')
+                if options['clean_django']:
+                    print(' (deleting Django file objects without files)')
+                if options['sync_ispublic']:
+                    print(' (correcting isPublic in iRODs)')
                 resource.check_irods_files(stop_on_error=False,
                                            echo_errors=not options['log'],
                                            log_errors=options['log'],
-                                           return_errors=False)
+                                           return_errors=False,
+                                           clean_irods=options['clean_irods'],
+                                           clean_django=options['clean_django'],
+                                           sync_ispublic=options['sync_ispublic'])
 
         else:  # check all resources
             print("LOOKING FOR FILE ERRORS FOR ALL RESOURCES")
+            if options['clean_irods']:
+                print(' (deleting unreferenced iRODs files)')
+            if options['clean_django']:
+                print(' (deleting Django file objects without files)')
+            if options['sync_ispublic']:
+                print(' (correcting isPublic in iRODs)')
             for r in BaseResource.objects.all():
                 r.check_irods_files(stop_on_error=False,
                                     echo_errors=not options['log'],  # Don't both log and echo
                                     log_errors=options['log'],
-                                    return_errors=False)
+                                    return_errors=False,
+                                    clean_irods=options['clean_irods'],
+                                    clean_django=options['clean_django'],
+                                    sync_ispublic=options['sync_ispublic'])
