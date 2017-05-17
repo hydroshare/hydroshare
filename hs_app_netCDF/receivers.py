@@ -8,7 +8,7 @@ import netCDF4
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
+from hs_core.signals import pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update, \
     post_add_files_to_resource, post_create_resource
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
