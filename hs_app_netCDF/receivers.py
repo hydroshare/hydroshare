@@ -274,8 +274,8 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please check if the uploaded file is in ' \
-                                             'valid NetCDF format.'
+            validate_files_dict['message'] = 'Please check if the uploaded file is ' \
+                                             'invalid NetCDF format.'
 
         if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
