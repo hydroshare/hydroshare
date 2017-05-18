@@ -14,19 +14,24 @@ More information can be found in our [Wiki Pages](https://github.com/hydroshare/
 
 ## Install
 
-This README file is for developers interested in working on the Hydroshare code itself, or learning about how the application works at a deeper level. If you simply want to use the application, go to http://hydroshare.org and register an account. If you want to install the application locally or in production, read on.
+This README file is for developers interested in working on the Hydroshare code itself, or for developers or researchers learning about how the application works at a deeper level. If you simply want to _use_ the application, go to http://hydroshare.org and register an account.
+
+If you want to install and run the source code of application locally, read on.
 
 ### Dependencies
-- VirtualBox or VMWare
+[VirtualBox](https://www.virtualbox.org/wiki/Downloads) is required, as the preferred development environment is encapuslated within a VM. This VM has the appropriate version of Ubuntu  nstalled, as well as python and docker and other necessary development tools. 
 
-Installation for development is handled via a development VM which has the appropriate version of Ubuntu  installed, as well as python and docker and other necessary development tools. A simplified version of the installation instructions is as follows:
+#### Simplified Installation Instructions 
+1. Download the [latest OVA file here](http://distribution.hydroshare.org/public_html/)
+2. Open the .OVA file with VirtualBox, this will create a guest VM
+3. Follow the instructions here to share a local hydroshare folder with your guest VM
+4. Start the guest VM
+5. Log into the guest VM with either ssh or the GUI. The default username/password is hydro:hydro
+6. From the root directory `/home/hydro`, clone this repository into the hydroshare folder
+7. `cd` into the hydroshare folder and run `./hsctl rebuild --db` to build the applicationa nd run it
+8. If all goes well, your local version of Hydroshare should be running at http://192.168.56.101:8000
 
-1. Download the thing http://distribution.hydroshare.org/public_html/ here
-2. Load the .OVA file with VirtualBox and run it
-3. Log into the VM using hydro:hydro
-4. Go to the Usage Section to read on about using the `hsctl` tool.
-
-If you want to contribute to HydroShare, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
 
 ## Usage
