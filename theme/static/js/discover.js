@@ -1476,4 +1476,7 @@ $(document).ready(function () {
         content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
         trigger: 'click'
     });
+
+    $("#btn-show-all").click(clearAllFaceted);
+    $("#clear-dates-options").click(clearDates);
 });
