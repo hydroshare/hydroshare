@@ -84,8 +84,13 @@ Interactive API docs via Swagger coming soon.
 
 ## Contribute
 
-Coming Soon
+There are many ways to contribute to Hydroshare.
+
+1. Submit Pull Requests with code changes for review
+2. Open Issues for any bugs you find or suggestions you may have
 
 ## License 
 
-Coming Soon
+Hydroshare is released under the BSD 3-Clause License. This means that [you can do what you want, so long as you don't mess with the trademark, and as long as you keep the license with the source code](https://tldrlegal.com/license/bsd-3-clause-license-(revised)).
+
+©2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090. Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF.
