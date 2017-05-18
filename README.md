@@ -14,11 +14,13 @@ More information can be found in our [Wiki Pages](https://github.com/hydroshare/
 
 ## Install
 
-This README file is for developer
-Installation for development is handled via a development VM. If you want to contribute to HydroShare, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+This README file is for developers interested in working on the Hydroshare code itself, or learning about how the application works at a deeper level. If you simply want to use the application, go to http://hydroshare.org and register an account. If you want to install the application locally or in production, read on.
 
 ### Dependencies
 - VirtualBox or VMWare
+
+Installation for development is handled via a development VM. If you want to contribute to HydroShare, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+
 
 ## Usage
 
