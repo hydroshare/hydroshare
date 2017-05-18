@@ -214,7 +214,7 @@ function irods_upload() {
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("#irods-sel-file").text("No file selected");
+            $("#irods-sel-file").text("No file selected.");
             $('#irodsContent').modal('hide');
         }
     });

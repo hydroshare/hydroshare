@@ -300,7 +300,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6 height-fix">
+                                            <div class="col-xs-12 col-sm-5 col-md-6">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                 <span id="btn-clear-search-input"
@@ -1090,7 +1090,7 @@
                                     {% if not metadata_form %}
                                         {% for tool in relevant_tools %}
                                             <div title="{{ tool.title }}" id="web-app-item">
-                                                <a href="{{ tool.url }}" target="_blank">
+						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
                                                     {% if tool.title|length > 20 %}
                                                         <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                     {% else %}
@@ -1137,10 +1137,16 @@
                                                         <td>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
                                                                   data-form-type="toggle-favorite"
-                                                                  class="glyphicon glyphicon-edit btn-inline-favorite btn-edit-extra-metadata"></span>
+                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
+                                                                  data-toggle="tooltip" data-placement="top"
+                                                                  title="Edit">
+                                                            </span>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
                                                                   data-form-type="toggle-favorite"
-                                                                  class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-extra-metadata"></span>
+                                                                  class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
+                                                                  data-toggle="tooltip" data-placement="top"
+                                                                  title="Remove">
+                                                            </span>
                                                         </td>
                                                     {% endif %}
                                                 </tr>

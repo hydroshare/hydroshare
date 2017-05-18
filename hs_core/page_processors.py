@@ -157,7 +157,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     allow_copy = can_user_copy_resource(content_model, user)
 
-    qholder = content_model.raccess.get_quota_holder()
+    qholder = content_model.get_quota_holder()
 
     # user requested the resource in READONLY mode
     if not resource_edit:

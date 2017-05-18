@@ -447,6 +447,33 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def resource(self):
         return RasterResource.objects.filter(object_id=self.id).first()
 
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+
+        # update any core metadata
+        super(RasterMetaData, self).update(metadata)
+        # update resource specific metadata
+        # for geo raster resource type only band information can be updated
+        missing_file_msg = "Resource specific metadata can't be updated when there is no " \
+                           "content files"
+
+        # update repeatable element (BandInformation)
+        for dict_item in metadata:
+            if 'bandinformation' in dict_item:
+                if not self.resource.files.all():
+                    raise ValidationError(missing_file_msg)
+                bandinfo_data = dict_item['bandinformation']
+                if 'original_band_name' not in bandinfo_data:
+                    raise ValidationError("Invalid band information data")
+                # find the matching (lookup by name) bandinformation element to update
+                band_element = self.bandInformations.filter(
+                    name=bandinfo_data['original_band_name']).first()
+                if band_element is None:
+                    raise ValidationError("No matching band information element was found")
+
+                bandinfo_data.pop('original_band_name')
+                self.update_element('bandinformation', band_element.id, **bandinfo_data)
+
     def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements

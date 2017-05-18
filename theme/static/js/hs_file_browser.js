@@ -58,6 +58,7 @@ function formatBytes(bytes) {
 // Updates the state of toolbar and menu buttons when a selection is made
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
+    var resourceType = $("#resource-type").val();
 
     var flagDisableOpen = false;
     var flagDisableDownload = false;
@@ -76,7 +77,7 @@ function updateSelectionMenuContext() {
     var maxSize = MAX_FILE_SIZE * 1024 * 1024; // convert MB to Bytes
 
     if (selected.length > 1) {          // Multiple files selected
-        flagDisableRename = true; 
+        flagDisableRename = true;
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
@@ -84,7 +85,7 @@ function updateSelectionMenuContext() {
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoFeatureFileType = true;
         flagDisableGetLink = true;
-        
+
         for (var i = 0; i < selected.length; i++) {
             var size = parseInt($(selected[i]).find(".fb-file-size").attr("data-file-size"));
             if (size > maxSize) {
@@ -92,6 +93,14 @@ function updateSelectionMenuContext() {
             }
         }
         $("#fb-download-help").toggleClass("hidden", !flagDisableDownload);
+
+        // Multiple folder deletion is not allowed for composite resource
+        // to avoid race condition that can occur with logical file objects especially
+        // if a folder has many files
+        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected")
+        if(resourceType === 'Composite Resource' && foldersSelected.length > 1){
+            flagDisableDelete = true;
+        }
     }
     else if (selected.length == 1) {    // Exactly one file selected
         var size = parseInt(selected.find(".fb-file-size").attr("data-file-size"));
@@ -246,13 +255,16 @@ function bindFileBrowserItemEvents() {
                 var destFolderPath = currentPath + "/" + destName;
 
                 var calls = [];
+                var callSources = []
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
                     var destPath = destFolderPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
-                        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+                        callSources.push(sourcePath) 
                     }
                 }
+                // use same entry point as cut/paste
+                calls.push(move_to_folder_ajax_submit(resID, callSources, destFolderPath));
 
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
@@ -263,7 +275,7 @@ function bindFileBrowserItemEvents() {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
-                
+
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
@@ -297,7 +309,7 @@ function bindFileBrowserItemEvents() {
             $(this).addClass("ui-last-selected");
         }
     });
-    
+
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
@@ -424,11 +436,17 @@ function bindFileBrowserItemEvents() {
 
 function showFileTypeMetadata(){
      var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
-     if (logical_file_id.length == 0){
+     if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
      }
      var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+     if (!logical_type){
+        return; 
+     } 
      var resource_mode = $("#resource-mode").val();
+     if (!resource_mode){ 
+        return; 
+     } 
      resource_mode = resource_mode.toLowerCase();
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
@@ -473,7 +491,7 @@ function showFileTypeMetadata(){
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields(logical_type);
          setFileTypeMetadataFormsClickHandlers();
-         
+
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
          var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
          if (logical_type === "NetCDFLogicalFile") {
@@ -507,10 +525,6 @@ function showFileTypeMetadata(){
              metadata_update_ajax_submit(formID);
          });
 
-         $("#btn-confirm-add-metadata").click(function () {
-             addFileTypeExtraMetadata();
-             return true;
-         });
     });
 }
 
@@ -1086,19 +1100,15 @@ $(document).ready(function () {
 
     function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var targetPath = $("#hs-file-browser").attr("data-current-path");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
 
-        if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
-            targetPath = targetPath + "/" + folderName
-        }
-
+        targetPath = currentPath + "/" + folderName
+        
         var calls = [];
-        for (var i = 0; i < sourcePaths.length; i++) {
-            var sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
-            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath+'/'+sourceName));
-        }
+        var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
+        calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
 
-        // Wait for the asynchronous calls to finish to get new folder structure
+        // Wait for the asynchronous call to finish to get new folder structure
         $.when.apply($, calls).done(function () {
             refreshFileBrowser();
             sourcePaths = [];
@@ -1185,7 +1195,7 @@ $(document).ready(function () {
         }
 
         var calls = [];
-        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
+        calls.push(rename_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {

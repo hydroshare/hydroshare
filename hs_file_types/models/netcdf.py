@@ -485,10 +485,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                             logical_file.metadata.create_element(k, **v)
                     log.info("NetCDF file type - metadata was saved to DB")
                     # set resource to private if logical file is missing required metadata
-                    if not logical_file.metadata.has_all_required_elements():
-                        resource.raccess.public = False
-                        resource.raccess.discoverable = False
-                        resource.raccess.save()
+                    resource.update_public_and_discoverable()
             else:
                 err_msg = "Not a valid NetCDF file. File type file validation failed."
                 log.error(err_msg)
@@ -935,7 +932,8 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
 
             creator = instance.metadata.creators.all().filter(order=1).first()
             if creator:
-                nc_dataset.creator_name = creator.name
+                nc_dataset.creator_name = creator.name if creator.name else creator.organization
+
                 if creator.email:
                     nc_dataset.creator_email = creator.email
                 if creator.description or creator.homepage:
