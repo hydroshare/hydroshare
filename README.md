@@ -71,7 +71,12 @@ Local iRODS is _not_ required for development unless you are specifically workin
 
 #### Local HTTPS
 
-Coming Soon
+To enable HTTPS locally, edit `config/hydroshare-config.template` and change the two values under `### Deployment Options ###` to `true` like so:
+```
+### Deployment Options ###
+USE_NGINX: true
+USE_SSL: true
+```
 
 ## API
 
