@@ -18,10 +18,10 @@ This README file is for developers interested in working on the Hydroshare code 
 
 If you want to install and run the source code of application locally, read on.
 
-### Dependencies
+#### Dependencies
 [VirtualBox](https://www.virtualbox.org/wiki/Downloads) is required, as the preferred development environment is encapuslated within a VM. This VM has the appropriate version of Ubuntu  nstalled, as well as python and docker and other necessary development tools. 
 
-#### Simplified Installation Instructions 
+### Simplified Installation Instructions 
 1. Download the [latest OVA file here](http://distribution.hydroshare.org/public_html/)
 2. Open the .OVA file with VirtualBox, this will create a guest VM
 3. Follow the instructions here to share a local hydroshare folder with your guest VM
@@ -33,10 +33,21 @@ If you want to install and run the source code of application locally, read on.
 
 For more detailed installation, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
-
 ## Usage
 
-Coming Soon
+The `hsctl` script is your primary tool in interacting with and running tasks against your Hydroshare install. It has the syntax `./hsccl [command]` where `[command]` is one of:
+
+- `loaddb`: Deletes existing database and reloads the database specified in the `hydroshare-config.yaml` file.
+- `managepy [args]`: Executes a `python manage.py [args]` call on the running hydroshare container.
+- `maint_off`: Removes the maintenance page from view (only if NGINX is being used).
+- `maint_on`: Displays the maintenance page in the browser (only if NGINX is being used).
+- `rebuild`: Stops, removes and deletes only the hydroshare docker containers and images while retaining the database contents on the subsequent build as defined in the `hydroshare-config.yaml` file
+- `rebuild --db`: Fully stops, removes and deletes any prior hydroshare docker containers, images and database contents prior to installing a clean copy of the hydroshare codebase as defined in the `hydroshare-config.yaml` file.
+- `rebuild_index`: Rebuilds the solr/haystack index in a non-interactive way.
+- `restart`: Restarts the django server only (and nginx if applicable).
+- `start`: Starts all containers as defined in the `docker-compose.yml` file (and nginx if applicable).
+- `stop`: Stops all containers as defined in the `docker-compose.yml` file.
+- `update_index`: Updates the solr/haystack index in a non-interactive way.
 
 ## API
 
