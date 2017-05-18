@@ -19,7 +19,14 @@ This README file is for developers interested in working on the Hydroshare code 
 ### Dependencies
 - VirtualBox or VMWare
 
-Installation for development is handled via a development VM. If you want to contribute to HydroShare, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
+Installation for development is handled via a development VM which has the appropriate version of Ubuntu  installed, as well as python and docker and other necessary development tools. A simplified version of the installation instructions is as follows:
+
+1. Download the thing http://distribution.hydroshare.org/public_html/ here
+2. Load the .OVA file with VirtualBox and run it
+3. Log into the VM using hydro:hydro
+4. Go to the Usage Section to read on about using the `hsctl` tool.
+
+If you want to contribute to HydroShare, please see this document: [Getting Started with HydroShare](https://github.com/hydroshare/hydroshare/wiki/getting_started)
 
 
 ## Usage
