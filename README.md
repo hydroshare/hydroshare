@@ -66,7 +66,8 @@ There are currently over 600 tests in the system, so it is highly recommended th
  
 #### Local iRODS
 
-Coming Soon
+Local iRODS is _not_ required for development unless you are specifically working on the iRODS integration. However, if you want to work with iRODS or you simply want to learn about it, you can enable it locally by following these steps:
+- Coming soon
 
 #### Local HTTPS
 
@@ -74,7 +75,7 @@ Coming Soon
 
 ## API
 
-Coming Soon
+Interactive API docs via Swagger coming soon.
 
 ## Contribute
 
