@@ -35,6 +35,15 @@ For more detailed installation, please see this document: [Getting Started with 
 
 ## Usage
 
+For all intents and purposes, Hydroshare is a large Python/Django application with some extra features and technologies added on:
+- SOLR for searching
+- Redis for caching
+- RabbitMQ for concurrency and serialization
+- iRODS for a federated file system
+- PostgreSQL for the database backend
+
+#### The `hsctl` Script
+
 The `hsctl` script is your primary tool in interacting with and running tasks against your Hydroshare install. It has the syntax `./hsccl [command]` where `[command]` is one of:
 
 - `loaddb`: Deletes existing database and reloads the database specified in the `hydroshare-config.yaml` file.
@@ -48,6 +57,20 @@ The `hsctl` script is your primary tool in interacting with and running tasks ag
 - `start`: Starts all containers as defined in the `docker-compose.yml` file (and nginx if applicable).
 - `stop`: Stops all containers as defined in the `docker-compose.yml` file.
 - `update_index`: Updates the solr/haystack index in a non-interactive way.
+
+#### Testing and Debugging
+
+Tests are run via normal Django tools and conventions. However, you should use the `hsctl` script mentioned abouve with the `managepy` command. For example: `./hsctl managepy test hs_core.tests.api.rest.test_resmap --keepdb`.
+
+There are currently over 600 tests in the system, so it is highly recommended that you run the test suites separately from one another.
+ 
+#### Local iRODS
+
+Coming Soon
+
+#### Local HTTPS
+
+Coming Soon
 
 ## API
 
