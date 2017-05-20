@@ -129,14 +129,14 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(self.resGeoFeature.metadata.geometryinformation.featureCount, 87)
         self.assertEqual(self.resGeoFeature.metadata.geometryinformation.geometryType, "POLYGON")
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.datum, 'WGS_1984')
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.eastlimit - 3.4520493)
-                        < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.northlimit - 45.0466382)
-                        < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.southlimit - 42.5732416)
-                        < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit - (-0.3263017))
-                        < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.eastlimit -
+                            3.4520493) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.northlimit -
+                            45.0466382) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.southlimit -
+                            42.5732416) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.westlimit -
+                            (-0.3263017)) < self.allowance)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.unit, 'Degree')
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')

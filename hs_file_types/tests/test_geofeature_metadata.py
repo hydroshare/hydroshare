@@ -172,14 +172,14 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(logical_file.metadata.geometryinformation.featureCount, 87)
         self.assertEqual(logical_file.metadata.geometryinformation.geometryType, "POLYGON")
         self.assertEqual(logical_file.metadata.originalcoverage.datum, 'WGS_1984')
-        self.assertTrue(abs(logical_file.metadata.originalcoverage.eastlimit - 3.4520493)
-                        < self.allowance)
-        self.assertTrue(abs(logical_file.metadata.originalcoverage.northlimit - 45.0466382)
-                        < self.allowance)
-        self.assertTrue(abs(logical_file.metadata.originalcoverage.southlimit - 42.5732416)
-                        < self.allowance)
-        self.assertTrue(abs(logical_file.metadata.originalcoverage.westlimit - (-0.3263017))
-                        < self.allowance)
+        self.assertTrue(abs(logical_file.metadata.originalcoverage.eastlimit -
+                            3.4520493) < self.allowance)
+        self.assertTrue(abs(logical_file.metadata.originalcoverage.northlimit -
+                            45.0466382) < self.allowance)
+        self.assertTrue(abs(logical_file.metadata.originalcoverage.southlimit -
+                            42.5732416) < self.allowance)
+        self.assertTrue(abs(logical_file.metadata.originalcoverage.westlimit -
+                            (-0.3263017)) < self.allowance)
         self.assertEqual(logical_file.metadata.originalcoverage.unit, 'Degree')
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')

@@ -96,4 +96,3 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
         # test file type and file type extracted metadata
         assert_geofeature_file_type_metadata(self, expected_folder_name)
         self.composite_resource.delete()
-

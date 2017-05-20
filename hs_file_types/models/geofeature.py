@@ -5,12 +5,7 @@ import zipfile
 import xmltodict
 
 from osgeo import ogr, osr
-try:
-    #  Python 2.6-2.7
-    from HTMLParser import HTMLParser
-except ImportError:
-    #  Python 3
-    from html.parser import HTMLParser
+
 
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -634,7 +629,7 @@ def extract_metadata(shp_file_full_path):
         # geometry
         geometryinformation = {"featureCount": parsed_md_dict["feature_count"],
                                "geometryType": parsed_md_dict["geometry_type"]}
-        
+
         metadata_dict["geometryinformation"] = geometryinformation
         return metadata_dict
     except:

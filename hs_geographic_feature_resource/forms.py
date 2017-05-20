@@ -1,5 +1,5 @@
 from django import forms
-from crispy_forms.layout import Layout, Field
+from crispy_forms.layout import Layout
 from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 
 
