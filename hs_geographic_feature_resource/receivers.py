@@ -335,7 +335,7 @@ def _process_uploaded_file(resource, res_file, err_msg):
         for f in resource.files.all():
             files_failed_validation.append(f.file_name)
             f.delete()
-        err_msg = err_msg,format(", ".join(files_failed_validation))
+        err_msg = err_msg,format(', '.join(files_failed_validation))
         raise ValidationError(err_msg)
     # upload generated files in case of zip file
     if res_file.extension.lower() == '.zip':

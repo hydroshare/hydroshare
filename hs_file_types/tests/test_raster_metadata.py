@@ -244,6 +244,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._create_composite_resource()
 
         self._test_invalid_file()
+        self.composite_resource.delete()
 
     def test_metadata_CRUD(self):
         # this is test metadata related to GeoRasterLogicalFile
