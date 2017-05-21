@@ -6,7 +6,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import TestCaseCommonUtilities
 from utils import assert_geofeature_file_type_metadata
-from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile
+from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GeoFeatureFileMetaData
 
 
 class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
@@ -96,3 +96,7 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
         # test file type and file type extracted metadata
         assert_geofeature_file_type_metadata(self, expected_folder_name)
         self.composite_resource.delete()
+        # there should be no GeoFeatureLogicalFile object at this point
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        # there should be no GenericFileMetaData object at this point
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)

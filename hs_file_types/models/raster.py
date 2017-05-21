@@ -301,11 +301,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        file_name)
 
-                        # Alva: This does nothing.
-                        # fed_file_full_path = ''
-                        # if resource.resource_federation_path:
-                        #     fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
-
                         log.info("Folder created:{}".format(new_folder_path))
                         create_folder(resource.short_id, new_folder_path)
 
@@ -345,6 +340,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         k, v = element.items()[0]
                         logical_file.metadata.create_element(k, **v)
                     log.info("Geo raster file type - metadata was saved to DB")
+                    log.info("Geo raster file type keywords:{}".format(
+                        logical_file.metadata.keywords))
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
             else:

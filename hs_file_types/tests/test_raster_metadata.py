@@ -99,6 +99,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file = res_file.logical_file
         # self.assertEqual(len(logical_file.metadata.keywords), 0)
         self.assertTrue(isinstance(logical_file, GeoRasterLogicalFile))
+        self.assertTrue(logical_file.metadata, GeoRasterFileMetaData)
         self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()

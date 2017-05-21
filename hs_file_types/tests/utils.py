@@ -2,7 +2,7 @@ from dateutil import parser
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
-    NetCDFLogicalFile, GeoFeatureLogicalFile
+    NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData
 
 
 def assert_raster_file_type_metadata(self):
@@ -261,6 +261,9 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
     self.assertEqual(GenericLogicalFile.objects.count(), 0)
     # check that there is one GeoFeatureLogicalFile object
     self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+    # check that there is one GeoFeatureFileMetaData object
+    self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+
     logical_file = GeoFeatureLogicalFile.objects.first()
     self.assertEqual(logical_file.files.count(), 3)
     # check that the 3 resource files are now associated with GeoFeatureLogicalFile
