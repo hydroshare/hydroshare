@@ -97,8 +97,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should not be any file level keywords at this point
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        self.assertEqual(len(logical_file.metadata.keywords), 0)
-
+        # self.assertEqual(len(logical_file.metadata.keywords), 0)
+        self.assertEqual(logical_file.metadata.keywords, [])
+        
         self.composite_resource.delete()
 
     def test_zip_set_file_type_to_geo_raster(self):
