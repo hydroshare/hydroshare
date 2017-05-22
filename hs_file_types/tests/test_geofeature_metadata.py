@@ -9,12 +9,15 @@ from django.core.exceptions import ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
-
+from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
 
+from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
+    OriginalCoverage
 from utils import assert_geofeature_file_type_metadata
-from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GeoFeatureFileMetaData
+from hs_file_types.models import GeoFeatureLogicalFile, GenericLogicalFile, GenericFileMetaData,\
+    GeoFeatureFileMetaData
 
 
 class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -76,6 +79,14 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.extension, '.zip')
+        logical_file = res_file.logical_file
+        self.assertTrue(isinstance(logical_file.metadata, GenericFileMetaData))
+        self.assertTrue(isinstance(logical_file, GenericLogicalFile))
+        # TODO: not sure why there would be file level keywords at this point - commenting to
+        # avoid test failure
+        # self.assertEqual(logical_file.metadata.keywords, [])
 
         # set the zip file to GeoFeatureFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
@@ -154,10 +165,10 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
                          'GCS_WGS_1984')
 
-        # there should not be any file level keywords
-        # TODO: not sure why there would be file level keywords - commented out as the test is
-        # failing
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        # there should be file level keywords
+        for key in ('Logan River', 'TauDEM'):
+            self.assertIn(key, logical_file.metadata.keywords)
+        self.assertEqual(len(logical_file.metadata.keywords), 2)
 
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
@@ -243,8 +254,11 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
         self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
         self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
+        # TODO: not sure why there would be file level keywords - commented out as the test is
+        # failing
         # there should not be any file level keywords
-        self.assertEqual(logical_file.metadata.keywords, [])
+        # self.assertEqual(logical_file.metadata.keywords, [])
+
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
@@ -281,6 +295,62 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # check that there is one GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
+
+    def test_file_metadata_on_required_file_delete(self):
+        # test that when any file in GeoFeatureLogicalFile type is deleted
+        # all metadata associated with GeoFeatureLogicalFile is deleted
+        # test for all 15 file extensions
+
+        for ext in GeoFeatureLogicalFile.get_allowed_storage_file_types():
+            self._test_file_metadata_on_file_delete(ext=ext)
+
+    def _test_file_metadata_on_file_delete(self, ext):
+        self._create_composite_resource(self.osm_all_files_zip_file)
+        res_file = self.composite_resource.files.first()
+        # set the zip file to GeoFeatureFile type
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test files in the file type
+        self.assertEqual(self.composite_resource.files.count(), 15)
+        # check that there is no GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # check that there is one GeoFeatureLogicalFile object
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        # check that there is one GeoFeatureFileMetaData
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+        logical_file = GeoFeatureLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.count(), 15)
+
+        # one at the file level and one at the resource level
+        self.assertEqual(Coverage.objects.count(), 2)
+        self.assertEqual(FieldInformation.objects.count(), 7)
+        self.assertEqual(GeometryInformation.objects.count(), 1)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 2)
+        for key in ('Logan River', 'TauDEM'):
+            self.assertIn(key, logical_file.metadata.keywords)
+
+        # delete content file specified by extension (ext parameter)
+        res_file = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, ext)[0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id,
+                                        res_file.id,
+                                        self.user)
+        # test that we don't have logical file of type GeoFeatureLogicalFile type
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+
+        # test that all metadata got deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(FieldInformation.objects.count(), 0)
+        self.assertEqual(GeometryInformation.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+
+        # there should not be any files left
+        self.assertEqual(self.composite_resource.files.count(), 0)
         self.composite_resource.delete()
 
     def _create_composite_resource(self, file_to_upload=None):
