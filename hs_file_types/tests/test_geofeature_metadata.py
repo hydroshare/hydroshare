@@ -7,11 +7,14 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
+from rest_framework.exceptions import ValidationError as DRF_ValidationError
+
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
+from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_geographic_feature_resource.models import FieldInformation, GeometryInformation, \
     OriginalCoverage
@@ -297,13 +300,142 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
         self.composite_resource.delete()
 
-    def test_file_metadata_on_required_file_delete(self):
+    def test_logical_file_delete(self):
+        # test that when an instance GeoFeatureLogicalFile Type is deleted
+        # all files associated with GeoFeatureLogicalFile is deleted
+
+        self._create_composite_resource(self.states_required_zip_file)
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType as a result
+        # of metadata extraction
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        logical_file = GeoFeatureLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 3)
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the logical file using the custom delete function - logical_delete()
+        logical_file.logical_delete(self.user)
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+
+        self.composite_resource.delete()
+
+    def test_content_file_delete(self):
         # test that when any file in GeoFeatureLogicalFile type is deleted
         # all metadata associated with GeoFeatureLogicalFile is deleted
         # test for all 15 file extensions
 
         for ext in GeoFeatureLogicalFile.get_allowed_storage_file_types():
             self._test_file_metadata_on_file_delete(ext=ext)
+
+    def test_geofeature_file_type_folder_delete(self):
+        # when  a file is set to geofeaturelogical file type
+        # system automatically creates a folder using the name of the file
+        # that was used to set the file type
+        # Here we need to test that when that folder gets deleted, all files
+        # in that folder gets deleted, the logicalfile object gets deleted and
+        # the associated metadata objects get deleted
+
+        self._create_composite_resource(self.states_required_zip_file)
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the zip file
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # test that we have one logical file of type GeoFeatureLogicalFile type as a result
+        # of metadata extraction
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+        # should have one GeoFeatureFileMetadata object
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+
+        # there should be 3 content files
+        self.assertEqual(self.composite_resource.files.count(), 3)
+        # delete the folder for the logical file
+        folder_path = "data/contents/states_required_files"
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        # there should be no content files
+        self.assertEqual(self.composite_resource.files.count(), 0)
+        # there should not be any logical file or file metadata object as a result
+        # of folder deletion
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+        self.composite_resource.delete()
+
+    def test_file_rename_or_move(self):
+        # test that file can't be moved or renamed for any resource file
+        # that's part of the GeoFeature logical file object (LFO)
+
+        self._create_composite_resource(self.states_required_zip_file)
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # test renaming of files that are associated with raster LFO - which should raise exception
+        self.assertEqual(self.composite_resource.files.count(), 3)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.file_folder, 'states_required_files')
+        src_path = 'data/contents/states_required_files/states.shp'
+        tgt_path = 'data/contents/states_required_files/states-1.shp'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/states_required_files/states.dbf'
+        tgt_path = 'data/contents/states_required_files/states-1.dbf'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        # test moving the files associated with geo raster LFO
+        src_path = 'data/contents/states_required_files/states.shx'
+        tgt_path = 'data/contents/states_required_files/states-1.shx'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/states_required_files/states.shp'
+        tgt_path = 'data/contents/states_required_files-1/states.shp'
+        with self.assertRaises(DRF_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+
+        self.composite_resource.delete()
+
+    def test_file_metadata_on_resource_delete(self):
+        # test that when the composite resource is deleted
+        # all metadata associated with GeoFeatureLogicalFile Type is deleted
+
+        self._create_composite_resource(self.states_required_zip_file)
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoFeatureLogicalFile as a result
+        # of metadata extraction
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+
+        # test that we have the metadata elements
+        # there should be no Coverage objects
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(GeometryInformation.objects.count(), 1)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(FieldInformation.objects.count(), 5)
+
+        # delete resource
+        hydroshare.delete_resource(self.composite_resource.short_id)
+
+        # test that we have no logical file of type GeoFeatureLogicalFileType
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(GeometryInformation.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(FieldInformation.objects.count(), 0)
 
     def _test_file_metadata_on_file_delete(self, ext):
         self._create_composite_resource(self.osm_all_files_zip_file)
