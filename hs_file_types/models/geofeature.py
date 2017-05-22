@@ -349,7 +349,7 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
                       "{folder_path} or one or more files are of not shape file type."
             err_msg = err_msg.format(folder_path=res_file.short_path)
         else:
-            err_msg = "One or more dependent shape files are missing in the selected zip file" \
+            err_msg = "One or more dependent shape files are missing in the selected zip file " \
                       "or one or more files are of not shape file type."
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)

@@ -84,10 +84,10 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         assert_geofeature_file_type_metadata(self, expected_folder_name)
 
         # there should not be any file level keywords
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
         # TODO: not sure why there would be file level keywords - commented out as the test is
         # failing
+        # res_file = self.composite_resource.files.first()
+        # logical_file = res_file.logical_file
         # self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()
