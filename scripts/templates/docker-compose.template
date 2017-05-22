@@ -18,6 +18,11 @@ solr:
   ports:
     - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+download_microservice:
+  build: download_microservice
+  container_name: download_microservice
+  ports:
+    - "5000:5000"
 hydroshare:
   build: .
   container_name: hydroshare
@@ -56,6 +61,7 @@ hydroshare:
     - redis:redis
     - rabbitmq:rabbitmq
     - solr:solr
+    - download_microservice:download_microservice
   command: /bin/bash init-hydroshare
 defaultworker:
   build: .
