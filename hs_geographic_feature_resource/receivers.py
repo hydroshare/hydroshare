@@ -261,7 +261,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     added_xml_file.delete()
                     added_res_files.remove(added_xml_file)
                     if "invalid xml file name" not in failure_reasons:
-                        failure_reasons.append("invalid xml file name" )
+                        failure_reasons.append("invalid xml file name")
 
         if files_existed_before:
             # added file name must match with existing file name
