@@ -234,15 +234,12 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         if not res_file.has_generic_logical_file:
             raise ValidationError("Selected file must be part of a generic file type.")
 
-        file_names = []
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
         except ValidationError as ex:
             log.exception(ex.message)
             raise ex
-        # store file names in case we have to rollback
-        for f in shp_res_files:
-            file_names.append(f.file_name)
+
         # hold on to temp dir for final clean up
         temp_dir = os.path.dirname(shape_files[0])
         file_name = res_file.file_name
@@ -259,11 +256,6 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         upload_folder = ''
         msg = "GeoFeature file type. Error when setting file type. Error:{}"
         with transaction.atomic():
-            # first delete all the shape files that we retrieved from irods
-            # for setting it to GeoFeature file type
-            for fl in shp_res_files:
-                delete_resource_file(resource.short_id, fl.id, user)
-
             # create a GeoFeature logical file object to be associated with
             # resource files
             logical_file = cls.create()
@@ -300,6 +292,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                 log.info("GeoFeature file type - files were added to the file type.")
                 add_metadata(resource, meta_dict, xml_file, logical_file)
                 log.info("GeoFeature file type and resource level metadata updated.")
+                # delete the original resource files used as part of setting file type
+                for fl in shp_res_files:
+                    delete_resource_file(resource.short_id, fl.id, user)
+                log.info("Deleted original resource files.")
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -310,25 +306,11 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
                     shutil.rmtree(temp_dir)
 
         if not file_type_success and upload_folder:
-            # rollback files to their original state
-            log.info("File type setting failed. Trying to rollback files to the original state.")
-            # TODO: refactor the following code to a class method of the AbstractLogicalFile
-            # and use it in other file type set_file_type() function
-            try:
-                tgt_path = 'data/contents'
-                if file_folder is not None:
-                    tgt_path = os.path.join(tgt_path, file_folder)
-
-                for fn in file_names:
-                    src_path = os.path.join(tgt_path, upload_folder, fn)
-                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path,
-                                                  validate_move_rename=False)
-                folder_to_remove = os.path.join(tgt_path, upload_folder)
-                remove_folder(user, resource.short_id, folder_to_remove)
-            except Exception as ex:
-                log.exception(ex.message)
-                msg += " .{}".format("Failed to roll back files to their original state.")
-                raise ValidationError(ex.message)
+            # delete any new files uploaded as part of setting file type
+            folder_to_remove = os.path.join('data', 'contents', upload_folder)
+            remove_folder(user, resource.short_id, folder_to_remove)
+            log.info("Deleted newly created file type folder")
+            raise ValidationError(msg)
 
 
 def extract_metadata_and_files(resource, res_file, file_type=True):
@@ -346,18 +328,18 @@ def extract_metadata_and_files(resource, res_file, file_type=True):
     if not _check_if_shape_files(shape_files):
         if res_file.extension.lower() == '.shp':
             err_msg = "One or more dependent shape files are missing at location: " \
-                      "{folder_path} or one or more files are of not shape file type."
+                      "{folder_path} or one or more files are not of shape file type."
             err_msg = err_msg.format(folder_path=res_file.short_path)
         else:
             err_msg = "One or more dependent shape files are missing in the selected zip file " \
-                      "or one or more files are of not shape file type."
+                      "or one or more files are not of shape file type."
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         raise ValidationError(err_msg)
 
     shp_file = ''
     for f in shape_files:
-        if f.endswith('.shp'):
+        if f.lower().endswith('.shp'):
             shp_file = f
             break
     try:
