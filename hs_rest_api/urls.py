@@ -79,12 +79,6 @@ urlpatterns = patterns(
         views.resource_rest_api.ResourceMapRetrieve.as_view(),
         name='get_resource_map'),
 
-    # Unused. See ResourceFileListCreate. This is now implemented there.
-    # Older version based upon polymorphism of ResourceFileCRUD.
-    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$',
-    #     views.resource_rest_api.ResourceFileCRUD.as_view(),
-    #     name='add_resource_file'),
-
     # Patterns are now checked in the view class.
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<pathname>.+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(),
