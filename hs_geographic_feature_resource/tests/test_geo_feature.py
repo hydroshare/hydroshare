@@ -338,6 +338,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # check that the resource has no files
         self.assertEqual(self.resGeoFeature.files.count(), 0)
+        self.resGeoFeature.delete()
 
     def test_add_zip_file_to_resource(self):
         # here we are using a zip file that has all the 15 (3 required + 12 optional) files
@@ -389,7 +390,7 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_delete_prj_file(self):
         # deleting .prj file should set attributes (datum, unit, and projection_name) of
-        # the orginalcoverage element to 'uknown' and delete the spatial covarage at the resource
+        # the orginalcoverage element to 'unknown' and delete the spatial coverage at the resource
         # level
         self.assertEqual(self.resGeoFeature.files.count(), 0)
 
@@ -417,11 +418,12 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                          'GCS_WGS_1984')
         self.assertGreater(len(self.resGeoFeature.metadata.originalcoverage.projection_string), 0)
 
-        # find the .shp file and delete it
+        # find the .prj file and delete it
         for f in self.resGeoFeature.files.all():
             if f.extension == '.prj':
                 hydroshare.delete_resource_file(self.resGeoFeature.short_id, f.id, self.user)
                 break
+
         # resource should have 14 files
         self.assertEqual(self.resGeoFeature.files.count(), 14)
         # resource level spatial coverage should have been deleted
