@@ -758,7 +758,7 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET')
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
