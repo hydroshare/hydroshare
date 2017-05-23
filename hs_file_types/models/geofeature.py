@@ -218,7 +218,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
+        from hs_core.views.utils import create_folder, remove_folder
 
         log = logging.getLogger()
 

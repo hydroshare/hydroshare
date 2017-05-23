@@ -258,7 +258,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
             """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder
+        from hs_core.views.utils import create_folder, remove_folder
 
         log = logging.getLogger()
 
@@ -270,7 +270,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         # file name without the extension
         file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
-
+        upload_folder = ''
         if res_file is not None and res_file.has_generic_logical_file:
             # get the file from irods to temp dir
             temp_file = utils.get_file_from_irods(res_file)
@@ -285,9 +285,6 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                 metadata = extract_metadata(temp_vrt_file_path)
                 log.info("Geo raster file type metadata extraction was successful.")
                 with transaction.atomic():
-                    # first delete the raster file that we retrieved from irods
-                    # for setting it to raster file type
-                    delete_resource_file(resource.short_id, res_file.id, user)
                     # create a geo raster logical file object to be associated with resource files
                     logical_file = cls.create()
                     # by default set the dataset_name attribute of the logical file to the
@@ -321,29 +318,33 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             logical_file.add_resource_file(new_res_file)
 
                         log.info("Geo raster file type - new files were added to the resource.")
+
+                        # use the extracted metadata to populate file metadata
+                        for element in metadata:
+                            # here k is the name of the element
+                            # v is a dict of all element attributes/field names and field values
+                            k, v = element.items()[0]
+                            logical_file.metadata.create_element(k, **v)
+                        log.info("Geo raster file type - metadata was saved to DB")
+                        # set resource to private if logical file is missing required metadata
+                        resource.update_public_and_discoverable()
+                        # delete the original resource file
+                        delete_resource_file(resource.short_id, res_file.id, user)
+                        log.info("Deleted original resource file.")
                     except Exception as ex:
                         msg = "Geo raster file type. Error when setting file type. Error:{}"
                         msg = msg.format(ex.message)
                         log.exception(msg)
-                        raise ex
+                        if upload_folder:
+                            # delete any new files uploaded as part of setting file type
+                            folder_to_remove = os.path.join('data', 'contents', upload_folder)
+                            remove_folder(user, resource.short_id, folder_to_remove)
+                            log.info("Deleted newly created file type folder")
+                        raise ValidationError(msg)
                     finally:
                         # remove temp dir
                         if os.path.isdir(temp_dir):
                             shutil.rmtree(temp_dir)
-
-                    log.info("Geo raster file type was created.")
-
-                    # use the extracted metadata to populate file metadata
-                    for element in metadata:
-                        # here k is the name of the element
-                        # v is a dict of all element attributes/field names and field values
-                        k, v = element.items()[0]
-                        logical_file.metadata.create_element(k, **v)
-                    log.info("Geo raster file type - metadata was saved to DB")
-                    log.info("Geo raster file type keywords:{}".format(
-                        logical_file.metadata.keywords))
-                    # set resource to private if logical file is missing required metadata
-                    resource.update_public_and_discoverable()
             else:
                 err_msg = "Geo raster file type file validation failed.{}".format(
                     ' '.join(error_info))
