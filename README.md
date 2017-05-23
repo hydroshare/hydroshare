@@ -59,23 +59,25 @@ The `hsctl` script is your primary tool in interacting with and running tasks ag
 - `stop`: Stops all containers as defined in the `docker-compose.yml` file.
 - `update_index`: Updates the solr/haystack index in a non-interactive way.
 
-#### Testing and Debugging
+## Testing and Debugging
 
-##### Testing
+### Testing
 
 Tests are run via normal Django tools and conventions. However, you should use the `hsctl` script mentioned abouve with the `managepy` command. For example: `./hsctl managepy test hs_core.tests.api.rest.test_resmap --keepdb`.
 
 There are currently over 600 tests in the system, so it is highly recommended that you run the test suites separately from one another.
 
-##### Debugging
+### Debugging
 
 You can debug via PyCharm by following the instructions [here](https://github.com/hydroshare/hydroshare/wiki/pycharm-configuration).
- 
-#### Local iRODS
+
+## Other Configuration Options
+
+### Local iRODS
 
 Local iRODS is _not_ required for development unless you are specifically working on the iRODS integration. However,if you want to work with iRODS or you simply want to learn about it, you can enable it locally.
 
-#### Local HTTPS
+### Local HTTPS
 
 To enable HTTPS locally:
 1. edit `config/hydroshare-config.template` and change the two values under `### Deployment Options ###` to `true` like so:
