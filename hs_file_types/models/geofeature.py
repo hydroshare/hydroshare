@@ -448,12 +448,15 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
     temp_dir = ''
     if selected_resource_file.extension.lower() == '.shp':
         for f in resource.files.all():
-            if f.extension.lower() in GeoFeatureLogicalFile.get_allowed_storage_file_types():
-                if file_type:
-                    if f.has_generic_logical_file:
+            if f.file_folder == selected_resource_file.file_folder:
+                if f.extension.lower() == '.xml' and not f.file_name.lower().endswith('.shp.xml'):
+                    continue
+                if f.extension.lower() in GeoFeatureLogicalFile.get_allowed_storage_file_types():
+                    if file_type:
+                        if f.has_generic_logical_file:
+                            collect_shape_resource_files(f)
+                    else:
                         collect_shape_resource_files(f)
-                else:
-                    collect_shape_resource_files(f)
 
         for f in shape_res_files:
             temp_file = utils.get_file_from_irods(f)
