@@ -61,9 +61,15 @@ The `hsctl` script is your primary tool in interacting with and running tasks ag
 
 #### Testing and Debugging
 
+##### Testing
+
 Tests are run via normal Django tools and conventions. However, you should use the `hsctl` script mentioned abouve with the `managepy` command. For example: `./hsctl managepy test hs_core.tests.api.rest.test_resmap --keepdb`.
 
 There are currently over 600 tests in the system, so it is highly recommended that you run the test suites separately from one another.
+
+##### Debugging
+
+You can debug via PyCharm by following the instructions [here](https://github.com/hydroshare/hydroshare/wiki/pycharm-configuration).
  
 #### Local iRODS
 
