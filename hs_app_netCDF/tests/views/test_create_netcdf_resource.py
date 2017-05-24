@@ -116,6 +116,6 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         response = create_resource(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         json_content = json.loads(response.content)
-        self.assertEqual(json_content['status'], 'error')
+        self.assertEqual(json_content['status'], 'success')
 
         self.assertEqual(BaseResource.objects.count(), 0)
