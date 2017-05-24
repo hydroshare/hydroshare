@@ -1,10 +1,11 @@
 import csv
 from django.core.management.base import BaseCommand
 from theme.models import UserQuota, QuotaMessage
+from mezzanine.conf import settings
 
 
 class Command(BaseCommand):
-    help = "Output quota allocations for all users in xDCIShare"
+    help = ("Output quota allocations for all users in {s_name}").format(s_name=settings.XDCI_SITE_NAME_MIXED)
 
     def add_arguments(self, parser):
         parser.add_argument('output_file_name_with_path', help='output file name with path')
