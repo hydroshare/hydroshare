@@ -151,8 +151,8 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = "[xDCIShare Support] New comment by {c_name} for: {res_obj}".format(
-                c_name=comment.user_name, res_obj=str(obj))
+            subject = ("[{s_name} Support] New comment by {c_name} for: {res_obj}").format(
+                s_name=settings.XDCI_SITE_NAME_MIXED, c_name=comment.user_name, res_obj=str(obj))
             context = {
                 "comment": comment,
                 "comment_url": add_cache_bypass(comment.get_absolute_url()),

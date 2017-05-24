@@ -3,17 +3,19 @@ from collections import namedtuple
 from django.core.management.base import BaseCommand
 from theme.models import UserQuota, QuotaMessage
 
+from mezzanine.conf import settings
+
 INPUT_FIELDS = namedtuple('FIELDS', 'user_name used_value storage_zone')
 input_fields = INPUT_FIELDS(0, 1, 2)
 
 
 class Command(BaseCommand):
-    help = "Update used storage space in UserQuota table for all users in xDCIShare by reading " \
+    help = ("Update used storage space in UserQuota table for all users in {s_name} by reading " \
            "an input file with updated values for users. Each row of the input file should list" \
            "information in the format of 'User name' 'Used value' 'Storage zone' " \
            "separated by comma. A header may also be included for informational purposes." \
            "This input file is created by a quota calculation script that runs nightly on a " \
-           "xDCIShare server."
+           "{s_name} server.").format(s_name=settings.XDCI_SITE_NAME_MIXED)
 
     def add_arguments(self, parser):
         parser.add_argument('input_file_name_with_path', help='input file name with path')
