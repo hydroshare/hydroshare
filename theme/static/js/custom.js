@@ -169,4 +169,25 @@ $(document).ready(function () {
     $(".format-date").each(function () {
         $(this).formatDate();
     });
+
+    $("#universalMessage a").on('click', function() {
+        $("#universalMessage").slideUp();
+        return false
+    })
 });
+
+function showUniversalMessage(type, message) {
+    return function(response,returnType,content) {
+        if(!message) message = content;
+        if(!type) type = returnType;
+
+        $("#universalMessage span").html(message);
+        $("#universalMessage").attr('class','');
+        $("#universalMessage").addClass(type);
+        $("#universalMessage").slideDown();
+
+        setTimeout(function() {
+            $("#universalMessage a").click()
+        }, 5000)
+    }
+}
