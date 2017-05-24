@@ -118,4 +118,4 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         json_content = json.loads(response.content)
         self.assertEqual(json_content['status'], 'success')
 
-        self.assertEqual(BaseResource.objects.count(), 0)
+        self.assertEqual(BaseResource.objects.count(), 1)
