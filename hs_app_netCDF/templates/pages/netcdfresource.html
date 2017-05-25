@@ -130,7 +130,7 @@
                     <div style="clear: both">
                         <br>
                         <legend>NetCDF Header Info</legend>
-                        <p>{{ f.short_path|slice:"33:" }}</p>
+                        <p>{{ f.short_path }}</p>
                         <div class="hs-doc-preview">
                             {% if f.size <= 5000000 %}
                                 <pre id="netcdf-header-info">{{ f.read }}</pre>

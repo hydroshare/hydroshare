@@ -2589,9 +2589,9 @@ class ResourceFile(models.Model):
     @property
     def read(self):
         if self.resource.is_federated:
-            return self.resource_file.read
-        else:
             return self.fed_resource_file.read
+        else:
+            return self.resource_file.read
 
     @property
     def storage_path(self):
