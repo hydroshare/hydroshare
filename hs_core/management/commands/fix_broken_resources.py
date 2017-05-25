@@ -30,8 +30,10 @@ cdc6292fbee24dfd9810da7696a40dcf Delete unreferenced files on both sides.
 from django.core.management.base import BaseCommand
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.utils import resource_modified
+from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
 
-
+# These should be cleaned up by deleting extra files
 VACUUM = [
     '094da7d9400f493fb1e412df015e17a4',
     'aff4e6dfc09a4070ac15a6ec0741fd02',
@@ -65,7 +67,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        print("FIX ALL AFFECTED RESOURCES")
+        print("FIX BROKEN RESOURCES")
 
         for rid in VACUUM:  # delete all non-matching IDS
             r = get_resource_by_shortkey(rid)
@@ -74,3 +76,31 @@ class Command(BaseCommand):
             resource_modified(r, r.creator)
             # Do a redundant check to ensure that cleaning worked.
             r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False)
+
+        print("REPAIR BROKEN NETCDF RESOURCES")
+
+        for r in BaseResource.objects.filter(resource_type='NetcdfResource'):
+            istorage = r.get_irods_storage()
+            for f in r.files.all():
+                try:
+                    if f.short_path.endswith('.txt') and not istorage.exists(f.storage_path):
+                        print("found broken NetCDF resource {}".format(r.short_id))
+                        files = istorage.listdir(r.file_path)[1]
+                        for g in files:
+                            if g.endswith('.txt'):
+                                print("in {}, changing short path {} to {}"
+                                      .format(r.short_id, f.short_path, g))
+                                f.set_short_path(g)
+                                # Now check for file integrity afterward
+                                r.check_irods_files(echo_errors=True, log_errors=False,
+                                                    return_errors=False, clean_irods=False,
+                                                    clean_django=False, sync_ispublic=True)
+                                break
+                except SessionException:
+                    print("resource {} not found in iRODS".format(r.short_id))
+
+        print("REPAIR ISPUBLIC AVUS AND CHECK ALL RESOURCES")
+        for r in BaseResource.objects.all():
+            r.check_irods_files(echo_errors=True, log_errors=False,
+                                return_errors=False, clean_irods=False,
+                                clean_django=False, sync_ispublic=True)
