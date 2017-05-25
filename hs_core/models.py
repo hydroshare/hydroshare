@@ -1666,7 +1666,7 @@ class AbstractResource(ResourcePermissionsMixin):
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
         if attribute == 'isPublic':
-            if value.lower() == 'true':
+            if value is not None and value.lower() == 'true':
                 return True
             else:
                 return False

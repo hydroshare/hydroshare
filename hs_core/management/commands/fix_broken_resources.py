@@ -140,7 +140,15 @@ class Command(BaseCommand):
                     print("resource {} not found in iRODS".format(r.short_id))
 
         print("REPAIR ISPUBLIC AVUS")
-        for rid in PUBLIC:  # resources with unsynchronized AVUs
-            r = get_resource_by_shortkey(rid)
-            r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False,
-                                clean_irods=False, clean_django=False, sync_ispublic=True)
+        for r in BaseResource.objects.all(): 
+            try: 
+                pub = r.getAVU('isPublic')
+                if pub != r.raccess.public: 
+                    print("INFO: resource {}: isPublic is {}, r.raccess.public is {} (REPAIRING)"
+                          .format(r.short_id, pub, r.raccess.public))
+                    try: 
+                        r.setAVU('isPublic', r.raccess.public) 
+                    except SessionException: 
+                        print("ERROR: non-existent collection {}".format(r.short_id))
+            except SessionException: 
+                print("ERROR: non-existent collection {}".format(r.short_id))
