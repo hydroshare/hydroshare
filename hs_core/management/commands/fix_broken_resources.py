@@ -3,7 +3,7 @@
 """
 Fix broken resources found in 1.10.0 migration.
 This script should be run only once.
-It performs resource-specific actions.
+It performs resource-specific actions:
 094da7d9400f493fb1e412df015e17a4 Delete files in iRODS that are not in Django (duplicates)
 aff4e6dfc09a4070ac15a6ec0741fd02 Delete files in Django that are not in Irods (failed upload)
 5e80dd7cbaf04a5e98d850609c7e534b Delete files in Django that are not in Irods (failed upload)
@@ -28,10 +28,13 @@ cdc6292fbee24dfd9810da7696a40dcf Delete unreferenced files on both sides.
 """
 
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.utils import resource_modified
+from hs_core.models import BaseResource
+from django_irods.icommands import SessionException
 
-
+# These should be cleaned up by deleting extra files
 VACUUM = [
     '094da7d9400f493fb1e412df015e17a4',
     'aff4e6dfc09a4070ac15a6ec0741fd02',
@@ -65,7 +68,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        print("FIX ALL AFFECTED RESOURCES")
+        print("FIX BROKEN RESOURCES")
 
         for rid in VACUUM:  # delete all non-matching IDS
             r = get_resource_by_shortkey(rid)
@@ -74,3 +77,46 @@ class Command(BaseCommand):
             resource_modified(r, r.creator)
             # Do a redundant check to ensure that cleaning worked.
             r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False)
+
+        print("REPAIR BROKEN NETCDF RESOURCES")
+
+        for r in BaseResource.objects.filter(resource_type='NetcdfResource'):
+            if r.is_federated and not settings.REMOTE_USE_IRODS:
+                print("INFO: skipping repair of federated resource {} in unfederated mode"
+                      .format(r.short_id))
+            else:
+
+                istorage = r.get_irods_storage()
+                for f in r.files.all():
+                    try:
+                        if f.short_path.endswith('.txt') and not istorage.exists(f.storage_path):
+                            print("found broken NetCDF resource {}".format(r.short_id))
+                            files = istorage.listdir(r.file_path)[1]
+                            for g in files:
+                                if g.endswith('.txt'):
+                                    print("in {}, changing short path {} to {}"
+                                          .format(r.short_id, f.short_path, g))
+                                    f.set_short_path(g)
+                                    # Now check for file integrity afterward
+                                    r.check_irods_files(echo_errors=True, log_errors=False,
+                                                        return_errors=False, clean_irods=False,
+                                                        clean_django=False, sync_ispublic=True)
+                                    break
+                    except SessionException:
+                        print("resource {} ({}) not found in iRODS".format(r.short_id, r.root_path))
+
+        print("REPAIR ISPUBLIC AVUS")
+        for r in BaseResource.objects.all():
+            if r.is_federated and not settings.REMOTE_USE_IRODS:
+                print("INFO: skipping repair of federated resource {} in unfederated mode"
+                      .format(r.short_id))
+            else:
+                istorage = r.get_irods_storage()
+                if istorage.exists(r.root_path):
+                    pub = r.getAVU('isPublic')
+                    if pub != r.raccess.public:
+                        print("INFO: resource {}: isPublic is {}, public is {} (REPAIRING)"
+                              .format(r.short_id, pub, r.raccess.public))
+                        r.setAVU('isPublic', r.raccess.public)
+                else:
+                    print("ERROR: non-existent collection {} ({})".format(r.short_id, r.root_path))
