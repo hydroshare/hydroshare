@@ -5,6 +5,8 @@
 #   gevent
 
 # Pinned with their dependencies
+six==1.10.0
+uWSGI==2.0.15
 appdirs==1.4.3
 click==6.7
 Flask==0.12.2
@@ -14,10 +16,8 @@ itsdangerous==0.24
 Jinja2==2.9.6
 MarkupSafe==1.0
 packaging==16.8
-pkg-resources==0.0.0
 prettytable==0.7.2
 pyparsing==2.2.0
 python-dotenv==0.6.4
-python-irodsclient==0.5.0
-six==1.10.0
 Werkzeug==0.12.2
+git+https://github.com/irods/python-irodsclient.git@master

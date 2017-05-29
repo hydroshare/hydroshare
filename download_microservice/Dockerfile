@@ -3,5 +3,4 @@ MAINTAINER Michael J. Stealey <michael.j.stealey@gmail.com>
 
 VOLUME ["/hs_download_microservice/"]
 
-ENTRYPOINT ["python"]
-CMD ["/usr/src/app/download_microservice.py"]
+CMD uwsgi --ini /usr/src/app/uwsgi.ini
