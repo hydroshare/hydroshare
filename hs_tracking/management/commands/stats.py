@@ -128,7 +128,7 @@ class Command(BaseCommand):
         for up in UserProfile.objects.filter(user__is_active=True):
             last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
             values = [
-                    up.user.date_joined.strftime('%m/%d/%Y %H:%M:%S.%f'),
+                up.user.date_joined.strftime('%m/%d/%Y %H:%M:%S.%f'),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
@@ -154,7 +154,7 @@ class Command(BaseCommand):
 
         for r in BaseResource.objects.all():
             values = [
-                    r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
                 r.metadata.title.value,
                 r.resource_type,
                 r.size,
