@@ -1346,6 +1346,8 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+        $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
+        $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
