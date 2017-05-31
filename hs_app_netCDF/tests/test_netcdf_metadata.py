@@ -425,6 +425,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             metadata=metadata
             )
 
+        utils.resource_post_create_actions(self.resNetcdf, self.user, metadata)
+
         self._test_metadata_extraction_wkt_crs()
 
     def test_metadata_extraction_of_wkt_crs_on_content_file_add(self):
@@ -610,6 +612,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             files=files,
             metadata=metadata
         )
+
+        utils.resource_post_create_actions(self.resNetcdf, self.user, metadata)
 
     def _test_metadata_extraction_wkt_crs(self, create_res_mode=True):
 

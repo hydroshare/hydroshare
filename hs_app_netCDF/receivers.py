@@ -1,13 +1,14 @@
 import re
 import os
 import shutil
+import logging
 
 import netCDF4
 
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
+from hs_core.signals import pre_add_files_to_resource, \
     pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update, \
     post_add_files_to_resource, post_create_resource
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
@@ -20,58 +21,62 @@ import hs_file_types.nc_functions.nc_meta as nc_meta
 from hs_file_types.models.netcdf import create_header_info_txt_file, add_metadata_to_list
 
 
-# receiver used to extract metadata after user click on "create resource"
-@receiver(pre_create_resource, sender=NetcdfResource)
-def netcdf_pre_create_resource(sender, **kwargs):
-    files = kwargs['files']
-    metadata = kwargs['metadata']
+@receiver(post_create_resource, sender=NetcdfResource)
+def netcdf_post_create_resource(sender, **kwargs):
+    log = logging.getLogger()
+    resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
-    source_names = kwargs['source_names']
+    res_file = resource.files.all().first()
 
-    if __debug__:
-        assert(isinstance(source_names, list))
-
-    file_selected = False
-    in_file_name = ''
-    nc_file_name = ''
-    if files:
-        file_selected = True
-        in_file_name = files[0].file.name
-        nc_file_name = os.path.splitext(files[0].name)[0]
-    elif source_names:
-        nc_file_name = os.path.splitext(os.path.basename(source_names[0]))[0]
-        ref_tmpfiles = utils.get_fed_zone_files(source_names)
-        if ref_tmpfiles:
-            in_file_name = ref_tmpfiles[0]
-            file_selected = True
-
-    if file_selected and in_file_name:
-        # file validation and metadata extraction
-        nc_dataset = nc_utils.get_nc_dataset(in_file_name)
+    if res_file:
+        temp_file = utils.get_file_from_irods(res_file)
+        nc_dataset = nc_utils.get_nc_dataset(temp_file)
+        nc_file_name = res_file.file_name
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
-            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(in_file_name)
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
             # populate metadata list with extracted metadata
+            metadata = []
             add_metadata_to_list(metadata, res_dublin_core_meta, res_type_specific_meta)
+            for element in metadata:
+                # here k is the name of the element
+                # v is a dict of all element attributes/field names and field values
+                k, v = element.items()[0]
+                if k == 'title':
+                    # update title element
+                    title_element = resource.metadata.title
+                    resource.metadata.update_element('title', title_element.id, **v)
+                elif k == 'rights':
+                    rights_element = resource.metadata.rights
+                    resource.metadata.update_element('rights', rights_element.id, **v)
+                elif k == 'creator':
+                    resource.metadata.creators.all().delete()
+                    resource.metadata.create_element('creator', **v)
+                else:
+                    resource.metadata.create_element(k, **v)
 
             # create the ncdump text file
-            dump_file = create_header_info_txt_file(in_file_name, nc_file_name)
+            dump_file = create_header_info_txt_file(temp_file, nc_file_name)
             dump_file_name = nc_file_name + '_header_info.txt'
             uploaded_file = UploadedFile(file=open(dump_file), name=dump_file_name)
-            files.append(uploaded_file)
+            utils.add_file_to_resource(resource, uploaded_file)
         else:
+            delete_resource_file_only(resource, res_file)
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please check if the uploaded file ' \
-                                             'is in valid NetCDF format.'
+            err_msg = "Uploaded file was not added to the resource." \
+                      " Please provide a valid NetCDF file. "
+            validate_files_dict['message'] = err_msg
+            log_msg = "File validation failed for netcdf resource (ID:{})."
+            log_msg = log_msg.format(resource.short_id)
+            log.error(log_msg)
 
-        if source_names and in_file_name:
-            shutil.rmtree(os.path.dirname(in_file_name))
+        # cleanup the temp file directory
+        if os.path.exists(temp_file):
+            shutil.rmtree(os.path.dirname(temp_file))
 
-
-@receiver(post_create_resource, sender=NetcdfResource)
-def netcdf_post_create_resource(sender, **kwargs):
-    metadata = kwargs['resource'].metadata
+    # set metadata is dirty flag as false for resource creation
+    metadata = resource.metadata
     metadata.is_dirty = False
     metadata.save()
 
@@ -270,8 +275,8 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please check if the uploaded file is in ' \
-                                             'valid NetCDF format.'
+            validate_files_dict['message'] = 'Please check if the uploaded file is ' \
+                                             'invalid NetCDF format.'
 
         if source_names and in_file_name:
             shutil.rmtree(os.path.dirname(in_file_name))
