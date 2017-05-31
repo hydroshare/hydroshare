@@ -51,11 +51,8 @@ def netcdf_post_create_resource(sender, **kwargs):
                     rights_element = resource.metadata.rights
                     resource.metadata.update_element('rights', rights_element.id, **v)
                 elif k == 'creator':
-                    new_creator = resource.metadata.create_element('creator', **v)
-                    resource.metadata.creators.all().first().delete()
-                    new_creator.order = 1
-                    new_creator.save()
-
+                    resource.metadata.creators.all().delete()
+                    resource.metadata.create_element('creator', **v)
                 else:
                     resource.metadata.create_element(k, **v)
 
