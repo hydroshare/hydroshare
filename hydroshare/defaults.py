@@ -24,4 +24,4 @@ config.read('hydroshare/customize.cfg')
 
 for section in config.sections():
     for key, value in config.items(section):
-        append_setting(key.upper(),value)
+        append_setting(unicode(key.upper()),unicode(value))
