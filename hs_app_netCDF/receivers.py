@@ -71,6 +71,10 @@ def netcdf_post_create_resource(sender, **kwargs):
             log_msg = log_msg.format(resource.short_id)
             log.error(log_msg)
 
+        # cleanup the temp file directory
+        if os.path.exists(temp_file):
+            shutil.rmtree(os.path.dirname(temp_file))
+
     # set metadata is dirty flag as false for resource creation
     metadata = resource.metadata
     metadata.is_dirty = False
