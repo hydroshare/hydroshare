@@ -235,22 +235,29 @@ def update_user_profile(request):
                                     "email address, please request email update again. "
                                     ))
                     # send an email to the old address notifying the email change
-                    message = """Dear {}
-                    <p>xDCIShare received a request to change the email address associated with
-                    xDCIShare account {} from {} to {}. You are receiving this email to the old
+                    message = """Dear {first_name}
+                    <p>{c_name} received a request to change the email address associated with
+                    {s_name} account {user_name} from {user_email} to {new_email}. You are receiving this email to the old
                     email address as a precaution. If this is correct you may ignore this email
                     and click on the link in the email sent to the new address to confirm this change.</p>
                     <p>If you did not originate this request, there is a danger someone else has
-                    accessed your account. You should log into xDCIShare, change your password,
+                    accessed your account. You should log into {s_name}, change your password,
                     and set the email address to the correct address. If you are unable to do this
-                    contact support@xdcishare.org
+                    contact {support}.
                     <p>Thank you</p>
-                    <p>The xDCIShare Team</p>
-                    """.format(user.first_name, user.username, user.email, new_email)
-                    send_mail(subject="Change of xDCIShare email address.",
+                    <p>The {s_name} Team</p>
+                    """.format(first_name=user.first_name,
+                               user_name=user.username,
+                               user_email=user.email,
+                               new_email=new_email,
+                               c_name=settings.XDCI_SITE_NAME_CAPS,
+                               s_name=settings.XDCI_SITE_NAME_MIXED,
+                               support=settings.XDCI_SUPPORT_EMAIL)
+                    subject = "Change of {s_name} email address.".format(s_name=settings.XDCI_SITE_NAME_MIXED)
+                    send_mail(subject=subject,
                               message=message,
                               html_message=message,
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
+                              from_email= settings.XDCI_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
             else:
                 errors = {}
                 if not user_form.is_valid():
