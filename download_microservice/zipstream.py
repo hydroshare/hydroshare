@@ -56,7 +56,7 @@ class ZipperChunkedIOStream:
     def chunked_add_file_paths(self, file_paths, chunk_size):
         filenames = [os.path.basename(path) for path in file_paths]
         file_streams = [open(path, 'rb') for path in file_paths]
-        yield from self.chunked_add_file_streams(file_streams, filenames, chunk_size)
+        yield from self.chunked_add_file_streams(file_streams, filenames, chunk_size)  # NOQA
 
     def chunked_add_file_streams(self, streams, stream_filenames, chunk_size):
         # yield a blank string so that hopefully nothing blocks too long here.
@@ -72,13 +72,13 @@ class ZipperChunkedIOStream:
             while not eof:
                 chunk = in_stream.read(chunk_size)
                 out_stream.write(chunk)
-                yield from self.zip_file_stream
+                yield from self.zip_file_stream  # NOQA
                 if not chunk:
                     eof = True
             out_stream.close()
-            yield from self.zip_file_stream
+            yield from self.zip_file_stream  # NOQA
         self.zip_file.close()
-        yield from self.zip_file_stream
+        yield from self.zip_file_stream  # NOQA
 
 
 if __name__ == '__main__':
