@@ -848,6 +848,10 @@ a.thumbnail:focus img {
   background: darkorange;
 }
 
+#universalMessage.success {
+  background: darkgreen;
+}
+
 #universalMessage a {
   top: 5px;
   right: 5px;

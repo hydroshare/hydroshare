@@ -176,10 +176,11 @@ $(document).ready(function () {
     })
 });
 
-function showUniversalMessage(type, message) {
+function showUniversalMessage(type, message, timeout) {
     return function(response,returnType,content) {
         if(!message) message = content;
         if(!type) type = returnType;
+        if(!timeout) timeout = 5000;
 
         $("#universalMessage span").html(message);
         $("#universalMessage").attr('class','');
@@ -188,6 +189,6 @@ function showUniversalMessage(type, message) {
 
         setTimeout(function() {
             $("#universalMessage a").click()
-        }, 5000)
+        }, timeout)
     }
 }
