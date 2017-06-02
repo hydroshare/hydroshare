@@ -48,6 +48,5 @@ class QuotaAdmin(admin.ModelAdmin):
 
 admin.site.register(HomePage, HomePageAdmin)
 admin.site.register(SiteConfiguration, SingletonAdmin)
-admin.site.register(User, admin.ModelAdmin)
 admin.site.register(UserQuota, QuotaAdmin)
 admin.site.register(QuotaMessage, SingletonAdmin)
