@@ -479,6 +479,7 @@ function showFileTypeMetadata(){
          showMetadataFormSaveChangesButton();
          initializeDatePickers();
          setFileTypeSpatialCoverageFormFields(logical_type);
+         // Bind event handler for submit button
          setFileTypeMetadataFormsClickHandlers();
 
          var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
@@ -507,12 +508,6 @@ function showFileTypeMetadata(){
          }
 
          $("#div_id_type_filetype input:radio").trigger("change");
-
-         // Bind event handler for submit button
-         $("#fileTypeMetaDataTab .btn-form-submit").click(function () {
-             var formID = $(this).closest("form").attr("id");
-             metadata_update_ajax_submit(formID);
-         });
 
     });
 }
