@@ -2,7 +2,7 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 
-from mezzanine.core.admin import TabularDynamicInlineAdmin, SingletonAdmin, OwnableAdmin
+from mezzanine.core.admin import TabularDynamicInlineAdmin, SingletonAdmin
 from mezzanine.pages.admin import PageAdmin
 
 from models import SiteConfiguration, HomePage, IconBox, UserQuota, QuotaMessage
@@ -20,14 +20,15 @@ class HomePageAdmin(PageAdmin):
 
 class UserQuotaForm(forms.ModelForm):
     user = forms.ModelChoiceField(queryset=User.objects.all())
+
     class Meta:
         model = UserQuota
         fields = ['user', 'allocated_value', 'used_value', 'unit', 'zone']
 
     def save(self, *args, **kwargs):
-         instance = super(UserQuotaForm, self).save(commit=False)
-         instance.user = self.cleaned_data['user']
-         return instance
+        instance = super(UserQuotaForm, self).save(commit=False)
+        instance.user = self.cleaned_data['user']
+        return instance
 
 
 class QuotaAdmin(admin.ModelAdmin):
