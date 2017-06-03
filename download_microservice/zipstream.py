@@ -54,9 +54,8 @@ class ZipperChunkedIOStream:
                                 allowZip64=True)
 
     def chunked_add_file_paths(self, file_paths, chunk_size):
-        filenames = [os.path.basename(path) for path in file_paths]
         file_streams = [open(path, 'rb') for path in file_paths]
-        yield from self.chunked_add_file_streams(file_streams, filenames, chunk_size)  # NOQA
+        yield from self.chunked_add_file_streams(file_streams, file_paths, chunk_size)  # NOQA
 
     def chunked_add_file_streams(self, streams, stream_filenames, chunk_size):
         # yield a blank string so that hopefully nothing blocks too long here.
@@ -99,6 +98,21 @@ if __name__ == '__main__':
                 out_finalized_fp.write(chunk)
             out_finalized_fp.close()
 
+    def subdirectories():
+        """
+        Create a zip with subdirectories
+        """
+        os.chdir('..')
+        zstream = ZipperChunkedIOStream(compression=ZIP_DEFLATED)
+        local_file_paths = ['download_microservice/zipstream.py', 'download_microservice/download_microservice.py']
+        chunks = list(zstream.chunked_add_file_paths(local_file_paths, chunk_size=1024))
+
+        with open('download_microservice/subdirectories.zip', 'wb') as out_finalized_fp:
+            for chunk in chunks:
+                out_finalized_fp.write(chunk)
+            out_finalized_fp.close()
+        os.chdir('download_microservice')
+
     def streaming_write():
         """
         Write the zipfile immediately as zipfile chunks are yielded.
@@ -111,4 +125,5 @@ if __name__ == '__main__':
             out_streaming_fp.close()
 
     finalized_write()
+    subdirectories()
     streaming_write()

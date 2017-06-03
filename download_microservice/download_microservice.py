@@ -24,12 +24,18 @@ def get_irods_session():
         app.logger.debug('Getting session')
         dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
         load_dotenv(dotenv_path)
+        variables = ['IRODS_HOST', 'IRODS_PORT', 'IRODS_ZONE', 'IRODS_USER',
+                     'IRODS_PASSWORD']
+        if not all([var in os.environ for var in variables]):
+            app.logger.error('Not enough information available to establish '
+                             'iRODS connection. Be sure to set env variables.')
+            exit(-1)
         session_kwargs = {
-            'host': os.getenv('IRODS_HOST', None),
-            'port': int(os.getenv('IRODS_PORT', None)),
-            'user': os.getenv('IRODS_USER', None),
-            'zone': os.getenv('IRODS_ZONE', None),
-            'password': os.getenv('IRODS_PASSWORD', None),
+            'host': os.getenv('IRODS_HOST'),
+            'port': int(os.getenv('IRODS_PORT')),
+            'zone': os.getenv('IRODS_ZONE'),
+            'user': os.getenv('IRODS_USER'),
+            'password': os.getenv('IRODS_PASSWORD'),
             'numThreads': int(os.getenv('IRODS_THREADS', 0)),
         }
         g._session = irods_session = iRODSSession(**session_kwargs)
@@ -72,13 +78,13 @@ def download_collection(collection_path):
     collection = irods_get(collection_path, 'collection')
     data_objects = walk_get_data_objects(collection)
     data_object_streams = [do.open() for do in data_objects]
-    # TODO: retain directory structure in resultant zip file.
-    data_object_filenames = [do.path.split('/')[-1] for do in data_objects]
+    base_path = get_irods_session().base_path
+    data_object_paths = [do.path[len(base_path):] for do in data_objects]
 
     zipstream = ZipperChunkedIOStream(compression=ZIP_DEFLATED)
 
     stream_generator = zipstream.chunked_add_file_streams(data_object_streams,
-                                                          data_object_filenames,
+                                                          data_object_paths,
                                                           chunk_size=BUFFER_SIZE_BYTES)
     return flask.Response(stream_generator, mimetype='application/zip')
 
