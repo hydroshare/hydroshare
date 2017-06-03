@@ -19,7 +19,8 @@ class HomePageAdmin(PageAdmin):
 
 
 class UserQuotaForm(forms.ModelForm):
-    user = forms.ModelChoiceField(queryset=User.objects.exclude(is_superuser=True))
+    user = forms.ModelChoiceField(
+        queryset=User.objects.exclude(is_superuser=True).exclude(is_active=False))
 
     class Meta:
         model = UserQuota
