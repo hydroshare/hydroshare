@@ -55,7 +55,7 @@ class ZipperChunkedIOStream:
 
     def chunked_add_file_paths(self, file_paths, chunk_size):
         file_streams = [open(path, 'rb') for path in file_paths]
-        yield from self.chunked_add_file_streams(file_streams, file_paths, chunk_size)  # NOQA
+        return self.chunked_add_file_streams(file_streams, file_paths, chunk_size)
 
     def chunked_add_file_streams(self, streams, stream_filenames, chunk_size):
         # yield a blank string so that hopefully nothing blocks too long here.
