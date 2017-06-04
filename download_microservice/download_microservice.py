@@ -48,10 +48,12 @@ def irods_get(path, irods_type):
     session = get_irods_session()
     irods_path = session.base_path + path
     try:
-        if irods_type == 'data object':
+        if irods_type == 'data_object':
             irods_item = session.data_objects.get(irods_path)
         elif irods_type == 'collection':
             irods_item = session.collections.get(irods_path)
+        else:
+            raise ValueError('Unknown irods_type. Cannot get item.')
     except (CollectionDoesNotExist, DataObjectDoesNotExist):
         app.logger.error('404: Could not find {}'.format(irods_path))
         flask.abort(404)
@@ -93,8 +95,8 @@ def download_collection(collection_path):
 @app.route('/download/<path:data_object_path>')
 def download(data_object_path):
     app.logger.info('Starting download of {}'.format(data_object_path))
-    fp = irods_get(data_object_path, 'data object').open('r')
-    return flask.Response(fp, mimetype=mimetypes.guess_type(data_object_path)[0])
+    with irods_get(data_object_path, 'data_object').open('r') as fp:
+        return flask.Response(fp, mimetype=mimetypes.guess_type(data_object_path)[0])
 
 
 if __name__ == '__main__':

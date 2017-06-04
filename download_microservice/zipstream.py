@@ -77,6 +77,8 @@ class ZipperChunkedIOStream:
             out_stream.close()
             yield from self.zip_file_stream  # NOQA
         self.zip_file.close()
+        for s in streams:
+            s.close()
         yield from self.zip_file_stream  # NOQA
 
 
