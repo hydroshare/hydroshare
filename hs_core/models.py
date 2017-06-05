@@ -2514,11 +2514,10 @@ class ResourceFile(models.Model):
                     raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
+                # no need to verify whether the file exists in iRODS since the file
+                # name is returned from iRODS ils list dir command which already
+                # confirmed the file exists already in iRODS
                 target = get_resource_file_path(resource, file, folder=folder)
-                istorage = resource.get_irods_storage()
-                if not istorage.exists(target):
-                    raise ValidationError("ResourceFile.create: target {} does not exist"
-                                          .format(target))
             else:
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")

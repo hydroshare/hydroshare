@@ -499,7 +499,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     if __debug__:
         assert(isinstance(resource, BaseResource))
-    istorage = resource.get_irods_storage()
+    if istorage is None:
+        istorage = resource.get_irods_storage()
 
     if foldername:
         store = istorage.listdir(foldername)
