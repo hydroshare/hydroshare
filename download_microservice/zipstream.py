@@ -71,15 +71,15 @@ class ZipperChunkedIOStream:
             while not eof:
                 chunk = in_stream.read(chunk_size)
                 out_stream.write(chunk)
-                yield from self.zip_file_stream  # NOQA
+                yield from self.zip_file_stream  # noqa
                 if not chunk:
                     eof = True
             out_stream.close()
-            yield from self.zip_file_stream  # NOQA
+            yield from self.zip_file_stream  # noqa
         self.zip_file.close()
         for s in streams:
             s.close()
-        yield from self.zip_file_stream  # NOQA
+        yield from self.zip_file_stream  # noqa
 
 
 if __name__ == '__main__':
