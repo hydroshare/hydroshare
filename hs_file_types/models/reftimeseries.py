@@ -86,6 +86,12 @@ class TimeSeries(object):
                                     get_th('Variable Code')
                                     td(self.variable_code)
                                 with tr():
+                                    get_th('Sample Medium')
+                                    td(self.sample_medium)
+                                with tr():
+                                    get_th('Value Count')
+                                    td(self.value_count)
+                                with tr():
                                     get_th('URL')
                                     td(self.url)
                                 with tr():
@@ -136,6 +142,15 @@ class TimeSeries(object):
         end_date = parser.parse(self.end_date)
         hs_end_date.text = end_date.isoformat()
 
+        # encode sample medium
+        hs_sample_medium = etree.SubElement(rdf_description, '{%s}sampleMedium'
+                                            % NAMESPACES['hsterms'])
+        hs_sample_medium.text = self.sample_medium
+
+        # encode value count
+        hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount' % NAMESPACES['hsterms'])
+        hs_value_count.text = str(self.value_count)
+        
         # encode site data
         hs_site = etree.SubElement(rdf_description, '{%s}site' % NAMESPACES['hsterms'])
         hs_site_desc = etree.SubElement(hs_site, '{%s}Description' % NAMESPACES['rdf'])
