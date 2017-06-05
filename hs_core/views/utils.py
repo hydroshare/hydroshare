@@ -457,12 +457,11 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath, size=0):
+def link_irods_file_to_django(resource, filepath):
     """
     Link a newly created irods file to Django resource model
 
     :param filepath: full path to file
-    :size: deprecated; size of file; not needed
     """
     # link the newly created file (**filepath**) to Django resource model
     b_add_file = False
@@ -508,9 +507,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
-                size = istorage.size(file_path)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path, size)
+                link_irods_file_to_django(resource, file_path)
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
