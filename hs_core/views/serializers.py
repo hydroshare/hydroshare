@@ -86,6 +86,7 @@ class ResourceListRequestValidator(serializers.Serializer):
     south = serializers.CharField(required=False)
     east = serializers.CharField(required=False)
     west = serializers.CharField(required=False)
+    include_obsolete = serializers.BooleanField(required=False, default=False)
 
 
 class ResourceListItemSerializer(serializers.Serializer):
