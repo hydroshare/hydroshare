@@ -26,3 +26,4 @@ schema.xml
 *.sublime-*
 .pycharm_helpers
 celerybeat.pid
+.config

@@ -2,13 +2,15 @@ import json
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
+from django.contrib.gis.geos import Polygon, Point
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core import exceptions
 from django.db.models import Q
 
-from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title
+from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, Coverage
 from .utils import user_from_id, group_from_id, get_profile
+from theme.models import UserQuota
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
@@ -66,6 +68,9 @@ def create_account(
     user_access.save()
     user_labels = UserLabels(user=u)
     user_labels.save()
+    # create default UserQuota object for the new user
+    uq = UserQuota.objects.create(user=u)
+    uq.save()
     return u
 
 
@@ -238,19 +243,11 @@ def get_public_groups():
         return Group.objects.filter(gaccess__public=True)
 
 
-def get_resource_list(creator=None,
-        group=None, user=None, owner=None,
-        from_date=None, to_date=None,
-        start=None, count=None,
-        full_text_search=None,
-        published=False,
-        edit_permission=False,
-        public=False,
-        type=None,
-        author=None,
-        contributor=None,
-        subject=None,
-):
+def get_resource_list(creator=None, group=None, user=None, owner=None, from_date=None,
+                      to_date=None, start=None, count=None, full_text_search=None,
+                      published=False, edit_permission=False, public=False,
+                      type=None, author=None, contributor=None, subject=None, coverage_type=None,
+                      north=None, south=None, east=None, west=None):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -286,9 +283,15 @@ def get_resource_list(creator=None,
         count = int
         subject = list of subject
         type = list of resource type names, used for filtering
+        coverage_type = geo parameter, one of box or point
+        north = north coordinate
+        west = west coordinate
+        south = south coordinate
+        east = east coordinate
     """
 
-    if not any((creator, group, user, owner, from_date, to_date, start, count, subject, full_text_search, public, type)):
+    if not any((creator, group, user, owner, from_date, to_date, start,
+                count, subject, full_text_search, public, type)):
         raise NotImplemented("Returning the full resource list is not supported.")
 
     q = []
@@ -308,6 +311,36 @@ def get_resource_list(creator=None,
         )
 
         q.append(Q(object_id__in=author_parties.values_list('object_id', flat=True)))
+
+    if coverage_type in ('box', 'point'):
+        if not north or not west or not south or not east: \
+            raise ValueError("coverage queries must have north, west, south, and east params")
+
+        coverages = set()
+        search_polygon = Polygon.from_bbox((east,south,west,north))
+
+        for coverage in Coverage.objects.filter(type="box"):
+            coverage_polygon = Polygon.from_bbox((
+                coverage.value.get('eastlimit', None),
+                coverage.value.get('southlimit', None),
+                coverage.value.get('westlimit', None),
+                coverage.value.get('northlimit', None)
+            ))
+
+            if search_polygon.intersects(coverage_polygon):
+                coverages.add(coverage.id)
+
+        for coverage in Coverage.objects.filter(type="point"):
+            coverage_shape = Point(
+                coverage.value.get('east', None),
+                coverage.value.get('north', None),
+            )
+
+            if search_polygon.intersects(coverage_shape):
+                coverages.add(coverage.id)
+
+        coverage_hits = (Coverage.objects.filter(id__in=coverages))
+        q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
 
     if contributor:
         contributor_parties = (
@@ -342,7 +375,7 @@ def get_resource_list(creator=None,
         q.append(Q(created__lte=to_date))
 
     if subject:
-        subjects = Subject.objects.filter(value__in=subject)
+        subjects = Subject.objects.filter(value__in=subject.split(','))
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()

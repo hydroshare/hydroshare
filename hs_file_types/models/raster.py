@@ -346,10 +346,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         logical_file.metadata.create_element(k, **v)
                     log.info("Geo raster file type - metadata was saved to DB")
                     # set resource to private if logical file is missing required metadata
-                    if not logical_file.metadata.has_all_required_elements():
-                        resource.raccess.public = False
-                        resource.raccess.discoverable = False
-                        resource.raccess.save()
+                    resource.update_public_and_discoverable()
             else:
                 err_msg = "Geo raster file type file validation failed.{}".format(
                     ' '.join(error_info))

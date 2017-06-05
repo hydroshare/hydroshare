@@ -1,11 +1,13 @@
-from django.db import models
+from lxml import etree
+
+from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
 
-from lxml import etree
 
 class ScriptResource(BaseResource):
     objects = ResourceManager('ScriptResource')
@@ -53,7 +55,7 @@ class ScriptSpecificMetadata(AbstractMetaDataElement):
                                              help_text='The date that this version of the script was released')
 
     # repository
-    scriptCodeRepository = models.CharField(verbose_name='Script Repository', blank=True, max_length=255,
+    scriptCodeRepository = models.URLField(verbose_name='Script Repository', blank=True, max_length=255,
                                             help_text='A URL to the source code repository (e.g. git, mercurial, svn)')
 
     class Meta:
@@ -95,6 +97,16 @@ class ScriptMetaData(CoreMetaData):
                 missing_required_elements.append('Programming Language Version')
 
         return missing_required_elements
+
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+        super(ScriptMetaData, self).update(metadata)
+        attribute_mappings = {'scriptspecificmetadata': 'program'}
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in attribute_mappings.keys():
+                element_property_name = attribute_mappings[element_name]
+                self.update_non_repeatable_element(element_name, metadata, element_property_name)
 
     def get_xml(self, pretty_print=True):
 

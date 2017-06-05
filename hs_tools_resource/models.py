@@ -2,7 +2,7 @@ import requests
 import base64
 import imghdr
 
-from django.db import models
+from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -354,3 +354,45 @@ class ToolMetaData(CoreMetaData):
         self.tool_icon.all().delete()
         self.supported_sharing_status.all().delete()
         self.homepage_url.all().delete()
+
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+
+        # update any core metadata
+        super(ToolMetaData, self).update(metadata)
+        # update resource specific metadata
+        with transaction.atomic():
+            for dict_item in metadata:
+                if 'supportedrestypes' in dict_item:
+                    self.create_element('supportedrestypes', **dict_item['supportedrestypes'])
+                elif 'supportedsharingstatus' in dict_item:
+                    self.create_element('supportedsharingstatus',
+                                        **dict_item['supportedsharingstatus'])
+                elif 'requesturlbase' in dict_item:
+                    request_url = self.url_bases.all().first()
+                    if request_url is not None:
+                        self.update_element('requesturlbase', request_url.id,
+                                            value=dict_item['requesturlbase'])
+                    else:
+                        self.create_element('requesturlbase', value=dict_item['requesturlbase'])
+                elif 'toolversion' in dict_item:
+                    tool_version = self.versions.all().first()
+                    if tool_version is not None:
+                        self.update_element('toolversion', tool_version.id,
+                                            **dict_item['toolversion'])
+                    else:
+                        self.create_element('toolversion', **dict_item['toolversion'])
+                elif 'toolicon' in dict_item:
+                    tool_icon = self.tool_icon.all().first()
+                    if tool_icon is not None:
+                        self.update_element('toolicon', tool_icon.id,
+                                            **dict_item['toolicon'])
+                    else:
+                        self.create_element('toolicon', **dict_item['toolicon'])
+                elif 'apphomepageurl' in dict_item:
+                    app_url = self.homepage_url.all().first()
+                    if app_url is not None:
+                        self.update_element('apphomepageurl', app_url.id,
+                                            **dict_item['apphomepageurl'])
+                    else:
+                        self.create_element('apphomepageurl', **dict_item['apphomepageurl'])

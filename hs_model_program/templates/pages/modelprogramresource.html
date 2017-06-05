@@ -13,28 +13,27 @@
                     {########################}
                     {#       CONTENT FILES     #}
                     {########################}
-
-                    {% if mpmetadata.get_engine_list.items|first|first or mpmetadata.get_software_list.items|first|first or mpmetadata.get_releasenotes_list.items|first|first or mpmetadata.get_documentation_list.items|first|first %}
+                    {% if mpmetadata.get_engine_list|first or mpmetadata.get_software_list|first or mpmetadata.get_releasenotes_list|first  or mpmetadata.get_documentation_list|first  %}
                     <legend>Content files</legend>
                     <table class="custom-table">
                         <tbody>
-                        {% if mpmetadata.get_engine_list.items|first|first %}
-                            {% for name, path in mpmetadata.get_engine_list.items %}
+                        {% if mpmetadata.get_engine_list|first %}
+                            {% for name in mpmetadata.get_engine_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
                                         <th></th>
                                     {% else %}
-                                        <th class="text-muted">Computational Engine {}</th>
+                                        <th class="text-muted">Computational Engine</th>
                                     {% endif %}
                                     <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
                         {% endif %}
 
-                        {% if mpmetadata.get_software_list.items|first|first %}
-                            {% for name, path in mpmetadata.get_software_list.items %}
+                        {% if mpmetadata.get_software_list|first %}
+                            {% for name in mpmetadata.get_software_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
                                         <th></th>
@@ -42,14 +41,14 @@
                                         <th class="text-muted">Software</th>
                                     {% endif %}
                                     <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
                         {% endif %}
 
-                        {% if mpmetadata.get_documentation_list.items|first|first %}
-                            {% for name, path in mpmetadata.get_documentation_list.items %}
+                        {% if mpmetadata.get_documentation_list|first %}
+                            {% for name in mpmetadata.get_documentation_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
                                         <th></th>
@@ -57,15 +56,15 @@
                                         <th class="text-muted">Documentation</th>
                                     {% endif %}
                                     <td><a id="permalink"
-                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
                                            target="_blank">{{ name }}</a></td>
                                 </tr>
                             {% endfor %}
                         {% endif %}
 
 
-                        {% if mpmetadata.get_releasenotes_list.items|first|first %}
-                            {% for name, path in mpmetadata.get_releasenotes_list.items %}
+                        {% if mpmetadata.get_releasenotes_list|first %}
+                            {% for name in mpmetadata.get_releasenotes_list %}
                                 <tr>
                                     {% if forloop.counter0 > 0 %}
                                         <th></th>
@@ -74,7 +73,7 @@
                                     {% endif %}
                                     <td>
                                         <a id="permalink"
-                                           href="http://{{ request.get_host }}/resource/{{ path }}"
+                                           href="http://{{ request.get_host }}/hsapi/resource/{{ cm.short_id }}/files/{{ name }}"
                                            target="_blank">{{ name }}</a>
                                     </td>
                                 </tr>

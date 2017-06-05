@@ -13,7 +13,8 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, \
+    HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -26,6 +27,8 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
+from mezzanine.utils.email import subject_template, send_mail_template
+
 import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
@@ -46,6 +49,7 @@ from . import resource_folder_hierarchy
 
 from . import resource_access_api
 from . import resource_folder_rest_api
+from . import debug_resource_view
 
 from hs_core.hydroshare import utils
 
@@ -84,6 +88,36 @@ def verify(request, *args, **kwargs):
         messages.error(request, "Your verification token was invalid.")
 
     return HttpResponseRedirect('/')
+
+
+def change_quota_holder(request, shortkey):
+    new_holder_uname = request.POST.get('new_holder_username', '')
+    if not new_holder_uname:
+        return HttpResponseBadRequest()
+    new_holder_u = User.objects.filter(username=new_holder_uname).first()
+    if not new_holder_u:
+        return HttpResponseBadRequest()
+
+    res = utils.get_resource_by_shortkey(shortkey)
+    try:
+        res.set_quota_holder(request.user, new_holder_u)
+
+        # send notification to the new quota holder
+        context = {
+            "request": request,
+            "user": request.user,
+            "new_quota_holder": new_holder_u,
+            "resource_uuid": res.short_id,
+        }
+        subject_template_name = "email/quota_holder_change_subject.txt"
+        subject = subject_template(subject_template_name, context)
+        send_mail_template(subject, "email/quota_holder_change",
+                           settings.DEFAULT_FROM_EMAIL, new_holder_u.email,
+                           context=context)
+    except PermissionDenied:
+        return HttpResponseForbidden()
+
+    return HttpResponseRedirect(res.get_absolute_url())
 
 
 def add_files_to_resource(request, shortkey, *args, **kwargs):
@@ -183,10 +217,14 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
 
     if is_update_success:
         resource_modified(res, request.user, overwrite_bag=False)
+        res_metadata = res.metadata
+        res_metadata.set_dirty(True)
 
     if request.is_ajax():
         if is_update_success:
-            ajax_response_data = {'status': 'success'}
+            ajax_response_data = {'status': 'success',
+                                  'is_dirty': res.metadata.is_dirty if
+                                  hasattr(res.metadata, 'is_dirty') else False}
         else:
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
@@ -239,14 +277,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
         # seems the user wants to delete all keywords - no need for pre-check in signal handler
         res.metadata.subjects.all().delete()
         is_add_success = True
-        if not res.can_be_public_or_discoverable:
-            res.raccess.public = False
-            res.raccess.discoverable = False
-            res.raccess.save()
-        elif not res.raccess.discoverable:
-            res.raccess.discoverable = True
-            res.raccess.save()
-
+        res.update_public_and_discoverable()
         resource_modified(res, request.user, overwrite_bag=False)
     else:
         handler_response = pre_metadata_element_create.send(sender=sender_resource,
@@ -331,6 +362,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                                       }
                 if element is not None:
                     ajax_response_data['element_id'] = element.id
+
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -373,12 +408,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     # some database error occurred
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
+                # TODO: it's brittle to embed validation logic at this level.
                 if element_name == 'title':
-                    if res.raccess.public:
-                        if not res.can_be_public_or_discoverable:
-                            res.raccess.public = False
-                            res.raccess.save()
-
+                    res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
@@ -411,6 +443,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'res_discoverable_status': res_discoverable_status,
                                       'element_exists': element_exists}
 
+            ajax_response_data['is_dirty'] = res.metadata.is_dirty if \
+                hasattr(res.metadata, 'is_dirty') else False
+
             return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
@@ -426,9 +461,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    istorage = resource.get_irods_storage()
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
-    istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
     return HttpResponseRedirect(file_download_url)
 
@@ -436,6 +471,7 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
+    res.update_public_and_discoverable()
     resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -443,7 +479,7 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    hydroshare.delete_resource_file(shortkey, f, user)
+    hydroshare.delete_resource_file(shortkey, f, user)  # calls resource_modified
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -456,12 +492,12 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     for f_id in f_id_list:
         f_id = f_id.strip()
         try:
-            hydroshare.delete_resource_file(shortkey, f_id, user)
+            hydroshare.delete_resource_file(shortkey, f_id, user)  # calls resource_modified
         except ObjectDoesNotExist as ex:
             # Since some specific resource types such as feature resource type delete all other
             # dependent content files together when one file is deleted, we make this specific
             # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
-            # raising this specific exceptoin
+            # raising this specific exception
             logger.debug(ex.message)
             continue
     request.session['resource-mode'] = 'edit'
@@ -642,7 +678,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
@@ -803,6 +839,63 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
 
     return JsonResponse(ajax_response_data)
 
+
+def undo_share_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    user_to_unshare_with = utils.user_from_id(user_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        undo_user_privilege = res.raccess.get_effective_privilege(user_to_unshare_with)
+        if undo_user_privilege == PrivilegeCodes.VIEW:
+            undo_user_privilege = "view"
+        elif undo_user_privilege == PrivilegeCodes.CHANGE:
+            undo_user_privilege = "change"
+        elif undo_user_privilege == PrivilegeCodes.OWNER:
+            undo_user_privilege = "owner"
+        else:
+            undo_user_privilege = 'none'
+        ajax_response_data['undo_user_privilege'] = undo_user_privilege
+
+        if user not in res.raccess.view_users:
+            # user has no explict access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
+def undo_share_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    group_to_unshare_with = utils.group_from_id(group_id)
+    ajax_response_data = {'status': 'success'}
+    try:
+        user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        if group_to_unshare_with in res.raccess.edit_groups:
+            undo_group_privilege = 'change'
+        elif group_to_unshare_with in res.raccess.view_groups:
+            undo_group_privilege = 'view'
+        else:
+            undo_group_privilege = 'none'
+        ajax_response_data['undo_group_privilege'] = undo_group_privilege
+
+        if user not in res.raccess.view_users:
+            # user has no explicit access to the resource - redirect to resource listing page
+            ajax_response_data['redirect_to'] = '/my-resources/'
+    except PermissionDenied as exp:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
+
+    return JsonResponse(ajax_response_data)
+
+
 # view functions mapped with INPLACE_SAVE_URL(/hsapi/save_inline/) for Django inplace editing
 def save_ajax(request):
     if not request.method == 'POST':
@@ -940,9 +1033,10 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-    
+
     return context
 
 
@@ -976,15 +1070,16 @@ def create_resource_select_resource_type(request, *args, **kwargs):
 
 @login_required
 def create_resource(request, *args, **kwargs):
-    """ Create resource via REST API """
+    # Note: This view function must be called by ajax
+
+    ajax_response_data = {'status': 'error', 'message': ''}
     resource_type = request.POST['resource-type']
     res_title = request.POST['title']
-
-    resource_files = request.FILES.getlist('files')
-    source_names=[]
+    resource_files = request.FILES.values()
+    source_names = []
     irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated").lower()=='true'
-    # TODO: need to make REST API consistent with internal API. This is just "move" now there. 
+    federated = request.POST.get("irods_federated").lower() == 'true'
+    # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
 
     if irods_fnames:
@@ -998,42 +1093,36 @@ def create_resource(request, *args, **kwargs):
             zone = request.POST.get("irods-zone")
             try:
                 upload_from_irods(username=user, password=password, host=host, port=port,
-                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except utils.ResourceFileSizeException as ex:
-                context = {'file_size_error': ex.message}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.message
+                return JsonResponse(ajax_response_data)
+
             except SessionException as ex:
-                context = {'resource_creation_error': ex.stderr}
-                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+                ajax_response_data['message'] = ex.stderr
+                return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
-
     try:
-        page_url_dict, res_title, metadata, fed_res_path = \
-            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, 
+        _, res_title, metadata, fed_res_path = \
+            hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                          files=resource_files,
-                                                         resource_title=res_title, 
+                                                         resource_title=res_title,
                                                          source_names=source_names,
-                                                         page_redirect_url_key=url_key, 
-                                                         requesting_user=request.user, 
+                                                         page_redirect_url_key=url_key,
+                                                         requesting_user=request.user,
                                                          **kwargs)
     except utils.ResourceFileSizeException as ex:
-        context = {'file_size_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except utils.ResourceFileValidationException as ex:
-        context = {'validation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
-                                  context_instance=RequestContext(request))
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     except Exception as ex:
-        context = {'resource_creation_error': ex.message}
-        return render_to_response('pages/create-resource.html', context, 
-                                  context_instance=RequestContext(request))
-
-    if url_key in page_url_dict:
-        return render(request, page_url_dict[url_key], {'title': res_title, 'metadata': metadata})
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
             resource_type=request.POST['resource-type'],
@@ -1042,21 +1131,31 @@ def create_resource(request, *args, **kwargs):
             metadata=metadata,
             files=resource_files,
             source_names=source_names,
-            # TODO: should probably be resource_federation_path like it is set to. 
-            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
-            move=(fed_copy_or_move == 'move'), 
+            # TODO: should probably be resource_federation_path like it is set to.
+            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
+            move=(fed_copy_or_move == 'move'),
             content=res_title
     )
 
     try:
-        utils.resource_post_create_actions(request=request, resource=resource, 
+        utils.resource_post_create_actions(request=request, resource=resource,
                                            user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
+        ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['file_upload_status'] = 'error'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+        return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
-    # go to resource landing page
-    return HttpResponseRedirect(resource.get_absolute_url())
+    if not ajax_response_data['message']:
+        if resource.files.all():
+            ajax_response_data['file_upload_status'] = 'success'
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
+
+    return JsonResponse(ajax_response_data)
 
 
 @login_required
@@ -1461,54 +1560,38 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
 
 
 def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
-    if not user.uaccess.can_change_resource_flags(resource):
-        messages.error(request, "You don't have permission to change resource sharing status")
-        return
+    """
+    Set flags 'public', 'discoverable', 'shareable'
 
-    if flag_to_set == 'shareable':
+    This routine generates appropriate messages for the REST API and thus differs from
+    AbstractResource.set_public, set_discoverable, which raise exceptions.
+    """
+
+    if flag_to_set == 'shareable':  # too simple to deserve a method in AbstractResource
+        # access control is separate from validation logic
+        if not user.uaccess.can_change_resource_flags(resource):
+            messages.error(request, "You don't have permission to change resource sharing status")
+            return
         if resource.raccess.shareable != flag_value:
             resource.raccess.shareable = flag_value
             resource.raccess.save()
             return
 
-    has_files = False
-    has_metadata = False
-    can_resource_be_public_or_discoverable = False
-    is_public = (flag_to_set == 'public' and flag_value)
-    is_discoverable = (flag_to_set == 'discoverable' and flag_value)
-    if is_public or is_discoverable:
-        has_files = resource.has_required_content_files()
-        has_metadata = resource.metadata.has_all_required_elements()
-        can_resource_be_public_or_discoverable = has_files and has_metadata
+    elif flag_to_set == 'discoverable':
+        try:
+            resource.set_discoverable(flag_value, user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
 
-    if is_public and not can_resource_be_public_or_discoverable:
-        messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag='public'))
+    elif flag_to_set == 'public':
+        try:
+            resource.set_public(flag_value, user)  # checks access control
+        except ValidationError as v:
+            messages.error(request, v.message)
+
     else:
-        if is_discoverable:
-            if can_resource_be_public_or_discoverable:
-                resource.raccess.public = False
-                resource.raccess.discoverable = True
-            else:
-                messages.error(request, _get_message_for_setting_resource_flag(has_files, has_metadata,
-                                                                               resource_flag='discoverable'))
-        else:
-            resource.raccess.public = is_public
-            resource.raccess.discoverable = is_public
-
-        resource.raccess.save()
-        # set isPublic metadata AVU accordingly
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
-        else:
-            istorage = IrodsStorage()
-            res_coll = resource.short_id
-        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
-
-        # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
-                        resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files(resource.short_id)
+        messages.error(request,
+                       "unrecognized resource flag {}".format(flag_to_set))
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):

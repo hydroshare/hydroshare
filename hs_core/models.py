@@ -1,10 +1,12 @@
 import os.path
 import json
 import arrow
+import logging
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -20,7 +22,8 @@ from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files import File
-from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
+    SuspiciousFileOperation, PermissionDenied
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -138,6 +141,35 @@ def page_permissions_page_processor(request, page):
                                                         include_group_granted_access=False)
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
+
+    if request.user.is_authenticated():
+        for owner in owners:
+            owner.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, owner)
+
+        for viewer in viewers:
+            viewer.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, viewer)
+
+        for editor in editors:
+            editor.can_undo = request.user.uaccess.can_undo_share_resource_with_user(cm, editor)
+
+        for view_grp in view_groups:
+            view_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        view_grp)
+
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = request.user.uaccess.can_undo_share_resource_with_group(cm,
+                                                                                        edit_grp)
+    else:
+        for owner in owners:
+            owner.can_undo = False
+        for viewer in viewers:
+            viewer.can_undo = False
+        for editor in editors:
+            editor.can_undo = False
+        for view_grp in view_groups:
+            view_grp.can_undo = False
+        for edit_grp in edit_groups:
+            edit_grp.can_undo = False
 
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
@@ -614,7 +646,11 @@ class Relation(AbstractMetaDataElement):
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
     value = models.CharField(max_length=500)
 
+    def __str__(self):
+        return "{type} {value}".format(type=self.type, value=self.value)
+
     def __unicode__(self):
+        """ deprecated """
         return "{type} {value}".format(type=self.type, value=self.value)
 
     @classmethod
@@ -666,13 +702,13 @@ class Relation(AbstractMetaDataElement):
         rel = Relation.objects.get(id=element_id)
         if rel.type != kwargs['type']:
             if kwargs['type'] == 'isHostedBy' and \
-                 Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                         content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isCopiedFrom relation already exists.' % rel.type)
             elif kwargs['type'] == 'isCopiedFrom' and \
-                    Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                            content_type__pk=rel.content_type.id).exists():
+                Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                        content_type__pk=rel.content_type.id).exists():
                 raise ValidationError('Relation type:%s cannot be updated since '
                                       'isHostedBy relation already exists.' % rel.type)
 
@@ -1123,8 +1159,8 @@ class Coverage(AbstractMetaDataElement):
                         try:
                             value_dict[value_item] = float(value_dict[value_item])
                         except TypeError:
-                            raise ValidationError("Value for '{}' must be numeric".format(
-                                                                              value_item))
+                            raise ValidationError("Value for '{}' must be numeric"
+                                                  .format(value_item))
 
             if value_dict['northlimit'] < value_dict['southlimit']:
                 raise ValidationError("Value for North latitude must be greater than or equal to "
@@ -1436,6 +1472,207 @@ class AbstractResource(ResourcePermissionsMixin):
         """ returns whether folder operations are supported. Computed for polymorphic types"""
         return False
 
+    @property
+    def has_required_metadata(self):
+        """ return True only if all required metadata is present. """
+        if self.metadata is None or not self.metadata.has_all_required_elements():
+            return False
+        for f in self.logical_files:
+            if not f.metadata.has_all_required_elements():
+                return False
+        return True
+
+    @property
+    def can_be_public_or_discoverable(self):
+        """
+        Return True if the resource can be set to public or discoverable
+
+        This is True if
+
+        1. The resource has all metadata elements marked as required.
+        2. The resource has all files that are considered required.
+
+        and False otherwise
+        """
+        has_files = self.has_required_content_files
+        has_metadata = self.has_required_metadata
+        return has_files and has_metadata
+
+    def set_discoverable(self, value, user=None):
+        """
+        Set the discoverable flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the discoverable flag (self.raccess.discoverable) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control.
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `discoverable` to `False` also sets `public` to `False`
+        * setting `discoverable` to `True` does not change `public`
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
+        if value and not (has_metadata and has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be " + \
+                    "discoverable"
+                raise ValidationError(msg)
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be discoverable"
+                raise ValidationError(msg)
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be discoverable"
+                raise ValidationError(msg)
+
+        else:  # state change is allowed
+            self.raccess.discoverable = value
+            self.raccess.save()
+            if not value:  # not discoverable means also not public
+                self.set_public(value)  # This must be called, as it sets the AVU isPublic
+
+    def set_public(self, value, user=None):
+        """
+        set the public flag for a resource.
+
+        :param value: True or False
+        :param user: user requesting the change, or None for changes that are not user requests.
+        :raises ValidationError: if the current configuration cannot be set to desired state
+
+        This sets the public flag (self.raccess.public) for a resource based
+        upon application logic. It is part of AbstractResource because its result depends
+        upon resource state, and not just access control.
+
+        * This flag can only be set to True if the resource passes basic validations
+          `has_required_metata` and `has_required_content_files`
+        * setting `public` to `True` also sets `discoverable` to `True`
+        * setting `public` to `False` does not change `discoverable`
+        * setting `public` to either also modifies the AVU isPublic for the resource.
+
+        Thus, the setting public=True, discoverable=False is disallowed.
+
+        If `user` is None, access control is not checked.  This happens when a resource has been
+        invalidated outside of the control of a specific user. In this case, user can be None
+        """
+        # avoid import loop
+        from hs_core.views.utils import run_script_to_update_hyrax_input_files
+
+        # access control is separate from validation logic
+        if user is not None and not user.uaccess.can_change_resource_flags(self):
+            raise ValidationError("You don't have permission to change resource sharing status")
+
+        old_value = self.raccess.public  # is this a change?
+
+        # check that there is sufficient resource content
+        has_metadata = self.has_required_metadata
+        has_files = self.has_required_content_files
+        if value and not (has_metadata and has_files):
+
+            if not has_metadata and not has_files:
+                msg = "Resource does not have sufficient metadata and content files to be public"
+                raise ValidationError(msg)
+
+            elif not has_metadata:
+                msg = "Resource does not have sufficient metadata to be public"
+                raise ValidationError(msg)
+
+            elif not has_files:
+                msg = "Resource does not have sufficient content files to be public"
+                raise ValidationError(msg)
+
+        else:  # make valid state change
+            self.raccess.public = value
+            if value:  # can't be public without being discoverable
+                self.raccess.discoverable = value
+            self.raccess.save()
+
+            # public changed state: set isPublic metadata AVU accordingly
+            if value != old_value:
+                self.setAVU("isPublic", self.raccess.public)
+
+                # TODO: why does this only run when something becomes public?
+                # TODO: Should it be run when a NetcdfResource becomes private?
+                # run script to update hyrax input files when private netCDF resource changes state
+                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                    run_script_to_update_hyrax_input_files(self.short_id)
+
+    def update_public_and_discoverable(self):
+        """ update the settings of the public and discoverable flags for changes in metadata """
+        if self.raccess.discoverable and not self.can_be_public_or_discoverable:
+            self.set_discoverable(False)  # also sets Public
+
+    def set_quota_holder(self, setter, new_holder):
+        # set quota holder of the resource to new_holder who must be an owner
+        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        if __debug__:
+            assert(isinstance(setter, User))
+            assert(isinstance(new_holder, User))
+        if not setter.uaccess.owns_resource(self) or \
+                not new_holder.uaccess.owns_resource(self):
+            raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        self.setAVU("quotaUserName", new_holder.username)
+
+    def get_quota_holder(self):
+        # get quota holder of the resource
+        # return User instance of the quota holder for the resource or None if it does not exist
+        try:
+            uname = self.getAVU("quotaUserName")
+        except SessionException:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+        if uname:
+            return User.objects.filter(username=uname).first()
+        else:
+            # quotaUserName AVU does not exist, return None
+            return None
+
+    def setAVU(self, attribute, value):
+        """
+        set an AVU at the resource level
+
+        This avoids mistakes in setting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        if isinstance(value, bool):
+            value = str(value).lower()  # normalize boolean values to strings
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        istorage.setAVU(root_path, attribute, value)
+
+    def getAVU(self, attribute):
+        """
+        get an AVU for a resource
+
+        This avoids mistakes in getting AVUs by assuring that the appropriate root path
+        is alway used.
+        """
+        istorage = self.get_irods_storage()
+        root_path = self.root_path
+        value = istorage.getAVU(root_path, attribute)
+        if attribute == 'isPublic':
+            if value.lower() == 'true':
+                return True
+            else:
+                return False
+        else:
+            return value
+
     # TODO: Why isn't this a regular method? Why does it need to be a class method?
     # It would seem to me that one only creates a bag after a resource has been created,
     # so that this would be an instance method....
@@ -1450,7 +1687,6 @@ class AbstractResource(ResourcePermissionsMixin):
         res = BaseResource.objects.get(short_id=resource_id)
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
-
         return bag_url
 
     @classmethod
@@ -1638,13 +1874,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return ''.join(citation_str_lst)
 
-    @property
-    def can_be_public_or_discoverable(self):
-        if self.metadata.has_all_required_elements() and self.has_required_content_files():
-            return True
-
-        return False
-
     @classmethod
     def get_supported_upload_file_types(cls):
         """
@@ -1768,6 +1997,327 @@ class AbstractResource(ResourcePermissionsMixin):
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
+
+    def check_relations(self, stop_on_error=False, log_errors=True,
+                        echo_errors=False, return_errors=False):
+        """
+        Check for dangling relations due to deleted resource files
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        """
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
+        for r in self.metadata.relations.all():
+            if r.value.startswith('http://www.hydroshare.org/resource/'):
+                target = r.value[len('http://www.hydroshare.org/resource/'):].rstrip('/')
+                try:
+                    get_resource_by_shortkey(target, or_404=False)
+                except BaseResource.DoesNotExist:
+                    print("relation {} {} {} (this does not exist)"
+                          .format(self.short_id, r.type, target))
+
+    def fix_irods_user_paths(self, log_actions=True, echo_actions=False, return_actions=False):
+        """
+        Move iRODS user paths to the locations specified in settings
+
+        :param log_actions: whether to log actions to Django log
+        :param echo_actions: whether to print actions on stdout
+        :param return_actions: whether to collect actions in an array and return them.
+
+        This is a temporary fix to the user resources, which are currently stored like
+        federated resources but whose paths are dynamically determined. This function points
+        the paths for user-level resources to where they are stored in the current environment,
+        as specified in hydroshare/local_settings.py.
+
+        * This only does something if the environment is not a production environment.
+        * It is idempotent, in the sense that it can be repeated more than once without problems.
+        * It must be done once whenever the django database is reloaded.
+        * It does not check whether the paths exist afterward. This is done by check_irods_files.
+        """
+        logger = logging.getLogger(__name__)
+        actions = []
+        ecount = 0
+
+        # location of the user files in production
+        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
+                              '/hydroshareuserZone/home/localHydroProxy')
+        # where resource should be found; this is equal to the default path in production
+        userpath = '/' + os.path.join(
+            getattr(settings, 'HS_USER_IRODS_ZONE', 'hydroshareuserZone'),
+            'home',
+            getattr(settings, 'HS_LOCAL_PROXY_USER_IN_FED_ZONE', 'localHydroProxy'))
+
+        msg = "fix_irods_user_paths: user path is {}".format(userpath)
+        if echo_actions:
+            print(msg)
+        if log_actions:
+            logger.info(msg)
+        if return_actions:
+            actions.append(msg)
+
+        # only take action if you find a path that is a default user path and not in production
+        if self.resource_federation_path == defaultpath and userpath != defaultpath:
+            msg = "fix_irods_user_paths: mapping existing user federation path {} to {}"\
+                  .format(self.resource_federation_path, userpath)
+            if echo_actions:
+                print(msg)
+            if log_actions:
+                logger.info(msg)
+            if return_actions:
+                actions.append(msg)
+
+            self.resource_federation_path = userpath
+            self.save()
+            for f in self.files.all():
+                path = f.storage_path
+                if path.startswith(defaultpath):
+                    newpath = userpath + path[len(defaultpath):]
+                    f.set_storage_path(newpath, test_exists=False)  # does implicit save
+                    ecount += 1
+                    msg = "fix_irods_user_paths: rewriting {} to {}".format(path, newpath)
+                    if echo_actions:
+                        print(msg)
+                    if log_actions:
+                        logger.info(msg)
+                    if return_actions:
+                        actions.append(msg)
+                else:
+                    msg = ("fix_irods_user_paths: ERROR: malformed path {} in resource" +
+                           " {} should start with {}; cannot convert")\
+                        .format(path, self.short_id, defaultpath)
+                    if echo_actions:
+                        print(msg)
+                    if log_actions:
+                        logger.error(msg)
+                    if return_actions:
+                        actions.append(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "fix_irods_user_paths: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_actions:
+                logger.info(msg)
+            if echo_actions:
+                print(msg)
+            if return_actions:
+                actions.append(msg)
+
+        return actions, ecount  # empty unless return_actions=True
+
+    def check_irods_files(self, stop_on_error=False, log_errors=True,
+                          echo_errors=False, return_errors=False,
+                          sync_ispublic=False, clean_irods=False, clean_django=False):
+        """
+        Check whether files in self.files and on iRODS agree
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+        :param sync_ispublic: whether to repair deviations between ResourceAccess.public
+               and AVU isPublic
+        :param clean_irods: whether to delete files in iRODs that are not in Django
+        :param clean_django: whether to delete files in Django that are not in iRODs
+        """
+        from hs_core.hydroshare.resource import delete_resource_file
+
+        logger = logging.getLogger(__name__)
+        istorage = self.get_irods_storage()
+        errors = []
+        ecount = 0
+        defaultpath = getattr(settings, 'HS_USER_ZONE_PRODUCTION_PATH',
+                              '/hydroshareuserZone/home/localHydroProxy')
+
+        # skip federated resources if not configured to handle these
+        if self.is_federated and not settings.REMOTE_USE_IRODS:
+            msg = "check_irods_files: skipping check of federated resource {} in unfederated mode"\
+                .format(self.short_id)
+            if echo_errors:
+                print(msg)
+            if log_errors:
+                logger.info(msg)
+
+        # skip resources that do not exist in iRODS
+        elif not istorage.exists(self.root_path):
+                msg = "root path {} does not exist in iRODS".format(self.root_path)
+                ecount += 1
+                if echo_errors:
+                    print(msg)
+                if log_errors:
+                    logger.error(msg)
+                if return_errors:
+                    errors.append(msg)
+
+        else:
+            # Step 1: repair irods user file paths if necessary
+            if clean_irods or clean_django:
+                # fix user paths before check (required). This is an idempotent step.
+                if self.resource_federation_path == defaultpath:
+                    error2, ecount2 = self.fix_irods_user_paths(log_actions=log_errors,
+                                                                echo_actions=echo_errors,
+                                                                return_actions=False)
+                    errors.extend(error2)
+                    ecount += ecount2
+
+            # Step 2: does every file here refer to an existing file in iRODS?
+            for f in self.files.all():
+                if not istorage.exists(f.storage_path):
+                    ecount += 1
+                    msg = "check_irods_files: django file {} does not exist in iRODS"\
+                        .format(f.storage_path)
+                    if clean_django:
+                        delete_resource_file(self.short_id, f.short_path, self.creator,
+                                             delete_logical_file=False)
+                        msg += " (DELETED FROM DJANGO)"
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            # Step 3: does every iRODS file correspond to a record in files?
+            error2, ecount2 = self.__check_irods_directory(self.file_path, logger,
+                                                           stop_on_error=stop_on_error,
+                                                           log_errors=log_errors,
+                                                           echo_errors=echo_errors,
+                                                           return_errors=return_errors,
+                                                           clean=clean_irods)
+            errors.extend(error2)
+            ecount += ecount2
+
+            # Step 4: check whether the iRODS public flag agrees with Django
+            django_public = self.raccess.public
+            irods_public = None
+            try:
+                irods_public = self.getAVU('isPublic')
+            except SessionException as ex:
+                msg = "cannot read isPublic attribute of {}: {}"\
+                    .format(self.short_id, ex.stderr)
+                ecount += 1
+                if log_errors:
+                    logger.error(msg)
+                if echo_errors:
+                    print(msg)
+                if return_errors:
+                    errors.append(msg)
+                if stop_on_error:
+                    raise ValidationError(msg)
+
+            if irods_public is not None:
+                # convert to boolean
+                irods_public = str(irods_public).lower() == 'true'
+
+            if irods_public is None or irods_public != django_public:
+                ecount += 1
+                if not django_public:  # and irods_public
+                    msg = "check_irods_files: resource {} public in irods, private in Django"\
+                        .format(self.short_id)
+                    if sync_ispublic:
+                        try:
+                            self.setAVU('isPublic', 'false')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
+                else:  # django_public and not irods_public
+                    msg = "check_irods_files: resource {} private in irods, public in Django"\
+                        .format(self.short_id)
+                    if sync_ispublic:
+                        try:
+                            self.setAVU('isPublic', 'true')
+                            msg += " (REPAIRED IN IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT REPAIR: {})"\
+                                .format(ex.stderr)
+
+                if msg != '':
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+        if ecount > 0:  # print information about the affected resource (not really an error)
+            msg = "check_irods_files: affected resource {} type is {}, title is '{}'"\
+                .format(self.short_id, self.resource_type, self.metadata.title.value)
+            if log_errors:
+                logger.error(msg)
+            if echo_errors:
+                print(msg)
+            if return_errors:
+                errors.append(msg)
+
+        return errors, ecount  # empty unless return_errors=True
+
+    def __check_irods_directory(self, dir, logger,
+                                stop_on_error=False, log_errors=True,
+                                echo_errors=False, return_errors=False,
+                                clean=False):
+        """
+        list a directory and check files there for conformance with django ResourceFiles
+
+        :param stop_on_error: whether to raise a ValidationError exception on first error
+        :param log_errors: whether to log errors to Django log
+        :param echo_errors: whether to print errors on stdout
+        :param return_errors: whether to collect errors in an array and return them.
+
+        """
+        errors = []
+        ecount = 0
+        istorage = self.get_irods_storage()
+        try:
+            listing = istorage.listdir(dir)
+            for fname in listing[1]:  # files
+                fullpath = os.path.join(dir, fname)
+                found = False
+                for f in self.files.all():
+                    if f.storage_path == fullpath:
+                        found = True
+                        break
+                if not found:
+                    ecount += 1
+                    msg = "check_irods_files: file {} in iRODs does not exist in Django"\
+                        .format(fullpath)
+                    if clean:
+                        try:
+                            istorage.delete(fullpath)
+                            msg += " (DELETED FROM IRODS)"
+                        except SessionException as ex:
+                            msg += ": (CANNOT DELETE: {})"\
+                                .format(ex.stderr)
+                    if echo_errors:
+                        print(msg)
+                    if log_errors:
+                        logger.error(msg)
+                    if return_errors:
+                        errors.append(msg)
+                    if stop_on_error:
+                        raise ValidationError(msg)
+
+            for dname in listing[0]:  # directories
+                error2, ecount2 = self.__check_irods_directory(os.path.join(dir, dname), logger,
+                                                               stop_on_error=stop_on_error,
+                                                               echo_errors=echo_errors,
+                                                               log_errors=log_errors,
+                                                               return_errors=return_errors,
+                                                               clean=clean)
+                errors.extend(error2)
+                ecount += ecount2
+
+        except SessionException:
+            pass  # not an error not to have a file directory.
+            # Non-existence of files is checked elsewhere.
+
+        return errors, ecount  # empty unless return_errors=True
 
 
 def get_path(instance, filename, folder=None):
@@ -2012,12 +2562,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.size
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.size
 
     # TODO: write unit test
@@ -2027,12 +2577,12 @@ class ResourceFile(models.Model):
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return istorage.exists(self.fed_resource_file.name)
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return istorage.exists(self.resource_file.name)
 
     @property
@@ -2050,12 +2600,12 @@ class ResourceFile(models.Model):
         if resource.resource_federation_path:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
-                       self.resource_file.name == ''
+                    self.resource_file.name == ''
             return self.fed_resource_file.name
         else:
             if __debug__:
                 assert self.fed_resource_file.name is None or \
-                       self.fed_resource_file.name == ''
+                    self.fed_resource_file.name == ''
             return self.resource_file.name
 
     # ResourceFile API handles file operations
@@ -2337,6 +2887,34 @@ class ResourceFile(models.Model):
 
     @property
     def url(self):
+        """
+        return the URL of the file contained in this ResourceFile.
+
+        A GET of this URL simply returns the file. This URL is independent of federation.
+        PUT, POST, and DELETE are not supported.
+
+        This choice for a URL is dependent mainly upon conformance to DataOne URL standards
+        that are also conformant to the format in resourcemap.xml. This url does not contain
+        the site URL, which is prefixed when needed.
+
+        This is based upon the resourcemap_urls.py entry:
+
+            url(r'^resource/(?P<shortkey>[0-9a-f-]+)/data/contents/(?.+)/$',
+                views.file_download_url_mapper,
+                name='get_resource_file')
+
+        """
+        # must start with a / in order to concat with current_site_url.
+        return '/' + os.path.join('resource', self.resource.short_id,
+                                  'data', 'contents', self.short_path)
+
+    @property
+    def irods_url(self):
+        """
+        Return the iRODS URL of the file
+
+        This is a direct link and independent of the Django path in ResourceFile.url
+        """
         if self.resource_file:
             return self.resource_file.url
         elif self.fed_resource_file:
@@ -2419,7 +2997,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def is_federated(self):
         return self.resource_federation_path is not None and \
-               self.resource_federation_path != ''
+            self.resource_federation_path != ''
 
     # Paths relative to the resource
     @property
@@ -2507,8 +3085,8 @@ class BaseResource(Page, AbstractResource):
         # create the head sub element
         head = etree.SubElement(ROOT, 'head')
         etree.SubElement(head, 'doi_batch_id').text = self.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated).format(
-                                                                 "YYYYMMDDHHmmss")
+        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated)\
+            .format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
         etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
@@ -2733,6 +3311,16 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
+    def set_dirty(self, flag):
+        """
+        Subclasses that have the attribute to track whether metadata object is dirty
+        should override this method to allow setting that attribute
+
+        :param flag: a boolean value
+        :return:
+        """
+        pass
+
     def has_all_required_elements(self):
         # this method needs to be overriden by any subclass of this class
         # if they implement additional metadata elements that are required
@@ -2825,23 +3413,21 @@ class CoreMetaData(models.Model):
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
     def update(self, metadata):
+        """
+        :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
+        element_name must be in lowercase.
+        example of a dict in metadata list:
+            {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :return:
+        """
+
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
-                for dict_item in metadata:
-                    if element_name in dict_item:
-                        element = getattr(self, element_name, None)
-                        if element:
-                            self.update_element(element_id=element.id,
-                                                element_model_name=element_name,
-                                                **dict_item[element_name])
-                        else:
-                            self.create_element(element_model_name=element_name,
-                                                **dict_item[element_name])
-
+                self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
-                self._update_repeatable_element(element_name=element_name, metadata=metadata)
+                self.update_repeatable_element(element_name=element_name, metadata=metadata)
 
             # allow only updating or creating date element of type valid
             element_name = 'date'
@@ -3090,9 +3676,9 @@ class CoreMetaData(models.Model):
             element_name = md_element.term
 
         hsterms_newElem = etree.SubElement(root,
-                                           "{{{ns}}}{new_element}".format(
-                                            ns=self.NAMESPACES['hsterms'],
-                                            new_element=element_name))
+                                           "{{{ns}}}{new_element}"
+                                           .format(ns=self.NAMESPACES['hsterms'],
+                                                   new_element=element_name))
         hsterms_newElem_rdf_Desc = etree.SubElement(
             hsterms_newElem, "{{{ns}}}Description".format(ns=self.NAMESPACES['rdf']))
         for md_field in md_fields:
@@ -3210,11 +3796,76 @@ class CoreMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
-    def _update_repeatable_element(self, element_name, metadata):
-        # make a list of dict that are for a specific element as specified by element_name
+    def update_non_repeatable_element(self, element_name, metadata, property_name=None):
+        """
+        This helper function is to create/update a specific metadata element as specified by
+        *element_name*
+        :param element_name: metadata element class name (e.g. title)
+        :param metadata: a list of dicts - each dict has data to update/create a specific metadata
+        element (e.g. {'title': {'value': 'my resource title'}}
+        :param property_name: name of the property/attribute name in this class or its sub class
+        to access the metadata element instance of *metadata_element*. This is needed only when
+        the property/attribute name differs from the element class name
+
+            Example:
+            class ModelProgramMetaData(CoreMetaData):
+                _mpmetadata = GenericRelation(MpMetadata)
+
+                @property
+                def program(self):
+                    return self._mpmetadata.all().first()
+
+            For the above class to update the metadata element MpMetadata, this function needs to
+            be called with element_name='mpmetadata' and property_name='program'
+        :return:
+        """
+        for dict_item in metadata:
+            if element_name in dict_item:
+                if property_name is None:
+                    element = getattr(self, element_name, None)
+                else:
+                    element = getattr(self, property_name, None)
+                if element:
+                    self.update_element(element_id=element.id,
+                                        element_model_name=element_name,
+                                        **dict_item[element_name])
+                else:
+                    self.create_element(element_model_name=element_name,
+                                        **dict_item[element_name])
+
+    def update_repeatable_element(self, element_name, metadata, property_name=None):
+        """
+        Creates new metadata elements of type *element_name*. Any existing metadata elements of
+        matching type get deleted first.
+        :param element_name: class name of the metadata element (e.g. creator)
+        :param metadata: a list of dicts containing data for each of the metadata elements that
+        needs to be created/updated as part of bulk update
+        :param property_name: (Optional) the property/attribute name used in this instance of
+        CoreMetaData (or its sub class) to access all the objects of type *element_type*
+            Example:
+            class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
+                 _model_input = GenericRelation(ModelInput)
+
+                @property
+                def model_inputs(self):
+                    return self._model_input.all()
+
+            For the above class to update the metadata element ModelInput, this function needs to
+            be called with element_name='modelinput' and property_name='model_inputs'. If in the
+            above class instead of using the attribute name '_model_inputs' we have used
+            'modelinputs' then this function needs to be called with element_name='modelinput' and
+            no need to pass a value for the property_name.
+
+        :return:
+        """
+
         element_list = [element_dict for element_dict in metadata if element_name in element_dict]
         if len(element_list) > 0:
-            elements = getattr(self, element_name + 's')
+            if property_name is None:
+                elements = getattr(self, element_name + 's')
+            else:
+                elements = getattr(self, property_name)
+
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])

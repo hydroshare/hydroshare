@@ -5,8 +5,9 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 RUN pip install --upgrade pip && pip install \
   robot_detection \
   django-ipware \
+  django-test-without-migrations \
+  django-rest-swagger \
   jsonschema
-  
 ### End - HydroShare Development Image Additions ###
 
 USER root

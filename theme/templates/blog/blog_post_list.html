@@ -75,7 +75,7 @@
     {% if page %}
     {% block blog_post_list_pagecontent %}
     {% editable page.richtextpage.content %}
-    {{ page.richtextpage.content|richtext_filters|safe }}
+    {{ page.richtextpage.content|richtext_filters }}
     {% endeditable %}
     {% endblock %}
     {% endif %}
@@ -124,7 +124,7 @@
     <div class="{% cycle 'pull-right' 'pull-left' %}">
     {% if blog_post.featured_video %}
     <div class="video-blog img-blog">
-        {{ blog_post.featured_video|safe }}
+        {{ blog_post.featured_video }}
     </div>
     {% elif blog_post.featured_image %}
     <a href="{{ blog_post.get_absolute_url }}">
@@ -138,7 +138,7 @@
     <div class="blog">
         {% block blog_post_list_post_content %}
         {% editable blog_post.content %}
-        {{ blog_post.description_from_content|safe }}
+        {{ blog_post.description_from_content }}
         {% endeditable %}
         {% endblock %}   
     </div>

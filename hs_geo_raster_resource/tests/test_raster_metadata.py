@@ -616,6 +616,117 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         self.resRaster.delete()
 
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the RasterMetaData class
+
+        # update of resource specific metadata should fail when the resource does not have content
+        # files
+        self.assertEqual(self.resRaster.files.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 0)
+        band_data = {'original_band_name': 'bandinfo',
+                     'name': 'Band_1',
+                     'variableName': 'digital elevation',
+                     'variableUnit': 'meter',
+                     'method': 'this is method',
+                     'comment': 'this is comment',
+                     'maximumValue': 1000,
+                     'minimumValue': 0,
+                     'noDataValue': -9999
+                     }
+        metadata = []
+        metadata.append({'bandinformation': band_data})
+        with self.assertRaises(ValidationError):
+            self.resRaster.metadata.update(metadata)
+        self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 0)
+        del metadata[:]
+        # adding a valid tiff file should generate some core metadata and all extended metadata
+        files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
+        utils.resource_file_add_process(resource=self.resRaster, files=files, user=self.user,
+                                        extract_metadata=False)
+
+        # testing extended metadata element: band information
+        self.assertEqual(self.resRaster.metadata.bandInformations.count(), 1)
+        band_info = self.resRaster.metadata.bandInformations.first()
+        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
+        self.assertEqual(band_info.maximumValue, '3031.44311523')
+        self.assertEqual(band_info.minimumValue, '1358.33459473')
+        self.assertEqual(band_info.name, 'Band_1')
+        # updating of bandinformation using a name that does not exist (band-name) should fail
+        band_data = {'original_band_name': 'band-name',
+                     'name': 'Band_1',
+                     'variableName': 'digital elevation',
+                     'variableUnit': 'meter',
+                     'method': 'this is method',
+                     'comment': 'this is comment',
+                     'maximumValue': 1000,
+                     'minimumValue': 0,
+                     'noDataValue': -9999
+                     }
+
+        metadata.append({'bandinformation': band_data})
+        with self.assertRaises(ValidationError):
+            self.resRaster.metadata.update(metadata)
+        self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
+        # updating of bandinformation using a valid band lookup name (Band_1) should be successful
+        band_data = {'original_band_name': 'Band_1',
+                     'name': 'Band_2',
+                     'variableName': 'digital elevation',
+                     'variableUnit': 'meter',
+                     'method': 'this is method',
+                     'comment': 'this is comment',
+                     'maximumValue': 1000,
+                     'minimumValue': 0,
+                     'noDataValue': -9999
+                     }
+        del metadata[:]
+        metadata.append({'bandinformation': band_data})
+        self.resRaster.metadata.update(metadata)
+        self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
+        band_info = self.resRaster.metadata.bandInformations.first()
+        self.assertEqual(band_info.name, 'Band_2')
+        self.assertEqual(band_info.variableName, 'digital elevation')
+        self.assertEqual(band_info.variableUnit, 'meter')
+        self.assertEqual(band_info.method, 'this is method')
+        self.assertEqual(band_info.comment, 'this is comment')
+        self.assertEqual(band_info.maximumValue, '1000')
+        self.assertEqual(band_info.minimumValue, '0')
+        self.assertEqual(band_info.noDataValue, '-9999')
+
+        # test updating only one attribute of bandinformation
+        band_data = {'original_band_name': 'Band_2',
+                     'name': 'Band_1'
+                     }
+        del metadata[:]
+        metadata.append({'bandinformation': band_data})
+        self.resRaster.metadata.update(metadata)
+        self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
+        band_info = self.resRaster.metadata.bandInformations.first()
+        self.assertEqual(band_info.name, 'Band_1')
+
+        # test updating both core and resource specific metadata
+        # there should be 1 creator
+        self.assertEqual(self.resRaster.metadata.creators.all().count(), 1)
+        # there should be no contributor
+        self.assertEqual(self.resRaster.metadata.contributors.all().count(), 0)
+        del metadata[:]
+        metadata.append({'creator': {'name': 'creator one'}})
+        metadata.append({'creator': {'name': 'creator two'}})
+        metadata.append({'contributor': {'name': 'contributor one'}})
+        metadata.append({'contributor': {'name': 'contributor two'}})
+        band_data = {'original_band_name': 'Band_1',
+                     'name': 'Band_3'
+                     }
+        metadata.append({'bandinformation': band_data})
+        self.resRaster.metadata.update(metadata)
+        band_info = self.resRaster.metadata.bandInformations.first()
+        self.assertEqual(band_info.name, 'Band_3')
+        # there should be 2 creators
+        self.assertEqual(self.resRaster.metadata.creators.all().count(), 2)
+        # there should be 2 contributor
+        self.assertEqual(self.resRaster.metadata.contributors.all().count(), 2)
+
+        self.resRaster.delete()
+
     def test_get_xml(self):
         # add a valid raster file to generate metadata
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]

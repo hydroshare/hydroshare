@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 #TEST_RUNNER='django_nose.NoseTestSuiteRunner'
 TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
+TEST_WITHOUT_MIGRATIONS_COMMAND = 'django_nose.management.commands.test.Command'
 
 import os
 import importlib
@@ -255,6 +256,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 ################
 
 INSTALLED_APPS = (
+    'test_without_migrations',
     "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -268,6 +270,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
+    "rest_framework_swagger",
     "inplaceeditform",
     "django_nose",
     "django_irods",
@@ -311,8 +314,11 @@ INSTALLED_APPS = (
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",
+    "hs_rest_api",
     "security",
 )
+
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
 # All apps beginning with "django." or "mezzanine." are also excluded by default
@@ -327,6 +333,15 @@ APPS_TO_NOT_RUN = (
     'autocomplete_light',
     'widget_tweaks',
     'oauth2_provider',
+    'debug_toolbar',
+    'corsheaders',
+    'security',
+    'django_comments',
+    'haystack'
+    'test_without_migrations',
+    'robots',
+    'heartbeat',
+    'filebrowser_safe'
     # etc...
 )
 
@@ -686,3 +701,7 @@ SECURE_HSTS_SECONDS = 31536000
 # Cookie Stuff
 SESSION_COOKIE_SECURE = USE_SECURITY
 CSRF_COOKIE_SECURE = USE_SECURITY
+
+SWAGGER_SETTINGS = {
+    "VALIDATOR_URL": False
+}

@@ -126,6 +126,11 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
                 i, num_files)
             resource.save()
 
+        # This might make the resource unsuitable for public consumption
+        resource.update_public_and_discoverable()
+        # TODO: this is a bit of a lie because a different user requested the bag overwrite
+        utils.resource_modified(resource, resource.creator, overwrite_bag=False)
+
         # Call success callback
         resource.file_unpack_message = None
         resource.file_unpack_status = 'Done'
@@ -170,7 +175,7 @@ def create_bag_by_irods(resource_id):
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty == "true":
+    if metadata_dirty is None or metadata_dirty.lower() == "true":
         try:
             create_bag_files(res)
         except Exception as ex:
@@ -191,14 +196,14 @@ def create_bag_by_irods(resource_id):
             def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
         bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
         bagit_files = [
-                '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
-                                                       res_id=resource_id),
-                '{fed_path}/{res_id}/manifest-md5.txt'.format(
-                    fed_path=res.resource_federation_path, res_id=resource_id),
-                '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
-                    fed_path=res.resource_federation_path, res_id=resource_id),
-                '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
-                                                      res_id=resource_id)
+            '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
+                                                   res_id=resource_id),
+            '{fed_path}/{res_id}/manifest-md5.txt'.format(
+                fed_path=res.resource_federation_path, res_id=resource_id),
+            '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
+                fed_path=res.resource_federation_path, res_id=resource_id),
+            '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
+                                                  res_id=resource_id)
         ]
     else:
         is_exist = istorage.exists(resource_id)
@@ -211,10 +216,10 @@ def create_bag_by_irods(resource_id):
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.IRODS_DEFAULT_RESOURCE)
         bagit_files = [
-                '{res_id}/bagit.txt'.format(res_id=resource_id),
-                '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-                '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-                'bags/{res_id}.zip'.format(res_id=resource_id)
+            '{res_id}/bagit.txt'.format(res_id=resource_id),
+            '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
+            '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
+            'bags/{res_id}.zip'.format(res_id=resource_id)
         ]
 
     # only proceed when the resource is not deleted potentially by another request

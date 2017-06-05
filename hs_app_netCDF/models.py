@@ -1,18 +1,18 @@
 import json
 from lxml import etree
 
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
-from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong
+from dominate.tags import legend, table, tbody, tr, td, th, h4, div, strong, form, button, input
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension, \
-    add_metadata_element_to_xml
+    add_metadata_element_to_xml, get_resource_files_by_extension
 
 
 # Define original spatial coverage metadata info
@@ -341,6 +341,17 @@ class NetcdfResource(BaseResource):
                 break
         return hs_term_dict
 
+    def update_netcdf_file(self, user):
+        if not self.metadata.is_dirty:
+            return
+
+        nc_res_file = get_resource_files_by_extension(self, ".nc")
+        txt_res_file = get_resource_files_by_extension(self, ".txt")
+
+        from hs_file_types.models.netcdf import netcdf_file_update  # avoid recursive import
+        if nc_res_file and txt_res_file:
+            netcdf_file_update(self, nc_res_file[0], txt_res_file[0], user)
+
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True
@@ -403,10 +414,61 @@ class NetCDFMetaDataMixin(models.Model):
 
 # define the netcdf metadata
 class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
+    is_dirty = models.BooleanField(default=False)
 
     @property
     def resource(self):
         return NetcdfResource.objects.filter(object_id=self.id).first()
+
+    def set_dirty(self, flag):
+        """
+        Overriding the base class method
+        """
+
+        if self.resource.files.all():
+            self.is_dirty = flag
+            self.save()
+
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+        super(NetcdfMetaData, self).update(metadata)
+        missing_file_msg = "Resource specific metadata can't be updated when there is no " \
+                           "content files"
+        with transaction.atomic():
+            # update/create non-repeatable element (originalcoverage)
+            for dict_item in metadata:
+                if 'originalcoverage' in dict_item:
+                    if not self.resource.files.all():
+                        raise ValidationError(missing_file_msg)
+                    coverage_data = dict_item['originalcoverage']
+                    for key in ('datum', 'projection_string_type', 'projection_string_text'):
+                        coverage_data.pop(key, None)
+
+                    if 'projection' in coverage_data['value']:
+                        coverage_data['value'].pop('projection')
+                    if self.originalCoverage:
+                        self.update_element('originalcoverage', self.originalCoverage.id,
+                                            **coverage_data)
+                    else:
+                        self.create_element('originalcoverage', **coverage_data)
+                    break
+
+            # update repeatable element (variable)
+            for dict_item in metadata:
+                if 'variable' in dict_item:
+                    if not self.resource.files.all():
+                        raise ValidationError(missing_file_msg)
+                    variable_data = dict_item['variable']
+                    if 'name' not in variable_data:
+                        raise ValidationError("Invalid variable data")
+                    # find the matching (lookup by name) variable element to update
+                    var_element = self.variables.filter(name=variable_data['name']).first()
+                    if var_element is None:
+                        raise ValidationError("No matching variable element was found")
+                    for key in ('name', 'type', 'shape'):
+                        variable_data.pop(key, None)
+
+                    self.update_element('variable', var_element.id, **variable_data)
 
     def get_xml(self, pretty_print=True):
         from lxml import etree
@@ -428,3 +490,61 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             ori_cov_obj.add_to_xml_container(container)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
+
+    def update_element(self, element_model_name, element_id, **kwargs):
+        super(NetcdfMetaData, self).update_element(element_model_name, element_id, **kwargs)
+        if self.resource.files.all() and element_model_name in ['variable', 'title', 'description',
+                                                                'rights', 'source', 'coverage',
+                                                                'relation', 'creator',
+                                                                'contributor']:
+
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs.get('type', None) == 'cites':
+                self.is_dirty = True
+
+            self.save()
+
+    def create_element(self, element_model_name, **kwargs):
+        element = super(NetcdfMetaData, self).create_element(element_model_name, **kwargs)
+        if self.resource.files.all() and element_model_name in ['description', 'subject', 'source',
+                                                                'coverage', 'relation', 'creator',
+                                                                'contributor']:
+
+            if element_model_name != 'relation':
+                self.is_dirty = True
+            elif kwargs.get('type', None) == 'cites':
+                self.is_dirty = True
+
+            self.save()
+
+        return element
+
+    def delete_element(self, element_model_name, element_id):
+        super(NetcdfMetaData, self).delete_element(element_model_name, element_id)
+        if self.resource.files.all() and element_model_name in ['source', 'contributor', 'creator',
+                                                                'relation']:
+            self.is_dirty = True
+            self.save()
+
+    def get_update_netcdf_file_html_form(self):
+        form_action = "/hsapi/_internal/netcdf_update/{}/".\
+            format(self.resource.short_id)
+        style = "display:none;"
+        if self.is_dirty:
+            style = "margin-bottom:10px"
+        root_div = div(id="netcdf-file-update", cls="row", style=style)
+
+        with root_div:
+            with div(cls="col-sm-12"):
+                with div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    strong("NetCDF file needs to be synced with metadata changes.")
+
+                    input(id="metadata-dirty", type="hidden", value="{{ cm.metadata.is_dirty }}")
+                    with form(action=form_action, method="post", id="update-netcdf-file",):
+                        div('{% csrf_token %}')
+                        button("Update NetCDF File", type="submit", cls="btn btn-primary",
+                               id="id-update-netcdf-file",
+                               )
+
+        return root_div

@@ -50,6 +50,18 @@
     }
 })(jQuery);
 
+// Formats dates from "yyyy-mm-dd" to "mm/dd/yyyy"
+(function ($) {
+    $.fn.formatDate = function () {
+        var item = $(this);
+        var dateString = item.attr("data-date").trim().substr(0, 10).split("-");    // original format: yyyy-mm-dd (10 characters)
+        var formattedDate = dateString[1] + "/" + dateString[2] + "/" + dateString[0];
+        item.text(formattedDate);
+
+        return item;
+    }
+})(jQuery);
+
 
 $(document).ready(function () {
     // Search box toggle
@@ -149,4 +161,34 @@ $(document).ready(function () {
 	$(".btn-close-message").click(function() {
 		$(this).parent().parent().parent().parent().hide(400);
 	});
+
+	// Initialize tooltips
+	$('[data-toggle="tooltip"]').tooltip();
+
+    // Format the dates before displaying them
+    $(".format-date").each(function () {
+        $(this).formatDate();
+    });
+
+    $("#universalMessage a").on('click', function() {
+        $("#universalMessage").slideUp();
+        return false
+    })
 });
+
+function showUniversalMessage(type, message, timeout) {
+    return function(response,returnType,content) {
+        if(!message) message = content;
+        if(!type) type = returnType;
+        if(!timeout) timeout = 5000;
+
+        $("#universalMessage span").html(message);
+        $("#universalMessage").attr('class','');
+        $("#universalMessage").addClass(type);
+        $("#universalMessage").slideDown();
+
+        setTimeout(function() {
+            $("#universalMessage a").click()
+        }, timeout)
+    }
+}

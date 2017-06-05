@@ -63,8 +63,10 @@ class ResourceToListItemMixin(object):
 
 class ResourceFileToListItemMixin(object):
     def resourceFileToListItem(self, f):
-        url = hydroshare.utils.current_site_url() + f.resource_file.url
-        fsize = f.resource_file.size
+        site_url = hydroshare.utils.current_site_url()
+        url = site_url + f.url
+        fsize = f.size
+        # trailing slash confuses mime guesser
         mimetype = mimetypes.guess_type(url)
         if mimetype[0]:
             ftype = mimetype[0]
@@ -614,8 +616,10 @@ class AccessRulesUpdate(APIView):
 
         validated_request_data = access_rules_validator.validated_data
         res = get_resource_by_shortkey(pk)
-        res.raccess.public = validated_request_data['public']
-        res.raccess.save()
+        try:
+            res.set_public(validated_request_data['public'], request.user)
+        except ValidationError:
+            return Response(data={'resource_id': pk}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(data={'resource_id': pk}, status=status.HTTP_200_OK)
 
@@ -754,7 +758,7 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET')
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)

@@ -176,6 +176,12 @@
     {% endif %}
     {% endnevercache %}
 
+    <!-- Universal message box for AJAX requests -->
+    <div id="universalMessage">
+      <span>Hi, I'm an error.</span>
+      <a href="#" id="UMClose">x</a>
+    </div>
+
     {% block all_content %}
         <div class="main-container">
             {% block main %}{% endblock %}

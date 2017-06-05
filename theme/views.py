@@ -16,6 +16,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils.http import int_to_base36
+from django.template.response import TemplateResponse
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -24,6 +25,7 @@ from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
     default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
+from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
@@ -31,6 +33,7 @@ from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
+from theme.utils import get_quota_message
 
 from .forms import SignupForm
 
@@ -55,6 +58,7 @@ class UserProfileView(TemplateView):
         resources = u.uaccess.owned_resources
         # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
@@ -73,6 +77,7 @@ class UserProfileView(TemplateView):
         return {
             'profile_user': u,
             'resources': resources,
+            'quota_message': get_quota_message(u),
             'group_membership_requests': group_membership_requests,
         }
 
@@ -160,9 +165,9 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                 else:
                     send_verification_mail(request, new_user, "signup_verify")
                     info(request, _("A verification email has been sent with "
-                                    "a link for activating your account. If you "
-                                    "do not receive this email please check your "
-                                    "spam folder as sometimes the confirmation email "
+                                    "a link that must be clicked prior to your account "
+                                    "being activated. If you do not receive this email please "
+                                    "check your spam folder as sometimes the confirmation email "
                                     "gets flagged as spam. If you entered an incorrect "
                                     "email address, please request an account again."))
                 return redirect(next_url(request) or "/")
@@ -289,6 +294,28 @@ def send_verification_mail_for_email_update(request, user, new_email, verificati
     send_mail_template(subject, "email/%s" % verification_type,
                        settings.DEFAULT_FROM_EMAIL, new_email,
                        context=context)
+
+
+def login(request, template="accounts/account_login.html",
+          form_class=LoginForm, extra_context=None):
+    """
+    Login form - customized from Mezzanine login form so that quota warning message can be
+    displayed when the user is logged in.
+    """
+    form = form_class(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        login_msg = "Successfully logged in"
+        authenticated_user = form.save()
+        # Comment out for now to hide quota info message until backend script is hooked up
+        # add_msg = get_quota_message(authenticated_user)
+        # if add_msg:
+        #    login_msg += add_msg
+        info(request, _(login_msg))
+        auth_login(request, authenticated_user)
+        return login_redirect(request)
+    context = {"form": form, "title": _("Log in")}
+    context.update(extra_context or {})
+    return TemplateResponse(request, template, context)
 
 
 def email_verify(request, new_email, uidb36=None, token=None):
