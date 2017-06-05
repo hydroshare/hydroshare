@@ -6,6 +6,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+
 from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
@@ -35,6 +36,7 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1412,7 +1414,7 @@ class ResourceManager(PageManager):
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin):
+class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
     All hydroshare objects inherit from this mixin.  It defines things that must
     be present to be considered a hydroshare resource.  Additionally, all
@@ -1678,20 +1680,17 @@ class AbstractResource(ResourcePermissionsMixin):
     # so that this would be an instance method....
     @classmethod
     def bag_url(cls, resource_id):
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
-                                                           resource_id=resource_id,
-                                                           postfix=bagit_postfix)
         # type resolution is not relevant; grab base class instance.
         res = BaseResource.objects.get(short_id=resource_id)
+        bag_path = res.bag_path
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
         return bag_url
 
     @classmethod
     def scimeta_url(cls, resource_id):
-        scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
+        res = BaseResource.objects.get(short_id=resource_id)
+        scimeta_path = res.scimeta_path 
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
@@ -2398,7 +2397,7 @@ class FedStorage(IrodsStorage):
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
 
-class ResourceFile(models.Model):
+class ResourceFile(ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
@@ -3029,11 +3028,15 @@ class BaseResource(Page, AbstractResource):
         """
         return os.path.join(self.root_path, "data", "contents")
 
-    # These are currently classmethods
-    # @property
-    # def scimeta_path(self):
-    #     """ path to science metadata file (in iRODS) """
-    #     return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+    @property
+    def scimeta_path(self):
+        """ path to science metadata file (in iRODS) """
+        return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+
+    @property
+    def resmap_path(self):
+        """ path to resource map file (in iRODS) """
+        return os.path.join(self.root_path, "data", "resourcemap.xml")
 
     # @property
     # def sysmeta_path(self):
@@ -3047,10 +3050,13 @@ class BaseResource(Page, AbstractResource):
 
         Since this is a cache, it is stored in a different place than the resource files.
         """
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         if self.is_federated:
-            return os.path.join(self.resource_federation_path, "bags", self.short_id + '.zip')
+            return os.path.join(self.resource_federation_path, bagit_path, 
+                                self.short_id + '.' + bagit_postfix)
         else:
-            return os.path.join("bags", self.short_id + '.zip')
+            return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     # URIs relative to resource
     # these are independent of federation strategy
