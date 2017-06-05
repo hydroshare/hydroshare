@@ -27,7 +27,7 @@ class TimeSeries(object):
     """represents a one timeseries metadata"""
     def __init__(self, network_name, site_name, site_code, latitude, longitude, variable_name,
                  variable_code, method_description, method_link, sample_medium, url, service_type,
-                 reference_type, return_type, start_date, end_date):
+                 reference_type, return_type, start_date, end_date, value_count):
         self.network_name = network_name
         self.site_name = site_name
         self.site_code = site_code
@@ -44,6 +44,7 @@ class TimeSeries(object):
         self.return_type = return_type
         self.start_date = start_date
         self.end_date = end_date
+        self.value_count = value_count
 
     def get_html(self, site_number):
         """generates html code for viewing site related data"""
@@ -124,7 +125,7 @@ class TimeSeries(object):
         hs_service_type = etree.SubElement(rdf_description, '{%s}serviceType'
                                            % NAMESPACES['hsterms'])
         hs_service_type.text = self.reference_type
-        hs_wsdl_url = etree.SubElement(rdf_description, '{%s}wsdlURL' % NAMESPACES['hsterms'])
+        hs_wsdl_url = etree.SubElement(rdf_description, '{%s}url' % NAMESPACES['hsterms'])
         hs_wsdl_url.text = self.url
 
         # encode date (duration) data
@@ -279,16 +280,16 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def title(self):
         """get the title associated with this ref time series"""
         json_data_dict = self._json_to_dict()
-        if 'title' in json_data_dict['timeSeriesLayerResource']:
-            return json_data_dict['timeSeriesLayerResource']['title']
+        if 'title' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['title']
         return ''
 
     @property
     def abstract(self):
         """get the abstract associated with this ref time series"""
         json_data_dict = self._json_to_dict()
-        if 'abstract' in json_data_dict['timeSeriesLayerResource']:
-            return json_data_dict['timeSeriesLayerResource']['abstract']
+        if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['abstract']
         return ''
 
     @property
@@ -296,14 +297,14 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """get a list of all keywords associated with this ref time series"""
         # had to name this property as key_words since the parent class has a model field keywords
         json_data_dict = self._json_to_dict()
-        if 'keyWords' in json_data_dict['timeSeriesLayerResource']:
-            return json_data_dict['timeSeriesLayerResource']['keyWords']
+        if 'keyWords' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['keyWords']
         return []
 
     @property
     def serieses(self):
         json_data_dict = self._json_to_dict()
-        return json_data_dict['timeSeriesLayerResource']['referencedTimeSeries']
+        return json_data_dict['timeSeriesReferenceFile']['referencedTimeSeries']
 
     @property
     def time_serieses(self):
@@ -320,9 +321,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 method_des = series['method']['methodDescription']
                 method_link = series['method']['methodLink']
 
-            sample_medium = series.get('sampleMedium', "")
-
-            ts_series = TimeSeries(network_name=series['networkName'],
+            request_info = series['requestInfo']
+            ts_series = TimeSeries(network_name=request_info['networkName'],
                                    site_name=series['site']['siteName'],
                                    site_code=series['site']['siteCode'],
                                    latitude=series['site']['latitude'],
@@ -331,13 +331,14 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                                    variable_code=series['variable']['variableCode'],
                                    method_description=method_des,
                                    method_link=method_link,
-                                   sample_medium=sample_medium,
-                                   url=series['wsdlURL'],
-                                   service_type=series['serviceType'],
-                                   reference_type=series['refType'],
-                                   return_type=series['returnType'],
+                                   sample_medium=series['sampleMedium'],
+                                   url=request_info['url'],
+                                   service_type=request_info['serviceType'],
+                                   reference_type=request_info['refType'],
+                                   return_type=request_info['returnType'],
                                    start_date=st_date,
-                                   end_date=end_date
+                                   end_date=end_date,
+                                   value_count=series['valueCount']
                                    )
             ts_serieses.append(ts_series)
         return ts_serieses
@@ -390,10 +391,12 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         services = []
         urls = []
         for series in self.serieses:
-            if series['wsdlURL'] not in urls:
-                service = RefWebService(url=series['wsdlURL'], service_type=series['serviceType'],
-                                        reference_type=series['refType'],
-                                        return_type=series['returnType'])
+            request_info = series['requestInfo']
+            if request_info['url'] not in urls:
+                service = RefWebService(url=request_info['url'],
+                                        service_type=request_info['serviceType'],
+                                        reference_type=request_info['refType'],
+                                        return_type=request_info['returnType'])
                 services.append(service)
                 urls.append(service.url)
         return services
@@ -565,17 +568,17 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     @classmethod
     def get_allowed_ref_types(cls):
         """returns a list of refType controlled vocabulary terms"""
-        return ['WOF']
+        return ['WOF', "WPS", "DirectFile"]
 
     @classmethod
     def get_allowed_return_types(cls):
         """returns a list of returnType controlled vocabulary terms"""
-        return ['WaterML 1.1']
+        return ['WaterML 1.1', 'WaterML 2.0', 'TimeseriesML']
 
     @classmethod
     def get_allowed_service_types(cls):
         """returns a list of serviceType controlled vocabulary terms"""
-        return ['SOAP']
+        return ['SOAP', 'REST']
 
     @classmethod
     def create(cls):
@@ -787,17 +790,19 @@ def _validate_json_data(series_data):
         if start_date > end_date:
             raise Exception(err_msg.format("Invalid date values"))
 
+        # validate requestInfo object
+        request_info = series["requestInfo"]
         # validate refType
-        if series['refType'] not in RefTimeseriesLogicalFile.get_allowed_ref_types():
+        if request_info['refType'] not in RefTimeseriesLogicalFile.get_allowed_ref_types():
             raise ValidationError("Invalid value for refType")
         # validate returnType
-        if series['returnType'] not in RefTimeseriesLogicalFile.get_allowed_return_types():
+        if request_info['returnType'] not in RefTimeseriesLogicalFile.get_allowed_return_types():
             raise ValidationError("Invalid value for returnType")
         # validate serviceType
-        if series['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
+        if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
 
-        url = Request(series['wsdlURL'])
+        url = Request(request_info['url'])
         if url not in urls:
             urls.append(url)
             try:
@@ -856,16 +861,21 @@ TS_SCHEMA = {
                                 "methodLink": {"type": "string"},
                             },
                         },
-                        "netWorkName": {"type": "string"},
-                        "refType": {"type": "string"},
-                        "returnType": {"type": "string"},
-                        "serviceType": {"type": "string"},
-                        "wsdlURL": {"type": "string"},
+                        "requestInfo": {
+                            "type": "object",
+                            "properties": {
+                                "netWorkName": {"type": "string"},
+                                "refType": {"type": "string"},
+                                "returnType": {"type": "string"},
+                                "serviceType": {"type": "string"},
+                                "url": {"type": "string"},
+                            }
+                        },
                         "sampleMedium": {"type": "string"},
+                        "valueCount": {"type": "number"},
                     },
-                    "required": ["beginDate", "endDate", "netWorkName", "refType",
-                                 "returnType", "serviceType", "site", "siteCode", "wsdlURL",
-                                 "variable"]
+                    "required": ["beginDate", "endDate", "requestInfo",
+                                 "site", "siteCode", "sampleMedium", "valueCount", "variable"]
                 }
             },
             "required": ["fileVersion", "referencedTimeSeries"]
