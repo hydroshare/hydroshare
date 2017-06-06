@@ -619,7 +619,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     output_zip_size = istorage.size(output_zip_full_path)
 
-    link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
+    link_irods_file_to_django(resource, output_zip_full_path)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
