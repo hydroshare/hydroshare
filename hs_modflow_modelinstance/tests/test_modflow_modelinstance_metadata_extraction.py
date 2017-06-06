@@ -98,6 +98,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # specified_flux_boundary_packages: 'WEL'
 
         self.assertEqual(self.res.metadata.general_elements.modelSolver, 'SIP')
+        self.assertTrue(self.res.metadata.ground_water_flow.unsaturatedZonePackage)
         self.assertIn(
             'GHB',
             self.res.metadata.boundary_condition.get_head_dependent_flux_boundary_packages()
