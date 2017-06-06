@@ -3,17 +3,36 @@
 import logging
 import os
 import mimetypes
+import io
+from collections import deque
+import hashlib
 
 from dotenv import load_dotenv
 import flask
 from flask import g
+from flask.wrappers import Request
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist, DataObjectDoesNotExist
 
 from zipstream import ZipperChunkedIOStream, ZIP_DEFLATED
 
+
+def file_stream_factory(total_content_length, filename, content_type,
+                        content_length=None):
+    return io.BytesIO()
+
+
+class StreamingFilesRequest(Request):
+    def _get_file_stream(self, total_content_length, content_type,
+                         filename=None, content_length=None):
+        return file_stream_factory(total_content_length, content_type,
+                                   filename, content_length)
+
 app = flask.Flask(__name__)
+app.request_class = StreamingFilesRequest
+
 BUFFER_SIZE_MiB = .25
+
 BUFFER_SIZE_BYTES = int(round((2**20) * BUFFER_SIZE_MiB))
 RETRY_THRESHOLD = 5
 
@@ -40,6 +59,7 @@ def get_irods_session():
         }
         g._session = irods_session = iRODSSession(**session_kwargs)
         irods_session.base_path = os.getenv('IRODS_BASE_PATH')
+        irods_session.upload_path = os.getenv('IRODS_UPLOAD_PATH')
     return irods_session
 
 
@@ -99,8 +119,52 @@ def download(data_object_path):
         return flask.Response(fp, mimetype=mimetypes.guess_type(data_object_path)[0])
 
 
+def write_manifest(session, col_base_path, filename_hashes):
+    manifest_do = session.data_objects.create(col_base_path + 'manifest-md5.txt')
+    with manifest_do.open('w') as do_fp:
+        for md5, fn in filename_hashes:
+            line = '{} {}\n'.format(md5, fn)
+            do_fp.write(bytes(line, encoding='utf8'))
+
+
+@app.route('/upload_files/<path:data_object_path>/', methods=['POST'])
+@app.route('/upload_files/<path:data_object_path>', methods=['POST'])
+def add_file(data_object_path):
+    app.logger.info('Starting upload of {}'.format(data_object_path))
+    session = get_irods_session()
+
+    fake_short_key = hashlib.md5(os.urandom(1024)).hexdigest()
+    collection_path = session.upload_path + fake_short_key
+    session.collections.create(collection_path)
+    collection_path = collection_path + '/'
+    data_path = collection_path + 'data'
+    session.collections.create(data_path)
+    data_path = data_path + '/'
+
+    hashes = []
+    for fn in flask.request.files:
+        md5_hash = hashlib.md5()
+        stream = flask.request.files[fn].stream
+        data_object = session.data_objects.create(data_path + fn)
+        with data_object.open('w') as do_fp:
+            chunked_buf = deque()
+            while True:
+                chunk = stream.read(10)
+                if not chunk:
+                    break
+                chunked_buf.append(chunk)
+                do_fp.write(chunk)
+                md5_hash.update(chunk)
+        hashes.append((fn, md5_hash.hexdigest()))
+
+    write_manifest(session, collection_path, hashes)
+    response = 'Wrote files and updated manifest\n'
+    response += repr(hashes)
+    return flask.Response(response)
+
+
 if __name__ == '__main__':
     level = logging.DEBUG
     app.logger.setLevel(logging.DEBUG)
     with app.app_context():
-        app.run(host='0.0.0.0', port=5000)
+        app.run(host='0.0.0.0', port=5000, debug=True)
