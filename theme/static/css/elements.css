@@ -832,8 +832,7 @@ a.thumbnail:focus img {
   width: 300px;
   text-align: center;
   height: auto;
-  padding: 15px;
-  font-weight: bold;
+  padding: 20px 15px 15px 15px;
   color: white;
   box-shadow: 2px 2px 5px #888;
   display: none;
@@ -845,14 +844,14 @@ a.thumbnail:focus img {
 }
 
 #universalMessage.warn {
-  background: darkorange;
+  background: #cc9b57;
 }
 
 #universalMessage.success {
   background: darkgreen;
 }
 
-#universalMessage a {
+#universalMessage a.um_close {
   top: 5px;
   right: 5px;
   position: absolute;
