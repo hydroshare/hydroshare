@@ -180,8 +180,15 @@ $(document).ready(function () {
         success: function(user) {
             if(!user.title || !user.organization) {
                 var message = 'Your profile is nearly complete. ';
-                message += 'Please fill in your <strong>title</strong> and <strong>organization</strong>';
-                message += 'on the <a href="/user/'+user.id+'/">user profile</a> page'
+                message += 'Please fill in the ';
+                if(!user.title && !user.organization) {
+                    message += '<strong>title</strong> and <strong>organization</strong>';
+                } else if (!user.title) {
+                    message += '<strong>title</strong>';
+                } else if (!user.organization) {
+                    message += '<strong>organization</strong>';
+                }
+                message += ' field on the <a href="/user/'+user.id+'/">user profile</a> page';
                 showUniversalMessage("warn", message, 10000)();
             }
         },
