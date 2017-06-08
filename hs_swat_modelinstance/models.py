@@ -149,7 +149,7 @@ class SimulationType(AbstractMetaDataElement):
     @classmethod
     def _validate_simulation_type(cls, swat_simulation_type):
         types = [c[0] for c in cls.type_choices]
-        if swat_simulation_type!='' and swat_simulation_type not in types:
+        if swat_simulation_type != '' and swat_simulation_type not in types:
             raise ValidationError('Invalid swat_model_simulation_type:{} not in {}'.format(
                 swat_simulation_type, types)
             )
