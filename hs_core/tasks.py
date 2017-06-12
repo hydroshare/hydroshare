@@ -1,3 +1,5 @@
+"""Define celery tasks for hs_core app."""
+
 from __future__ import absolute_import
 
 import os
@@ -37,6 +39,7 @@ logger = logging.getLogger('django')
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def check_doi_activation():
+    """Check DOI activation on failed and pending resources and send email."""
     msg_lst = []
     # retrieve all published resources with failed metadata deposition with CrossRef if any and
     # retry metadata deposition
@@ -107,6 +110,7 @@ def check_doi_activation():
 
 @shared_task
 def add_zip_file_contents_to_resource(pk, zip_file_path):
+    """Add zip file to existing resource and remove tmp zip file."""
     zfile = None
     resource = None
     try:
@@ -158,9 +162,9 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 @shared_task
 def create_bag_by_irods(resource_id):
-    """
-    create a resource bag on iRODS side by running the bagit rule followed by ibun zipping
-    operation. This function runs as a celery task, invoked asynchronously so that it does not
+    """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
+
+    This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
