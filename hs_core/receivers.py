@@ -1,8 +1,4 @@
-"""Signal receivers for the hs_core app.
-
-Note: this module has been imported in the models.py in order to receive signals
-see the end of the models.py for the import of this module
-"""
+"""Signal receivers for the hs_core app."""
 
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update

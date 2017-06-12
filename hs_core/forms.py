@@ -245,7 +245,7 @@ class CreatorForm(PartyForm):
 
 
 class PartyValidationForm(forms.Form):
-    """Render validated form for Party models."""
+    """Validate form for Party models."""
 
     description = forms.URLField(required=False, validators=[validate_user_url])
     name = forms.CharField(required=False, max_length=100)
@@ -277,13 +277,13 @@ class PartyValidationForm(forms.Form):
 
 
 class CreatorValidationForm(PartyValidationForm):
-    """Render validated form for Creator models. Extends PartyValidationForm."""
+    """Validate form for Creator models. Extends PartyValidationForm."""
 
     order = forms.IntegerField(required=False)
 
 
 class ContributorValidationForm(PartyValidationForm):
-    """Render validated form for Contributor models. Extends PartyValidationForm."""
+    """Validate form for Contributor models. Extends PartyValidationForm."""
 
     pass
 
@@ -601,10 +601,10 @@ class FundingAgencyFormSetHelper(FormHelper):
 
 
 class FundingAgencyForm(ModelForm):
-    """Render Identifier model form with appropriate attributes."""
+    """Render FundingAgency model form with appropriate attributes."""
 
     def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
-        """Render Identifier model form with appropriate attributes."""
+        """Render FundingAgency model form with appropriate attributes."""
         super(FundingAgencyForm, self).__init__(*args, **kwargs)
         self.helper = FundingAgencyFormSetHelper()
         self.number = 0
@@ -741,7 +741,7 @@ class SubjectsFormHelper(BaseFormHelper):
 
 
 class SubjectsForm(forms.Form):
-    """Render Identifier model form with appropriate attributes."""
+    """Render Subjects model form with appropriate attributes."""
 
     value = forms.CharField(max_length=500,
                             label='',
@@ -749,7 +749,7 @@ class SubjectsForm(forms.Form):
                             help_text='Enter each keyword separated by a comma.')
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        """Render Identifier model form with appropriate attributes."""
+        """Render Subjects model form with appropriate attributes."""
         super(SubjectsForm, self).__init__(*args, **kwargs)
         self.helper = SubjectsFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='subject')
@@ -789,7 +789,7 @@ class AbstractForm(ModelForm):
     """Render Abstract model form with appropriate attributes."""
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        """Render Identifier model form with appropriate attributes."""
+        """Render Abstract model form with appropriate attributes."""
         super(AbstractForm, self).__init__(*args, **kwargs)
         self.helper = AbstractFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='description')
@@ -813,7 +813,7 @@ class AbstractValidationForm(forms.Form):
 
 
 class RightsValidationForm(forms.Form):
-    """Validate Rigths form with statement and URL field."""
+    """Validate Rights form with statement and URL field."""
 
     statement = forms.CharField(required=False)
     url = forms.URLField(required=False, max_length=500)
