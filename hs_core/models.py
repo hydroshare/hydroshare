@@ -38,6 +38,7 @@ from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
+
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1667,8 +1668,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         istorage = self.get_irods_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
-        if attribute == 'isPublic':
-            if value.lower() == 'true':
+        if attribute == 'isPublic' or attribute == 'bag_modified' or attribute == 'metadata_dirty':
+            if value is None or value.lower() == 'true':
                 return True
             else:
                 return False
@@ -1690,7 +1691,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     @classmethod
     def scimeta_url(cls, resource_id):
         res = BaseResource.objects.get(short_id=resource_id)
-        scimeta_path = res.scimeta_path 
+        scimeta_path = res.scimeta_path
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
@@ -2375,7 +2376,7 @@ def get_resource_file_path(resource, filename, folder=None):
         return os.path.join(resource.file_path, filename)
 
 
-def _path_is_allowed(path):
+def path_is_allowed(path):
     """ paths containing '/../' are suspicious """
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
@@ -2819,7 +2820,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """ create a folder for a resource """
         # avoid import loop
         from hs_core.views.utils import create_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
@@ -2829,7 +2830,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """ remove a folder for a resource """
         # avoid import loop
         from hs_core.views.utils import remove_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
@@ -3053,7 +3054,7 @@ class BaseResource(Page, AbstractResource):
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         if self.is_federated:
-            return os.path.join(self.resource_federation_path, bagit_path, 
+            return os.path.join(self.resource_federation_path, bagit_path,
                                 self.short_id + '.' + bagit_postfix)
         else:
             return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
