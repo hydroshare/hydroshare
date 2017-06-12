@@ -184,7 +184,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
-        feature_metadata = GeoFeatureFileMetaData.objects.create()
+        feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=feature_metadata)
 
     @property

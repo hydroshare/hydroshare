@@ -224,7 +224,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
-        raster_metadata = GeoRasterFileMetaData.objects.create()
+        raster_metadata = GeoRasterFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=raster_metadata)
 
     @property

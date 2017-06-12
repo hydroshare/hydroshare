@@ -87,9 +87,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         logical_file = res_file.logical_file
         self.assertTrue(isinstance(logical_file.metadata, GenericFileMetaData))
         self.assertTrue(isinstance(logical_file, GenericLogicalFile))
-        # TODO: not sure why there would be file level keywords at this point - commenting to
-        # avoid test failure
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        # no keywords at this point for file
+        self.assertEqual(logical_file.metadata.keywords, [])
 
         # set the zip file to GeoFeatureFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
@@ -98,11 +97,9 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         assert_geofeature_file_type_metadata(self, expected_folder_name)
 
         # there should not be any file level keywords
-        # TODO: not sure why there would be file level keywords - commented out as the test is
-        # failing
-        # res_file = self.composite_resource.files.first()
-        # logical_file = res_file.logical_file
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point
@@ -132,6 +129,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.count(), 15)
         # check that there is no GenericLogicalFile object
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # check that there is no GenericFileMetaData object
+        self.assertEqual(GenericFileMetaData.objects.count(), 0)
         # check that there is one GeoFeatureLogicalFile object
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
         logical_file = GeoFeatureLogicalFile.objects.first()
@@ -257,10 +256,9 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
         self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
         self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
-        # TODO: not sure why there would be file level keywords - commented out as the test is
-        # failing
+
         # there should not be any file level keywords
-        # self.assertEqual(logical_file.metadata.keywords, [])
+        self.assertEqual(logical_file.metadata.keywords, [])
 
         self.composite_resource.delete()
         # there should be no GeoFeatureLogicalFile object at this point

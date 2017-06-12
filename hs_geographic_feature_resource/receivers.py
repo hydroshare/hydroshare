@@ -42,7 +42,7 @@ def post_create_resource(sender, **kwargs):
             files_failed_validation.append(res_file.file_name)
             res_file.delete()
             err_msg = base_err_msg.format(reason="single file upload must be a zip file",
-                                          files=", ".join(files_failed_validation))
+                                          files=files_failed_validation[0])
             raise ValidationError(err_msg)
     elif not resource.has_required_content_files():
         for f in resource.files.all():

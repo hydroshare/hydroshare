@@ -31,10 +31,10 @@ class GeoFeatureFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCas
         self.zip_file_name = 'states_required_files.zip'
         self.zip_file = base_file_path.format(self.zip_file_name)
 
-        # transfer this valid tif file to user zone space for testing
-        # only need to test that tif file stored in iRODS user zone space can be used to create a
-        # composite resource and metadata can be extracted when the file type is set to raster file
-        # type.
+        # transfer this valid zip file to user zone space for testing
+        # only need to test that the zip file stored in iRODS user zone space can be used to
+        # create a composite resource and metadata can be extracted when the file type is set to
+        # geo feature file type.
         # Other detailed tests don't need to be retested for irods user zone space scenario since
         # as long as the tif file in iRODS user zone space can be read with metadata extracted
         # correctly, other functionalities are done with the same common functions regardless of

@@ -290,7 +290,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
-        netcdf_metadata = NetCDFFileMetaData.objects.create()
+        netcdf_metadata = NetCDFFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=netcdf_metadata)
 
     @property
