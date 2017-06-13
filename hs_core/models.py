@@ -3054,7 +3054,7 @@ class ResourceFile(models.Model):
 
     @property
     def can_set_file_type(self):
-        """Allow user to set file type on tif, zip and nc."""
+        """Check if file type can be set for this resource file instance."""
         return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
                                                               self.logical_file_type_name ==
                                                               "GenericLogicalFile")
@@ -3123,10 +3123,10 @@ class PublicResourceManager(models.Manager):
 
 
 class DiscoverableResourceManager(models.Manager):
-    """Extend Django model Manager to filter for public and discoverable resources."""
+    """Extend Django model Manager to filter for public or discoverable resources."""
 
     def get_queryset(self):
-        """Extend Django model Manager to filter for public and discoverable resources."""
+        """Extend Django model Manager to filter for public or discoverable resources."""
         return super(DiscoverableResourceManager, self).get_queryset().filter(
             Q(raccess__discoverable=True) |
             Q(raccess__public=True))
@@ -3179,7 +3179,7 @@ class BaseResource(Page, AbstractResource):
         return AbstractResource.can_view(self, request)
 
     def get_irods_storage(self):
-        """Return either IrodsStorage and FedStorage."""
+        """Return either IrodsStorage or FedStorage."""
         if self.resource_federation_path:
             return FedStorage()
         else:
@@ -3967,7 +3967,7 @@ class CoreMetaData(models.Model):
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
-        """Create generic metadata element."""
+        """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)

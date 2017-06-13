@@ -46,7 +46,7 @@ class MockIRODSTestCaseMixin(object):
 
 
 class TestCaseCommonUtilities(object):
-    """Enable commun utilities for iRODS testing."""
+    """Enable common utilities for iRODS testing."""
 
     def is_federated_irods_available(self):
         """Check if federated iRODS is available."""
@@ -266,7 +266,7 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(updated_res_file_names[0], 'new_' + file_name_list[2])
 
     def raster_metadata_extraction(self):
-        """Test Metadata extraction.
+        """Test raster metadata extraction.
 
         This is a common test utility function to be called by both regular raster metadata
         extraction testing and federated zone raster metadata extraction testing.

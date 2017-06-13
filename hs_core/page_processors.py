@@ -21,7 +21,7 @@ from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
-    """Return landing page context."""
+    """Return resource landing page context."""
     edit_resource = check_resource_mode(request)
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)

@@ -317,7 +317,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
     def prepare_formats(self, obj):
-        """Return metadata formats if metadat exists, otherwise return empty array."""
+        """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [format.value for format in obj.metadata.formats.all()]
         else:
@@ -364,7 +364,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return obj.comments_count
 
     def prepare_owners_logins(self, obj):
-        """Return list of usernames that have access to resource."""
+        """Return list of usernames that have ownership access to resource."""
         if hasattr(obj, 'raccess'):
             return [owner.username for owner in obj.raccess.owners.all()]
         else:
