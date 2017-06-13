@@ -99,11 +99,11 @@ class ResourcePermissionsMixin(Ownable):
         return s.PERMISSIONS_DB
 
     def can_add(self, request):
-        """Pass through can_change to determine if user can_add resources or resource files."""
+        """Pass through can_change to determine if user can make changes to a resource."""
         return self.can_change(request)
 
     def can_delete(self, request):
-        """Use utils.authorize method to determine if user can delete."""
+        """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -111,7 +111,7 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
     def can_change(self, request):
-        """Use utils.authorize method to determine if user can change."""
+        """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -119,7 +119,7 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
     def can_view(self, request):
-        """Use utils.authorize method to determine if user can view."""
+        """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -128,11 +128,7 @@ class ResourcePermissionsMixin(Ownable):
 
 
 def page_permissions_page_processor(request, page):
-    """Return a dict describing permissions for current user.
-
-    This should be used as the page processor for anything with pagepermissionsmixin
-    page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
-    """
+    """Return a dict describing permissions for current user."""
     from hs_access_control.models import PrivilegeCodes
 
     cm = page.get_content_model()
@@ -1062,7 +1058,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        """Define custom create method for Language model.
+        """Define custom create method for Coverage model.
 
         data for the coverage value attribute must be provided as a dictionary
         Note that kwargs['_value'] is a JSON-serialized unicode string dictionary
@@ -1132,7 +1128,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        """Define custom create method for Language model.
+        """Define custom create method for Coverage model.
 
         data for the coverage value attribute must be provided as a dictionary
         """
@@ -1179,7 +1175,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        """Define custom remove method for Language model."""
+        """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_to_xml_container(self, container):
