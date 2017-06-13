@@ -43,11 +43,14 @@ class Command(BaseCommand):
                 print("SETTING GENERIC LOGICAL FILE FOR FILES IN RESOURCE {}".format(rid))
                 for res_file in resource.files.all():
                     if not res_file.has_logical_file:
-                        print("Logical file missing for file {}".format(res_file.file_name))
+                        print("Logical file missing for file {}".format(res_file.short_path))
                 resource.set_default_logical_file()
 
         else:  # check all composite resources
             print("SETTING GENERIC LOGICAL FILE FOR FILES IN ALL COMPOSITE RESOURCES")
             for r in BaseResource.objects.filter(resource_type="CompositeResource"):
                 print("SETTING GENERIC LOGICAL FILE FOR FILES IN RESOURCE {}".format(r.short_id))
+                for res_file in r.files.all():
+                    if not res_file.has_logical_file:
+                        print("Logical file missing for file {}".format(res_file.short_path))
                 r.set_default_logical_file()
