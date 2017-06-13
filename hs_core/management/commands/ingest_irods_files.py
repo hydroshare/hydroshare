@@ -3,8 +3,8 @@
 """
 Check synchronization between iRODS and Django
 
-This checks that every file in IRODS corresponds to a ResourceFile in Django. 
-If a file in iRODS is not present in Django, it attempts to register that file in Django. 
+This checks that every file in IRODS corresponds to a ResourceFile in Django.
+If a file in iRODS is not present in Django, it attempts to register that file in Django.
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.

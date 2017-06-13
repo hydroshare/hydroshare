@@ -5,10 +5,10 @@ Check Django metadata
 
 This checks that:
 
-1. Every resource has a metadata entry. 
-2. Every metadata entry has a title. 
+1. Every resource has a metadata entry.
+2. Every metadata entry has a title.
 
-More tests are left for later. 
+More tests are left for later.
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.
