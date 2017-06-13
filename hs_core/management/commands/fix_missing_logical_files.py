@@ -41,6 +41,9 @@ class Command(BaseCommand):
                     continue
 
                 print("SETTING GENERIC LOGICAL FILE FOR FILES IN RESOURCE {}".format(rid))
+                for res_file in resource.files.all():
+                    if not res_file.has_logical_file:
+                        print("Logical file missing for file {}".format(res_file.file_name))
                 resource.set_default_logical_file()
 
         else:  # check all composite resources
