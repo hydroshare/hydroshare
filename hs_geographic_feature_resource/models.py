@@ -13,31 +13,6 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, \
 from hs_core.hydroshare.utils import add_metadata_element_to_xml
 
 
-# TODO: Pabitra - this model is not being used anymore. however, deleting this class
-# causes the migration to hang during the build process
-class OriginalFileInfo(AbstractMetaDataElement):
-
-    term = 'OriginalFileInfo'
-
-    fileTypeEnum = (
-                    (None, 'Unknown'),
-                    ("SHP", "ESRI Shapefiles"),
-                    ("ZSHP", "Zipped ESRI Shapefiles"),
-                    ("KML", "KML"),
-                    ("KMZ", "KMZ"),
-                    ("GML", "GML"),
-                    ("SQLITE", "SQLite")
-                   )
-    fileType = models.TextField(max_length=128, choices=fileTypeEnum, default=None)
-    baseFilename = models.TextField(max_length=256, null=False, blank=False)
-    fileCount = models.IntegerField(null=False, blank=False, default=0)
-    filenameString = models.TextField(null=True, blank=True)
-
-    class Meta:
-        # OriginalFileInfo element is not repeatable
-        unique_together = ("content_type", "object_id")
-
-
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
