@@ -3,11 +3,8 @@
 """
 Check synchronization between iRODS and Django
 
-This checks that:
-
-1. every ResourceFile corresponds to an iRODS file
-2. every iRODS file in {short_id}/data/contents corresponds to a ResourceFile
-3. every iRODS directory {short_id} corresponds to a Django resource
+This checks that every file in IRODS corresponds to a ResourceFile in Django. 
+If a file in iRODS is not present in Django, it attempts to register that file in Django. 
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.
@@ -124,9 +121,9 @@ def __ingest_irods_directory(self,
             errors.extend(error2)
             ecount += ecount2
 
-    except SessionException:
-        pass  # not an error not to have a file directory.
-        # Non-existence of files is checked elsewhere.
+    except SessionException as se:
+        print("iRODs error: {}".format(se.stderr))
+        logger.error("iRODs error: {}".format(se.stderr))
 
     return errors, ecount  # empty unless return_errors=True
 
@@ -158,14 +155,15 @@ class Command(BaseCommand):
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
-                    next
+                    continue
 
                 if resource.resource_type != 'CompositeResource' and \
                    resource.resource_type != 'GenericResource':
                     print("resource {} has type {}: skipping".format(resource.short_id,
                                                                      resource.resource_type))
                 else:
-                    print("LOOKING FOR NEW IRODS FILES FOR RESOURCE {}".format(rid))
+                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
+                          .format(rid, str(resource.files.all().count())))
                     ingest_irods_files(resource,
                                        logger,
                                        stop_on_error=False,
@@ -174,11 +172,11 @@ class Command(BaseCommand):
                                        return_errors=False)
 
         else:  # check all resources
-            print("LOOKING FOR NEW IRODS FILES FOR ALL RESOURCES")
+            print("LOOKING FOR UNREGISTERED IRODS FILES FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
                 if r.resource_type == 'CompositeResource' or \
                    r.resource_type == 'GenericResource':
-                    print("ingesting irods files for {} (current files {})"
+                    print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
                     ingest_irods_files(r,
                                        logger,

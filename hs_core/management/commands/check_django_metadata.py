@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Check synchronization between iRODS and Django
+Check Django metadata
 
 This checks that:
 
-1. every ResourceFile corresponds to an iRODS file
-2. every iRODS file in {short_id}/data/contents corresponds to a ResourceFile
-3. every iRODS directory {short_id} corresponds to a Django resource
+1. Every resource has a metadata entry. 
+2. Every metadata entry has a title. 
+
+More tests are left for later. 
 
 * By default, prints errors on stdout.
 * Optional argument --log instead logs output to system log.
@@ -109,7 +110,7 @@ class Command(BaseCommand):
                                       return_errors=False)
 
         else:  # check all resources
-            print("LOOKING FOR DJANGO ERRORS FOR ALL RESOURCES")
+            print("LOOKING FOR METADATA ERRORS FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
                 check_django_metadata(r, stop_on_error=False,
                                       echo_errors=not options['log'],  # Don't both log and echo
