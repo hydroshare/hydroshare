@@ -1763,12 +1763,16 @@ class AbstractResource(ResourcePermissionsMixin):
 
         setter is the requesting user to transfer quota holder and setter must also be an owner
         """
+        from hs_core.hydroshare.utils import validate_user_quota
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        # QuotaException will be raised if new_holder does not have enough quota to hold this
+        # new resource, in which case, set_quota_holder to the new user fails
+        validate_user_quota(new_holder, self.size)
         self.setAVU("quotaUserName", new_holder.username)
 
     def get_quota_holder(self):
