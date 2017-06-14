@@ -389,7 +389,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_geometry_type(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                geometry_info = obj.metadata.geometryinformation.all().first()
+                geometry_info = obj.metadata.geometryinformation
                 if geometry_info is not None:
                     return geometry_info.geometryType
                 else:
@@ -402,7 +402,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_name(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldName
                 else:
@@ -415,7 +415,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_type(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldType
                 else:
@@ -428,7 +428,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_field_type_code(self, obj):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldTypeCode
                 else:
