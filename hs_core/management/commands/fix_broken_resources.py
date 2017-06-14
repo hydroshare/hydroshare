@@ -83,6 +83,7 @@ DELETE = [
     '8fd42ad1d86f495a914e7ce9be21bbce'
 ]
 
+
 class Command(BaseCommand):
     help = "Check synchronization between iRODS and Django."
 
@@ -101,7 +102,7 @@ class Command(BaseCommand):
             # Do a redundant check to ensure that cleaning worked.
             r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False)
 
-        for rid in DELETE: # delete whole resource for unmanageable resources
+        for rid in DELETE:  # delete whole resource for unmanageable resources
             try:
                 resource = BaseResource.objects.get(short_id=rid)
                 print("DELETING {} FROM DJANGO ({} files)"
@@ -109,7 +110,6 @@ class Command(BaseCommand):
                 delete_resource(rid)
             except BaseResource.DoesNotExist:
                 print("RESOURCE {} NOT FOUND IN DJANGO".format(rid))
-
 
         print("REPAIR BROKEN NETCDF RESOURCES")
 
