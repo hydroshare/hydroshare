@@ -102,6 +102,7 @@ class Command(BaseCommand):
                 except BaseResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
+                    continue
 
                 print("LOOKING FOR METADATA ERRORS FOR RESOURCE {}".format(rid))
                 check_django_metadata(resource, stop_on_error=False,

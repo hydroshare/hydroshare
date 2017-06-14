@@ -33,6 +33,9 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.hydroshare.utils import resource_modified
 from hs_core.models import BaseResource
 from django_irods.icommands import SessionException
+from hs_core.hydroshare.resource import delete_resource
+
+from hs_core.management.commands.ingest_irods_files import ingest_irods_files
 
 # These should be cleaned up by deleting extra files
 VACUUM = [
@@ -59,6 +62,26 @@ VACUUM = [
     'cdc6292fbee24dfd9810da7696a40dcf'
 ]
 
+CORRUPTED = [
+    '49361c4e569e46eb9f2123594caf5804',
+    'd3dcb1744be5478eb1edee95839c3463',
+    'a28da53a49bb42d3bff9a50f0af387f1',
+    '9daebf7ed6344a23a4c13a2ff36081c1',
+    '37594b5bba544e14905dc0f8257c874f',
+    '0b828da8c0b24ab786dee74b6f2eabf7',
+    '1a664ae2fd4744f6aeb060de46a8739f',
+    'fbde31db496b450e83db20862c89a11c',
+    'c43944f0e2f84f2dbd8b9e05e5f6314a',
+    'd2683f86f18d4c1cbf58a619086c3268',
+    'a184d5f080c84054ab715c46162232fc',
+    'f196399316764d169fbe4f140a70f1f5',
+    '0909e74dfc734397afd1abafecc4315a',
+    '30c49e486f2c45648698e20778b751a6'
+]
+
+DELETE = [
+    '8fd42ad1d86f495a914e7ce9be21bbce'
+]
 
 class Command(BaseCommand):
     help = "Check synchronization between iRODS and Django."
@@ -77,6 +100,16 @@ class Command(BaseCommand):
             resource_modified(r, r.creator)
             # Do a redundant check to ensure that cleaning worked.
             r.check_irods_files(echo_errors=True, log_errors=False, return_errors=False)
+
+        for rid in DELETE: # delete whole resource for unmanageable resources
+            try:
+                resource = BaseResource.objects.get(short_id=rid)
+                print("DELETING {} FROM DJANGO ({} files)"
+                      .format(rid, str(resource.files.all().count())))
+                delete_resource(rid)
+            except BaseResource.DoesNotExist:
+                print("RESOURCE {} NOT FOUND IN DJANGO".format(rid))
+
 
         print("REPAIR BROKEN NETCDF RESOURCES")
 
@@ -104,6 +137,52 @@ class Command(BaseCommand):
                                     break
                     except SessionException:
                         print("resource {} ({}) not found in iRODS".format(r.short_id, r.root_path))
+        print("REMOVE '/./' FROM PATHS")
+        for rid in CORRUPTED:
+            r = get_resource_by_shortkey(rid)
+            if r.is_federated and not settings.REMOTE_USE_IRODS:
+                print("INFO: skipping repair of federated resource {} in unfederated mode"
+                      .format(r.short_id))
+            else:
+                istorage = r.get_irods_storage()
+                print("INFO: checking {} for /./ ({} files)"
+                      .format(r.short_id, str(r.files.all().count())))
+                if istorage.exists(r.root_path):
+                    for f in r.files.all():
+                        if '/./' in f.storage_path:
+                            cleaned = f.storage_path
+                            cleaned = cleaned.replace('/./', '/')
+                            print("INFO: replacing path {} with {}"
+                                  .format(f.storage_path, cleaned))
+                            f.set_storage_path(cleaned)
+                else:
+                    print("INFO: skipping resource {} with no files".format(rid))
+
+        print("CHECK FOR FILE INCLUSION IN DJANGO")
+        for rid in CORRUPTED:
+            r = get_resource_by_shortkey(rid)
+            if r.is_federated and not settings.REMOTE_USE_IRODS:
+                print("INFO: skipping repair of federated resource {} in unfederated mode"
+                      .format(r.short_id))
+            else:
+                istorage = r.get_irods_storage()
+                print("INFO: checking {} for new files ({} files)"
+                      .format(r.short_id, str(r.files.all().count())))
+                if istorage.exists(r.root_path):
+                    if r.resource_type == 'CompositeResource' or \
+                       r.resource_type == 'GenericResource':
+                        print(("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {}" +
+                               " (current files {})")
+                              .format(r.short_id, str(r.files.all().count())))
+                        ingest_irods_files(r,
+                                           None,
+                                           stop_on_error=False,
+                                           echo_errors=True,
+                                           log_errors=False,
+                                           return_errors=False)
+                else:
+                    print("resource {} has type {}: skipping"
+                          .format(r.short_id, r.resource_type))
 
         print("REPAIR ISPUBLIC AVUS")
         for r in BaseResource.objects.all():
