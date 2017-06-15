@@ -762,9 +762,10 @@ def _validate_json_file(res_json_file):
         raise Exception("Not a json file")
     try:
         # validate json_data based on the schema
-        jsonschema.validate(json_data, TS_SCHEMA)
-    except Exception:
-        raise Exception("Not a valid reference time series json file")
+        jsonschema.Draft4Validator(TS_SCHEMA).validate(json_data)
+    except jsonschema.ValidationError as ex:
+        msg = "Not a valid reference time series json file. {}".format(ex.message)
+        raise Exception(msg)
 
     # TODO: validate that there are no duplicate time series
     # test that there is no duplicate time series data
@@ -835,6 +836,7 @@ def _validate_json_data(series_data):
                     raise Exception(err_msg.format("Invalid method link found"))
 
 TS_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
         "timeSeriesReferenceFile": {
@@ -845,7 +847,8 @@ TS_SCHEMA = {
                 "fileVersion": {"type": "string"},
                 "keyWords": {
                     "type": "array",
-                    "items": {"type": "string"}
+                    "items": {"type": "string"},
+                    "uniqueItems": True
                 },
                 "symbol": {"type": "string"},
                 "referencedTimeSeries": {
@@ -859,41 +862,51 @@ TS_SCHEMA = {
                                 "siteCode": {"type": "string"},
                                 "siteName": {"type": "string"},
                                 "latitude": {"type": "number", "minimum": -90, "maximum": 90},
-                                "longitude": {"type": "number", "minimum": -180, "maximum": 180},
+                                "longitude": {"type": "number", "minimum": -180, "maximum": 180}
                             },
+                            "required": ["siteCode", "siteName", "latitude", "longitude"],
+                            "additionalProperties": False
                         },
                         "variable": {
                             "type": "object",
                             "properties": {
                                 "variableCode": {"type": "string"},
-                                "variableName": {"type": "string"},
+                                "variableName": {"type": "string"}
                             },
+                            "additionalProperties": False
                         },
                         "method": {
                             "type": "object",
                             "properties": {
                                 "methodDescription": {"type": "string"},
-                                "methodLink": {"type": "string"},
+                                "methodLink": {"type": "string"}
                             },
+                            "additionalProperties": False
                         },
                         "requestInfo": {
                             "type": "object",
                             "properties": {
                                 "netWorkName": {"type": "string"},
-                                "refType": {"type": "string"},
-                                "returnType": {"type": "string"},
-                                "serviceType": {"type": "string"},
-                                "url": {"type": "string"},
-                            }
+                                "refType": {"enum": ["WOF", "WPS", "DirectFile"]},
+                                "returnType": {"enum": ["WaterML 1.1", "WaterML 2.0",
+                                                        "TimeseriesML"]},
+                                "serviceType": {"enum": ["SOAP", "REST"]},
+                                "url": {"type": "string"}
+                            },
+                            "additionalProperties": False
                         },
                         "sampleMedium": {"type": "string"},
-                        "valueCount": {"type": "number"},
+                        "valueCount": {"type": "number"}
                     },
+                    "additionalProperties": False,
                     "required": ["beginDate", "endDate", "requestInfo",
-                                 "site", "siteCode", "sampleMedium", "valueCount", "variable"]
+                                 "site", "sampleMedium", "valueCount", "variable"]
                 }
             },
+            "additionalProperties": False,
             "required": ["fileVersion", "referencedTimeSeries"]
         }
-    }
+    },
+    "additionalProperties": False,
+    "required": ["timeSeriesReferenceFile"]
 }

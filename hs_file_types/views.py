@@ -57,6 +57,9 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     except ValidationError as ex:
         response_data['message'] = ex.message
         return JsonResponse(response_data, status=status.HTTP_200_OK)
+    except Exception as ex:
+        response_data['message'] = ex.message
+        return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @login_required

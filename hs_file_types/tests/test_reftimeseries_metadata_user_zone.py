@@ -29,7 +29,7 @@ class RefTimeSeriesFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTest
 
         super(RefTimeSeriesFileTypeMetaDataTest, self).create_irods_user_in_user_zone()
 
-        self.refts_file_name = 'multi_sites_formatted.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
         # transfer this valid tif file to user zone space for testing

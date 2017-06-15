@@ -35,20 +35,12 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         )
 
         self.temp_dir = tempfile.mkdtemp()
-        self.refts_file_name = 'multi_sites_formatted.json.refts'
+        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
         self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
 
         target_temp_refts_file = os.path.join(self.temp_dir, self.refts_file_name)
         shutil.copy(self.refts_file, target_temp_refts_file)
         self.refts_file_obj = open(target_temp_refts_file, 'r')
-
-        self.refts_duplicate_series_file_name = 'refts_duplicate_series.json.refts'
-        self.refts_duplicate_series_file = 'hs_file_types/tests/{}'.format(
-            self.refts_duplicate_series_file_name)
-
-        tgt_temp_refts_duplicate_series_file = os.path.join(self.temp_dir,
-                                                            self.refts_duplicate_series_file_name)
-        shutil.copy(self.refts_duplicate_series_file, tgt_temp_refts_duplicate_series_file)
 
         self.refts_invalid_url_file_name = 'refts_invalid_urls.json.refts'
         self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
@@ -159,14 +151,6 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         for kw in keywords:
             self.assertIn(kw, ["key-word-1", "CUAHSI", "Time Series"])
 
-        self.composite_resource.delete()
-
-    def test_set_file_type_to_file_with_duplicate_series(self):
-        # here we are using an invalid time series json file for setting it
-        # to RefTimeseries file type which should fail
-        self.refts_file_obj = open(self.refts_duplicate_series_file, 'r')
-        self._create_composite_resource()
-        self._test_invalid_file()
         self.composite_resource.delete()
 
     def test_set_file_type_to_file_with_invalid_urls(self):
