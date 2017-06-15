@@ -9,7 +9,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestResolveDOIAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestResolveDOIAPI, self).setUp()
-        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
     def test_resolve_doi(self):
         self.user_creator = hydroshare.create_account(

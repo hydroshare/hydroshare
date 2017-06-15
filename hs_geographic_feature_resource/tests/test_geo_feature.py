@@ -23,7 +23,7 @@ from hs_geographic_feature_resource.receivers import geofeature_post_add_files_t
 class TestGeoFeature(TransactionTestCase):
 
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'zhiyu.li@byu.edu',
             username='drew',

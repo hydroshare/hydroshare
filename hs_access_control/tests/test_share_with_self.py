@@ -19,7 +19,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         super(T05ShareResource, self).setUp()
         global_reset()
         self.logger = logging.getLogger('django')
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
             username='admin',

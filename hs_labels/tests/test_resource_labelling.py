@@ -86,7 +86,7 @@ class T01BasicFunction(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T01BasicFunction, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
         self.cat = hydroshare.create_account(
             'cat@gmail.com',

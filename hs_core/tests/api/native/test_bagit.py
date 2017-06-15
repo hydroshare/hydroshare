@@ -10,7 +10,7 @@ from django_irods.storage import IrodsStorage
 
 class TestBagIt(TestCase):
     def setUp(self):
-        self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         # create a user
         self.user = hydroshare.create_account(
             'test_user@email.com',

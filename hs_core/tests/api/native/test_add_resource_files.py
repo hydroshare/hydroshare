@@ -13,7 +13,7 @@ from hs_core.hydroshare.utils import QuotaException
 class TestAddResourceFiles(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestAddResourceFiles, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = create_account(
             'shauntheta@gmail.com',
             username='shaun',

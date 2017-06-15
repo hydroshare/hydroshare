@@ -12,7 +12,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
         super(TestUpdateResourceFileAPI, self).setUp()
-        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
     def tearDown(self):
         super(TestUpdateResourceFileAPI, self).tearDown()

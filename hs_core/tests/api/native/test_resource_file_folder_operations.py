@@ -11,7 +11,7 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin,
                                     TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestResourceFileFolderOprsAPI, self).setUp()
-        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         # create a user to be used for creating the resource
         self.user = hydroshare.create_account(
             'creator@usu.edu',

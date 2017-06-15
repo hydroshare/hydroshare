@@ -22,7 +22,7 @@ from hs_swat_modelinstance.models import SWATModelInstanceMetaData, ModelObjecti
 class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestSWATModelInstanceMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

@@ -12,7 +12,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestGetResourceFile(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetResourceFile, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
             username='jamy2',

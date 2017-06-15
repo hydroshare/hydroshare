@@ -15,7 +15,7 @@ class TestUserInfo(APITestCase):
         self.maxDiff = None
         self.client = APIClient()
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         # create a user
         self.email = 'test_user@email.com'
         self.username = 'testuser'

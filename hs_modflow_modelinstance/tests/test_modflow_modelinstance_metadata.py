@@ -23,7 +23,7 @@ from hs_modflow_modelinstance.models import MODFLOWModelInstanceMetaData, ModelO
 class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestMODFLOWModelInstanceMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

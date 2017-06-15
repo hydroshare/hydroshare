@@ -13,7 +13,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         super(TestGeoFeature, self).setUp()
         if not super(TestGeoFeature, self).is_federated_irods_available():
             return
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'zhiyu.li@byu.edu',
             username='drew',

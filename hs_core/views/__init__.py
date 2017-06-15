@@ -77,7 +77,7 @@ def verify(request, *args, **kwargs):
         if not u.is_active:
             u.is_active=True
             u.save()
-            u.groups.add(Group.objects.get(name="Hydroshare Author"))
+            u.groups.add(Group.objects.get(name="xDCIShare Author"))
         from django.contrib.auth import login
         u.backend = settings.AUTHENTICATION_BACKENDS[0]
         login(request, u)
@@ -1058,7 +1058,7 @@ def add_generic_context(request, page):
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='xDCIShare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
@@ -1710,7 +1710,7 @@ class CollaborateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="xDCIShare Author")
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members

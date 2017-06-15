@@ -19,7 +19,7 @@ from hs_file_types.models import GeoRasterLogicalFile, GenericLogicalFile
 class TestCopyResource(TestCase):
     def setUp(self):
         super(TestCopyResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
         # create a user who is the owner of the resource to be copied
         self.owner = hydroshare.create_account(

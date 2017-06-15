@@ -10,7 +10,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUpdateMetadata, self).setUp()
-        group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         user = hydroshare.create_account(
             'shaun@gmail.com',
             username='shaunjl',
