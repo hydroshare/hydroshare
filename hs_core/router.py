@@ -1,7 +1,11 @@
+"""Perform DOI activation task."""
+
+
 class HSTaskRouter(object):
+    """Perform DOI activation task."""
 
     def route_for_task(self, task, args=None, kwargs=None):
-
+        """Return exchange, exchange_type, and routing_key."""
         if task == 'hs_core.tasks.check_doi_activation':
             return {
                 'exchange': 'default',

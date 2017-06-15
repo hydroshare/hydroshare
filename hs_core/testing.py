@@ -1,3 +1,5 @@
+"""Test cases and utilities for hs_core module. See also ./tests folder."""
+
 from dateutil import parser
 import tempfile
 
@@ -17,7 +19,10 @@ from django_irods.storage import IrodsStorage
 
 
 class MockIRODSTestCaseMixin(object):
+    """Mix in to allow for mock iRODS testing."""
+
     def setUp(self):
+        """Set up iRODS patchers for testing of data bags, etc."""
         super(MockIRODSTestCaseMixin, self).setUp()
         # only mock up testing iRODS operations when local iRODS container is not used
         if settings.IRODS_HOST != 'data.local.org':
@@ -33,6 +38,7 @@ class MockIRODSTestCaseMixin(object):
                 patcher.start()
 
     def tearDown(self):
+        """Stop iRODS patchers."""
         if settings.IRODS_HOST != 'data.local.org':
             for patcher in self.irods_patchers:
                 patcher.stop()
@@ -40,7 +46,10 @@ class MockIRODSTestCaseMixin(object):
 
 
 class TestCaseCommonUtilities(object):
+    """Enable common utilities for iRODS testing."""
+
     def is_federated_irods_available(self):
+        """Check if federated iRODS is available."""
         if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
                 or settings.IRODS_HOST != 'data.local.org':
             return False
@@ -48,7 +57,7 @@ class TestCaseCommonUtilities(object):
             return True
 
     def create_irods_user_in_user_zone(self):
-        # create corresponding irods account in user zone
+        """Create corresponding irods account in user zone."""
         try:
             exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
                                             self.user.username, self.user.username)
@@ -68,7 +77,7 @@ class TestCaseCommonUtilities(object):
             self.assertRaises(SessionException(-1, ex.message, ex.message))
 
     def delete_irods_user_in_user_zone(self):
-        # delete irods test user in user zone
+        """Delete irods test user in user zone."""
         try:
             exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD,
                                         self.user.username)
@@ -89,8 +98,8 @@ class TestCaseCommonUtilities(object):
             self.assertRaises(SessionException(-1, ex.message, ex.message))
 
     def save_files_to_user_zone(self, file_name_to_target_name_dict):
-        """
-        Save a list of files to iRODS user zone using the same IrodsStorage() object
+        """Save a list of files to iRODS user zone using the same IrodsStorage() object.
+
         :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
         where ori_file is the file to be save to, and the target_file is the full path file name
         in iRODS user zone to save ori_file to
@@ -101,7 +110,8 @@ class TestCaseCommonUtilities(object):
             self.irods_storage.saveFile(file_name, target_name)
 
     def resource_file_oprs(self):
-        """
+        """Test common iRODS file operations.
+
         This is a common test utility function to be called by both regular folder operation
         testing and federated zone folder operation testing.
         Make sure the calling TestCase object has the following attributes defined before calling
@@ -256,7 +266,8 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(updated_res_file_names[0], 'new_' + file_name_list[2])
 
     def raster_metadata_extraction(self):
-        """
+        """Test raster metadata extraction.
+
         This is a common test utility function to be called by both regular raster metadata
         extraction testing and federated zone raster metadata extraction testing.
         Make sure the calling TestCase object has self.resRaster attribute defined before calling
@@ -335,7 +346,8 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(band_info.minimumValue, '1358.33459473')
 
     def netcdf_metadata_extraction(self, expected_creators_count=1):
-        """
+        """Test NetCDF metadata extraction.
+
         This is a common test utility function to be called by both regular netcdf metadata
         extraction testing and federated zone netCDF metadata extraction testing.
         Make sure the calling TestCase object has self.resNetcdf attribute defined before calling
@@ -463,7 +475,8 @@ class TestCaseCommonUtilities(object):
         self.assertEqual(var_grid.shape, 'Not defined')
 
     def timeseries_metadata_extraction(self):
-        """
+        """Test timeseries metadata extraction.
+
         This is a common test utility function to be called by both regular timeseries metadata
         extraction testing and federated zone timeseries metadata extraction testing.
         Make sure the calling TestCase object has self.resTimeSeries attribute defined before
@@ -625,13 +638,17 @@ class TestCaseCommonUtilities(object):
 
 
 class ViewTestCase(TestCase):
+    """Test basic view functionality."""
+
     def setUp(self):
+        """Create request factory and set temp_dir for testing."""
         self.factory = RequestFactory()
         self.temp_dir = tempfile.mkdtemp()
         super(ViewTestCase, self).setUp()
 
     @staticmethod
     def set_request_message_attributes(request):
+        """Set session and _messages attributies on request."""
         # the following 3 lines are for preventing error in unit test due to the view being
         # tested uses messaging middleware
         setattr(request, 'session', 'session')
@@ -640,6 +657,7 @@ class ViewTestCase(TestCase):
 
     @staticmethod
     def add_session_to_request(request):
+        """Use SessionMiddleware to add a session to the request."""
         """Annotate a request object with a session"""
         middleware = SessionMiddleware()
         middleware.process_request(request)
