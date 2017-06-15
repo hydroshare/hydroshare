@@ -22,7 +22,7 @@ from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, Band
 class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestRasterMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
         self.user = hydroshare.create_account(
             'user1@nowhere.com',

@@ -18,7 +18,7 @@ from hs_model_program.models import ModelProgramResource, MpMetadata
 class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestModelProgramMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

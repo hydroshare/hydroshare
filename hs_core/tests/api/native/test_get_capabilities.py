@@ -17,7 +17,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestGetCapabilities(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetCapabilities, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
 
     def test_generic(self):
         user = hydroshare.create_account(email='shauntheta@gmail.com', username='shaun', first_name='shaun',

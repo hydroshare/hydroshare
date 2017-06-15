@@ -23,7 +23,7 @@ from utils import assert_netcdf_file_type_metadata
 class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(NetCDFFileTypeMetaDataTest, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

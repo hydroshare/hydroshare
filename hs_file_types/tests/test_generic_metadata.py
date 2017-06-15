@@ -19,7 +19,7 @@ from hs_file_types.models import GenericLogicalFile, GenericFileMetaData
 class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(GenericFileTypeMetaDataTest, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

@@ -7,7 +7,7 @@ from hs_core import hydroshare
 
 class TestUpdateGroupAPI(TestCase):
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.john_group_owner = hydroshare.create_account(
             'john@gmail.com',
             username='johns',

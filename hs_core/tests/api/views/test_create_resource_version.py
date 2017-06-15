@@ -15,7 +15,7 @@ from hs_core.testing import MockIRODSTestCaseMixin, ViewTestCase
 class TestCreateResourceVersion(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCreateResourceVersion, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.username = 'john'
         self.password = 'jhmypassword'
         self.user = hydroshare.create_account(

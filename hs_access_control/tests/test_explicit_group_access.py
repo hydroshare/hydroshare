@@ -11,7 +11,7 @@ class TestExplicitGroupAccess(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestExplicitGroupAccess, self).setUp()
         self.hs_group, _ = Group.objects.get_or_create(
-            name='Hydroshare Author')
+            name='xDCIShare Author')
         self.grp_creator_user = hydroshare.create_account(
             'grp_creator@gmail.com',
             username='grpcreator',

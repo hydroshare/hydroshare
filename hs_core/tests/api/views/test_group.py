@@ -29,7 +29,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         patcher_email_send_call.start()
         self.addCleanup(patcher_email_send_call.stop)
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.username = 'john'
         self.password = 'jhmypassword'
         self.john = hydroshare.create_account(
@@ -424,7 +424,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         self._update_failure(new_group, request)
 
         # test trying to update group with a duplicate name ('HydroShare Author') should fail
-        grp_data = {'name': 'Hydroshare Author', 'description': 'This is a cool group-1',
+        grp_data = {'name': 'xDCIShare Author', 'description': 'This is a cool group-1',
                     'purpose': 'This group has purpose'}
         request = self.factory.post(url, data=grp_data)
         self.set_request_message_attributes(request)
@@ -432,8 +432,8 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         response = update_user_group(request, group_id=new_group.id)
         # name has not changed proves update failed
-        self.assertEqual(Group.objects.filter(name='Hydroshare Author').count(), 1)
-        updated_group = Group.objects.filter(name='Hydroshare Author').first()
+        self.assertEqual(Group.objects.filter(name='xDCIShare Author').count(), 1)
+        updated_group = Group.objects.filter(name='xDCIShare Author').first()
         self.assertNotEqual(updated_group.id, new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])

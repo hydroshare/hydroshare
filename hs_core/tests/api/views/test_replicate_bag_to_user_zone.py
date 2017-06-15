@@ -17,7 +17,7 @@ class TestReplicateBagToUserZone(TestCaseCommonUtilities, TestCase):
         if not super(TestReplicateBagToUserZone, self).is_federated_irods_available():
             return
 
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
+        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
         self.username = 'john'
         self.password = 'jhmypassword'
         self.user = hydroshare.create_account(
