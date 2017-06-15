@@ -120,18 +120,23 @@ class TimeSeries(object):
                                          % NAMESPACES['hsterms'])
         rdf_description = etree.SubElement(ref_ts_result, '{%s}Description' % NAMESPACES['rdf'])
 
-        # encode web service data
-        hs_network_name = etree.SubElement(rdf_description, '{%s}networkName'
+        # encode request info data
+        hs_request_info = etree.SubElement(rdf_description, '{%s}requestInfo'
+                                           % NAMESPACES['hsterms'])
+        hs_request_info_desc = etree.SubElement(hs_request_info, '{%s}Description'
+                                                % NAMESPACES['rdf'])
+        hs_network_name = etree.SubElement(hs_request_info_desc, '{%s}networkName'
                                            % NAMESPACES['hsterms'])
         hs_network_name.text = self.network_name
-        hs_ref_type = etree.SubElement(rdf_description, '{%s}refType' % NAMESPACES['hsterms'])
+        hs_ref_type = etree.SubElement(hs_request_info_desc, '{%s}refType' % NAMESPACES['hsterms'])
         hs_ref_type.text = self.reference_type
-        hs_retrun_type = etree.SubElement(rdf_description, '{%s}returnType' % NAMESPACES['hsterms'])
+        hs_retrun_type = etree.SubElement(hs_request_info_desc, '{%s}returnType'
+                                          % NAMESPACES['hsterms'])
         hs_retrun_type.text = self.return_type
-        hs_service_type = etree.SubElement(rdf_description, '{%s}serviceType'
+        hs_service_type = etree.SubElement(hs_request_info_desc, '{%s}serviceType'
                                            % NAMESPACES['hsterms'])
         hs_service_type.text = self.reference_type
-        hs_wsdl_url = etree.SubElement(rdf_description, '{%s}url' % NAMESPACES['hsterms'])
+        hs_wsdl_url = etree.SubElement(hs_request_info_desc, '{%s}url' % NAMESPACES['hsterms'])
         hs_wsdl_url.text = self.url
 
         # encode date (duration) data
