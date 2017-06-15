@@ -313,6 +313,14 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         return ''
 
     @property
+    def file_version(self):
+        """get the file version associated with this ref time series"""
+        json_data_dict = self._json_to_dict()
+        if 'fileVersion' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['fileVersion']
+        return ''
+
+    @property
     def key_words(self):
         """get a list of all keywords associated with this ref time series"""
         # had to name this property as key_words since the parent class has a model field keywords
@@ -320,6 +328,26 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         if 'keyWords' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['keyWords']
         return []
+
+    @property
+    def sample_mediums(self):
+        """get a list of all sample mediums associated with this ref time series"""
+        sample_mediums = []
+        for series in self.serieses:
+            if "sampleMedium" in series:
+                if series['sampleMedium'] not in sample_mediums:
+                    sample_mediums.append(series['sampleMedium'])
+        return sample_mediums
+
+    @property
+    def value_counts(self):
+        """get a list of all value counts associated with this ref time series"""
+        value_counts = []
+        for series in self.serieses:
+            if "valueCount" in series:
+                if series['valueCount'] not in value_counts:
+                    value_counts.append(series['valueCount'])
+        return value_counts
 
     @property
     def serieses(self):
@@ -421,8 +449,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 urls.append(service.url)
         return services
 
-    # TODO: other properties to go here
-
     def get_html(self):
         """overrides the base class function"""
 
@@ -446,23 +472,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 html_string += self.spatial_coverage.get_html()
 
         html_string += self.get_ts_series_html().render()
-
-        # TODO: delete these commented code
-        # site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
-        # html_string += site_legend.render()
-        # for site in self.sites:
-        #     html_string += site.get_html()
-        #
-        # variable_legend = legend("Variables", cls="pull-left", style="margin-top:20px;")
-        # html_string += variable_legend.render()
-        # for variable in self.variables:
-        #     html_string += variable.get_html()
-        #
-        # service_legend = legend("Web Services", cls="pull-left", style="margin-top:20px;")
-        # html_string += service_legend.render()
-        # for service in self.web_services:
-        #     html_string += service.get_html()
-
         html_string += self.get_json_file_data_html().render()
         template = Template(html_string)
         context = Context({})
@@ -507,20 +516,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                                            "'id-coverage-spatial-filetype');")
 
             self.get_ts_series_html()
-
-            # TODO: delete these commented code
-            # legend("Sites", cls="pull-left", style="margin-top:20px;")
-            # for site in self.sites:
-            #     site.get_html()
-            #
-            # legend("Variables", cls="pull-left", style="margin-top:20px;")
-            # for variable in self.variables:
-            #     variable.get_html()
-            #
-            # legend("Web Services", cls="pull-left", style="margin-top:20px;")
-            # for service in self.web_services:
-            #     service.get_html()
-
             self.get_json_file_data_html()
 
         template = Template(root_div.render())
@@ -772,20 +767,7 @@ def _validate_json_file(res_json_file):
         msg = "Not a valid reference time series json file. {}".format(ex.message)
         raise Exception(msg)
 
-    # TODO: validate that there are no duplicate time series
-    # test that there is no duplicate time series data
     ts_serieses = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
-    # locations = []
-    # for item in ts_serieses:
-    #     # remove the inner dictionary item with key of 'location'
-    #     if 'location' in item.keys():
-    #         locations.append(item.pop('location'))
-    #
-    # ts_unique_serieses = [dict(t) for t in set(tuple(d.items()) for d in ts_serieses)]
-    # if len(ts_serieses) != len(ts_unique_serieses):
-    #     raise Exception("Duplicate time series found")
-    # if not locations:
-    #     raise Exception("Not a valid reference time series json file")
     _validate_json_data(ts_serieses)
     return json_file_content
 
