@@ -1,6 +1,4 @@
-
-# Note: this module has been imported in the models.py in order to receive signals
-# se the end of the models.py for the import of this module
+"""Signal receivers for the hs_core app."""
 
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
@@ -11,9 +9,12 @@ from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     CoverageSpatialForm, CoverageTemporalForm, IdentifierForm, TitleValidationForm
 
 
-# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GenericResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
+    """Select proper form class based on element_name.
+
+    This handler is executed only when a metadata element is added as part of editing a resource
+    """
     element_name = kwargs['element_name']
     request = kwargs['request']
     if element_name == "subject":   # keywords
@@ -55,9 +56,12 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
-# This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_update, sender=GenericResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
+    """Select proper form class based on element_name.
+
+    This handler is executed only when a metadata element is added as part of editing a resource
+    """
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
     repeatable_elements = {'creator': CreatorValidationForm,

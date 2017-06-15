@@ -803,7 +803,7 @@ def netcdf_file_update(instance, nc_res_file, txt_res_file, user):
         # update title
         title = instance.dataset_name if file_type else instance.metadata.title.value
 
-        if title != 'Untitled resource':
+        if title.lower() != 'untitled resource':
             if hasattr(nc_dataset, 'title'):
                 delattr(nc_dataset, 'title')
             nc_dataset.title = title
