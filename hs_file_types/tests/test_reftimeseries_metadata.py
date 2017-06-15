@@ -40,39 +40,6 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
 
         target_temp_refts_file = os.path.join(self.temp_dir, self.refts_file_name)
         shutil.copy(self.refts_file, target_temp_refts_file)
-        self.refts_file_obj = open(target_temp_refts_file, 'r')
-
-        self.refts_invalid_url_file_name = 'refts_invalid_urls.json.refts'
-        self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_url_file_name)
-
-        tgt_temp_refts_invalid_urls_file = os.path.join(self.temp_dir,
-                                                        self.refts_invalid_url_file_name)
-        shutil.copy(self.refts_invalid_url_file, tgt_temp_refts_invalid_urls_file)
-
-        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.json.refts'
-        self.refts_invalid_dates_1_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_dates_1_file_name)
-
-        tgt_temp_refts_invalid_dates_1_file = os.path.join(self.temp_dir,
-                                                           self.refts_invalid_dates_1_file_name)
-        shutil.copy(self.refts_invalid_dates_1_file, tgt_temp_refts_invalid_dates_1_file)
-
-        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.json.refts'
-        self.refts_invalid_dates_2_file = 'hs_file_types/tests/{}'.format(
-            self.refts_invalid_dates_2_file_name)
-
-        tgt_temp_refts_invalid_dates_2_file = os.path.join(self.temp_dir,
-                                                           self.refts_invalid_dates_2_file_name)
-        shutil.copy(self.refts_invalid_dates_2_file, tgt_temp_refts_invalid_dates_2_file)
-
-        self.refts_missing_key_file_name = 'refts_missing_key.json.refts'
-        self.refts_missing_key_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_key_file_name)
-
-        tgt_temp_refts_missing_key_file = os.path.join(self.temp_dir,
-                                                       self.refts_missing_key_file_name)
-        shutil.copy(self.refts_missing_key_file, tgt_temp_refts_missing_key_file)
 
     def tearDown(self):
         super(RefTimeseriesFileTypeMetaDataTest, self).tearDown()
@@ -156,6 +123,13 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
     def test_set_file_type_to_file_with_invalid_urls(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
+        self.refts_invalid_url_file_name = 'refts_invalid_urls.json.refts'
+        self.refts_invalid_url_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_url_file_name)
+
+        tgt_temp_refts_invalid_urls_file = os.path.join(self.temp_dir,
+                                                        self.refts_invalid_url_file_name)
+        shutil.copy(self.refts_invalid_url_file, tgt_temp_refts_invalid_urls_file)
         self.refts_file_obj = open(self.refts_invalid_url_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
@@ -165,6 +139,13 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # beginDate has an invalid date value
+        self.refts_invalid_dates_1_file_name = 'refts_invalid_dates_1.json.refts'
+        self.refts_invalid_dates_1_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_dates_1_file_name)
+
+        tgt_temp_refts_invalid_dates_1_file = os.path.join(self.temp_dir,
+                                                           self.refts_invalid_dates_1_file_name)
+        shutil.copy(self.refts_invalid_dates_1_file, tgt_temp_refts_invalid_dates_1_file)
         self.refts_file_obj = open(self.refts_invalid_dates_1_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
@@ -174,6 +155,13 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
         # beginDate > endDate
+        self.refts_invalid_dates_2_file_name = 'refts_invalid_dates_2.json.refts'
+        self.refts_invalid_dates_2_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_dates_2_file_name)
+
+        tgt_temp_refts_invalid_dates_2_file = os.path.join(self.temp_dir,
+                                                           self.refts_invalid_dates_2_file_name)
+        shutil.copy(self.refts_invalid_dates_2_file, tgt_temp_refts_invalid_dates_2_file)
         self.refts_file_obj = open(self.refts_invalid_dates_2_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
@@ -185,7 +173,93 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # key 'site' is missing
         # Note we don't need to test for missing of any other required keys as we
         # don't want to unit test the jsonschema module
+        self.refts_missing_key_file_name = 'refts_missing_key.json.refts'
+        self.refts_missing_key_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_key_file_name)
+
+        tgt_temp_refts_missing_key_file = os.path.join(self.temp_dir,
+                                                       self.refts_missing_key_file_name)
+        shutil.copy(self.refts_missing_key_file, tgt_temp_refts_missing_key_file)
         self.refts_file_obj = open(self.refts_missing_key_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_duplicate_keywords(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has duplicate keywords
+        # Note we don't need to test for missing of any other required keys as we
+        # don't want to unit test the jsonschema module
+        self.invalid_duplicate_keywords_file_name = 'invalid_duplicate_keywords.json.refts'
+        self.invalid_duplicate_keywords_file = 'hs_file_types/tests/{}'.format(
+            self.invalid_duplicate_keywords_file_name)
+
+        tgt_temp_invalid_duplicate_keywords_file = os.path.join(
+            self.temp_dir, self.invalid_duplicate_keywords_file_name)
+        shutil.copy(self.invalid_duplicate_keywords_file, tgt_temp_invalid_duplicate_keywords_file)
+
+        self.refts_file_obj = open(self.invalid_duplicate_keywords_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_service_type(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has invalid service type
+        # Note we don't need to test for missing of any other required keys as we
+        # don't want to unit test the jsonschema module
+
+        self.invalid_service_type_file_name = 'invalid_service_type.json.refts'
+        self.invalid_service_type_file = 'hs_file_types/tests/{}'.format(
+            self.invalid_service_type_file_name)
+
+        tgt_temp_invalid_service_type_file = os.path.join(
+            self.temp_dir, self.invalid_service_type_file_name)
+        shutil.copy(self.invalid_service_type_file, tgt_temp_invalid_service_type_file)
+
+        self.refts_file_obj = open(self.invalid_service_type_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_return_type(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has invalid return type
+        # Note we don't need to test for missing of any other required keys as we
+        # don't want to unit test the jsonschema module
+
+        self.invalid_return_type_file_name = 'invalid_return_type.json.refts'
+        self.invalid_return_type_file = 'hs_file_types/tests/{}'.format(
+            self.invalid_return_type_file_name)
+
+        tgt_temp_invalid_return_type_file = os.path.join(
+            self.temp_dir, self.invalid_return_type_file_name)
+        shutil.copy(self.invalid_return_type_file, tgt_temp_invalid_return_type_file)
+
+        self.refts_file_obj = open(self.invalid_return_type_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_invalid_ref_type(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail
+        # as this file has invalid ref type
+        # Note we don't need to test for missing of any other required keys as we
+        # don't want to unit test the jsonschema module
+
+        self.invalid_ref_type_file_name = 'invalid_ref_type.json.refts'
+        self.invalid_ref_type_file = 'hs_file_types/tests/{}'.format(
+            self.invalid_ref_type_file_name)
+
+        tgt_temp_invalid_ref_type_file = os.path.join(
+            self.temp_dir, self.invalid_ref_type_file_name)
+        shutil.copy(self.invalid_ref_type_file, tgt_temp_invalid_ref_type_file)
+
+        self.refts_file_obj = open(self.invalid_ref_type_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
         self.composite_resource.delete()
