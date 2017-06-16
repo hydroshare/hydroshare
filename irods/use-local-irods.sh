@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # use-local-irods.sh
-# Federated local iRODS for HydroShare in Docker
+# Federated local iRODS for xDCIShare in Docker
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 # Pull in environment variables to use for federated local iRODS

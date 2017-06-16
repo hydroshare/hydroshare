@@ -11,16 +11,16 @@
 
 {% block main %}
     <div style="margin-left: 10px;">
-    <h2>Description of HydroShare Resource Types and Metadata Terms</h2>
+    <h2>Description of xDCIShare Resource Types and Metadata Terms</h2>
     <h3>Generic Resource Type Description</h3>
     <p>A generic resource is an arbitrary collection of files that are logically grouped together as a resource.
         There may be any number of files, and files may be of any type.
-        The generic resource type should be used for creating resources for which a formal content data model has not been specified in HydroShare.
+        The generic resource type should be used for creating resources for which a formal content data model has not been specified in xDCIShare.
         Generic resources are treated the same way as other resource types in terms of sharing and access control;
-        however, no value added tools are provided given that HydroShare cannot anticipate what the contents of generic resources will be.
+        however, no value added tools are provided given that xDCIShare cannot anticipate what the contents of generic resources will be.
     </p>
     <a name="name"></a>
-    <p> To describe the entities of a generic resource in HydroShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
+    <p> To describe the entities of a generic resource in xDCIShare, we choose the Dublin Core Meta Data Elements as the resource science metadata,
         Each of these elements consists of sub metadata elements:
     </p>
         <br/>
@@ -78,14 +78,14 @@
             <li><strong>Term: </strong>doi</li>
             <li><strong>URI: </strong><a href="#doi">http://www.hydroshare.org/terms/doi</a></li>
             <li><strong>Label: </strong>DOI</li>
-            <li><strong>Description: </strong>The digitial object identifier for the resource which is published in HydroShare.</li>
+            <li><strong>Description: </strong>The digitial object identifier for the resource which is published in xDCIShare.</li>
         </ul>
         <a name="publisherName"></a>
         <ul>
             <li><strong>Term: </strong>hydroshareIdentifier</li>
             <li><strong>URI: </strong><a href="#hydroshareIdentifier">http://www.hydroshare.org/terms/hydroshareIdentifier</a></li>
-            <li><strong>Label: </strong>HydroShare Identifier</li>
-            <li><strong>Description: </strong>the UUID assigned to each Hydroshare resource</li>
+            <li><strong>Label: </strong>xDCIShare Identifier</li>
+            <li><strong>Description: </strong>the UUID assigned to each xDCIShare resource</li>
         </ul>
         <a name="publisherURL"></a>
         <ul>
@@ -158,7 +158,7 @@
     <p>The time series is a sequence of individual data values that are ordered in time to record the
         changing trend of a certain phenomenon. As time series are widely used for hydrologic research
         and because they are also the primary granule of data sharing within the CUAHSI HIS,
-        the time series will be an important resource type in the HydroShare system. Currently,
+        the time series will be an important resource type in the xDCIShare system. Currently,
         we define a time series resource such that it can contain only one time series.
         To define the entities and attributes of a time series, we adopt the definition of a time series as
         specified by Version 2.0 of the Observations Data Model (ODM2) – see description of a time series result in
@@ -166,8 +166,8 @@
     </p>
     <a name="site"></a>
     <p> ODM2 does not limit the types of time series that can be supported.  Any time series supported by the
-        ODM2 information model will be valid for input as a time series resource in HydroShare. The specific
-        implementation of ODM2 that will be used for storing time series in HydroShare is described in more detail
+        ODM2 information model will be valid for input as a time series resource in xDCIShare. The specific
+        implementation of ODM2 that will be used for storing time series in xDCIShare is described in more detail
         in a subsequent section, but, in general, ODM2 describes a time series via the following entities:
     </p>
         <br/>
@@ -518,12 +518,12 @@
         is widely used in hydrological and other geoscience modeling because it contains self-describing metadata and
         supports the creation of array-oriented datasets which may include three spatial dimensions, a time dimension
         and other user defined dimensions , we choose NetCDF as the file format to support the sharing of
-        the multidimensional space-time data in HydroShare.
+        the multidimensional space-time data in xDCIShare.
     </p>
     <a name="nc_spatialReference"></a>
     <p> Currently, we define the multidimensional (NetCDF) resource such that it includes only one NetCDF file with
         ".nc" extension. Any multidimensional space-time data supported by the NetCDF format will be valid for input as
-        a multidimensional (NetCDF) resource in HydroShare. To describe the multidimensional space-time data in NetCDF format,
+        a multidimensional (NetCDF) resource in xDCIShare. To describe the multidimensional space-time data in NetCDF format,
         we will use the following entities:
     </p>
         <br/>
@@ -631,14 +631,14 @@
         which is widely used in hydrological research. The raster can have a single or multiple bands (or layers) of data.
         A band is represented by a single matrix of cell organized into rows and columns where each contains a value
         representing information. We choose the <a href="http://trac.osgeo.org/geotiff/">GeoTIFF</a> file format to represent the
-        geographic raster data in HydroShare. The GeoTIFF refers to TIFF files which have geographic data embeded as
+        geographic raster data in xDCIShare. The GeoTIFF refers to TIFF files which have geographic data embeded as
         tags within the TIFF file. The geographic data can then be used to position the image in the correct location and
         geometry on the screen of a geographic information display.
     </p>
     <a name="rt_spatialReference"></a>
     <p> Currently, we define the geographic raster resource such that it includes only one geographic raster in GeoTIFF format which includes a
         single or multiple bands. Any raster data in GeoTIFF format will be valid for input as
-        a geographic raster resource in HydroShare. To describe the geographic raster data, we will use the following entities:
+        a geographic raster resource in xDCIShare. To describe the geographic raster data, we will use the following entities:
     </p>
         <br/>
         <a name="box"></a>
@@ -860,7 +860,7 @@
             <li><strong>Term: </strong>ModelOutput</li>
             <li><strong>URI: </strong><a href="#ModelOutput">http://www.hydroshare.org/terms/ModelOutput</a></li>
             <li><strong>Label: </strong>Model Output</li>
-            <li><strong>Description: </strong>A HydroShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
+            <li><strong>Description: </strong>A xDCIShare class that encapsulates all the metadata elements related to Model Instance resource output files</li>
         </ul>
     <a name="includesModelOutput"></a>
         <ul >
@@ -875,7 +875,7 @@
             <li><strong>Term: </strong>ExecutedBy</li>
             <li><strong>URI: </strong><a href="#ExecutedBy">http://www.hydroshare.org/terms/ExecutedBy</a></li>
             <li><strong>Label: </strong>Executed By</li>
-            <li><strong>Description: </strong>A HydroShare class that defines the Model Program that executes the current resource</li>
+            <li><strong>Description: </strong>A xDCIShare class that defines the Model Program that executes the current resource</li>
         </ul>
     <a name="modelProgramName"></a>
         <ul >
@@ -889,7 +889,7 @@
             <li><strong>Term: </strong>modelProgramIdentifier</li>
             <li><strong>URI: </strong><a href="#modelProgramIdentifier">http://www.hydroshare.org/terms/modelProgramIdentifier</a></li>
             <li><strong>Label: </strong>URI</li>
-            <li><strong>Description: </strong>The HydroShare identifier of the Model Program resource that executes the current resource</li>
+            <li><strong>Description: </strong>The xDCIShare identifier of the Model Program resource that executes the current resource</li>
         </ul>
 
     <h3>SWAT Model Instance Resource Type Description</h3>
@@ -919,7 +919,7 @@
             <li><strong>Term: </strong>ModelInput</li>
             <li><strong>URI: </strong><a href="#ModelInput">http://www.hydroshare.org/terms/ModelInput</a></li>
             <li><strong>Label: </strong>Model Input</li>
-            <li><strong>Description: </strong>HydroShare Class that includes all the metadata elements related to Model Instance resource input files</li>
+            <li><strong>Description: </strong>xDCIShare Class that includes all the metadata elements related to Model Instance resource input files</li>
         </ul>
     <a name="warmupPeriodType"></a>
         <ul >
@@ -1053,7 +1053,7 @@
             <li><strong>Term: </strong>ModelMethod</li>
             <li><strong>URI: </strong><a href="#ModelMethod">http://www.hydroshare.org/terms/ModelMethod</a></li>
             <li><strong>Label: </strong>Model Method</li>
-            <li><strong>Description: </strong>HydroShare class that includes all the metadata elements related to the model methods used in simulation</li>
+            <li><strong>Description: </strong>xDCIShare class that includes all the metadata elements related to the model methods used in simulation</li>
         </ul>
     <a name="runoffCalculationMethod"></a>
         <ul >
@@ -1096,7 +1096,7 @@
             <li><strong>Term: </strong>StudyArea</li>
             <li><strong>URI: </strong><a href="#StudyArea">http://www.hydroshare.org/terms/StudyArea</a></li>
             <li><strong>Label: </strong>Study Area</li>
-            <li><strong>Description: </strong>HydroShare class to describe the main properties of the study area</li>
+            <li><strong>Description: </strong>xDCIShare class to describe the main properties of the study area</li>
         </ul>
     <a name="totalLength"></a>
         <ul >
@@ -1132,7 +1132,7 @@
             <li><strong>Term: </strong>GridDimensions</li>
             <li><strong>URI: </strong><a href="#GridDimensions">http://www.hydroshare.org/terms/GridDimensions</a></li>
             <li><strong>Label: </strong>Grid Dimensions</li>
-            <li><strong>Description: </strong>HydroShare class that includes the properties of the model grid</li>
+            <li><strong>Description: </strong>xDCIShare class that includes the properties of the model grid</li>
         </ul>
     <a name="numberOfLayers"></a>
         <ul >
@@ -1175,7 +1175,7 @@
             <li><strong>Term: </strong>StressPeriod</li>
             <li><strong>URI: </strong><a href="#StressPeriod">http://www.hydroshare.org/terms/StressPeriod</a></li>
             <li><strong>Label: </strong>Stress Period</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information about the stress period</li>
+            <li><strong>Description: </strong>xDCIShare class that includes the information about the stress period</li>
         </ul>
     <a name="stressPeriodType"></a>
         <ul >
@@ -1212,7 +1212,7 @@
             <li><strong>Term: </strong>GroundWaterFlow</li>
             <li><strong>URI: </strong><a href="#GroundWaterFlow">http://www.hydroshare.org/terms/GroundWaterFlow</a></li>
             <li><strong>Label: </strong>GroundWater Flow</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information about groundwater flow</li>
+            <li><strong>Description: </strong>xDCIShare class that includes the information about groundwater flow</li>
         </ul>
     <a name="flowPackage"></a>
         <ul >
@@ -1235,7 +1235,7 @@
             <li><strong>Term: </strong>BoundaryCondition</li>
             <li><strong>URI: </strong><a href="#BoundaryCondition">http://www.hydroshare.org/terms/BoundaryCondition</a></li>
             <li><strong>Label: </strong>Boundary Condition</li>
-            <li><strong>Description: </strong>HydroShare class that includes the information about the boundary condition</li>
+            <li><strong>Description: </strong>xDCIShare class that includes the information about the boundary condition</li>
         </ul>
     <a name="specifiedHeadBoundaryPackages"></a>
         <ul >
@@ -1264,7 +1264,7 @@
             <li><strong>Term: </strong>ModelCalibration</li>
             <li><strong>URI: </strong><a href="#ModelCalibration">http://www.hydroshare.org/terms/ModelCalibration</a></li>
             <li><strong>Label: </strong>Model Calibration</li>
-            <li><strong>Description: </strong>HydroShare class to include the main aspects of the model calibration</li>
+            <li><strong>Description: </strong>xDCIShare class to include the main aspects of the model calibration</li>
         </ul>
     <a name="calibratedParameter"></a>
         <ul >
@@ -1300,7 +1300,7 @@
             <li><strong>Term: </strong>ModelInput</li>
             <li><strong>URI: </strong><a href="#ModelInput">http://www.hydroshare.org/terms/ModelInput</a></li>
             <li><strong>Label: </strong>Model Input</li>
-            <li><strong>Description: </strong>HydroShare class that includes all the metadata elements related to Model Instance resource input files</li>
+            <li><strong>Description: </strong>xDCIShare class that includes all the metadata elements related to Model Instance resource input files</li>
         </ul>
     <a name="inputType"></a>
         <ul >
@@ -1358,22 +1358,22 @@
 
     <h3>Web App Resource Type Description</h3>
     <p>
-        A Web App resource is a shortcut (or reference) to an external web application that can work with HydroShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access HydroShare data resources using the HydroShare REST API, and can be linked to specific HydroShare resource types and made discoverable within HydroShare by registering them as a Web App resource.
+        A Web App resource is a shortcut (or reference) to an external web application that can work with xDCIShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access xDCIShare data resources using the xDCIShare REST API, and can be linked to specific xDCIShare resource types and made discoverable within xDCIShare by registering them as a Web App resource.
     </p>
     <a name="AppURLPattern"></a>
         <ul >
             <li><strong>Term: </strong>AppURLPattern</li>
             <li><strong>URI: </strong><a href="#AppURLPattern">http://www.hydroshare.org/terms/AppURLPattern</a></li>
             <li><strong>Label: </strong>App-launching URL Pattern</li>
-            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, HydroShare supports the following parameters:
+            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which xDCIShare resource to retrieve and process. xDCIShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, xDCIShare supports the following parameters:
             <ul>
                 <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
                 <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
-                <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
+                <li> <strong>${HS_USR_NAME}</strong>: xDCIShare username</li>
                 <li> <strong>${HS_NETCDF_FILE_NAME}</strong>: Fullname of the '.nc' file in a NetCDF res</li>
             </ul>
                 An example:<br>
- <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>HydroShare will replace ${HS_RES_ID} with the real resource id.
+ <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>xDCIShare will replace ${HS_RES_ID} with the real resource id.
             </li>
         </ul>
     <a name="SupportedResourceType"></a>
@@ -1440,9 +1440,9 @@
         </ul>
     <h3>Collection Resource Type Description</h3>
     <p>
-        A collection resource is a resource that holds a list of other resources in HydroShare that the creator has logically assembled into a collection.
+        A collection resource is a resource that holds a list of other resources in xDCIShare that the creator has logically assembled into a collection.
         Collections are intended to be a flexible way to combine resources associated with a specific purpose, such as a specific study, site, or experiment.
-        HydroShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types,
+        xDCIShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types,
         publication status or permissions settings associated with resources in a collection.
     </p>
 
@@ -1451,10 +1451,10 @@
     <p>
         A Composite resource is a resource which can include multiple files without file format
         limitations. This resource is designed to support metadata and data functions at both file
-        level and resource level to better support data management in HydroShare. Each file may be
+        level and resource level to better support data management in xDCIShare. Each file may be
         annotated with general file type metadata. If a file, or group of files representing
         one logical object (e.g. multiple files for a shapefile) is in the format which represents
-        a specific file type supported in HydroShare, the file will be supported with specific file
+        a specific file type supported in xDCIShare, the file will be supported with specific file
         type metadata and additional data functions established for that type
         (e.g. metadata extraction from TIFF or NetCDF file). The resource level metadata will be the
         same as metadata of the generic resource type. Each file within the resource will be associated

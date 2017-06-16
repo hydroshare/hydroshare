@@ -8,10 +8,10 @@
 {% endblock %}
 
 {% block main %}
-<p>Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.
-    &nbsp;Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>
+<p>Thank you for signing up for xDCIShare! We have sent you an email from hydroshare.org to verify your account.
+    &nbsp;Please click on the link within the email and verify your account with us and you can get started sharing data and models with xDCIShare.</p>
 {% if is_email_sent %}
-    <p style="color: #0A91AB">Verification email has been resent successfully. Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare. </p>
+    <p style="color: #0A91AB">Verification email has been resent successfully. Please click on the link within the email and verify your account with us and you can get started sharing data and models with xDCIShare. </p>
 {% else %}
     <p><a href="/hsapi/_internal/resend_verification_email/?username={{ username }}&email={{ email }}">Please click here if you do not receive a verification email within 1 hour.</a></p>
 {% endif %}

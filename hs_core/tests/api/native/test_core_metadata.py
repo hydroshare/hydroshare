@@ -983,7 +983,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.published = False
         self.res.raccess.save()
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.res.short_id, 'publisher', name='HydroShare',
+            resource.create_metadata_element(self.res.short_id, 'publisher', name='xDCIShare',
                                              url="http://hydroshare.org")
 
         # publisher element can be added when the resource is published

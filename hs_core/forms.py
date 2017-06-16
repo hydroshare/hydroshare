@@ -165,7 +165,7 @@ class PartyForm(ModelForm):
         fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
-        labels = {'description': 'HydroShare User Identifier (URL)'}
+        labels = {'description': 'xDCIShare User Identifier (URL)'}
 
 
 class CreatorForm(PartyForm):

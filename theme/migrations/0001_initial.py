@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
                 ('phone_2_type', models.CharField(blank=True, max_length=1024, null=True, choices=[(b'Home', b'Home'), (b'Work', b'Work'), (b'Mobile', b'Mobile')])),
                 ('public', models.BooleanField(default=True, help_text=b'Uncheck to make your profile contact information and details private.')),
                 ('cv', models.FileField(help_text=b'Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, upload_to=b'profile', blank=True)),
-                ('details', models.TextField(help_text=b'Tell the HydroShare community a little about yourself.', null=True, verbose_name=b'Description', blank=True)),
+                ('details', models.TextField(help_text=b'Tell the xDCIShare community a little about yourself.', null=True, verbose_name=b'Description', blank=True)),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
             options={

@@ -1,4 +1,4 @@
 hs_app_template
 ===============
 
-Hydroshare app template for Django
+xDCIShare app template for Django

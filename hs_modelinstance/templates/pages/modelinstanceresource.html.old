@@ -145,7 +145,7 @@
                               </div>
                               <div class="modal-body">
                                   <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource file. A copy of your
-                                    resource file will not be retained by Hydroshare.  We recommend highly that you download the latest copy
+                                    resource file will not be retained by xDCIShare.  We recommend highly that you download the latest copy
                                     of your resource file before confirming this action.
                               </div>
                               <div class="modal-footer">
@@ -445,7 +445,7 @@
           <div class="modal-body">
 
                 <strong>THIS IS A PERMANENT ACTION.</strong> This will delete the resource entirely. A copy of your
-                resource data will not be retained by Hydroshare.  We recommend highly that you download the latest copy
+                resource data will not be retained by xDCIShare.  We recommend highly that you download the latest copy
                 of your resource before confirming this action.
               <hr/>
                 <a class="btn btn-primary btn-block" href="{{ bag.bag.url }}">Download resource package</a>

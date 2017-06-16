@@ -1,4 +1,4 @@
 hs_ModelInstance
 ===============
 
-Hydroshare Model Instance resource type for Django
+xDCIShare Model Instance resource type for Django

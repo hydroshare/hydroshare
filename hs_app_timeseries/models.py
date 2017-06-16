@@ -1215,7 +1215,7 @@ class TimeSeriesMetaData(CoreMetaData):
             coverage = self.coverages.all().exclude(type='period').first()
             if coverage:
                 spatial_ref_id = 1
-                # this is the default projection system for coverage in HydroShare
+                # this is the default projection system for coverage in xDCIShare
                 srs_name = 'World Geodetic System 1984 (WGS84)'
                 srs_code = 'EPSG:4326'
                 cur.execute(insert_sql, (spatial_ref_id, srs_code, srs_name), )

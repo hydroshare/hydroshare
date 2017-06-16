@@ -19,7 +19,7 @@ from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, Core
 
 
 class AbstractFileMetaData(models.Model):
-    """ base class for HydroShare file type metadata """
+    """ base class for xDCIShare file type metadata """
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
@@ -557,7 +557,7 @@ class AbstractFileMetaData(models.Model):
 
 
 class AbstractLogicalFile(models.Model):
-    """ base class for HydroShare file types """
+    """ base class for xDCIShare file types """
 
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',

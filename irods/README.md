@@ -1,6 +1,6 @@
 ## Using local federated iRODS
 
-The scripts herein are a one-way street that update the configuration of HydroShare to use a locally deployed federated pair 
+The scripts herein are a one-way street that update the configuration of xDCIShare to use a locally deployed federated pair 
 of iCAT v.4.1.8 servers in Docker.
 
 Effected files:
@@ -63,7 +63,7 @@ a4d976bcdeb7        mjstealey/docker-irods-icat:4.1.8   "/irods-docker-entryp"  
 
 ### Restarting after all containers have been stopped or host has been shutdown
 
-It can be useful to retain the system state after all containers have been stopped or a system running HydroShare with local iRODS has been shutdown.
+It can be useful to retain the system state after all containers have been stopped or a system running xDCIShare with local iRODS has been shutdown.
 
 Assuming that the user has initially started with the `--persist` option, a normal initial deployment would look like this.
 
@@ -87,7 +87,7 @@ $ cd ../
 $ ./hsctl start
 ```
 
-This should recreate the HydroShare application as it was prior to beign stopped or shut down with all iRODS related information intact.
+This should recreate the xDCIShare application as it was prior to beign stopped or shut down with all iRODS related information intact.
 
 ### Known issues at this time
 

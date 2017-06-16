@@ -423,7 +423,7 @@ class TestGroup(MockIRODSTestCaseMixin, ViewTestCase):
 
         self._update_failure(new_group, request)
 
-        # test trying to update group with a duplicate name ('HydroShare Author') should fail
+        # test trying to update group with a duplicate name ('xDCIShare Author') should fail
         grp_data = {'name': 'Resource Author', 'description': 'This is a cool group-1',
                     'purpose': 'This group has purpose'}
         request = self.factory.post(url, data=grp_data)
