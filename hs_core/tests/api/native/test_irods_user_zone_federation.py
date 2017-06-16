@@ -235,7 +235,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         res = resource.create_resource(
             resource_type='GenericResource',
             owner=self.user,
-            title='My Test Generic Resource in HydroShare Zone'
+            title='My Test Generic Resource in xDCIShare Zone'
         )
         self.assertEqual(res.files.all().count(), 0,
                          msg="Number of content files is not equal to 0")

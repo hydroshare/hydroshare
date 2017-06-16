@@ -582,7 +582,7 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
-        # Catch-all logger for HydroShare apps
+        # Catch-all logger for xDCIShare apps
         '': {
             'handlers': ['hydrosharelog'],
             'propagate': False,

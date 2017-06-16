@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # hsctl
-# HydroShare Control Script
+# xDCIShare Control Script
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 ### Local Config ###
@@ -29,7 +29,7 @@ PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 USE_LOCAL_IRODS=false
 
 display_usage() {
-    echo "*** HydroShare Control script ***"
+    echo "*** xDCIShare Control script ***"
     echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
     echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
     echo "usage: $0 maint_off       # removes maintenance page (only if USE_NGINX = true)"
@@ -369,11 +369,11 @@ reset_all_hs() {
     echo "RESET ALL:"
     echo "  - WARNING: All data, containers, and hydroshare related images will be removed"
     if [[ "$(docker-compose ps | grep hydroshare)" ]]; then
-        echo "  - INFO: HydroShare found previously running, proceeding with clean up"
+        echo "  - INFO: xDCIShare found previously running, proceeding with clean up"
         # Remove root items
         scripts/pre-remove-hs;
     else
-        echo "  - WARNING: Could not find a running instance of HydroShare"
+        echo "  - WARNING: Could not find a running instance of xDCIShare"
         echo "  - WARNING: Attempting cleanup anyway";
     fi
     # Stopping all running docker containers

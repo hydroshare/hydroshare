@@ -245,7 +245,7 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def test_create_resource_with_metadata_for_publisher(self):
         # trying to create a resource with metadata for publisher should fail due to the fact that the
         # resource is not yet published
-        metadata_dict = [{'publisher': {'name': 'HydroShare', 'url': 'https://hydroshare.org'}}, ]
+        metadata_dict = [{'publisher': {'name': 'xDCIShare', 'url': 'https://hydroshare.org'}}, ]
         with self.assertRaises(Exception):
             resource.create_resource(resource_type='GenericResource',
                                      owner=self.user,

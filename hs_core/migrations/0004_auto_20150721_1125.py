@@ -30,13 +30,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='baseresource',
             name='edit_groups',
-            field=models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can edit the resource', related_name='group_editable_hs_core_baseresource', null=True, to='auth.Group', blank=True),
+            field=models.ManyToManyField(help_text=b'This is the set of xDCIShare Groups who can edit the resource', related_name='group_editable_hs_core_baseresource', null=True, to='auth.Group', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='baseresource',
             name='edit_users',
-            field=models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can edit the resource', related_name='user_editable_hs_core_baseresource', null=True, to=settings.AUTH_USER_MODEL, blank=True),
+            field=models.ManyToManyField(help_text=b'This is the set of xDCIShare Users who can edit the resource', related_name='user_editable_hs_core_baseresource', null=True, to=settings.AUTH_USER_MODEL, blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
@@ -60,13 +60,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='baseresource',
             name='view_groups',
-            field=models.ManyToManyField(help_text=b'This is the set of Hydroshare Groups who can view the resource', related_name='group_viewable_hs_core_baseresource', null=True, to='auth.Group', blank=True),
+            field=models.ManyToManyField(help_text=b'This is the set of xDCIShare Groups who can view the resource', related_name='group_viewable_hs_core_baseresource', null=True, to='auth.Group', blank=True),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='baseresource',
             name='view_users',
-            field=models.ManyToManyField(help_text=b'This is the set of Hydroshare Users who can view the resource', related_name='user_viewable_hs_core_baseresource', null=True, to=settings.AUTH_USER_MODEL, blank=True),
+            field=models.ManyToManyField(help_text=b'This is the set of xDCIShare Users who can view the resource', related_name='user_viewable_hs_core_baseresource', null=True, to=settings.AUTH_USER_MODEL, blank=True),
             preserve_default=True,
         ),
         migrations.AlterModelTable(
