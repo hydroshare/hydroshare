@@ -155,7 +155,7 @@ class TimeSeries(object):
         # encode value count
         hs_value_count = etree.SubElement(rdf_description, '{%s}valueCount' % NAMESPACES['hsterms'])
         hs_value_count.text = str(self.value_count)
-        
+
         # encode site data
         hs_site = etree.SubElement(rdf_description, '{%s}site' % NAMESPACES['hsterms'])
         hs_site_desc = etree.SubElement(hs_site, '{%s}Description' % NAMESPACES['rdf'])

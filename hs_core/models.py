@@ -3050,7 +3050,7 @@ class ResourceFile(models.Model):
     def can_set_file_type(self):
         """Check if file type can be set for this resource file instance."""
         return self.extension in ('.tif', '.zip', '.nc', '.refts') and \
-               (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
+            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
 
     @property
     def url(self):
