@@ -9,7 +9,7 @@ import django.contrib.postgres.fields.hstore
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0003_auto_20170302_2257'),
+        ('hs_file_types', '0004_geofeaturefilemetadata_geofeaturelogicalfile'),
     ]
 
     operations = [
