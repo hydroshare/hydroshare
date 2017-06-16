@@ -28,7 +28,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
             return
 
-        self.hs_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name='Resource Author')
         # create a user
         self.user = hydroshare.create_account(
             'test_user@email.com',

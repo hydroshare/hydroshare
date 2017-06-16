@@ -25,7 +25,7 @@ from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, Ban
 class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(RasterFileTypeMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

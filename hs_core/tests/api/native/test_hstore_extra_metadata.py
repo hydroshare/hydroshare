@@ -10,7 +10,7 @@ class TestHStore(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestHStore, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         # create a user
         self.user = users.create_account(
             'test_user@email.com',

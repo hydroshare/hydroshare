@@ -20,7 +20,7 @@ from hs_modelinstance.models import ModelInstanceResource, ModelOutput, Executed
 class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestModelInstanceMetaData, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

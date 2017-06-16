@@ -16,7 +16,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         if not super(CompositeResourceTest, self).is_federated_irods_available():
             return
 
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

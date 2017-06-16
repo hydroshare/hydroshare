@@ -21,7 +21,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestCollection, self).setUp()
         self.api_client = Client()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         self.user1 = create_account(
             'byu1@byu.edu',

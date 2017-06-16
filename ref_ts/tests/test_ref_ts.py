@@ -16,7 +16,7 @@ class TestRefTS(TestCase):
         self.username = 'creator'
         self.password = 'mybadpassword'
 
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         # create a user to be used for creating the resource
         self.user = hydroshare.create_account(

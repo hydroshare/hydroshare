@@ -17,7 +17,7 @@ from hs_file_types.models import GenericLogicalFile
 class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
     def setUp(self):
         super(TestCreateResourceViewFunctions, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.username = 'john'
         self.password = 'jhmypassword'
         self.user = hydroshare.create_account(

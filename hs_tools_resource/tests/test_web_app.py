@@ -18,7 +18,7 @@ from hs_tools_resource.utils import parse_app_url_template
 class TestWebAppFeature(TransactionTestCase):
 
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
                 'scrawley@byu.edu',
                 username='scrawley',

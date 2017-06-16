@@ -15,7 +15,7 @@ class T11ExplicitGet(MockIRODSTestCaseMixin, TestCase):
         super(T11ExplicitGet, self).setUp()
         global_reset()
 
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.A_user = hydroshare.create_account(
             'a_user@gmail.com',
             username='A',

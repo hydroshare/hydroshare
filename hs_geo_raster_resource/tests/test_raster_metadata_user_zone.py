@@ -13,7 +13,7 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         super(TestRasterMetaData, self).setUp()
         if not super(TestRasterMetaData, self).is_federated_irods_available():
             return
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         self.user = hydroshare.create_account(
             'user1@nowhere.com',

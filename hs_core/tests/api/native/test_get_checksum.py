@@ -10,7 +10,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestGetChecksum(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetChecksum, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         # create a user
         self.user1 = hydroshare.create_account(
             'creator@usu.edu',

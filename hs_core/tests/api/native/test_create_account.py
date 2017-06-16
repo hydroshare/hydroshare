@@ -14,7 +14,7 @@ from hs_core import hydroshare
 
 class CreateAccountTest(TestCase):
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
     def test_basic_superuser(self):
         username, first_name, last_name, password = 'shaunjl', 'shaun','joseph','mypass'

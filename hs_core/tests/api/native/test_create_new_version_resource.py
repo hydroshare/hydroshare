@@ -18,7 +18,7 @@ from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, Cell
 class TestNewVersionResource(TestCase):
     def setUp(self):
         super(TestNewVersionResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         # create a user who is the owner of the resource to be versioned
         self.owner = hydroshare.create_account(

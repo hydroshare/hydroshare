@@ -837,7 +837,7 @@ def assertUserGroupUnshareCoherence(self):
     :return: None
     """
     for g in Group.objects.all().exclude(
-            pk=self.group.pk):  # all groups except xDCIShare Author
+            pk=self.group.pk):  # all groups except Resource Author
         for u in User.objects.all():  # all instigating users
             for v in User.objects.all():  # all target users
                 if u.uaccess.can_unshare_group_with_user(g, v):
