@@ -20,6 +20,10 @@
 				"variableName" : "Discharge, cubic feet per second",
 				"variableCode" : "NWISDV:00060/DataType=MEAN"
 			},
+			"method" : {
+                "methodDescription" : "Estimated by NASA National Snow and Ice Data Center",
+                "methodLink" : "https://nsidc.org/"
+            },
 			"valueCount": 1000,
 			"sampleMedium" : "unknown"
           }

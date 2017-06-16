@@ -135,6 +135,21 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self._test_invalid_file()
         self.composite_resource.delete()
 
+    def test_set_file_type_to_file_with_invalid_method_link(self):
+        # here we are using an invalid time series json file for setting it
+        # to RefTimeseries file type which should fail as it as has an invalid method link
+        self.refts_invalid_mlink_file_name = 'refts_invalid_method_link.json.refts'
+        self.refts_invalid_mlink_file = 'hs_file_types/tests/{}'.format(
+            self.refts_invalid_mlink_file_name)
+
+        tgt_temp_refts_invalid_mlink_file = os.path.join(
+            self.temp_dir, self.refts_invalid_mlink_file_name)
+        shutil.copy(self.refts_invalid_mlink_file, tgt_temp_refts_invalid_mlink_file)
+        self.refts_file_obj = open(self.refts_invalid_mlink_file, 'r')
+        self._create_composite_resource()
+        self._test_invalid_file()
+        self.composite_resource.delete()
+
     def test_set_file_type_to_file_with_invalid_date_value(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail
@@ -183,6 +198,74 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.refts_file_obj = open(self.refts_missing_key_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_missing_title(self):
+        # here we are using a valid time series json file for setting it
+        # to RefTimeseries file type which should be successful even though it is missing title
+
+        self.refts_missing_title_file_name = 'refts_valid_title_missing.json.refts'
+        self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_title_file_name)
+
+        tgt_temp_refts_missing_title_file = os.path.join(
+            self.temp_dir, self.refts_missing_title_file_name)
+        shutil.copy(self.refts_missing_title_file, tgt_temp_refts_missing_title_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_title_file, 'r')
+        self._create_composite_resource()
+        self._test_valid_missing_optional_elements()
+
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_missing_abstract(self):
+        # here we are using a valid time series json file for setting it
+        # to RefTimeseries file type which should be successful even though it is missing abstract
+
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_abstract_file_name)
+
+        tgt_temp_refts_missing_abstract_file = os.path.join(
+            self.temp_dir, self.refts_missing_abstract_file_name)
+        shutil.copy(self.refts_missing_abstract_file, tgt_temp_refts_missing_abstract_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_abstract_file, 'r')
+        self._create_composite_resource()
+        self._test_valid_missing_optional_elements()
+
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_missing_keywords(self):
+        # here we are using a valid time series json file for setting it
+        # to RefTimeseries file type which should be successful even though it is missing keywords
+
+        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.json.refts'
+        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_keywords_file_name)
+
+        tgt_temp_refts_missing_keywords_file = os.path.join(
+            self.temp_dir, self.refts_missing_keywords_file_name)
+        shutil.copy(self.refts_missing_keywords_file, tgt_temp_refts_missing_keywords_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_keywords_file, 'r')
+        self._create_composite_resource()
+        self._test_valid_missing_optional_elements()
+
+        self.composite_resource.delete()
+
+    def test_set_file_type_to_file_with_missing_symbol(self):
+        # here we are using a valid time series json file for setting it
+        # to RefTimeseries file type which should be successful even though it is missing symbol
+
+        self.refts_missing_symbol_file_name = 'refts_valid_symbol_missing.json.refts'
+        self.refts_missing_symbol_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_symbol_file_name)
+
+        tgt_temp_refts_missing_symbol_file = os.path.join(
+            self.temp_dir, self.refts_missing_symbol_file_name)
+        shutil.copy(self.refts_missing_symbol_file, tgt_temp_refts_missing_symbol_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_symbol_file, 'r')
+        self._create_composite_resource()
+        self._test_valid_missing_optional_elements()
+
         self.composite_resource.delete()
 
     def test_set_file_type_to_file_with_duplicate_keywords(self):
@@ -283,6 +366,30 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # check that the resource file is not associated with generic logical file
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
+    def _test_valid_missing_optional_elements(self):
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that there is one GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # check that there is no RefTimeseriesLogicalFile object
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
+
+        # set the json file to RefTimeseries file type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        # check that there is one RefTimeseriesLogicalFile object
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        # test that the content of the json file is same is what we have
+        # saved in json_file_content field of the file metadata object
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertTrue(isinstance(logical_file, RefTimeseriesLogicalFile))
+        self.assertEqual(logical_file.metadata.json_file_content, res_file.resource_file.read())
 
     def _create_composite_resource(self, title='Test Ref Time Series File Type Metadata'):
         uploaded_file = UploadedFile(file=self.refts_file_obj,

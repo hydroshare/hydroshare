@@ -68,6 +68,18 @@ class TimeSeries(object):
                                     get_th('Network Name')
                                     td(self.network_name)
                                 with tr():
+                                    get_th('Service Type')
+                                    td(self.service_type)
+                                with tr():
+                                    get_th('Return Type')
+                                    td(self.return_type)
+                                with tr():
+                                    get_th('Reference Type')
+                                    td(self.reference_type)
+                                with tr():
+                                    get_th('URL')
+                                    td(self.url)
+                                with tr():
                                     get_th('Site Name')
                                     td(self.site_name)
                                 with tr():
@@ -86,23 +98,17 @@ class TimeSeries(object):
                                     get_th('Variable Code')
                                     td(self.variable_code)
                                 with tr():
+                                    get_th('Method Description')
+                                    td(self.method_description)
+                                with tr():
+                                    get_th('Method Link')
+                                    td(self.method_link)
+                                with tr():
                                     get_th('Sample Medium')
                                     td(self.sample_medium)
                                 with tr():
                                     get_th('Value Count')
                                     td(self.value_count)
-                                with tr():
-                                    get_th('URL')
-                                    td(self.url)
-                                with tr():
-                                    get_th('Service Type')
-                                    td(self.service_type)
-                                with tr():
-                                    get_th('Return Type')
-                                    td(self.return_type)
-                                with tr():
-                                    get_th('Reference Type')
-                                    td(self.reference_type)
                                 with tr():
                                     get_th('Begin Date')
                                     td(self.start_date)
@@ -177,6 +183,16 @@ class TimeSeries(object):
         hs_variable_name = etree.SubElement(hs_variable_desc, '{%s}variableName'
                                             % NAMESPACES['hsterms'])
         hs_variable_name.text = self.variable_name
+
+        # encode method data
+        hs_method = etree.SubElement(rdf_description, '{%s}method' % NAMESPACES['hsterms'])
+        hs_rdf_method_desc = etree.SubElement(hs_method, '{%s}Description' % NAMESPACES['rdf'])
+        hs_method_desc = etree.SubElement(hs_rdf_method_desc, '{%s}methodDescription'
+                                          % NAMESPACES['hsterms'])
+        hs_method_desc.text = self.method_description
+        hs_method_link = etree.SubElement(hs_rdf_method_desc, '{%s}methodLink'
+                                          % NAMESPACES['hsterms'])
+        hs_method_link.text = self.method_link
 
 
 class Site(object):
@@ -822,6 +838,7 @@ def _validate_json_data(series_data):
                 except URLError:
                     raise Exception(err_msg.format("Invalid method link found"))
 
+
 TS_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
@@ -860,6 +877,7 @@ TS_SCHEMA = {
                                 "variableCode": {"type": "string"},
                                 "variableName": {"type": "string"}
                             },
+                            "required": ["variableCode", "variableName"],
                             "additionalProperties": False
                         },
                         "method": {
@@ -868,6 +886,7 @@ TS_SCHEMA = {
                                 "methodDescription": {"type": "string"},
                                 "methodLink": {"type": "string"}
                             },
+                            "required": ["methodDescription", "methodLink"],
                             "additionalProperties": False
                         },
                         "requestInfo": {
@@ -880,20 +899,22 @@ TS_SCHEMA = {
                                 "serviceType": {"enum": ["SOAP", "REST"]},
                                 "url": {"type": "string"}
                             },
+                            "required": ["networkName", "refType", "returnType", "serviceType",
+                                         "url"],
                             "additionalProperties": False
                         },
                         "sampleMedium": {"type": "string"},
                         "valueCount": {"type": "number"}
                     },
-                    "additionalProperties": False,
                     "required": ["beginDate", "endDate", "requestInfo",
-                                 "site", "sampleMedium", "valueCount", "variable"]
+                                 "site", "sampleMedium", "valueCount", "variable"],
+                    "additionalProperties": False
                 }
             },
-            "additionalProperties": False,
-            "required": ["fileVersion", "referencedTimeSeries"]
+            "required": ["fileVersion", "referencedTimeSeries"],
+            "additionalProperties": False
         }
     },
-    "additionalProperties": False,
-    "required": ["timeSeriesReferenceFile"]
+    "required": ["timeSeriesReferenceFile"],
+    "additionalProperties": False
 }
