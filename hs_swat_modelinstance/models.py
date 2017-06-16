@@ -332,20 +332,17 @@ class ModelInput(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if val == 'Choose a type':
                 kwargs[key] = ''
-            else:
-                if val != '':
-                    if key == 'rainfallTimeStepType':
-                        time_step = val
-                        types = [c[0] for c in cls.rainfall_type_choices]
-                        cls.check_time_steps(time_step, types)
-                    elif key == 'routingTimeStepType':
-                        time_step = val
-                        types = [c[0] for c in cls.routing_type_choices]
-                        cls.check_time_steps(time_step, types)
-                    elif key == 'simulationTimeStepType':
-                        time_step = val
-                        types = [c[0] for c in cls.simulation_type_choices]
-                        cls.check_time_steps(time_step, types)
+            elif val != '':
+                time_step = val
+                if key == 'rainfallTimeStepType':
+                    types = [c[0] for c in cls.rainfall_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'routingTimeStepType':
+                    types = [c[0] for c in cls.routing_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'simulationTimeStepType':
+                    types = [c[0] for c in cls.simulation_type_choices]
+                    cls.check_time_steps(time_step, types)
         return kwargs
 
     @classmethod
