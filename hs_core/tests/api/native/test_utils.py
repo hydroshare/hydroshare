@@ -13,7 +13,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestUtils(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUtils, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',
@@ -92,7 +92,7 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
         )
 
         self.assertEqual(
-            utils.group_from_id('xDCIShare Author'),
+            utils.group_from_id('Resource Author'),
             self.group,
             msg='lookup by group name failed'
         )

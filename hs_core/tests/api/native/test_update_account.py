@@ -14,7 +14,7 @@ from hs_core import hydroshare
 
 class UpdateAccountTest(unittest.TestCase):
     def setUp(self):
-        self.hs_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'shaun@gmail.com',
             username='shaunjl',

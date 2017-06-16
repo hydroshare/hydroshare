@@ -14,7 +14,7 @@ class T01CreateUser(MockIRODSTestCaseMixin, TestCase):
         super(T01CreateUser, self).setUp()
         global_reset()
 
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         self.admin = hydroshare.create_account(
             'admin@gmail.com',

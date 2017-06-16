@@ -8736,7 +8736,7 @@ ALTER TABLE ONLY theme_userquota ALTER COLUMN id SET DEFAULT nextval('theme_user
 --
 
 COPY auth_group (id, name) FROM stdin;
-1	xDCIShare Author
+1	Resource Author
 \.
 
 
@@ -10065,12 +10065,12 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 32	2016-01-25 19:52:16.941687+00	4	Discover	2	Changed slug and keywords.	33	4
 33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
 34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
-35	2016-02-24 17:41:41.504891+00	1	xDCIShare Author	2	Changed permissions.	2	4
+35	2016-02-24 17:41:41.504891+00	1	Resource Author	2	Changed permissions.	2	4
 36	2016-06-23 17:07:04.049586+00	13	Collaborate	1		33	4
-37	2017-02-02 17:25:53.744625+00	1	xDCIShare Author	2	Changed permissions.	2	4
-38	2017-02-02 17:26:10.173151+00	1	xDCIShare Author	2	Changed permissions.	2	4
-39	2017-02-02 17:26:32.707066+00	1	xDCIShare Author	2	Changed permissions.	2	4
-40	2017-02-02 17:26:47.958444+00	1	xDCIShare Author	2	Changed permissions.	2	4
+37	2017-02-02 17:25:53.744625+00	1	Resource Author	2	Changed permissions.	2	4
+38	2017-02-02 17:26:10.173151+00	1	Resource Author	2	Changed permissions.	2	4
+39	2017-02-02 17:26:32.707066+00	1	Resource Author	2	Changed permissions.	2	4
+40	2017-02-02 17:26:47.958444+00	1	Resource Author	2	Changed permissions.	2	4
 41	2017-05-05 13:47:22.842788+00	2	Home	2	Changed heading, content, message_start_date, message_end_date, message_type, in_menus and keywords.	17	4
 42	2017-05-05 13:49:03.819452+00	2	Home	2	Changed content, message_start_date, in_menus and keywords.	17	4
 43	2017-05-05 13:52:11.658026+00	6	Apps	2	Changed slug.	34	4
@@ -10079,7 +10079,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 46	2017-05-05 14:13:10.186432+00	10	Statement of Privacy	2	Changed content, in_menus, description and keywords.	33	4
 47	2017-05-05 14:16:27.533827+00	4	admin	2	Changed first_name.	3	4
 48	2017-05-05 14:16:51.48684+00	1	xDCIshare Author	2	Changed name.	2	4
-49	2017-05-05 14:17:42.985039+00	1	xDCIShare Author	2	Changed name.	2	4
+49	2017-05-05 14:17:42.985039+00	1	Resource Author	2	Changed name.	2	4
 50	2017-05-05 14:20:45.489007+00	1	QuotaMessage object	1		207	4
 51	2017-05-05 14:24:29.244065+00	1	SiteConfiguration object	2	Changed col1_content, col3_heading, col3_content, twitter_link, facebook_link, youtube_link, github_link, linkedin_link and copyright.	16	4
 \.

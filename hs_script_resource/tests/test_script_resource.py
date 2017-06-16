@@ -13,7 +13,7 @@ from hs_script_resource.receivers import script_pre_create, script_metadata_pre_
 class TestScriptResource(TransactionTestCase):
 
     def setUp(self):
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
                 'scrawley@byu.edu',
                 username='scrawley',

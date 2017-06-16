@@ -16,7 +16,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T05ShareResource, self).setUp()
         global_reset()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
             username='admin',

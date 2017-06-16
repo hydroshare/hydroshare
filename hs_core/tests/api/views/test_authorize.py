@@ -14,7 +14,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestAuthorize, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         # create a user - resource owner
         self.user = users.create_account(
             'test_user@email.com',

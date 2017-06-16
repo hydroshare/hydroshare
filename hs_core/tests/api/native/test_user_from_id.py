@@ -10,7 +10,7 @@ from hs_core import hydroshare
 
 class TestUserFromId(TestCase):
     def setUp(self):
-        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'jamy2@gmail.com',
             username='jamy2',

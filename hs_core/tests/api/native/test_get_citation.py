@@ -11,7 +11,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestGetCitation, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.user = hydroshare.create_account(
             'user1@nowhere.com',
             username='user1',

@@ -13,7 +13,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestChangeQuotaHolder, self).setUp()
 
-        self.hs_group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.hs_group, _ = Group.objects.get_or_create(name='Resource Author')
         # create a user
         self.user1 = hydroshare.create_account(
             'test_user1@email.com',

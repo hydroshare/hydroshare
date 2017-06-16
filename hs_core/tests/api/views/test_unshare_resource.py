@@ -16,7 +16,7 @@ from hs_access_control.models import PrivilegeCodes
 class TestUnshareResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUnshareResource, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
 
         self.owner = hydroshare.create_account(
             'john@gmail.com',

@@ -21,7 +21,7 @@ class TestUpdateSQLiteFile(MockIRODSTestCaseMixin, TestCase):
 
     def setUp(self):
         super(TestUpdateSQLiteFile, self).setUp()
-        self.group, _ = Group.objects.get_or_create(name='xDCIShare Author')
+        self.group, _ = Group.objects.get_or_create(name='Resource Author')
         self.username = 'john'
         self.password = 'jhmypassword'
         self.john = hydroshare.create_account(
