@@ -2,7 +2,7 @@ from dateutil import parser
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
-    NetCDFLogicalFile, RefTimeseriesLogicalFile
+    NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile
 
 
 def assert_raster_file_type_metadata(self):
@@ -253,6 +253,51 @@ def assert_netcdf_file_type_metadata(self, title):
     self.assertEqual(var_grid.type, 'Unknown')
     self.assertEqual(var_grid.shape, 'Not defined')
 
+
+def assert_geofeature_file_type_metadata(self, expected_folder_name):
+    # test files in the file type
+    self.assertEqual(self.composite_resource.files.count(), 3)
+    # check that there is no GenericLogicalFile object
+    self.assertEqual(GenericLogicalFile.objects.count(), 0)
+    # check that there is one GeoFeatureLogicalFile object
+    self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+    # check that there is one GeoFeatureFileMetaData object
+    self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+
+    logical_file = GeoFeatureLogicalFile.objects.first()
+    self.assertEqual(logical_file.files.count(), 3)
+    # check that the 3 resource files are now associated with GeoFeatureLogicalFile
+    for res_file in self.composite_resource.files.all():
+        self.assertEqual(res_file.logical_file_type_name, "GeoFeatureLogicalFile")
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertTrue(isinstance(res_file.logical_file, GeoFeatureLogicalFile))
+    # check that we put the 3 files in a new folder
+    for res_file in self.composite_resource.files.all():
+        file_path, base_file_name, _ = get_resource_file_name_and_extension(res_file)
+        expected_file_path = "{}/data/contents/{}/{}"
+        res_file.file_folder = expected_folder_name
+        expected_file_path = expected_file_path.format(self.composite_resource.root_path,
+                                                       expected_folder_name, base_file_name)
+        self.assertEqual(file_path, expected_file_path)
+    # test extracted raster file type metadata
+    # there should not be any resource level coverage
+    self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
+    self.assertNotEqual(logical_file.metadata.geometryinformation, None)
+    self.assertEqual(logical_file.metadata.geometryinformation.featureCount, 51)
+    self.assertEqual(logical_file.metadata.geometryinformation.geometryType,
+                     "MULTIPOLYGON")
+
+    self.assertNotEqual(logical_file.metadata.originalcoverage, None)
+    self.assertEqual(logical_file.metadata.originalcoverage.datum,
+                     'unknown')
+    self.assertEqual(logical_file.metadata.originalcoverage.projection_name,
+                     'unknown')
+    self.assertGreater(len(logical_file.metadata.originalcoverage.projection_string), 0)
+    self.assertEqual(logical_file.metadata.originalcoverage.unit, 'unknown')
+    self.assertEqual(logical_file.metadata.originalcoverage.eastlimit, -66.9692712587578)
+    self.assertEqual(logical_file.metadata.originalcoverage.northlimit, 71.406235393967)
+    self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
+    self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
 
 def assert_ref_time_series_file_type_metadata(self):
     # check that there is one RefTimeseriesLogicalFile object

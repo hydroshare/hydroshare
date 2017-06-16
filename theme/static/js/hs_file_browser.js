@@ -70,6 +70,7 @@ function updateSelectionMenuContext() {
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
     var flagDisableSetNetCDFFileType = false;
+    var flagDisableSetGeoFeatureFileType = false;
     var flagDisableSetRefTimeseriesFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
@@ -83,6 +84,7 @@ function updateSelectionMenuContext() {
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetNetCDFFileType = true;
+        flagDisableSetGeoFeatureFileType = true;
         flagDisableSetRefTimeseriesFileType = true;
         flagDisableGetLink = true;
 
@@ -122,6 +124,7 @@ function updateSelectionMenuContext() {
         flagDisableGetLink = true;
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableSetGeoFeatureFileType = true;
 
         $("#fb-download-help").toggleClass("hidden", true);
     }
@@ -157,11 +160,13 @@ function updateSelectionMenuContext() {
             flagDisableSetNetCDFFileType = true;
         }
 
+        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetGeoFeatureFileType = true;
+        }
         if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "GenericLogicalFile") {
             flagDisableSetRefTimeseriesFileType = true;
         }
-
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile") {
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
@@ -173,7 +178,7 @@ function updateSelectionMenuContext() {
     }
 
     var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
+    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
             flagDisableCreateFolder = true;
         }
     // Show Create folder toolbar option
@@ -204,6 +209,10 @@ function updateSelectionMenuContext() {
     // set NetCDF file type
     menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
     $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
+
+    // set GeoFeature file type
+    menu.children("li[data-menu-name='setgeofeaturefiletype']").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
+    $("#fb-set-geofeature-file-type").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
 
     // set RefTimeseries file type
     menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
@@ -443,13 +452,13 @@ function showFileTypeMetadata(){
      }
      var logical_type = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
      if (!logical_type){
-        return;
-     }
+        return; 
+     } 
      var resource_mode = $("#resource-mode").val();
+     if (!resource_mode){ 
+        return; 
+     } 
      resource_mode = resource_mode.toLowerCase();
-     if (!resource_mode){
-        return;
-     }
      var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
@@ -1111,7 +1120,7 @@ $(document).ready(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
 
         targetPath = currentPath + "/" + folderName
-
+        
         var calls = [];
         var localSources = sourcePaths.slice()  // avoid concurrency botch due to call by reference
         calls.push(move_to_folder_ajax_submit(resID, localSources, targetPath));
@@ -1268,11 +1277,14 @@ $(document).ready(function () {
          setFileType("NetCDF");
      });
 
+    // set GeoFeature file type method
+     $("#btn-set-geofeature-file-type").click(function () {
+         setFileType("GeoFeature");
+     });
     // set RefTimeseries file type method
      $("#btn-set-refts-file-type").click(function () {
          setFileType("RefTimeseries");
      });
-
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {

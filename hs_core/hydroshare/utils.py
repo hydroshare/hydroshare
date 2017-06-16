@@ -909,7 +909,8 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                     source_names=source_names,
                                     resource=resource, user=user,
                                     validate_files=file_validation_dict,
-                                    extract_metadata=extract_metadata, **kwargs)
+                                    extract_metadata=extract_metadata,
+                                    res_files=resource_file_objects, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 

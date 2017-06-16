@@ -162,9 +162,8 @@ class AbstractFileMetaData(models.Model):
             return add_key_value_btn
 
         if self.extra_metadata:
-            root_div_extra = div(id="filetype-extra-metadata")
+            root_div_extra = div(cls="col-xs-12", id="filetype-extra-metadata")
             with root_div_extra:
-                with div(cls="col-lg-12"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     with table(cls="table table-striped funding-agencies-table",
@@ -196,9 +195,9 @@ class AbstractFileMetaData(models.Model):
                     self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
-            root_div_extra = div(id="filetype-extra-metadata")
+            root_div_extra = div(cls="row", id="filetype-extra-metadata")
             with root_div_extra:
-                with div(cls="col-lg-12"):
+                with div(cls="col-lg-12 content-block"):
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
                     self._get_add_key_value_modal_form()
@@ -207,18 +206,17 @@ class AbstractFileMetaData(models.Model):
     def get_temporal_coverage_html_form(self):
         # Note: When using this form layout the context variable 'temp_form' must be
         # set prior to calling the template.render(context)
-        root_div = div(id="temporal-coverage-filetype")
+        root_div = div(cls="col-lg-6 col-xs-12", id="temporal-coverage-filetype")
         with root_div:
-            with div(cls="col-lg-6 col-xs-12"):
-                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
-                          method="post", enctype="multipart/form-data"):
-                    div("{% crispy temp_form %}")
-                    with div(cls="row", style="margin-top:10px;"):
-                        with div(cls="col-md-offset-10 col-xs-offset-6 "
-                                     "col-md-2 col-xs-6"):
-                            button("Save changes", type="button",
-                                   cls="btn btn-primary pull-right",
-                                   style="display: none;")
+            with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                      method="post", enctype="multipart/form-data"):
+                div("{% crispy temp_form %}")
+                with div(cls="row", style="margin-top:10px;"):
+                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                 "col-md-2 col-xs-6"):
+                        button("Save changes", type="button",
+                               cls="btn btn-primary pull-right",
+                               style="display: none;")
         return root_div
 
     def has_all_required_elements(self):
@@ -258,7 +256,7 @@ class AbstractFileMetaData(models.Model):
         dc_datatype = etree.SubElement(rdf_Description, '{%s}type' % NAMESPACES['dc'])
         data_type = current_site_url() + "/terms/" + self.logical_file.data_type
         dc_datatype.set('{%s}resource' % NAMESPACES['rdf'], data_type)
-        # hsterms_datatype.text = self.logical_file.data_type
+
         if self.logical_file.dataset_name:
             dc_datatitle = etree.SubElement(rdf_Description, '{%s}title' % NAMESPACES['dc'])
             dc_datatitle.text = self.logical_file.dataset_name
@@ -269,7 +267,6 @@ class AbstractFileMetaData(models.Model):
                                                 '{%s}dataFile' % NAMESPACES['hsterms'])
             rdf_dataFile_Description = etree.SubElement(hsterms_datafile,
                                                         '{%s}Description' % NAMESPACES['rdf'])
-
             file_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url(),
                 res_id=self.logical_file.resource.short_id,
@@ -385,7 +382,7 @@ class AbstractFileMetaData(models.Model):
     def _get_dataset_name_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-filetype-dataset-name/"
         form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-        root_div = div(cls="col-sm-12 col-xs-12")
+        root_div = div(cls="col-xs-12")
         dataset_name = self.logical_file.dataset_name if self.logical_file.dataset_name else ""
         with root_div:
             with form(action=form_action, id="filetype-dataset-name",
@@ -572,9 +569,10 @@ class AbstractLogicalFile(models.Model):
                             object_id_field='logical_file_object_id')
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
-    # this will be used for hsterms:dataType in resourcemetadata.xml
+    # this will be used for dc:type in resourcemetadata.xml
     # each specific logical type needs to reset this field
-    data_type = "Generic data"
+    # also this data type needs to be defined in in terms.html page
+    data_type = "Generic"
 
     class Meta:
         abstract = True
@@ -656,6 +654,23 @@ class AbstractLogicalFile(models.Model):
 
         res_file.logical_file_content_object = self
         res_file.save()
+
+    # TODO: unit test this
+    def reset_to_generic(self, user):
+        """
+        This sets all files in this logical file group to GenericLogicalFile type
+
+        :param  user: user who is re-setting to generic file type
+        :return:
+        """
+        from .generic import GenericLogicalFile
+
+        for res_file in self.files.all():
+            if res_file.has_logical_file:
+                res_file.logical_file.logical_delete(user=user, delete_res_files=False)
+            logical_file = GenericLogicalFile.create()
+            res_file.logical_file_content_object = logical_file
+            res_file.save()
 
     def get_copy(self):
         """creates a copy of this logical file object with associated metadata needed to support
