@@ -1557,7 +1557,7 @@ class ResourceManager(PageManager):
 
 
 class AbstractResource(ResourcePermissionsMixin):
-    """Create Absstract Class for all Resources.
+    """Create Abstract Class for all Resources.
 
     All hydroshare objects inherit from this mixin.  It defines things that must
     be present to be considered a hydroshare resource.  Additionally, all
@@ -1896,14 +1896,15 @@ class AbstractResource(ResourcePermissionsMixin):
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
 
-    def get_metadata_xml(self, pretty_print=True):
+    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata xml for Resource.
 
         Resource types that support file types
         must override this method. See Composite Resource
         type as an example
         """
-        return self.metadata.get_xml(pretty_print=pretty_print)
+        return self.metadata.get_xml(pretty_print=pretty_print,
+                                     include_format_elements=include_format_elements)
 
     def _get_metadata(self, metatdata_obj):
         """Get resource metadata from content_object."""
@@ -3059,9 +3060,8 @@ class ResourceFile(models.Model):
     @property
     def can_set_file_type(self):
         """Check if file type can be set for this resource file instance."""
-        return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
-                                                              self.logical_file_type_name ==
-                                                              "GenericLogicalFile")
+        return self.extension in ('.tif', '.zip', '.nc', '.shp') and \
+            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
 
     @property
     def url(self):
@@ -3668,7 +3668,7 @@ class CoreMetaData(models.Model):
                             self.create_element(element_model_name=element_name,
                                                 **id_item[element_name])
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         """Get metadata XML rendering."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url, get_resource_types
@@ -3753,9 +3753,10 @@ class CoreMetaData(models.Model):
                 else:
                     rdf_date_value.text = dt.start_date.isoformat()
 
-        for fmt in self.formats.all():
-            dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
-            dc_format.text = fmt.value
+        if include_format_elements:
+            for fmt in self.formats.all():
+                dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
+                dc_format.text = fmt.value
 
         for res_id in self.identifiers.all():
             dc_identifier = etree.SubElement(rdf_Description,

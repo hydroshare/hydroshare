@@ -70,6 +70,7 @@ function updateSelectionMenuContext() {
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
     var flagDisableSetNetCDFFileType = false;
+    var flagDisableSetGeoFeatureFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -82,6 +83,7 @@ function updateSelectionMenuContext() {
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetNetCDFFileType = true;
+        flagDisableSetGeoFeatureFileType = true;
         flagDisableGetLink = true;
 
         for (var i = 0; i < selected.length; i++) {
@@ -120,6 +122,7 @@ function updateSelectionMenuContext() {
         flagDisableGetLink = true;
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableSetGeoFeatureFileType = true;
 
         $("#fb-download-help").toggleClass("hidden", true);
     }
@@ -155,7 +158,11 @@ function updateSelectionMenuContext() {
             flagDisableSetNetCDFFileType = true;
         }
 
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
+        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetGeoFeatureFileType = true;
+        }
+
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
@@ -164,7 +171,7 @@ function updateSelectionMenuContext() {
     }
 
     var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile"){
+    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
             flagDisableCreateFolder = true;
         }
     // Show Create folder toolbar option
@@ -195,6 +202,10 @@ function updateSelectionMenuContext() {
     // set NetCDF file type
     menu.children("li[data-menu-name='setnetcdffiletype']").toggleClass("disabled", flagDisableSetNetCDFFileType);
     $("#fb-set-netcdf-file-type").toggleClass("disabled", flagDisableSetNetCDFFileType);
+
+    // set GeoFeature file type
+    menu.children("li[data-menu-name='setgeofeaturefiletype']").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
+    $("#fb-set-geofeature-file-type").toggleClass("disabled", flagDisableSetGeoFeatureFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -1247,6 +1258,11 @@ $(document).ready(function () {
     // set NetCDF file type method
      $("#btn-set-netcdf-file-type").click(function () {
          setFileType("NetCDF");
+     });
+
+    // set GeoFeature file type method
+     $("#btn-set-geofeature-file-type").click(function () {
+         setFileType("GeoFeature");
      });
 
     // Zip method

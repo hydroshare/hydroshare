@@ -436,7 +436,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return geometry type if metadata exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                geometry_info = obj.metadata.geometryinformation.all().first()
+                geometry_info = obj.metadata.geometryinformation
                 if geometry_info is not None:
                     return geometry_info.geometryType
                 else:
@@ -450,7 +450,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata field name if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldName
                 else:
@@ -464,7 +464,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata field type if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldType
                 else:
@@ -478,7 +478,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata field type code if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
-                field_info = obj.metadata.fieldinformation.all().first()
+                field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
                     return field_info.fieldTypeCode
                 else:
