@@ -14,7 +14,7 @@ RUN echo -e "\
 \n---\
 \n>         # Mezzanine 4.10 fix for collecttemplates.py\
 \n>         # to_dir = settings.TEMPLATE_DIRS[0]\
-\n>         to_dir = settings.TEMPLATES[0]["DIRS"][0]\
+\n>         to_dir = settings.TEMPLATES[0][\"DIRS\"][0]\
 " | patch /usr/local/lib/python2.7/site-packages/mezzanine/core/management/commands/collecttemplates.py -
 
 ### End - HydroShare Development Image Additions ###
