@@ -901,6 +901,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']
                 spatial_coverage_dict['north'] = spatial_coverage.value['north']
@@ -915,6 +916,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         temporal_coverage = resource.metadata.coverages.filter(type='period').first()
         temporal_coverage_dict = {}
         if temporal_coverage:
+            temporal_coverage_dict['element_id'] = temporal_coverage.id
             temporal_coverage_dict['type'] = temporal_coverage.type
             temporal_coverage_dict['start'] = temporal_coverage.value['start']
             temporal_coverage_dict['end'] = temporal_coverage.value['end']
