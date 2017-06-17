@@ -299,6 +299,7 @@ def assert_geofeature_file_type_metadata(self, expected_folder_name):
     self.assertEqual(logical_file.metadata.originalcoverage.southlimit, 18.921786345087)
     self.assertEqual(logical_file.metadata.originalcoverage.westlimit, -178.217598362366)
 
+
 def assert_ref_time_series_file_type_metadata(self):
     # check that there is one RefTimeseriesLogicalFile object
     self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
