@@ -556,8 +556,11 @@ function metadata_update_ajax_submit(form_id){
                         var temporalCoverage = json_response.temporal_coverage;
                         updateResourceTemporalCoverage(temporalCoverage);
                     }
-                    var spatialCoverage = json_response.spatial_coverage;
-                    updateResourceSpatialCoverage(spatialCoverage);
+
+                    if (json_response.hasOwnProperty('spatial_coverage')) {
+                        var spatialCoverage = json_response.spatial_coverage;
+                        updateResourceSpatialCoverage(spatialCoverage);
+                    }
                 }
                 if (($form.attr("id") == "id-site")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
@@ -1321,7 +1324,7 @@ function initializeDatePickers(){
         if($(this).attr('data-date')){
             // resource temporal date picker
             dateString = $(this).attr("data-date").split("-");
-            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2].substring(0, 2));
+            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
         }
         else{
             // file type temporal date picker
@@ -1348,6 +1351,8 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         if (logical_type !== "RefTimeseriesLogicalFile"){
             $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
         }
+        $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
+        $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
@@ -1390,9 +1395,20 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
 // updates the UI spatial coverage elements
 function updateResourceSpatialCoverage(spatialCoverage){
     $("#spatial-coverage-type").val(spatialCoverage.type);
-
+    var $form = $("#id-coverage-spatial");
+    var form_update_action = $form.attr('action');
+    var res_short_id = form_update_action.split('/')[3];
+    var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
+    $form.attr('action', update_url);
+    var $id_type_div = $("#div_id_type");
+    var $point_radio = $id_type_div.find("#id_type_2");
+    var $box_radio = $id_type_div.find("#id_type_1");
     if (spatialCoverage.type === 'point') {
-        $("#id_type_2").attr('checked', 'checked');
+        $point_radio.attr('checked', 'checked');
+        $box_radio.parent().closest("label").addClass("text-muted");
+        $box_radio.attr('disabled', true);
+        $point_radio.parent().closest("label").removeClass("text-muted");
+        $point_radio.attr('disabled', false);
         $("#id_north").val(spatialCoverage.north);
         $("#id_east").val(spatialCoverage.east);
         $("#div_id_north").show();
@@ -1406,7 +1422,11 @@ function updateResourceSpatialCoverage(spatialCoverage){
         $("#div_id_downlimit").hide();
     }
     else { //coverage type is 'box'
-        $("#id_type_1").attr('checked', 'checked');
+        $box_radio.attr('checked', 'checked');
+        $point_radio.parent().closest("label").addClass("text-muted");
+        $point_radio.attr('disabled', true);
+        $box_radio.parent().closest("label").removeClass("text-muted");
+        $box_radio.attr('disabled', false);
         $("#id_eastlimit").val(spatialCoverage.eastlimit);
         $("#id_northlimit").val(spatialCoverage.northlimit);
         $("#id_westlimit").val(spatialCoverage.westlimit);
@@ -1421,6 +1441,7 @@ function updateResourceSpatialCoverage(spatialCoverage){
         $("#div_id_uplimit").show();
         $("#div_id_downlimit").show();
         }
+    initMap();
 }
 
 // updates the UI temporal coverage elements

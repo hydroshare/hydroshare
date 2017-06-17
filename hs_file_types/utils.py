@@ -79,6 +79,9 @@ def update_resource_coverage_element(resource):
     if len(spatial_coverages) > 0:
         if spatial_cov:
             spatial_cov.type = cov_type
+            place_name = spatial_cov.value.get('name', None)
+            if place_name is not None:
+                bbox_value['name'] = place_name
             spatial_cov._value = json.dumps(bbox_value)
             spatial_cov.save()
         else:
