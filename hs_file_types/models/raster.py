@@ -20,7 +20,7 @@ from dominate.tags import div, legend, form, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_core.forms import CoverageTemporalForm
+from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
@@ -55,8 +55,11 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         in view mode"""
 
         html_string = super(GeoRasterFileMetaData, self).get_html()
-        html_string += self.spatial_coverage.get_html()
-        html_string += self.originalCoverage.get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalCoverage:
+            html_string += self.originalCoverage.get_html()
+
         html_string += self.cellInformation.get_html()
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
@@ -75,8 +78,18 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
             super(GeoRasterFileMetaData, self).get_html_forms()
-            with div(cls="col-lg-6 col-xs-12"):
-                div("{% crispy coverage_form %}")
+            with div(cls="col-lg-6 col-xs-12", id="spatial-coverage-filetype"):
+                with form(id="id-spatial-coverage-file-type",
+                          action="{{ coverage_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy coverage_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;")
+
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy orig_coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
@@ -94,29 +107,37 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                                     with div(cls="col-md-offset-10 col-xs-offset-6 "
                                                  "col-md-2 col-xs-6"):
                                         button("Save changes", type="button",
-                                               cls="btn btn-primary pull-right",
-                                               style="display: none;",
-                                               onclick="metadata_update_ajax_submit({{ "
-                                                       "form.form_id_button }}); return false;")
+                                               cls="btn btn-primary pull-right btn-form-submit",
+                                               style="display: none;")
                         div("{% endfor %}")
 
         template = Template(root_div.render())
         context_dict = dict()
-        context_dict["coverage_form"] = self.get_spatial_coverage_form()
+
         context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
         temp_cov_form = self.get_temporal_coverage_form()
 
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
-        if self.temporal_coverage:
-            temp_action = update_action.format(self.logical_file.id, "coverage",
-                                               self.temporal_coverage.id)
-            temp_cov_form.action = temp_action
+        spatial_cov_form = self.get_spatial_coverage_form(allow_edit=True)
+        if self.spatial_coverage:
+            form_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.spatial_coverage.id)
         else:
-            temp_action = create_action.format(self.logical_file.id, "coverage")
-            temp_cov_form.action = temp_action
+            form_action = create_action.format(self.logical_file.id, "coverage")
 
+        spatial_cov_form.action = form_action
+
+        if self.temporal_coverage:
+            form_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.temporal_coverage.id)
+            temp_cov_form.action = form_action
+        else:
+            form_action = create_action.format(self.logical_file.id, "coverage")
+            temp_cov_form.action = form_action
+
+        context_dict["coverage_form"] = spatial_cov_form
         context_dict["temp_form"] = temp_cov_form
         context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
         context = Context(context_dict)
@@ -127,7 +148,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
         return self.cellInformation.get_html_form(resource=None)
 
     def get_original_coverage_form(self):
-        return self.originalCoverage.get_html_form(resource=None)
+        return OriginalCoverage.get_html_form(resource=None, element=self.originalCoverage,
+                                              file_type=True, allow_edit=False)
 
     def get_bandinfo_formset(self):
         BandInfoFormSetEdit = formset_factory(
@@ -160,7 +182,8 @@ class GeoRasterFileMetaData(GeoRasterMetaDataMixin, AbstractFileMetaData):
                 matching_key = [key for key in request.POST if '-' + field_name in key][0]
                 form_data[field_name] = request.POST[matching_key]
             element_form = BandInfoValidationForm(form_data)
-
+        elif element_name == 'coverage' and 'start' not in request.POST:
+            element_form = CoverageSpatialForm(data=request.POST)
         else:
             # element_name must be coverage
             # here we are assuming temporal coverage
@@ -207,6 +230,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     @property
     def supports_resource_file_move(self):
         """resource files that are part of this logical file can't be moved"""
+        return False
+
+    @property
+    def supports_resource_file_add(self):
+        """doesn't allow a resource file to be added"""
         return False
 
     @property
@@ -273,12 +301,13 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                        file_name)
 
-                        fed_file_full_path = ''
-                        if resource.resource_federation_path:
-                            fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
+                        # Alva: This does nothing.
+                        # fed_file_full_path = ''
+                        # if resource.resource_federation_path:
+                        #     fed_file_full_path = os.path.join(resource.root_path, new_folder_path)
 
-                        create_folder(resource.short_id, new_folder_path)
                         log.info("Folder created:{}".format(new_folder_path))
+                        create_folder(resource.short_id, new_folder_path)
 
                         new_folder_name = new_folder_path.split('/')[-1]
                         if file_folder is None:
@@ -291,9 +320,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
                             new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder,
-                                fed_res_file_name_or_path=fed_file_full_path
-                                )
+                                resource, uploaded_file, folder=upload_folder)
+
                             # make each resource file we added as part of the logical file
                             logical_file.add_resource_file(new_res_file)
 
@@ -317,6 +345,8 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
                         k, v = element.items()[0]
                         logical_file.metadata.create_element(k, **v)
                     log.info("Geo raster file type - metadata was saved to DB")
+                    # set resource to private if logical file is missing required metadata
+                    resource.update_public_and_discoverable()
             else:
                 err_msg = "Geo raster file type file validation failed.{}".format(
                     ' '.join(error_info))
@@ -432,9 +462,13 @@ def extract_metadata(temp_vrt_file_path):
         metadata.append(box)
 
     # Save extended meta spatial reference
-    ori_cov = {'OriginalCoverage': {
-        'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}}
-    metadata.append(ori_cov)
+    orig_cov_info = res_md_dict['spatial_coverage_info']['original_coverage_info']
+
+    # Here the assumption is that if there is no value for the 'northlimit' then there is no value
+    # for the bounding box
+    if orig_cov_info['northlimit'] is not None:
+        ori_cov = {'OriginalCoverage': {'value': orig_cov_info}}
+        metadata.append(ori_cov)
 
     # Save extended meta cell info
     res_md_dict['cell_info']['name'] = os.path.basename(temp_vrt_file_path)

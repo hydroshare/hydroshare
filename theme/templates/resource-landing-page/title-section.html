@@ -1,6 +1,6 @@
 {# ======= Resource Publication just published notification =======#}
 {% if cm.raccess.published and just_published %}
-    <div class="col-sm-12">
+    <div class="col-xs-12">
         <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
@@ -12,7 +12,7 @@
 
 {# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
-    <div class="col-sm-12">
+    <div class="col-xs-12">
         <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
@@ -26,7 +26,7 @@
 
 {# ======= Resource copy just created notification =======#}
 {% if just_created and just_copied %}
-    <div class="col-sm-12">
+    <div class="col-xs-12">
         <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
             <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <strong>Congratulations! </strong>
@@ -42,7 +42,7 @@
 {# ======= Missing fields notification =======#}
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
-        <div class="col-sm-12">
+        <div class="col-xs-12">
             <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
@@ -84,6 +84,37 @@
     {% endif %}
 {% endif %}
 
+{# ======= Missing file level metadata notification =======#}
+{% if cm.resource_type == "CompositeResource" %}
+    {% if file_type_missing_metadata %}
+        <div class="col-sm-12">
+            <div id="missing-metadata-file-type" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+
+                <span>The following file level metadata are still required to
+                      make the resource public or discoverable:</span>
+                {% for item in file_type_missing_metadata %}
+                    <ul>
+                        <li>File path: {{ item.file_path }}
+                            <ul>
+                                {% for element in item.missing_elements %}
+                                    <li>{{ element }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </ul>
+                {% endfor %}
+
+                {% if not metadata_form %}
+                    <hr>
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
 {# ======= Check MODFLOW Model Instance content files =======#}
 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
     {% if cm.check_content_files %}
@@ -112,9 +143,10 @@
 {% endif %}
 
 {# ======= Title ======= #}
-<div class="col-sm-12">
+<div class="col-xs-12">
     {% if not metadata_form %}
         <h2 id="resource-title">{{ title }}</h2>
+        <hr>
         {% if tool_homepage_url %}
             <span id="apps-dropdown"/>
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
@@ -152,8 +184,7 @@
                                                  value="{{ cm.metadata.title }}"></div>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-primary pull-right"
-                            onclick="metadata_update_ajax_submit('id-title'); return false;"
+                    <button type="button" class="btn btn-primary pull-right btn-form-submit"
                             style="display: none;">
                         Save changes
                     </button>
@@ -163,11 +194,17 @@
     {% endif %}
 </div>
 
-<div class="col-sm-12">
+
 {% if is_replaced_by %}
-     <div class="clear-fix"><i>A newer version of this resource <a href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
+    <div class="col-xs-12">
+        <div class="clear-fix"><i>A newer version of this resource <a
+                href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
+    </div>
 {% endif %}
 {% if is_version_of %}
-    <div class="clear-fix"><i>An older version of this resource <a href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
+    <div class="col-xs-12">
+        <div class="clear-fix"><i>An older version of this resource <a
+                href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
+    </div>
 {% endif %}
-</div>
+

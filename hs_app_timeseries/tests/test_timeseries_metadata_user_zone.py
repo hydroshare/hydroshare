@@ -62,8 +62,8 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
             resource_type='TimeSeriesResource',
             owner=self.user,
             title='My Test TimeSeries Resource',
-            fed_res_file_names=[fed_test_file_full_path],
-            fed_copy_or_move='copy'
+            source_names=[fed_test_file_full_path],
+            move=False
         )
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
@@ -124,12 +124,12 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
         res_add_files = []
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=res_add_files,
                                             user=self.user, extract_metadata=False,
-                                            fed_res_file_names=[fed_test_file_full_path])
+                                            source_names=[fed_test_file_full_path])
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=res_add_files,
                                         user=self.user,
                                         extract_metadata=True,
-                                        fed_res_file_names=[fed_test_file_full_path])
+                                        source_names=[fed_test_file_full_path])
 
         super(TestTimeSeriesMetaData, self).timeseries_metadata_extraction()
 

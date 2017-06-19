@@ -1,3 +1,7 @@
+import os
+import subprocess
+import signal
+
 from django.contrib.auth.models import Group
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import override_settings
@@ -34,7 +38,17 @@ class FunctionalTestsCases(object):
         super(FunctionalTestsCases, self).setUp()
 
     def tearDown(self):
+        self.driver.close()
         self.driver.quit()
+
+        # Selenium does not clean up phantomjs processes, so we are left to take care of it.
+        # see Selenium bug: https://github.com/seleniumhq/selenium/issues/767
+        processes = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+        out, err = processes.communicate()
+        for line in out.splitlines():
+            if 'phantomjs' in line:
+                pid = int(line.split(None, 1)[0])
+                os.kill(pid, signal.SIGKILL)
         super(FunctionalTestsCases, self).tearDown()
 
     def _login_helper(self, login_name, user_password):
@@ -86,7 +100,6 @@ class FunctionalTestsCases(object):
 
     def test_create_resource(self):
         RESOURCE_TITLE = 'Selenium resource creation test'
-        UPLOAD_FILE_PATH = '/hydroshare/manage.py'
         self._login_helper(self.user.email, self.user_password)
 
         # load my resources & click create new
@@ -96,22 +109,27 @@ class FunctionalTestsCases(object):
         create_new_lnk.click()
 
         # complete new resource form
-        title_field = self.driver.find_element_by_name('title')
-        file_field = self.driver.find_element_by_name('files')
-        submit_btn = self.driver.find_element_by_xpath("//button[@type='submit']")
+        title_field = self.driver.find_element_by_css_selector('#txtTitle')
+        # file_field = self.driver.find_element_by_name('files')
+        self.driver.execute_script("""
+            var myZone = Dropzone.forElement('#hsDropzone');
+            var blob = new Blob(new Array(), {type: 'image/png'});
+            blob.name = 'filename.png'
+            myZone.addFile(blob);
+        """)
+        submit_btn = self.driver.find_element_by_css_selector(".btn-create-resource")
 
         self.assertTrue(title_field.is_displayed())
         title_field.send_keys(RESOURCE_TITLE)
-        file_field.send_keys(UPLOAD_FILE_PATH + ',', keys.Keys.ENTER)
         submit_btn.click()
 
         # check results
-        title = self.driver.find_element_by_xpath("//h2[@id='resource-title']").text
-        self.assertEqual(title, RESOURCE_TITLE)
-        citation = self.driver.find_element_by_xpath("//input[@id='citation-text']")
-        citation_text = citation.get_attribute('value')
+        title_field = self.driver.find_element_by_css_selector("#resource-title")
+        self.assertTrue(title_field.is_displayed())
+        self.assertEqual(title_field.text, RESOURCE_TITLE)
+        citation_text = self.driver.find_element_by_css_selector("#citation-text").text
         import re
-        m = re.search('HydroShare, http://www.hydroshare.org/resource/(.*)$', citation_text)
+        m = re.search('HydroShare, http.*/resource/(.*)$', citation_text)
         shortkey = m.groups(0)[0]
         resource = BaseResource.objects.get()
         self.assertEqual(resource.title, RESOURCE_TITLE)
@@ -175,6 +193,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
         # iPhone 5 resolution
         self.driver.set_window_size(width=640, height=1136)
         self.driver.get(self.live_server_url)
+        self.driver.implicitly_wait(10)
         super(MobileTests, self).setUp()
 
     def _open_nav_menu(self):
@@ -184,7 +203,7 @@ class MobileTests(FunctionalTestsCases, StaticLiveServerTestCase):
             return
         toggle.click()
         try:
-            WebDriverWait(self.driver, 20).until(EC.visibility_of(navbar))
+            WebDriverWait(self.driver, 10).until(EC.visibility_of(navbar))
         finally:
             if not navbar.is_displayed():
                 self.fail()

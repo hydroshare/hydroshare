@@ -1,10 +1,15 @@
+import os
+
 from django.test import TransactionTestCase
 from django.contrib.auth.models import Group
 from django.conf import settings
 
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
+from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions, \
+    resource_file_add_pre_process
+from hs_core.views.utils import create_folder
+
 from hs_core.testing import TestCaseCommonUtilities
 
 from hs_file_types.models import GenericLogicalFile
@@ -84,6 +89,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.composite_resource.delete()
 
     def test_file_add_to_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
@@ -109,8 +115,11 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
             fname=self.raster_file_name)
         res_upload_files = []
+        resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
+                                      source_names=[fed_test_file_full_path], user=self.user,
+                                      folder=None)
         resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
-                                  fed_res_file_names=[fed_test_file_full_path], user=self.user)
+                                  source_names=[fed_test_file_full_path], user=self.user)
 
         # there should be one resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
@@ -123,6 +132,23 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # test adding a file to a folder (Note the UI does not support uploading a iRODS file
+        # to a specific folder)
+
+        # create the folder
+        new_folder_path = os.path.join("data", "contents", "my-new-folder")
+        create_folder(self.composite_resource.short_id, new_folder_path)
+        resource_file_add_pre_process(resource=self.composite_resource, files=res_upload_files,
+                                      source_names=[fed_test_file_full_path], user=self.user,
+                                      folder="my-new-folder")
+        resource_file_add_process(resource=self.composite_resource, files=res_upload_files,
+                                  source_names=[fed_test_file_full_path], user=self.user,
+                                  folder="my-new-folder")
+
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+
+        self.composite_resource.delete()
 
     def test_file_delete_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
@@ -144,6 +170,7 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 0)
         # there should not be any GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        self.composite_resource.delete()
 
     def test_delete_composite_resource(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
@@ -172,8 +199,8 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
             owner=self.user,
             title='Federated Composite Resource Testing',
             files=res_upload_files,
-            fed_res_file_names=[fed_test_file_full_path],
+            source_names=[fed_test_file_full_path],
             fed_res_path=fed_res_path,
-            fed_copy_or_move='copy',
+            move=False,
             metadata=[]
         )

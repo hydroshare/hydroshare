@@ -15,6 +15,7 @@ from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
+from hs_core.hydroshare.utils import QuotaException, resource_pre_create_actions
 
 
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
@@ -110,6 +111,9 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(new_res.creator == self.user)
         self.assertTrue(new_res.short_id is not None, 'Short ID has not been created!')
         self.assertEqual(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+        self.assertEqual(new_res.get_quota_holder(), self.user,
+                         msg="The quota holder of the newly created resource is not the creator")
+
         if new_res:
             new_res.delete()
 
@@ -171,7 +175,8 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(res.metadata.description.abstract, 'My test abstract')
 
         # the following 3 date elements should have been created as part of resource creation
-        self.assertEqual(res.metadata.dates.all().count(), 3, msg="Number of date elements not equal to 3.")
+        self.assertEqual(res.metadata.dates.all().count(), 3,
+                         msg="Number of date elements not equal to 3.")
         self.assertIn('created', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Created' does not exist")
         self.assertIn('modified', [dt.type for dt in res.metadata.dates.all()],
@@ -179,16 +184,18 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('valid', [dt.type for dt in res.metadata.dates.all()],
                       msg="Date element type 'Modified' does not exist")
 
-        # number of creators at this point should be 3 (2 are created based on supplied metadata and one is
-        # automatically generated as part of the resource creation
-        self.assertEqual(res.metadata.creators.all().count(), 3, msg='Number of creators not equal to 3')
+        # number of creators at this point should be 2 as created based on supplied
+        # metadata and the user creating the resource won't be added as the creator
+        self.assertEqual(res.metadata.creators.all().count(), 2,
+                         msg='Number of creators not equal to 2')
         self.assertIn('John Smith', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'John Smith' was not found")
         self.assertIn('Lisa Molley', [cr.name for cr in res.metadata.creators.all()],
                       msg="Creator 'Lisa Molley' was not found")
 
         # number of contributors at this point should be 1
-        self.assertEqual(res.metadata.contributors.all().count(), 1, msg='Number of contributors not equal to 1')
+        self.assertEqual(res.metadata.contributors.all().count(), 1,
+                         msg='Number of contributors not equal to 1')
 
         # there should be now 2 coverage elements as per the supplied metadata
         self.assertEqual(res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
@@ -404,3 +411,17 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(res.files.all().count(), 2)
         if res:
             res.delete()
+
+    def test_create_resource_over_quota(self):
+        uquota = self.user.quotas.first()
+        # make user's quota over hard limit 125%
+        uquota.used_value = uquota.allocated_value * 1.3
+        uquota.save()
+        # create_resource should raise quota exception now that the creator user is over hard limit
+        with self.assertRaises(QuotaException):
+            resource_pre_create_actions(resource_type='GenericResource',
+                                        resource_title='My Test Resource',
+                                        page_redirect_url_key=None,
+                                        files=(self.file_one,),
+                                        metadata=None,
+                                        requesting_user=self.user,)

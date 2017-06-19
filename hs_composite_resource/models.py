@@ -63,12 +63,16 @@ class CompositeResource(BaseResource):
     def supports_folder_creation(self, folder_full_path):
         """this checks if it is allowed to create a folder at the specified path"""
 
+        if __debug__:
+            assert(folder_full_path.startswith(self.file_path))
+
+        # determine containing folder
         if "/" in folder_full_path:
-            path_to_check = folder_full_path[:folder_full_path.rfind("/")]
+            path_to_check, _ = os.path.split(folder_full_path)
         else:
             path_to_check = folder_full_path
 
-        if not path_to_check.endswith("/data/contents"):
+        if path_to_check != self.file_path:
             res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
                              res_file_obj.dir_path == path_to_check]
 
@@ -81,6 +85,10 @@ class CompositeResource(BaseResource):
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
         """checks if file/folder rename/move is allowed"""
+
+        if __debug__:
+            assert(src_full_path.startswith(self.file_path))
+            assert(tgt_full_path.startswith(self.file_path))
 
         istorage = self.get_irods_storage()
         tgt_file_dir = os.path.dirname(tgt_full_path)
@@ -124,17 +132,44 @@ class CompositeResource(BaseResource):
             # allow moving stuff there
             return check_directory()
 
+    def can_add_files(self, target_full_path):
+        """
+        checks if file(s) can be uploaded to the specified *target_full_path*
+        :param target_full_path: full folder path name where file needs to be uploaded to
+        :return: True or False
+        """
+        istorage = self.get_irods_storage()
+        if istorage.exists(target_full_path):
+            path_to_check = target_full_path
+        else:
+            return False
+
+        if not path_to_check.endswith("data/contents"):
+            # it is not the base directory - it must be a directory under base dir
+            res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
+                             res_file_obj.dir_path == path_to_check]
+
+            for res_file_obj in res_file_objs:
+                if not res_file_obj.logical_file.supports_resource_file_add:
+                    return False
+        return True
+
     def supports_zip(self, folder_to_zip):
         """check if the given folder can be zipped or not"""
 
         # find all the resource files in the folder to be zipped
-        if self.resource_federation_path:
+        # this is being passed both qualified and unqualified paths!
+        full_path = folder_to_zip
+        if not full_path.startswith(self.file_path):
+            full_path = os.path.join(self.file_path, full_path)
+
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=folder_to_zip).all()
+                fed_resource_file__startswith=full_path).all()
         else:
             res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=folder_to_zip).all()
+                                                 resource_file__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:
@@ -147,13 +182,19 @@ class CompositeResource(BaseResource):
         """check if the specified folder can be deleted at the end of zipping that folder"""
 
         # find all the resource files in the folder to be deleted
-        if self.resource_federation_path:
+        # this is being passed both qualified and unqualified paths!
+        full_path = original_folder
+        if not full_path.startswith(self.file_path):
+            full_path = os.path.join(self.file_path, full_path)
+
+        if self.is_federated:
             res_file_objects = self.files.filter(
                 object_id=self.id,
-                fed_resource_file_name_or_path__contains=original_folder).all()
+                fed_resource_file__startswith=full_path).all()
         else:
-            res_file_objects = self.files.filter(object_id=self.id,
-                                                 resource_file__contains=original_folder).all()
+            res_file_objects = self.files.filter(
+                object_id=self.id,
+                resource_file__startswith=full_path).all()
 
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped
@@ -163,6 +204,17 @@ class CompositeResource(BaseResource):
 
         return True
 
+    def get_missing_file_type_metadata_info(self):
+        # this is used in page pre-processor to build the context
+        # so that the landing page can show what metadata items are missing for each logical file
+        metadata_missing_info = []
+        for lfo in self.logical_files:
+            if not lfo.metadata.has_all_required_elements():
+                file_path = lfo.files.first().short_path
+                missing_elements = lfo.metadata.get_required_missing_elements()
+                metadata_missing_info.append({'file_path': file_path,
+                                              'missing_elements': missing_elements})
+        return metadata_missing_info
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed

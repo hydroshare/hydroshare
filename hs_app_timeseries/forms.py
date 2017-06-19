@@ -46,10 +46,12 @@ class SiteFormHelper(BaseFormHelper):
                                         "Select 'Other...' to specify a new site type term."),
                             Field('latitude', css_class=field_width,
                                   title="The latitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., 43.1111)."),
+                                        "WGS84 datum (e.g., 43.1111).",
+                                  data_map_item="latitude"),
                             Field('longitude', css_class=field_width,
                                   title="The longitude coordinate of the site location using the "
-                                        "WGS84 datum (e.g., -111.2334)."),
+                                        "WGS84 datum (e.g., -111.2334).",
+                                  data_map_item="longitude"),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=show_site_code_selection,
@@ -740,8 +742,8 @@ UpdateSQLiteLayout = Layout(HTML("""
             enctype="multipart/form-data">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit">
-                <button type="button" class="btn btn-primary" onclick="this.form.submit();
-                return false;">Update SQLite File</button>
+                <button id="btn-update-sqlite-file" type="button" class="btn btn-primary">
+                Update SQLite File</button>
             </form>
         </div>
     </div>
@@ -758,8 +760,7 @@ SeriesSelectionLayout = Layout(HTML("""
         <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
             {% csrf_token %}
             <input name="resource-mode" type="hidden" value="edit">
-            <select class="form-control" name="series_id" id="series_id"
-            onchange="this.form.submit()">
+            <select class="form-control" name="series_id" id="series_id">
                 {% for series_id, label in series_ids.items %}
                     {% if selected_series_id == series_id %}
                         <option value="{{ series_id }}" selected="selected"
@@ -789,7 +790,7 @@ UTCOffSetLayout = HTML("""
 
 TimeSeriesMetaDataLayout = HTML("""
 <div class="form-group col-sm-6 col-xs-12 time-series-forms">
-     <div id="site">
+     <div id="site" class="hs-coordinates-picker" data-coordinates-type="point">
          {% load crispy_forms_tags %}
          {% crispy site_form %}
          <hr style="border:0">
