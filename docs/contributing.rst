@@ -9,16 +9,12 @@ Getting Started
 ---------------
 
 1) Fork the repo under your own name
-
 2) Set up your Hydroshare development environment by following the
 `installation directions`_
-
-.. _installation directions: https://github.com/hydroshare/hydroshare#simplified-installation-instructions
-
 3) Make the required edits to the code
-
 4) Push to your fork and `submit a pull request`_
 
+.. _installation directions: https://github.com/hydroshare/hydroshare#simplified-installation-instructions
 .. _submit a pull request: https://github.com/hydroshare/hydroshare/compare/
 
 After You've Submitted a Pull Request
