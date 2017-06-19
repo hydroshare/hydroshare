@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# HydroShare user zone control script to create iRODS users on-demand corresponding to HydroShare users
+# xDCIShare user zone control script to create iRODS users on-demand corresponding to xDCIShare users
 # AUthor: Hong Yi <hongyi@renci.org>
 
 HS_WWW_IRODS_PROXY_USER=wwwHydroProxy

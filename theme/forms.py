@@ -24,7 +24,7 @@ from hs_core.templatetags.hydroshare_tags import best_name
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
 
-# This form.py is added by Hong Yi for customizing comments in HydroShare
+# This form.py is added by Hong Yi for customizing comments in xDCIShare
 # as part of effort to address issue https://github.com/hydroshare/hydroshare/issues/186
 # In particular, we want to remove name, email, and url fields and
 # want to link comments to user profile

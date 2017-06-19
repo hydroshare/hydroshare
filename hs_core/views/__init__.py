@@ -558,10 +558,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     '''
     This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
-    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
+    which is federated with hydroshare zone under the iRODS user account corresponding to a xDCIShare user. This function
     should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
-    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
-    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
+    user Zone exists. The purpose of this function is to allow xDCIShare resource bag that a xDCIShare user has access
+    to be copied to xDCIShare user's iRODS space in xDCIShare user zone so that users can do analysis or computations on
     the resource
     Args:
         request: an AJAX request
@@ -953,9 +953,9 @@ def resend_verification_email(request):
     try:
         token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
-            'Please verify your new Hydroshare account.',
+            'Please verify your new xDCIShare account.',
             """
-This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
+This is an automated email from xDCIShare.org. If you requested a xDCIShare account, please
 go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
@@ -1507,7 +1507,7 @@ def _send_email_on_group_membership_acceptance(membership_request):
         email_msg = """Dear {}
         <p>Your invitation to user '{}' to join the group '{}' has been accepted.</p>
         <p>Thank you</p>
-        <p>The HydroShare Team</p>
+        <p>The xDCIShare Team</p>
         """.format(membership_request.request_from.first_name,
                    membership_request.invitation_to.first_name, membership_request.group_to_join.name)
     else:
@@ -1516,10 +1516,10 @@ def _send_email_on_group_membership_acceptance(membership_request):
         email_msg = """Dear {}
         <p>Your request to join the group '{}' has been accepted.</p>
         <p>Thank you</p>
-        <p>The HydroShare Team</p>
+        <p>The xDCIShare Team</p>
         """.format(membership_request.request_from.first_name, membership_request.group_to_join.name)
 
-    send_mail(subject="HydroShare group membership",
+    send_mail(subject="xDCIShare group membership",
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,

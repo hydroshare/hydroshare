@@ -35,7 +35,7 @@ class TestGenericResourceMetaSax(unittest.TestCase):
                 <hsterms:homepage rdf:resource="http://www.cmu.edu/"/>
               </rdf:Description>
             </dc:contributor>
-            <dc:subject>HydroShare</dc:subject>
+            <dc:subject>xDCIShare</dc:subject>
             <dc:subject>cuahsi</dc:subject>
             <dc:subject>Presentation</dc:subject>
             <dc:subject>Hydroinformatics</dc:subject>
@@ -51,7 +51,7 @@ class TestGenericResourceMetaSax(unittest.TestCase):
         xml.sax.parseString(self.parse_sample, handler)
 
         self.assertTrue(len(handler.subjects) == 4)
-        self.assertEqual(handler.subjects[0], 'HydroShare')
+        self.assertEqual(handler.subjects[0], 'xDCIShare')
         self.assertEqual(handler.subjects[1], 'cuahsi')
         self.assertEqual(handler.subjects[2], 'Presentation')
         self.assertEqual(handler.subjects[3], 'Hydroinformatics')

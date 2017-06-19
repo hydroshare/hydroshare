@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # init-hydroshare
-# HydroShare container intiliaization script
+# xDCIShare container intiliaization script
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 sleep 3s

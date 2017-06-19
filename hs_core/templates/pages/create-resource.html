@@ -37,7 +37,7 @@
                 {% endblock %}
 
                 <div class="alert alert-info">
-                    <p>When you click Create Resource, the files will be uploaded to the HydroShare server. Click
+                    <p>When you click Create Resource, the files will be uploaded to the xDCIShare server. Click
                         <strong><a href="https://pages.hydroshare.org/sharing-and-privacy/formally-publishing-resources/"
                            target="_blank">here</a></strong>
                         to learn more about next steps to share and formally publish your data.</p>
@@ -65,7 +65,7 @@
                     <ul class="dropdown-menu shadow-md" aria-labelledby="select-resource-type">
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
-                               title="A resource that holds a list of other resources in HydroShare."
+                               title="A resource that holds a list of other resources in xDCIShare."
                                data-value="CollectionResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                      alt="Collection Resource Icon" class="resource-type-icon"/>
@@ -93,7 +93,7 @@
                         <!--
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
-                               title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
+                               title="A shortcut (or reference) to an external web application that functions with xDCIShare data resources."
                                data-value="ToolResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                      alt="Web App Resource Icon" class="resource-type-icon"/>
@@ -244,7 +244,7 @@
                             <div class="row">
                                 <div class="col-xs-12">
                                     <br>
-                                    <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
+                                    <span>To load files from an iRODS server including your iRODS user xDCIShare server:</span>
 
                                     <div id="irods-browse">
                                         <div id="log-into-irods">
@@ -334,7 +334,7 @@
 
                         <div id="file-move-warning" class="alert alert-warning hidden-form">
                             You selected move option which will move the selected files out of your iRODS account into a
-                            HydroShare resource once created.
+                            xDCIShare resource once created.
                         </div>
 
                         {% if file_size_error %}
@@ -357,14 +357,14 @@
                     <div class="col-xs-12 col-sm-4 col-md-3">
                         <ul class="list-group">
                             <li class="list-group-item">Files you upload here will be grouped together into a
-                                "Resource" in HydroShare.
+                                "Resource" in xDCIShare.
                             </li>
                             <li class="list-group-item">File size is limited to 1 GB per file for direct browser
                                 upload from your local disk.
                             </li>
                             <li class="list-group-item"><p>Files larger than 1GB can be imported directly from any
                                 iRODS account. You can create
-                                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
+                                a xDCIShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
                                 page.</p>
                                 <p>See <a href="https://pages.hydroshare.org/creating-and-managing-resources/"
                                           target="_blank">Creating and Managing Resources</a> for information on working

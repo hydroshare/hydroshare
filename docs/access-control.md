@@ -1,6 +1,6 @@
 
 # Access Control Tests
-### Tests cases to check proper implementation of Hydroshare access control policies.
+### Tests cases to check proper implementation of xDCIShare access control policies.
 
 ## Overview
 

@@ -5,7 +5,7 @@ urlpatterns = patterns('',
 
     # users API
 
-    url(r'^metrics/$', views.HydroshareSiteMetrics.as_view()),
+    url(r'^metrics/$', views.xDCIShareSiteMetrics.as_view()),
 
 )
 

@@ -472,7 +472,7 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
     Gets metadata html for the logical file type
     :param request:
-    :param hs_file_type: HydroShare supported logical file type class name
+    :param hs_file_type: xDCIShare supported logical file type class name
     :param file_type_id: id of the logical file object for which metadata in html format is needed
     :param metadata_mode: a value of either edit or view. In edit mode metadata html form elements
                           are returned. In view mode normal html for display of metadata is returned
