@@ -1,6 +1,7 @@
 from mezzanine.pages.page_processors import processor_for
 
 from crispy_forms.layout import Layout, HTML
+from dominate.tags import legend, table, tbody, tr, th, div
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
@@ -20,21 +21,21 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
 
-        if content_model.metadata.originalcoverage.all():
+        if content_model.metadata.originalcoverage:
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
 
         # add the original coverage context
         geom_info_for_view = {}
-        geom_info = content_model.metadata.geometryinformation.all().first()
+        geom_info = content_model.metadata.geometryinformation
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
             context['geometry_information'] = geom_info_for_view
 
         ori_cov_dict = {}
-        ori_cov_obj = content_model.metadata.originalcoverage.all().first()
+        ori_cov_obj = content_model.metadata.originalcoverage
         if ori_cov_obj:
             ori_cov_dict['northlimit'] = ori_cov_obj.northlimit
             ori_cov_dict['eastlimit'] = ori_cov_obj.eastlimit
@@ -46,7 +47,7 @@ def landing_page(request, page):
             ori_cov_dict['unit'] = ori_cov_obj.unit
             context['original_coverage'] = ori_cov_dict
 
-        field_info_list = content_model.metadata.fieldinformation.all()
+        field_info_list = content_model.metadata.fieldinformations.all()
         field_info_list_context = []
         for field_info in field_info_list:
             field_info_dict_item = {}
@@ -59,15 +60,16 @@ def landing_page(request, page):
         context['field_information'] = field_info_list_context
 
     else:  # editing mode
+        # now editing is allowed for resource specific metadata
         geom_info_for_view = {}
-        geom_info = content_model.metadata.geometryinformation.all().first()
+        geom_info = content_model.metadata.geometryinformation
         if geom_info:
             geom_info_for_view['geometryType'] = geom_info.geometryType
             geom_info_for_view['featureCount'] = geom_info.featureCount
 
         geom_information_form = GeometryInformationForm(initial=geom_info_for_view,
                                                         res_short_id=content_model.short_id,
-                                                        allow_edit=edit_resource,
+                                                        allow_edit=False,
                                                         element_id=geom_info.id
                                                         if geom_info else None)
 
@@ -78,7 +80,7 @@ def landing_page(request, page):
                                        '</div>')
 
         # origina coverage_form
-        ori_cov_obj = content_model.metadata.originalcoverage.all().first()
+        ori_cov_obj = content_model.metadata.originalcoverage
         ori_coverage_data_dict = {}
         if ori_cov_obj:
             ori_coverage_data_dict['projection_string'] = ori_cov_obj.projection_string
@@ -92,7 +94,7 @@ def landing_page(request, page):
 
         ori_coverage_form = OriginalCoverageForm(initial=ori_coverage_data_dict,
                                                  res_short_id=content_model.short_id,
-                                                 allow_edit=edit_resource,
+                                                 allow_edit=False,
                                                  element_id=ori_cov_obj.id
                                                  if ori_cov_obj else None)
         ori_coverage_layout = HTML('<div class="form-group col-lg-6 '
@@ -100,10 +102,25 @@ def landing_page(request, page):
                                    '{% load crispy_forms_tags %} '
                                    '{% crispy ori_coverage_form %} '
                                    '</div>')
+        root_div = div(cls="col-md-12 col-sm-12 pull-left", style="margin-bottom:40px;")
+        with root_div:
+            legend('Field Information')
+            with table(style="width: 100%;"):
+                with tbody():
+                    with tr(cls='row'):
+                        th('Name')
+                        th('Type')
+                        th('Width')
+                        th('Precision')
+
+                    for field_info in content_model.metadata.fieldinformations.all():
+                        field_info.get_html(pretty=False)
+
         ext_md_layout = Layout(HTML("<div class='row'>"),
                                geom_information_layout,
                                ori_coverage_layout,
-                               HTML("</div>"))
+                               HTML("</div>"),
+                               HTML(root_div.render()))
 
         context = page_processors.get_page_context(page,
                                                    request.user,

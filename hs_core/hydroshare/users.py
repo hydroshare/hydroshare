@@ -8,7 +8,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core import exceptions
 from django.db.models import Q
 
-from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, Coverage
+from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, \
+    Coverage, Relation
 from .utils import user_from_id, group_from_id, get_profile
 from theme.models import UserQuota
 
@@ -247,7 +248,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
-                      north=None, south=None, east=None, west=None):
+                      north=None, south=None, east=None, west=None, include_obsolete=False):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -379,6 +380,11 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()
+
+    if not include_obsolete:
+        flt = flt.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id'))
+
     for q in q:
         flt = flt.filter(q)
 

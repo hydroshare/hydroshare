@@ -1,3 +1,5 @@
+"""Extra URLs that add debugging capabilities to resources."""
+
 from django.conf.urls import patterns, url
 from hs_core import views
 

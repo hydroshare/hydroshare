@@ -9,7 +9,7 @@ from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
 from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource,\
-                                     ToolIcon, AppHomePageUrl
+                                     ToolIcon, AppHomePageUrl, SupportedSharingStatus
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
                                         metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template
@@ -230,6 +230,83 @@ class TestWebAppFeature(TransactionTestCase):
                                                    element_name="ToolIcon",
                                                    request=request)
         self.assertTrue(data["is_valid"])
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the ToolMetaData class
+
+        self.assertEqual(RequestUrlBase.objects.all().count(), 0)
+
+        # create 1 RequestUrlBase obj with required params
+        metadata = []
+        metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(RequestUrlBase.objects.all().count(), 1)
+        # no ToolVersion obj
+        self.assertEqual(ToolVersion.objects.all().count(), 0)
+
+        # create 1 ToolVersion obj with required params
+        del metadata[:]
+        metadata.append({'toolversion': {'value': '1.0'}})
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(ToolVersion.objects.all().count(), 1)
+
+        # update/create multiple metadata elements
+        del metadata[:]
+        # no SupportedResTypes obj
+        self.assertEqual(SupportedResTypes.objects.all().count(), 0)
+
+        # create SupportedResTypes obj with required params
+        metadata.append({'supportedrestypes': {'supported_res_types':
+                                               ['NetcdfResource', 'TimeSeriesResource']}})
+
+        # update tool version
+        metadata.append({'toolversion': {'value': '2.0'}})
+        # do the bulk metadata update
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(SupportedResTypes.objects.all().count(), 1)
+        supported_res_type = SupportedResTypes.objects.first()
+        for res_type in supported_res_type.supported_res_types.all():
+            self.assertIn(res_type.description, ['NetcdfResource', 'TimeSeriesResource'])
+        self.assertEqual(supported_res_type.supported_res_types.count(), 2)
+        self.assertEqual(ToolVersion.objects.first().value, '2.0')
+
+        # test updating SupportedSharingStatus
+        del metadata[:]
+        self.assertEqual(SupportedSharingStatus.objects.all().count(), 0)
+        metadata.append({'supportedsharingstatus': {'sharing_status':
+                                                    ['Public', 'Discoverable']}})
+        # do the bulk metadata update
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(SupportedSharingStatus.objects.all().count(), 1)
+        supported_sharing_status = SupportedSharingStatus.objects.first()
+        for sharing_status in supported_sharing_status.sharing_status.all():
+            self.assertIn(sharing_status.description, ['Public', 'Discoverable'])
+
+        # test creating ToolIcon element
+        del metadata[:]
+        self.assertEqual(ToolIcon.objects.all().count(), 0)
+
+        # create 1 ToolIcon obj with required params
+        metadata.append({'toolicon': {'value':
+                                      'https://www.hydroshare.org/static/img/logo-sm.png'}})
+        # do the bulk metadata update
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(ToolIcon.objects.all().count(), 1)
+        self.assertEqual(ToolIcon.objects.first().value,
+                         'https://www.hydroshare.org/static/img/logo-sm.png')
+
+        # test creating AppHomePageURL element
+        del metadata[:]
+        # verify no AppHomePageUrl obj
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
+
+        # create 1 AppHomePageUrl obj with required params
+        metadata.append({'apphomepageurl': {'value': 'https://my_web_app.com'}})
+        # do the bulk metadata update
+        self.resWebApp.metadata.update(metadata)
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
+        self.assertEqual(AppHomePageUrl.objects.first().value, 'https://my_web_app.com')
+        self.resWebApp.delete()
 
     def test_utils(self):
         url_template_string = "http://www.google.com/?" \

@@ -169,4 +169,46 @@ $(document).ready(function () {
     $(".format-date").each(function () {
         $(this).formatDate();
     });
+
+    $("#universalMessage a").on('click', function() {
+        $("#universalMessage").slideUp();
+        return false
+    });
+
+    $.ajax({
+        url: "/hsapi/userInfo/",
+        success: function(user) {
+            if(!user.title || !user.organization) {
+                var message = 'Your profile is nearly complete. ';
+                message += 'Please fill in the ';
+                if(!user.title && !user.organization) {
+                    message += '<strong>title</strong> and <strong>organization</strong> fields';
+                } else if (!user.title) {
+                    message += '<strong>title</strong> field';
+                } else if (!user.organization) {
+                    message += '<strong>organization</strong> field';
+                }
+                message += ' on the <a href="/user/'+user.id+'/">user profile</a> page';
+                showUniversalMessage("warn", message, 10000)();
+            }
+        },
+        error: showUniversalMessage()
+    })
 });
+
+function showUniversalMessage(type, message, timeout) {
+    return function(response,returnType,content) {
+        if(!message) message = content;
+        if(!type) type = returnType;
+        if(!timeout) timeout = 5000;
+
+        $("#universalMessage span").html(message);
+        $("#universalMessage").attr('class','');
+        $("#universalMessage").addClass(type);
+        $("#universalMessage").slideDown();
+
+        setTimeout(function() {
+            $("#universalMessage a.um_close").click()
+        }, timeout)
+    }
+}

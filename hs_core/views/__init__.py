@@ -116,6 +116,9 @@ def change_quota_holder(request, shortkey):
                            context=context)
     except PermissionDenied:
         return HttpResponseForbidden()
+    except utils.QuotaException as ex:
+        msg = 'Failed to change quota holder to {}:'.format(new_holder_u.username) + ex.message
+        request.session['validation_error'] = msg
 
     return HttpResponseRedirect(res.get_absolute_url())
 
