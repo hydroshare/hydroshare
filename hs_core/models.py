@@ -3032,7 +3032,7 @@ class BaseResource(Page, AbstractResource):
     @property
     def scimeta_path(self):
         """ path to science metadata file (in iRODS) """
-        return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+        return os.path.join(self.root_path, "data", "resourcemetadata.xml")
 
     @property
     def resmap_path(self):

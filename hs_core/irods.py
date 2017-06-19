@@ -29,17 +29,17 @@ class ResourceIRODSMixin(models.Model):
 
         # send signal for pre_check_bag_flag
         resource_cls = check_resource_type(self.resource_type)
-        pre_check_bag_flag.send(sender=resource_cls, resource=self)
+        # pre_check_bag_flag.send(sender=resource_cls, resource=self)
 
         metadata_dirty = self.getAVU('metadata_dirty')
         bag_modified = self.getAVU('bag_modified')
 
-        print('metadata_dirty = {} (type {})'.format(str(metadata_dirty), type(metadata_dirty)))
-        print('bag_modified = {} (type {})'.format(str(bag_modified), type(bag_modified)))
-        # if metadata_dirty:  # automatically cast to Bool
-        print("creating bag files")
-        create_bag_files(self)
-        # self.setAVU('metadata_dirty', False)
+        print('metadata_dirty = {} ({})'.format(str(metadata_dirty), type(metadata_dirty)))
+        print('bag_modified = {} ({})'.format(str(bag_modified), type(bag_modified)))
+        if metadata_dirty:  # automatically cast to Bool
+            print("update_bag: creating bag files")
+            create_bag_files(self)
+            self.setAVU('metadata_dirty', False)
 
         # if bag_modified:  # automatically cast to Bool
         print("create bag")
@@ -49,10 +49,13 @@ class ResourceIRODSMixin(models.Model):
     def update_metadata_files(self):
         from hs_core.hydroshare.hs_bagit import create_bag_files
         metadata_dirty = self.getAVU('metadata_dirty')
+        print('{} metadata_dirty = {}'.format(self.short_id, str(metadata_dirty)))
+        if metadata_dirty:
+            print("update metadata files {}: calling create_bag_files".format(self.short_id)) 
+            create_bag_files(self)
+            self.setAVU('metadata_dirty', False)
+        metadata_dirty = self.getAVU('metadata_dirty')
         print('metadata_dirty = {}'.format(str(metadata_dirty)))
-        # if metadata_dirty:
-        create_bag_files(self)
-        # self.setAVU('metadata_dirty', False)
 
     def create_ticket(self, user, path=None, write=False, allowed_uses=1):
         """
@@ -96,7 +99,7 @@ class ResourceIRODSMixin(models.Model):
 
         print("create ticket: creating bag files")
         create_bag_files(self)
-        print("create ticket: create bag")
+        print("create ticket: create_bag_by_irods")
         create_bag_by_irods(self.short_id)
 
         # can only write resource files
@@ -108,16 +111,15 @@ class ResourceIRODSMixin(models.Model):
         else:
             if path != self.bag_path and not path.startswith(self.root_path):
                 raise PermissionDenied("invalid resource file path {}".format(path))
-            # self.update_bag()
-            # self.update_metadata_files()
             if path == self.bag_path:
-                print("found a bag request for {}".format(path))
+                print("found a bag request for {}, updating bag".format(path))
                 self.update_bag()
                 istorage = self.get_irods_storage()
                 stuff = istorage.listdir('bags') 
+                print("contents of bags:")
                 pprint(stuff) 
             elif path == self.resmap_path or path == self.scimeta_path:
-                print("found a metadata request for {}".format(path))
+                print("found a metadata request for {}, updating metadata files".format(path))
                 self.update_metadata_files()
                 istorage = self.get_irods_storage()
                 stuff = istorage.listdir(os.path.join(self.root_path, 'data')) 
@@ -127,7 +129,8 @@ class ResourceIRODSMixin(models.Model):
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
             path = os.path.join(self.__home_path(), path)
-        print("path={} for {}".format(path, read_or_write))
+        print("in create_ticket, path={} for {}".format(path, read_or_write))
+        print("iticket command is 'iticket create {} {}'".format(read_or_write, path))
         stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
@@ -137,7 +140,11 @@ class ResourceIRODSMixin(models.Model):
                                     'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
+        # Note that this is a timeout on when the ticket is first used, and 
+        # not on the completion of the use, which can take considerably longer. 
         # TODO: this will fail unless Django and iRODS are both running in UTC.
+        # There is no current mechanism for determining the timezone of a remote iRODS 
+        # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
         _, _ = istorage.session.run('iticket', None, 'mod', ticket,
@@ -192,6 +199,9 @@ class ResourceIRODSMixin(models.Model):
                         output[line[0]] = line[1]
                 except Exception:  # no ':' in line
                     pass
+            if 'filename' in output: 
+                output['full_path'] = os.path.join(output['full_path'], output['filename'])
+
             return output
         else:
             raise ValidationError("ticket {} cannot be listed".format(ticket))

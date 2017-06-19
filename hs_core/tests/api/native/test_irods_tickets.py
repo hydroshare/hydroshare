@@ -5,6 +5,8 @@ from django.test import TestCase
 
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.hydroshare.hs_bagit import create_bag_files 
+from hs_core.tasks import create_bag_by_irods
 
 from pprint import pprint
 
@@ -53,7 +55,7 @@ class TestTickets(MockIRODSTestCaseMixin, TestCase):
         print(file.storage_path)
         ticket = file.create_ticket(self.user)
         attrs = self.res.list_ticket(ticket)
-        self.assertTrue(attrs['full_path'].endswith(self.res.file_path))
+        self.assertTrue(attrs['full_path'].endswith(file.storage_path))
         self.assertEqual(file.short_path, attrs['filename'])
         self.res.delete_ticket(self.user, ticket)
 
@@ -65,7 +67,13 @@ class TestTickets(MockIRODSTestCaseMixin, TestCase):
         self.res.delete_ticket(self.user, ticket)
 
     def test_get_meta_read_ticket(self):
-        print(self.res.scimeta_path)
+        print("getting ticket for {}".format(self.res.scimeta_path))
+
+        # print("testing: creating bag files for {}".format(self.res.short_id))
+        # create_bag_files(self.res)
+        # print("testing: create_bag_by_irods for {}".format(self.res.short_id))
+        # create_bag_by_irods(self.res.short_id)
+
         istorage = self.res.get_irods_storage()
         stuff = istorage.listdir(os.path.join(self.res.root_path, 'data')) 
         pprint(stuff) 
@@ -75,17 +83,30 @@ class TestTickets(MockIRODSTestCaseMixin, TestCase):
         self.res.delete_ticket(self.user, ticket)
 
     def test_get_map_read_ticket(self):
-        print(self.res.resmap_path)
+        print("getting ticket for {}".format(self.res.resmap_path))
+
+        # print("testing: creating bag files for {}".format(self.res.short_id))
+        # create_bag_files(self.res)
+        # print("testing: create_bag_by_irods for {}".format(self.res.short_id))
+        # create_bag_by_irods(self.res.short_id)
+
         istorage = self.res.get_irods_storage() 
         stuff = istorage.listdir(os.path.join(self.res.root_path, 'data')) 
         pprint(stuff) 
         ticket = self.res.create_ticket(self.user, self.res.resmap_path)
         attrs = self.res.list_ticket(ticket)
+        print("full_path = {}, resmap_path = {}".format(attrs['full_path'], self.res.resmap_path))
         self.assertTrue(attrs['full_path'].endswith(self.res.resmap_path))
         self.res.delete_ticket(self.user, ticket)
 
     def test_get_bag_read_ticket(self):
-        print(self.res.bag_path)
+        print("getting ticket for {}".format(self.res.bag_path))
+
+        # print("testing: creating bag files for {}".format(self.res.short_id))
+        # create_bag_files(self.res)
+        # print("testing: create_bag_by_irods for {}".format(self.res.short_id))
+        # create_bag_by_irods(self.res.short_id)
+
         istorage = self.res.get_irods_storage() 
         stuff = istorage.listdir('bags') 
         pprint(stuff) 
