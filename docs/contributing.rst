@@ -10,8 +10,7 @@ Getting Started
 
 #) Fork the repo under your own name
 
-#) Set up your Hydroshare development environment by following the
-`installation directions`_
+#) Set up your Hydroshare development environment by following the `installation directions`_
 
 #) Make the required edits to the code
 
