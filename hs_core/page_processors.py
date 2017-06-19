@@ -1,3 +1,5 @@
+"""Page processors for hs_core app."""
+
 from functools import partial, wraps
 
 from django.core.exceptions import PermissionDenied
@@ -19,15 +21,15 @@ from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
+    """Return resource landing page context."""
     edit_resource = check_resource_mode(request)
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
 
 
-# resource type specific app needs to call this method to inject a crispy_form layout
-# object for displaying metadata UI for the extended metadata for their resource
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
-    """
+    """Inject a crispy_form layout into the page to display extended metadata.
+
     :param page: which page to get the template context for
     :param user: the user who is viewing the page
     :param resource_edit: True if and only if the page should render in edit mode
@@ -36,6 +38,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     :return: the basic template context (a python dict) used to render a resource page. can and
     should be extended by page/resource-specific page_processors
 
+    Resource type specific app needs to call this method to inject a crispy_form layout
+    object for displaying metadata UI for the extended metadata for their resource
 
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and
@@ -445,8 +449,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 
 def check_resource_mode(request):
-    """
-    Determines whether the `request` represents an attempt to edit a resource.
+    """Determine whether the `request` represents an attempt to edit a resource.
+
     A request is considered an attempt
     to edit if any of the following conditions are met:
         1. the HTTP verb is not "GET"
@@ -470,6 +474,7 @@ def check_resource_mode(request):
 
 
 def check_for_validation(request):
+    """Check for validation error in request session."""
     if request.method == "GET":
         validation_error = request.session.get('validation_error', None)
         if validation_error:

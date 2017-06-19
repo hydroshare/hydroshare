@@ -457,12 +457,11 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath, size=0):
+def link_irods_file_to_django(resource, filepath):
     """
     Link a newly created irods file to Django resource model
 
     :param filepath: full path to file
-    :size: deprecated; size of file; not needed
     """
     # link the newly created file (**filepath**) to Django resource model
     b_add_file = False
@@ -500,7 +499,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     if __debug__:
         assert(isinstance(resource, BaseResource))
-    istorage = resource.get_irods_storage()
+    if istorage is None:
+        istorage = resource.get_irods_storage()
 
     if foldername:
         store = istorage.listdir(foldername)
@@ -508,9 +508,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
-                size = istorage.size(file_path)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path, size)
+                link_irods_file_to_django(resource, file_path)
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
@@ -620,7 +619,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     output_zip_size = istorage.size(output_zip_full_path)
 
-    link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
+    link_irods_file_to_django(resource, output_zip_full_path)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
@@ -902,6 +901,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']
                 spatial_coverage_dict['north'] = spatial_coverage.value['north']
@@ -916,6 +916,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         temporal_coverage = resource.metadata.coverages.filter(type='period').first()
         temporal_coverage_dict = {}
         if temporal_coverage:
+            temporal_coverage_dict['element_id'] = temporal_coverage.id
             temporal_coverage_dict['type'] = temporal_coverage.type
             temporal_coverage_dict['start'] = temporal_coverage.value['start']
             temporal_coverage_dict['end'] = temporal_coverage.value['end']

@@ -108,7 +108,7 @@ class ScriptMetaData(CoreMetaData):
                 element_property_name = attribute_mappings[element_name]
                 self.update_non_repeatable_element(element_name, metadata, element_property_name)
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string for R Script
         xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)
