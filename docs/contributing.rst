@@ -9,9 +9,12 @@ Getting Started
 ---------------
 
 1) Fork the repo under your own name
+
 2) Set up your Hydroshare development environment by following the
 `installation directions`_
+
 3) Make the required edits to the code
+
 4) Push to your fork and `submit a pull request`_
 
 .. _installation directions: https://github.com/hydroshare/hydroshare#simplified-installation-instructions
@@ -31,5 +34,5 @@ increase the chance that your pull request is accepted:
 - Follow the `PEP8 style guide`_
 - Write a `good commit message`_
 
-.. _PEP8 style guide:: https://www.python.org/dev/peps/pep-0008/
+.. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
 .. _good commit message: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
