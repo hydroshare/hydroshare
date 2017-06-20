@@ -2554,7 +2554,7 @@ def get_resource_file_path(resource, filename, folder=None):
         return os.path.join(resource.file_path, filename)
 
 
-def _path_is_allowed(path):
+def path_is_allowed(path):
     """Check for suspicious paths containing '/../'."""
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
@@ -2994,7 +2994,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Create a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import create_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
@@ -3004,7 +3004,7 @@ class ResourceFile(ResourceFileIRODSMixin):
         """Remove a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import remove_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
