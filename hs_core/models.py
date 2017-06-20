@@ -1817,11 +1817,22 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         istorage = self.get_irods_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
-        if attribute == 'isPublic' or attribute == 'bag_modified' or attribute == 'metadata_dirty':
+
+        # Convert selected boolean attribute values to bool; non-existence implies False
+        if attribute == 'isPublic': 
+            if value is not None and value.lower() == 'true':
+                return True
+            else:
+                return False
+
+        # Convert selected boolean attribute values to bool; non-existence implies True
+        if attribute == 'bag_modified' or attribute == 'metadata_dirty':
             if value is None or value.lower() == 'true':
                 return True
             else:
                 return False
+
+        # return strings for all other attributes
         else:
             return value
 

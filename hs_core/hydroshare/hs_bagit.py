@@ -63,9 +63,7 @@ def create_bag_files(resource):
     # to accommodate asynchronous multiple file move operations for the same resource
 
     # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
-    print("create_bag_files for {}".format(resource.short_id))
     temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
-    print("temp_path = {}".format(temp_path))
 
     try:
         os.makedirs(temp_path)
