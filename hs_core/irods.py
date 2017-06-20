@@ -1,5 +1,4 @@
 import os
-from pprint import pprint
 
 from datetime import datetime, timedelta
 
@@ -21,7 +20,13 @@ class ResourceIRODSMixin(models.Model):
 
     def update_bag(self):
         """
-        Update a bag before issuing a download ticket
+        Update a bag if necessary.
+
+        This uses the Django signal pre_check_bag_flag to prepare collections, i
+        and then checks the AVUs 'metadata_dirty' and 'bag_modified' to determine
+        whether to regenerate the metadata files and/or bag.
+
+        This is a synchronous update. The call waits until the update is finished. 
         """
         from hs_core.tasks import create_bag_by_irods
         from hs_core.hydroshare.resource import check_resource_type
@@ -29,7 +34,7 @@ class ResourceIRODSMixin(models.Model):
 
         # send signal for pre_check_bag_flag
         resource_cls = check_resource_type(self.resource_type)
-        # pre_check_bag_flag.send(sender=resource_cls, resource=self)
+        pre_check_bag_flag.send(sender=resource_cls, resource=self)
 
         metadata_dirty = self.getAVU('metadata_dirty')
         bag_modified = self.getAVU('bag_modified')
@@ -45,10 +50,17 @@ class ResourceIRODSMixin(models.Model):
             self.setAVU('bag_modified', False)
 
     def update_metadata_files(self):
+        """
+        Make the metadata files resourcemetadata.xml and resourcemap.xml up to date.
+
+        This checks the "metadata dirty" AVU before updating files if necessary.
+        """
         from hs_core.hydroshare.hs_bagit import create_bag_files
+
         metadata_dirty = self.getAVU('metadata_dirty')
-        create_bag_files(self)
-        self.setAVU('metadata_dirty', False)
+        if metadata_dirty: 
+            create_bag_files(self)
+            self.setAVU('metadata_dirty', False)
 
     def create_ticket(self, user, path=None, write=False, allowed_uses=1):
         """
@@ -75,9 +87,6 @@ class ResourceIRODSMixin(models.Model):
 
         """
         from hs_core.models import path_is_allowed
-        from hs_core.tasks import create_bag_by_irods
-        from hs_core.hydroshare.resource import check_resource_type
-        from hs_core.hydroshare.hs_bagit import create_bag_files
 
         # raises SuspiciousFileOperation if path is not allowed
         path_is_allowed(path)
