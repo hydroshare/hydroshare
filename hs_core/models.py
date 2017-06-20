@@ -1814,7 +1814,7 @@ class AbstractResource(ResourcePermissionsMixin):
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
         if attribute == 'isPublic':
-            if value.lower() == 'true':
+            if value is not None and value.lower() == 'true':
                 return True
             else:
                 return False
@@ -2654,7 +2654,7 @@ class ResourceFile(models.Model):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
-            if resource.resource_federation_path:
+            if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = file
             else:
@@ -2693,7 +2693,7 @@ class ResourceFile(models.Model):
                     "ResourceFile.create: exactly one of source or file must be specified")
 
             # we've copied or moved if necessary; now set the paths
-            if resource.resource_federation_path:
+            if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = target
             else:
@@ -2745,7 +2745,7 @@ class ResourceFile(models.Model):
     def exists(self):
         """Check existence of files for both federated and non-federated."""
         istorage = self.resource.get_irods_storage()
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -2755,6 +2755,14 @@ class ResourceFile(models.Model):
                 assert self.fed_resource_file.name is None or \
                     self.fed_resource_file.name == ''
             return istorage.exists(self.resource_file.name)
+
+    # TODO: write unit test
+    @property
+    def read(self):
+        if self.resource.is_federated:
+            return self.fed_resource_file.read
+        else:
+            return self.resource_file.read
 
     @property
     def storage_path(self):
@@ -2768,7 +2776,7 @@ class ResourceFile(models.Model):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
-        if resource.resource_federation_path:  # false if None or empty
+        if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -2813,7 +2821,7 @@ class ResourceFile(models.Model):
         resource = self.resource
 
         # switch FileFields based upon federation path
-        if resource.resource_federation_path:
+        if resource.is_federated:
             # uses file_folder; must come after that setting.
             self.fed_resource_file = get_path(self, base)
             self.resource_file = None
@@ -2832,7 +2840,7 @@ class ResourceFile(models.Model):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
@@ -2852,7 +2860,7 @@ class ResourceFile(models.Model):
         if folder == "":
             folder = None
         self.file_folder = folder  # must precede call to get_path
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             self.resource_file = None
             self.fed_resource_file = get_path(self, base)
         else:
@@ -2968,7 +2976,7 @@ class ResourceFile(models.Model):
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
-        if resource.resource_federation_path:
+        if resource.is_federated:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
                 fed_resource_file__startswith=folder)
