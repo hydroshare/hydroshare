@@ -26,7 +26,7 @@ class ResourceIRODSMixin(models.Model):
         and then checks the AVUs 'metadata_dirty' and 'bag_modified' to determine
         whether to regenerate the metadata files and/or bag.
 
-        This is a synchronous update. The call waits until the update is finished. 
+        This is a synchronous update. The call waits until the update is finished.
         """
         from hs_core.tasks import create_bag_by_irods
         from hs_core.hydroshare.resource import check_resource_type
@@ -58,7 +58,7 @@ class ResourceIRODSMixin(models.Model):
         from hs_core.hydroshare.hs_bagit import create_bag_files
 
         metadata_dirty = self.getAVU('metadata_dirty')
-        if metadata_dirty: 
+        if metadata_dirty:
             create_bag_files(self)
             self.setAVU('metadata_dirty', False)
 

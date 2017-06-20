@@ -1819,7 +1819,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         value = istorage.getAVU(root_path, attribute)
 
         # Convert selected boolean attribute values to bool; non-existence implies False
-        if attribute == 'isPublic': 
+        if attribute == 'isPublic':
             if value is not None and value.lower() == 'true':
                 return True
             else:
