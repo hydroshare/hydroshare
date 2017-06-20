@@ -108,7 +108,8 @@ if __name__ == '__main__':
         zstream = ZipperChunkedIOStream(compression=ZIP_DEFLATED)
         local_file_paths = ['download_microservice/zipstream.py',
                             'download_microservice/download_microservice.py']
-        chunks = list(zstream.chunked_add_file_paths(local_file_paths, chunk_size=1024))
+        chunks = list(zstream.chunked_add_file_paths(local_file_paths,
+                                                     chunk_size=1024))
 
         with open('download_microservice/subdirectories.zip', 'wb') as out_finalized_fp:
             for chunk in chunks:
