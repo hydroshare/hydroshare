@@ -20,7 +20,7 @@ from hs_core import hydroshare
 from hs_core.models import BaseResource
 
 
-def create_driver(platform='desktop', driver_name='firefox'):
+def create_driver(platform='desktop', driver_name='phantomjs'):
     if platform is 'desktop':
         user_agent = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_2) '
                       'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -213,7 +213,10 @@ class SeleniumTestsParentClass(object):
 
             self.assertEqual(len(mail.outbox), 1)
             url = re.search(r'(?P<url>https?://[^\s]+)', mail.outbox[0].body).groupdict()['url']
-            self.assertFalse(User.objects.get(email=usr['email']).is_active)
+            user = User.objects.get(email=usr['email'])
+            self.assertFalse(user.is_active)
+            with self.assertRaises(ValueError):
+                _ = user.userprofile.cv.url
 
             self.driver.get(url)
             # Now that we have clicked the verify URL, the user will get some popups and be verified
@@ -234,6 +237,8 @@ class SeleniumTestsParentClass(object):
 
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="organization"]').send_keys(usr['org'])
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="title"]').send_keys(usr['title'])
+            upload_field = self.wait_for_visible(By.CSS_SELECTOR, 'input[name="cv"]')
+            upload_file(self.driver, upload_field, './manage.py')
             self.wait_for_visible(By.CSS_SELECTOR, 'button#btn-save-profile').click()
 
             alert_div =  self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
@@ -250,6 +255,7 @@ class SeleniumTestsParentClass(object):
             self.assertEqual(user.userprofile.title, usr['title'])
             self.assertEqual(user.userprofile.organization, usr['org'])
             self.assertTrue(user.check_password(usr['pass']))
+            self.assertNotEqual('', user.userprofile.cv.url)
 
         def test_login_email(self):
             self.driver.get(self.live_server_url)
