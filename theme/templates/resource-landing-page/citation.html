@@ -191,6 +191,23 @@
                               <span class="form-control">Shareable</span>
                             </div><!-- /input-group -->
                         </form>
+                        {#   Require license agreement flag    #}
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                              method="POST">
+                            {% csrf_token %}
+
+                            <input name="t" type="hidden" {% if cm.requires_license_agreement %}value="make_not_require_lic_agreement"
+                                   {% else %}value="make_require_lic_agreement"{% endif %}/>
+
+                            <br>
+                            <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners need to agree before they can download any content files or resource bag.">
+                              <span class="input-group-addon">
+                                <input id="btn-lic-agreement" type="checkbox"
+                                              {% if cm.requires_license_agreement %}checked{% endif %}>
+                              </span>
+                              <span class="form-control">Requires License Agreement</span>
+                            </div><!-- /input-group -->
+                        </form>
                     </div>
                     <br>
                 {% endif %}

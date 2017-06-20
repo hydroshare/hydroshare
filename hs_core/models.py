@@ -1611,6 +1611,15 @@ class AbstractResource(ResourcePermissionsMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
+    @property
+    def requires_license_agreement(self):
+        requires_lic_agreement = self.extra_data.get('require_license_agreement', 'no')
+        return requires_lic_agreement.lower() == 'yes'
+
+    def set_require_license_agreement(self, flag='yes'):
+        self.extra_data['require_license_agreement'] = flag
+        self.save()
+
     # definition of resource logic
     @property
     def supports_folders(self):
