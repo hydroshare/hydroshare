@@ -93,6 +93,9 @@ function license_agreement_ajax_submit(event) {
             else {
                 element.closest("form").find("input[name='t']").val("make_not_require_lic_agreement");
             }
+            // page refresh is needed to update if license agreement popup to show or not prior
+            // to download of files/bag
+            window.location = window.location.href;
         },
         error: function () {
             element.attr("disabled", false);

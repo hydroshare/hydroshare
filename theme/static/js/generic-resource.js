@@ -460,6 +460,20 @@ $(document).ready(function () {
             $('#copy-btn').attr('disabled', 'disabled');
     });
 
+    $("#agree-chk-download-bag").on('click', function(e) {
+        e.stopImmediatePropagation();
+        if (e.currentTarget.checked)
+            $('#download-bag-btn').removeAttr('disabled');
+        else
+            $('#download-bag-btn').attr('disabled', 'disabled');
+    });
+    $("#agree-chk-download-file").on('click', function(e) {
+        e.stopImmediatePropagation();
+        if (e.currentTarget.checked)
+            $('#download-file-btn').removeAttr('disabled');
+        else
+            $('#download-file-btn').attr('disabled', 'disabled');
+    });
     // add input element to each of the comment/rating forms to track resource mode (edit or view)
     var resourceMode = $("#resource-mode").val().toLowerCase();
     var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';

@@ -150,7 +150,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_published' in request.session:
             del request.session['just_published']
 
-    bag_url = AbstractResource.bag_url(content_model.short_id)
+    bag_url = content_model.bag_url
 
     if user.is_authenticated():
         show_content_files = user.uaccess.can_view_resource(content_model)
@@ -428,6 +428,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
+               'rights': content_model.metadata.rights,
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'current_user': user,

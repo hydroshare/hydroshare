@@ -105,8 +105,28 @@
                 </div>
             {% endif %}
         </div>
+        <div class="col-xs-12">
+            {#   Require license agreement for file download flag    #}
+            {% if is_owner_user %}
+                <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                      method="POST">
+                    {% csrf_token %}
 
-        <div id="sharing-status" class="col-xs-12">
+                    <input name="t" type="hidden" {% if cm.requires_license_agreement %}value="make_not_require_lic_agreement"
+                           {% else %}value="make_require_lic_agreement"{% endif %}/>
+
+                    <br>
+                    <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners need to agree before they can download any content files or resource bag.">
+                      <span class="input-group-addon">
+                        <input id="btn-lic-agreement" type="checkbox"
+                                      {% if cm.requires_license_agreement %}checked{% endif %}>
+                      </span>
+                      <span class="form-control">Require agreement to rights statement before downloading</span>
+                    </div><!-- /input-group -->
+                </form>
+            {% endif %}
+        </div>
+        <div id="sharing-status" class="col-xs-12 pull-left">
             <br>
             <h4>Sharing status:</h4>
             {% if can_change_resource_flags %}
@@ -189,23 +209,6 @@
                                               {% if cm.raccess.shareable %}checked{% endif %}>
                               </span>
                               <span class="form-control">Shareable</span>
-                            </div><!-- /input-group -->
-                        </form>
-                        {#   Require license agreement flag    #}
-                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                              method="POST">
-                            {% csrf_token %}
-
-                            <input name="t" type="hidden" {% if cm.requires_license_agreement %}value="make_not_require_lic_agreement"
-                                   {% else %}value="make_require_lic_agreement"{% endif %}/>
-
-                            <br>
-                            <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners need to agree before they can download any content files or resource bag.">
-                              <span class="input-group-addon">
-                                <input id="btn-lic-agreement" type="checkbox"
-                                              {% if cm.requires_license_agreement %}checked{% endif %}>
-                              </span>
-                              <span class="form-control">Requires License Agreement</span>
                             </div><!-- /input-group -->
                         </form>
                     </div>
