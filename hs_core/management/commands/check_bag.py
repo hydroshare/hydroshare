@@ -81,7 +81,7 @@ class Command(BaseCommand):
                         print("{} NOT FOUND".format(scimeta_path))
 
                     resmap_path = os.path.join(resource.root_path, 'data',
-                                                'resourcemap.xml')
+                                               'resourcemap.xml')
                     if istorage.exists(resmap_path):
                         print("found {}".format(resmap_path))
                     else:
