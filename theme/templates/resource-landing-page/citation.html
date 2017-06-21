@@ -124,7 +124,18 @@
                       <span class="form-control">Require agreement to rights statement before downloading</span>
                     </div><!-- /input-group -->
                 </form>
+            {% else %}
+                {% if cm.requires_license_agreement %}
+                    <br>
+                    <li class="list-group-item">
+                    <div>
+                        <span class="glyphicon glyphicon-download-alt"></span>
+                         <span>Downloads require agreement to resource rights statement</span>
+                    </div>
+                    </li>
+                {% endif %}
             {% endif %}
+
         </div>
         <div id="sharing-status" class="col-xs-12 pull-left">
             <br>

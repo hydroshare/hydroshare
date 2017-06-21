@@ -7,7 +7,7 @@ from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, GenericResource, Relation
+from hs_core.models import GenericResource, Relation
 from hs_core import languages_iso
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
