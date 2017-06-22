@@ -27,7 +27,6 @@ class TestTickets(TestCase):
             self.user,
             'test resource',
         )
-        self.res.save()
 
         # create a file
         self.test_file_name1 = 'file1.txt'

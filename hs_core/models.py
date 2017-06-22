@@ -1819,6 +1819,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         value = istorage.getAVU(root_path, attribute)
 
         # Convert selected boolean attribute values to bool; non-existence implies False
+        # "Private" is the appropriate response if "isPublic" is None
         if attribute == 'isPublic':
             if value is not None and value.lower() == 'true':
                 return True
@@ -1826,6 +1827,9 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 return False
 
         # Convert selected boolean attribute values to bool; non-existence implies True
+        # If bag_modified or metadata_dirty does not exist, then we do not know the
+        # state of metadata files and/or bags. They may not exist. Thus we interpret
+        # None as "true", which will generate the appropriate files if they do not exist.
         if attribute == 'bag_modified' or attribute == 'metadata_dirty':
             if value is None or value.lower() == 'true':
                 return True
@@ -1851,6 +1855,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
     @classmethod
     def scimeta_url(cls, resource_id):
+        """ Get URL of the science metadata file resourcemetadata.xml """
         res = BaseResource.objects.get(short_id=resource_id)
         scimeta_path = res.scimeta_path
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
@@ -1862,7 +1867,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     # Choose one!
     @classmethod
     def resmap_url(cls, resource_id):
-        """Get URL of resource map xml."""
+        """ Get URL of the resource map resourcemap.xml."""
         resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
         resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
         return resmap_url

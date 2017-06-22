@@ -22,7 +22,7 @@ class ResourceIRODSMixin(models.Model):
         """
         Update a bag if necessary.
 
-        This uses the Django signal pre_check_bag_flag to prepare collections, i
+        This uses the Django signal pre_check_bag_flag to prepare collections,
         and then checks the AVUs 'metadata_dirty' and 'bag_modified' to determine
         whether to regenerate the metadata files and/or bag.
 
@@ -68,6 +68,7 @@ class ResourceIRODSMixin(models.Model):
 
         :param user: user to authorize
         :param path: path in iRODS to the object being requested.
+        :param allowed_uses: number of possible uses of the ticket; default is one use.
         :return:
 
         :raises PermissionDenied: if user is not allowed to create the ticket.
@@ -126,8 +127,8 @@ class ResourceIRODSMixin(models.Model):
             raise ValidationError("ticket creation failed: {}", stderr)
         ticket = stdout.split('\n')[0]
         ticket = ticket[len('ticket:'):]
-        _, _ = istorage.session.run('iticket', None, 'mod', ticket,
-                                    'uses', str(allowed_uses))
+        istorage.session.run('iticket', None, 'mod', ticket,
+                             'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
         # Note that this is a timeout on when the ticket is first used, and
@@ -137,8 +138,8 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        _, _ = istorage.session.run('iticket', None, 'mod', ticket,
-                                    'expires', formatted)
+        istorage.session.run('iticket', None, 'mod', ticket,
+                             'expires', formatted)
         return ticket
 
     def list_ticket(self, ticket):
@@ -233,7 +234,7 @@ class ResourceIRODSMixin(models.Model):
                 raise PermissionDenied("user {} cannot delete view ticket for {}"
                                        .format(user.username, self.short_id))
         istorage = self.get_irods_storage()
-        _, _ = istorage.session.run('iticket', None, 'delete', ticket)
+        istorage.session.run('iticket', None, 'delete', ticket)
 
 
 class ResourceFileIRODSMixin(models.Model):

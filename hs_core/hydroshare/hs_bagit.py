@@ -211,10 +211,6 @@ def create_bag(resource):
     # created when user clicks on download button
     resource.setAVU("bag_modified", True)
 
-    # TODO: why are these set here? They should be correct already!
-    resource.setAVU("isPublic", resource.raccess.public)
-    resource.setAVU("resourceType", resource._meta.object_name)
-
     # delete if there exists any bags for the resource
     resource.bags.all().delete()
     # link the zipped bag file in IRODS via bag_url for bag downloading
