@@ -201,8 +201,8 @@ class UserQuota(models.Model):
                              related_name='quotas',
                              related_query_name='quotas')
 
-    allocated_value = models.BigIntegerField(default=20)
-    used_value = models.BigIntegerField(default=0)
+    allocated_value = models.FloatField(default=20)
+    used_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare_internal")
     # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
