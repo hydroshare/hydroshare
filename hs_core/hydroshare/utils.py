@@ -669,16 +669,16 @@ def convert_file_size_to_unit(size, unit):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
 
-    kbsize = size / 1000.0
+    kbsize = size / 1024.0
     if unit == 'kb':
         return kbsize
-    mbsize = kbsize / 1000.0
+    mbsize = kbsize / 1024.0
     if unit == 'mb':
         return mbsize
-    gbsize = mbsize / 1000.0
+    gbsize = mbsize / 1024.0
     if unit == 'gb':
         return gbsize
-    tbsize = gbsize / 1000.0
+    tbsize = gbsize / 1024.0
     if unit == 'tb':
         return tbsize
 
