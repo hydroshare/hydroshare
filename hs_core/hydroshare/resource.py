@@ -463,7 +463,7 @@ def create_resource(
     # set the resource to private
     resource.setAVU('isPublic', resource.raccess.public)
 
-    # set the resource type (which is immutable) 
+    # set the resource type (which is immutable)
     resource.setAVU("resourceType", resource._meta.object_name)
 
     # set quota of this resource to this creator
