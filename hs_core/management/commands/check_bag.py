@@ -92,41 +92,41 @@ class Command(BaseCommand):
                     else:
                         print("bag {} NOT FOUND".format(resource.bag_path))
 
-                    dirty = istorage.getAVU(resource.root_path, 'metadata_dirty')
+                    dirty = resource.getAVU('metadata_dirty')
                     print("metadata_dirty is {}".format(str(dirty)))
 
-                    modified = istorage.getAVU(resource.root_path, 'bag_modified')
+                    modified = resource.getAVU('bag_modified')
                     print("bag_modified is {}".format(str(modified)))
 
                     if options['generate']:  # generate usable bag
 
                         create_bag_files(resource)
                         print("metadata generated for {} from Django".format(rid))
-                        istorage.setAVU(resource.root_path, 'metadata_dirty', 'false')
+                        resource.setAVU('metadata_dirty', 'false')
                         print("metadata_dirty set to false for {}".format(rid))
 
                         create_bag_by_irods(rid)
                         print("bag generated for {} from iRODs".format(rid))
-                        istorage.setAVU(resource.root_path, 'bag_modified', 'false')
+                        resource.setAVU('bag_modified', 'false')
                         print("bag_modified set to false for {}".format(rid))
 
                     elif options['generate_metadata']:
 
                         create_bag_files(resource)
                         print("metadata generated for {} from Django".format(rid))
-                        istorage.setAVU(resource.root_path, 'metadata_dirty', 'false')
+                        resource.setAVU('metadata_dirty', 'false')
                         print("metadata_dirty set to false for {}".format(rid))
 
                     elif options['generate_bag']:
 
                         create_bag_by_irods(rid)
                         print("bag generated for {} from iRODs".format(rid))
-                        istorage.setAVU(resource.root_path, 'bag_modified', 'false')
+                        resource.setAVU('bag_modified', 'false')
                         print("bag_modified set to false for {}".format(rid))
 
                     elif options['reset']:  # reset all data to pristine
 
-                        istorage.setAVU(resource.root_path, 'metadata_dirty', 'true')
+                        resource.setAVU('metadata_dirty', 'true')
                         print("metadata_dirty set to true for {}".format(rid))
                         try:
                             istorage.delete(resource.scimeta_path)
@@ -143,7 +143,7 @@ class Command(BaseCommand):
                                   .format(resource.resmap_path,
                                           ex.stderr))
 
-                        istorage.setAVU(resource.root_path, 'bag_modified', 'true')
+                        resource.setAVU('bag_modified', 'true')
                         print("bag_modified set to true for {}".format(rid))
                         try:
                             istorage.delete(resource.bag_path)
@@ -155,7 +155,7 @@ class Command(BaseCommand):
 
                     elif options['reset_metadata']:
 
-                        istorage.setAVU(resource.root_path, 'metadata_dirty', 'true')
+                        resource.setAVU('metadata_dirty', 'true')
                         print("metadata_dirty set to true for {}".format(rid))
                         try:
                             istorage.delete(resource.scimeta_path)
@@ -173,7 +173,7 @@ class Command(BaseCommand):
                                           ex.stderr))
 
                     elif options['reset_bag']:
-                        istorage.setAVU(resource.root_path, 'bag_modified', 'true')
+                        resource.setAVU('bag_modified', 'true')
                         print("bag_modified set to true for {}".format(rid))
                         try:
                             istorage.delete(resource.bag_path)
