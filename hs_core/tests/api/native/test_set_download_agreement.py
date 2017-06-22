@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 
 from hs_core.hydroshare import resource
