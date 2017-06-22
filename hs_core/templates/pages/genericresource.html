@@ -135,7 +135,7 @@
                         {% endif %}
 
                     {% endif %}
-                    {% if cm.requires_license_agreement %}
+                    {% if cm.raccess.download_agreement %}
                         <li id="btn-download-with-agreement" data-menu-name="download" data-toggle="modal" data-target="#license-agree-dialog-file">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
@@ -557,7 +557,7 @@
                         {% endif %}
                         {% for b in cm.bags.all %}
                             <div>
-                            {% if cm.requires_license_agreement %}
+                            {% if cm.raccess.download_agreement %}
                                 <a id="btn-download-all" type="button" class="btn btn-default row-selector"
                                 data-target="#license-agree-dialog-bag" data-toggle="modal" data-placement="auto">
                             {% else %}

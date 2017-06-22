@@ -1611,25 +1611,6 @@ class AbstractResource(ResourcePermissionsMixin):
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
-    @property
-    def requires_license_agreement(self):
-        """Check if license agreement is needed for resource file or bag download"""
-        requires_lic_agreement = self.extra_data.get('require_license_agreement', 'no')
-        return requires_lic_agreement.lower() == 'yes'
-
-    def set_require_license_agreement(self, user, flag='yes'):
-        """Set if user will be required to agree to resource license prior to downloading resource
-        files or bag
-        :param  user: user who is setting the license requirement for downloads
-        :param  flag: a value of 'yes' to requires license agreement, any other value no agreement
-        required
-        """
-
-        if not user.uaccess.can_change_resource_flags(self):
-            raise PermissionDenied("You don't have permission to change resource status")
-        self.extra_data['require_license_agreement'] = flag
-        self.save()
-
     # definition of resource logic
     @property
     def supports_folders(self):
@@ -1771,6 +1752,21 @@ class AbstractResource(ResourcePermissionsMixin):
                 # run script to update hyrax input files when private netCDF resource changes state
                 if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
                     run_script_to_update_hyrax_input_files(self.short_id)
+
+    def set_download_agreement(self, user, value):
+        """Set resource download_agreement flag to True or False. If download_agreement is True
+        then user will be prompted to agree to resource rights statement before he/she can download
+        resource files or bag.
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource download agreement"
+                                   " status")
+        self.raccess.download_agreement = value
+        self.raccess.save()
 
     def update_public_and_discoverable(self):
         """Update the settings of the public and discoverable flags for changes in metadata."""

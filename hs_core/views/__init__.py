@@ -689,9 +689,9 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
     elif t == 'make_require_lic_agreement':
-        res.set_require_license_agreement(user)
+        res.set_download_agreement(user, value=True)
     elif t == 'make_not_require_lic_agreement':
-        res.set_require_license_agreement(user, flag='no')
+        res.set_download_agreement(user, value=False)
 
     if request.META.get('HTTP_REFERER', None):
         request.session['resource-mode'] = request.POST.get('resource-mode', 'view')

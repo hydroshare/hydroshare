@@ -73,6 +73,8 @@ function shareable_ajax_submit(event) {
 }
 
 function license_agreement_ajax_submit(event) {
+    // this sets if user will be required to agree to resource rights statement prior
+    // to any resource file or bag download
     var form = $(this).closest("form");
     var datastring = form.serialize();
     var url = form.attr('action');

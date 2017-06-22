@@ -51,7 +51,7 @@ $(document).ready(function() {
         rep_res_to_irods_user_zone_ajax_submit(resID);
     });
 
-    $("#download-btn").click(function() {
+    $("#download-bag-btn").click(function() {
         $("#license-agree-dialog-bag").modal('hide');
     });
 
