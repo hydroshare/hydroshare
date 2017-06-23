@@ -146,6 +146,8 @@ class ResourceIRODSMixin(models.Model):
         """ List a ticket's attributes """
         istorage = self.get_irods_storage()
         stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket)
+        print(stdout)
+        print(stderr)
         if stdout.startswith('id:'):
             stuff = stdout.split('\n')
             output = {}
@@ -194,8 +196,10 @@ class ResourceIRODSMixin(models.Model):
                 output['full_path'] = os.path.join(output['full_path'], output['filename'])
 
             return output
-        else:
-            raise ValidationError("ticket {} cannot be listed".format(ticket))
+        elif stdout == '':
+            raise ValidationError("ticket {} not found".format(ticket))
+        else: 
+            raise ValidationError("ticket {} error: {}".format(ticket, stderr))
 
     def delete_ticket(self, user, ticket):
         """
