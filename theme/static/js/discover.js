@@ -137,14 +137,6 @@ var initMap = function(json_results, view_type) {
     document.getElementById(geocoder_submit_id).addEventListener('click', function() {
         geocodeAddress(geocoder, maps[view_type], mapDim, view_type);
     });
-
-
-    google.maps.event.addListener(maps[view_type],'click',function(e){
-        updateMapView(view_type);
-
-    });
-
-
 };
 
 var setMarkers = function(json_results) {
@@ -182,13 +174,6 @@ var setBoxes = function(json_results) {
     });
     drawShadeRectangles(boxes_data);
 
-    shade_rects.forEach(function(box){
-        var rect = box.rect;
-        google.maps.event.addListener(rect,'click',function(e){
-            highlightOverlapping(e.latLng);
-        });
-    });
-
     box_centers_cluster = new MarkerClusterer(maps["area_map"], box_centers, {
         styles:[{
             height: 55,
@@ -196,31 +181,6 @@ var setBoxes = function(json_results) {
             url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
         }]
     });
-};
-
-var highlightOverlapping = function(position) {
-    var map_items_table = $('#area-map-items').DataTable();
-    map_items_table.rows().every( function (rowIdx, tableLoop, rowLoop ) {
-        var data = this.data();
-        var resource = data[1];
-
-        var node_data = this.node();
-        var northlimit = parseFloat(resource.northlimit);
-        var southlimit = parseFloat(resource.southlimit);
-        var eastlimit = parseFloat(resource.eastlimit);
-        var westlimit = parseFloat(resource.westlimit);
-        var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-        var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-        var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
-
-        if (resource_bound.contains(position)) {
-            $(node_data).find("input[type=checkbox]:not(:checked)").trigger("click");
-        } else {
-            $(node_data).find("input[type=checkbox]:checked").trigger("click");
-        }
-
-    });
-
 };
 
 var drawShadeRectangles = function(boxes) {
@@ -247,7 +207,8 @@ var drawShadeRectangles = function(boxes) {
                     strokeOpacity: 0.35,
                     strokeWeight: 2,
                     fillColor: '#FF0000',
-                    fillOpacity: 0
+                    fillOpacity: 0,
+                    clickable: false
                     }),
             checked: false,
             rect_id: box.short_id
