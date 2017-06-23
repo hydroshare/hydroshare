@@ -149,7 +149,7 @@ class SimulationType(AbstractMetaDataElement):
     @classmethod
     def _validate_simulation_type(cls, swat_simulation_type):
         types = [c[0] for c in cls.type_choices]
-        if swat_simulation_type not in types:
+        if swat_simulation_type != '' and swat_simulation_type not in types:
             raise ValidationError('Invalid swat_model_simulation_type:{} not in {}'.format(
                 swat_simulation_type, types)
             )
@@ -332,17 +332,15 @@ class ModelInput(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if val == 'Choose a type':
                 kwargs[key] = ''
-            else:
+            elif val != '':
+                time_step = val
                 if key == 'rainfallTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.rainfall_type_choices]
                     cls.check_time_steps(time_step, types)
                 elif key == 'routingTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.routing_type_choices]
                     cls.check_time_steps(time_step, types)
                 elif key == 'simulationTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.simulation_type_choices]
                     cls.check_time_steps(time_step, types)
         return kwargs

@@ -8,6 +8,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+
 from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
@@ -36,6 +37,8 @@ from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
 
 
 class GroupOwnership(models.Model):
@@ -1556,8 +1559,9 @@ class ResourceManager(PageManager):
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin):
-    """Create Abstract Class for all Resources.
+class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
+    """
+    Create Abstract Class for all Resources.
 
     All hydroshare objects inherit from this mixin.  It defines things that must
     be present to be considered a hydroshare resource.  Additionally, all
@@ -1813,11 +1817,26 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage = self.get_irods_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
+
+        # Convert selected boolean attribute values to bool; non-existence implies False
+        # "Private" is the appropriate response if "isPublic" is None
         if attribute == 'isPublic':
             if value is not None and value.lower() == 'true':
                 return True
             else:
                 return False
+
+        # Convert selected boolean attribute values to bool; non-existence implies True
+        # If bag_modified or metadata_dirty does not exist, then we do not know the
+        # state of metadata files and/or bags. They may not exist. Thus we interpret
+        # None as "true", which will generate the appropriate files if they do not exist.
+        if attribute == 'bag_modified' or attribute == 'metadata_dirty':
+            if value is None or value.lower() == 'true':
+                return True
+            else:
+                return False
+
+        # return strings for all other attributes
         else:
             return value
 
@@ -1826,22 +1845,19 @@ class AbstractResource(ResourcePermissionsMixin):
     # so that this would be an instance method....
     @classmethod
     def bag_url(cls, resource_id):
-        """Get bag url of resource data bag."""
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
-                                                           resource_id=resource_id,
-                                                           postfix=bagit_postfix)
+        """ return the URL of a bag """
         # type resolution is not relevant; grab base class instance.
         res = BaseResource.objects.get(short_id=resource_id)
+        bag_path = res.bag_path
         istorage = res.get_irods_storage()
         bag_url = istorage.url(bag_path)
         return bag_url
 
     @classmethod
     def scimeta_url(cls, resource_id):
-        """Get URL of science metadata xml for resource."""
-        scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
+        """ Get URL of the science metadata file resourcemetadata.xml """
+        res = BaseResource.objects.get(short_id=resource_id)
+        scimeta_path = res.scimeta_path
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
@@ -1851,7 +1867,7 @@ class AbstractResource(ResourcePermissionsMixin):
     # Choose one!
     @classmethod
     def resmap_url(cls, resource_id):
-        """Get URL of resource map xml."""
+        """ Get URL of the resource map resourcemap.xml."""
         resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
         resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
         return resmap_url
@@ -2543,7 +2559,7 @@ def get_resource_file_path(resource, filename, folder=None):
         return os.path.join(resource.file_path, filename)
 
 
-def _path_is_allowed(path):
+def path_is_allowed(path):
     """Check for suspicious paths containing '/../'."""
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
@@ -2567,10 +2583,10 @@ class FedStorage(IrodsStorage):
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
-
-class ResourceFile(models.Model):
-    """Represent a file in a resource."""
-
+class ResourceFile(ResourceFileIRODSMixin):
+    """
+    Represent a file in a resource.
+    """
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
@@ -2991,7 +3007,7 @@ class ResourceFile(models.Model):
         """Create a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import create_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
@@ -3001,7 +3017,7 @@ class ResourceFile(models.Model):
         """Remove a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import remove_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
@@ -3225,11 +3241,15 @@ class BaseResource(Page, AbstractResource):
         """
         return os.path.join(self.root_path, "data", "contents")
 
-    # These are currently classmethods
-    # @property
-    # def scimeta_path(self):
-    #     """ path to science metadata file (in iRODS) """
-    #     return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+    @property
+    def scimeta_path(self):
+        """ path to science metadata file (in iRODS) """
+        return os.path.join(self.root_path, "data", "resourcemetadata.xml")
+
+    @property
+    def resmap_path(self):
+        """ path to resource map file (in iRODS) """
+        return os.path.join(self.root_path, "data", "resourcemap.xml")
 
     # @property
     # def sysmeta_path(self):
@@ -3242,10 +3262,13 @@ class BaseResource(Page, AbstractResource):
 
         Since this is a cache, it is stored in a different place than the resource files.
         """
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         if self.is_federated:
-            return os.path.join(self.resource_federation_path, "bags", self.short_id + '.zip')
+            return os.path.join(self.resource_federation_path, bagit_path,
+                                self.short_id + '.' + bagit_postfix)
         else:
-            return os.path.join("bags", self.short_id + '.zip')
+            return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
 
     # URIs relative to resource
     # these are independent of federation strategy
