@@ -823,3 +823,49 @@ a.thumbnail:focus img {
 .social-icons ul li.dropbox {
 	background: #4fa3e3;
 }
+
+#universalMessage {
+  position: fixed;
+  top: 40px;
+  z-index: 9999;
+  left: calc(50% - 150px);
+  width: 300px;
+  text-align: center;
+  height: auto;
+  padding: 20px 15px 15px 15px;
+  color: white;
+  box-shadow: 2px 2px 5px #888;
+  display: none;
+  background: #a1a1a1;
+}
+
+#universalMessage.error {
+  background: indianred;
+}
+
+#universalMessage.warn {
+  background: #cc9b57;
+}
+
+#universalMessage.success {
+  background: darkgreen;
+}
+
+#universalMessage a.um_close {
+  top: 5px;
+  right: 5px;
+  position: absolute;
+  border: 1px solid white;
+  height: 16px;
+  width: 16px;
+  line-height: 11px;
+  color: white;
+  border-radius: 50%;
+}
+
+#universalMessage a:hover {
+  color: #333;
+  background-color: white;
+  border-color: #333;
+  text-decoration: none;
+}

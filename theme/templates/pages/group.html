@@ -122,7 +122,7 @@
                                         <div>
                                             <h5 class="text-muted pull-right">{{ res.date_granted }}</h5>
                                             <div class="shared-resource-info">
-                                                <strong><a>{{ res.grantor|contact|safe }}</a></strong><span class="text-muted"> shared</span>
+                                                <strong><a>{{ res.grantor|contact }}</a></strong><span class="text-muted"> shared</span>
                                                 <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                             </div>
                                             <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
@@ -233,7 +233,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ owner|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ owner|contact }}</a></strong></h4>
                                             {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
 
@@ -331,7 +331,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ member|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ member|contact }}</a></strong></h4>
                                             {% if  member.userprofile.title %}
                                                 <span class="text-muted">{{ member.userprofile.title }}</span>
                                             {% endif %}
@@ -393,7 +393,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ pendingrequest.request_from|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ pendingrequest.request_from|contact }}</a></strong></h4>
                                             {% if  pendingrequest.request_from.userprofile.title %}
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}
@@ -434,7 +434,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <h4><strong>{{ pendingrequest.invitation_to|contact|safe }}</strong>
+                                                <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
                                                 </h4>
                                                 {% if  pendingrequest.invitation_to.userprofile.title %}
                                                     <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
@@ -805,7 +805,7 @@
                                 {{ add_view_user_form.user }}
                                 <form action="">
                                     <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span
+                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>

@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
@@ -744,7 +744,28 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         elements.append('GeneralElements')
         return elements
 
-    def get_xml(self, pretty_print=True):
+    def update(self, metadata):
+        # overriding the base class update method
+        super(MODFLOWModelInstanceMetaData, self).update(metadata)
+        attribute_mappings = {'studyarea': 'study_area',
+                              'griddimensions': 'grid_dimensions',
+                              'stressperiod': 'stress_period',
+                              'groundwaterflow': 'ground_water_flow',
+                              'boundarycondition': 'boundary_condition',
+                              'modelcalibration': 'model_calibration',
+                              'generalelements': 'general_elements',
+                              'modeloutput': 'model_output', 'executedby': 'executed_by'}
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in attribute_mappings.keys():
+                element_property_name = attribute_mappings[element_name]
+                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+
+            # update possibly only one repeatable element 'modelinput'
+            self.update_repeatable_element(element_name='modelinput', metadata=metadata,
+                                           property_name='model_inputs')
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
 

@@ -62,7 +62,7 @@ def create_bag_files(resource):
     # we have to make temp_path unique even for the same resource with same update time
     # to accommodate asynchronous multiple file move operations for the same resource
 
-    # TODO: This is always /tmp; otherwise code breaks because open() is called on the result!
+    # TODO: This is always in /tmp; otherwise code breaks because open() is called on the result!
     temp_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     try:
@@ -205,18 +205,11 @@ def create_bag(resource):
     :param resource: (subclass of AbstractResource) A resource to create a bag for.
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
-
-    istorage = create_bag_files(resource)
+    create_bag_files(resource)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be
     # created when user clicks on download button
-    to_coll_name = resource.root_path
-
-    istorage.setAVU(to_coll_name, "bag_modified", "true")
-
-    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public).lower())
-
-    istorage.setAVU(to_coll_name, "resourceType", resource._meta.object_name)
+    resource.setAVU("bag_modified", True)
 
     # delete if there exists any bags for the resource
     resource.bags.all().delete()

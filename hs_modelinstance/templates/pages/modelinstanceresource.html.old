@@ -25,9 +25,9 @@
 
         <table class="table">
             <tr><th>Resource Type</th><td>{{ resource_type }}</td></tr>
-            <tr><th>Owner</th><td>{{ cm.user|contact|safe }}</td></tr>
+            <tr><th>Owner</th><td>{{ cm.user|contact }}</td></tr>
             <tr><th>Added on</th><td>{{ cm.created|date }}</td></tr>
-            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+            <tr><th>Last updated by</th><td>{% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
             <tr><th>Updated on</th><td>{{ cm.updated|date }}</td></tr>
             <tr><th>Keywords</th><td>{{ kws|join:', ' }}</td></tr>
             <tr><th>Size</th><td>{{ cm.bags.first.bag.size|filesizeformat }}</td></tr>
@@ -49,7 +49,7 @@
             {% if cm.content %}
                 {% editable cm.content %}
                 <h4>Abstract</h4>
-                {{ cm.content|richtext_filters|safe }}
+                {{ cm.content|richtext_filters }}
                 {% endeditable %}
             {% endif %}
 

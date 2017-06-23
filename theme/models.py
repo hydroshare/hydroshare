@@ -167,7 +167,7 @@ class QuotaMessage(models.Model):
                                                             'or to acquire additional quota, after '
                                                             'which you will no longer be able to '
                                                             'create new resources in HydroShare. ')
-    enforce_content_prepend = models.TextField(default='Your action to add content to HydroShare '
+    enforce_content_prepend = models.TextField(default='Your action '
                                                        'was refused because you have exceeded your '
                                                        'quota. Your quota for HydroShare resources '
                                                        'is {allocated}{unit} in {zone} zone. You '

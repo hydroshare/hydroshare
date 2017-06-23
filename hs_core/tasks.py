@@ -1,3 +1,5 @@
+"""Define celery tasks for hs_core app."""
+
 from __future__ import absolute_import
 
 import os
@@ -37,6 +39,7 @@ logger = logging.getLogger('django')
 
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def check_doi_activation():
+    """Check DOI activation on failed and pending resources and send email."""
     msg_lst = []
     # retrieve all published resources with failed metadata deposition with CrossRef if any and
     # retry metadata deposition
@@ -107,6 +110,7 @@ def check_doi_activation():
 
 @shared_task
 def add_zip_file_contents_to_resource(pk, zip_file_path):
+    """Add zip file to existing resource and remove tmp zip file."""
     zfile = None
     resource = None
     try:
@@ -125,6 +129,11 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(
                 i, num_files)
             resource.save()
+
+        # This might make the resource unsuitable for public consumption
+        resource.update_public_and_discoverable()
+        # TODO: this is a bit of a lie because a different user requested the bag overwrite
+        utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
         # Call success callback
         resource.file_unpack_message = None
@@ -153,9 +162,9 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 
 @shared_task
 def create_bag_by_irods(resource_id):
-    """
-    create a resource bag on iRODS side by running the bagit rule followed by ibun zipping
-    operation. This function runs as a celery task, invoked asynchronously so that it does not
+    """Create a resource bag on iRODS side by running the bagit rule and ibun zip.
+
+    This function runs as a celery task, invoked asynchronously so that it does not
     block the main web thread when it creates bags for very large files which will take some time.
     :param
     resource_id: the resource uuid that is used to look for the resource to create the bag for.
@@ -170,7 +179,7 @@ def create_bag_by_irods(resource_id):
 
     metadata_dirty = istorage.getAVU(res.root_path, 'metadata_dirty')
     # if metadata has been changed, then regenerate metadata xml files
-    if metadata_dirty.lower() == "true":
+    if metadata_dirty is None or metadata_dirty.lower() == "true":
         try:
             create_bag_files(res)
         except Exception as ex:
@@ -191,14 +200,14 @@ def create_bag_by_irods(resource_id):
             def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
         bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
         bagit_files = [
-                '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
-                                                       res_id=resource_id),
-                '{fed_path}/{res_id}/manifest-md5.txt'.format(
-                    fed_path=res.resource_federation_path, res_id=resource_id),
-                '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
-                    fed_path=res.resource_federation_path, res_id=resource_id),
-                '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
-                                                      res_id=resource_id)
+            '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
+                                                   res_id=resource_id),
+            '{fed_path}/{res_id}/manifest-md5.txt'.format(
+                fed_path=res.resource_federation_path, res_id=resource_id),
+            '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(
+                fed_path=res.resource_federation_path, res_id=resource_id),
+            '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
+                                                  res_id=resource_id)
         ]
     else:
         is_exist = istorage.exists(resource_id)
@@ -211,10 +220,10 @@ def create_bag_by_irods(resource_id):
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.IRODS_DEFAULT_RESOURCE)
         bagit_files = [
-                '{res_id}/bagit.txt'.format(res_id=resource_id),
-                '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-                '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-                'bags/{res_id}.zip'.format(res_id=resource_id)
+            '{res_id}/bagit.txt'.format(res_id=resource_id),
+            '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
+            '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
+            'bags/{res_id}.zip'.format(res_id=resource_id)
         ]
 
     # only proceed when the resource is not deleted potentially by another request

@@ -1,3 +1,5 @@
+"""Extend ExpatParser with hydroshare-specific functionality."""
+
 import base64
 import os.path
 from StringIO import StringIO
@@ -11,7 +13,10 @@ XML_CACHE = os.path.join(settings.PROJECT_ROOT, '_xmlcache')
 
 
 class CatalogedExpatParser(ExpatParser):
+    """Extend ExpatParser with cataloging capabilities."""
+
     def external_entity_ref(self, context, base, sysid, pubid):
+        """Add external entity reference to XML document."""
         if not self._external_ges:
             return 1
 
@@ -43,7 +48,10 @@ class CatalogedExpatParser(ExpatParser):
 
 
 class CatalogEntityResolver(object):
+    """Respove catalog entities based on file path."""
+
     def resolveEntity(self, publicId, systemId):
+        """Respove catalog entities based on file path."""
         filepath = os.path.join(XML_CACHE, base64.urlsafe_b64encode(publicId))
         if os.path.isfile(filepath):
             source = xmlreader.InputSource()
@@ -55,6 +63,7 @@ class CatalogEntityResolver(object):
 
 
 def create_parser(*args, **kwargs):
+    """Create extended XML parser."""
     parser = CatalogedExpatParser(*args, **kwargs)
     parser.setEntityResolver(CatalogEntityResolver())
 

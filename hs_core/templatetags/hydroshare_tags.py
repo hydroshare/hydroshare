@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, unicode_literals
 from future.builtins import int
 
+from django.utils.html import format_html
+
 from mezzanine import template
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
@@ -44,11 +46,14 @@ def contact(content):
     if not content.is_authenticated():
         content = "Anonymous"
     elif content.first_name:
-        content = """<a href='/user/{uid}/'>{fn} {ln}<a>""".format(fn=content.first_name,
-                                                                   ln=content.last_name,
-                                                                   uid=content.pk)
+        content = format_html("<a href='/user/{uid}/'>{fn} {ln}</a>",
+                              fn=content.first_name,
+                              ln=content.last_name,
+                              uid=content.pk)
     else:
-        content = """<a href='/user/{uid}/'>{un}<a>""".format(uid=content.pk, un=content.username)
+        content = format_html("<a href='/user/{uid}/'>{un}</a>",
+                              uid=content.pk,
+                              un=content.username)
 
     return content
 
