@@ -20,7 +20,7 @@ def get_quota_message(user):
         percent = round(uq.used_value * 100.0 / uq.allocated_value)
         if percent >= hard_limit or uq.remaining_grace_period == 0:
             # return quota enforcement message
-            msg_template_str = ' - {}{}\n'.format(qmsg.enforce_content_prepend, qmsg.content)
+            msg_template_str = '{}{}\n'.format(qmsg.enforce_content_prepend, qmsg.content)
             return_msg += msg_template_str.format(used=round(uq.used_value),
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
@@ -28,8 +28,8 @@ def get_quota_message(user):
                                                   percent=percent)
         elif uq.remaining_grace_period > 0:
             # return quota grace period message
-            cut_off_date = date.today() - timedelta(days=uq.remaining_grace_period)
-            msg_template_str = ' - {}{}\n'.format(qmsg.grace_period_content_prepend, qmsg.content)
+            cut_off_date = date.today() + timedelta(days=uq.remaining_grace_period)
+            msg_template_str = '{}{}\n'.format(qmsg.grace_period_content_prepend, qmsg.content)
             return_msg += msg_template_str.format(used=round(uq.used_value),
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
@@ -38,7 +38,7 @@ def get_quota_message(user):
                                                   cut_off_date=cut_off_date)
         elif percent >= soft_limit:
             # return quota warning message
-            msg_template_str = ' - {}{}\n'.format(qmsg.warning_content_prepend, qmsg.content)
+            msg_template_str = '{}{}\n'.format(qmsg.warning_content_prepend, qmsg.content)
             return_msg += msg_template_str.format(used=round(uq.used_value),
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
@@ -46,7 +46,7 @@ def get_quota_message(user):
                                                   percent=percent)
         else:
             # return quota informational message
-            return_msg += ' - Your quota for HydroShare resources is {allocated}{unit} in {zone} ' \
+            return_msg += 'Your quota for HydroShare resources is {allocated}{unit} in {zone} ' \
                           'zone. You currently have resources that consume {used}{unit}, ' \
                           '{percent}% of your quota.'.format(allocated=uq.allocated_value,
                                                              unit=uq.unit,
