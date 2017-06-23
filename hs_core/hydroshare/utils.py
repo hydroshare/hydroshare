@@ -699,8 +699,8 @@ def validate_user_quota(user, size):
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
             hard_limit = qmsg.hard_limit_percent
-            used_size = round(uq.used_value + convert_file_size_to_unit(size, uq.unit))
-            used_percent = round(used_size*100.0/uq.allocated_value)
+            used_size = uq.used_value + convert_file_size_to_unit(size, uq.unit)
+            used_percent = used_size*100.0/uq.allocated_value
             if used_percent >= hard_limit or uq.remaining_grace_period == 0:
                 msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                      qmsg.content)
@@ -729,14 +729,12 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
             resource_title = 'Untitled resource'
 
     resource_cls = check_resource_type(resource_type)
-    size = 0
     if len(files) > 0:
         size = validate_resource_file_size(files)
         validate_resource_file_count(resource_cls, files)
         validate_resource_file_type(resource_cls, files)
-
-    # validate it is within quota hard limit
-    validate_user_quota(requesting_user, size)
+        # validate it is within quota hard limit
+        validate_user_quota(requesting_user, size)
 
     if not metadata:
         metadata = []
