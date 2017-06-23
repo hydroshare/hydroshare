@@ -92,6 +92,15 @@ urlpatterns = patterns(
         views.resource_folder_rest_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
 
+    # iRODS tickets 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/(?P<op>(read|write))/(?P<pathname>.*)/$',
+        views.resource_tickets_rest_api.CreateResourceTicket.as_view(),
+        name='create_ticket'),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
+        views.resource_tickets_rest_api.ManageResourceTicket.as_view(),
+        name='manage_ticket'),
+
     # public unzip endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/unzip/(?P<pathname>.*)/$',
         views.resource_folder_hierarchy.data_store_folder_unzip_public),

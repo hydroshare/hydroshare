@@ -235,6 +235,7 @@ class ResourceIRODSMixin(models.Model):
                                        .format(user.username, self.short_id))
         istorage = self.get_irods_storage()
         istorage.session.run('iticket', None, 'delete', ticket)
+        return meta
 
 
 class ResourceFileIRODSMixin(models.Model):
