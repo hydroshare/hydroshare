@@ -68,6 +68,7 @@ class Command(BaseCommand):
                         # the quota row does not exist in Django
                         continue
                     uq.used_value = convert_file_size_to_unit(used_val, uq.unit)
+                    uq.save()
                     used_percent = uq.used_value*100.0/uq.allocated_value
                     if used_percent >= qmsg.soft_limit_percent:
                         if used_percent < qmsg.hard_limit_percent:
@@ -80,7 +81,7 @@ class Command(BaseCommand):
                         else:
                             # set grace period to 0 when user quota exceeds hard limit
                             uq.remaining_grace_period = 0
-
+                        uq.save()
                         user = uq.user
                         uemail = user.email
                         msg_str = 'Dear ' + uname + ':\n\n'
@@ -95,7 +96,8 @@ class Command(BaseCommand):
                         if uq.remaining_grace_period >= 0:
                             # turn grace period off now that the user is below quota soft limit
                             uq.remaining_grace_period = -1
-                    uq.save()
+                            uq.save()
+
                 except ValueError as ex:   # header row, continue
                     print "Skip the header row:" + ex.message
                     continue
