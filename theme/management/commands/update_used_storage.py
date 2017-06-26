@@ -71,14 +71,14 @@ class Command(BaseCommand):
                     uq.save()
                     used_percent = uq.used_value*100.0/uq.allocated_value
                     if used_percent >= qmsg.soft_limit_percent:
-                        if used_percent < qmsg.hard_limit_percent:
+                        if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
                             if uq.remaining_grace_period < 0:
                                 # triggers grace period counting
                                 uq.remaining_grace_period = qmsg.grace_period
-                            else:
+                            elif uq.remaining_grace_period > 0:
                                 # reduce remaining_grace_period by one day
                                 uq.remaining_grace_period -= 1
-                        else:
+                        elif used_percent >= qmsg.hard_limit_percent:
                             # set grace period to 0 when user quota exceeds hard limit
                             uq.remaining_grace_period = 0
                         uq.save()

@@ -20,7 +20,8 @@ def get_quota_message(user):
         percent = uq.used_value * 100.0 / uq.allocated_value
         rounded_percent = round(percent,2)
         rounded_used_val = round(uq.used_value, 2)
-        if percent >= hard_limit or (percent >= soft_limit and uq.remaining_grace_period == 0):
+
+        if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
             # return quota enforcement message
             msg_template_str = '{}{}\n'.format(qmsg.enforce_content_prepend, qmsg.content)
             return_msg += msg_template_str.format(used=rounded_used_val,
@@ -28,7 +29,7 @@ def get_quota_message(user):
                                                   allocated=uq.allocated_value,
                                                   zone=uq.zone,
                                                   percent=rounded_percent)
-        elif percent >= soft_limit and uq.remaining_grace_period > 0:
+        elif percent >= 100 and uq.remaining_grace_period > 0:
             # return quota grace period message
             cut_off_date = date.today() + timedelta(days=uq.remaining_grace_period)
             msg_template_str = '{}{}\n'.format(qmsg.grace_period_content_prepend, qmsg.content)
