@@ -39,7 +39,6 @@ class TestReplicateBagToUserZoneREST(HSRESTTestCase, TestCaseCommonUtilities):
         self.pid = self.gen_res.short_id
 
     def test_replicate_public_endpoint(self):
-        print(self, dir(self))
         replicate_url = "/hsapi/resource/%s/functions/rep-res-bag-to-irods-user-zone/" % \
                         self.gen_res.short_id
         response = self.client.post(replicate_url, {}, format='json')

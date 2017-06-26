@@ -100,7 +100,7 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/zip/$',
         views.resource_folder_hierarchy.data_store_folder_zip_public),
 
-    url(r'^resource/(?P<shortkey>[0-9a-f-]+)/functions/rep-res-bag-to-irods-user-zone/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/rep-res-bag-to-irods-user-zone/$',
         views.rep_res_bag_to_irods_user_zone_public),
 
     # public move or rename
