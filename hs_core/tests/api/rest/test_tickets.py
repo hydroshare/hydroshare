@@ -5,6 +5,8 @@ from .base import HSRESTTestCase
 
 from pprint import pprint
 
+# TODO: what happens when irods user doesn't exist? 
+# TODO: what happens when user doesn't own resource? 
 
 class TestTickets(HSRESTTestCase):
 

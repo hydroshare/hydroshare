@@ -1,9 +1,7 @@
 import os
 
-# TODO: should issue tickets to different iRODS user; not proxy user
-# TODO: need username for that user as part of call.
+# TODO: should be able to issue tickets to different user 
 # TODO: probably do not need to authenticate that user.
-# TODO: how do we map hydroshare users to iRODS users?
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
