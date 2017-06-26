@@ -696,9 +696,6 @@ def update_science_metadata(pk, metadata, user):
     # set to private if metadata has become non-compliant
     resource.update_public_and_discoverable()  # set to False if necessary
 
-    # TODO: This is a bit of a lie since the user initiating this is not the creator
-    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
-
 
 def delete_resource(pk):
     """
