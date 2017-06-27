@@ -19,7 +19,7 @@ def get_quota_message(user):
     for uq in user.quotas.all():
         percent = uq.used_value * 100.0 / uq.allocated_value
         rounded_percent = round(percent,2)
-        rounded_used_val = round(uq.used_value, 2)
+        rounded_used_val = round(uq.used_value, 4)
 
         if percent >= hard_limit or (percent >= 100 and uq.remaining_grace_period == 0):
             # return quota enforcement message
