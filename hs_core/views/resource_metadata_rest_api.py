@@ -230,7 +230,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
                 for subject in put_data.pop('subjects'):
                     metadata.append({"subject": {"value": subject['value']}})
 
-            hydroshare.update_science_metadata(pk=pk, metadata=metadata)
+            hydroshare.update_science_metadata(pk=pk, metadata=metadata, user=request.user)
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"

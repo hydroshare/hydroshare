@@ -653,7 +653,7 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-def update_science_metadata(pk, metadata):
+def update_science_metadata(pk, metadata, user):
     """
     Updates science metadata for a resource
 
@@ -662,6 +662,7 @@ def update_science_metadata(pk, metadata):
         updated.
         metadata: a list of dictionary items containing data for each metadata element that needs to
         be updated
+        user: user who is updating metadata
         example metadata format:
         [
             {'title': {'value': 'Updated Resource Title'}},
@@ -693,12 +694,10 @@ def update_science_metadata(pk, metadata):
     """
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # set to private if metadata has become non-compliant
     resource.update_public_and_discoverable()  # set to False if necessary
-
-    # TODO: This is a bit of a lie since the user initiating this is not the creator
-    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
 
 def delete_resource(pk):

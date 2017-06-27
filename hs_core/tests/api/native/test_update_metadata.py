@@ -11,7 +11,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestUpdateMetadata, self).setUp()
         group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        user = hydroshare.create_account(
+        self.user = hydroshare.create_account(
             'shaun@gmail.com',
             username='shaunjl',
             first_name='shaun',
@@ -19,7 +19,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             )
 
-        self.res = hydroshare.create_resource('GenericResource', user, 'Test Resource')
+        self.res = hydroshare.create_resource('GenericResource', self.user, 'Test Resource')
 
     def test_update_science_metadata(self):
         # add these new metadata elements
@@ -52,7 +52,8 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'subject': {'value': 'sub-2'}},
         ]
 
-        hydroshare.update_science_metadata(pk=self.res.short_id, metadata=metadata_dict)
+        hydroshare.update_science_metadata(pk=self.res.short_id, metadata=metadata_dict,
+                                           user=self.user)
 
         # check that the title element got updated
         self.assertEqual(self.res.metadata.title.value, 'Updated Resource Title', msg='Resource title did not match')
@@ -169,7 +170,8 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 0, msg="Number of coverages not equal to 0.")
 
         # now add the 2 coverage elements by updating metadata
-        hydroshare.update_science_metadata(pk=self.res.short_id, metadata=metadata_dict)
+        hydroshare.update_science_metadata(pk=self.res.short_id, metadata=metadata_dict,
+                                           user=self.user)
 
         # there should be now 2 coverage elements after the update
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
