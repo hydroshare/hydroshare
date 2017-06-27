@@ -701,14 +701,16 @@ def validate_user_quota(user, size):
             hard_limit = qmsg.hard_limit_percent
             used_size = uq.used_value + convert_file_size_to_unit(size, uq.unit)
             used_percent = used_size*100.0/uq.allocated_value
+            rounded_percent = round(used_percent, 2)
+            rounded_used_val = round(used_size, 4)
             if used_percent >= hard_limit or uq.remaining_grace_period == 0:
                 msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
                                                      qmsg.content)
-                msg_str = msg_template_str.format(used=used_size,
+                msg_str = msg_template_str.format(used=rounded_used_val,
                                                   unit=uq.unit,
                                                   allocated=uq.allocated_value,
                                                   zone=uq.zone,
-                                                  percent=used_percent)
+                                                  percent=rounded_percent)
                 raise QuotaException(msg_str)
 
 
