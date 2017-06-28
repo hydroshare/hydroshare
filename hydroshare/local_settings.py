@@ -1,7 +1,7 @@
 # DEVELOPMENT - local_settings.py
 #    - This file should be copied to ~/hydroshare/hydroshare/local_settings.py
 #    - The iRODS specific contents of this file contain username and password informaiton
-#      that is used for a xDCIShare proxy user
+#      that is used for an xDCIShare proxy user
 
 import redis
 import os
@@ -145,22 +145,22 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
-# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
+# hsuserproxy system user configuration used to create xDCIShare iRODS users on-demand
 HS_USER_ZONE_HOST = ''
 HS_USER_ZONE_PROXY_USER = ''
 HS_USER_ZONE_PROXY_USER_PWD = ''
 HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
 HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
 
-# the local xDCIShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with xDCIShare Zone
+# the local xDCIShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
 HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not
 HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
 # credentials for xDCIShare proxy user iRODS account which is set to have own access control
-# to all collections in any federated zone with xDCIShare zone, which is only useful when
-# testing xDCIShare federated zone in local test development environment since in www
+# to all collections in any federated zone with HydroShare zone, which is only useful when
+# testing HydroShare federated zone in local test development environment since in www
 # production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
 HS_WWW_IRODS_PROXY_USER_PWD = ''
 HS_WWW_IRODS_HOST = ''

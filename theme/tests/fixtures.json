@@ -1,7 +1,7 @@
 [
   {
    "fields": {
-     "domain": "www.xdcishare.org",
+     "domain": "xdcishare.renci.org",
      "name": "Default"
     },
     "model": "sites.site",
