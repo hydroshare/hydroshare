@@ -41,12 +41,23 @@ def get_SupportedResTypes_choices():
         ["RESOURCE_CLASS_NAME_N", "RESOURCE_VERBOSE_NAME_N"],
     ]
     """
-
+    xdci_excluded_types = ["Geographic Raster",
+                           "HIS Referenced Time Series",
+                           "Time Series",
+                           "Multidimensional (NetCDF)",
+                           "Model Program Resource",
+                           "Model Instance Resource",
+                           "SWAT Model Instance Resource",
+                           "Geographic Feature (ESRI Shapefiles)",
+                           "Script Resource",
+                           "MODFLOW Model Instance Resource",
+                          ]
     result_list = []
     res_types_list = get_resource_types()
     for r_type in res_types_list:
         class_name = r_type.__name__
         verbose_name = r_type._meta.verbose_name
         if "toolresource" != class_name.lower():
-            result_list.append([class_name, verbose_name])
+            if verbose_name not in xdci_excluded_types:
+                result_list.append([class_name, verbose_name])
     return result_list
