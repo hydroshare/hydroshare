@@ -2,9 +2,9 @@
 
 | Workflow | Clean | Build/Deploy | Unit Tests | Flake8
 | :----- | :--- | :--- | :-------- | :------------ | :----------- |
-| [![Build Status](http://ci.xdcishare.org:8080/job/nightly-build-workflow/badge/icon?style=plastic)](http://ci.xdcishare.org:8080/job/nightly-build-workflow/) | [![Build Status](http://ci.xdcishare.org:8080/job/nightly-build-clean/badge/icon?style=plastic)](http://ci.xdcishare.org:8080/job/nightly-build-clean/) | [![Build Status](http://ci.xdcishare.org:8080/job/nightly-build-deploy/badge/icon?style=plastic)](http://ci.xdcishare.org:8080/job/nightly-build-deploy/) | [![Build Status](http://ci.xdcishare.org:8080/job/nightly-build-test/badge/icon?style=plastic)](http://ci.xdcishare.org:8080/job/nightly-build-test/) | [![Build Status](http://ci.xdcishare.org:8080/job/nightly-build-flake8/badge/icon?style=plastic)](http://ci.xdcishare.org:8080/job/nightly-build-flake8/) |
+| [![Build Status](http://ci.xdcishare.renci.org:8080/job/nightly-build-workflow/badge/icon?style=plastic)](http://ci.xdcishare.renci.org:8080/job/nightly-build-workflow/) | [![Build Status](http://ci.xdcishare.renci.org:8080/job/nightly-build-clean/badge/icon?style=plastic)](http://ci.xdcishare.renci.org:8080/job/nightly-build-clean/) | [![Build Status](http://ci.xdcishare.renci.org:8080/job/nightly-build-deploy/badge/icon?style=plastic)](http://ci.xdcishare.renci.org:8080/job/nightly-build-deploy/) | [![Build Status](http://ci.xdcishare.renci.org:8080/job/nightly-build-test/badge/icon?style=plastic)](http://ci.xdcishare.renci.org:8080/job/nightly-build-test/) | [![Build Status](http://ci.xdcishare.renci.org:8080/job/nightly-build-flake8/badge/icon?style=plastic)](http://ci.xdcishare.renci.org:8080/job/nightly-build-flake8/) |
 
-Build generate by [Jenkins CI](http://ci.xdcishare.org:8080)
+Build generate by [Jenkins CI](http://ci.xdcishare.renci.org:8080)
 
 ### requires.io
 [![Requirements Status](https://requires.io/github/RENCI/xDCIShare/hs_docker_base/requirements.svg?branch=develop)](https://requires.io/github/RENCI/xDCIShare/hs_docker_base/requirements/?branch=master)

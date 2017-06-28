@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='quotamessage',
             name='content',
-            field=models.TextField(default=b'To request additional quota, please contact {email}. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://pages.xdcishare.org/about-xdcishare/policies/quota/ for more information about the quota policy.'),
+            field=models.TextField(default=b'To request additional quota, please contact {email}. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://pages.xdcishare.renci.org/about-xdcishare/policies/quota/ for more information about the quota policy.'),
         ),
         migrations.AlterField(
             model_name='quotamessage',
