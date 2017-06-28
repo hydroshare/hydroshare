@@ -1,12 +1,7 @@
 import json
 from rest_framework import status
-
 from .base import HSRESTTestCase
-
-from pprint import pprint
-
-# TODO: what happens when irods user doesn't exist? 
-# TODO: what happens when user doesn't own resource? 
+from hs_access_control.models import PrivilegeCodes
 
 class TestTickets(HSRESTTestCase):
 
@@ -32,20 +27,19 @@ class TestTickets(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
         ticket = content['ticket']
-        pprint(content)
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        pprint(content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        pprint(content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should not be able to delete a ticket twice
         response = self.client.delete(url3, {})
@@ -78,20 +72,19 @@ class TestTickets(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
         ticket = content['ticket']
-        pprint(content)
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket)
         response = self.client.get(url3, {})
-        content = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pprint(content)
+        content = json.loads(response.content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
-        content = json.loads(response.content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pprint(content)
+        content = json.loads(response.content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should not be able to delete a ticket twice
         response = self.client.delete(url3, {})
@@ -124,20 +117,19 @@ class TestTickets(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         content = json.loads(response.content)
         ticket = content['ticket']
-        pprint(content)
 
         # should be able to list ticket
         url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        pprint(content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should be able to delete ticket
         response = self.client.delete(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        pprint(content)
+        self.assertEqual(content['ticket'], ticket)
 
         # should not be able to delete a ticket twice
         response = self.client.delete(url3, {})
@@ -146,4 +138,3 @@ class TestTickets(HSRESTTestCase):
         # should not be able to list a deleted ticket
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-

@@ -92,8 +92,10 @@ urlpatterns = patterns(
         views.resource_folder_rest_api.ResourceFolders.as_view(),
         name='list_manipulate_folders'),
 
-    # iRODS tickets 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>(read|write))/(?P<pathname>.*)/$',
+    # iRODS tickets
+    # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
         views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
         name='create_ticket'),
 

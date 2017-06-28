@@ -1,8 +1,5 @@
 import os
 
-# TODO: should be able to issue tickets to different user 
-# TODO: probably do not need to authenticate that user.
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -17,14 +14,13 @@ from django_irods.icommands import SessionException
 
 # hsapi/resource/{pk}/ticket/read/{path}
 #   GET: create
-#   user: request.user
-# hsapi/resource/{pk}/ticket/write/{path}
-#   GET: create
-#   user: request.user
+# hsapi/resource/{pk}/ticket/write/{path} (currently disabled) 
+#   GET: create 
+# hsapi/resource/{pk}/ticket/bag 
+#   GET: create 
 # hsapi/resource/{pk}/ticket/info/{tnumber}
 #   GET: list
 #   DELETE: remove
-#   user: request.user
 
 
 class CreateResourceTicket(APIView):
@@ -81,7 +77,7 @@ class CreateResourceTicket(APIView):
         #                     status=status.HTTP_403_FORBIDDEN)
 
         try:
-            ticket = resource.create_ticket(request.user, path=fullpath, write=write)
+            ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=write)
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
@@ -89,7 +85,7 @@ class CreateResourceTicket(APIView):
 
         return Response(
             {'resource_id': pk,
-             'path': fullpath,
+             'path': abspath,
              'ticket': ticket,
              'operation': op},
             status=status.HTTP_201_CREATED)
@@ -123,7 +119,7 @@ class CreateBagTicket(APIView):
 
         fullpath = resource.bag_path
         try:
-            ticket = resource.create_ticket(request.user, path=fullpath, write=False)
+            ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=False)
         except SessionException as e:
             return Response(e.stderr, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
@@ -131,7 +127,7 @@ class CreateBagTicket(APIView):
 
         return Response(
             {'resource_id': pk,
-             'path': fullpath,
+             'path': abspath,
              'ticket': ticket,
              'operation': 'read'},
             status=status.HTTP_201_CREATED)
