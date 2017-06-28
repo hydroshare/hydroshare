@@ -670,17 +670,17 @@ def convert_file_size_to_unit(size, unit):
     if unit not in ('kb', 'mb', 'gb', 'tb'):
         raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
                               'or TB')
-
-    kbsize = size / 1024.0
+    factor = 1024.0
+    kbsize = size / factor
     if unit == 'kb':
         return kbsize
-    mbsize = kbsize / 1024.0
+    mbsize = kbsize / factor
     if unit == 'mb':
         return mbsize
-    gbsize = mbsize / 1024.0
+    gbsize = mbsize / factor
     if unit == 'gb':
         return gbsize
-    tbsize = gbsize / 1024.0
+    tbsize = gbsize / factor
     if unit == 'tb':
         return tbsize
 
@@ -701,8 +701,8 @@ def validate_user_quota(user, size):
                 QuotaMessage.objects.create()
             qmsg = QuotaMessage.objects.first()
             hard_limit = qmsg.hard_limit_percent
-            used_size = uq.used_value + convert_file_size_to_unit(size, uq.unit)
-            used_percent = used_size*100.0/uq.allocated_value
+            used_size = uq.add_to_used_value(size)
+            used_percent = uq.used_percent
             rounded_percent = round(used_percent, 2)
             rounded_used_val = round(used_size, 4)
             if used_percent >= hard_limit or uq.remaining_grace_period == 0:

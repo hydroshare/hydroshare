@@ -7,7 +7,7 @@ from django.conf import settings
 
 from theme.models import UserQuota, QuotaMessage
 from theme.utils import get_quota_message
-from hs_core.hydroshare import convert_file_size_to_unit
+
 
 INPUT_FIELDS = namedtuple('FIELDS', 'user_name used_value storage_zone')
 input_fields = INPUT_FIELDS(0, 1, 2)
@@ -67,9 +67,9 @@ class Command(BaseCommand):
                     if uq is None:
                         # the quota row does not exist in Django
                         continue
-                    uq.used_value = convert_file_size_to_unit(used_val, uq.unit)
-                    uq.save()
-                    used_percent = uq.used_value*100.0/uq.allocated_value
+                    uq.update_used_value(used_val)
+
+                    used_percent = uq.used_percent
                     if used_percent >= qmsg.soft_limit_percent:
                         if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
                             if uq.remaining_grace_period < 0:
