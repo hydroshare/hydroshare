@@ -3730,10 +3730,10 @@ class ResourceAccess(models.Model):
     immutable = models.BooleanField(default=False,
                                     help_text='whether to prevent all changes to the resource')
 
-    download_agreement = models.BooleanField(default=False,
-                                             help_text='whether to require agreement to resource '
-                                                       'rights statement for resource content '
-                                                       'downloads')
+    require_download_agreement = models.BooleanField(default=False,
+                                                     help_text='whether to require agreement to '
+                                                               'resource rights statement for '
+                                                               'resource content downloads')
     #############################################
     # workalike queries adapt to old access control system
     #############################################

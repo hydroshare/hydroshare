@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='resourceaccess',
-            name='download_agreement',
+            name='require_download_agreement',
             field=models.BooleanField(default=False, help_text=b'whether to require agreement to resource rights statement for resource content downloads'),
         ),
     ]

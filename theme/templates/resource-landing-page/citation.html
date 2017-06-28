@@ -118,20 +118,20 @@
                       method="POST">
                     {% csrf_token %}
 
-                    <input name="t" type="hidden" {% if cm.raccess.download_agreement %}value="make_not_require_lic_agreement"
+                    <input name="t" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
                            {% else %}value="make_require_lic_agreement"{% endif %}/>
 
                     <br>
-                    <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners need to agree before they can download any content files or resource bag.">
+                    <div class="input-group" data-toggle="tooltip" title="When checked, users need to agree before they can download any content files or resource bag.">
                       <span class="input-group-addon">
                         <input id="btn-lic-agreement" type="checkbox"
-                                      {% if cm.raccess.download_agreement %}checked{% endif %}>
+                                      {% if cm.raccess.require_download_agreement %}checked{% endif %}>
                       </span>
                       <span class="form-control">Require agreement to rights statement before downloading</span>
                     </div><!-- /input-group -->
                 </form>
             {% else %}
-                {% if cm.raccess.download_agreement %}
+                {% if cm.raccess.require_download_agreement %}
                     <br>
                     <li class="list-group-item">
                     <div>
@@ -141,7 +141,6 @@
                     </li>
                 {% endif %}
             {% endif %}
-
         </div>
         <div id="sharing-status" class="col-xs-12 pull-left">
             <br>

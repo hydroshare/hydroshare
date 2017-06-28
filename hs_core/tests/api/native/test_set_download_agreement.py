@@ -43,28 +43,28 @@ class TestSetDownloadAgreement(MockIRODSTestCaseMixin, TestCase):
         self.res.delete()
 
     def test_set_download_agreement(self):
-        """Here we are testing set_download_agreement() function of the resource object
-        that only the owner can set the  download_agreement flag"""
+        """Here we are testing set_require_download_agreement() function of the resource object
+        that only the owner can set the  require_download_agreement flag"""
 
-        self.assertFalse(self.res.raccess.download_agreement)
-        self.res.set_download_agreement(self.user_owner, value=True)
-        self.assertTrue(self.res.raccess.download_agreement)
+        self.assertFalse(self.res.raccess.require_download_agreement)
+        self.res.set_require_download_agreement(self.user_owner, value=True)
+        self.assertTrue(self.res.raccess.require_download_agreement)
         # test that resource non owner can't set the flag
         with self.assertRaises(PermissionDenied):
-            self.res.set_download_agreement(self.user_non_owner, value=True)
+            self.res.set_require_download_agreement(self.user_non_owner, value=True)
 
         # give user_non_owner resource view permission
         self.user_owner.uaccess.share_resource_with_user(self.res, self.user_non_owner,
                                                          PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied):
-            self.res.set_download_agreement(self.user_non_owner, value=True)
+            self.res.set_require_download_agreement(self.user_non_owner, value=True)
 
         # give user_non_owner resource edit permission
         self.user_owner.uaccess.share_resource_with_user(self.res, self.user_non_owner,
                                                          PrivilegeCodes.CHANGE)
         with self.assertRaises(PermissionDenied):
-            self.res.set_download_agreement(self.user_non_owner, value=True)
+            self.res.set_require_download_agreement(self.user_non_owner, value=True)
 
         # let the owner reset the flag
-        self.res.set_download_agreement(self.user_owner, value=False)
-        self.assertFalse(self.res.raccess.download_agreement)
+        self.res.set_require_download_agreement(self.user_owner, value=False)
+        self.assertFalse(self.res.raccess.require_download_agreement)

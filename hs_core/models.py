@@ -1757,10 +1757,10 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
                     run_script_to_update_hyrax_input_files(self.short_id)
 
-    def set_download_agreement(self, user, value):
-        """Set resource download_agreement flag to True or False. If download_agreement is True
-        then user will be prompted to agree to resource rights statement before he/she can download
-        resource files or bag.
+    def set_require_download_agreement(self, user, value):
+        """Set resource require_download_agreement flag to True or False.
+        If require_download_agreement is True then user will be prompted to agree to resource
+        rights statement before he/she can download resource files or bag.
 
         :param user: user requesting the change
         :param value: True or False
@@ -1769,7 +1769,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         if not user.uaccess.can_change_resource_flags(self):
             raise PermissionDenied("You don't have permission to change resource download agreement"
                                    " status")
-        self.raccess.download_agreement = value
+        self.raccess.require_download_agreement = value
         self.raccess.save()
 
     def update_public_and_discoverable(self):
