@@ -407,6 +407,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         # TODO: allow setting destination path
         tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
             userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        fsize = istorage.size(src_file)
+        validate_user_quota(user, fsize)
         istorage.copyFiles(src_file, tgt_file)
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
