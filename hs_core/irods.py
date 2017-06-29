@@ -102,11 +102,11 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.uaccess.can_change_resource(self):
+            if user.username == 'anonymous' or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot change resource {}"
                                        .format(user.username, self.short_id))
         else:
-            if not user.uaccess.can_view_resource(self):
+            if not self.raccess.public and not user.uaccess.can_view_resource(self):
                 raise PermissionDenied("user {} cannot view resource {}"
                                        .format(user.username, self.short_id))
         if path is None:
