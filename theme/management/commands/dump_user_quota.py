@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from theme.models import UserQuota, QuotaMessage
+from theme.models import UserQuota
 
 
 class Command(BaseCommand):
@@ -12,16 +12,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         with open(options['output_file_name_with_path'], 'w') as csvfile:
             w = csv.writer(csvfile)
-            if not QuotaMessage.objects.exists():
-                QuotaMessage.objects.create()
-            qmsg = QuotaMessage.objects.first()
             fields = [
                 'User id',
                 'User name',
                 'Allocated quota value',
                 'Quota unit',
-                'Storage zone',
-                'Quota soft limit percent: ' + str(qmsg.soft_limit_percent)
+                'Storage zone'
             ]
             w.writerow(fields)
 
