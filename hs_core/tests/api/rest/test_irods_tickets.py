@@ -1,7 +1,7 @@
 import json
 from rest_framework import status
 from .base import HSRESTTestCase
-from hs_access_control.models import PrivilegeCodes
+
 
 class TestTickets(HSRESTTestCase):
 
