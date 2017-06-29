@@ -188,27 +188,33 @@ class TestResourceList(HSRESTTestCase):
     def test_resource_list_by_keyword(self):
         gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
         gen_res_two = resource.create_resource('GenericResource', self.user, 'Resource 2')
+        gen_res_three = resource.create_resource('GenericResource', self.user, 'Resource 3')
+        gen_res_four = resource.create_resource('GenericResource', self.user, 'Resource 2')
 
         self.resources_to_delete.append(gen_res_one.short_id)
         self.resources_to_delete.append(gen_res_two.short_id)
+        self.resources_to_delete.append(gen_res_three.short_id)
+        self.resources_to_delete.append(gen_res_four.short_id)
 
         gen_res_one.metadata.create_element("subject", value="one")
         gen_res_two.metadata.create_element("subject", value="other")
+        gen_res_three.metadata.create_element("subject", value="One")
+        gen_res_four.metadata.create_element("subject", value="Other")
 
         response = self.client.get('/hsapi/resource/', {'subject': 'one'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
+        self.assertEqual(content['count'], 2)
 
         response = self.client.get('/hsapi/resource/', {'subject': 'other'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['count'], 1)
+        self.assertEqual(content['count'], 2)
 
         response = self.client.get('/hsapi/resource/', {'subject': 'one,other'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(content['count'], 2)
+        self.assertEqual(content['count'], 4)
 
     def test_resource_list_obsolete(self):
         gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')

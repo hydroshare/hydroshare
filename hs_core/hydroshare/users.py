@@ -376,7 +376,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(created__lte=to_date))
 
     if subject:
-        subjects = Subject.objects.filter(value__in=subject.split(','))
+        subjects = subject.split(',')
+        subjects = Subject.objects.filter(value__iregex=r'(' + '|'.join(subjects) + ')')
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()
