@@ -14,10 +14,10 @@ from django_irods.icommands import SessionException
 
 # hsapi/resource/{pk}/ticket/read/{path}
 #   GET: create
-# hsapi/resource/{pk}/ticket/write/{path} (currently disabled) 
-#   GET: create 
-# hsapi/resource/{pk}/ticket/bag 
-#   GET: create 
+# hsapi/resource/{pk}/ticket/write/{path} (currently disabled)
+#   GET: create
+# hsapi/resource/{pk}/ticket/bag
+#   GET: create
 # hsapi/resource/{pk}/ticket/info/{tnumber}
 #   GET: list
 #   DELETE: remove
