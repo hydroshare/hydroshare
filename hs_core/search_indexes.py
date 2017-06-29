@@ -132,7 +132,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_subjects(self, obj):
         """Return metadata subjects if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [subject.value.lower() for subject in obj.metadata.subjects.all()
+            return [subject.value for subject in obj.metadata.subjects.all()
                     .exclude(value__isnull=True)]
         else:
             return []

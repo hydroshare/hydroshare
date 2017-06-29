@@ -16,7 +16,9 @@ class DiscoveryForm(FacetedSearchForm):
         if not self.cleaned_data.get('q'):
             sqs = self.searchqueryset.filter(discoverable=True).filter(is_replaced_by=False)
         else:
-            sqs = super(FacetedSearchForm, self).search().filter(discoverable=True).filter(is_replaced_by=False)
+            sqs = self.searchqueryset.filter(text__startswith=self.cleaned_data.get('q'))\
+                .filter(discoverable=True)\
+                .filter(is_replaced_by=False)
 
         geo_sq = SQ()
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
