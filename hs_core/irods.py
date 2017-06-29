@@ -14,9 +14,17 @@ class ResourceIRODSMixin(models.Model):
     class Meta:
         abstract = True
 
-    def __home_path(self):
+    @property
+    def irods_home_path(self):
         """ Return the home path for local iRODS resources """
         return settings.IRODS_CWD
+
+    def irods_full_path(self, path):
+        """ return fully qualified path for local paths """
+        if path.startswith('/'):
+            return path
+        else:
+            return os.path.join(self.irods_home_path, path)
 
     def update_bag(self):
         """
@@ -121,7 +129,7 @@ class ResourceIRODSMixin(models.Model):
         istorage = self.get_irods_storage()
         read_or_write = 'write' if write else 'read'
         if path.startswith(self.short_id) or path.startswith('bags/'):  # local path
-            path = os.path.join(self.__home_path(), path)
+            path = os.path.join(self.irods_home_path, path)
         stdout, stderr = istorage.session.run("iticket", None, 'create', read_or_write, path)
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
@@ -140,7 +148,8 @@ class ResourceIRODSMixin(models.Model):
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
         istorage.session.run('iticket', None, 'mod', ticket,
                              'expires', formatted)
-        return ticket
+
+        return ticket, self.irods_full_path(path)
 
     def list_ticket(self, ticket):
         """ List a ticket's attributes """
@@ -156,27 +165,28 @@ class ResourceIRODSMixin(models.Model):
                     value = line[1]
                     if key == 'collection name' or key == 'data collection':
                         output['full_path'] = value
-                        if self.resource_federation_path:
+                        if self.is_federated:
                             if __debug__:
                                 assert(value.startswith(self.resource_federation_path))
                             output['long_path'] = value[len(self.resource_federation_path):]
-                            output['fed_path'] = self.resource_federation_path
+                            output['home_path'] = self.resource_federation_path
                         else:
                             location = value.search(self.short_id)
                             if __debug__:
                                 assert(location >= 0)
-                            output['long_path'] = value[location:]
-                            output['home_path'] = value[:(location-1)]
+                            if location == 0:
+                                output['long_path'] = value
+                                output['home_path'] = self.irods_home_path
+                            else:
+                                output['long_path'] = value[location:]
+                                output['home_path'] = value[:(location-1)]
+
                         if __debug__:
                             assert(output['long_path'].startswith(self.short_id))
-                        # data/....
-                        qual_path = output['long_path'][len(self.short_id)+1:]
-                        output['qual_path'] = qual_path
-                        output['folder'] = None
-                        if qual_path.startswith('data/contents/'):
-                            output['folder'] = qual_path[len('data/contents/'):]
 
-                    if key == 'data-object name':
+                    if key == 'string':
+                        output['ticket'] = value
+                    elif key == 'data-object name':
                         output['filename'] = value
                     elif key == 'ticket type':
                         output['type'] = value
@@ -190,12 +200,16 @@ class ResourceIRODSMixin(models.Model):
                         output[line[0]] = line[1]
                 except Exception:  # no ':' in line
                     pass
+
+            # put in actual file path including folder and filename
             if 'filename' in output:
                 output['full_path'] = os.path.join(output['full_path'], output['filename'])
-
             return output
+
+        elif stdout == '':
+            raise ValidationError("ticket {} not found".format(ticket))
         else:
-            raise ValidationError("ticket {} cannot be listed".format(ticket))
+            raise ValidationError("ticket {} error: {}".format(ticket, stderr))
 
     def delete_ticket(self, user, ticket):
         """
@@ -235,6 +249,7 @@ class ResourceIRODSMixin(models.Model):
                                        .format(user.username, self.short_id))
         istorage = self.get_irods_storage()
         istorage.session.run('iticket', None, 'delete', ticket)
+        return meta
 
 
 class ResourceFileIRODSMixin(models.Model):
