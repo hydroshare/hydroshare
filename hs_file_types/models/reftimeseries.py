@@ -78,7 +78,8 @@ class TimeSeries(object):
                                     td(self.reference_type)
                                 with tr():
                                     get_th('URL')
-                                    td(self.url)
+                                    with td():
+                                        a(self.url, href=self.url, target="_blank")
                                 with tr():
                                     get_th('Site Name')
                                     td(self.site_name)
@@ -102,7 +103,8 @@ class TimeSeries(object):
                                     td(self.method_description)
                                 with tr():
                                     get_th('Method Link')
-                                    td(self.method_link)
+                                    with td():
+                                        a(self.method_link, href=self.method_link, target="_blank")
                                 with tr():
                                     get_th('Sample Medium')
                                     td(self.sample_medium)
