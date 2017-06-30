@@ -461,7 +461,10 @@ def create_resource(
             hs_bagit.create_bag(resource)
 
     # set the resource to private
-    resource.setAVU('isPublic', str(resource.raccess.public).lower())
+    resource.setAVU('isPublic', resource.raccess.public)
+
+    # set the resource type (which is immutable)
+    resource.setAVU("resourceType", resource._meta.object_name)
 
     # set quota of this resource to this creator
     resource.set_quota_holder(owner, owner)
@@ -650,7 +653,7 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-def update_science_metadata(pk, metadata):
+def update_science_metadata(pk, metadata, user):
     """
     Updates science metadata for a resource
 
@@ -659,6 +662,7 @@ def update_science_metadata(pk, metadata):
         updated.
         metadata: a list of dictionary items containing data for each metadata element that needs to
         be updated
+        user: user who is updating metadata
         example metadata format:
         [
             {'title': {'value': 'Updated Resource Title'}},
@@ -690,12 +694,10 @@ def update_science_metadata(pk, metadata):
     """
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # set to private if metadata has become non-compliant
     resource.update_public_and_discoverable()  # set to False if necessary
-
-    # TODO: This is a bit of a lie since the user initiating this is not the creator
-    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
 
 def delete_resource(pk):
