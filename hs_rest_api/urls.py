@@ -107,7 +107,7 @@ urlpatterns = patterns(
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/set-file-type/(?P<file_path>.*)/'
         r'(?P<hs_file_type>[A-z]+)/$',
-        file_type_views.set_file_type,
+        file_type_views.set_file_type_public,
         name="set_file_type_public"),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity

@@ -11,6 +11,8 @@ from django.template import Template, Context
 
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 
 from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
     ResourceFile, utils
@@ -70,11 +72,11 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
 
 
 @api_view(['POST'])
-def set_file_type_public(request, resource_id, file_path, hs_file_type):
+def set_file_type_public(request, pk, file_path, hs_file_type):
     """
     Set file type as specified by *hs_file_type* using the file given by *file_path*
     :param request: an instance of HttpRequest object
-    :param resource_id: id of the resource in which this file type needs to be set
+    :param pk: id of the resource in which this file type needs to be set
     :param file_path: relative file path of the file which needs to be set to the specified file
     type
     :param hs_file_type: type of file to be set (e.g NetCDF, GeoRaster, GeoFeature etc)
@@ -94,22 +96,27 @@ def set_file_type_public(request, resource_id, file_path, hs_file_type):
         return JsonResponse('file_path must not contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-    file_name = os.path.basename(file_rel_path)
-    folder = os.path.dirname(file_rel_path)
-    if folder == '':
-        folder = None
-    resource = utils.get_resource_by_shortkey(resource_id)
+    resource = utils.get_resource_by_shortkey(pk)
+    file_storage_path = os.path.join(resource.file_path, file_rel_path)
+
     try:
-        res_file = ResourceFile.get(resource, file_name, folder)
-    except ObjectDoesNotExist:
-        return JsonResponse('no file was found for the given file_path',
-                            status=status.HTTP_400_BAD_REQUEST)
+        folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
+                                                                     file_storage_path,
+                                                                     test_exists=True)
+    except ValidationError as ex:
+        return Response('File {} does not exist.'.format(file_path),
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    res_file = ResourceFile.get(resource, file_name, folder)
 
     # call the internal api for setting the file type
-    json_response = set_file_type(request=request, resource_id=resource_id, file_id=res_file.id,
+    json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
                                   hs_file_type=hs_file_type)
-    response_dict = json.loads(json_response)
-    return JsonResponse(response_dict['message'], status=response_dict['status_code'])
+    response_dict = json.loads(json_response.content)
+    if response_dict['status_code'] == status.HTTP_200_OK:
+        response_dict['status_code'] = status.HTTP_201_CREATED
+    return Response(response_dict['message'],
+                    status=response_dict['status_code'])
 
 
 @login_required
