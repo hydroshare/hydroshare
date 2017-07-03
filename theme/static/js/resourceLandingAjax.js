@@ -712,23 +712,19 @@ function set_file_type_ajax_submit(url) {
         success: function (result) {
             waitDialog.dialog("close");
             var json_response = JSON.parse(result);
-            if (json_response.status === 'success'){
-                var spatialCoverage = json_response.spatial_coverage;
-                updateResourceSpatialCoverage(spatialCoverage);
-                $alert_success = $alert_success.replace("File type was successful.", json_response.message);
-                $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
-                });
-            }
-            else {
-                display_error_message('Failed to set file type', json_response.message);
-            }
-
+            var spatialCoverage = json_response.spatial_coverage;
+            updateResourceSpatialCoverage(spatialCoverage);
+            $alert_success = $alert_success.replace("File type was successful.", json_response.message);
+            $("#fb-inner-controls").before($alert_success);
+            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                $(".alert-success").alert('close');
+            });
         },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        error: function (xhr, textStatus, errorThrown) {
             waitDialog.dialog("close");
-            display_error_message('Failed to set file type', xhr.responseText);
+            var jsonResponse = JSON.parse(xhr.responseText);
+            display_error_message('Failed to set file type', jsonResponse.message);
+            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         }
     });
 }
