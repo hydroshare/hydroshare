@@ -4,7 +4,7 @@ import json
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.db import Error
 from django.contrib.contenttypes.models import ContentType
 from django.template import Template, Context
@@ -72,12 +72,13 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
 def set_file_type_public(request, pk, file_path, hs_file_type):
     """
     Set file type as specified by *hs_file_type* using the file given by *file_path*
+    
     :param request: an instance of HttpRequest object
     :param pk: id of the composite resource in which this file type needs to be set
     :param file_path: relative file path of the file which needs to be set to the specified file
     type. If the absolute file path is [resource-id]/data/contents/some-folder/some-file.txt then
     file_path needs to be set as: some-folder/some-file.txt
-    :param hs_file_type: type of file to be set (e.g NetCDF, GeoRaster, GeoFeature etc)
+    :param hs_file_type: type of file to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
     :return:
     """
 
@@ -99,7 +100,7 @@ def set_file_type_public(request, pk, file_path, hs_file_type):
         folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
                                                                      file_storage_path,
                                                                      test_exists=True)
-    except ValidationError as ex:
+    except ValidationError:
         return Response('File {} does not exist.'.format(file_path),
                         status=status.HTTP_400_BAD_REQUEST)
 
