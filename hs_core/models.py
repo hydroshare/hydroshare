@@ -1757,6 +1757,21 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
                     run_script_to_update_hyrax_input_files(self.short_id)
 
+    def set_require_download_agreement(self, user, value):
+        """Set resource require_download_agreement flag to True or False.
+        If require_download_agreement is True then user will be prompted to agree to resource
+        rights statement before he/she can download resource files or bag.
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource download agreement"
+                                   " status")
+        self.raccess.require_download_agreement = value
+        self.raccess.save()
+
     def update_public_and_discoverable(self):
         """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
@@ -1839,19 +1854,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         # return strings for all other attributes
         else:
             return value
-
-    # TODO: Why isn't this a regular method? Why does it need to be a class method?
-    # It would seem to me that one only creates a bag after a resource has been created,
-    # so that this would be an instance method....
-    @classmethod
-    def bag_url(cls, resource_id):
-        """ return the URL of a bag """
-        # type resolution is not relevant; grab base class instance.
-        res = BaseResource.objects.get(short_id=resource_id)
-        bag_path = res.bag_path
-        istorage = res.get_irods_storage()
-        bag_url = istorage.url(bag_path)
-        return bag_url
 
     @classmethod
     def scimeta_url(cls, resource_id):
@@ -3269,6 +3271,18 @@ class BaseResource(Page, AbstractResource):
                                 self.short_id + '.' + bagit_postfix)
         else:
             return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
+
+    @property
+    def bag_url(self):
+        """Get bag url of resource data bag."""
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
+                                                           resource_id=self.short_id,
+                                                           postfix=bagit_postfix)
+        istorage = self.get_irods_storage()
+        bag_url = istorage.url(bag_path)
+        return bag_url
 
     # URIs relative to resource
     # these are independent of federation strategy
