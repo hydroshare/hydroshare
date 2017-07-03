@@ -42,7 +42,6 @@ class TestSetFileTypeEndPoint(HSRESTTestCase):
         res_file = self.resource.files.all().first()
         self.assertEqual(res_file.file_name, self.raster_file_name)
 
-
         # test the set file type endpoint
         url_template = "/hsapi/resource/{res_id}/functions/set-file-type/{file_path}/{file_type}/"
         set_file_type_url = url_template.format(res_id=self.resource.short_id,
