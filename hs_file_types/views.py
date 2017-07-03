@@ -72,7 +72,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
 def set_file_type_public(request, pk, file_path, hs_file_type):
     """
     Set file type as specified by *hs_file_type* using the file given by *file_path*
-    
+
     :param request: an instance of HttpRequest object
     :param pk: id of the composite resource in which this file type needs to be set
     :param file_path: relative file path of the file which needs to be set to the specified file
