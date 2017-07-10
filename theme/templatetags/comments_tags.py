@@ -61,32 +61,3 @@ def comment_thread(context, parent):
         "replied_to": replied_to,
     })
     return context
-
-
-@register.inclusion_tag("admin/includes/recent_comments.html",
-    takes_context=True)
-def recent_comments(context):
-    """
-    Dashboard widget for displaying recent comments.
-    """
-    latest = context["settings"].COMMENTS_NUM_LATEST
-    comments = ThreadedComment.objects.all().select_related("user")
-    context["comments"] = comments.order_by("-id")[:latest]
-    return context
-
-
-@register.filter
-def comment_filter(comment_text):
-    """
-    Passed comment text to be rendered through the function defined
-    by the ``COMMENT_FILTER`` setting. If no function is defined
-    (the default), Django's ``linebreaksbr`` and ``urlize`` filters
-    are used.
-    """
-    filter_func = settings.COMMENT_FILTER
-    if not filter_func:
-        def filter_func(s):
-            return linebreaksbr(urlize(s, autoescape=True), autoescape=True)
-    elif not callable(filter_func):
-        filter_func = import_dotted_path(filter_func)
-    return filter_func(comment_text)
