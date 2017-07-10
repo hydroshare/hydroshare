@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
-                <small class="text-muted"><i>Find content shared by your colleagues and other users.</i></small>
+                <small class="text-muted"><i>public resources shared with the community.</i></small>
             </h2>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-xs-12">
@@ -30,7 +30,9 @@
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
             <div>
-                <button id="btn-show-all" class="btn btn-default">Show All</button>
+                <button id="btn-show-all" data-toggle="tooltip" data-placement="right" class="btn btn-default"
+                        title="Show All Public and Discoverable Resources">Show All
+                </button>
             </div>
 
             <div id="filter-items">
@@ -318,6 +320,13 @@
                         </div>
                     {% endif %}
                     <br>
+                    <div class="alert alert-info">
+                        <strong>
+                            <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
+                        </strong>
+                        <p>Private resources owned by you or shared with you by colleagues are searchable from
+                            <strong><a href="/my-resources">My Resources</a></strong></p>
+                    </div>
                     {% include "includes/legend.html" %}
                 </div>
 
