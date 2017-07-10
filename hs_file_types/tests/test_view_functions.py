@@ -84,7 +84,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # this is the view function we are testing
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='GeoRaster')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_dict = json.loads(response.content)
         self.assertIn("File was successfully set to selected file type.",
                       response_dict['message'])
@@ -118,7 +118,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # this is the view function we are testing
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='NetCDF')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_dict = json.loads(response.content)
         self.assertIn("File was successfully set to selected file type.",
                       response_dict['message'])
