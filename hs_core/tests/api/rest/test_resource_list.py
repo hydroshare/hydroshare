@@ -216,6 +216,11 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 4)
 
+        response = self.client.get('/hsapi/resource/', {'subject': 'oth'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+
     def test_resource_list_obsolete(self):
         gen_res_one = resource.create_resource('GenericResource', self.user, 'Resource 1')
         # make a new version of gen_res_one to make gen_res_one obsolete
