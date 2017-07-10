@@ -19,6 +19,13 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
+        # create another resource for testing relation metadata
+        another_res = resource.create_resource('GenericResource',
+                                               self.user,
+                                               'My another Test resource')
+        self.pid2 = another_res.short_id
+        self.resources_to_delete.append(self.pid2)
+
     def test_get_scimeta(self):
         # Get the resource system metadata
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
@@ -75,7 +82,17 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 {
                     "derived_from": "Source 2"
                 }
-            ]
+            ],
+            "relations": [
+                {
+                    "type": "isCopiedFrom",
+                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                },
+                {
+                    "type": "isExecutedBy",
+                    "value": "https://www.hydroshare.org/resource/{}/".format(self.pid2)
+                }
+            ],
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
