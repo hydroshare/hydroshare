@@ -16,9 +16,9 @@ sed -i '/^\s*$/d' ${CONFIG_DIRECTORY}/hydroshare-config.sh
 while read line; do export $line; done < <(cat ${CONFIG_DIRECTORY}/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare defaultworker)
-HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
+HS_DOCKER_CONTAINERS=(xdcishare xdcishare-defaultworker)
+HS_DOCKER_IMAGES=(xdcishare_xdcishare xdcishare_defaultworker)
+OTHER_DOCKER_CONTAINERS=(xdcishare-postgis xdcishare-rabbitmq xdcishare-redis xdcishare-solr)
 
 ### Pre-flight Variables ###
 DEV_SERVER='runuser -p -u hydro-service -g storage-hydro ./run-server'
@@ -59,10 +59,10 @@ stop_nginx() {
 restart_hs() {
     echo "RESTART HYDROSHARE:"
     stop_nginx
-    docker-compose stop hydroshare defaultworker
+    docker-compose stop xdcishare xdcishare-defaultworker
     delete_celerybeat_scheduler
     preflight_hs
-    docker-compose start hydroshare defaultworker
+    docker-compose start xdcishare xdcishare-defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
@@ -92,11 +92,11 @@ maint_off_hs() {
 
 solr_schema_hs() {
     echo "SOLR SCHEMA:"
-    echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
-    docker exec hydroshare python manage.py build_solr_schema -f schema.xml
+    echo "  - docker exec xdcishare python manage.py build_solr_schema -f schema.xml"
+    docker exec xdcishare python manage.py build_solr_schema -f schema.xml
     sleep 1s
-    echo "  - docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
-    docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
+    echo "  - docker exec xdcishare-solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
+    docker exec xdcishare-solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
 }
 
 delete_celerybeat_scheduler() {
@@ -225,54 +225,54 @@ preflight_hs() {
 loaddb_hs() {
     echo "LOADDB:"
     # Ensure all prior connections to the database are removed prior to dropping the database
-    docker exec -u postgres -ti postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
-    docker exec -u postgres -ti postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
-    echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
-    docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
-    echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
-    docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}
+    docker exec -u postgres -ti xdcishare-postgis psql -c "REVOKE CONNECT ON DATABASE postgres FROM public;"
+    docker exec -u postgres -ti xdcishare-postgis psql -c "SELECT pid, pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();"
+    echo "  - docker exec -u hydro-service xdcishare dropdb -U postgres -h xdcishare-postgis postgres"
+    docker exec -u hydro-service xdcishare dropdb -U postgres -h xdcishare-postgis postgres
+    echo "  - docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h xdcishare-postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+    echo "  - docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
+    docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+    echo "  - docker exec -u hydro-service xdcishare createdb -U postgres -h xdcishare-postgis postgres --encoding UNICODE --template=template1"
+    docker exec -u hydro-service xdcishare createdb -U postgres -h xdcishare-postgis postgres --encoding UNICODE --template=template1
+    echo "  - docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
+    docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
+    echo "  - docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d postgres -q -f ${HS_DATABASE}"
+    docker exec -u hydro-service xdcishare psql -U postgres -h xdcishare-postgis -d postgres -q -f ${HS_DATABASE}
 }
 
 migrate_hs() {
     echo "MIGRATE:"
-    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites"
-    docker exec -u hydro-service hydroshare python manage.py migrate sites
-    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial"
-    docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial
-    echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
-    docker exec -u hydro-service hydroshare python manage.py fix_permissions
+    echo "  - docker exec -u hydro-service xdcishare python manage.py migrate sites"
+    docker exec -u hydro-service xdcishare python manage.py migrate sites
+    echo "  - docker exec -u hydro-service xdcishare python manage.py migrate --fake-initial"
+    docker exec -u hydro-service xdcishare python manage.py migrate --fake-initial
+    echo "  - docker exec -u hydro-service xdcishare python manage.py fix_permissions"
+    docker exec -u hydro-service xdcishare python manage.py fix_permissions
 }
 
 manage_py_hs() {
     echo "MANAGEPY:"
-    echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
-    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
+    echo "  - docker exec -u hydro-service -ti xdcishare python manage.py ${@:2}"
+    docker exec -u hydro-service -ti xdcishare python manage.py ${@:2}
 }
 
 solr_reload_hs() {
     echo "SOLR RELOAD"
-    echo "  - docker exec hydroshare curl \"solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
-    docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    echo "  - docker exec xdcishare curl \"xdcishare-solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
+    docker exec xdcishare curl "xdcishare-solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
 }
 
 update_solr_index() {
     echo "UPDATE SOLR INDEX:"
-    echo "  - docker exec hydroshare python manage.py update_index"
-    docker exec hydroshare python manage.py update_index
+    echo "  - docker exec xdcishare python manage.py update_index"
+    docker exec xdcishare python manage.py update_index
 }
 
 rebuild_solr_index() {
     echo "REBUILD SOLR INDEX:"
-    echo "  - docker exec hydroshare python manage.py rebuild_index --noinput"
-    docker exec hydroshare python manage.py rebuild_index --noinput
+    echo "  - docker exec xdcishare python manage.py rebuild_index --noinput"
+    docker exec dcishare python manage.py rebuild_index --noinput
 }
 
 remove_hs_components(){
@@ -368,7 +368,7 @@ reloaddb_hs() {
 reset_all_hs() {
     echo "RESET ALL:"
     echo "  - WARNING: All data, containers, and hydroshare related images will be removed"
-    if [[ "$(docker-compose ps | grep hydroshare)" ]]; then
+    if [[ "$(docker-compose ps | grep xdcishare)" ]]; then
         echo "  - INFO: xDCIShare found previously running, proceeding with clean up"
         # Remove root items
         scripts/pre-remove-hs;
@@ -385,7 +385,7 @@ reset_all_hs() {
     echo "  - INFO: Removing hydroshare related images"
     while read line; do
         docker rmi -f ${line};
-    done < <(docker images | grep "^hydroshare_" | tr -s ' ' | cut -d ' ' -f 3)
+    done < <(docker images | grep "^xdcishare_" | tr -s ' ' | cut -d ' ' -f 3)
     echo "  - INFO: Removing transient directories and files"
     if [[ -d hydroshare/static ]]; then rm -rf hydroshare/static; fi
     if [[ -d log ]]; then rm -rf log; fi
