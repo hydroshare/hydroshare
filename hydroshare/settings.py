@@ -33,7 +33,6 @@ local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_setti
 #
 # DASHBOARD_TAGS = (
 #     ("blog_tags.quick_blog", "mezzanine_tags.app_list"),
-#     ("comment_tags.recent_comments",),
 #     ("mezzanine_tags.recent_actions",),
 # )
 
@@ -268,7 +267,6 @@ INSTALLED_APPS = (
     "django_nose",
     "django_irods",
     "theme",
-    "theme.blog_mods",
     "heartbeat",
     "mezzanine.boot",
     "mezzanine.conf",
@@ -307,8 +305,12 @@ INSTALLED_APPS = (
     "hs_tracking",
     "hs_file_types",
     "hs_composite_resource",
+    "django_comments",
     "security",
 )
+
+COMMENTS_APP = 'django_comments'
+COMMENTS_NUM_LATEST = 0
 
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
 

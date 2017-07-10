@@ -28,7 +28,7 @@ from django.core.urlresolvers import reverse
 
 from mezzanine.pages.models import Page
 from mezzanine.core.models import Ownable
-from mezzanine.generic.fields import CommentsField, RatingField
+from mezzanine.generic.fields import RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
@@ -1447,7 +1447,6 @@ class AbstractResource(ResourcePermissionsMixin):
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
-    comments = CommentsField()
     rating = RatingField()
 
     # this is to establish a relationship between a resource and

@@ -1,5 +1,7 @@
-{% load comments_tags %}
+{% load comments %}
 
 <div class="rating col-xs-12 content-block">
-    {% comments_for cm %}
+    <h3>Comments</h3>
+    {% render_comment_list for cm %}
+    {% render_comment_form for cm %}
 </div>
