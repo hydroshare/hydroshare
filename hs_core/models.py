@@ -3542,6 +3542,60 @@ class CoreMetaData(models.Model):
         """Return the first _publisher object from metadata."""
         return self._publisher.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self
+        Note: Subclass must override this property
+        """
+        from views.resource_metadata_rest_api import CoreMetaDataSerializer
+        return CoreMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Parse the input *metadata* dict to needed format and store it in
+        *parsed_metadata* list
+        :param  metadata: a dict of metadata that needs to be parsed to get the metadata in the
+        format needed for updating the metadata elements supported by generic resource type
+        :param  parsed_metadata: a list of dicts that will be appended with parsed data
+        """
+
+        keys_to_update = metadata.keys()
+        if 'title' in keys_to_update:
+            parsed_metadata.append({"title": {"value": metadata.pop('title')}})
+
+        if 'creators' in keys_to_update:
+            for creator in metadata.pop('creators'):
+                parsed_metadata.append({"creator": creator})
+
+        if 'contributors' in keys_to_update:
+            for contributor in metadata.pop('contributors'):
+                parsed_metadata.append({"contributor": contributor})
+
+        if 'coverages' in keys_to_update:
+            for coverage in metadata.pop('coverages'):
+                parsed_metadata.append({"coverage": coverage})
+
+        if 'dates' in keys_to_update:
+            for date in metadata.pop('dates'):
+                parsed_metadata.append({"date": date})
+
+        if 'description' in keys_to_update:
+            parsed_metadata.append({"description": {"abstract": metadata.pop('description')}})
+
+        if 'language' in keys_to_update:
+            parsed_metadata.append({"language": {"code": metadata.pop('language')}})
+
+        if 'rights' in keys_to_update:
+            parsed_metadata.append({"rights": {"statement": metadata.pop('rights')}})
+
+        if 'sources' in keys_to_update:
+            for source in metadata.pop('sources'):
+                parsed_metadata.append({"source": source})
+
+        if 'subjects' in keys_to_update:
+            for subject in metadata.pop('subjects'):
+                parsed_metadata.append({"subject": {"value": subject['value']}})
+
     @classmethod
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""

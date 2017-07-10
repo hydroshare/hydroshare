@@ -420,6 +420,25 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     def resource(self):
         return NetcdfResource.objects.filter(object_id=self.id).first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import NetCDFMetaDataSerializer
+        return NetCDFMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'originalcoverage' in keys_to_update:
+            parsed_metadata.append({"originalcoverage": metadata.pop('originalcoverage')})
+
+        if 'variables' in keys_to_update:
+            for variable in metadata.pop('variables'):
+                parsed_metadata.append({"variable": variable})
+
     def set_dirty(self, flag):
         """
         Overriding the base class method
