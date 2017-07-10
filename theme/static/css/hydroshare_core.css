@@ -4096,6 +4096,10 @@ form#covereage-search-fields {
 	color: #4caf50;
 }
 
+.fb-stack-shape {
+	color: #777;
+}
+
 .fb-view-grid .fb-stack {
 	height: 32px;
 }
@@ -4141,9 +4145,21 @@ form#covereage-search-fields {
     top: -3px;
 }
 
+.fb-view-grid .fb-stack-shape .fa-globe, .dz-details .fb-stack-shape .fa-globe {
+	top: 5px;
+	font-size: 14px;
+}
+
+.fb-view-list .fb-stack-shape .fa-globe {
+	font-size: 10px;
+	top: -4px;
+}
+
 .fb-view-grid .fb-stack .fa-file-o {
 	font-size: 32px;
 }
+
+
 
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
