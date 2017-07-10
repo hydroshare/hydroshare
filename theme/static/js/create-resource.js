@@ -13,7 +13,11 @@ $(document).ready(function () {
         $("#btn-select-irods-file").show();
         $("#irods-sel-file").text("No file selected.");
     }
-
+    $alert_error = '<div class="alert alert-danger" id="alert_error"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Error! </strong> \
+        Resource failed to create.\
+    </div>';
     Dropzone.options.hsDropzone = {
         previewTemplate: document.getElementById('preview-template').innerHTML,
         clickable: "#dz-container",
@@ -30,6 +34,14 @@ $(document).ready(function () {
             }
             else {
                 console.log(response);
+                $alert_error = $alert_error.replace("Resource failed to create.", response.message);
+                $('.btn-create-resource').before($alert_error);
+                $("#alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $("#alert-error").alert('close');
+                });
+                $("html, #dz-container").css("cursor", "initial");
+                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+                $(".hs-upload-indicator").show();
             }
         },
         error: function (file, response) {

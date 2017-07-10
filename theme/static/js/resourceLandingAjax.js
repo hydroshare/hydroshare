@@ -72,6 +72,41 @@ function shareable_ajax_submit(event) {
     return false;
 }
 
+function license_agreement_ajax_submit(event) {
+    // this sets if user will be required to agree to resource rights statement prior
+    // to any resource file or bag download
+    var form = $(this).closest("form");
+    var datastring = form.serialize();
+    var url = form.attr('action');
+    var element = $(this);
+    var action = $(this).closest("form").find("input[name='t']").val();
+    element.attr("disabled", true);
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function () {
+            element.attr("disabled", false);
+            if (action == "make_not_require_lic_agreement") {
+                element.closest("form").find("input[name='t']").val("make_require_lic_agreement");
+            }
+            else {
+                element.closest("form").find("input[name='t']").val("make_not_require_lic_agreement");
+            }
+            // page refresh is needed to update if license agreement popup to show or not prior
+            // to download of files/bag
+            window.location = window.location.href;
+        },
+        error: function () {
+            element.attr("disabled", false);
+        }
+    });
+    //don't submit the form
+    return false;
+}
+
 function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
     if (typeof check_for_prompt === 'undefined'){
         check_for_prompt = true;

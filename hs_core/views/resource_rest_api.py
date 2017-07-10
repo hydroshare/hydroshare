@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
         site_url = hydroshare.utils.current_site_url()
-        bag_url = site_url + AbstractResource.bag_url(r.short_id)
+        bag_url = site_url + r.bag_url
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
         resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
