@@ -30,9 +30,6 @@ $(document).ready(function () {
 
         success: function (file, response) {
             if (response.status == "success") {
-                if (response.file_upload_status == "error") {
-                    console.log(response.message);
-                }
                 window.location = response['resource_url'];
             }
             else {
