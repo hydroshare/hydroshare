@@ -1,14 +1,24 @@
 {% load comments %}
 {% if user.is_authenticated %}
+    <p>Join the conversation</p>
     {% get_comment_form for object as form %}
     <form action="{% comment_form_target %}" method="POST">
     {% csrf_token %}
-    {{ form.comment }}
+    <div class="fieldWrapper">
+        {{ form.cmoment.errors }}
+        {{ form.comment }}
+        {% if form.comment.help_text %}
+        <p class="help">{{ form.comment.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    <div style="display:none;">
     {{ form.honeypot }}
     {{ form.content_type }}
     {{ form.object_pk }}
     {{ form.timestamp }}
     {{ form.security_hash }}
+    </div>
+    <br />
     <input type="hidden" name="next" value="{{ request.path }}" />
     <input type="submit" value="Add comment" id="id_submit" />
     </form>

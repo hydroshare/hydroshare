@@ -3,5 +3,7 @@
 <div class="rating col-xs-12 content-block">
     <h3>Comments</h3>
     {% render_comment_list for cm %}
-    {% render_comment_form for cm %}
+    {% with cm as object %}
+    {% render_comment_form for object %}
+    {% endwith %}
 </div>
