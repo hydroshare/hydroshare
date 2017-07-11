@@ -148,7 +148,8 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         netcdf_file = 'hs_core/tests/data/netcdf_valid.nc'
         file_to_upload = open(netcdf_file, "r")
         self._create_resource(resource_type="NetcdfResource", file_to_upload=file_to_upload)
-        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.resource.short_id)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
         put_data = {
             "title": "New Title",
             "description": "New Description",
@@ -202,9 +203,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                     "northlimit": '12', "projection": "transverse_mercator",
                     "units": "meter", "southlimit": '10',
                     "eastlimit": '23', "westlimit": '2'},
-                "projection_string_text": '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
-                                                         '+y_0=0.0 +k_0=0.9996',
-                "projection_string_type": 'Proj4 String'
+                    "projection_string_text": '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
+                                              '+y_0=0.0 +k_0=0.9996',
+                    "projection_string_type": 'Proj4 String'
             },
             "variables": [
                 {
@@ -229,7 +230,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.resource = resource.create_resource(
             resource_type=resource_type,
             owner=self.user,
-            title= "Testing bulk metadata update for resource type - {}".format(resource_type),
+            title="Testing bulk metadata update for resource type - {}".format(resource_type),
             files=(file_to_upload,)
             )
         resource_post_create_actions(resource=self.resource, user=self.user,
