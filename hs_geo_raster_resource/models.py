@@ -447,6 +447,23 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def resource(self):
         return RasterResource.objects.filter(object_id=self.id).first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import GeoRasterMetaDataSerializer
+        return GeoRasterMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+
+        if 'bandinformations' in keys_to_update:
+            for bandinformation in metadata.pop('bandinformations'):
+                parsed_metadata.append({"bandinformation": bandinformation})
+
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
