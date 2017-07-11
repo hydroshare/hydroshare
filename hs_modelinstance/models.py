@@ -146,9 +146,9 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         return elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(ModelInstanceMetaData, self).update(metadata)
+        super(ModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modeloutput': 'model_output', 'executedby': 'executed_by'}
         with transaction.atomic():
             # update/create non-repeatable element

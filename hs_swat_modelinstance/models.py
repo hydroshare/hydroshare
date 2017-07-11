@@ -431,9 +431,9 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(SWATModelInstanceMetaData, self).update(metadata)
+        super(SWATModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modelobjective': 'model_objective',
                               'simulationtype': 'simulation_type',
                               'modelmethod': 'model_method',

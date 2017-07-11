@@ -708,9 +708,9 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         elements.append('GeneralElements')
         return elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method
-        super(MODFLOWModelInstanceMetaData, self).update(metadata)
+        super(MODFLOWModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'studyarea': 'study_area',
                               'griddimensions': 'grid_dimensions',
                               'stressperiod': 'stress_period',

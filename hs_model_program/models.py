@@ -116,9 +116,9 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(ModelProgramMetaData, self).update(metadata)
+        super(ModelProgramMetaData, self).update(metadata, user)
         attribute_mappings = {'mpmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element

@@ -98,9 +98,9 @@ class ScriptMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(ScriptMetaData, self).update(metadata)
+        super(ScriptMetaData, self).update(metadata, user)
         attribute_mappings = {'scriptspecificmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element

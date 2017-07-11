@@ -447,11 +447,11 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def resource(self):
         return RasterResource.objects.filter(object_id=self.id).first()
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
         # update any core metadata
-        super(RasterMetaData, self).update(metadata)
+        super(RasterMetaData, self).update(metadata, user)
         # update resource specific metadata
         # for geo raster resource type only band information can be updated
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \

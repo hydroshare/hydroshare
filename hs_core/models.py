@@ -3726,13 +3726,14 @@ class CoreMetaData(models.Model):
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
-    def update(self, metadata):
+    def update(self, metadata, user):
         """Define custom update method for CoreMetaData model.
 
         :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
         element_name must be in lowercase.
         example of a dict in metadata list:
             {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :param  user: user who is updating metadata
         :return:
         """
         # updating non-repeatable elements

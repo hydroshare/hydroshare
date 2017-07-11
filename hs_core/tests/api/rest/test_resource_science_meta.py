@@ -162,7 +162,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "name": "Test Name 1",
                 "organization": "Org 1"
             }, {
-                "name": None,
+                "name": "Test Name 2",
                 "organization": "Org 2"
             }],
             "creators": [{
@@ -202,10 +202,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "value": {
                     "northlimit": '12', "projection": "transverse_mercator",
                     "units": "meter", "southlimit": '10',
-                    "eastlimit": '23', "westlimit": '2'},
-                    "projection_string_text": '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
-                                              '+y_0=0.0 +k_0=0.9996',
-                    "projection_string_type": 'Proj4 String'
+                    "eastlimit": '23', "westlimit": '2'
+                },
+                "projection_string_text": '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
+                                          '+y_0=0.0 +k_0=0.9996',
+                "projection_string_type": 'Proj4 String'
             },
             "variables": [
                 {

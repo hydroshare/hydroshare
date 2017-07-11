@@ -448,9 +448,9 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             self.is_dirty = flag
             self.save()
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(NetcdfMetaData, self).update(metadata)
+        super(NetcdfMetaData, self).update(metadata, user)
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \
                            "content files"
         with transaction.atomic():
@@ -488,6 +488,9 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                         variable_data.pop(key, None)
 
                     self.update_element('variable', var_element.id, **variable_data)
+
+        # write updated metadata to netcdf file
+        self.resource.update_netcdf_file(user)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree

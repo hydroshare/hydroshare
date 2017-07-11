@@ -636,7 +636,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         metadata = []
         metadata.append({'bandinformation': band_data})
         with self.assertRaises(ValidationError):
-            self.resRaster.metadata.update(metadata)
+            self.resRaster.metadata.update(metadata, self.user)
         self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 0)
         del metadata[:]
         # adding a valid tiff file should generate some core metadata and all extended metadata
@@ -665,7 +665,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         metadata.append({'bandinformation': band_data})
         with self.assertRaises(ValidationError):
-            self.resRaster.metadata.update(metadata)
+            self.resRaster.metadata.update(metadata, self.user)
         self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
         # updating of bandinformation using a valid band lookup name (Band_1) should be successful
         band_data = {'original_band_name': 'Band_1',
@@ -680,7 +680,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                      }
         del metadata[:]
         metadata.append({'bandinformation': band_data})
-        self.resRaster.metadata.update(metadata)
+        self.resRaster.metadata.update(metadata, self.user)
         self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.name, 'Band_2')
@@ -698,7 +698,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                      }
         del metadata[:]
         metadata.append({'bandinformation': band_data})
-        self.resRaster.metadata.update(metadata)
+        self.resRaster.metadata.update(metadata, self.user)
         self.assertEqual(self.resRaster.metadata.bandInformations.all().count(), 1)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.name, 'Band_1')
@@ -717,7 +717,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                      'name': 'Band_3'
                      }
         metadata.append({'bandinformation': band_data})
-        self.resRaster.metadata.update(metadata)
+        self.resRaster.metadata.update(metadata, self.user)
         band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEqual(band_info.name, 'Band_3')
         # there should be 2 creators

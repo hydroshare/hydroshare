@@ -355,11 +355,11 @@ class ToolMetaData(CoreMetaData):
         self.supported_sharing_status.all().delete()
         self.homepage_url.all().delete()
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
         # update any core metadata
-        super(ToolMetaData, self).update(metadata)
+        super(ToolMetaData, self).update(metadata, user)
         # update resource specific metadata
         with transaction.atomic():
             for dict_item in metadata:
