@@ -142,7 +142,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
   background-color: #eaeaea;
 }
 
-
 /* ===== Recaptcha ===== */
 #recaptcha_challenge_image {
     max-width: 100%;
@@ -4158,8 +4157,6 @@ form#covereage-search-fields {
 .fb-view-grid .fb-stack .fa-file-o {
 	font-size: 32px;
 }
-
-
 
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;

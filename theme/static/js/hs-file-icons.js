@@ -36,7 +36,7 @@ function getFileIcons() {
 
     fileIcons.SHP =
         "<span class='fa-stack fb-stack fb-stack-shape'>" +
-        "<i class='fa fa-file-o fa-stack-2x '></i>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
         "<i class='fa fa-globe fa-stack-1x'></i>" +
         "</span>";
 
