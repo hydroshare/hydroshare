@@ -741,7 +741,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         metadata_dict = [{'coverage': {'type': 'period', 'value':
                          {'name': 'Name for period coverage',
                           'start': '1/1/2016', 'end': '12/31/2016'}}}, ]
-        update_science_metadata(pk=self.resGen1.short_id, metadata=metadata_dict)
+        update_science_metadata(pk=self.resGen1.short_id, metadata=metadata_dict, user=self.user1)
         self.assertEqual(self.resGen1.metadata.coverages.count(), 1)
         # calculate overall coverages
         _update_collection_coverages(self.resCollection)
@@ -758,7 +758,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         metadata_dict = [{'coverage': {'type': 'point', 'value':
                          {'name': 'Name for point coverage', 'east': '-20',
                           'north': '10', 'units': 'decimal deg'}}}, ]
-        update_science_metadata(pk=self.resGeoFeature.short_id, metadata=metadata_dict)
+        update_science_metadata(pk=self.resGeoFeature.short_id, metadata=metadata_dict,
+                                user=self.user1)
         self.assertEqual(self.resGeoFeature.metadata.coverages.count(), 1)
         # calculate overall coverages
         _update_collection_coverages(self.resCollection)
@@ -785,7 +786,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                          {'coverage': {'type': 'point', 'value':
                           {'name': 'Name for point coverage', 'east': '25',
                            'north': '-35', 'units': 'decimal deg'}}}]
-        update_science_metadata(pk=self.resGen2.short_id, metadata=metadata_dict)
+        update_science_metadata(pk=self.resGen2.short_id, metadata=metadata_dict, user=self.user1)
         self.assertEqual(self.resGen2.metadata.coverages.count(), 2)
         self.resCollection.resources.add(self.resGen2)
         self.assertEqual(self.resCollection.resources.count(), 3)

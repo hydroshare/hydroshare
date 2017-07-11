@@ -1203,7 +1203,10 @@ $(document).ready(function () {
     });
 
     // Download method
-    $("#btn-download, #fb-download").click(function () {
+    $(" #btn-download, #download-file-btn, #fb-download").click(function (e) {
+        if(e.currentTarget.id === "download-file-btn"){
+            $("#license-agree-dialog-file").modal('hide');
+        }
         var downloadList = $("#fb-files-container li.ui-selected");
 
         // Remove previous temporary download frames
