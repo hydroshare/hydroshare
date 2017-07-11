@@ -435,7 +435,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resModelProgram.metadata.creators.count(), 1)
         self.resModelProgram.metadata.update([{'creator': {'name': 'Second Creator'}},
                                               {'creator': {'name': 'Third Creator'}},
-                                              {'mpmetadata': {'modelVersion': '5.1.012'}}], self.user)
+                                              {'mpmetadata': {'modelVersion': '5.1.012'}}],
+                                             self.user)
         # there should be 2 creators at this point (previously existed creator gets
         # delete as part of the update() call
         self.assertEqual(self.resModelProgram.metadata.creators.count(), 2)
