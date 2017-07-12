@@ -137,6 +137,24 @@ class ModelInstanceMetaData(CoreMetaData):
     def executed_by(self):
         return self._executed_by.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ModelInstanceMetaDataSerializer
+        return ModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'modeloutput' in keys_to_update:
+            parsed_metadata.append({"modeloutput": metadata.pop('modeloutput')})
+
+        if 'executedby' in keys_to_update:
+            parsed_metadata.append({"executedby": metadata.pop('executedby')})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
