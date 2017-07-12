@@ -105,8 +105,23 @@ class ModelProgramMetaData(CoreMetaData):
         return ModelProgramResource.objects.filter(object_id=self.id).first()
 
     @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ModelProgramMetaDataSerializer
+        return ModelProgramMetaDataSerializer(self)
+
+    @property
     def program(self):
         return self._mpmetadata.all().first()
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'mpmetadata' in keys_to_update:
+            parsed_metadata.append({"mpmetadata": metadata.pop('mpmetadata')})
 
     @classmethod
     def get_supported_element_names(cls):
