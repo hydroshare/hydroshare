@@ -68,7 +68,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # test that the resource is not public
         self.assertEqual(self.gen_res_one.raccess.public, False)
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_public'}
+        post_data = {'flag': 'make_public'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -87,7 +87,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # test that the resource is not public
         self.assertEqual(self.gen_res_two.raccess.public, False)
         url_params = {'shortkey': self.gen_res_two.short_id}
-        post_data = {'t': 'make_public'}
+        post_data = {'flag': 'make_public'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -117,7 +117,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.gen_res_one.raccess.save()
 
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_private'}
+        post_data = {'flag': 'make_private'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -145,7 +145,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # test that the resource is not discoverable
         self.assertEqual(self.gen_res_one.raccess.discoverable, False)
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_discoverable'}
+        post_data = {'flag': 'make_discoverable'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -164,7 +164,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         # test that the resource is not discoverable
         self.assertEqual(self.gen_res_two.raccess.discoverable, False)
         url_params = {'shortkey': self.gen_res_two.short_id}
-        post_data = {'t': 'make_discoverable'}
+        post_data = {'flag': 'make_discoverable'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -195,7 +195,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.gen_res_one.raccess.save()
 
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_not_discoverable'}
+        post_data = {'flag': 'make_not_discoverable'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -225,7 +225,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.gen_res_one.raccess.save()
 
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_shareable'}
+        post_data = {'flag': 'make_shareable'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
@@ -251,7 +251,7 @@ class TestSetResourceFlag(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(self.gen_res_one.raccess.shareable, True)
 
         url_params = {'shortkey': self.gen_res_one.short_id}
-        post_data = {'t': 'make_not_shareable'}
+        post_data = {'flag': 'make_not_shareable'}
         url = reverse('set_resource_flag', kwargs=url_params)
         request = self.factory.post(url, data=post_data)
         request.user = self.user
