@@ -632,7 +632,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "maximumElevation": 3333,
                 "minimumElevation": 4444
             },
-            "griddimensions":{
+            "griddimensions": {
                 "numberOfLayers": 5555,
                 "typeOfRows": "Irregular",
                 "numberOfRows": 6666,
@@ -698,7 +698,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "maximumElevation": 3333,
                 "minimumElevation": 4444
             },
-            "griddimensions":{
+            "griddimensions": {
                 "numberOfLayers": 5555,
                 "typeOfRows": "Irregular",
                 "numberOfRows": 6666,
