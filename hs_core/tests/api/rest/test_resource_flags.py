@@ -48,47 +48,47 @@ class TestPublicResourceFlagsEndpoint(HSRESTTestCase):
     def test_set_resource_flag_make_public(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid
         response = self.client.post(flag_url, {
-            "t": "make_public"
+            "flag": "make_public"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         flag_url = "/hsapi/resource/%s/flag/" % self.pid_two
         response = self.client.post(flag_url, {
-            "t": "make_public"
+            "flag": "make_public"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_set_resource_flag_make_private(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid
         response = self.client.post(flag_url, {
-            "t": "make_private"
+            "flag": "make_private"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_set_resource_flag_make_discoverable(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid_two
         response = self.client.post(flag_url, {
-            "t": "make_discoverable"
+            "flag": "make_discoverable"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_set_resource_flag_make_not_discoverable(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid
         response = self.client.post(flag_url, {
-            "t": "make_not_discoverable"
+            "flag": "make_not_discoverable"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_set_resource_flag_make_not_shareable(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid
         response = self.client.post(flag_url, {
-            "t": "make_not_shareable"
+            "flag": "make_not_shareable"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_set_resource_flag_make_shareable(self):
         flag_url = "/hsapi/resource/%s/flag/" % self.pid
         response = self.client.post(flag_url, {
-            "t": "make_shareable"
+            "flag": "make_shareable"
         }, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
