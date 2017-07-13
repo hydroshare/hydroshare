@@ -693,6 +693,43 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     def general_elements(self):
         return self._general_elements.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import MODFLOWModelInstanceMetaDataSerializer
+        return MODFLOWModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'studyarea' in keys_to_update:
+            parsed_metadata.append({"studyarea": metadata.pop('studyarea')})
+
+        if 'griddimensions' in keys_to_update:
+            parsed_metadata.append({"griddimensions": metadata.pop('griddimensions')})
+
+        if 'stressperiod' in keys_to_update:
+            parsed_metadata.append({"stressperiod": metadata.pop('stressperiod')})
+
+        if 'groundwaterflow' in keys_to_update:
+            parsed_metadata.append({"groundwaterflow": metadata.pop('groundwaterflow')})
+
+        if 'boundarycondition' in keys_to_update:
+            parsed_metadata.append({"boundarycondition": metadata.pop('boundarycondition')})
+
+        if 'modelcalibration' in keys_to_update:
+            parsed_metadata.append({"modelcalibration": metadata.pop('modelcalibration')})
+
+        if 'generalelements' in keys_to_update:
+            parsed_metadata.append({"generalelements": metadata.pop('generalelements')})
+
+        if 'modelinputs' in keys_to_update:
+            for modelinput in metadata.pop('modelinputs'):
+                parsed_metadata.append({"modelinput": modelinput})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements

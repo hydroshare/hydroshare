@@ -479,7 +479,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         # testing bulk metadata update that includes both core metadata and resource specific
         # metadata update
 
-        # create a model program resource
+        # create a model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
         file_to_upload = open(some_file, "r")
         self._create_resource(resource_type="ModelInstanceResource", file_to_upload=file_to_upload)
@@ -543,7 +543,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
     def test_put_scimeta_modelinstance_resource_without_core_metadata(self):
         # testing bulk metadata update updates only resource specific metadata
 
-        # create a model program resource
+        # create a model instance resource
         some_file = 'hs_core/tests/data/cea.tif'
         file_to_upload = open(some_file, "r")
         self._create_resource(resource_type="ModelInstanceResource", file_to_upload=file_to_upload)
@@ -564,6 +564,190 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
         model_program_resource.delete()
+
+    def test_put_scimeta_modflowinstance_resource_with_core_metadata(self):
+        # testing bulk metadata update that includes both core metadata and resource specific
+        # metadata update
+
+        # create a MODFLOW model instance resource
+        some_file = 'hs_core/tests/data/cea.tif'
+        file_to_upload = open(some_file, "r")
+        self._create_resource(resource_type="MODFLOWModelInstanceResource",
+                              file_to_upload=file_to_upload)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "title": "New Title",
+            "description": "New Description",
+            "subjects": [
+                {"value": "subject1"},
+                {"value": "subject2"},
+                {"value": "subject3"}
+            ],
+            "contributors": [{
+                "name": "Test Name 1",
+                "organization": "Org 1"
+            }, {
+                "name": "Test Name 2",
+                "organization": "Org 2"
+            }],
+            "creators": [{
+                "name": "Creator",
+                "organization": None
+            }],
+            "coverages": [{
+                "type": "box",
+                "value": {
+                    "northlimit": 43.19716728247476,
+                    "projection": "WGS 84 EPSG:4326",
+                    "name": "A whole bunch of the atlantic ocean",
+                    "units": "Decimal degrees",
+                    "southlimit": 23.8858376999,
+                    "eastlimit": -19.16015625,
+                    "westlimit": -62.75390625
+                }
+            }],
+            "dates": [
+                {
+                    "type": "valid",
+                    "start_date": "2016-12-07T00:00:00Z",
+                    "end_date": "2018-12-07T00:00:00Z"
+                }
+            ],
+            "language": "fre",
+            "rights": "CCC",
+            "sources": [
+                {
+                    "derived_from": "Source 3"
+                },
+                {
+                    "derived_from": "Source 2"
+                }
+            ],
+            "modeloutput": {"includes_output": False},
+            "executedby": {"model_name": "id of a an existing model program resource"},
+            "studyarea": {
+                "totalLength": 1111,
+                "totalWidth": 2222,
+                "maximumElevation": 3333,
+                "minimumElevation": 4444
+            },
+            "griddimensions":{
+                "numberOfLayers": 5555,
+                "typeOfRows": "Irregular",
+                "numberOfRows": 6666,
+                "typeOfColumns": "Regular",
+                "numberOfColumns": 7777
+            },
+            "stressperiod": {
+                "stressPeriodType":  "Steady and Transient",
+                "steadyStateValue": 8888,
+                "transientStateValueType": "Monthly",
+                "transientStateValue": 9999
+            },
+            "groundwaterflow": {
+                "flowPackage": "LPF",
+                "flowParameter": "Hydraulic Conductivity"
+            },
+            "boundarycondition": {
+                "specified_head_boundary_packages":  ["CHD", "FHB"],
+                "specified_flux_boundary_packages": ["FHB", "WEL"],
+                "head_dependent_flux_boundary_packages": ["RIV", "MNW1"]
+            },
+            "modelcalibration": {
+                "calibratedParameter": "test parameter",
+                "observationType": "test observation type",
+                "observationProcessPackage": "GBOB",
+                "calibrationMethod": "test calibration method"
+            },
+            "modelinputs": [
+                {
+                    "inputType": "test input type",
+                    "inputSourceName": "test source name",
+                    "inputSourceURL": "http://www.test.com"
+                }
+            ],
+            "generalelements": {
+                "modelParameter": "test model parameter",
+                "modelSolver": "SIP",
+                "output_control_package": ["HYD", "OC"],
+                "subsidencePackage": "SWT"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
+
+    def test_put_scimeta_modflowinstance_resource_without_core_metadata(self):
+        # testing bulk metadata update that updates onlt the resource specific
+        # metadata
+
+        # create a MODFLOW model instance resource
+        some_file = 'hs_core/tests/data/cea.tif'
+        file_to_upload = open(some_file, "r")
+        self._create_resource(resource_type="MODFLOWModelInstanceResource",
+                              file_to_upload=file_to_upload)
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "modeloutput": {"includes_output": False},
+            "executedby": {"model_name": "id of a an existing model program resource"},
+            "studyarea": {
+                "totalLength": 1111,
+                "totalWidth": 2222,
+                "maximumElevation": 3333,
+                "minimumElevation": 4444
+            },
+            "griddimensions":{
+                "numberOfLayers": 5555,
+                "typeOfRows": "Irregular",
+                "numberOfRows": 6666,
+                "typeOfColumns": "Regular",
+                "numberOfColumns": 7777
+            },
+            "stressperiod": {
+                "stressPeriodType":  "Steady and Transient",
+                "steadyStateValue": 8888,
+                "transientStateValueType": "Monthly",
+                "transientStateValue": 9999
+            },
+            "groundwaterflow": {
+                "flowPackage": "LPF",
+                "flowParameter": "Hydraulic Conductivity"
+            },
+            "boundarycondition": {
+                "specified_head_boundary_packages":  ["CHD", "FHB"],
+                "specified_flux_boundary_packages": ["FHB", "WEL"],
+                "head_dependent_flux_boundary_packages": ["RIV", "MNW1"]
+            },
+            "modelcalibration": {
+                "calibratedParameter": "test parameter",
+                "observationType": "test observation type",
+                "observationProcessPackage": "GBOB",
+                "calibrationMethod": "test calibration method"
+            },
+            "modelinputs": [
+                {
+                    "inputType": "test input type-1",
+                    "inputSourceName": "test source name-1",
+                    "inputSourceURL": "http://www.test-1.com"
+                },
+                {
+                    "inputType": "test input type-2",
+                    "inputSourceName": "test source name-2",
+                    "inputSourceURL": "http://www.test-2.com"
+                }
+            ],
+            "generalelements": {
+                "modelParameter": "test model parameter",
+                "modelSolver": "SIP",
+                "output_control_package": ["HYD", "OC"],
+                "subsidencePackage": "SWT"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
 
     def _create_resource(self, resource_type, file_to_upload):
         self.resource = resource.create_resource(
