@@ -749,12 +749,106 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
-    def _create_resource(self, resource_type, file_to_upload):
+    def test_put_scimeta_script_resource_with_core_metadata(self):
+        # testing bulk metadata update that includes both core metadata and resource specific
+        # metadata update
+
+        # create a script resource
+        self._create_resource(resource_type="ScriptResource")
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "title": "New Title",
+            "description": "New Description",
+            "subjects": [
+                {"value": "subject1"},
+                {"value": "subject2"},
+                {"value": "subject3"}
+            ],
+            "contributors": [{
+                "name": "Test Name 1",
+                "organization": "Org 1"
+            }, {
+                "name": "Test Name 2",
+                "organization": "Org 2"
+            }],
+            "creators": [{
+                "name": "Creator",
+                "organization": None
+            }],
+            "coverages": [{
+                "type": "box",
+                "value": {
+                    "northlimit": 43.19716728247476,
+                    "projection": "WGS 84 EPSG:4326",
+                    "name": "A whole bunch of the atlantic ocean",
+                    "units": "Decimal degrees",
+                    "southlimit": 23.8858376999,
+                    "eastlimit": -19.16015625,
+                    "westlimit": -62.75390625
+                }
+            }],
+            "dates": [
+                {
+                    "type": "valid",
+                    "start_date": "2016-12-07T00:00:00Z",
+                    "end_date": "2018-12-07T00:00:00Z"
+                }
+            ],
+            "language": "fre",
+            "rights": "CCC",
+            "sources": [
+                {
+                    "derived_from": "Source 3"
+                },
+                {
+                    "derived_from": "Source 2"
+                }
+            ],
+            "scriptspecificmetadata": {
+                    "scriptLanguage": "R",
+                    "languageVersion": "3.5",
+                    "scriptVersion": "1.0",
+                    "scriptDependencies": "None",
+                    "scriptReleaseDate": "2015-12-01 00:00",
+                    "scriptCodeRepository": "http://www.google.com"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
+
+    def test_put_scimeta_script_resource_without_core_metadata(self):
+        # testing bulk metadata update for resource specific
+        # metadata only
+
+        # create a script resource
+        self._create_resource(resource_type="ScriptResource")
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "scriptspecificmetadata": {
+                    "scriptLanguage": "R",
+                    "languageVersion": "3.5",
+                    "scriptVersion": "1.0",
+                    "scriptDependencies": "None",
+                    "scriptReleaseDate": "2015-12-01 00:00",
+                    "scriptCodeRepository": "http://www.google.com"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
+
+    def _create_resource(self, resource_type, file_to_upload=None):
+        files = ()
+        if file_to_upload is not None:
+            files = (file_to_upload,)
         self.resource = resource.create_resource(
             resource_type=resource_type,
             owner=self.user,
             title="Testing bulk metadata update for resource type - {}".format(resource_type),
-            files=(file_to_upload,)
+            files=files
             )
         resource_post_create_actions(resource=self.resource, user=self.user,
                                      metadata=self.resource.metadata)

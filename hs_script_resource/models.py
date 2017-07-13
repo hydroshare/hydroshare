@@ -74,6 +74,26 @@ class ScriptMetaData(CoreMetaData):
     def program(self):
         return self.scriptspecificmetadata.all().first()
 
+    @property
+    def script_specific_metadata(self):
+        return self.program
+
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ScriptMetaDataSerializer
+        return ScriptMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'scriptspecificmetadata' in keys_to_update:
+            parsed_metadata.append({"scriptspecificmetadata":
+                                    metadata.pop('scriptspecificmetadata')})
+
     @classmethod
     def get_supported_element_names(cls):
         elements = super(ScriptMetaData, cls).get_supported_element_names()
