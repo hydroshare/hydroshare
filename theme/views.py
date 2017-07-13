@@ -216,12 +216,8 @@ def update_user_profile(request):
                         raise ValidationError("Passwords do not match.")
 
                 profile = profile_form.save(commit=False)
-                organization_name = request.POST['organization']
-                organization = Organization.objects.filter(name=organization_name).first()
-                if organization is None:
-                    organization = Organization.objects.create(name=organization_name)
-                profile.organization = organization
                 profile.user = request.user
+                profile.highest_degree_completed = request.POST['highest_degree_completed']
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation

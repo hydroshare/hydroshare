@@ -277,6 +277,7 @@ class SignupForm(forms.ModelForm):
 
         user.userprofile.title = self.request.POST['title']
         user.userprofile.organization = self.request.POST['organization']
+        user.userprofile.highest_degree_completed = self.request.POST['highest_degree_completed']
         user.userprofile.save()
 
         return user

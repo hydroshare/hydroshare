@@ -162,7 +162,7 @@
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
                                         <label>Organization</label>
-                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %} value="{{ profile.organization.name }}" {% endif %} name="organization" data-autocomplete-choice-selector="[data-value]">
+                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %} value="{{ profile.organization }}" {% endif %} name="organization" data-autocomplete-choice-selector="[data-value]">
                                         <small class="text-muted">The name of the organization you work for.</small>
                                     </fieldset>
 
@@ -174,6 +174,29 @@
                                             Professor, Software Developer.
                                         </small>
                                     </fieldset>
+                                </div>
+
+                                <div class="row">
+                                  <fieldset class="col-sm-12">
+                                    <label>Highest Degree Completed</label>
+                                    <select name="highest_degree_completed" class="form-control">
+                                      <option
+                                          {% if profile.highest_degree_completed == "high_school" %}selected{% endif %}
+                                          value="high_school">High School Diploma</option>
+                                      <option
+                                          {% if profile.highest_degree_completed == "associates" %}selected{% endif %}
+                                          value="associates">Associate Degree</option>
+                                      <option
+                                          {% if profile.highest_degree_completed == "bachelors" %}selected{% endif %}
+                                          value="bachelors">Bachelors Degree</option>
+                                      <option
+                                          {% if profile.highest_degree_completed == "masters" %}selected{% endif %}
+                                          value="masters">Masters Degree</option>
+                                      <option
+                                          {% if profile.highest_degree_completed == "doctorate" %}selected{% endif %}
+                                          value="doctorate">Doctorate / Postdoc</option>
+                                    </select>
+                                  </fieldset>
                                 </div>
 
                                 <div class="row">
