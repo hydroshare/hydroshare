@@ -6,7 +6,8 @@ RUN pip install --upgrade pip && pip install \
   robot_detection \
   django-ipware \
   django-test-without-migrations \
-  django-rest-swagger
+  django-rest-swagger \
+  django-autocomplete-light
 ### End - HydroShare Development Image Additions ###
 
 USER root

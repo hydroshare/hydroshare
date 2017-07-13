@@ -21,6 +21,8 @@ from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
 
+import autocomplete_light
+
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
 
@@ -261,7 +263,8 @@ class SignupForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         data = self.cleaned_data
-        return create_account(
+
+        user = create_account(
             email=data['email'],
             username=data['username'],
             first_name=data['first_name'],
@@ -270,6 +273,13 @@ class SignupForm(forms.ModelForm):
             password=data['password'],
             active=False,
         )
+
+
+        user.userprofile.title = self.request.POST['title']
+        user.userprofile.organization = self.request.POST['organization']
+        user.userprofile.save()
+
+        return user
 
 
 class UserForm(forms.ModelForm):
@@ -303,12 +313,8 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(autocomplete_light.ModelForm):
-    state = USStateField(required=False)
-    # organization = autocomplete_light.ModelChoiceField('OrganizationAutocomplete')
     organization = forms.CharField()
 
-
-class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account', 'organization']
