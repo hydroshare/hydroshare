@@ -245,7 +245,7 @@ class ToolIcon(AbstractMetaDataElement):
             raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               fromat(response.status_code))
+                               format(response.status_code))
         image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
@@ -300,6 +300,61 @@ class ToolMetaData(CoreMetaData):
     @property
     def resource(self):
         return ToolResource.objects.filter(object_id=self.id).first()
+
+    @property
+    def url_base(self):
+        return self.url_bases.all().first()
+
+    @property
+    def version(self):
+        return self.versions.all().first()
+
+    @property
+    def supported_resource_types(self):
+        return self.supported_res_types.all().first()
+        
+    @property
+    def supported_sharing_statuses(self):
+        return self.supported_sharing_status.all().first()
+
+    @property
+    def app_home_page_url(self):
+        return self.homepage_url.all().first()
+
+    @property
+    def app_icon(self):
+        return self.tool_icon.all().first()
+
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ToolMetaDataSerializer
+        return ToolMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'requesturlbase' in keys_to_update:
+            parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
+
+        if 'toolversion' in keys_to_update:
+            parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
+
+        if 'toolicon' in keys_to_update:
+            parsed_metadata.append({"toolicon": metadata.pop('toolicon')})
+
+        if 'apphomepageurl' in keys_to_update:
+            parsed_metadata.append({"apphomepageurl": metadata.pop('apphomepageurl')})
+
+        if 'supportedrestypes' in keys_to_update:
+            parsed_metadata.append({"supportedrestypes": metadata.pop('supportedrestypes')})
+
+        if 'supportedsharingstatuses' in keys_to_update:
+            parsed_metadata.append({"supportedsharingstatus":
+                                    metadata.pop('supportedsharingstatuses')})
 
     @classmethod
     def get_supported_element_names(cls):
