@@ -840,6 +840,155 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.resource.delete()
 
+    def test_put_scimeta_SWATModelInstance_resource_with_core_metadata(self):
+        # testing bulk metadata update that includes both core metadata and resource specific
+        # metadata update
+
+        # create a SWAT model resource
+        self._create_resource(resource_type="SWATModelInstanceResource")
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "title": "New Title",
+            "description": "New Description",
+            "subjects": [
+                {"value": "subject1"},
+                {"value": "subject2"},
+                {"value": "subject3"}
+            ],
+            "contributors": [{
+                "name": "Test Name 1",
+                "organization": "Org 1"
+            }, {
+                "name": "Test Name 2",
+                "organization": "Org 2"
+            }],
+            "creators": [{
+                "name": "Creator",
+                "organization": None
+            }],
+            "coverages": [{
+                "type": "box",
+                "value": {
+                    "northlimit": 43.19716728247476,
+                    "projection": "WGS 84 EPSG:4326",
+                    "name": "A whole bunch of the atlantic ocean",
+                    "units": "Decimal degrees",
+                    "southlimit": 23.8858376999,
+                    "eastlimit": -19.16015625,
+                    "westlimit": -62.75390625
+                }
+            }],
+            "dates": [
+                {
+                    "type": "valid",
+                    "start_date": "2016-12-07T00:00:00Z",
+                    "end_date": "2018-12-07T00:00:00Z"
+                }
+            ],
+            "language": "fre",
+            "rights": "CCC",
+            "sources": [
+                {
+                    "derived_from": "Source 3"
+                },
+                {
+                    "derived_from": "Source 2"
+                }
+            ],
+            "modeloutput": {"includes_output": False},
+            "executedby": {"model_name": "id of a an existing model program resource"},
+            "modelobjective": {
+                "swat_model_objectives": ["BMPs", "Hydrology", "Water quality"],
+                "other_objectives": "some other objectives"
+            },
+            "simulationtype": {
+                "simulation_type_name": "Normal Simulation"
+            },
+            "modelmethod": {
+                "runoffCalculationMethod": "A test calculation method",
+                "flowRoutingMethod": "A test flow routing method",
+                "petEstimationMethod": "A test estimation method"
+            },
+            "modelparameter": {
+                "model_parameters": ["Crop rotation", "Tillage operation"],
+                "other_parameters": "some other model parameters"
+            },
+            "modelinput": {
+                "warmupPeriodValue": 10,
+                "rainfallTimeStepType": "Daily",
+                "rainfallTimeStepValue": 5,
+                "routingTimeStepType": "Daily",
+                "routingTimeStepValue": 2,
+                "simulationTimeStepType": "Hourly",
+                "simulationTimeStepValue": 1,
+                "watershedArea": 1000,
+                "numberOfSubbasins": 200,
+                "numberOfHRUs": 10000,
+                "demResolution": 30,
+                "demSourceName": "Unknown",
+                "demSourceURL": "http://dem-source.org",
+                "landUseDataSourceName": "Unknown",
+                "landUseDataSourceURL": "http://land-data.org",
+                "soilDataSourceName": "Unknown",
+                "soilDataSourceURL": "http://soil-data.org"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
+
+    def test_put_scimeta_SWATModelInstance_resource_without_core_metadata(self):
+        # testing bulk metadata update that includes only resource specific
+        # metadata update
+
+        # create a SWAT model resource
+        self._create_resource(resource_type="SWATModelInstanceResource")
+        sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(
+            res_id=self.resource.short_id)
+        put_data = {
+            "modeloutput": {"includes_output": False},
+            "executedby": {"model_name": "id of a an existing model program resource"},
+            "modelobjective": {
+                "swat_model_objectives": ["BMPs", "Hydrology", "Water quality"],
+                "other_objectives": "some other objectives"
+            },
+            "simulationtype": {
+                "simulation_type_name": "Normal Simulation"
+            },
+            "modelmethod": {
+                "runoffCalculationMethod": "A test calculation method",
+                "flowRoutingMethod": "A test flow routing method",
+                "petEstimationMethod": "A test estimation method"
+            },
+            "modelparameter": {
+                "model_parameters": ["Crop rotation", "Tillage operation"],
+                "other_parameters": "some other model parameters"
+            },
+            "modelinput": {
+                "warmupPeriodValue": 10,
+                "rainfallTimeStepType": "Daily",
+                "rainfallTimeStepValue": 5,
+                "routingTimeStepType": "Daily",
+                "routingTimeStepValue": 2,
+                "simulationTimeStepType": "Hourly",
+                "simulationTimeStepValue": 1,
+                "watershedArea": 1000,
+                "numberOfSubbasins": 200,
+                "numberOfHRUs": 10000,
+                "demResolution": 30,
+                "demSourceName": "Unknown",
+                "demSourceURL": "http://dem-source.org",
+                "landUseDataSourceName": "Unknown",
+                "landUseDataSourceURL": "http://land-data.org",
+                "soilDataSourceName": "Unknown",
+                "soilDataSourceURL": "http://soil-data.org"
+            }
+        }
+        response = self.client.put(sysmeta_url, put_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.resource.delete()
+
     def _create_resource(self, resource_type, file_to_upload=None):
         files = ()
         if file_to_upload is not None:
