@@ -949,11 +949,11 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                         'numberOfHRUs': 'j',
                                         'demResolution': 'k',
                                         'demSourceName': 'l',
-                                        'demSourceURL': 'm',
+                                        'demSourceURL': 'http://dem-source.org',
                                         'landUseDataSourceName': 'n',
-                                        'landUseDataSourceURL': 'o',
+                                        'landUseDataSourceURL': 'http://land-data.org',
                                         'soilDataSourceName': 'p',
-                                        'soilDataSourceURL': 'q'}})
+                                        'soilDataSourceURL': 'http://soil-data.org'}})
 
         self.resSWATModelInstance.metadata.update(metadata, self.user)
 
