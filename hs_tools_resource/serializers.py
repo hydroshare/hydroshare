@@ -63,7 +63,8 @@ class ToolMetaDataSerializer(CoreMetaDataSerializer):
     version = ToolVersionMetaDataSerializer(required=False, many=False)
     supported_resource_types = SupportedResTypesMetaDataSerializer(required=False, many=False)
     app_icon = ToolIconMetaDataSerializer(required=False, many=False)
-    supported_sharing_statuses = SupportedSharingStatusMetaDataSerializer(required=False, many=False)
+    supported_sharing_statuses = SupportedSharingStatusMetaDataSerializer(required=False,
+                                                                          many=False)
     app_home_page_url = AppHomePageUrlMetaDataSerializer(required=False, many=False)
 
     class Meta:

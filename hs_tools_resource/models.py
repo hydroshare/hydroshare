@@ -312,7 +312,7 @@ class ToolMetaData(CoreMetaData):
     @property
     def supported_resource_types(self):
         return self.supported_res_types.all().first()
-        
+
     @property
     def supported_sharing_statuses(self):
         return self.supported_sharing_status.all().first()
