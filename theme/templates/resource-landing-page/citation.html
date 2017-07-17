@@ -21,92 +21,128 @@
                 {% if rights.statement or rights.url %}
                     <div id="rights">
                         {% if rights.statement %}
-                            <span class="rights-text">{{ rights.statement|remove_last_char }} License.</span>
-                        {% endif %}
-
-                                {% if rights.url %}
-                                    <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
-                                {% endif %}
-                            </div>
-                            {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
-                            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
-                            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
-                            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
-                            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
-                            {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                            {% if rights.statement|length > 1000 %}
+                                <div class="pre-scrollable">
+                                    <span>{{ rights.statement|linebreaks }}</span>
+                                </div>
+                            {% else %}
+                                <span>{{ rights.statement|linebreaks }}</span>
                             {% endif %}
                         {% endif %}
-                    {% else %}
-                        <div class="row">
-                            <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
-                                  id="id-rights" method="post">
-                                {% csrf_token %}
-                                <fieldset>
-                                    <div class="col-md-6">
-                                        <span for="select_license"> Select a license </span>
-                                                <span data-toggle="tooltip" data-placement="auto"
-                                                      title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
-                                                      class="glyphicon glyphicon-info-sign text-muted"></span>
-                                        <select id="select_license" class="form-control">
-                                            <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
-                                            <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
-                                            <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
-                                            <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
-                                            <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
-                                            <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                        <img id="img-badge" class="cc-image"
-                                                {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
-                                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
-                                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
-                                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
-                                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
-                                                {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
-                                             src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
-                                                {% endif %}/>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div id="div_id_statement" class="control-group">
-                                            <span for="id_statement"> Statement</span>
 
-                                            <div class="controls">
-                                                    <textarea class="form-control input-sm textarea" cols="40"
-                                                              id="id_statement" name="statement" readonly="True">{{ cm.metadata.rights.statement }}</textarea>
-                                            </div>
-                                        </div>
-                                        <div id="div_id_url" class="control-group">
-                                            <span for="id_url">Url</span>
-
-                                            <div class="controls">
-                                                <input class="form-control input-sm urlinput" id="id_url"
-                                                       maxlength="200" name="url" readonly="True" type="url"
-                                                       value={{ cm.metadata.rights.url }}>
-                                            </div>
-                                        </div>
-
-                                <button type="button" class="btn btn-primary pull-right btn-form-submit"
-                                        style="display: none;">Save changes
-                                </button>
+                        {% if rights.url %}
+                            <span class="rights-url"><a href="{{ rights.url }}">&nbsp;{{ rights.url }}</a></span>
+                        {% endif %}
+                    </div>
+                        {% if rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"/>
+                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"/>
+                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"/>
+                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"/>
+                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"/>
+                        {% elif rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                            <img class="cc-image" src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"/>
+                        {% endif %}
+                {% endif %}
+            {% else %}
+                <div class="row">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/rights/{{ cm.metadata.rights.id }}/update-metadata/"#}
+                          id="id-rights" method="post">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div class="col-md-6">
+                                <span for="select_license"> Select a license </span>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Information about rights held in and over the HydroShare resource. (e.g. Creative commons Attribution License)'
+                                              class="glyphicon glyphicon-info-sign text-muted"></span>
+                                <select id="select_license" class="form-control">
+                                    <option value="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution CC BY</option>
+                                    <option value="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike CC BY-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nd/4.0/">Creative Commons Attribution-NoDerivs CC BY-ND</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NoCommercial CC BY-NC</option>
+                                    <option value="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <img id="img-badge" class="cc-image"
+                                        {% if cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution CC BY." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY.png" alt="CC-BY"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-ShareAlike CC BY-SA." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-SA.png" alt="CC-BY-SA"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoDerivs CC BY-ND." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-ND.png" alt="CC-BY-ND"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-ShareAlike CC BY-NC-SA." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-SA.png" alt="CC-BY-NC-SA"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial CC BY-NC." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC.png" alt="CC-BY-NC"
+                                        {% elif cm.metadata.rights.statement == "This resource is shared under the Creative Commons Attribution-NoCommercial-NoDerivs CC BY-NC-ND." %}
+                                     src="{{ STATIC_URL }}img/cc-badges/CC-BY-NC-ND.png" alt="CC-BY-NC-ND"
+                                        {% endif %}/>
                             </div>
+                            <div class="col-md-6">
+                                <div id="div_id_statement" class="control-group">
+                                    <span for="id_statement"> Statement</span>
+
+                                    <div class="controls">
+                                            <textarea class="form-control input-sm textarea" cols="40"
+                                                      id="id_statement" name="statement" readonly="True">{{ cm.metadata.rights.statement }}</textarea>
+                                    </div>
+                                </div>
+                                <div id="div_id_url" class="control-group">
+                                    <span for="id_url">Url</span>
+
+                                    <div class="controls">
+                                        <input class="form-control input-sm urlinput" id="id_url"
+                                               maxlength="200" name="url" readonly="True" type="url"
+                                               value={{ cm.metadata.rights.url }}>
+                                    </div>
+                                </div>
+
+                        <button type="button" class="btn btn-primary pull-right btn-form-submit"
+                                style="display: none;">Save changes
+                        </button>
+                    </div>
                         </fieldset>
                     </form>
                 </div>
             {% endif %}
         </div>
+        <div class="col-xs-12">
+            {#   Require license agreement for file download flag    #}
+            {% if is_owner_user %}
+                <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                      method="POST">
+                    {% csrf_token %}
 
-        <div id="sharing-status" class="col-xs-12">
+                    <input name="t" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
+                           {% else %}value="make_require_lic_agreement"{% endif %}/>
+
+                    <br>
+                    <div class="input-group" data-toggle="tooltip" title="When checked, users need to agree before they can download any content files or resource bag.">
+                      <span class="input-group-addon">
+                        <input id="btn-lic-agreement" type="checkbox"
+                                      {% if cm.raccess.require_download_agreement %}checked{% endif %}>
+                      </span>
+                      <span class="form-control">Require agreement to rights statement before downloading</span>
+                    </div><!-- /input-group -->
+                </form>
+            {% else %}
+                {% if cm.raccess.require_download_agreement %}
+                    <br>
+                    <li class="list-group-item">
+                    <div>
+                        <span class="glyphicon glyphicon-download-alt"></span>
+                         <span>Downloads require agreement to resource rights statement</span>
+                    </div>
+                    </li>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div id="sharing-status" class="col-xs-12 pull-left">
             <br>
             <h4>Sharing status:</h4>
             {% if can_change_resource_flags %}

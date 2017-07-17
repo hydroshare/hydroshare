@@ -135,11 +135,17 @@
                         {% endif %}
 
                     {% endif %}
-                    <li id="btn-download" data-menu-name="download">
-                        <span class="glyphicon glyphicon-download icon-blue"></span>
-                        <span>Download</span>
-                    </li>
-
+                    {% if cm.raccess.require_download_agreement %}
+                        <li id="btn-download-with-agreement" data-menu-name="download" data-toggle="modal" data-target="#license-agree-dialog-file">
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
+                        </li>
+                    {% else %}
+                        <li id="btn-download" data-menu-name="download" >
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
+                        </li>
+                    {% endif %}
                     <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
@@ -560,8 +566,13 @@
                         {% endif %}
                         {% for b in cm.bags.all %}
                             <div>
+                            {% if cm.raccess.require_download_agreement %}
                                 <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                   href="{{ bag_url }}">
+                                data-target="#license-agree-dialog-bag" data-toggle="modal" data-placement="auto">
+                            {% else %}
+                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                                   href="{{ cm.bag_url }}">
+                            {% endif %}
                                 <span class="glyphicon glyphicon-download-alt">
                                     <span title='Download All Content as Zipped BagIt Archive'
                                           class="button-label">Download All Content as Zipped BagIt Archive</span>

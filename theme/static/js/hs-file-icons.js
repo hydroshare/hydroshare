@@ -34,6 +34,12 @@ function getFileIcons() {
     fileIcons.JS = fileIcons.PY = fileIcons.PHP = fileIcons.JAVA = fileIcons.CS =
         "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
 
+    fileIcons.SHP =
+        "<span class='fa-stack fb-stack fb-stack-shape'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i class='fa fa-globe fa-stack-1x'></i>" +
+        "</span>";
+
     fileIcons.SQLITE =
         "<span class='fa-stack fb-stack fb-stack-database'>" +
         "<i class='fa fa-file-o fa-stack-2x '></i>" +
