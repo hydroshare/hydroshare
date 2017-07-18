@@ -1098,7 +1098,7 @@ class Coverage(AbstractMetaDataElement):
                 value_arg_dict = json.loads(kwargs['_value'])
 
             if value_arg_dict is not None:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
+                cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
                     value_dict = {k: v for k, v in value_arg_dict.iteritems()
@@ -1142,7 +1142,7 @@ class Coverage(AbstractMetaDataElement):
         if 'type' in kwargs:
             changing_coverage_type = cov.type != kwargs['type']
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                cls.validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
             else:
                 raise ValidationError('Coverage value is missing.')
 
@@ -1233,7 +1233,7 @@ class Coverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     @classmethod
-    def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
+    def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
         if coverage_type == 'period':
             # check that all the required sub-elements exist
@@ -3616,6 +3616,15 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
+    @classmethod
+    def get_form_errors_as_string(cls, form):
+        """Helper method to generate a string from form.errors
+        :param  form: an instance of Django Form class
+        """
+        error_string = ", ".join(key + ":" + form.errors[key][0]
+                                 for key in form.errors.keys())
+        return error_string
+
     def set_dirty(self, flag):
         """Track whethrer metadata object is dirty.
 
@@ -3736,12 +3745,65 @@ class CoreMetaData(models.Model):
         :param  user: user who is updating metadata
         :return:
         """
+        from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
+            SourceValidationForm, RelationValidationForm
+
+        validation_forms_mapping = {'title': TitleValidationForm,
+                                    'description': AbstractValidationForm,
+                                    'language': LanguageValidationForm,
+                                    'rights': RightsValidationForm,
+                                    'creator': CreatorValidationForm,
+                                    'contributor': ContributorValidationForm,
+                                    'source': SourceValidationForm,
+                                    'relation': RelationValidationForm
+                                    }
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
                 self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
+                subjects = []
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if element_name == 'subject':
+                            subject_data = dict_item['subject']
+                            if 'value' not in subject_data:
+                                raise ValidationError("Subject value is missing")
+                            subjects.append(dict_item['subject']['value'])
+                            continue
+                        if element_name == 'coverage':
+                            coverage_data = dict_item[element_name]
+                            if 'type' not in coverage_data:
+                                raise ValidationError("Coverage type data is missing")
+                            if 'value' not in coverage_data:
+                                raise ValidationError("Coverage value data is missing")
+                            coverage_value_dict = coverage_data['value']
+                            coverage_type = coverage_data['type']
+                            Coverage.validate_coverage_type_value_attributes(coverage_type,
+                                                                              coverage_value_dict)
+                            continue
+
+                        else:
+                            validation_form = validation_forms_mapping[element_name](
+                                dict_item[element_name])
+
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            err_string += " element name:{}".format(element_name)
+                            raise ValidationError(err_string)
+                if subjects:
+                    subjects_set = set([s.lower() for s in subjects])
+                    if len(subjects_set) < len(subjects):
+                        raise ValidationError("Duplicate subject values found")
                 self.update_repeatable_element(element_name=element_name, metadata=metadata)
 
             # allow only updating or creating date element of type valid
