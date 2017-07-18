@@ -3781,6 +3781,13 @@ class CoreMetaData(models.Model):
                             subjects.append(dict_item['subject']['value'])
                             continue
                         if element_name == 'coverage':
+                            # coverage metadata is not allowed for update for composite
+                            # and time series resource
+                            if self.resource.resource_type in ("CompositeResource",
+                                                               "TimeSeriesResource"):
+                                err_msg = "Coverage metadata can't be updated for {} resource"
+                                err_msg = err_msg.format(self.resource.resource_type)
+                                raise ValidationError(err_msg)
                             coverage_data = dict_item[element_name]
                             if 'type' not in coverage_data:
                                 raise ValidationError("Coverage type data is missing")
