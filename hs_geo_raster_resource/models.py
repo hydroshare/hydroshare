@@ -467,6 +467,7 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
+        from forms import BandInfoValidationForm
         # update any core metadata
         super(RasterMetaData, self).update(metadata, user)
         # update resource specific metadata
@@ -489,6 +490,16 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
                     raise ValidationError("No matching band information element was found")
 
                 bandinfo_data.pop('original_band_name')
+                if 'name' not in bandinfo_data:
+                    bandinfo_data['name'] = band_element.name
+                if 'variableName' not in bandinfo_data:
+                    bandinfo_data['variableName'] = band_element.variableName
+                if 'variableUnit' not in bandinfo_data:
+                    bandinfo_data['variableUnit'] = band_element.variableUnit
+                validation_form = BandInfoValidationForm(bandinfo_data)
+                if not validation_form.is_valid():
+                    err_string = self.get_form_errors_as_string(validation_form)
+                    raise ValidationError(err_string)
                 self.update_element('bandinformation', band_element.id, **bandinfo_data)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
