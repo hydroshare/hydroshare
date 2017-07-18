@@ -3789,7 +3789,7 @@ class CoreMetaData(models.Model):
                             coverage_value_dict = coverage_data['value']
                             coverage_type = coverage_data['type']
                             Coverage.validate_coverage_type_value_attributes(coverage_type,
-                                                                              coverage_value_dict)
+                                                                             coverage_value_dict)
                             continue
 
                         else:

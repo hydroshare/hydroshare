@@ -450,6 +450,7 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
+        from forms import VariableValidationForm, OriginalCoverageValidationForm
         super(NetcdfMetaData, self).update(metadata, user)
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \
                            "content files"
@@ -462,9 +463,16 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                     coverage_data = dict_item['originalcoverage']
                     for key in ('datum', 'projection_string_type', 'projection_string_text'):
                         coverage_data.pop(key, None)
-
+                    if 'value' not in coverage_data:
+                        raise ValidationError("Coverage value data is missing")
                     if 'projection' in coverage_data['value']:
                         coverage_data['value'].pop('projection')
+                    coverage_value_dict = coverage_data.pop('value')
+                    validation_form = OriginalCoverageValidationForm(coverage_value_dict)
+                    coverage_data['value'] = coverage_value_dict
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
                     if self.originalCoverage:
                         self.update_element('originalcoverage', self.originalCoverage.id,
                                             **coverage_data)
@@ -486,7 +494,15 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                         raise ValidationError("No matching variable element was found")
                     for key in ('name', 'type', 'shape'):
                         variable_data.pop(key, None)
-
+                    variable_data['name'] = var_element.name
+                    variable_data['type'] = var_element.type
+                    variable_data['shape'] = var_element.shape
+                    if 'unit' not in variable_data:
+                        variable_data['unit'] = var_element.unit
+                    validation_form = VariableValidationForm(variable_data)
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
                     self.update_element('variable', var_element.id, **variable_data)
 
         # write updated metadata to netcdf file
