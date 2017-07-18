@@ -271,7 +271,7 @@ function bindFileBrowserItemEvents() {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
                     var destPath = destFolderPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
-                        callSources.push(sourcePath)
+                        callSources.push(sourcePath);
                     }
                 }
                 // use same entry point as cut/paste
