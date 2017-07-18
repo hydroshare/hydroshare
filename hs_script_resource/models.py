@@ -2,6 +2,7 @@ from lxml import etree
 
 from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -120,13 +121,23 @@ class ScriptMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
+        from forms import ScriptFormValidation
+
         super(ScriptMetaData, self).update(metadata, user)
         attribute_mappings = {'scriptspecificmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = ScriptFormValidation(dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
+                        break
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
 
