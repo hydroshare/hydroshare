@@ -2,6 +2,7 @@ from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -9,6 +10,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_core.hydroshare import utils
 
 from hs_model_program.models import ModelProgramResource
+
 
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
@@ -28,6 +30,7 @@ class ModelOutput(AbstractMetaDataElement):
             return "Yes"
         else:
             return "No"
+
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
@@ -166,14 +169,25 @@ class ModelInstanceMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
+        from forms import ModelOutputValidationForm, ExecutedByValidationForm
+
         super(ModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modeloutput': 'model_output', 'executedby': 'executed_by'}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
-
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if element_name == 'modeloutput':
+                            validation_form = ModelOutputValidationForm(dict_item[element_name])
+                        else:
+                            validation_form = ExecutedByValidationForm(dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
