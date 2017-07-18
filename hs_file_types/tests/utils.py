@@ -365,7 +365,7 @@ def assert_ref_time_series_file_type_metadata(self):
     # file level abstract
     self.assertEqual(logical_file.metadata.abstract, abstract)
     # there should be 2 time series
-    self.assertEqual(len(logical_file.metadata.time_serieses), 2)
+    self.assertEqual(len(logical_file.metadata.time_series_list), 2)
 
     # test site related metadata
 

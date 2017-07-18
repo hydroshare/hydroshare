@@ -351,7 +351,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def sample_mediums(self):
         """get a list of all sample mediums associated with this ref time series"""
         sample_mediums = []
-        for series in self.serieses:
+        for series in self.series_list:
             if "sampleMedium" in series:
                 if series['sampleMedium'] not in sample_mediums:
                     sample_mediums.append(series['sampleMedium'])
@@ -361,22 +361,22 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def value_counts(self):
         """get a list of all value counts associated with this ref time series"""
         value_counts = []
-        for series in self.serieses:
+        for series in self.series_list:
             if "valueCount" in series:
                 if series['valueCount'] not in value_counts:
                     value_counts.append(series['valueCount'])
         return value_counts
 
     @property
-    def serieses(self):
+    def series_list(self):
         json_data_dict = self._json_to_dict()
         return json_data_dict['timeSeriesReferenceFile']['referencedTimeSeries']
 
     @property
-    def time_serieses(self):
+    def time_series_list(self):
         """get a list of all time series associated with this ref time series"""
         ts_serieses = []
-        for series in self.serieses:
+        for series in self.series_list:
             st_date = parser.parse(series['beginDate'])
             st_date = st_date.strftime('%m-%d-%Y')
             end_date = parser.parse(series['endDate'])
@@ -414,7 +414,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """get a list of all sites associated with this ref time series"""
         sites = []
         site_codes = []
-        for series in self.serieses:
+        for series in self.series_list:
             site_dict = series['site']
             if site_dict['siteCode'] not in site_codes:
                 site = Site(name=site_dict['siteName'], code=site_dict['siteCode'],
@@ -430,7 +430,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """get a list of all variables associated with this ref time series"""
         variables = []
         variable_codes = []
-        for series in self.serieses:
+        for series in self.series_list:
             variable_dict = series['variable']
             if variable_dict['variableCode'] not in variable_codes:
                 variable = Variable(name=variable_dict['variableName'],
@@ -443,7 +443,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def methods(self):
         """get a list of all methods associated with this ref time series"""
         methods = []
-        for series in self.serieses:
+        for series in self.series_list:
             if 'method' in series:
                 method_dict = series['method']
                 method = Method(description=method_dict['methodDescription'],
@@ -456,7 +456,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """get a list of all web services associated with this ref time series"""
         services = []
         urls = []
-        for series in self.serieses:
+        for series in self.series_list:
             request_info = series['requestInfo']
             if request_info['url'] not in urls:
                 service = RefWebService(url=request_info['url'],
@@ -504,7 +504,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             panel_group_div = div(cls="panel-group", id="accordion")
             panel_group_div.add(p("Note: Time series are listed below by site name. "
                                   "Click on a site name to see details.", cls="col-xs-12"))
-            for index, series in enumerate(self.time_serieses):
+            for index, series in enumerate(self.time_series_list):
                 panel_group_div.add(series.get_html(index + 1))
 
         return root_div
@@ -549,8 +549,8 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
     def get_json_file_data_html(self):
         """
-        Generates html code to display the contents of the json file file. The generated html
-        is used for ref timeseries file type metadata view and edit modes.
+        Generates html code to display the contents of the json file. The generated html
+        is used for ref timeseries file type metadata in the view and edit modes.
         :return:
         """
 
@@ -559,8 +559,6 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         with json_file_content_div:
             legend("Reference Time Series JSON File Content", style="margin-top:20px;")
             p(json_res_file.full_path[33:])
-            # header_info = json.dumps(self.json_file_content, indent=4, sort_keys=True,
-            #                          separators=(',', ': '))
             header_info = self.json_file_content
             if isinstance(header_info, str):
                 header_info = unicode(header_info, 'utf-8')
@@ -575,7 +573,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         logical file type instance"""
 
         container_to_add_to = super(RefTimeseriesFileMetaData, self).add_to_xml_container(container)
-        for series in self.time_serieses:
+        for series in self.time_series_list:
             series.add_to_xml_container(container_to_add_to)
 
     def _json_to_dict(self):
@@ -730,9 +728,9 @@ def _extract_metadata(resource, logical_file):
 
     # add file level temporal coverage
     start_date = min([parser.parse(series['beginDate']) for series in
-                     logical_file.metadata.serieses])
+                      logical_file.metadata.series_list])
     end_date = max([parser.parse(series['endDate']) for series in
-                    logical_file.metadata.serieses])
+                    logical_file.metadata.series_list])
     if timezone.is_aware(start_date):
         start_date = timezone.make_naive(start_date)
     if timezone.is_aware(end_date):
@@ -742,9 +740,9 @@ def _extract_metadata(resource, logical_file):
 
     # add file level spatial coverage
     # check if we have single site or multiple sites
-    sites = set([series['site']['siteCode'] for series in logical_file.metadata.serieses])
+    sites = set([series['site']['siteCode'] for series in logical_file.metadata.series_list])
     if len(sites) == 1:
-        series = logical_file.metadata.serieses[0]
+        series = logical_file.metadata.series_list[0]
         value_dict = {'east': series['site']['longitude'],
                       'north': series['site']['latitude'],
                       'projection': 'Unknown',
@@ -753,7 +751,7 @@ def _extract_metadata(resource, logical_file):
     else:
         bbox = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
                 'projection': 'Unknown', 'units': "Decimal degrees"}
-        for series in logical_file.metadata.serieses:
+        for series in logical_file.metadata.series_list:
             latitude = float(series['site']['latitude'])
             if bbox['northlimit'] < latitude:
                 bbox['northlimit'] = latitude
