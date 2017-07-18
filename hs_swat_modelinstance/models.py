@@ -460,7 +460,9 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        from forms import ModelInputValidationForm
+        from forms import ModelInputValidationForm, ModelMethodValidationForm, \
+            SimulationTypeValidationForm, ModelObjectiveValidationForm, \
+            ModelParameterValidationForm, ModelOutputValidationForm, ExecutedByValidationForm
         super(SWATModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modelobjective': 'model_objective',
                               'simulationtype': 'simulation_type',
@@ -469,16 +471,23 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                               'modelinput': 'model_input',
                               'modeloutput': 'model_output',
                               'executedby': 'executed_by'}
+        validation_forms_mapping = {'modelobjective': ModelObjectiveValidationForm,
+                                    'simulationtype': SimulationTypeValidationForm,
+                                    'modelmethod': ModelMethodValidationForm,
+                                    'modelparameter': ModelParameterValidationForm,
+                                    'modelinput': ModelInputValidationForm,
+                                    'modeloutput': ModelOutputValidationForm,
+                                    'executedby': ExecutedByValidationForm}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                # TODO: form validation for other elements need to be done
-                if element_name == "modelinput":
-                    for dict_item in metadata:
-                        if element_name in dict_item:
-                            validation_form = ModelInputValidationForm(dict_item[element_name])
-                            if not validation_form.is_valid():
-                                raise ValidationError(validation_form.errors.as_json())
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
                 element_property_name = attribute_mappings[element_name]
                 self.update_non_repeatable_element(element_name, metadata, element_property_name)
 
