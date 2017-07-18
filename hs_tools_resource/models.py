@@ -413,17 +413,35 @@ class ToolMetaData(CoreMetaData):
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
+        from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
+
         # update resource specific metadata
+
+        def validate_form(form):
+            if not form.is_valid():
+                err_string = self.get_form_errors_as_string(form)
+                raise ValidationError(err_string)
+
         with transaction.atomic():
             for dict_item in metadata:
                 if 'supportedrestypes' in dict_item:
+                    validation_form = SupportedResTypesValidationForm(
+                        dict_item['supportedrestypes'])
+                    validate_form(validation_form)
                     self.create_element('supportedrestypes', **dict_item['supportedrestypes'])
                 elif 'supportedsharingstatus' in dict_item:
+                    validation_form = SupportedSharingStatusValidationForm(
+                        dict_item['supportedsharingstatus'])
+                    validate_form(validation_form)
                     self.create_element('supportedsharingstatus',
                                         **dict_item['supportedsharingstatus'])
                 elif 'requesturlbase' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['requesturlbase'])
+                    validate_form(validation_form)
                     request_url = self.url_bases.all().first()
                     if request_url is not None:
                         self.update_element('requesturlbase', request_url.id,
@@ -431,6 +449,8 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'toolversion' in dict_item:
+                    validation_form = VersionValidationForm(dict_item['toolversion'])
+                    validate_form(validation_form)
                     tool_version = self.versions.all().first()
                     if tool_version is not None:
                         self.update_element('toolversion', tool_version.id,
@@ -438,13 +458,16 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('toolversion', **dict_item['toolversion'])
                 elif 'toolicon' in dict_item:
+                    validation_form = ToolIconValidationForm(dict_item['toolicon'])
+                    validate_form(validation_form)
                     tool_icon = self.tool_icon.all().first()
                     if tool_icon is not None:
-                        self.update_element('toolicon', tool_icon.id,
-                                            **dict_item['toolicon'])
+                        self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
                     else:
                         self.create_element('toolicon', **dict_item['toolicon'])
                 elif 'apphomepageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['apphomepageurl'])
+                    validate_form(validation_form)
                     app_url = self.homepage_url.all().first()
                     if app_url is not None:
                         self.update_element('apphomepageurl', app_url.id,

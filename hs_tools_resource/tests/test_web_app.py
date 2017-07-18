@@ -301,11 +301,11 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
 
         # create 1 AppHomePageUrl obj with required params
-        metadata.append({'apphomepageurl': {'value': 'https://my_web_app.com'}})
+        metadata.append({'apphomepageurl': {'value': 'https://mywebapp.com'}})
         # do the bulk metadata update
         self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
-        self.assertEqual(AppHomePageUrl.objects.first().value, 'https://my_web_app.com')
+        self.assertEqual(AppHomePageUrl.objects.first().value, 'https://mywebapp.com')
         self.resWebApp.delete()
 
     def test_utils(self):

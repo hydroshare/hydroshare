@@ -1078,7 +1078,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "value": "https://www.hydroshare.org/static/img/logo-sm.png"
             },
             "apphomepageurl": {
-                "value": "https://my_web_app.com"
+                "value": "https://mywebapp.com"
             }
         }
 
@@ -1111,7 +1111,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "value": "https://www.hydroshare.org/static/img/logo-sm.png"
             },
             "apphomepageurl": {
-                "value": "https://my_web_app.com"
+                "value": "https://mywebapp.com"
             }
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
