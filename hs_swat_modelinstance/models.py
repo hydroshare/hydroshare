@@ -488,8 +488,9 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                         if not validation_form.is_valid():
                             err_string = self.get_form_errors_as_string(validation_form)
                             raise ValidationError(err_string)
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
 

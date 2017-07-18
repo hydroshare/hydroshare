@@ -747,6 +747,12 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method
+        from forms import StudyAreaValidationForm, GridDimensionsValidationForm, \
+            StressPeriodValidationForm, GroundWaterFlowValidationForm, \
+            BoundaryConditionValidationForm, ModelCalibrationValidationForm, \
+            GeneralElementsValidationForm, ModelOutputValidationForm, ExecutedByValidationForm, \
+            ModelInputValidationForm
+
         super(MODFLOWModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'studyarea': 'study_area',
                               'griddimensions': 'grid_dimensions',
@@ -756,14 +762,40 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                               'modelcalibration': 'model_calibration',
                               'generalelements': 'general_elements',
                               'modeloutput': 'model_output', 'executedby': 'executed_by'}
+
+        validation_forms_mapping = {'studyarea': StudyAreaValidationForm,
+                                    'griddimensions': GridDimensionsValidationForm,
+                                    'stressperiod': StressPeriodValidationForm,
+                                    'groundwaterflow': GroundWaterFlowValidationForm,
+                                    'boundarycondition': BoundaryConditionValidationForm,
+                                    'modelcalibration': ModelCalibrationValidationForm,
+                                    'generalelements': GeneralElementsValidationForm,
+                                    'modeloutput': ModelOutputValidationForm,
+                                    'executedby': ExecutedByValidationForm}
+
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
             # update possibly only one repeatable element 'modelinput'
-            self.update_repeatable_element(element_name='modelinput', metadata=metadata,
+            element_name = 'modelinput'
+            for dict_item in metadata:
+                if element_name in dict_item:
+                    validation_form = ModelInputValidationForm(dict_item[element_name])
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
+            self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                            property_name='model_inputs')
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
