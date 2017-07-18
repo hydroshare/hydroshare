@@ -1,12 +1,16 @@
+from dateutil import parser
+
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.auth.models import User, Group
 from django.db import models, transaction
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
+from django.core.exceptions import ValidationError
+
 from mezzanine.pages.page_processors import processor_for
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core.signals import *
+
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
+
 from lxml import etree
+
 
 class MpMetadata(AbstractMetaDataElement):
     term = "MpMetadata"
@@ -56,8 +60,6 @@ class MpMetadata(AbstractMetaDataElement):
                                           blank=True, max_length=400,
                                           help_text='Uploaded archive containing model software (source code, executable, etc.)' )
 
-
-
     def __unicode__(self):
         self.modelVersion
 
@@ -68,10 +70,13 @@ class MpMetadata(AbstractMetaDataElement):
 
     def get_software_list(self):
         return self.modelSoftware.split(';')
+
     def get_documentation_list(self):
         return self.modelDocumentation.split(';')
+
     def get_releasenotes_list(self):
         return self.modelReleaseNotes.split(';')
+
     def get_engine_list(self):
         return self.modelEngine.split(';')
 
@@ -133,13 +138,32 @@ class ModelProgramMetaData(CoreMetaData):
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
+        from forms import ModelProgramMetadataValidationForm
+
         super(ModelProgramMetaData, self).update(metadata, user)
         attribute_mappings = {'mpmetadata': 'program'}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if 'modelReleaseDate' in dict_item[element_name]:
+                            release_date = dict_item[element_name]['modelReleaseDate']
+                            if isinstance(release_date, basestring):
+                                try:
+                                    release_date = parser.parse(release_date)
+                                except ValueError:
+                                    raise ValidationError("Invalid modelReleaseDate")
+                                dict_item[element_name]['modelReleaseDate'] = release_date
+                        validation_form = ModelProgramMetadataValidationForm(
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                    element_property_name = attribute_mappings[element_name]
+                    self.update_non_repeatable_element(element_name, metadata,
+                                                       element_property_name)
+                    break
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
 
