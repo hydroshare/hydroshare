@@ -1342,7 +1342,7 @@ class Coverage(AbstractMetaDataElement):
                             get_th('North')
                             td(self.value['north'])
                         with tr():
-                            get_th('Eest')
+                            get_th('East')
                             td(self.value['east'])
             else:
                 legend('Temporal Coverage')
@@ -3059,34 +3059,28 @@ class ResourceFile(ResourceFileIRODSMixin):
     @property
     def extension(self):
         """Return extension of resource file."""
-        from .hydroshare.utils import get_resource_file_name_and_extension
-        return get_resource_file_name_and_extension(self)[2]
+        _, file_ext = os.path.splitext(self.storage_path)
+        return file_ext
 
-    # TODO: these are much simpler than this now. use storage_path, short_path, etc.
     @property
     def dir_path(self):
         """Return directory path of resource file."""
-        from .hydroshare.utils import get_resource_file_name_and_extension
-        return os.path.dirname(get_resource_file_name_and_extension(self)[0])
+        return os.path.dirname(self.storage_path)
 
     @property
     def full_path(self):
         """Return full path of resource file."""
-        # from .hydroshare.utils import get_resource_file_name_and_extension
-        # return get_resource_file_name_and_extension(self)[0]
         return self.storage_path
 
     @property
     def file_name(self):
         """Return filename of resource file."""
-        # from .hydroshare.utils import get_resource_file_name_and_extension
-        # return get_resource_file_name_and_extension(self)[1]
         return os.path.basename(self.storage_path)
 
     @property
     def can_set_file_type(self):
         """Check if file type can be set for this resource file instance."""
-        return self.extension in ('.tif', '.zip', '.nc', '.shp') and \
+        return self.extension in ('.tif', '.zip', '.nc', '.shp', '.refts') and \
             (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
 
     @property
