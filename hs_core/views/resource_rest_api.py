@@ -353,6 +353,8 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     :param  types: (optional) - to get a list of resources of the specified resource types
     :param  from_date: (optional) - to get a list of resources created on or after this date
     :param  to_date: (optional) - to get a list of resources created on or before this date
+    :param  include_obsolete: (optional) - default is False which means the returned resource list
+    does not include obsoleted resource; if set to True, obsoleted resource will be included
     :param  edit_permission: (optional) - to get a list of resources for which the authorised user
     has edit permission
     :rtype:  json string
@@ -526,7 +528,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             filter_parms['type'] = list(filter_parms['type'])
 
         filter_parms['public'] = not self.request.user.is_authenticated()
-
         filtered_res_list = []
 
         for r in hydroshare.get_resource_list(**filter_parms):
@@ -758,7 +759,7 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET')
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)

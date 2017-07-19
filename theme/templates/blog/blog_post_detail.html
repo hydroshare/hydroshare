@@ -27,7 +27,7 @@
     {% if blog_post.featured_video or blog_post.featured_image %}
     {% if blog_post.featured_video %}
     <div class="video-blog img-blog-detail">
-        {{ blog_post.featured_video|safe }}
+        {{ blog_post.featured_video }}
     </div>
     {% elif blog_post.featured_image %}
     <img class="img-responsive img-blog-detail" src="{{ MEDIA_URL }}{% thumbnail blog_post.featured_image 750 0 %}">
@@ -70,7 +70,7 @@
     <div class="blog">
         {% block blog_post_detail_post_content %}
         {% editable blog_post.content %}
-        {{ blog_post.content|richtext_filters|safe }}
+        {{ blog_post.content|richtext_filters }}
         {% endeditable %}
         {% endblock %}   
     </div>

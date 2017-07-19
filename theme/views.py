@@ -165,9 +165,9 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                 else:
                     send_verification_mail(request, new_user, "signup_verify")
                     info(request, _("A verification email has been sent with "
-                                    "a link for activating your account. If you "
-                                    "do not receive this email please check your "
-                                    "spam folder as sometimes the confirmation email "
+                                    "a link that must be clicked prior to your account "
+                                    "being activated. If you do not receive this email please "
+                                    "check your spam folder as sometimes the confirmation email "
                                     "gets flagged as spam. If you entered an incorrect "
                                     "email address, please request an account again."))
                 return redirect(next_url(request) or "/")
@@ -306,10 +306,9 @@ def login(request, template="accounts/account_login.html",
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        # Comment out for now to hide quota info message until backend script is hooked up
-        # add_msg = get_quota_message(authenticated_user)
-        # if add_msg:
-        #    login_msg += add_msg
+        add_msg = get_quota_message(authenticated_user)
+        if add_msg:
+            login_msg += ' - ' + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)

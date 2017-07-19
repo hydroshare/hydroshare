@@ -12,7 +12,7 @@ from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUF
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
 
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile
 
 
 @login_required
@@ -24,7 +24,8 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
-    file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile}
+    file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile,
+                     'GeoFeature': GeoFeatureLogicalFile}
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"

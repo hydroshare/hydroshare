@@ -46,9 +46,9 @@ function drawInitialShape() {
     var resourceType = $("#resource-type").val();
     var spatialCoverageType = $("#spatial-coverage-type").val();
     // Center the map
-    if (shapeType || resourceType === "Time Series") {
+    if (shapeType || resourceType === "Time Series" || resourceType === "Composite Resource") {
         deleteAllShapes();
-        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+        if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite Resource" && spatialCoverageType == "point")) {
             var myLatLng;
             if (shapeType == "point") {
                 // resource view mode
@@ -83,7 +83,7 @@ function drawInitialShape() {
                 coverageMap.setCenter(marker.getPosition());
             });
         }
-        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+        else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite Resource" && spatialCoverageType == "box")) {
             var bounds;
             if (shapeType == "box") {
                 //resource view mode
@@ -175,7 +175,7 @@ function initMap() {
         // data-shape-type is set to have a value only in resource view mode
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
         resourceType = $("#resource-type").val();
-        if (resourceType === "Time Series" || resourceType === "Composite"){
+        if (resourceType === "Time Series" || resourceType === "Composite Resource"){
             // set to view mode
             shapeType = " ";
         }

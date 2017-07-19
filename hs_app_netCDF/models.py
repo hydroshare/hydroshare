@@ -1,7 +1,7 @@
 import json
 from lxml import etree
 
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 
@@ -429,7 +429,48 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             self.is_dirty = flag
             self.save()
 
-    def get_xml(self, pretty_print=True):
+    def update(self, metadata):
+        # overriding the base class update method for bulk update of metadata
+        super(NetcdfMetaData, self).update(metadata)
+        missing_file_msg = "Resource specific metadata can't be updated when there is no " \
+                           "content files"
+        with transaction.atomic():
+            # update/create non-repeatable element (originalcoverage)
+            for dict_item in metadata:
+                if 'originalcoverage' in dict_item:
+                    if not self.resource.files.all():
+                        raise ValidationError(missing_file_msg)
+                    coverage_data = dict_item['originalcoverage']
+                    for key in ('datum', 'projection_string_type', 'projection_string_text'):
+                        coverage_data.pop(key, None)
+
+                    if 'projection' in coverage_data['value']:
+                        coverage_data['value'].pop('projection')
+                    if self.originalCoverage:
+                        self.update_element('originalcoverage', self.originalCoverage.id,
+                                            **coverage_data)
+                    else:
+                        self.create_element('originalcoverage', **coverage_data)
+                    break
+
+            # update repeatable element (variable)
+            for dict_item in metadata:
+                if 'variable' in dict_item:
+                    if not self.resource.files.all():
+                        raise ValidationError(missing_file_msg)
+                    variable_data = dict_item['variable']
+                    if 'name' not in variable_data:
+                        raise ValidationError("Invalid variable data")
+                    # find the matching (lookup by name) variable element to update
+                    var_element = self.variables.filter(name=variable_data['name']).first()
+                    if var_element is None:
+                        raise ValidationError("No matching variable element was found")
+                    for key in ('name', 'type', 'shape'):
+                        variable_data.pop(key, None)
+
+                    self.update_element('variable', var_element.id, **variable_data)
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)

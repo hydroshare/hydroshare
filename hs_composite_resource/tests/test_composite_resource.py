@@ -13,7 +13,7 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, remove_folder
 
-from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile
+from hs_file_types.models import GenericLogicalFile, GeoRasterLogicalFile, GenericFileMetaData
 
 
 class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -91,7 +91,14 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # there should be 1 GenericLogicalFile object at this point
         self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # there should be 1 GenericFileMetaData object at this point
+        self.assertEqual(GenericFileMetaData.objects.count(), 1)
         self.composite_resource.delete()
+
+        # there should be no GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # there should be no GenericFileMetaData object at this point
+        self.assertEqual(GenericFileMetaData.objects.count(), 0)
 
     def test_file_add_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file

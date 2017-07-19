@@ -153,6 +153,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Set Multidimensional Data File Type</span>
                         </li>
+                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set Geographic Feature File Type</span>
+                        </li>
                     {%  endif %}
                 </ul>
 
@@ -395,6 +399,12 @@
                                                             title="Set Multidimensional Data File Type">
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                         <span class="caption-file-type">Multidimensional</span>
+                                                    </button>
+                                                    <button id="fb-set-geofeature-file-type"
+                                                            class="disabled"
+                                                            title="Set Geographic Feature File Type">
+                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                        <span class="caption-file-type">Geographic Feature</span>
                                                     </button>
                                                  {% endif %}
 
@@ -1080,7 +1090,7 @@
                                     {% if not metadata_form %}
                                         {% for tool in relevant_tools %}
                                             <div title="{{ tool.title }}" id="web-app-item">
-                                                <a href="{{ tool.url }}" target="_blank">
+						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
                                                     {% if tool.title|length > 20 %}
                                                         <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                     {% else %}
