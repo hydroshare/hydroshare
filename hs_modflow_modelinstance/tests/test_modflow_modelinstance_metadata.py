@@ -1302,17 +1302,17 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.general_elements, None)
 
         # create modeloutput element using the update()
-        self.res.metadata.update([{'modeloutput': {'includes_output': False}}])
+        self.res.metadata.update([{'modeloutput': {'includes_output': False}}], self.user)
         self.assertNotEqual(self.res.metadata.model_output, None)
 
-        self.res.metadata.update([{'modeloutput': {'includes_output': True}}])
+        self.res.metadata.update([{'modeloutput': {'includes_output': True}}], self.user)
         self.assertEqual(self.res.metadata.model_output.includes_output, True)
 
         # test that we can also update core metadata using update()
         # there should be a creator element
         self.assertEqual(self.res.metadata.creators.count(), 1)
         self.res.metadata.update([{'creator': {'name': 'Second Creator'}},
-                                  {'creator': {'name': 'Third Creator'}}])
+                                  {'creator': {'name': 'Third Creator'}}], self.user)
         # there should be 2 creators at this point (previously existed creator gets
         # delete as part of the update() call
         self.assertEqual(self.res.metadata.creators.count(), 2)
@@ -1344,7 +1344,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         metadata.append({'modelcalibration': {'calibratedParameter': 'a', 'observationType': 'b',
                                               'observationProcessPackage': 'RVOB',
                                               'calibrationMethod': 'c'}})
-        self.res.metadata.update(metadata)
+        self.res.metadata.update(metadata, self.user)
         # check that there are extended metadata elements at this point
         self.assertNotEqual(self.res.metadata.model_output, None)
         self.assertNotEqual(self.res.metadata.executed_by, None)

@@ -450,7 +450,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         metadata = []
         metadata.append({'originalcoverage': {'value': value}})
         with self.assertRaises(ValidationError):
-            self.resNetcdf.metadata.update(metadata)
+            self.resNetcdf.metadata.update(metadata, self.user)
 
         del metadata[:]
         metadata.append({'variable': {'name': 'SWE', 'type': 'Float',
@@ -461,7 +461,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                       }
                          })
         with self.assertRaises(ValidationError):
-            self.resNetcdf.metadata.update(metadata)
+            self.resNetcdf.metadata.update(metadata, self.user)
         self.resNetcdf.delete()
         # create netcdf resource with uploaded valid netcdf file
         self._create_netcdf_resource()
@@ -478,7 +478,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         del metadata[:]
         metadata.append({'originalcoverage': {'value': value}})
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
         self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '12')
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
@@ -494,7 +494,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                               }
                          })
 
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage, None)
         self.assertEqual(self.resNetcdf.metadata.originalCoverage.value['northlimit'], '15')
         self.assertNotEqual(self.resNetcdf.metadata.originalCoverage.value['projection'],
@@ -521,7 +521,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                       }
                          })
 
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
         self.assertEqual(swe_variable.unit, 'feet')
         # test that update of variable should fail if update is made for non-existing variable
@@ -536,7 +536,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                          })
 
         with self.assertRaises(ValidationError):
-            self.resNetcdf.metadata.update(metadata)
+            self.resNetcdf.metadata.update(metadata, self.user)
 
         # there should no variable with name SWE1
         self.assertEqual(self.resNetcdf.metadata.variables.filter(name='SWE1').count(), 0)
@@ -556,7 +556,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                          })
         metadata.append({'variable': {'name': 'x', 'unit': 'Feet'}})
 
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         swe_variable = self.resNetcdf.metadata.variables.filter(name='SWE').first()
         self.assertEqual(swe_variable.unit, 'm')
         x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
@@ -568,7 +568,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         del metadata[:]
         metadata.append({'variable': {'name': 'x', 'type': 'Double', 'shape': 'y'}})
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
         self.assertEqual(x_variable.type, 'Float')
         self.assertEqual(x_variable.shape, 'x')
@@ -585,7 +585,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         metadata.append({'contributor': {'name': 'contributor one'}})
         metadata.append({'contributor': {'name': 'contributor two'}})
         metadata.append({'variable': {'name': 'x', 'unit': 'Meter'}})
-        self.resNetcdf.metadata.update(metadata)
+        self.resNetcdf.metadata.update(metadata, self.user)
         x_variable = self.resNetcdf.metadata.variables.filter(name='x').first()
         self.assertEqual(x_variable.unit, 'Meter')
         # there should be 2 creators (the previous creator gets deleted as part of the update)

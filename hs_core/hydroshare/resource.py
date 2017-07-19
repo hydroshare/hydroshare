@@ -693,7 +693,7 @@ def update_science_metadata(pk, metadata, user):
     Returns:
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.metadata.update(metadata)
+    resource.metadata.update(metadata, user)
     utils.resource_modified(resource, user, overwrite_bag=False)
 
     # set to private if metadata has become non-compliant

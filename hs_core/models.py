@@ -1098,7 +1098,7 @@ class Coverage(AbstractMetaDataElement):
                 value_arg_dict = json.loads(kwargs['_value'])
 
             if value_arg_dict is not None:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
+                cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
                     value_dict = {k: v for k, v in value_arg_dict.iteritems()
@@ -1142,7 +1142,7 @@ class Coverage(AbstractMetaDataElement):
         if 'type' in kwargs:
             changing_coverage_type = cov.type != kwargs['type']
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                cls.validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
             else:
                 raise ValidationError('Coverage value is missing.')
 
@@ -1233,7 +1233,7 @@ class Coverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     @classmethod
-    def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
+    def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         """Validate values based on coverage type."""
         if coverage_type == 'period':
             # check that all the required sub-elements exist
@@ -3536,6 +3536,60 @@ class CoreMetaData(models.Model):
         """Return the first _publisher object from metadata."""
         return self._publisher.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self
+        Note: Subclass must override this property
+        """
+        from views.resource_metadata_rest_api import CoreMetaDataSerializer
+        return CoreMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Parse the input *metadata* dict to needed format and store it in
+        *parsed_metadata* list
+        :param  metadata: a dict of metadata that needs to be parsed to get the metadata in the
+        format needed for updating the metadata elements supported by generic resource type
+        :param  parsed_metadata: a list of dicts that will be appended with parsed data
+        """
+
+        keys_to_update = metadata.keys()
+        if 'title' in keys_to_update:
+            parsed_metadata.append({"title": {"value": metadata.pop('title')}})
+
+        if 'creators' in keys_to_update:
+            for creator in metadata.pop('creators'):
+                parsed_metadata.append({"creator": creator})
+
+        if 'contributors' in keys_to_update:
+            for contributor in metadata.pop('contributors'):
+                parsed_metadata.append({"contributor": contributor})
+
+        if 'coverages' in keys_to_update:
+            for coverage in metadata.pop('coverages'):
+                parsed_metadata.append({"coverage": coverage})
+
+        if 'dates' in keys_to_update:
+            for date in metadata.pop('dates'):
+                parsed_metadata.append({"date": date})
+
+        if 'description' in keys_to_update:
+            parsed_metadata.append({"description": {"abstract": metadata.pop('description')}})
+
+        if 'language' in keys_to_update:
+            parsed_metadata.append({"language": {"code": metadata.pop('language')}})
+
+        if 'rights' in keys_to_update:
+            parsed_metadata.append({"rights": {"statement": metadata.pop('rights')}})
+
+        if 'sources' in keys_to_update:
+            for source in metadata.pop('sources'):
+                parsed_metadata.append({"source": source})
+
+        if 'subjects' in keys_to_update:
+            for subject in metadata.pop('subjects'):
+                parsed_metadata.append({"subject": {"value": subject['value']}})
+
     @classmethod
     def get_supported_element_names(cls):
         """Return a list of supported metadata element names."""
@@ -3555,6 +3609,15 @@ class CoreMetaData(models.Model):
                 'Relation',
                 'Publisher',
                 'FundingAgency']
+
+    @classmethod
+    def get_form_errors_as_string(cls, form):
+        """Helper method to generate a string from form.errors
+        :param  form: an instance of Django Form class
+        """
+        error_string = ", ".join(key + ":" + form.errors[key][0]
+                                 for key in form.errors.keys())
+        return error_string
 
     def set_dirty(self, flag):
         """Track whethrer metadata object is dirty.
@@ -3666,21 +3729,82 @@ class CoreMetaData(models.Model):
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
-    def update(self, metadata):
+    def update(self, metadata, user):
         """Define custom update method for CoreMetaData model.
 
         :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
         element_name must be in lowercase.
         example of a dict in metadata list:
             {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :param  user: user who is updating metadata
         :return:
         """
+        from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
+            SourceValidationForm, RelationValidationForm
+
+        validation_forms_mapping = {'title': TitleValidationForm,
+                                    'description': AbstractValidationForm,
+                                    'language': LanguageValidationForm,
+                                    'rights': RightsValidationForm,
+                                    'creator': CreatorValidationForm,
+                                    'contributor': ContributorValidationForm,
+                                    'source': SourceValidationForm,
+                                    'relation': RelationValidationForm
+                                    }
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
                 self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
+                subjects = []
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if element_name == 'subject':
+                            subject_data = dict_item['subject']
+                            if 'value' not in subject_data:
+                                raise ValidationError("Subject value is missing")
+                            subjects.append(dict_item['subject']['value'])
+                            continue
+                        if element_name == 'coverage':
+                            # coverage metadata is not allowed for update for composite
+                            # and time series resource
+                            if self.resource.resource_type in ("CompositeResource",
+                                                               "TimeSeriesResource"):
+                                err_msg = "Coverage metadata can't be updated for {} resource"
+                                err_msg = err_msg.format(self.resource.resource_type)
+                                raise ValidationError(err_msg)
+                            coverage_data = dict_item[element_name]
+                            if 'type' not in coverage_data:
+                                raise ValidationError("Coverage type data is missing")
+                            if 'value' not in coverage_data:
+                                raise ValidationError("Coverage value data is missing")
+                            coverage_value_dict = coverage_data['value']
+                            coverage_type = coverage_data['type']
+                            Coverage.validate_coverage_type_value_attributes(coverage_type,
+                                                                             coverage_value_dict)
+                            continue
+
+                        else:
+                            validation_form = validation_forms_mapping[element_name](
+                                dict_item[element_name])
+
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            err_string += " element name:{}".format(element_name)
+                            raise ValidationError(err_string)
+                if subjects:
+                    subjects_set = set([s.lower() for s in subjects])
+                    if len(subjects_set) < len(subjects):
+                        raise ValidationError("Duplicate subject values found")
                 self.update_repeatable_element(element_name=element_name, metadata=metadata)
 
             # allow only updating or creating date element of type valid

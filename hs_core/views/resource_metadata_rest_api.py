@@ -180,60 +180,20 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-        serializer = CoreMetaDataSerializer(resource.metadata)
+        serializer = resource.metadata.serializer
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         # Update science metadata
-        view_utils.authorize(
+        resource, _, _ = view_utils.authorize(
             request, pk,
             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         metadata = []
         put_data = request.data.copy()
-        keys_to_update = put_data.keys()
 
         try:
-            if 'title' in keys_to_update:
-                metadata.append({"title": {"value": put_data.pop('title')}})
-
-            if 'creators' in keys_to_update:
-                for creator in put_data.pop('creators'):
-                    metadata.append({"creator": creator})
-
-            if 'contributors' in keys_to_update:
-                for contributor in put_data.pop('contributors'):
-                    metadata.append({"contributor": contributor})
-
-            if 'coverages' in keys_to_update:
-                for coverage in put_data.pop('coverages'):
-                    metadata.append({"coverage": coverage})
-
-            if 'dates' in keys_to_update:
-                for date in put_data.pop('dates'):
-                    metadata.append({"date": date})
-
-            if 'description' in keys_to_update:
-                metadata.append({"description": {"abstract": put_data.pop('description')}})
-
-            if 'language' in keys_to_update:
-                metadata.append({"language": {"code": put_data.pop('language')}})
-
-            if 'rights' in keys_to_update:
-                metadata.append({"rights": {"statement": put_data.pop('rights')}})
-
-            if 'sources' in keys_to_update:
-                for source in put_data.pop('sources'):
-                    metadata.append({"source": source})
-
-            if 'subjects' in keys_to_update:
-                for subject in put_data.pop('subjects'):
-                    metadata.append({"subject": {"value": subject['value']}})
-
-            if 'relations' in keys_to_update:
-                for relation in put_data.pop('relations'):
-                    metadata.append({"relation": relation})
-
+            resource.metadata.parse_for_bulk_update(put_data, metadata)
             hydroshare.update_science_metadata(pk=pk, metadata=metadata, user=request.user)
         except Exception as ex:
             error_msg = {
@@ -243,5 +203,5 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
             raise ValidationError(detail=error_msg)
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-        serializer = CoreMetaDataSerializer(resource.metadata)
+        serializer = resource.metadata.serializer
         return Response(data=serializer.data, status=status.HTTP_202_ACCEPTED)

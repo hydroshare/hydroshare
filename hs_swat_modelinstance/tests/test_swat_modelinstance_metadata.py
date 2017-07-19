@@ -906,17 +906,20 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
 
         # create modeloutput element using the update()
-        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': False}}])
+        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': False}}],
+                                                  self.user)
         self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
 
-        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': True}}])
+        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': True}}],
+                                                  self.user)
         self.assertEqual(self.resSWATModelInstance.metadata.model_output.includes_output, True)
 
         # test that we can also update core metadata using update()
         # there should be a creator element
         self.assertEqual(self.resSWATModelInstance.metadata.creators.count(), 1)
         self.resSWATModelInstance.metadata.update([{'creator': {'name': 'Second Creator'}},
-                                                   {'creator': {'name': 'Third Creator'}}])
+                                                   {'creator': {'name': 'Third Creator'}}],
+                                                  self.user)
         # there should be 2 creators at this point (previously existed creator gets
         # delete as part of the update() call
         self.assertEqual(self.resSWATModelInstance.metadata.creators.count(), 2)
@@ -946,13 +949,13 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                         'numberOfHRUs': 'j',
                                         'demResolution': 'k',
                                         'demSourceName': 'l',
-                                        'demSourceURL': 'm',
+                                        'demSourceURL': 'http://dem-source.org',
                                         'landUseDataSourceName': 'n',
-                                        'landUseDataSourceURL': 'o',
+                                        'landUseDataSourceURL': 'http://land-data.org',
                                         'soilDataSourceName': 'p',
-                                        'soilDataSourceURL': 'q'}})
+                                        'soilDataSourceURL': 'http://soil-data.org'}})
 
-        self.resSWATModelInstance.metadata.update(metadata)
+        self.resSWATModelInstance.metadata.update(metadata, self.user)
 
         # check that there are extended metadata elements at this point
         self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
