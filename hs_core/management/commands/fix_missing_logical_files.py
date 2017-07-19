@@ -3,7 +3,7 @@ for any composite resource that are not part of any logical file, each of those 
 part of a generic logical file.
 
 * By default, prints errors on stdout.
-* Optional argument --log instead logs output to system log.
+* Optional argument --log: logs output to system log.
 """
 
 from django.core.management.base import BaseCommand
