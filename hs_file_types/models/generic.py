@@ -32,7 +32,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, datatset_name_form=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
@@ -115,7 +115,7 @@ class GenericLogicalFile(AbstractLogicalFile):
     """ Each resource file is assigned an instance of this logical file type on upload to
     Composite Resource """
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
-    data_type = "Generic data"
+    data_type = "genericData"
 
     @classmethod
     def create(cls):
