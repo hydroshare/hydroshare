@@ -554,14 +554,10 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).create(
-            content_object=kwargs['content_object'],
-            modelParameter=kwargs.get('modelParameter'),
-            modelSolver=kwargs.get('modelSolver'),
-            subsidencePackage=kwargs.get('subsidencePackage')
-        )
-        if kwargs.get('output_control_package'):
-            general_elements._add_output_control_package(kwargs['output_control_package'])
+        ocp = kwargs.pop('output_control_package', None)
+        general_elements = super(GeneralElements, cls).create(**kwargs)
+        if ocp:
+            general_elements._add_output_control_package(ocp)
 
         return general_elements
 
@@ -570,17 +566,12 @@ class GeneralElements(AbstractMetaDataElement):
         general_elements = GeneralElements.objects.get(id=element_id)
         kwargs = cls._validate_params(**kwargs)
         if general_elements:
-            if 'output_control_package' in kwargs:
-                general_elements = super(GeneralElements, cls).update(
-                    general_elements.id,
-                    content_object=kwargs['content_object'],
-                    modelParameter=kwargs.get('modelParameter'),
-                    modelSolver=kwargs.get('modelSolver'),
-                    subsidencePackage=kwargs.get('subsidencePackage')
-                )
+            ocp = kwargs.pop('output_control_package', None)
+            general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
 
+            if ocp:
                 general_elements.output_control_package.clear()
-                general_elements._add_output_control_package(kwargs['output_control_package'])
+                general_elements._add_output_control_package(ocp)
 
             general_elements.save()
             if len(general_elements.get_output_control_package()) == 0:
@@ -675,7 +666,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                             reqd_files.append(reqd_file)
                             model_package_name = row[0].strip()
                             model_package_ext = reqd_file.split('.')[-1].upper()
-                            model_packages.append((model_package_name, model_package_ext))
+                            model_packages.extend(set([model_package_name, model_package_ext]))
         return nam_file_count, reqd_files, existing_files, model_packages
 
 

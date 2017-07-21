@@ -134,7 +134,6 @@ def process_package_info(resource):
             specified_flux_boundary_packages_list = []
             head_dependent_flux_boundary_packages = []
 
-            packages = list(itertools.chain(*packages))
             # loop through packages from .nam file to see if they match any of the controlled terms
             if 'UZF' in packages:
                 create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
