@@ -643,7 +643,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                  included for the model to run
                  -existing_files, (list of strings), the names of files that have been uploaded
                  -model packages (list of strings), the names of the packages for the uploaded model
-                 found in the .nam or .mfn file. These are the entries in the far left column of the 
+                 found in the .nam or .mfn file. These are the entries in the far left column of the
                  .nam or .mfn file.
         """
         nam_file_count = 0

@@ -1,7 +1,6 @@
 from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
 from hs_core.hydroshare.hs_bagit import create_bag_files
-import itertools
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_create_resource, post_metadata_element_update, post_add_files_to_resource, \
@@ -14,7 +13,6 @@ from hs_modflow_modelinstance.forms import ModelOutputValidationForm, ExecutedBy
     StudyAreaValidationForm, GridDimensionsValidationForm, StressPeriodValidationForm,\
     GroundWaterFlowValidationForm, BoundaryConditionValidationForm, ModelCalibrationValidationForm,\
     ModelInputValidationForm, GeneralElementsValidationForm
-from django.core.exceptions import ValidationError
 
 
 @receiver(pre_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
@@ -99,21 +97,16 @@ def _process_metadata_update_create(update_or_create, **kwargs):
 @receiver(post_add_files_to_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-
-    # extract metadata from the just uploaded file
-    res_files = resource.files.all()
-    if res_files.first():
-        process_package_info(resource)
-        for f in res_files:
-            if f.extension == '.dis':
-                add_metadata_from_dis_file(f, resource)
+    add_metadata_from_dis_file(resource)
 
 
 @receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    user = kwargs['user']
+    add_metadata_from_dis_file(resource)
 
+
+def add_metadata_from_file(resource):
     # extract metadata from the just uploaded file
     res_files = resource.files.all()
     if res_files.first():
@@ -258,12 +251,6 @@ def create_or_update_from_package(resource, term, **kwargs):
 
 
 def add_metadata_from_dis_file(dis_file, res):
-    """
-    
-    :param dis_file: 
-    :param res: 
-    :return: 
-    """
     lines = dis_file.resource_file.readlines()
     first_line = True
     ss = False
@@ -284,8 +271,6 @@ def add_metadata_from_dis_file(dis_file, res):
                     numberOfRows=l[1],
                     numberOfColumns=l[2],
                 )
-                Nper=l[3],
-                tmuni=l[4],
                 lenuni = l[5]
                 first_line = False
             unit_con_factor = get_unit_conversion_factor(int(lenuni))
@@ -326,11 +311,6 @@ def add_metadata_from_dis_file(dis_file, res):
 
 
 def get_unit_conversion_factor(unit_id):
-    """
-    
-    :param unit_id: 
-    :return: 
-    """
     factor = None
     if unit_id == 0:
         factor = 'length units are undefined'

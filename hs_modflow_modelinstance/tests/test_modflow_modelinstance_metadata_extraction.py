@@ -49,8 +49,8 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.file_names = []
         self.sample_nam_name = 'example.nam'
         self.sample_nam_name2 = 'example2.nam'
-	self.sample_dis_file = 'example.dis'        
-	for file in os.listdir(d):
+        self.sample_dis_file = 'example.dis'
+        for file in os.listdir(d):
             self.file_names.append(file)
             target_temp_file = os.path.join(self.temp_dir, file)
             shutil.copy("{}{}".format(d, file), target_temp_file)
@@ -58,9 +58,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                 self.sample_nam_obj = open(target_temp_file, 'r')
             elif self.sample_nam_name2 == file:
                 self.sample_nam_obj2 = open(target_temp_file, 'r')
-	    elif self.sample_dis_file == file:
-		self.sample_dis_obj = open(target_temp_file, 'r')           
- 	    else:
+            elif self.sample_dis_file == file:
+                self.sample_dis_obj = open(target_temp_file, 'r')
+            else:
                 self.file_list.append(target_temp_file)
 
         self.file_name = "MIR.txt"
@@ -82,7 +82,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.files.all().count(), 0)
 
         # Upload any file type should pass both the file pre add check post add check
-        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]  #these 3 lines
+        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
         utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
                                             extract_metadata=False)
 
@@ -123,34 +123,36 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             self.res.metadata.general_elements.get_output_control_package()
         )
 
-        
-
-
     def test_metadata_extraction_DIS_file(self):
-        #Extract Metadata from DIS File
-        files = [UploadedFile(file=self.sample_dis_obj, name=self.sample_dis_obj.name)] 
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user, extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user, extract_metadeta=False)
+        # Extract Metadata from DIS File
+        files = [UploadedFile(file=self.sample_dis_obj, name=self.sample_dis_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.res,
+                                            files=files,
+                                            user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.res,
+                                        files=files,
+                                        user=self.user,
+                                        extract_metadeta=False)
 
-        #---Tests for Grid Dimensions
-        #Number of Layers
+        # ---Tests for Grid Dimensions
+        # Number of Layers
         self.assertEquals(self.res.metadata.grid_dimensions.numberOfLayers, str(4))
-        #Type of Rows
+        # Type of Rows
         self.assertEquals(self.res.metadata.grid_dimensions.typeOfRows, 'Regular')
-        #Number of Rows
+        # Number of Rows
         self.assertEquals(self.res.metadata.grid_dimensions.numberOfRows, str(20))
-        #Type of Columns
+        # Type of Columns
         self.assertEquals(self.res.metadata.grid_dimensions.typeOfColumns, 'Regular')
-        #Number of Columns
+        # Number of Columns
         self.assertEquals(self.res.metadata.grid_dimensions.numberOfColumns, str(15))
 
-        #---Tests for Stress Period
-        #Stress Period Type
-        self.assertEquals(self.res.metadata.stress_period.stressPeriodType, 'Steady and Transient')      
+        # ---Tests for Stress Period
+        # Stress Period Type
+        self.assertEquals(self.res.metadata.stress_period.stressPeriodType, 'Steady and Transient')
 
-        #---Tests for Study Area
-        #Total Length
-        self.assertEquals(self.res.metadata.study_area.totalLength, str(20*2000.0)) #double
-        #Total Width
-        self.assertEquals(self.res.metadata.study_area.totalWidth, str(15*2000.0)) #double
-        
+        # ---Tests for Study Area
+        # Total Length
+        self.assertEquals(self.res.metadata.study_area.totalLength, str(20*2000.0))  # double
+        # Total Width
+        self.assertEquals(self.res.metadata.study_area.totalWidth, str(15*2000.0))  # double
