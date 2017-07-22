@@ -118,7 +118,7 @@
                       method="POST">
                     {% csrf_token %}
 
-                    <input name="t" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
+                    <input name="flag" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
                            {% else %}value="make_require_lic_agreement"{% endif %}/>
 
                     <br>
@@ -152,7 +152,7 @@
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
-                            <input name="t" type="hidden" value="make_public"/>
+                            <input name="flag" type="hidden" value="make_public"/>
                             <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             <button {% if not cm.can_be_public_or_discoverable or cm.raccess.public %} disabled {% endif %}
                                     id="btn-public" data-toggle="tooltip" data-placement="auto"
@@ -169,7 +169,7 @@
                     <form class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
-                            <input name="t" type="hidden" value="make_discoverable"/>
+                            <input name="flag" type="hidden" value="make_discoverable"/>
                             <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             {% csrf_token %}
                             <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
@@ -187,7 +187,7 @@
                     <form class="pull-left"
                               action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
-                            <input name="t" type="hidden" value="make_private"/>
+                            <input name="flag" type="hidden" value="make_private"/>
                             <input name="resource-mode" type="hidden" value="{{ resource_mode }}">
                             {% csrf_token %}
                             <button {% if not cm.raccess.public and not cm.raccess.discoverable %} disabled {% endif %}
@@ -215,7 +215,7 @@
                               method="POST">
                             {% csrf_token %}
 
-                            <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
+                            <input name="flag" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
                                    {% else %}value="make_shareable"{% endif %}/>
 
                             <br>
