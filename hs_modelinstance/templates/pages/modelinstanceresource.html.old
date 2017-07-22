@@ -195,11 +195,11 @@
             {% csrf_token %}
             {% if cm.public %}
                 This resource can be viewed and downloaded by anyone.
-                <input name="t" type="hidden" value="make_private"/>
+                <input name="flag" type="hidden" value="make_private"/>
                 <button type="submit" class="btn btn-danger">Make private</button>
             {% else %}
                 This resource can be viewed and downloaded only by designated users or research groups.
-                <input name="t" type="hidden" value="make_public"/>
+                <input name="flag" type="hidden" value="make_public"/>
                 <button type="submit" class="btn btn-danger">Make public</button>
             {% endif %}
             </form>
@@ -238,14 +238,14 @@
                                 <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
                             {% endfor %}
                         </select>
-                        <input name="t" value="owners" type="hidden"/>
+                        <input name="flag" value="owners" type="hidden"/>
                         <button type="submit" class="btn btn-primary btn-block">Update access list</button>
                     </form>
                     <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="">Add user (first, last, email, or username)</label>
-                        <input name="t" value="add_owner" type="hidden"/>
+                        <input name="flag" value="add_owner" type="hidden"/>
                         {{ add_owner_user_form.user }}
                             <button type="submit" class="btn btn-primary">Add</button>
                         </div>
@@ -273,14 +273,14 @@
                             <option value="{{ u.pk }}" selected>{{ u|best_name }} ({{ u.username }})</option>
                         {% endfor %}
                     </select>
-                    <input name="t" value="edit_users" type="hidden"/>
+                    <input name="flag" value="edit_users" type="hidden"/>
                     <button type="submit" class="btn btn-primary btn-block">Update access list</button>
                 </form>
                 <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="">Add user (first, last, email, or username)</label>
-                        <input name="t" value="add_edit_user" type="hidden"/>
+                        <input name="flag" value="add_edit_user" type="hidden"/>
                         {{ add_edit_user_form.user }}
                             <button type="submit" class="btn btn-primary">Add</button>
                         </div>
@@ -308,14 +308,14 @@
                                 <option value="{{ u.pk }}" {% if u in edit_groups %}selected{% endif %}>{{ u }}</option>
                             {% endfor %}
                         </select>
-                        <input name="t" value="edit_groups" type="hidden"/>
+                        <input name="flag" value="edit_groups" type="hidden"/>
                         <button type="submit" class="btn btn-primary btn-block">Update access list</button>
                 </form>
               <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="">Add group by name</label>
-                        <input name="t" value="add_edit_group" type="hidden"/>
+                        <input name="flag" value="add_edit_group" type="hidden"/>
                         {{ add_edit_group_form.user }}
                             <button type="submit" class="btn btn-primary">Add</button>
                         </div>
@@ -344,14 +344,14 @@
                             <option value="{{ u.pk }}" {% if u in view_users %}selected{% endif %}>{{ u|best_name }}</option>
                         {% endfor %}
                     </select>
-                    <input name="t" value="view_users" type="hidden"/>
+                    <input name="flag" value="view_users" type="hidden"/>
                     <button type="submit" class="btn btn-primary btn-block">Update access list</button>
                 </form>
               <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="">Add user (first, last, email, or username)</label>
-                        <input name="t" value="add_view_user" type="hidden"/>
+                        <input name="flag" value="add_view_user" type="hidden"/>
                         {{ add_view_user_form.user }}
                             <button type="submit" class="btn btn-primary">Add</button>
                         </div>
@@ -379,14 +379,14 @@
                             <option value="{{ u.pk }}" {% if u in view_groups %}selected{% endif %}>{{ u }}</option>
                         {% endfor %}
                     </select>
-                    <input name="t" value="view_groups" type="hidden"/>
+                    <input name="flag" value="view_groups" type="hidden"/>
                     <button type="submit" class="btn btn-primary btn-block">Update access list</button>
                 </form>
               <form class="form-inline" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/" method="POST" style="padding-top:0.3em">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="">Add group by name</label>
-                        <input name="t" value="add_view_group" type="hidden"/>
+                        <input name="flag" value="add_view_group" type="hidden"/>
                         {{ add_view_group_form.user }}
                             <button type="submit" class="btn btn-primary">Add</button>
                         </div>
