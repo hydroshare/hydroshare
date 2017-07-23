@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url
 from hs_core import views
+from hs_file_types import views as file_type_views
 
 from rest_framework_swagger.views import get_swagger_view
 
@@ -103,6 +104,11 @@ urlpatterns = patterns(
     # public move or rename
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
+
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/set-file-type/(?P<file_path>.*)/'
+        r'(?P<hs_file_type>[A-z]+)/$',
+        file_type_views.set_file_type_public,
+        name="set_file_type_public"),
 
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
