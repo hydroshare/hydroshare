@@ -112,6 +112,12 @@ def post_create_resource(sender, **kwargs):
         err_msg = base_err_msg.format(reason=reason, files=", ".join(files_failed_validation))
         raise ValidationError(err_msg)
 
+    # since we are extracting metadata after resource creation
+    # metadata xml files need to be regenerated - so need to set the
+    # dirty bag flags
+    if resource.files.all().count() > 0:
+        utils.set_dirty_bag_flag(resource)
+
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
