@@ -80,6 +80,12 @@ def netcdf_post_create_resource(sender, **kwargs):
     metadata.is_dirty = False
     metadata.save()
 
+    # since we are extracting metadata after resource creation
+    # metadata xml files need to be regenerated - so need to set the
+    # dirty bag flags
+    if resource.files.all().count() > 0:
+        utils.set_dirty_bag_flag(resource)
+
 
 # receiver used after user clicks on "delete file" for existing netcdf file
 @receiver(pre_delete_file_from_resource, sender=NetcdfResource)
