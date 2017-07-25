@@ -45,16 +45,12 @@ class CreateResourceTicket(APIView):
             return Response("Operation must be read or write", status=status.HTTP_400_BAD_REQUEST)
 
         write = (op == 'write')
+        needed_permission = ACTION_TO_AUTHORIZE.EDIT_RESOURCE if write \
+            else ACTION_TO_AUTHORIZE.VIEW_RESOURCE
 
         try:
-            if write:
-                resource, authorized, user = view_utils.authorize(
-                    request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                    raises_exception=False)
-            else:
-                resource, authorized, user = view_utils.authorize(
-                    request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                    raises_exception=False)
+            resource, authorized, user = view_utils.authorize(
+                request, pk, needed_permission=needed_permission, raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
         if not authorized:
@@ -72,10 +68,7 @@ class CreateResourceTicket(APIView):
         else:  # op == 'write'
             return Response("Write operation must specify path", status=status.HTTP_400_BAD_REQUEST)
 
-        # if not resource.supports_folders:
-        #     return Response("Resource type does not support subfolders",
-        #                     status=status.HTTP_403_FORBIDDEN)
-
+        # TODO: check for folder support before allowing folders to be created.
         try:
             ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=write)
         except SessionException as e:

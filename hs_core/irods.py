@@ -102,11 +102,12 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if user.username == 'anonymous' or not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot change resource {}"
                                        .format(user.username, self.short_id))
         else:
-            if not self.raccess.public and not user.uaccess.can_view_resource(self):
+            if not self.raccess.public and (not user.is_authenticated() or
+                                            not user.uaccess.can_view_resource(self)):
                 raise PermissionDenied("user {} cannot view resource {}"
                                        .format(user.username, self.short_id))
         if path is None:
@@ -147,7 +148,7 @@ class ResourceIRODSMixin(models.Model):
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
         istorage.session.run('iticket', None, 'mod', ticket,
-                             'expires', formatted)
+                             'expire', formatted)
 
         return ticket, self.irods_full_path(path)
 
@@ -171,7 +172,7 @@ class ResourceIRODSMixin(models.Model):
                             output['long_path'] = value[len(self.resource_federation_path):]
                             output['home_path'] = self.resource_federation_path
                         else:
-                            location = value.search(self.short_id)
+                            location = value.find(self.short_id)
                             if __debug__:
                                 assert(location >= 0)
                             if location == 0:
@@ -240,11 +241,11 @@ class ResourceIRODSMixin(models.Model):
 
         # authorize user
         if write:
-            if not user.uaccess.can_change_resource(self):
+            if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
                 raise PermissionDenied("user {} cannot delete change ticket for {}"
                                        .format(user.username, self.short_id))
         else:
-            if not user.uaccess.can_view_resource(self):
+            if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
                 raise PermissionDenied("user {} cannot delete view ticket for {}"
                                        .format(user.username, self.short_id))
         istorage = self.get_irods_storage()
