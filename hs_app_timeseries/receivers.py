@@ -139,6 +139,10 @@ def post_create_resource_handler(sender, **kwargs):
         elif file_ext == '.csv':
             _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                        delete_existing_metadata=False)
+        # since we are extracting metadata after resource creation
+        # metadata xml files need to be regenerated - so need to set the
+        # dirty bag flags
+        utils.set_dirty_bag_flag(resource)
 
 
 def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
