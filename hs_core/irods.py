@@ -16,11 +16,21 @@ class ResourceIRODSMixin(models.Model):
 
     @property
     def irods_home_path(self):
-        """ Return the home path for local iRODS resources """
+        """
+        Return the home path for local iRODS resources
+
+        This must be public in order to be accessed from the methods below in a mixin context.
+        """
         return settings.IRODS_CWD
 
     def irods_full_path(self, path):
-        """ return fully qualified path for local paths """
+        """
+        Return fully qualified path for local paths
+
+        This leaves fully qualified paths alone, but presumes that unqualified paths
+        are home paths, and adds irods_home_path to these to qualify them.
+
+        """
         if path.startswith('/'):
             return path
         else:
@@ -150,6 +160,7 @@ class ResourceIRODSMixin(models.Model):
         istorage.session.run('iticket', None, 'mod', ticket,
                              'expire', formatted)
 
+        # fully qualify home paths with their iRODS prefix when returning them.
         return ticket, self.irods_full_path(path)
 
     def list_ticket(self, ticket):
@@ -180,6 +191,7 @@ class ResourceIRODSMixin(models.Model):
                                 output['home_path'] = self.irods_home_path
                             else:
                                 output['long_path'] = value[location:]
+                                # omit trailing slash
                                 output['home_path'] = value[:(location-1)]
 
                         if __debug__:

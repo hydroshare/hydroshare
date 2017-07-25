@@ -29,7 +29,21 @@ class CreateResourceTicket(APIView):
 
     REST URL: hsapi/resource/{pk}/{op}/{path}/
     HTTP methods: GET
-    Returns HTTP 400, 403, 404
+    Returns HTTP 201, 400, 403, 404
+
+    An example of a correct query is:
+
+    GET /hsapi/resource/ff243faf8ab84adc999e5233091f2322/ticket/read/data/contents/cea.tif/
+
+    This returns HTTP_201_CREATED with content:
+    {u'operation': u'read',
+     u'path':
+         u'/hydroshareZone/home/cuahsi2DataProxy/ff243faf8ab84adc999e5233091f2322/data/\
+         contents/cea.tif',
+     u'resource_id': u'ff243faf8ab84adc999e5233091f2322',
+     u'ticket': u'Kj8kock9aaeszyN'}
+
+    Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
     allowed_methods = ('GET')
 
@@ -68,7 +82,10 @@ class CreateResourceTicket(APIView):
         else:  # op == 'write'
             return Response("Write operation must specify path", status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: check for folder support before allowing folders to be created.
+        # TODO: check for folder support before allowing folders to be written to
+        # The API allows existing files that should not exist to be read anyway.
+        # It should not allow files that should not exist to be created.
+
         try:
             ticket, abspath = resource.create_ticket(request.user, path=fullpath, write=write)
         except SessionException as e:
@@ -90,7 +107,18 @@ class CreateBagTicket(APIView):
 
     REST URL: hsapi/resource/{pk}/bag/
     HTTP methods: GET
-    Returns HTTP 400, 403, 404
+    Returns HTTP 201, 400, 403, 404
+
+    Example of a correct request:
+    GET /hsapi/resource/28f87079ceaf440588e7866a0f4b6c57/ticket/bag/
+
+    This returns HTTP_201_CREATED with content:
+    {u'operation': u'read',
+     u'path': u'/hydroshareZone/home/cuahsi2DataProxy/bags/28f87079ceaf440588e7866a0f4b6c57.zip',
+     u'resource_id': u'28f87079ceaf440588e7866a0f4b6c57',
+     u'ticket': u'pwYwPanpnwdDZa9'}
+
+    Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
     allowed_methods = ('GET')
 
@@ -127,13 +155,70 @@ class CreateBagTicket(APIView):
 
 
 class ManageResourceTicket(APIView):
-    """ list or delete a ticket """
+    """
+    list or delete a ticket
+
+    Methods: GET, DELETE
+    Returns: HTTP 200, 400, 403, 403
+
+    Example of a correct list request:
+
+    GET /hsapi/resource/28f87079ceaf440588e7866a0f4b6c57/ticket/info/pwYwPanpnwdDZa9/
+
+    This returns HTTP_200_OK with content:
+
+    {u'expires': u'2017-07-26.00:17:00',
+     u'filename': u'28f87079ceaf440588e7866a0f4b6c57.zip',
+     u'full_path':
+         u'/hydroshareZone/home/cuahsi2DataProxy/bags/28f87079ceaf440588e7866a0f4b6c57.zip',
+     u'id': u'457392',
+     u'obj type': u'data',
+     u'owner': u'cuahsi2DataProxy',
+     u'ticket': u'pwYwPanpnwdDZa9',
+     u'type': u'read',
+     u'uses count': u'0',
+     u'uses limit': u'1',
+     u'write byte count': u'0',
+     u'write byte limit': u'0',
+     u'write file count': u'0',
+     u'write file limit': u'10',
+     u'zone': u'hydroshareZone'}
+
+    Example of deleting the same ticket:
+
+    DELETE /hsapi/resource/28f87079ceaf440588e7866a0f4b6c57/ticket/info/pwYwPanpnwdDZa9/
+
+    This returns HTTP_200_OK with content:
+
+    {u'expires': u'2017-07-26.00:17:00',
+     u'filename': u'28f87079ceaf440588e7866a0f4b6c57.zip',
+     u'full_path':
+         u'/hydroshareZone/home/cuahsi2DataProxy/bags/28f87079ceaf440588e7866a0f4b6c57.zip',
+     u'id': u'457392',
+     u'obj type': u'data',
+     u'owner': u'cuahsi2DataProxy',
+     u'ticket': u'pwYwPanpnwdDZa9',
+     u'type': u'read',
+     u'uses count': u'0',
+     u'uses limit': u'1',
+     u'write byte count': u'0',
+     u'write byte limit': u'0',
+     u'write file count': u'0',
+     u'write file limit': u'10',
+     u'zone': u'hydroshareZone'}
+
+    This is the same content as before, just before the DELETE.
+
+    Error returns 400, 403, 404 return a string with the error message instead of JSON.
+    """
 
     allowed_methods = ('GET', 'DELETE')
 
     def get(self, request, pk, ticket):
         """
         list a ticket
+
+
         """
         try:
             resource, authorized, user = view_utils.authorize(
