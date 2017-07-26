@@ -41,7 +41,7 @@ class CreateResourceTicket(APIView):
          u'/hydroshareZone/home/cuahsi2DataProxy/ff243faf8ab84adc999e5233091f2322/data/\
          contents/cea.tif',
      u'resource_id': u'ff243faf8ab84adc999e5233091f2322',
-     u'ticket': u'Kj8kock9aaeszyN'}
+     u'ticket_id': u'Kj8kock9aaeszyN'}
 
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
@@ -96,7 +96,7 @@ class CreateResourceTicket(APIView):
         return Response(
             {'resource_id': pk,
              'path': abspath,
-             'ticket': ticket,
+             'ticket_id': ticket,
              'operation': op},
             status=status.HTTP_201_CREATED)
 
@@ -116,7 +116,7 @@ class CreateBagTicket(APIView):
     {u'operation': u'read',
      u'path': u'/hydroshareZone/home/cuahsi2DataProxy/bags/28f87079ceaf440588e7866a0f4b6c57.zip',
      u'resource_id': u'28f87079ceaf440588e7866a0f4b6c57',
-     u'ticket': u'pwYwPanpnwdDZa9'}
+     u'ticket_id': u'pwYwPanpnwdDZa9'}
 
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
@@ -149,7 +149,7 @@ class CreateBagTicket(APIView):
         return Response(
             {'resource_id': pk,
              'path': abspath,
-             'ticket': ticket,
+             'ticket_id': ticket,
              'operation': 'read'},
             status=status.HTTP_201_CREATED)
 
@@ -174,7 +174,7 @@ class ManageResourceTicket(APIView):
      u'id': u'457392',
      u'obj type': u'data',
      u'owner': u'cuahsi2DataProxy',
-     u'ticket': u'pwYwPanpnwdDZa9',
+     u'ticket_id': u'pwYwPanpnwdDZa9',
      u'type': u'read',
      u'uses count': u'0',
      u'uses limit': u'1',
@@ -197,7 +197,7 @@ class ManageResourceTicket(APIView):
      u'id': u'457392',
      u'obj type': u'data',
      u'owner': u'cuahsi2DataProxy',
-     u'ticket': u'pwYwPanpnwdDZa9',
+     u'ticket_id': u'pwYwPanpnwdDZa9',
      u'type': u'read',
      u'uses count': u'0',
      u'uses limit': u'1',

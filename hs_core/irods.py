@@ -145,8 +145,8 @@ class ResourceIRODSMixin(models.Model):
         if not stdout.startswith('ticket:'):
             raise ValidationError("ticket creation failed: {}", stderr)
         ticket = stdout.split('\n')[0]
-        ticket = ticket[len('ticket:'):]
-        istorage.session.run('iticket', None, 'mod', ticket,
+        ticket_id = ticket[len('ticket:'):]
+        istorage.session.run('iticket', None, 'mod', ticket_id,
                              'uses', str(allowed_uses))
 
         # This creates a timestamp with a one-hour timeout.
@@ -157,16 +157,16 @@ class ResourceIRODSMixin(models.Model):
         # server from within iRODS; shell access is required.
         timeout = datetime.now() + timedelta(hours=1)
         formatted = timeout.strftime("%Y-%m-%d.%H:%M")
-        istorage.session.run('iticket', None, 'mod', ticket,
+        istorage.session.run('iticket', None, 'mod', ticket_id,
                              'expire', formatted)
 
         # fully qualify home paths with their iRODS prefix when returning them.
-        return ticket, self.irods_full_path(path)
+        return ticket_id, self.irods_full_path(path)
 
-    def list_ticket(self, ticket):
+    def list_ticket(self, ticket_id):
         """ List a ticket's attributes """
         istorage = self.get_irods_storage()
-        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket)
+        stdout, stderr = istorage.session.run("iticket", None, 'ls', ticket_id)
         if stdout.startswith('id:'):
             stuff = stdout.split('\n')
             output = {}
@@ -198,7 +198,7 @@ class ResourceIRODSMixin(models.Model):
                             assert(output['long_path'].startswith(self.short_id))
 
                     if key == 'string':
-                        output['ticket'] = value
+                        output['ticket_id'] = value
                     elif key == 'data-object name':
                         output['filename'] = value
                     elif key == 'ticket type':
@@ -220,15 +220,15 @@ class ResourceIRODSMixin(models.Model):
             return output
 
         elif stdout == '':
-            raise ValidationError("ticket {} not found".format(ticket))
+            raise ValidationError("ticket {} not found".format(ticket_id))
         else:
-            raise ValidationError("ticket {} error: {}".format(ticket, stderr))
+            raise ValidationError("ticket {} error: {}".format(ticket_id, stderr))
 
-    def delete_ticket(self, user, ticket):
+    def delete_ticket(self, user, ticket_id):
         """
         delete an existing ticket
 
-        :param ticket: ticket string
+        :param ticket_id: ticket string
 
         :raises SessionException: if ticket does not exist.
 
@@ -243,25 +243,25 @@ class ResourceIRODSMixin(models.Model):
         The usual mechanism -- of checking that the user owns the ticket -- is not
         practical, because the ticket owner is always the proxy user.
         """
-        meta = self.list_ticket(ticket)
+        meta = self.list_ticket(ticket_id)
 
         if self.root_path not in meta['full_path']:
-            raise PermissionDenied("user {} cannot delete ticket for a different resource"
-                                   .format(user.username))
+            raise PermissionDenied("user {} cannot delete ticket {} for a different resource"
+                                   .format(user.username, ticket_id))
         # get kind of ticket
         write = meta['type'] == 'write'
 
         # authorize user
         if write:
             if not user.is_authenticated() or not user.uaccess.can_change_resource(self):
-                raise PermissionDenied("user {} cannot delete change ticket for {}"
-                                       .format(user.username, self.short_id))
+                raise PermissionDenied("user {} cannot delete change ticket {} for {}"
+                                       .format(user.username, ticket_id, self.short_id))
         else:
             if not user.is_authenticated() or not user.uaccess.can_view_resource(self):
-                raise PermissionDenied("user {} cannot delete view ticket for {}"
-                                       .format(user.username, self.short_id))
+                raise PermissionDenied("user {} cannot delete view ticket {} for {}"
+                                       .format(user.username, ticket_id, self.short_id))
         istorage = self.get_irods_storage()
-        istorage.session.run('iticket', None, 'delete', ticket)
+        istorage.session.run('iticket', None, 'delete', ticket_id)
         return meta
 
 
