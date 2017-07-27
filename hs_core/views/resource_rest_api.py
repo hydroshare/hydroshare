@@ -357,6 +357,16 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     does not include obsoleted resource; if set to True, obsoleted resource will be included
     :param  edit_permission: (optional) - to get a list of resources for which the authorised user
     has edit permission
+    :param  coverage_type: (optional) - to get a list of resources that fall within the specified
+    spatial coverage boundary (must be either 'box' or 'point')
+    :param  north:  (optional) - north coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified
+    :param  south:  (optional) - north coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified with a value of 'box'
+    :param  east:  (optional) - east coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified
+    :param  west:  (optional) - west coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified with a value of 'box'
     :rtype:  json string
     :return:  a paginated list of resources with data for resource id, title, resource type,
     creator, public, date created, date last updated, resource bag url path, and science
