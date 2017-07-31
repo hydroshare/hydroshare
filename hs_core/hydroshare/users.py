@@ -19,6 +19,8 @@ EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
 
+log = logging.getLogger(__name__)
+
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
@@ -342,7 +344,6 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 if search_polygon.intersects(coverage_shape):
                     coverages.add(coverage.id)
             except Exception as e:
-                log = logging.getLogger()
                 log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
