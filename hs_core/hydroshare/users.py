@@ -332,13 +332,16 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 coverages.add(coverage.id)
 
         for coverage in Coverage.objects.filter(type="point"):
-            coverage_shape = Point(
-                coverage.value.get('east', None),
-                coverage.value.get('north', None),
-            )
+            try:
+                coverage_shape = Point(
+                    coverage.value.get('east', None),
+                    coverage.value.get('north', None),
+                )
 
-            if search_polygon.intersects(coverage_shape):
-                coverages.add(coverage.id)
+                if search_polygon.intersects(coverage_shape):
+                    coverages.add(coverage.id)
+            except Exception as e:
+                pass
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
         q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
