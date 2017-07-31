@@ -119,6 +119,9 @@ urlpatterns = patterns(
         views.resource_rest_api.CheckTaskStatus.as_view(),
         name='get_task_status'),
 
+    url(r'^user/$',
+        views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
