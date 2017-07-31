@@ -103,7 +103,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
 @receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    add_metadata_from_dis_file(resource)
+    add_metadata_from_file(resource)
 
 
 def add_metadata_from_file(resource):
