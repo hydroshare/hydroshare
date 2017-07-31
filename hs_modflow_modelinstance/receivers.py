@@ -97,13 +97,13 @@ def _process_metadata_update_create(update_or_create, **kwargs):
 @receiver(post_add_files_to_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    add_metadata_from_dis_file(resource)
+    add_metadata_from_file(resource)
 
 
 @receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    add_metadata_from_dis_file(resource)
+    add_metadata_from_file(resource)
 
 
 def add_metadata_from_file(resource):
