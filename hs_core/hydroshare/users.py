@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
@@ -341,7 +342,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 if search_polygon.intersects(coverage_shape):
                     coverages.add(coverage.id)
             except Exception as e:
-                pass
+                log = logging.getLogger()
+                log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
         q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
