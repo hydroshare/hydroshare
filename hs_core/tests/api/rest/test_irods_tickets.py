@@ -29,7 +29,7 @@ class TestTickets(HSRESTTestCase):
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
-        url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket_id)
+        url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -74,7 +74,7 @@ class TestTickets(HSRESTTestCase):
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
-        url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket_id)
+        url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
@@ -119,7 +119,7 @@ class TestTickets(HSRESTTestCase):
         ticket_id = content['ticket_id']
 
         # should be able to list ticket
-        url3 = str.format('/hsapi/resource/{}/ticket/info/{}/', res_id, ticket_id)
+        url3 = str.format('/hsapi/resource/{}/ticket/{}/', res_id, ticket_id)
         response = self.client.get(url3, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)

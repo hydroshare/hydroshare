@@ -103,7 +103,7 @@ urlpatterns = patterns(
         views.resource_ticket_rest_api.CreateBagTicket.as_view(),
         name='create_bag_ticket'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/info/(?P<ticket>.*)/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
         views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
         name='manage_ticket'),
 
