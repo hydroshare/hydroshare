@@ -1062,7 +1062,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # there should 9 content files
         self.assertEqual(self.res.files.all().count(), 9)
 
-        # there should be 9 format elements 
+        # there should be 9 format elements
         self.assertEqual(self.res.metadata.formats.all().count(), 9)
 
         # delete content files that we added above
