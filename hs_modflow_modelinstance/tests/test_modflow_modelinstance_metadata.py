@@ -1120,12 +1120,13 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                         extract_metadata=False)
         for f in self.file_list:
-            f_obj = open(f, 'r')
-            files = [UploadedFile(file=f_obj, name=f_obj.name)]
-            utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+            if 'dis' not in f:  # not upload dis file to test manual metadata creation and deletion
+                f_obj = open(f, 'r')
+                files = [UploadedFile(file=f_obj, name=f_obj.name)]
+                utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+                                                    extract_metadata=False)
+                utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                                 extract_metadata=False)
-            utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
 
         # create metadata elements
         self.res.metadata.create_element('Description', abstract="test abstract")
