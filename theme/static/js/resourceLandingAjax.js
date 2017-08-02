@@ -1424,55 +1424,57 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
 }
 
 // updates the UI spatial coverage elements
-function updateResourceSpatialCoverage(spatialCoverage){
-    $("#spatial-coverage-type").val(spatialCoverage.type);
-    var $form = $("#id-coverage-spatial");
-    var form_update_action = $form.attr('action');
-    var res_short_id = form_update_action.split('/')[3];
-    var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
-    $form.attr('action', update_url);
-    var $id_type_div = $("#div_id_type");
-    var $point_radio = $id_type_div.find("#id_type_2");
-    var $box_radio = $id_type_div.find("#id_type_1");
-    if (spatialCoverage.type === 'point') {
-        $point_radio.attr('checked', 'checked');
-        $box_radio.parent().closest("label").addClass("text-muted");
-        $box_radio.attr('disabled', true);
-        $point_radio.parent().closest("label").removeClass("text-muted");
-        $point_radio.attr('disabled', false);
-        $("#id_north").val(spatialCoverage.north);
-        $("#id_east").val(spatialCoverage.east);
-        $("#div_id_north").show();
-        $("#div_id_east").show();
-        $("#div_id_elevation").show();
-        $("#div_id_northlimit").hide();
-        $("#div_id_eastlimit").hide();
-        $("#div_id_southlimit").hide();
-        $("#div_id_westlimit").hide();
-        $("#div_id_uplimit").hide();
-        $("#div_id_downlimit").hide();
-    }
-    else { //coverage type is 'box'
-        $box_radio.attr('checked', 'checked');
-        $point_radio.parent().closest("label").addClass("text-muted");
-        $point_radio.attr('disabled', true);
-        $box_radio.parent().closest("label").removeClass("text-muted");
-        $box_radio.attr('disabled', false);
-        $("#id_eastlimit").val(spatialCoverage.eastlimit);
-        $("#id_northlimit").val(spatialCoverage.northlimit);
-        $("#id_westlimit").val(spatialCoverage.westlimit);
-        $("#id_southlimit").val(spatialCoverage.southlimit);
-        $("#div_id_north").hide();
-        $("#div_id_east").hide();
-        $("#div_id_elevation").hide();
-        $("#div_id_northlimit").show();
-        $("#div_id_eastlimit").show();
-        $("#div_id_southlimit").show();
-        $("#div_id_westlimit").show();
-        $("#div_id_uplimit").show();
-        $("#div_id_downlimit").show();
+function updateResourceSpatialCoverage(spatialCoverage) {
+    if ($("#id-coverage-spatial").length) {
+        $("#spatial-coverage-type").val(spatialCoverage.type);
+        var $form = $("#id-coverage-spatial");
+        var form_update_action = $form.attr('action');
+        var res_short_id = form_update_action.split('/')[3];
+        var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
+        $form.attr('action', update_url);
+        var $id_type_div = $("#div_id_type");
+        var $point_radio = $id_type_div.find("#id_type_2");
+        var $box_radio = $id_type_div.find("#id_type_1");
+        if (spatialCoverage.type === 'point') {
+            $point_radio.attr('checked', 'checked');
+            $box_radio.parent().closest("label").addClass("text-muted");
+            $box_radio.attr('disabled', true);
+            $point_radio.parent().closest("label").removeClass("text-muted");
+            $point_radio.attr('disabled', false);
+            $("#id_north").val(spatialCoverage.north);
+            $("#id_east").val(spatialCoverage.east);
+            $("#div_id_north").show();
+            $("#div_id_east").show();
+            $("#div_id_elevation").show();
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
         }
-    initMap();
+        else { //coverage type is 'box'
+            $box_radio.attr('checked', 'checked');
+            $point_radio.parent().closest("label").addClass("text-muted");
+            $point_radio.attr('disabled', true);
+            $box_radio.parent().closest("label").removeClass("text-muted");
+            $box_radio.attr('disabled', false);
+            $("#id_eastlimit").val(spatialCoverage.eastlimit);
+            $("#id_northlimit").val(spatialCoverage.northlimit);
+            $("#id_westlimit").val(spatialCoverage.westlimit);
+            $("#id_southlimit").val(spatialCoverage.southlimit);
+            $("#div_id_north").hide();
+            $("#div_id_east").hide();
+            $("#div_id_elevation").hide();
+            $("#div_id_northlimit").show();
+            $("#div_id_eastlimit").show();
+            $("#div_id_southlimit").show();
+            $("#div_id_westlimit").show();
+            $("#div_id_uplimit").show();
+            $("#div_id_downlimit").show();
+        }
+        initMap();
+    }
 }
 
 // updates the UI temporal coverage elements

@@ -407,6 +407,7 @@ function bindFileBrowserItemEvents() {
     });
 
     $("#hs-file-browser li.fb-folder").dblclick(onOpenFolder);
+    $("#hs-file-browser li.fb-file").dblclick(onOpenFile);
 
     // Right click menu for file browser
     $("#hsDropzone").bind("contextmenu", function (event) {
@@ -652,6 +653,44 @@ function onSort() {
     var order = $("#fb-sort li[data-order].active").attr("data-order");
 
     sort(method, order);
+}
+
+
+function onOpenFile() {
+    startDownload();
+}
+
+function startDownload() {
+    var downloadList = $("#fb-files-container li.ui-selected");
+
+    // Remove previous temporary download frames
+    $(".temp-download-frame").remove();
+
+    if (downloadList.length) {
+        // Workaround for Firefox and IE
+        if (jQuery.browser.mozilla == true || !!navigator.userAgent.match(/Trident\/7\./)) {
+            for (var i = 0; i < downloadList.length; i++) {
+                var url = $(downloadList[i]).attr("data-url");
+                var frameID = "download-frame-" + i;
+                $("body").append("<iframe class='temp-download-frame' id='" + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+            }
+        }
+        else {
+            for (var i = 0; i < downloadList.length; i++) {
+                var url = $(downloadList[i]).attr("data-url");
+                var fileName = $(downloadList[i]).children(".fb-file-name").text();
+                downloadURI(url, fileName);
+            }
+        }
+    }
+}
+
+function downloadURI(uri, name) {
+    var link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    link.click();
+    link.remove();
 }
 
 function onOpenFolder() {
@@ -1224,37 +1263,9 @@ $(document).ready(function () {
         if(e.currentTarget.id === "download-file-btn"){
             $("#license-agree-dialog-file").modal('hide');
         }
-        var downloadList = $("#fb-files-container li.ui-selected");
 
-        // Remove previous temporary download frames
-        $(".temp-download-frame").remove();
-
-        if (downloadList.length) {
-            // Workaround for Firefox and IE
-            if (jQuery.browser.mozilla == true || !!navigator.userAgent.match(/Trident\/7\./)) {
-                for (var i = 0; i < downloadList.length; i++) {
-                    var url = $(downloadList[i]).attr("data-url");
-                    var frameID = "download-frame-" + i;
-                    $("body").append("<iframe class='temp-download-frame' id='" + frameID + "' style='display:none;' src='" + url + "'></iframe>");
-                }
-            }
-            else {
-                for (var i = 0; i < downloadList.length; i++) {
-                    var url = $(downloadList[i]).attr("data-url");
-                    var fileName = $(downloadList[i]).children(".fb-file-name").text();
-                    downloadURI(url, fileName);
-                }
-            }
-        }
+        startDownload();
     });
-
-    function downloadURI(uri, name) {
-        var link = document.createElement("a");
-        link.download = name;
-        link.href = uri;
-        link.click();
-        link.remove();
-    }
 
     // Get file URL method
     $("#btn-get-link, #fb-get-link").click(function () {
