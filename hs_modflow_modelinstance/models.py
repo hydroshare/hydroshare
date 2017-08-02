@@ -569,7 +569,7 @@ class GeneralElements(AbstractMetaDataElement):
             ocp = kwargs.pop('output_control_package', None)
             general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
 
-            if ocp:
+            if ocp != None:
                 general_elements.output_control_package.clear()
                 general_elements._add_output_control_package(ocp)
 
