@@ -689,6 +689,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif flag == 'make_private' or flag == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
     elif flag == 'make_discoverable':
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif flag == 'make_not_shareable':
         _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
