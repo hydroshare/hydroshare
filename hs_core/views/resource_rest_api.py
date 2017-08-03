@@ -43,7 +43,8 @@ class ResourceToListItemMixin(object):
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
         resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
-        coverages = [{"type": v['type'], "value": json.loads(v['_value'])} for v in r.metadata.coverages.values()]
+        coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
+                     for v in r.metadata.coverages.values()]
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
