@@ -1696,8 +1696,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         else:  # state change is allowed
             self.raccess.discoverable = value
             self.raccess.save()
-            if not value:  # not discoverable means also not public
-                self.set_public(value)  # This must be called, as it sets the AVU isPublic
+            self.set_public(False)
 
     def set_public(self, value, user=None):
         """Set the public flag for a resource.
