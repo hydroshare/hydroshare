@@ -650,7 +650,8 @@ class TimeSeriesResource(BaseResource):
 processor_for(TimeSeriesResource)(resource_processor)
 
 
-class TimeSeriesMetaData(CoreMetaData):
+class TimeSeriesMetaDataMixin(models.Model):
+    """This class must be the first class in the multi-inheritance list of classes"""
     _sites = GenericRelation(Site)
     _variables = GenericRelation(Variable)
     _methods = GenericRelation(Method)
@@ -664,9 +665,8 @@ class TimeSeriesMetaData(CoreMetaData):
     # file as part of the sync operation
     value_counts = HStoreField(default={})
 
-    @property
-    def resource(self):
-        return TimeSeriesResource.objects.filter(object_id=self.id).first()
+    class Meta:
+        abstract = True
 
     @property
     def sites(self):
@@ -704,7 +704,7 @@ class TimeSeriesMetaData(CoreMetaData):
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
-        elements = super(TimeSeriesMetaData, cls).get_supported_element_names()
+        elements = super(TimeSeriesMetaDataMixin, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('Site')
         elements.append('Variable')
@@ -715,7 +715,7 @@ class TimeSeriesMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        if not super(TimeSeriesMetaData, self).has_all_required_elements():
+        if not super(TimeSeriesMetaDataMixin, self).has_all_required_elements():
             return False
         if not self.sites:
             return False
@@ -755,7 +755,8 @@ class TimeSeriesMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):
-        missing_required_elements = super(TimeSeriesMetaData, self).get_required_missing_elements()
+        missing_required_elements = super(TimeSeriesMetaDataMixin,
+                                          self).get_required_missing_elements()
         if not self.sites:
             missing_required_elements.append('Site')
         if not self.variables:
@@ -788,6 +789,36 @@ class TimeSeriesMetaData(CoreMetaData):
                 missing_required_elements.append('UTC Offset')
 
         return missing_required_elements
+
+    def delete_all_elements(self):
+        super(TimeSeriesMetaDataMixin, self).delete_all_elements()
+        # delete resource specific metadata
+        self.sites.delete()
+        self.variables.delete()
+        self.methods.delete()
+        self.processing_levels.delete()
+        self.time_series_results.delete()
+        if self.utc_offset:
+            self.utc_offset.delete()
+
+        # delete CV lookup django tables
+        self.cv_variable_types.all().delete()
+        self.cv_variable_names.all().delete()
+        self.cv_speciations.all().delete()
+        self.cv_elevation_datums.all().delete()
+        self.cv_site_types.all().delete()
+        self.cv_method_types.all().delete()
+        self.cv_units_types.all().delete()
+        self.cv_statuses.all().delete()
+        self.cv_mediums.all().delete()
+        self.cv_aggregation_statistics.all().delete()
+
+
+class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
+
+    @property
+    def resource(self):
+        return TimeSeriesResource.objects.filter(object_id=self.id).first()
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
@@ -926,29 +957,6 @@ class TimeSeriesMetaData(CoreMetaData):
                                                  element_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
-
-    def delete_all_elements(self):
-        super(TimeSeriesMetaData, self).delete_all_elements()
-        # delete resource specific metadata
-        self.sites.delete()
-        self.variables.delete()
-        self.methods.delete()
-        self.processing_levels.delete()
-        self.time_series_results.delete()
-        if self.utc_offset:
-            self.utc_offset.delete()
-
-        # delete CV lookup django tables
-        self.cv_variable_types.all().delete()
-        self.cv_variable_names.all().delete()
-        self.cv_speciations.all().delete()
-        self.cv_elevation_datums.all().delete()
-        self.cv_site_types.all().delete()
-        self.cv_method_types.all().delete()
-        self.cv_units_types.all().delete()
-        self.cv_statuses.all().delete()
-        self.cv_mediums.all().delete()
-        self.cv_aggregation_statistics.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         super(TimeSeriesMetaData, self).copy_all_elements_from(src_md, exclude_elements)
