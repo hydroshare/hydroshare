@@ -18,7 +18,7 @@ from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVaria
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
-from hs_file_types.models.timseries import extract_metadata
+from hs_file_types.models.timseries import extract_metadata, validate_odm2_db_file
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
 
@@ -243,7 +243,7 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
     if fl_ext == '.sqlite':
         # get the file from iRODS to a temp directory
         fl_obj_name = utils.get_file_from_irods(res_file)
-        validate_err_message = _validate_odm2_db_file(fl_obj_name)
+        validate_err_message = validate_odm2_db_file(fl_obj_name)
         if not validate_err_message:
             # first delete relevant existing metadata elements
             if delete_existing_metadata:
@@ -437,55 +437,6 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
                     return err_message
 
     return None
-
-
-def _validate_odm2_db_file(uploaded_sqlite_file_name):
-    err_message = "Uploaded file is not a valid ODM2 SQLite file."
-    log = logging.getLogger()
-    try:
-        con = sqlite3.connect(uploaded_sqlite_file_name)
-        with con:
-
-            # TODO: check that each of the core tables has the necessary columns
-
-            # check that the uploaded file has all the tables from ODM2Core and the CV tables
-            cur = con.cursor()
-            odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy',
-                                     'Organizations', 'Methods', 'FeatureActions', 'Actions',
-                                     'RelatedActions', 'Results', 'Variables', 'Units', 'Datasets',
-                                     'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers',
-                                     'CV_VariableType', 'CV_VariableName', 'CV_Speciation',
-                                     'CV_SiteType', 'CV_ElevationDatum', 'CV_MethodType',
-                                     'CV_UnitsType', 'CV_Status', 'CV_Medium',
-                                     'CV_AggregationStatistic']
-            # check the tables exist
-            for table_name in odm2_core_table_names:
-                cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?",
-                            ("table", table_name))
-                result = cur.fetchone()
-                if result[0] <= 0:
-                    err_message += " Table '{}' is missing.".format(table_name)
-                    log.info(err_message)
-                    return err_message
-
-            # check that the tables have at least one record
-            for table_name in odm2_core_table_names:
-                if table_name == 'RelatedActions' or table_name == 'TaxonomicClassifiers':
-                    continue
-                cur.execute("SELECT COUNT(*) FROM " + table_name)
-                result = cur.fetchone()
-                if result[0] <= 0:
-                    err_message += " Table '{}' has no records.".format(table_name)
-                    log.info(err_message)
-                    return err_message
-        return None
-    except sqlite3.Error, e:
-        sqlite_err_msg = str(e.args[0])
-        log.error(sqlite_err_msg)
-        return sqlite_err_msg
-    except Exception, e:
-        log.error(e.message)
-        return e.message
 
 
 def _delete_resource_file(resource, file_ext):

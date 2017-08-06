@@ -1,11 +1,13 @@
-# import os
-# import shutil
+import os
+import shutil
 import logging
 import sqlite3
 
-from django.db import models
-# from django.core.exceptions import ValidationError
-# from django.core.files.uploadedfile import UploadedFile
+from django.db import models, transaction
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
+from hs_core.hydroshare import utils
+from hs_core.hydroshare.resource import delete_resource_file
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin
 
 from base import AbstractFileMetaData, AbstractLogicalFile
@@ -65,6 +67,165 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     def supports_delete_folder_on_zip(self):
         """does not allow the original folder to be deleted upon zipping of that folder"""
         return False
+
+    @classmethod
+    def set_file_type(cls, resource, file_id, user):
+        """
+        Sets a .sqlite or .csv resource file to TimeSeries file type
+        :param resource: an instance of resource type CompositeResource
+        :param file_id: id of the resource file to be set as TimeSeries file type
+        :param user: user who is setting the file type
+        :return:
+        """
+
+        # TODO: need to code for setting csv file as time series file type
+
+        # had to import it here to avoid import loop
+        from hs_core.views.utils import create_folder, remove_folder
+
+        log = logging.getLogger()
+
+        # get the resource file
+        res_file = utils.get_resource_file_by_id(resource, file_id)
+
+        if res_file is None or not res_file.exists:
+            raise ValidationError("File not found.")
+
+        if res_file.extension.lower() not in ('.sqlite', '.csv'):
+            raise ValidationError("Not a valid time series supported file.")
+
+        if not res_file.has_generic_logical_file:
+            raise ValidationError("Selected file must be part of a generic file type.")
+
+        # get the file from irods to temp dir
+        temp_sqlite_file = utils.get_file_from_irods(res_file)
+        # hold on to temp dir for final clean up
+        temp_dir = os.path.dirname(temp_sqlite_file)
+        validate_err_message = validate_odm2_db_file(temp_sqlite_file)
+        if validate_err_message is not None:
+            log.error(validate_err_message)
+            # remove temp dir
+            if os.path.isdir(temp_dir):
+                shutil.rmtree(temp_dir)
+            raise ValidationError(validate_err_message)
+
+        file_name = res_file.file_name
+        # file name without the extension
+        base_file_name = file_name[:-len(res_file.extension)]
+        file_folder = res_file.file_folder
+        file_type_success = False
+        upload_folder = ''
+        msg = "TimeSeries file type. Error when setting file type. Error:{}"
+        with transaction.atomic():
+            # create a TimeSerisLogicalFile object to be associated with resource file
+            logical_file = cls.create()
+
+            # by default set the dataset_name attribute of the logical file to the
+            # name of the file selected to set file type
+            logical_file.dataset_name = base_file_name
+            logical_file.save()
+            try:
+                # create a folder for the geofeature file type using the base file
+                # name as the name for the new folder
+                new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                               base_file_name)
+                create_folder(resource.short_id, new_folder_path)
+                log.info("Folder created:{}".format(new_folder_path))
+
+                new_folder_name = new_folder_path.split('/')[-1]
+                if file_folder is None:
+                    upload_folder = new_folder_name
+                else:
+                    upload_folder = os.path.join(file_folder, new_folder_name)
+                # add the sqlite file to the resource
+                uploaded_file = UploadedFile(file=open(temp_sqlite_file, 'rb'),
+                                             name=os.path.basename(temp_sqlite_file))
+                new_res_file = utils.add_file_to_resource(
+                    resource, uploaded_file, folder=upload_folder
+                )
+
+                # make each resource file we added part of the logical file
+                logical_file.add_resource_file(new_res_file)
+
+                log.info("TimeSeries file type - sqlite file was added to the file type.")
+                extract_err_message = extract_metadata(resource, temp_sqlite_file, logical_file)
+                if extract_err_message:
+                    raise ValidationError(extract_err_message)
+
+                log.info("TimeSeries file type and resource level metadata updated.")
+                # delete the original sqlite file used as part of setting file type
+                delete_resource_file(resource.short_id, file_id.id, user)
+                log.info("Deleted original sqlite file.")
+                file_type_success = True
+            except Exception as ex:
+                msg = msg.format(ex.message)
+                log.exception(msg)
+            finally:
+                # remove temp dir
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
+
+        if not file_type_success and upload_folder:
+            # delete any new files uploaded as part of setting file type
+            folder_to_remove = os.path.join('data', 'contents', upload_folder)
+            remove_folder(user, resource.short_id, folder_to_remove)
+            log.info("Deleted newly created file type folder")
+            raise ValidationError(msg)
+
+
+def validate_odm2_db_file(sqlite_file_path):
+    """
+    Validates if the sqlite file *sqlite_file_path* is a valid ODM2 sqlite file
+    :param sqlite_file_path: path of the sqlite file to be validated
+    :return: If validation fails then an error message string is returned otherwise None is
+    returned
+    """
+    err_message = "Uploaded file is not a valid ODM2 SQLite file."
+    log = logging.getLogger()
+    try:
+        con = sqlite3.connect(sqlite_file_path)
+        with con:
+
+            # TODO: check that each of the core tables has the necessary columns
+
+            # check that the uploaded file has all the tables from ODM2Core and the CV tables
+            cur = con.cursor()
+            odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy',
+                                     'Organizations', 'Methods', 'FeatureActions', 'Actions',
+                                     'RelatedActions', 'Results', 'Variables', 'Units', 'Datasets',
+                                     'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers',
+                                     'CV_VariableType', 'CV_VariableName', 'CV_Speciation',
+                                     'CV_SiteType', 'CV_ElevationDatum', 'CV_MethodType',
+                                     'CV_UnitsType', 'CV_Status', 'CV_Medium',
+                                     'CV_AggregationStatistic']
+            # check the tables exist
+            for table_name in odm2_core_table_names:
+                cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?",
+                            ("table", table_name))
+                result = cur.fetchone()
+                if result[0] <= 0:
+                    err_message += " Table '{}' is missing.".format(table_name)
+                    log.info(err_message)
+                    return err_message
+
+            # check that the tables have at least one record
+            for table_name in odm2_core_table_names:
+                if table_name == 'RelatedActions' or table_name == 'TaxonomicClassifiers':
+                    continue
+                cur.execute("SELECT COUNT(*) FROM " + table_name)
+                result = cur.fetchone()
+                if result[0] <= 0:
+                    err_message += " Table '{}' has no records.".format(table_name)
+                    log.info(err_message)
+                    return err_message
+        return None
+    except sqlite3.Error, e:
+        sqlite_err_msg = str(e.args[0])
+        log.error(sqlite_err_msg)
+        return sqlite_err_msg
+    except Exception, e:
+        log.error(e.message)
+        return e.message
 
 
 def extract_metadata(resource, sqlite_file_name, logical_file=None):
