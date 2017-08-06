@@ -658,7 +658,7 @@ class TimeSeriesMetaDataMixin(models.Model):
     _processing_levels = GenericRelation(ProcessingLevel)
     _time_series_results = GenericRelation(TimeSeriesResult)
     _utc_offset = GenericRelation(UTCOffSet)
-    is_dirty = models.BooleanField(default=False)
+
     # temporarily store the series names (data column names) from the csv file
     # for storing data column name (key) and number of data points (value) for that column
     # this field is set to an empty dict once metadata changes are written to the blank sqlite
@@ -813,8 +813,28 @@ class TimeSeriesMetaDataMixin(models.Model):
         self.cv_mediums.all().delete()
         self.cv_aggregation_statistics.all().delete()
 
+    def create_cv_lookup_models(self, sql_cur):
+        table_name_class_mappings = {'CV_VariableType': CVVariableType,
+                                     'CV_VariableName': CVVariableName,
+                                     'CV_Speciation': CVSpeciation,
+                                     'CV_SiteType': CVSiteType,
+                                     'CV_ElevationDatum': CVElevationDatum,
+                                     'CV_MethodType': CVMethodType,
+                                     'CV_UnitsType': CVUnitsType,
+                                     'CV_Status': CVStatus,
+                                     'CV_Medium': CVMedium,
+                                     'CV_AggregationStatistic': CVAggregationStatistic}
+        for table_name in table_name_class_mappings:
+            sql_cur.execute("SELECT Term, Name FROM {}".format(table_name))
+            table_rows = sql_cur.fetchall()
+            for row in table_rows:
+                table_name_class_mappings[table_name].objects.create(metadata=self,
+                                                                     term=row['Term'],
+                                                                     name=row['Name'])
+
 
 class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
+    is_dirty = models.BooleanField(default=False)
 
     @property
     def resource(self):
