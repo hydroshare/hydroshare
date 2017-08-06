@@ -3,7 +3,7 @@
 import logging
 import sqlite3
 
-from django.db import models, transaction
+from django.db import models
 # from django.core.exceptions import ValidationError
 # from django.core.files.uploadedfile import UploadedFile
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin
@@ -133,7 +133,6 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                 for kw in logical_file.metadata.keywords:
                     if kw.lower() not in resource_keywords:
                         resource.metadata.create_element('subject', value=kw)
-
 
             # find the contributors for metadata
             file_type = logical_file is not None
