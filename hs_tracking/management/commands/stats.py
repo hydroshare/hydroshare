@@ -175,7 +175,6 @@ class Command(BaseCommand):
 
         # adjust start date for look-back option
         yesterday_start = today_start - datetime.timedelta(days=lookback)
-        print('range: %s - %s' % (yesterday_start, today_start))
         variables = hs_tracking.Variable.objects.filter(
             timestamp__gte=yesterday_start,
             timestamp__lt=today_start
