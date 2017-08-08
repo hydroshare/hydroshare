@@ -72,6 +72,7 @@ function updateSelectionMenuContext() {
     var flagDisableSetNetCDFFileType = false;
     var flagDisableSetGeoFeatureFileType = false;
     var flagDisableSetRefTimeseriesFileType = false;
+    var flagDisableSetTimeseriesFileType = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -86,6 +87,7 @@ function updateSelectionMenuContext() {
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoFeatureFileType = true;
         flagDisableSetRefTimeseriesFileType = true;
+        flagDisableSetTimeseriesFileType = true;
         flagDisableGetLink = true;
 
         for (var i = 0; i < selected.length; i++) {
@@ -99,8 +101,8 @@ function updateSelectionMenuContext() {
         // Multiple folder deletion is not allowed for composite resource
         // to avoid race condition that can occur with logical file objects especially
         // if a folder has many files
-        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected")
-        if(resourceType === 'Composite Resource' && foldersSelected.length > 1){
+        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
+        if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
             flagDisableDelete = true;
         }
     }
@@ -125,6 +127,7 @@ function updateSelectionMenuContext() {
         flagDisableSetNetCDFFileType = true;
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetGeoFeatureFileType = true;
+        flagDisableSetTimeseriesFileType = true;
 
         $("#fb-download-help").toggleClass("hidden", true);
     }
@@ -166,7 +169,10 @@ function updateSelectionMenuContext() {
         if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "GenericLogicalFile") {
             flagDisableSetRefTimeseriesFileType = true;
         }
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
+        if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetTimeseriesFileType = true;
+        }
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableDelete = true;
             flagDisableRename = true;
             flagDisableCut = true;
@@ -217,6 +223,10 @@ function updateSelectionMenuContext() {
     // set RefTimeseries file type
     menu.children("li[data-menu-name='setreftsfiletype']").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
     $("#fb-set-refts-file-type").toggleClass("disabled", flagDisableSetRefTimeseriesFileType);
+
+    // set Timeseries file type
+    menu.children("li[data-menu-name='settimeseriesfiletype']").toggleClass("disabled", flagDisableSetTimeseriesFileType);
+    $("#fb-set-timeseries-file-type").toggleClass("disabled", flagDisableSetTimeseriesFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -1282,6 +1292,11 @@ $(document).ready(function () {
     // set RefTimeseries file type method
      $("#btn-set-refts-file-type").click(function () {
          setFileType("RefTimeseries");
+     });
+
+     // set Timeseries file type method
+     $("#btn-set-timeseris-file-type").click(function () {
+         setFileType("TimeSeries");
      });
     // Zip method
     $("#btn-confirm-zip").click(function () {
