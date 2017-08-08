@@ -183,13 +183,37 @@ class Command(BaseCommand):
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
 
+            # make sure values are | separated (i.e. replace legacy format)
+            vals = self.dict_spc_to_pipe(v.value)
+
             # encode variables as key value pairs (except for timestamp)
             values = [unicode(v.timestamp).encode('utf-8'),
                       'user_id=%s' % unicode(uid).encode(),
                       'session_id=%s' % unicode(v.session.id).encode(),
                       'action=%s' % unicode(v.name).encode(),
-                      v.value]
+                      vals]
             print('|'.join(values))
+
+    def dict_spc_to_pipe(self, s):
+
+        # exit early if pipes already exist
+        if '|' in s:
+            return s
+
+        # convert from space separated to pipe separated
+        groups = s.split('=')
+
+        # need to take into account possible spaces in the dict values
+        formatted_str = ''
+        for i in range(1, len(groups)):
+            k = groups[i-1].split(' ')[-1]
+            if i < len(groups) - 1:
+                v = ' '.join(groups[i].split(' ')[:-1])
+                formatted_str += '%s=%s|' % (k, v)
+            else:
+                v = ' '.join(groups[i].split(' ')[:])
+                formatted_str += '%s=%s' % (k, v)
+        return formatted_str
 
     def handle(self, *args, **options):
         START_YEAR = 2016
