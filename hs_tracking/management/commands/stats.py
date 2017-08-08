@@ -2,6 +2,7 @@ import csv
 import datetime
 import sys
 import logging
+from datetime import timedelta
 from calendar import monthrange
 from optparse import make_option
 
@@ -164,16 +165,17 @@ class Command(BaseCommand):
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
-    def yesterdays_variables(self):
+    def yesterdays_variables(self, lookback=1):
 
         today_start = timezone.datetime.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
+           hour=0,
+           minute=0,
+           second=0,
+           microsecond=0)
 
-        yesterday_start = today_start - datetime.timedelta(days=1)
+        # adjust start date for look-back option
+        yesterday_start = today_start - datetime.timedelta(days=lookback)
+        print('range: %s - %s' % (yesterday_start, today_start))
         variables = hs_tracking.Variable.objects.filter(
             timestamp__gte=yesterday_start,
             timestamp__lt=today_start
@@ -187,7 +189,7 @@ class Command(BaseCommand):
                       'session_id=%s' % unicode(v.session.id).encode(),
                       'action=%s' % unicode(v.name).encode(),
                       v.value]
-            print(' '.join(values))
+            print('|'.join(values))
 
     def handle(self, *args, **options):
         START_YEAR = 2016
@@ -212,4 +214,9 @@ class Command(BaseCommand):
         if options["resources_details"]:
             self.resources_details()
         if options["yesterdays_variables"]:
-            self.yesterdays_variables()
+            if len(args) > 0:
+                # run look-back mode
+                self.yesterdays_variables(lookback=int(args[0]))
+            else:
+                # run default mode
+                self.yesterdays_variables()
