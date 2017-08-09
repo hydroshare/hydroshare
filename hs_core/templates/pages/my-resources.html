@@ -7,7 +7,9 @@
 <div class="container" id="main">
     <div class="row">
         <div class="col-sm-12">
-            <h2 class="page-title">My Resources</h2>
+            <h2 class="page-title">My Resources
+                <small class="text-muted"><i>Interact with your HydroShare Content.</i></small>
+            </h2>
         </div>
         <div class="col-lg-2" id="facets">
             <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
@@ -395,6 +397,14 @@
             </table>
 
             <br>
+
+            <div class="alert alert-info">
+                <strong>
+                    <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
+                </strong>
+                <p>Public resources not owned are searchable from
+                    <strong><a href="/search">Discover</a></strong></p>
+            </div>
             {% include "includes/legend.html" %}
 
         </div>
