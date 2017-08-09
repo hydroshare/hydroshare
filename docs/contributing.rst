@@ -58,5 +58,7 @@ Pull requests will not be merged until at least one code review is accepted. We 
 - Follow the `PEP8 style guide`_
 - Write a `good commit message`_
 
+TODO: Stakeholder Review
+
 .. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
 .. _good commit message: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
