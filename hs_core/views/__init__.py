@@ -591,6 +591,12 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             content_type="application/json"
         )
 
+@api_view(['POST'])
+def rep_res_bag_to_irods_user_zone_public(request, pk):
+    response = rep_res_bag_to_irods_user_zone(request, pk)
+    return response
+
+
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
