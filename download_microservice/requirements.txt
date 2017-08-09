@@ -1,0 +1,23 @@
+# Direct dependencies:
+#   python-dotenv
+#   git+https://github.com/irods/python-irodsclient.git@master
+#   flask
+#   gevent
+
+# Pinned with their dependencies
+six==1.10.0
+uWSGI==2.0.15
+appdirs==1.4.3
+click==6.7
+Flask==0.12.2
+gevent==1.2.1
+greenlet==0.4.12
+itsdangerous==0.24
+Jinja2==2.9.6
+MarkupSafe==1.0
+packaging==16.8
+prettytable==0.7.2
+pyparsing==2.2.0
+python-dotenv==0.6.4
+Werkzeug==0.12.2
+git+https://github.com/irods/python-irodsclient.git@tags/v0.6.0

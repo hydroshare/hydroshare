@@ -70,15 +70,18 @@ start_nginx() {
     fi
     # Launch nginx as docker container nginx
     HYDROSHARE_CID=`docker-compose ps | grep hydroshare | tr -s ' ' | cut -d ' ' -f 1`
+    DOWNLOAD_CID=`docker-compose ps | grep download_microservice | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
         echo "  - docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR}"
         docker run -d --name ${NGINX_DOCKER_CNTR} \
             --link ${HYDROSHARE_CID}:hydroshare \
+            --link ${DOWNLOAD_CID}:download_microservice \
             -p 80:80 -p 443:443 \
             --volume ${HOST_SSL_DIR}:/hs-certs \
             --volume ${HS_LOG_FILES}:/var/log/nginx \
             --volumes-from ${HYDROSHARE_CID} \
+            --volumes-from ${DOWNLOAD_CID} \
             -ti ${NGINX_DOCKER_IMG};
     else
         CHECK_NGINX_CID=`docker ps | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
