@@ -526,9 +526,6 @@ class Description(AbstractMetaDataElement):
             element.metadata.is_dirty = True
             element.metadata.save()
 
-        if(type(kwargs['abstract']) == list):
-            kwargs['abstract'] = kwargs['abstract'][0].encode('utf-8')
-
         super(Description, cls).update(element_id, **kwargs)
 
     @classmethod
@@ -560,9 +557,6 @@ class Title(AbstractMetaDataElement):
         if resource.resource_type == "TimeSeriesResource":
             element.metadata.is_dirty = True
             element.metadata.save()
-
-        if(type(kwargs['value']) == list):
-            kwargs['value'] = kwargs['value'][0].encode('utf-8')
 
         super(Title, cls).update(element_id, **kwargs)
 

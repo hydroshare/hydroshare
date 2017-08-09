@@ -192,6 +192,10 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         metadata = []
         put_data = request.data.copy()
 
+        # convert the QueryDict to dict
+
+        put_data = put_data.dict()
+
         try:
             resource.metadata.parse_for_bulk_update(put_data, metadata)
             hydroshare.update_science_metadata(pk=pk, metadata=metadata, user=request.user)
