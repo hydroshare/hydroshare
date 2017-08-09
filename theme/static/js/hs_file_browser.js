@@ -672,7 +672,8 @@ function startDownload() {
             for (var i = 0; i < downloadList.length; i++) {
                 var url = $(downloadList[i]).attr("data-url");
                 var frameID = "download-frame-" + i;
-                $("body").append("<iframe class='temp-download-frame' id='" + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+                $("body").append("<iframe class='temp-download-frame' id='"
+                    + frameID + "' style='display:none;' src='" + url + "'></iframe>");
             }
         }
         else {

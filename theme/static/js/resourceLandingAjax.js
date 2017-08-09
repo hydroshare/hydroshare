@@ -617,7 +617,9 @@ function metadata_update_ajax_submit(form_id){
                     form_update_action = $form.attr('action');
                     if (!json_response.hasOwnProperty('form_action')){
                         res_short_id = form_update_action.split('/')[3];
-                        update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/";
+                        update_url = "/hsapi/_internal/" + res_short_id + "/"
+                            + json_response.element_name + "/"
+                            + json_response.element_id + "/update-metadata/";
                     }
                     else {
                         update_url = json_response.form_action
