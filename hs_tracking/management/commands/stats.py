@@ -151,18 +151,30 @@ class Command(BaseCommand):
             'user id'
         ]
         w.writerow(fields)
-
+        failed_resource_ids = []
         for r in BaseResource.objects.all():
-            values = [
-                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
-                r.metadata.title.value,
-                r.resource_type,
-                r.size,
-                r.raccess.sharing_status,
-                r.user.userprofile.user_type,
-                r.user_id
-            ]
-            w.writerow([unicode(v).encode("utf-8") for v in values])
+            try:
+                values = [
+                    r.metadata.dates.get(type="created").
+                    start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                    r.metadata.title.value,
+                    r.resource_type,
+                    r.size,
+                    r.raccess.sharing_status,
+                    r.user.userprofile.user_type,
+                    r.user_id
+                ]
+                w.writerow([unicode(v).encode("utf-8") for v in values])
+
+            except Exception as e:
+                err.error(e)
+
+                # save the id of the broken resource
+                failed_resource_ids.append(r.short_id)
+
+        # print all failed resources for debugging purposes
+        for f in failed_resource_ids:
+            err.error('Error processing resource: %s' % f)
 
     def yesterdays_variables(self, lookback=1):
 
