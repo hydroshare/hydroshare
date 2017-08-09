@@ -2,7 +2,6 @@ import csv
 import datetime
 import sys
 import logging
-from datetime import timedelta
 from calendar import monthrange
 from optparse import make_option
 
