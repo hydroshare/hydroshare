@@ -59,7 +59,7 @@ We may suggest some changes or improvements or alternatives. Below is a list of 
 - Create an issue to pair your pull request with
 - Write tests
 - Follow the `PEP8 style guide`_
-- Write a `good commit message`_
+- Writing `clear and concise commit messages` to help code reviewers
 
 .. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
-.. _good commit message: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+.. _clear and concise commit messages: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
