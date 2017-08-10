@@ -109,7 +109,7 @@ def post_create_resource_handler(sender, **kwargs):
 def add_metadata_from_file(resource):
     # extract metadata from the just uploaded file
     res_files = resource.files.all()
-    if res_files.first():
+    if res_files:
         process_package_info(resource)
         for f in res_files:
             if f.extension == '.dis':
@@ -145,26 +145,22 @@ def process_package_info(resource):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.StressPeriod,
                                                   stressPeriodType=p)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.StressPeriod.transientStateValueTypeChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.StressPeriod,
                                                   transientStateValueType=p)
-                    continue
                 # GroundWaterFlow
                 if p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowPackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
                                                   flowPackage=p)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowParameterChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
                                                   flowParameter=p)
-                    continue
                 # BoundaryCondition
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedHeadBoundaryPackageChoices):
@@ -173,7 +169,6 @@ def process_package_info(resource):
                     create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_head_boundary_packages=specified_head_boundary_package_list)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
@@ -181,7 +176,6 @@ def process_package_info(resource):
                     create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_flux_boundary_packages=specified_flux_boundary_packages_list)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.headDependentFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
@@ -189,21 +183,18 @@ def process_package_info(resource):
                     create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         head_dependent_flux_boundary_packages=head_dependent_flux_boundary_packages)
-                    continue
                 # ModelCalibration
                 if p in modflow_models.uncouple(
                         modflow_models.ModelCalibration.observationProcessPackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.ModelCalibration,
                                                   observationProcessPackage=p)
-                    continue
                 # GeneralElements
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.modelSolverChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GeneralElements,
                                                   modelSolver=p)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.outputControlPackageChoices):
                     # create if does not exist, update if it does exist
@@ -211,30 +202,24 @@ def process_package_info(resource):
                     create_or_update_from_package(
                         resource, modflow_models.GeneralElements,
                         output_control_package=output_control_package_list)
-                    continue
                 if p in modflow_models.uncouple(
                         modflow_models.GeneralElements.subsidencePackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GeneralElements,
                                                   subsidencePackage=p)
-                    continue
 
 
 def create_or_update_from_package(resource, term, **kwargs):
-    if term.term == 'StressPeriod':
-        t = 'stress_period'
-    if term.term == 'GroundWaterFlow':
-        t = 'ground_water_flow'
-    if term.term == 'BoundaryCondition':
-        t = 'boundary_condition'
-    if term.term == 'ModelCalibration':
-        t = 'model_calibration'
-    if term.term == 'GeneralElements':
-        t = 'general_elements'
-    if term.term == 'GridDimensions':
-        t = 'grid_dimensions'
-    if term.term == 'StudyArea':
-        t = 'study_area'
+    terms_dict = dict(
+            StressPeriod='stress_period',
+            GroundWaterFlow='ground_water_flow',
+            BoundaryCondition='boundary_condition',
+            ModelCalibration='model_calibration',
+            GeneralElements='general_elements',
+            GridDimensions='grid_dimensions',
+            StudyArea='study_area'
+            )
+    t = terms_dict[term.term]
     metadata_term_obj = getattr(resource.metadata, t)
     if not metadata_term_obj:
         resource.metadata.create_element(
@@ -251,6 +236,15 @@ def create_or_update_from_package(resource, term, **kwargs):
 
 
 def add_metadata_from_dis_file(dis_file, res):
+    """
+    This function parses the .dis file and populates relevant metadata terms for the MODFLOWModel-
+    InstanceResource object being passed. Data from the .dis file is used to populate portions of
+    the StressPeriod, GridDimensions, and StudyArea terms. Information about what the parts of the
+    .dis file is at : https://water.usgs.gov/nrp/gwsoftware/modflow2000/MFDOC/index.html?dis.htm
+    inputs:
+    dis_file: file object of .dis file
+    res: MODFLOWModelInstanceResource object
+    """
     lines = dis_file.resource_file.readlines()
     first_line = True
     ss = False

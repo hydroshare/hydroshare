@@ -137,22 +137,22 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # ---Tests for Grid Dimensions
         # Number of Layers
-        self.assertEquals(self.res.metadata.grid_dimensions.numberOfLayers, str(4))
+        self.assertEqual(self.res.metadata.grid_dimensions.numberOfLayers, str(4))
         # Type of Rows
-        self.assertEquals(self.res.metadata.grid_dimensions.typeOfRows, 'Regular')
+        self.assertEqual(self.res.metadata.grid_dimensions.typeOfRows, 'Regular')
         # Number of Rows
-        self.assertEquals(self.res.metadata.grid_dimensions.numberOfRows, str(20))
+        self.assertEqual(self.res.metadata.grid_dimensions.numberOfRows, str(20))
         # Type of Columns
-        self.assertEquals(self.res.metadata.grid_dimensions.typeOfColumns, 'Regular')
+        self.assertEqual(self.res.metadata.grid_dimensions.typeOfColumns, 'Regular')
         # Number of Columns
-        self.assertEquals(self.res.metadata.grid_dimensions.numberOfColumns, str(15))
+        self.assertEqual(self.res.metadata.grid_dimensions.numberOfColumns, str(15))
 
         # ---Tests for Stress Period
         # Stress Period Type
-        self.assertEquals(self.res.metadata.stress_period.stressPeriodType, 'Steady and Transient')
+        self.assertEqual(self.res.metadata.stress_period.stressPeriodType, 'Steady and Transient')
 
         # ---Tests for Study Area
         # Total Length
-        self.assertEquals(self.res.metadata.study_area.totalLength, str(20*2000.0))  # double
+        self.assertEqual(self.res.metadata.study_area.totalLength, str(20*2000.0))  # double
         # Total Width
-        self.assertEquals(self.res.metadata.study_area.totalWidth, str(15*2000.0))  # double
+        self.assertEqual(self.res.metadata.study_area.totalWidth, str(15*2000.0))  # double

@@ -363,13 +363,13 @@ class BoundaryCondition(AbstractMetaDataElement):
             other_head_dependent_flux_boundary_packages=kwargs.get(
                 'other_head_dependent_flux_boundary_packages', '')
                     )
-        if kwargs.get('specified_head_boundary_packages'):
+        if kwargs.get('specified_head_boundary_packages', None):
             model_boundary_condition._add_specified_head_boundary_packages(
                 kwargs['specified_head_boundary_packages'])
-        if kwargs.get('specified_flux_boundary_packages'):
+        if kwargs.get('specified_flux_boundary_packages', None):
             model_boundary_condition._add_specified_flux_boundary_packages(
                 kwargs['specified_flux_boundary_packages'])
-        if kwargs.get('head_dependent_flux_boundary_packages'):
+        if kwargs.get('head_dependent_flux_boundary_packages', None):
             model_boundary_condition._add_head_dependent_flux_boundary_packages(
                 kwargs['head_dependent_flux_boundary_packages'])
 
