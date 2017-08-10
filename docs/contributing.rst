@@ -45,12 +45,13 @@ After You've Submitted a Pull Request
 
 The Hydroshare team does our best to respond to pull requests within three business days.
 
-Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictator" of this production Hydroshare code base. After that point, pull requests into develop (and ultimately master) will only be merged by CUAHSI staff or other appointed staff from partner institutions. Other users can still:
+Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictator" of the production Hydroshare code base. After that point, pull requests into develop (and ultimately master) will only be merged by CUAHSI staff or other appointed staff from partner institutions. Other users can still:
 
 #) Create issues and/or pull requests
-#) Request reviews from anybody.
+#) Request reviews from anybody
+#) Participate in code reviews
 
-Pull requests will not be merged until at least one code review is accepted. Additionally, a likely-non-coder stakeholder must review the work to make sure that their issue is resolved or that it doesn't cause any additional technical or philosophical problems.
+Pull requests will not be merged until at least one code review is accepted. Additionally, a stakeholder outside of the core development team must review the work to make sure that their issue is resolved or that it doesn't cause any additional technical or philosophical problems.
 
 We may suggest some changes or improvements or alternatives. Some things that will increase the chance that your pull request is accepted:
 
