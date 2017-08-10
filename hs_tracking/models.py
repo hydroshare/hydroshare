@@ -143,7 +143,7 @@ class Variable(models.Model):
         msg_items = []
         for k, v in kwargs.iteritems():
             msg_items.append('%s=%s' % (unicode(k).encode(), unicode(v).encode()))
-        return ' '.join(msg_items)
+        return '|'.join(msg_items)
 
     @classmethod
     def record(cls, session, name, value=None):
