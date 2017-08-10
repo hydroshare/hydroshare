@@ -55,10 +55,10 @@ Pull requests will not be merged until at least one code review is accepted. Add
 
 We may suggest some changes or improvements or alternatives. Below is a list of best practices that will help expedite the process of accepting developer code into the master branch:
 
-- A reference to the corresponding issue in the description of the pull request.
-- Create an issue to pair your pull request with
-- Write tests
-- Follow the `PEP8 style guide`_
+- Creating an issue to pair your pull request with
+- Including a reference to the corresponding issue in the description of the pull request
+- Writing unit and functional tests to compliment the feature or bugfix code you've written
+- Following the `PEP8 style guide`_
 - Writing `clear and concise commit messages` to help code reviewers
 
 .. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
