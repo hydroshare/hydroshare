@@ -53,7 +53,7 @@ Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictato
 
 Pull requests will not be merged until at least one code review is accepted. Additionally, a stakeholder outside of the core development team must review the work to make sure that their issue is resolved or that it doesn't cause any additional technical or philosophical problems.
 
-We may suggest some changes or improvements or alternatives. Some things that will increase the chance that your pull request is accepted:
+We may suggest some changes or improvements or alternatives. Below is a list of best practices that will help expedite the process of accepting developer code into the master branch:
 
 - A reference to the corresponding issue in the description of the pull request.
 - Create an issue to pair your pull request with
