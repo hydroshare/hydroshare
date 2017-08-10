@@ -1,5 +1,7 @@
 import logging
 
+from django.http import QueryDict
+
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
@@ -193,8 +195,8 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         put_data = request.data.copy()
 
         # convert the QueryDict to dict
-
-        put_data = put_data.dict()
+        if isinstance(put_data, QueryDict):
+            put_data = put_data.dict()
 
         try:
             resource.metadata.parse_for_bulk_update(put_data, metadata)
