@@ -7,7 +7,8 @@ RUN pip install --upgrade pip && pip install \
   django-ipware \
   django-test-without-migrations \
   django-rest-swagger \
-  django-autocomplete-light
+  django-autocomplete-light \
+  jsonschema
 ### End - HydroShare Development Image Additions ###
 
 USER root

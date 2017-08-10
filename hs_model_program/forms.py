@@ -90,7 +90,7 @@ class mp_form(ModelForm):
         exclude = ['content_object']
 
 
-class mp_form_validation(forms.Form):
+class ModelProgramMetadataValidationForm(forms.Form):
     modelVersion = forms.CharField(required=False)
     modelProgramLanguage = forms.CharField(required=False)
     modelOperatingSystem = forms.CharField(required=False)
@@ -101,5 +101,3 @@ class mp_form_validation(forms.Form):
     modelDocumentation = forms.CharField(required=False)
     modelSoftware = forms.CharField(required=False)
     modelEngine = forms.CharField(required=False)
-
-
