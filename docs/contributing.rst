@@ -47,18 +47,18 @@ The Hydroshare team does our best to respond to pull requests within three busin
 
 Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictator" of this production Hydroshare code base. After that point, pull requests into develop (and ultimately master) will only be merged by CUAHSI staff or other appointed staff from partner institutions. Other users can still:
 
-#) Create issues pull requests
+#) Create issues and/or pull requests
 #) Request reviews from anybody.
 
-Pull requests will not be merged until at least one code review is accepted. We may suggest some changes or improvements or alternatives. Some things that will increase the chance that your pull request is accepted:
+Pull requests will not be merged until at least one code review is accepted. Additionally, a likely-non-coder stakeholder must review the work to make sure that their issue is resolved or that it doesn't cause any additional technical or philosophical problems.
+
+We may suggest some changes or improvements or alternatives. Some things that will increase the chance that your pull request is accepted:
 
 - A reference to the corresponding issue in the description of the pull request.
 - Create an issue to pair your pull request with
 - Write tests
 - Follow the `PEP8 style guide`_
 - Write a `good commit message`_
-
-TODO: Stakeholder Review
 
 .. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
 .. _good commit message: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
