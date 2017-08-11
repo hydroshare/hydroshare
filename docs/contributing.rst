@@ -45,20 +45,21 @@ After You've Submitted a Pull Request
 
 The Hydroshare team does our best to respond to pull requests within three business days.
 
-Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictator" of this production Hydroshare code base. After that point, pull requests into develop (and ultimately master) will only be merged by CUAHSI staff or other appointed staff from partner institutions. Other users can still:
+Starting on Sept 1, 2017, CUAHSI will assume the role of the "benevolent dictator" of the production Hydroshare code base. After that point, pull requests into develop (and ultimately master) will only be merged by CUAHSI staff or other appointed staff from partner institutions. Other users can still:
 
-#) Create issues pull requests
-#) Request reviews from anybody.
+#) Create issues and/or pull requests
+#) Request reviews from anybody
+#) Participate in code reviews
 
-Pull requests will not be merged until at least one code review is accepted. We may suggest some changes or improvements or alternatives. Some things that will increase the chance that your pull request is accepted:
+Pull requests will not be merged until at least one code review is accepted. Additionally, a stakeholder outside of the core development team must review the work to make sure that their issue is resolved or that it doesn't cause any additional technical or philosophical problems.
 
-- A reference to the corresponding issue in the description of the pull request.
-- Create an issue to pair your pull request with
-- Write tests
-- Follow the `PEP8 style guide`_
-- Write a `good commit message`_
+We may suggest some changes or improvements or alternatives. Below is a list of best practices that will help expedite the process of accepting developer code into the master branch:
 
-TODO: Stakeholder Review
+- Creating an issue to pair your pull request with
+- Including a reference to the corresponding issue in the description of the pull request
+- Writing unit and functional tests to compliment the feature or bugfix code you've written
+- Following the `PEP8 style guide`_
+- Writing `clear and concise commit messages` to help code reviewers
 
 .. _PEP8 style guide: https://www.python.org/dev/peps/pep-0008/
-.. _good commit message: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+.. _clear and concise commit messages: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
