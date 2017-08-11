@@ -145,38 +145,38 @@ def process_package_info(resource):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.StressPeriod,
                                                   stressPeriodType=p)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.StressPeriod.transientStateValueTypeChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.StressPeriod,
                                                   transientStateValueType=p)
                 # GroundWaterFlow
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowPackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
                                                   flowPackage=p)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.GroundWaterFlow.flowParameterChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
                                                   flowParameter=p)
                 # BoundaryCondition
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedHeadBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     specified_head_boundary_package_list.append(p)
                     create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_head_boundary_packages=specified_head_boundary_package_list)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.specifiedFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     specified_flux_boundary_packages_list.append(p)
                     create_or_update_from_package(
                         resource, modflow_models.BoundaryCondition,
                         specified_flux_boundary_packages=specified_flux_boundary_packages_list)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.BoundaryCondition.headDependentFluxBoundaryPackageChoices):
                     # create if does not exist, update if it does exist
                     head_dependent_flux_boundary_packages.append(p)
@@ -184,25 +184,25 @@ def process_package_info(resource):
                         resource, modflow_models.BoundaryCondition,
                         head_dependent_flux_boundary_packages=head_dependent_flux_boundary_packages)
                 # ModelCalibration
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.ModelCalibration.observationProcessPackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.ModelCalibration,
                                                   observationProcessPackage=p)
                 # GeneralElements
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.GeneralElements.modelSolverChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GeneralElements,
                                                   modelSolver=p)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.GeneralElements.outputControlPackageChoices):
                     # create if does not exist, update if it does exist
                     output_control_package_list.append(p)
                     create_or_update_from_package(
                         resource, modflow_models.GeneralElements,
                         output_control_package=output_control_package_list)
-                if p in modflow_models.uncouple(
+                elif p in modflow_models.uncouple(
                         modflow_models.GeneralElements.subsidencePackageChoices):
                     # create if does not exist, update if it does exist
                     create_or_update_from_package(resource, modflow_models.GeneralElements,
