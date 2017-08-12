@@ -49,7 +49,12 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
         # note: in case of sqlite file upload we don't create any resource specific metadata
         # elements - we do only metadata element updates
         metadata = element.metadata
-        if metadata.resource.has_csv_file:
+        if isinstance(metadata, TimeSeriesMetaData):
+            tg_obj = metadata.resource
+        else:
+            # metadata is an instance of TimeSeriesFileMetaData
+            tg_obj = metadata.logical_file
+        if tg_obj.has_csv_file:
             element.is_dirty = True
             element.save()
             metadata.is_dirty = True
@@ -567,8 +572,7 @@ class TimeSeriesResource(BaseResource):
     @property
     def has_csv_file(self):
         for res_file in self.files.all():
-            fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
-            if fl_ext == '.csv':
+            if res_file.extension == '.csv':
                 return True
         return False
 
@@ -728,7 +732,11 @@ class TimeSeriesMetaDataMixin(models.Model):
         if not self.time_series_results:
             return False
 
-        if self.resource.has_csv_file:
+        if isinstance(self, TimeSeriesMetaData):
+            tg_obj = self.resource
+        else:
+            tg_obj = self.logical_file
+        if tg_obj.has_csv_file:
             # applies to the case of csv file upload
             if not self.utc_offset:
                 return False
@@ -814,16 +822,42 @@ class TimeSeriesMetaDataMixin(models.Model):
         self.cv_aggregation_statistics.all().delete()
 
     def create_cv_lookup_models(self, sql_cur):
-        table_name_class_mappings = {'CV_VariableType': CVVariableType,
-                                     'CV_VariableName': CVVariableName,
-                                     'CV_Speciation': CVSpeciation,
-                                     'CV_SiteType': CVSiteType,
-                                     'CV_ElevationDatum': CVElevationDatum,
-                                     'CV_MethodType': CVMethodType,
-                                     'CV_UnitsType': CVUnitsType,
-                                     'CV_Status': CVStatus,
-                                     'CV_Medium': CVMedium,
-                                     'CV_AggregationStatistic': CVAggregationStatistic}
+        cv_variable_type = CVVariableType
+        cv_variable_name = CVVariableName
+        cv_speciation = CVSpeciation
+        cv_site_type = CVSiteType
+        cv_elevation_datum = CVElevationDatum
+        cv_method_type = CVMethodType
+        cv_units_type = CVUnitsType
+        cv_status = CVStatus
+        cv_medium = CVMedium
+        cv_agg_statistic = CVAggregationStatistic
+
+        if not isinstance(self, TimeSeriesMetaData):
+            # self must be an instance of TimeSeriesFileMetaData
+            from hs_file_types.models import timeseries
+
+            cv_variable_type = timeseries.CVVariableType
+            cv_variable_name = timeseries.CVVariableName
+            cv_speciation = timeseries.CVSpeciation
+            cv_site_type = timeseries.CVSiteType
+            cv_elevation_datum = timeseries.CVElevationDatum
+            cv_method_type = timeseries.CVMethodType
+            cv_units_type = timeseries.CVUnitsType
+            cv_status = timeseries.CVStatus
+            cv_medium = timeseries.CVMedium
+            cv_agg_statistic = timeseries.CVAggregationStatistic
+
+        table_name_class_mappings = {'CV_VariableType': cv_variable_type,
+                                     'CV_VariableName': cv_variable_name,
+                                     'CV_Speciation': cv_speciation,
+                                     'CV_SiteType': cv_site_type,
+                                     'CV_ElevationDatum': cv_elevation_datum,
+                                     'CV_MethodType': cv_method_type,
+                                     'CV_UnitsType': cv_units_type,
+                                     'CV_Status': cv_status,
+                                     'CV_Medium': cv_medium,
+                                     'CV_AggregationStatistic': cv_agg_statistic}
         for table_name in table_name_class_mappings:
             sql_cur.execute("SELECT Term, Name FROM {}".format(table_name))
             table_rows = sql_cur.fetchall()
@@ -1918,26 +1952,39 @@ def _create_variable_related_cv_terms(element, data_dict):
 
 def _create_timeseriesresult_related_cv_terms(element, data_dict):
     # if the user has entered a new sample medium, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVMedium,
+    cv_medium = CVMedium
+    cv_units_type = CVUnitsType
+    cv_status = CVStatus
+    cv_agg_statistic = CVAggregationStatistic
+
+    if not isinstance(element.metadata, TimeSeriesMetaData):
+        # element.metadata must be an instance of TimeSeriesFileMetaData
+        from hs_file_types.models import timeseries
+        cv_medium = timeseries.CVMedium
+        cv_units_type = timeseries.CVUnitsType
+        cv_status = timeseries.CVStatus
+        cv_agg_statistic = timeseries.CVAggregationStatistic
+
+    _create_cv_term(element=element, cv_term_class=cv_medium,
                     cv_term_str='sample_medium',
                     element_metadata_cv_terms=element.metadata.cv_mediums.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new units type, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVUnitsType,
+    _create_cv_term(element=element, cv_term_class=cv_units_type,
                     cv_term_str='units_type',
                     element_metadata_cv_terms=element.metadata.cv_units_types.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new status, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVStatus,
+    _create_cv_term(element=element, cv_term_class=cv_status,
                     cv_term_str='status',
                     element_metadata_cv_terms=element.metadata.cv_statuses.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new aggregation statistics, then create a corresponding new
     # cv term
-    _create_cv_term(element=element, cv_term_class=CVAggregationStatistic,
+    _create_cv_term(element=element, cv_term_class=cv_agg_statistic,
                     cv_term_str='aggregation_statistics',
                     element_metadata_cv_terms=element.metadata.cv_aggregation_statistics.all(),
                     data_dict=data_dict)

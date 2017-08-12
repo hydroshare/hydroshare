@@ -8,9 +8,49 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
-from hs_app_timeseries.models import TimeSeriesMetaDataMixin
+from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
 
 from base import AbstractFileMetaData, AbstractLogicalFile
+
+
+class CVVariableType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_variable_types")
+
+
+class CVVariableName(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_variable_names")
+
+
+class CVSpeciation(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_speciations")
+
+
+class CVElevationDatum(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_elevation_datums")
+
+
+class CVSiteType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_site_types")
+
+
+class CVMethodType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_method_types")
+
+
+class CVUnitsType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_units_types")
+
+
+class CVStatus(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_statuses")
+
+
+class CVMedium(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_mediums")
+
+
+class CVAggregationStatistic(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesFileMetaData', related_name="cv_aggregation_statistics")
 
 
 class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
@@ -66,6 +106,13 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
     @property
     def supports_delete_folder_on_zip(self):
         """does not allow the original folder to be deleted upon zipping of that folder"""
+        return False
+
+    @property
+    def has_csv_file(self):
+        for res_file in self.files.all():
+            if res_file.extension == '.csv':
+                return True
         return False
 
     @classmethod
@@ -154,7 +201,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
                 log.info("TimeSeries file type and resource level metadata updated.")
                 # delete the original sqlite file used as part of setting file type
-                delete_resource_file(resource.short_id, file_id.id, user)
+                delete_resource_file(resource.short_id, file_id, user)
                 log.info("Deleted original sqlite file.")
                 file_type_success = True
             except Exception as ex:
@@ -332,7 +379,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                 cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?",
                             (result["FeatureActionID"],))
                 feature_action = cur.fetchone()
-                if is_create_multiple_site_elements or len(resource.metadata.sites) == 0:
+                if is_create_multiple_site_elements or len(target_obj.metadata.sites) == 0:
                     cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
                                 (feature_action["SamplingFeatureID"],))
                     sampling_feature = cur.fetchone()
@@ -341,7 +388,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                                 (feature_action["SamplingFeatureID"],))
                     site = cur.fetchone()
                     if not any(sampling_feature["SamplingFeatureCode"] == s.site_code for s
-                               in resource.metadata.sites):
+                               in target_obj.metadata.sites):
 
                         data_dict = {}
                         data_dict['series_ids'] = [result["ResultUUID"]]
@@ -400,14 +447,14 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                 # extract method element data
                 # Start with Results table -> FeatureActions table to -> Actions table to ->
                 # Method table
-                if is_create_multiple_method_elements or len(resource.metadata.methods) == 0:
+                if is_create_multiple_method_elements or len(target_obj.metadata.methods) == 0:
                     cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
                                 (feature_action["ActionID"],))
                     action = cur.fetchone()
                     cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
                     method = cur.fetchone()
                     if not any(method["MethodCode"] == m.method_code for m
-                               in resource.metadata.methods):
+                               in target_obj.metadata.methods):
 
                         data_dict = {}
                         data_dict['series_ids'] = [result["ResultUUID"]]

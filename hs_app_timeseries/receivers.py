@@ -18,7 +18,7 @@ from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVaria
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
-from hs_file_types.models.timseries import extract_metadata, validate_odm2_db_file
+from hs_file_types.models.timeseries import extract_metadata, validate_odm2_db_file
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
 
