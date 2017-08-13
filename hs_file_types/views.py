@@ -75,6 +75,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         response_data['message'] = ex.message
         return JsonResponse(response_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['POST'])
 def set_file_type_public(request, pk, file_path, hs_file_type):
     """
