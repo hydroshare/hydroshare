@@ -564,6 +564,41 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
+@login_required
+def get_timeseries_metadata(request, file_type_id, series_id, metadata_mode):
+    """
+    Gets metadata html for the logical file type
+    :param request:
+    :param file_type_id: id of the logical file object for which metadata in html format is needed
+    :param  series_id: if of the time series for which metadata to be displayed
+    :param metadata_mode: a value of either edit or view. In edit mode metadata html form elements
+                          are returned. In view mode normal html for display of metadata is returned
+    :return: json data containing html string
+    """
+    if metadata_mode != "edit" and metadata_mode != 'view':
+        err_msg = "Invalid metadata type request."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    logical_file, json_response = _get_logical_file("TimeSeries", file_type_id)
+    if json_response is not None:
+        return json_response
+    if series_id not in logical_file.metadata.series_ids:
+        err_msg = "Invalid time series id."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        if metadata_mode == 'view':
+            metadata = logical_file.metadata.get_html(series_id=series_id)
+        else:
+            metadata = logical_file.metadata.get_html_forms(series_id=series_id)
+        ajax_response_data = {'status': 'success', 'metadata': metadata}
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'message': ex.message}
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
 def _get_logical_file(hs_file_type, file_type_id):
     content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
     logical_file_type_class = content_type.model_class()

@@ -6,6 +6,10 @@ import sqlite3
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
+from django.template import Template, Context
+
+from dominate.tags import div, legend, strong
+
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
@@ -66,6 +70,45 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         elements += list(self.time_series_results)
         elements += [self.utc_offset]
         return elements
+
+    def get_html(self, **kwargs):
+        """overrides the base class function"""
+
+        series_id = kwargs.get('series_id', None)
+        if series_id is None:
+            raise ValidationError("A series id must be specified to see metadata")
+        elif series_id not in self.series_ids:
+            raise ValidationError("Series id:{} is not a valid series id".format(series_id))
+
+        html_string = super(TimeSeriesFileMetaData, self).get_html()
+        if self.spatial_coverage:
+            html_string += self.spatial_coverage.get_html()
+        if self.originalCoverage:
+            html_string += self.originalCoverage.get_html()
+        if self.temporal_coverage:
+            html_string += self.temporal_coverage.get_html()
+        # TODO: implement get_series_selection_html()
+        html_string += self.get_series_selection_html()
+        site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
+        html_string += site_legend.render()
+        for site in self.sites.all():
+            if series_id in site.series_ids:
+                html_string += site.get_html()
+
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
+
+    def get_series_selection_html(self):
+        """Generates html needed to display series selection drop box and the associated form"""
+
+        root_div = div(id="div-series-selection-file_type", cls="row", style="margin-top:10px;")
+        heading = "Select a timeseries to see corresponding metadata (Number of time series:{})"
+        heading = heading.format(str(self.time_series_results.count()))
+        with root_div:
+            strong(heading)
+            # TODO: continue here (refer to timeseriesresource.html line#9)
+            # with form(id="series-selection-form", action="")
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):

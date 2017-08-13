@@ -53,5 +53,13 @@ urlpatterns = patterns(
         name="update_netcdf_file"),
 
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<metadata_mode>[a-z]+)/'
-        r'get-file-metadata/$', views.get_metadata, name="get_file_metadata"),
+        r'get-file-metadata/$',
+        views.get_metadata,
+        name="get_file_metadata"),
+
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/(?P<series_id>[A-Za-z0-9-]+)/'
+        r'(?P<metadata_mode>[a-z]+)/'
+        r'get-timeseries-file-metadata/$',
+        views.get_timeseries_metadata,
+        name="get_timeseries_file_metadata"),
     )

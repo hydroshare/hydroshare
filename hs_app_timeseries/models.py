@@ -15,6 +15,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
+from dominate.tags import table, tbody, tr, td, th, div
+
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
@@ -122,6 +124,41 @@ class Site(TimeSeriesAbstractMetaDataElement):
 
     def __unicode__(self):
         return self.site_name
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Code')
+                        td(self.site_code)
+                    with tr():
+                        get_th('Name')
+                        td(self.site_name)
+                    with tr():
+                        get_th('Elevation M')
+                        td(self.elevation_m)
+                    with tr():
+                        get_th('Elevation Datum')
+                        td(self.elevation_datum)
+                    with tr():
+                        get_th('Site Type')
+                        td(self.site_type)
+                    with tr():
+                        get_th('Latitude')
+                        td(self.latitude)
+                    with tr():
+                        get_th('Longitude')
+                        td(self.longitude)
+
+        return root_div.render(pretty=pretty)
 
     @classmethod
     def create(cls, **kwargs):
@@ -704,6 +741,10 @@ class TimeSeriesMetaDataMixin(models.Model):
         # once metadata changes are written to the blank sqlite file as
         # part of the sync operation.
         return self.value_counts.keys()
+
+    @property
+    def series_ids(self):
+        return TimeSeriesResult.get_series_ids(metadata_obj=self)
 
     @classmethod
     def get_supported_element_names(cls):
