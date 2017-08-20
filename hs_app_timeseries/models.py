@@ -6,6 +6,7 @@ import logging
 from uuid import uuid4
 from dateutil import parser
 import json
+from collections import OrderedDict
 
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericRelation
@@ -746,6 +747,28 @@ class TimeSeriesMetaDataMixin(models.Model):
     def series_ids(self):
         return TimeSeriesResult.get_series_ids(metadata_obj=self)
 
+    @property
+    def series_ids_with_labels(self):
+        """Returns a dict with series id as the key and an associated label as value"""
+        series_ids = {}
+        if isinstance(self, TimeSeriesMetaData):
+            tgt_obj = self.resource
+        else:
+            tgt_obj = self.logical_file
+        if tgt_obj.has_csv_file and tgt_obj.metadata.series_names:
+            # this condition is true if the user has uploaded a csv file and the blank
+            # sqlite file (added by the system) has never been synced before with metadata changes
+            for index, series_name in enumerate(tgt_obj.metadata.series_names):
+                series_ids[str(index)] = series_name
+        else:
+            for result in tgt_obj.metadata.time_series_results:
+                series_id = result.series_ids[0]
+                series_ids[series_id] = self._get_series_label(series_id, tgt_obj)
+
+        # sort the dict on series names - item[1]
+        series_ids = OrderedDict(sorted(series_ids.items(), key=lambda item: item[1].lower()))
+        return series_ids
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -906,6 +929,29 @@ class TimeSeriesMetaDataMixin(models.Model):
                 table_name_class_mappings[table_name].objects.create(metadata=self,
                                                                      term=row['Term'],
                                                                      name=row['Name'])
+
+    def _get_series_label(self, series_id, source):
+        """Generate a label given a series id
+        :param  series_id: id of the time series
+        :param  source: either an instance of BaseResource or an instance of a Logical file type
+        """
+        label = "{site_code}:{site_name}, {variable_code}:{variable_name}, {units_name}, " \
+                "{pro_level_code}, {method_name}"
+        site = [site for site in source.metadata.sites if series_id in site.series_ids][0]
+        variable = [variable for variable in source.metadata.variables if
+                    series_id in variable.series_ids][0]
+        method = [method for method in source.metadata.methods if series_id in method.series_ids][
+            0]
+        pro_level = [pro_level for pro_level in source.metadata.processing_levels if
+                     series_id in pro_level.series_ids][0]
+        ts_result = [ts_result for ts_result in source.metadata.time_series_results if
+                     series_id in ts_result.series_ids][0]
+        label = label.format(site_code=site.site_code, site_name=site.site_name,
+                             variable_code=variable.variable_code,
+                             variable_name=variable.variable_name, units_name=ts_result.units_name,
+                             pro_level_code=pro_level.processing_level_code,
+                             method_name=method.method_name)
+        return label
 
 
 class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):

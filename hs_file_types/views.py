@@ -565,22 +565,22 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
 
 
 @login_required
-def get_timeseries_metadata(request, file_type_id, series_id, metadata_mode):
+def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     """
     Gets metadata html for the logical file type
     :param request:
     :param file_type_id: id of the logical file object for which metadata in html format is needed
     :param  series_id: if of the time series for which metadata to be displayed
-    :param metadata_mode: a value of either edit or view. In edit mode metadata html form elements
-                          are returned. In view mode normal html for display of metadata is returned
+    :param resource_mode: a value of either edit or view. In resource edit mode metadata html
+    form elements are returned. In view mode normal html for display of metadata is returned
     :return: json data containing html string
     """
-    if metadata_mode != "edit" and metadata_mode != 'view':
+    if resource_mode != "edit" and resource_mode != 'view':
         err_msg = "Invalid metadata type request."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    logical_file, json_response = _get_logical_file("TimeSeries", file_type_id)
+    logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
     if json_response is not None:
         return json_response
     if series_id not in logical_file.metadata.series_ids:
@@ -588,7 +588,7 @@ def get_timeseries_metadata(request, file_type_id, series_id, metadata_mode):
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
     try:
-        if metadata_mode == 'view':
+        if resource_mode == 'view':
             metadata = logical_file.metadata.get_html(series_id=series_id)
         else:
             metadata = logical_file.metadata.get_html_forms(series_id=series_id)

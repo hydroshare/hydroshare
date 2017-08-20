@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong
+from dominate.tags import div, legend, strong, form, select, option, hr
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -76,19 +76,17 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         series_id = kwargs.get('series_id', None)
         if series_id is None:
-            raise ValidationError("A series id must be specified to see metadata")
+            series_id = self.series_ids_with_labels.keys()[0]
         elif series_id not in self.series_ids:
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         html_string = super(TimeSeriesFileMetaData, self).get_html()
         if self.spatial_coverage:
             html_string += self.spatial_coverage.get_html()
-        if self.originalCoverage:
-            html_string += self.originalCoverage.get_html()
+
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
-        # TODO: implement get_series_selection_html()
-        html_string += self.get_series_selection_html()
+        html_string += self.get_series_selection_html(selected_series_id=series_id)
         site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
         html_string += site_legend.render()
         for site in self.sites.all():
@@ -99,16 +97,31 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_series_selection_html(self):
-        """Generates html needed to display series selection drop box and the associated form"""
+    def get_series_selection_html(self, selected_series_id, pretty=True):
+        """Generates html needed to display series selection dropdown box and the
+        associated form"""
 
-        root_div = div(id="div-series-selection-file_type", cls="row", style="margin-top:10px;")
+        root_div = div(id="div-series-selection-file_type", cls="content-block col-xs-12 col-sm-12",
+                       style="margin-top:10px;")
         heading = "Select a timeseries to see corresponding metadata (Number of time series:{})"
         heading = heading.format(str(self.time_series_results.count()))
         with root_div:
             strong(heading)
             # TODO: continue here (refer to timeseriesresource.html line#9)
-            # with form(id="series-selection-form", action="")
+            action_url = "/hsapi/_internal/{logical_file_id}/series_id/resource_mode/"
+            action_url += "get-timeseries-file-metadata"
+            action_url = action_url.format(logical_file_id=self.logical_file.id)
+            with form(id="series-selection-form-file_type", action=action_url, method="get",
+                      enctype="multipart/form-data"):
+                with select(cls="form-control", id="series_id_file_type"):
+                    for series_id, label in self.series_ids_with_labels.items():
+                        display_text = label[:120] + "..."
+                        if series_id == selected_series_id:
+                            option(display_text, value=series_id, selected="selected", title=label)
+                        else:
+                            option(display_text, value=series_id, title=label)
+            hr()
+        return root_div.render(pretty=pretty)
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
