@@ -337,7 +337,7 @@ function bindFileBrowserItemEvents() {
             if ($(this).hasClass("fb-file")) {
                 // check if this is a left mouse button click
                 if(e.which == 1) {
-                    showFileTypeMetadata();
+                    showFileTypeMetadata(false, "");
                 }
             }
             else{
@@ -456,8 +456,10 @@ function bindFileBrowserItemEvents() {
     });
 }
 
-function showFileTypeMetadata(){
-     var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+function showFileTypeMetadata(file_type_time_series, url){
+    // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
+    // set to true and the *url* msut be set
+    var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
      if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
      }
@@ -470,11 +472,18 @@ function showFileTypeMetadata(){
         return; 
      } 
      resource_mode = resource_mode.toLowerCase();
-     var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+     var $url;
+     if (file_type_time_series) {
+         $url = url;
+     }
+     else {
+         $url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+     }
+
      $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
      var calls = [];
-     calls.push(get_file_type_metadata_ajax_submit(url));
+     calls.push(get_file_type_metadata_ajax_submit($url));
 
      // Wait for the asynchronous calls to finish to get new folder structure
      $.when.apply($, calls).done(function (result) {
@@ -530,6 +539,15 @@ function showFileTypeMetadata(){
              var $endDateElement = $("#id_end_filetype");
              $startDateElement.css('pointer-events', 'none');
              $endDateElement.css('pointer-events', 'none');
+         }
+         if (logical_type === 'TimeSeriesLogicalFile') {
+             $("#series_id_file_type").change(function () {
+                 var $url = $(this.form).attr('action');
+                 $url = $url.replace('series_id', $(this).val());
+                 $url = $url.replace('resource_mode', resource_mode);
+                 // make a recursive call to this function
+                 showFileTypeMetadata(true, $url);
+             });
          }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);

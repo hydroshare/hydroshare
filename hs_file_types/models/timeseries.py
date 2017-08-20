@@ -107,9 +107,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         heading = heading.format(str(self.time_series_results.count()))
         with root_div:
             strong(heading)
-            # TODO: continue here (refer to timeseriesresource.html line#9)
             action_url = "/hsapi/_internal/{logical_file_id}/series_id/resource_mode/"
-            action_url += "get-timeseries-file-metadata"
+            action_url += "get-timeseries-file-metadata/"
             action_url = action_url.format(logical_file_id=self.logical_file.id)
             with form(id="series-selection-form-file_type", action=action_url, method="get",
                       enctype="multipart/form-data"):

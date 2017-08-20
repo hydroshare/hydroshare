@@ -33,20 +33,7 @@ def landing_page(request, page):
             content_model.metadata.time_series_results:
         extended_metadata_exists = True
 
-    series_ids = {}
-    if content_model.has_csv_file and content_model.metadata.series_names:
-        # this condition is true if the user has uploaded a csv file and the blank
-        # sqlite file (added by the system) has never been synced before with metadata changes
-        for index, series_name in enumerate(content_model.metadata.series_names):
-            series_ids[str(index)] = series_name
-    else:
-        for result in content_model.metadata.time_series_results:
-            series_id = result.series_ids[0]
-            series_ids[series_id] = _get_series_label(series_id, content_model)
-
-    # sort the dict on series names - item[1]
-    series_ids = OrderedDict(sorted(series_ids.items(), key=lambda item: item[1].lower()))
-
+    series_ids = content_model.metadata.series_ids_with_labels
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
         if selected_series_id not in series_ids.keys():

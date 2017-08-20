@@ -863,7 +863,7 @@ function update_netcdf_file_ajax_submit() {
                     $(".alert-success").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
-                showFileTypeMetadata();
+                showFileTypeMetadata(false, "");
             }
             else {
                 display_error_message("File update.", json_response.message);
