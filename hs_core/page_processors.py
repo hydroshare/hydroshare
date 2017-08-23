@@ -5,7 +5,7 @@ from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, GenericResource, Relation
+from hs_core.models import AbstractResource, GenericResource, Relation, PageMock
 from hs_core import languages_iso
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
@@ -15,6 +15,20 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_s
     can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
+
+
+def get_context(content_model, user, resource_edit=False, extended_metadata_layout=None,
+                request=None):
+    fake_page = PageMock(content_model)
+    return get_page_context(fake_page, user, resource_edit=False, extended_metadata_layout=None,
+                            request=None)
+
+
+def resource_detail_context(request, content_model):
+    fake_page = PageMock(content_model)
+    edit_resource = check_resource_mode(request)
+
+    return get_page_context(fake_page, request.user, resource_edit=edit_resource, request=request)
 
 
 @processor_for(GenericResource)

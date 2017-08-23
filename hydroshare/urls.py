@@ -1,21 +1,19 @@
 from __future__ import unicode_literals
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, include, url,\
+    handler400, handler403, handler404, handler500
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from django.views.generic import TemplateView
 
-from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
 import autocomplete_light
 
-from hs_core.views.discovery_view import DiscoveryView
-from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
 from hs_tracking import views as tracking
-from hs_core import views as hs_core_views
+import hs_core.views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-from hs_app_netCDF import views as nc_views
 
 
 autocomplete_light.autodiscover()
@@ -33,10 +31,8 @@ urlpatterns = i18n_patterns("",
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url("^inplaceeditform/", include("inplaceeditform.urls")),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
-    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
-        name='tracking-report-profiles'),
-    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
-        name='tracking-report-history'),
+    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
     url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
@@ -47,13 +43,14 @@ urlpatterns = i18n_patterns("",
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
     url(r'^accounts/login/$', theme.login, name='login'),
-    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
-        theme.email_verify, name='email_verify'),
+    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/', theme.email_verify,
+        name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
-    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
+    url(r'^search/$', hs_core_views.discovery_view.DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^searchjson/$', hs_core_views.discovery_json_view.DiscoveryJsonView.as_view(), name='haystack_json_search'),
+    url(r'^rn/(?P<short_id>[A-z0-9\-_]+)', hs_core_views.resource_frontend.resource_detail, name='resource_detail'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
     url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
@@ -114,7 +111,7 @@ urlpatterns += patterns('',
     # one out.
 
     # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
+    url(r"^tests/$", TemplateView.as_view(template_name='tests.html'), name="tests"),
 
     # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
     # ---------------------------------------------
@@ -129,7 +126,7 @@ urlpatterns += patterns('',
     # "/.html" - so for this case, the template "pages/index.html"
     # should be used if you want to customize the homepage's template.
 
-    url("^$", "mezzanine.pages.views.page", {"slug": "/"}, name="home"),
+    url("^$", TemplateView.as_view(template_name='pages/homepage.html'), name="home"),
 
     # HOMEPAGE FOR A BLOG-ONLY SITE
     # -----------------------------
@@ -177,5 +174,7 @@ urlpatterns += patterns('',
 
 # Adds ``STATIC_URL`` to the context of error pages, so that error
 # pages can use JS, CSS and images.
-handler404 = "mezzanine.core.views.page_not_found"
-handler500 = "mezzanine.core.views.server_error"
+handler400 = "hs_core.views.error_handlers.bad_request"
+handler403 = "hs_core.views.error_handlers.permission_denied"
+handler404 = "hs_core.views.error_handlers.page_not_found"
+handler500 = "hs_core.views.error_handlers.server_error"

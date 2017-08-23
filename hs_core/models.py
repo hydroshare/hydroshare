@@ -1,3 +1,4 @@
+import collections
 import os.path
 import json
 import arrow
@@ -33,6 +34,25 @@ from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
+
+
+class PageMock:
+    content_model = None
+
+    def __init__(self, content_model=None):
+        self.content_model = content_model
+
+    def get_content_model(self):
+        return self.content_model
+
+    def split(self, *args, **kwargs):
+        # helper for keywords_for template tag
+        return ''
+
+    @property
+    def perms(self):
+        Permissions = collections.namedtuple('PermissionsMock', 'change delete')
+        return Permissions(change=True, delete=True)
 
 
 class GroupOwnership(models.Model):
@@ -111,6 +131,11 @@ class ResourcePermissionsMixin(Ownable):
         return authorize(request, self.short_id,
                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
+
+
+def get_permissions_context(request, base_resource):
+    page = PageMock(base_resource)
+    return page_permissions_page_processor(request, page)
 
 
 # this should be used as the page processor for anything with pagepermissionsmixin

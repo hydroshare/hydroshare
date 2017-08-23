@@ -42,14 +42,6 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Subject
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
-from . import resource_rest_api
-from . import resource_metadata_rest_api
-from . import user_rest_api
-from . import resource_folder_hierarchy
-
-from . import resource_access_api
-from . import resource_folder_rest_api
-
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
@@ -58,6 +50,31 @@ from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, Gro
 from hs_collection_resource.models import CollectionDeletedResource
 
 logger = logging.getLogger(__name__)
+
+from . import discovery_view
+from . import discovery_json_view
+from . import error_handlers
+from . import resource_rest_api
+from . import resource_metadata_rest_api
+from . import user_rest_api
+from . import resource_folder_hierarchy
+from . import resource_access_api
+from . import resource_frontend
+from . import resource_folder_rest_api
+
+__all__ = [
+    'short_url',
+    'discovery_view',
+    'discovery_json_view',
+    'error_handlers',
+    'resource_folder_hierarchy',
+    'resource_folder_rest_api',
+    'resource_frontend',
+    'resource_rest_api',
+    'resource_metadata_rest_api',
+    'resource_access_api',
+    'user_rest_api',
+]
 
 
 def short_url(request, *args, **kwargs):
