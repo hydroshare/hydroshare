@@ -16,7 +16,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
-from dominate.tags import table, tbody, tr, td, th, div
+from dominate.tags import table, tbody, tr, td, th, div, a
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -129,12 +129,11 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def get_html(self, pretty=True):
         """Generates html code for displaying data for this metadata element"""
 
-        root_div = div(cls="col-xs-12 pull-left", style="margin-top:10px;")
-
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
 
-        with root_div:
+        html_table = table(cls='custom-table')
+        with html_table:
             with table(cls='custom-table'):
                 with tbody():
                     with tr():
@@ -159,7 +158,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
                         get_th('Longitude')
                         td(self.longitude)
 
-        return root_div.render(pretty=pretty)
+        return html_table.render(pretty=pretty)
 
     @classmethod
     def create(cls, **kwargs):
@@ -298,6 +297,38 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def get_series_ids(cls, metadata_obj):
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        html_table = table(cls='custom-table')
+        with html_table:
+            with tbody():
+                with tr():
+                    get_th('Code')
+                    td(self.variable_code)
+                with tr():
+                    get_th('Name')
+                    td(self.variable_name)
+                with tr():
+                    get_th('Type')
+                    td(self.variable_type)
+                with tr():
+                    get_th('No Data Value')
+                    td(self.no_data_value)
+                if self.variable_definition:
+                    with tr():
+                        get_th('Definition')
+                        td(self.variable_definition)
+                if self.speciation:
+                    with tr():
+                        get_th('Speciations')
+                        td(self.speciation)
+
+        return html_table.render(pretty=pretty)
+
 
 class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
@@ -375,6 +406,37 @@ class Method(TimeSeriesAbstractMetaDataElement):
         # get series ids associated with this element
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        html_table = table(cls='custom-table')
+        with html_table:
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Code')
+                        td(self.method_code)
+                    with tr():
+                        get_th('Name')
+                        td(self.method_name)
+                    with tr():
+                        get_th('Type')
+                        td(self.method_type)
+                    if self.method_description:
+                        with tr():
+                            get_th('Description')
+                            td(self.method_description)
+                    if self.method_link:
+                        with tr():
+                            get_th('Link')
+                            with td():
+                                a(self.method_link, target="_blank", href=self.method_link)
+
+        return html_table.render(pretty=pretty)
+
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
@@ -443,6 +505,30 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     def get_series_ids(cls, metadata_obj):
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        html_table = table(cls='custom-table')
+        with html_table:
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Code')
+                        td(self.processing_level_code)
+                    if self.definition:
+                        with tr():
+                            get_th('Definition')
+                            td(self.definition)
+                    if self.explanation:
+                        with tr():
+                            get_th('Explanation')
+                            td(self.explanation)
+
+        return html_table.render(pretty=pretty)
+
 
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
@@ -501,6 +587,44 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def get_series_ids(cls, metadata_obj):
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
+
+    def get_html(self, pretty=True):
+        """Generates html code for displaying data for this metadata element"""
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        html_table = table(cls='custom-table')
+        with html_table:
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Units Type')
+                        td(self.units_type)
+                    with tr():
+                        get_th('Units Name')
+                        td(self.units_name)
+                    with tr():
+                        get_th('Units Abbreviation')
+                        td(self.units_abbreviation)
+                    with tr():
+                        get_th('Status')
+                        td(self.status)
+                    with tr():
+                        get_th('Sample Medium')
+                        td(self.sample_medium)
+                    with tr():
+                        get_th('Value Count')
+                        td(self.value_count)
+                    with tr():
+                        get_th('Aggregation Statistics')
+                        td(self.aggregation_statistics)
+                    if self.metadata.utc_offset:
+                        with tr():
+                            get_th('UTC Offset')
+                            td(self.metadata.utc_offset.value)
+
+        return html_table.render(pretty=pretty)
 
 
 class UTCOffSet(TimeSeriesAbstractMetaDataElement):

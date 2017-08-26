@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, hr
+from dominate.tags import div, legend, strong, form, select, option, hr, h3
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -86,14 +86,63 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         if self.temporal_coverage:
             html_string += self.temporal_coverage.get_html()
-        html_string += self.get_series_selection_html(selected_series_id=series_id)
-        site_legend = legend("Sites", cls="pull-left", style="margin-top:20px;")
-        html_string += site_legend.render()
-        for site in self.sites.all():
-            if series_id in site.series_ids:
-                html_string += site.get_html()
 
+        series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
+        with series_selection_div:
+            div_meta_row = div(cls="row")
+            with div_meta_row:
+                # create 1st column of the row
+                with div(cls="col-md-6 col-xs-12"):
+                    # generate html for display of site element
+                    legend("Site")
+                    for site in self.sites.all():
+                        if series_id in site.series_ids:
+                            site.get_html()
+                            break
+
+                    # generate html for variable element
+                    legend("Variable")
+                    for variable in self.variables.all():
+                        if series_id in variable.series_ids:
+                            variable.get_html()
+                            break
+                    # generate html for method element
+                    legend("Method")
+                    for method in self.methods.all():
+                        if series_id in method.series_ids:
+                            method.get_html()
+                            break
+                # create 2nd column of the row
+                with div(cls="col-md-6 col-xs-12"):
+                    # generate html for processing_level element
+                    if self.processing_levels:
+                        legend("Processing Level")
+                        for pro_level in self.processing_levels.all():
+                            if series_id in pro_level.series_ids:
+                                pro_level.get_html()
+                                break
+
+                    # generate html for timeseries_result element
+                    if self.time_series_results:
+                        legend("Time Series Result")
+                        for ts_result in self.time_series_results.all():
+                            if series_id in ts_result.series_ids:
+                                ts_result.get_html()
+                                break
+        html_string += series_selection_div.render()
         template = Template(html_string)
+        context = Context({})
+        return template.render(context)
+
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+        """overrides the base class function"""
+
+        root_div = div("{% load crispy_forms_tags %}")
+        # TODO: implement metadata editing html form elements
+        with root_div:
+            with div(cls="alert alert-warning"):
+                h3("Metadata editing yet to be implemented.")
+        template = Template(root_div.render(pretty=True))
         context = Context({})
         return template.render(context)
 
@@ -120,7 +169,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                         else:
                             option(display_text, value=series_id, title=label)
             hr()
-        return root_div.render(pretty=pretty)
+        return root_div
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):

@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from django.contrib import messages
 
 from mezzanine.pages.page_processors import processor_for
