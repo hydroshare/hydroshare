@@ -16,7 +16,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
-from dominate.tags import table, tbody, tr, td, th, div, a
+from dominate.tags import table, tbody, tr, td, th, a
 
 from mezzanine.pages.page_processors import processor_for
 
