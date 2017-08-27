@@ -1054,6 +1054,12 @@ class TimeSeriesMetaDataMixin(models.Model):
                                                                      term=row['Term'],
                                                                      name=row['Name'])
 
+    def get_element_by_series_id(self, series_id, elements):
+        for element in elements:
+            if series_id in element.series_ids:
+                return element
+        return None
+
     def _get_series_label(self, series_id, source):
         """Generate a label given a series id
         :param  series_id: id of the time series

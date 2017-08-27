@@ -8,11 +8,14 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, hr, h3
+from dominate.tags import div, legend, strong, form, select, option, hr, h3, button
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
+from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, \
+    MethodValidationForm, ProcessingLevelValidationForm, TimeSeriesResultValidationForm, \
+    UTCOffSetValidationForm
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
@@ -95,55 +98,103 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 with div(cls="col-md-6 col-xs-12"):
                     # generate html for display of site element
                     legend("Site")
-                    for site in self.sites.all():
-                        if series_id in site.series_ids:
-                            site.get_html()
-                            break
+                    site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
+                    if site:
+                        site.get_html()
 
                     # generate html for variable element
                     legend("Variable")
-                    for variable in self.variables.all():
-                        if series_id in variable.series_ids:
-                            variable.get_html()
-                            break
+                    variable = self.get_element_by_series_id(series_id=series_id,
+                                                             elements=self.variables)
+                    if variable:
+                        variable.get_html()
+
                     # generate html for method element
                     legend("Method")
-                    for method in self.methods.all():
-                        if series_id in method.series_ids:
-                            method.get_html()
-                            break
+                    method = self.get_element_by_series_id(series_id=series_id,
+                                                           elements=self.methods)
+                    if method:
+                        method.get_html()
+
                 # create 2nd column of the row
                 with div(cls="col-md-6 col-xs-12"):
                     # generate html for processing_level element
                     if self.processing_levels:
                         legend("Processing Level")
-                        for pro_level in self.processing_levels.all():
-                            if series_id in pro_level.series_ids:
-                                pro_level.get_html()
-                                break
+                        pro_level = self.get_element_by_series_id(series_id=series_id,
+                                                                  elements=self.processing_levels)
+                        if pro_level:
+                            pro_level.get_html()
 
                     # generate html for timeseries_result element
                     if self.time_series_results:
                         legend("Time Series Result")
-                        for ts_result in self.time_series_results.all():
-                            if series_id in ts_result.series_ids:
-                                ts_result.get_html()
-                                break
+                        ts_result = self.get_element_by_series_id(series_id=series_id,
+                                                                  elements=self.time_series_results)
+                        if ts_result:
+                            ts_result.get_html()
+
         html_string += series_selection_div.render()
         template = Template(html_string)
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function"""
 
+        series_id = kwargs.get('series_id', None)
+        if series_id is None:
+            series_id = self.series_ids_with_labels.keys()[0]
+        elif series_id not in self.series_ids:
+            raise ValidationError("Series id:{} is not a valid series id".format(series_id))
+
         root_div = div("{% load crispy_forms_tags %}")
-        # TODO: implement metadata editing html form elements
+        # TODO: implement metadata editing html for remaining elements
         with root_div:
-            with div(cls="alert alert-warning"):
-                h3("Metadata editing yet to be implemented.")
+            super(TimeSeriesFileMetaData, self).get_html_forms(temporal_coverage=False)
+            if self.spatial_coverage:
+                self.spatial_coverage.get_html()
+
+            if self.temporal_coverage:
+                self.temporal_coverage.get_html()
+
+            series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
+            with series_selection_div:
+                with div(cls="row"):
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="site-filetype"):
+                        with form(id="id-site-file-type",
+                                  action="{{ site_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy site_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+                # with div(cls="row"):
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="variable-filetype"):
+                        with form(id="id-variable-file-type",
+                                  action="{{ variable_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy variable_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
         template = Template(root_div.render(pretty=True))
-        context = Context({})
+        context_dict = dict()
+        site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
+        if site:
+            context_dict["site_form"] = create_site_form(self.logical_file, series_id)
+
+        variable = self.get_element_by_series_id(series_id=series_id, elements=self.variables)
+        if variable:
+            context_dict["variable_form"] = create_variable_form(self.logical_file, series_id)
+        context = Context(context_dict)
         return template.render(context)
 
     def get_series_selection_html(self, selected_series_id, pretty=True):
@@ -170,6 +221,34 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                             option(display_text, value=series_id, title=label)
             hr()
         return root_div
+
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        """overriding the base class method"""
+
+        if element_name.lower() not in [el_name.lower() for el_name
+                                        in cls.get_supported_element_names()]:
+            err_msg = "{} is nor a supported metadata element for Time Series file type"
+            err_msg = err_msg.format(element_name)
+            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+
+        validation_forms_mapping = {'site': SiteValidationForm,
+                                    'variable': VariableValidationForm,
+                                    'method': MethodValidationForm,
+                                    'processinglevel': ProcessingLevelValidationForm,
+                                    'timeseriesresult': TimeSeriesResultValidationForm,
+                                    'utcoffset': UTCOffSetValidationForm}
+        element_name = element_name.lower()
+        if element_name not in validation_forms_mapping:
+            raise ValidationError("Invalid metadata element name:{}".format(element_name))
+
+        element_validation_form = validation_forms_mapping[element_name](request.POST)
+
+        if element_validation_form.is_valid():
+            return {'is_valid': True, 'element_data_dict': element_validation_form.cleaned_data}
+        else:
+            return {'is_valid': False, 'element_data_dict': None,
+                    "errors": element_validation_form.errors}
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -829,3 +908,133 @@ def _extract_coverage_metadata(resource, cur, logical_file=None):
 def _update_element_series_ids(element, series_id):
     element.series_ids = element.series_ids + [series_id]
     element.save()
+
+
+def create_site_form(target, selected_series_id):
+    """
+    Creates an instance of SiteForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of SiteForm
+    """
+    from hs_app_timeseries.forms import SiteForm
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+    else:
+        res_short_id = target.short_id
+        file_type = False
+
+    if target.metadata.sites:
+        site = target.metadata.sites.filter(
+            series_ids__contains=[selected_series_id]).first()
+        site_form = SiteForm(instance=site, res_short_id=res_short_id,
+                             element_id=site.id if site else None,
+                             cv_site_types=target.metadata.cv_site_types.all(),
+                             cv_elevation_datums=target.metadata.cv_elevation_datums.all(),
+                             show_site_code_selection=len(target.metadata.series_names) > 0,
+                             available_sites=target.metadata.sites,
+                             selected_series_id=selected_series_id,
+                             file_type=file_type)
+
+        if file_type:
+            target_id = target.id
+        else:
+            target_id = target.short_id
+        if site is not None:
+            site_form.action = _get_element_update_form_action('site', target_id, site.id,
+                                                               file_type=file_type)
+            site_form.number = site.id
+
+            site_form.set_dropdown_widgets(site_form.initial['site_type'],
+                                           site_form.initial['elevation_datum'])
+        else:
+            site_form.set_dropdown_widgets()
+
+    else:
+        # this case can happen only in case of CSV upload
+        site_form = SiteForm(instance=None, res_short_id=res_short_id,
+                             element_id=None,
+                             cv_site_types=target.metadata.cv_site_types.all(),
+                             cv_elevation_datums=target.metadata.cv_elevation_datums.all(),
+                             selected_series_id=selected_series_id,
+                             file_type=file_type)
+
+        site_form.set_dropdown_widgets()
+    return site_form
+
+
+def create_variable_form(target, selected_series_id):
+    """
+    Creates an instance of VariableForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of VariableForm
+    """
+    from hs_app_timeseries.forms import VariableForm
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+    else:
+        res_short_id = target.short_id
+        file_type = False
+
+    if target.metadata.variables:
+        variable = target.metadata.variables.filter(
+            series_ids__contains=[selected_series_id]).first()
+        variable_form = VariableForm(
+            instance=variable, res_short_id=res_short_id,
+            element_id=variable.id if variable else None,
+            cv_variable_types=target.metadata.cv_variable_types.all(),
+            cv_variable_names=target.metadata.cv_variable_names.all(),
+            cv_speciations=target.metadata.cv_speciations.all(),
+            show_variable_code_selection=len(target.metadata.series_names) > 0,
+            available_variables=target.metadata.variables,
+            selected_series_id=selected_series_id,
+            file_type=file_type)
+
+        if file_type:
+            target_id = target.id
+        else:
+            target_id = target.short_id
+
+        if variable is not None:
+            variable_form.action = _get_element_update_form_action('variable', target_id,
+                                                                   variable.id, file_type=file_type)
+            variable_form.number = variable.id
+
+            variable_form.set_dropdown_widgets(variable_form.initial['variable_type'],
+                                               variable_form.initial['variable_name'],
+                                               variable_form.initial['speciation'])
+        else:
+            # this case can only happen in case of csv upload
+            variable_form.set_dropdown_widgets()
+    else:
+        # this case can happen only in case of CSV upload
+        variable_form = VariableForm(instance=None, res_short_id=res_short_id,
+                                     element_id=None,
+                                     cv_variable_types=target.metadata.cv_variable_types.all(),
+                                     cv_variable_names=target.metadata.cv_variable_names.all(),
+                                     cv_speciations=target.metadata.cv_speciations.all(),
+                                     available_variables=target.metadata.variables,
+                                     selected_series_id=selected_series_id,
+                                     file_type=file_type)
+
+        variable_form.set_dropdown_widgets()
+
+    return variable_form
+
+
+def _get_element_update_form_action(element_name, target_id, element_id, file_type=False):
+    if not file_type:
+        # TimeSeries resource level metadata update
+        # target_id is resource short_id
+        action = "/hsapi/_internal/{res_id}/{element_name}/{element_id}/update-metadata/"
+        return action.format(res_id=target_id, element_name=element_name, element_id=element_id)
+    else:
+        # Time series file type metadata update
+        # target_id is logical file object id
+        action = "/hsapi/_internal/TimeSeriesLogicalFile/{logical_file_id}/{element_name}/" \
+                 "{element_id}/update-file-metadata/"
+        return action.format(logical_file_id=target_id, element_name=element_name,
+                             element_id=element_id)

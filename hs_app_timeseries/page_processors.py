@@ -108,6 +108,8 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                ts_result_value_count, extended_metadata_exists):
 
+    from hs_file_types.models.timeseries import create_site_form, create_variable_form
+
     if series_ids and selected_series_id is not None:
         selected_series_label = series_ids[selected_series_id]
     else:
@@ -121,9 +123,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                        element_id=utc_offset.id if utc_offset else None,
                                        selected_series_id=selected_series_id)
     # create timeseries specific metadata element forms
-    site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
-    variable_form = _create_variable_form(resource=content_model,
-                                          selected_series_id=selected_series_id)
+    site_form = create_site_form(target=content_model, selected_series_id=selected_series_id)
+    variable_form = create_variable_form(target=content_model,
+                                         selected_series_id=selected_series_id)
     method_form = _create_method_form(resource=content_model, selected_series_id=selected_series_id)
     processing_level_form = _create_processing_level_form(resource=content_model,
                                                           selected_series_id=selected_series_id)
@@ -182,80 +184,6 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     context['processing_level_form'] = processing_level_form
     context['timeseries_result_form'] = timeseries_result_form
     return context
-
-
-def _create_site_form(resource, selected_series_id):
-    if resource.metadata.sites:
-        site = resource.metadata.sites.filter(
-            series_ids__contains=[selected_series_id]).first()
-        site_form = SiteForm(instance=site, res_short_id=resource.short_id,
-                             element_id=site.id if site else None,
-                             cv_site_types=resource.metadata.cv_site_types.all(),
-                             cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
-                             show_site_code_selection=len(resource.metadata.series_names) > 0,
-                             available_sites=resource.metadata.sites,
-                             selected_series_id=selected_series_id)
-
-        if site is not None:
-            site_form.action = _get_element_update_form_action('site', resource.short_id,
-                                                               site.id)
-            site_form.number = site.id
-
-            site_form.set_dropdown_widgets(site_form.initial['site_type'],
-                                           site_form.initial['elevation_datum'])
-        else:
-            site_form.set_dropdown_widgets()
-
-    else:
-        # this case can happen only in case of CSV upload
-        site_form = SiteForm(instance=None, res_short_id=resource.short_id,
-                             element_id=None,
-                             cv_site_types=resource.metadata.cv_site_types.all(),
-                             cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
-                             selected_series_id=selected_series_id)
-
-        site_form.set_dropdown_widgets()
-    return site_form
-
-
-def _create_variable_form(resource, selected_series_id):
-    if resource.metadata.variables:
-        variable = resource.metadata.variables.filter(
-            series_ids__contains=[selected_series_id]).first()
-        variable_form = VariableForm(
-            instance=variable, res_short_id=resource.short_id,
-            element_id=variable.id if variable else None,
-            cv_variable_types=resource.metadata.cv_variable_types.all(),
-            cv_variable_names=resource.metadata.cv_variable_names.all(),
-            cv_speciations=resource.metadata.cv_speciations.all(),
-            show_variable_code_selection=len(resource.metadata.series_names) > 0,
-            available_variables=resource.metadata.variables,
-            selected_series_id=selected_series_id)
-
-        if variable is not None:
-            variable_form.action = _get_element_update_form_action('variable', resource.short_id,
-                                                                   variable.id)
-            variable_form.number = variable.id
-
-            variable_form.set_dropdown_widgets(variable_form.initial['variable_type'],
-                                               variable_form.initial['variable_name'],
-                                               variable_form.initial['speciation'])
-        else:
-            # this case can only happen in case of csv upload
-            variable_form.set_dropdown_widgets()
-    else:
-        # this case can happen only in case of CSV upload
-        variable_form = VariableForm(instance=None, res_short_id=resource.short_id,
-                                     element_id=None,
-                                     cv_variable_types=resource.metadata.cv_variable_types.all(),
-                                     cv_variable_names=resource.metadata.cv_variable_names.all(),
-                                     cv_speciations=resource.metadata.cv_speciations.all(),
-                                     available_variables=resource.metadata.variables,
-                                     selected_series_id=selected_series_id)
-
-        variable_form.set_dropdown_widgets()
-
-    return variable_form
 
 
 def _create_method_form(resource, selected_series_id):

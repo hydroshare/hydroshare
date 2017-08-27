@@ -20,35 +20,44 @@ class SiteFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
                             Field('selected_series_id', css_class=field_width, type="hidden"),
                             Field('available_sites', css_class=field_width, type="hidden"),
                             Field('site_code', css_class=field_width,
+                                  id=_get_field_id('site_code', file_type=file_type),
                                   title="A brief and unique code that identifies the site at "
                                         "which the data were collected (e.g., 'USU-LBR-Mendon' "
                                         "or '10109000')."),
                             Field('site_name', css_class=field_width,
+                                  id=_get_field_id('site_name', file_type=file_type),
                                   title="A brief but descriptive name for the site (e.g., "
                                         "'Little Bear River at Mendon Road near Mendon, Utah')."),
-                            Field('organization', css_class=field_width),
+                            Field('organization', css_class=field_width,
+                                  id=_get_field_id('organization', file_type=file_type),),
                             Field('elevation_m', css_class=field_width,
+                                  id=_get_field_id('elevation_m', file_type=file_type),
                                   title="The elevation of the site in meters (e.g., 1345)."),
 
                             Field('elevation_datum', css_class=field_width,
+                                  id=_get_field_id('elevation_datum', file_type=file_type),
                                   title="The datum to which the site elevation is referenced "
                                         "(e.g., 'NGVD29').\n"
                                         "Select 'Other...' to specify a new elevation datum term."),
 
                             Field('site_type', css_class=field_width,
+                                  id=_get_field_id('site_type', file_type=file_type),
                                   title="A controlled vocabulary term that describes the type of "
                                         "data collection site (e.g., 'Stream').\n"
                                         "Select 'Other...' to specify a new site type term."),
                             Field('latitude', css_class=field_width,
+                                  id=_get_field_id('latitude', file_type=file_type),
                                   title="The latitude coordinate of the site location using the "
                                         "WGS84 datum (e.g., 43.1111).",
                                   data_map_item="latitude"),
                             Field('longitude', css_class=field_width,
+                                  id=_get_field_id('longitude', file_type=file_type),
                                   title="The longitude coordinate of the site location using the "
                                         "WGS84 datum (e.g., -111.2334).",
                                   data_map_item="longitude"),
@@ -72,11 +81,13 @@ class SiteForm(ModelForm):
         selected_series_id = kwargs.pop('selected_series_id', None)
         available_sites = kwargs.pop('available_sites', [])
         show_site_code_selection = kwargs.pop('show_site_code_selection', False)
+        file_type = kwargs.pop('file_type', False)
         super(SiteForm, self).__init__(*args, **kwargs)
         self.selected_series_id = selected_series_id
         show_site_code_selection = len(available_sites) > 0 and show_site_code_selection
         self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site',
-                                     show_site_code_selection=show_site_code_selection)
+                                     show_site_code_selection=show_site_code_selection,
+                                     file_type=file_type)
         self.fields['selected_series_id'].initial = selected_series_id
         _set_available_elements_form_field(form=self, elements=available_sites,
                                            element_name="site")
@@ -164,29 +175,36 @@ class SiteValidationForm(forms.Form):
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  show_variable_code_selection=False, *args, **kwargs):
+        file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('available_variables', css_class=field_width, type="hidden"),
                      Field('variable_code', css_class=field_width,
+                           id=_get_field_id('variable_code', file_type=file_type),
                            title="A brief and unique code that identifies the measured "
                                  "variable (e.g., 'Temp')."),
                      Field('variable_name', css_class=field_width,
+                           id=_get_field_id('variable_name', file_type=file_type),
                            title="A brief but descriptive name of the variable that was measured "
                                  "selected from a controlled vocabulary of variable names "
                                  "(e.g., 'Temperature').\n"
                                  "Select 'Other...' to specify a new variable name term."),
                      Field('variable_type', css_class=field_width,
+                           id=_get_field_id('variable_type', file_type=file_type),
                            title="A term selected from a controlled vocabulary that describes the "
                                  "type of variable that was measured (e.g., 'Water quality').\n"
                                  "Select 'Other...' to specify a new variable type term."),
                      Field('no_data_value', css_class=field_width,
+                           id=_get_field_id('no_data_value', file_type=file_type),
                            title="A numeric value that is used to represent 'NoData' values "
                                  "in the time series (e.g., -9999)."),
                      Field('variable_definition', css_class=field_width,
+                           id=_get_field_id('variable_definition', file_type=file_type),
                            title="An optional, longer text description of the variable "
                                  "(e.g., 'Water temperature')."),
                      Field('speciation', css_class=field_width,
+                           id=_get_field_id('speciation', file_type=file_type),
                            title="A term describing the chemical speciation of the resulting data "
                                  "values. For most continuous time series from environmental "
                                  "sensors, this will be 'Not Applicable'.\n"
@@ -214,12 +232,14 @@ class VariableForm(ModelForm):
         selected_series_id = kwargs.pop('selected_series_id', None)
         available_variables = kwargs.pop('available_variables', [])
         show_variable_code_selection = kwargs.pop('show_variable_code_selection', False)
+        file_type = kwargs.pop('file_type', False)
         super(VariableForm, self).__init__(*args, **kwargs)
         self.selected_series_id = selected_series_id
         show_variable_code_selection = len(available_variables) > 0 and show_variable_code_selection
         self.helper = VariableFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='Variable',
-                                         show_variable_code_selection=show_variable_code_selection)
+                                         show_variable_code_selection=show_variable_code_selection,
+                                         file_type=file_type)
         self.fields['selected_series_id'].initial = selected_series_id
         _set_available_elements_form_field(form=self, elements=available_variables,
                                            element_name="variable")
@@ -702,6 +722,12 @@ def _set_element_code_selection_form_field(form, form_field_name, form_field_lab
         form.fields[form_field_name].widget = forms.Select(
             choices=element_code_choices)
         form.fields[form_field_name].label = form_field_label
+
+
+def _get_field_id(field_name, file_type=False):
+    if file_type:
+        return "id_{}_filetype".format(field_name)
+    return "id_{}".format(field_name)
 
 
 def _set_form_helper_layout(common_layout, element_name, is_show_element_code_selection, field_css):
