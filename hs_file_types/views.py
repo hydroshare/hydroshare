@@ -1,3 +1,6 @@
+import os
+import json
+
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,40 +10,49 @@ from django.contrib.contenttypes.models import ContentType
 from django.template import Template, Context
 
 from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+
+from hs_core.hydroshare import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, \
+    ResourceFile, utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize, get_coverage_data_dict
 from hs_core.hydroshare.utils import resource_modified
 
-from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile
+from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
+    RefTimeseriesLogicalFile
 
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
-    """This view function must be called using ajax call.
-    Note: Response status code is always 200 (OK). Client needs check the
-    the response 'status' key for success or failure.
+    """Set a file (*file_id*) to a specific file type (*hs_file_type*)
+    :param  request: an instance of HttpRequest
+    :param  resource_id: id of the resource in which this file type needs to be set
+    :param  file_id: id of the file which needs to be set to a file type
+    :param  hs_file_type: file type to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
+    :return an instance of JsonResponse type
     """
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
     file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile,
-                     'GeoFeature': GeoFeatureLogicalFile}
+                     'GeoFeature': GeoFeatureLogicalFile,
+                     'RefTimeseries': RefTimeseriesLogicalFile}
     response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
         response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
         err_msg = "File type can be set only for files in composite resource."
         response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     if hs_file_type not in file_type_map:
-        err_msg = "Unsupported file type."
+        err_msg = "Unsupported file type. Supported file types are: {}".format(file_type_map.keys())
         response_data['message'] = err_msg
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         logical_file_type_class = file_type_map[hs_file_type]
@@ -48,15 +60,62 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to selected file type. " \
               "Metadata extraction was successful."
-        response_data['message'] = msg
         response_data['status'] = 'success'
+        response_data['message'] = msg
         spatial_coverage_dict = get_coverage_data_dict(res)
         response_data['spatial_coverage'] = spatial_coverage_dict
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=status.HTTP_201_CREATED)
 
     except ValidationError as ex:
         response_data['message'] = ex.message
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def set_file_type_public(request, pk, file_path, hs_file_type):
+    """
+    Set file type as specified by *hs_file_type* using the file given by *file_path*
+
+    :param request: an instance of HttpRequest object
+    :param pk: id of the composite resource in which this file type needs to be set
+    :param file_path: relative file path of the file which needs to be set to the specified file
+    type. If the absolute file path is [resource-id]/data/contents/some-folder/some-file.txt then
+    file_path needs to be set as: some-folder/some-file.txt
+    :param hs_file_type: type of file to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
+    :return:
+    """
+
+    # get id of the file from the file_path to map to the internal api call
+    file_rel_path = str(file_path).strip()
+    if not file_rel_path:
+        return JsonResponse('file_path cannot be empty',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # security checks deny illicit requests
+    if file_rel_path.find('/../') >= 0 or file_rel_path.endswith('/..'):
+        return JsonResponse('file_path must not contain /../',
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    resource = utils.get_resource_by_shortkey(pk)
+    file_storage_path = os.path.join(resource.file_path, file_rel_path)
+
+    try:
+        folder, file_name = ResourceFile.resource_path_is_acceptable(resource,
+                                                                     file_storage_path,
+                                                                     test_exists=True)
+    except ValidationError:
+        return Response('File {} does not exist.'.format(file_path),
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    res_file = ResourceFile.get(resource, file_name, folder)
+
+    # call the internal api for setting the file type
+    json_response = set_file_type(request=request, resource_id=pk, file_id=res_file.id,
+                                  hs_file_type=hs_file_type)
+    # only return the message part of the above response
+    response_dict = json.loads(json_response.content)
+    return Response(data=response_dict['message'],
+                    status=json_response.status_code)
 
 
 @login_required

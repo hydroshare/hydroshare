@@ -72,6 +72,41 @@ function shareable_ajax_submit(event) {
     return false;
 }
 
+function license_agreement_ajax_submit(event) {
+    // this sets if user will be required to agree to resource rights statement prior
+    // to any resource file or bag download
+    var form = $(this).closest("form");
+    var datastring = form.serialize();
+    var url = form.attr('action');
+    var element = $(this);
+    var action = $(this).closest("form").find("input[name='t']").val();
+    element.attr("disabled", true);
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function () {
+            element.attr("disabled", false);
+            if (action == "make_not_require_lic_agreement") {
+                element.closest("form").find("input[name='t']").val("make_require_lic_agreement");
+            }
+            else {
+                element.closest("form").find("input[name='t']").val("make_not_require_lic_agreement");
+            }
+            // page refresh is needed to update if license agreement popup to show or not prior
+            // to download of files/bag
+            window.location = window.location.href;
+        },
+        error: function () {
+            element.attr("disabled", false);
+        }
+    });
+    //don't submit the form
+    return false;
+}
+
 function unshare_resource_ajax_submit(form_id, check_for_prompt, remove_permission) {
     if (typeof check_for_prompt === 'undefined'){
         check_for_prompt = true;
@@ -582,7 +617,9 @@ function metadata_update_ajax_submit(form_id){
                     form_update_action = $form.attr('action');
                     if (!json_response.hasOwnProperty('form_action')){
                         res_short_id = form_update_action.split('/')[3];
-                        update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/";
+                        update_url = "/hsapi/_internal/" + res_short_id + "/"
+                            + json_response.element_name + "/"
+                            + json_response.element_id + "/update-metadata/";
                     }
                     else {
                         update_url = json_response.form_action
@@ -712,23 +749,19 @@ function set_file_type_ajax_submit(url) {
         success: function (result) {
             waitDialog.dialog("close");
             var json_response = JSON.parse(result);
-            if (json_response.status === 'success'){
-                var spatialCoverage = json_response.spatial_coverage;
-                updateResourceSpatialCoverage(spatialCoverage);
-                $alert_success = $alert_success.replace("File type was successful.", json_response.message);
-                $("#fb-inner-controls").before($alert_success);
-                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-success").alert('close');
-                });
-            }
-            else {
-                display_error_message('Failed to set file type', json_response.message);
-            }
-
+            var spatialCoverage = json_response.spatial_coverage;
+            updateResourceSpatialCoverage(spatialCoverage);
+            $alert_success = $alert_success.replace("File type was successful.", json_response.message);
+            $("#fb-inner-controls").before($alert_success);
+            $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                $(".alert-success").alert('close');
+            });
         },
-        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        error: function (xhr, textStatus, errorThrown) {
             waitDialog.dialog("close");
-            display_error_message('Failed to set file type', xhr.responseText);
+            var jsonResponse = JSON.parse(xhr.responseText);
+            display_error_message('Failed to set file type', jsonResponse.message);
+            $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         }
     });
 }
@@ -1324,7 +1357,7 @@ function initializeDatePickers(){
         if($(this).attr('data-date')){
             // resource temporal date picker
             dateString = $(this).attr("data-date").split("-");
-            pickerDate = new Date(dateString[0], dateString[1] - 1, dateString[2]);
+            pickerDate = new Date(dateString);
         }
         else{
             // file type temporal date picker
@@ -1348,7 +1381,9 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
         $id_type_filetype_div.find("#id_type_1").attr('onclick', 'return false');
         $id_type_filetype_div.find("#id_type_2").attr('onclick', 'return false');
-        $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+        if (logical_type !== "RefTimeseriesLogicalFile"){
+            $id_type_filetype_div.find("#id_type_1").attr('checked', 'checked');
+        }
         $id_type_filetype_div.find("#id_type_2").attr('disabled', true);
         $id_type_filetype_div.find("#id_type_2").parent().closest("label").addClass("text-muted");
     }
@@ -1391,55 +1426,57 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
 }
 
 // updates the UI spatial coverage elements
-function updateResourceSpatialCoverage(spatialCoverage){
-    $("#spatial-coverage-type").val(spatialCoverage.type);
-    var $form = $("#id-coverage-spatial");
-    var form_update_action = $form.attr('action');
-    var res_short_id = form_update_action.split('/')[3];
-    var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
-    $form.attr('action', update_url);
-    var $id_type_div = $("#div_id_type");
-    var $point_radio = $id_type_div.find("#id_type_2");
-    var $box_radio = $id_type_div.find("#id_type_1");
-    if (spatialCoverage.type === 'point') {
-        $point_radio.attr('checked', 'checked');
-        $box_radio.parent().closest("label").addClass("text-muted");
-        $box_radio.attr('disabled', true);
-        $point_radio.parent().closest("label").removeClass("text-muted");
-        $point_radio.attr('disabled', false);
-        $("#id_north").val(spatialCoverage.north);
-        $("#id_east").val(spatialCoverage.east);
-        $("#div_id_north").show();
-        $("#div_id_east").show();
-        $("#div_id_elevation").show();
-        $("#div_id_northlimit").hide();
-        $("#div_id_eastlimit").hide();
-        $("#div_id_southlimit").hide();
-        $("#div_id_westlimit").hide();
-        $("#div_id_uplimit").hide();
-        $("#div_id_downlimit").hide();
-    }
-    else { //coverage type is 'box'
-        $box_radio.attr('checked', 'checked');
-        $point_radio.parent().closest("label").addClass("text-muted");
-        $point_radio.attr('disabled', true);
-        $box_radio.parent().closest("label").removeClass("text-muted");
-        $box_radio.attr('disabled', false);
-        $("#id_eastlimit").val(spatialCoverage.eastlimit);
-        $("#id_northlimit").val(spatialCoverage.northlimit);
-        $("#id_westlimit").val(spatialCoverage.westlimit);
-        $("#id_southlimit").val(spatialCoverage.southlimit);
-        $("#div_id_north").hide();
-        $("#div_id_east").hide();
-        $("#div_id_elevation").hide();
-        $("#div_id_northlimit").show();
-        $("#div_id_eastlimit").show();
-        $("#div_id_southlimit").show();
-        $("#div_id_westlimit").show();
-        $("#div_id_uplimit").show();
-        $("#div_id_downlimit").show();
+function updateResourceSpatialCoverage(spatialCoverage) {
+    if ($("#id-coverage-spatial").length) {
+        $("#spatial-coverage-type").val(spatialCoverage.type);
+        var $form = $("#id-coverage-spatial");
+        var form_update_action = $form.attr('action');
+        var res_short_id = form_update_action.split('/')[3];
+        var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
+        $form.attr('action', update_url);
+        var $id_type_div = $("#div_id_type");
+        var $point_radio = $id_type_div.find("#id_type_2");
+        var $box_radio = $id_type_div.find("#id_type_1");
+        if (spatialCoverage.type === 'point') {
+            $point_radio.attr('checked', 'checked');
+            $box_radio.parent().closest("label").addClass("text-muted");
+            $box_radio.attr('disabled', true);
+            $point_radio.parent().closest("label").removeClass("text-muted");
+            $point_radio.attr('disabled', false);
+            $("#id_north").val(spatialCoverage.north);
+            $("#id_east").val(spatialCoverage.east);
+            $("#div_id_north").show();
+            $("#div_id_east").show();
+            $("#div_id_elevation").show();
+            $("#div_id_northlimit").hide();
+            $("#div_id_eastlimit").hide();
+            $("#div_id_southlimit").hide();
+            $("#div_id_westlimit").hide();
+            $("#div_id_uplimit").hide();
+            $("#div_id_downlimit").hide();
         }
-    initMap();
+        else { //coverage type is 'box'
+            $box_radio.attr('checked', 'checked');
+            $point_radio.parent().closest("label").addClass("text-muted");
+            $point_radio.attr('disabled', true);
+            $box_radio.parent().closest("label").removeClass("text-muted");
+            $box_radio.attr('disabled', false);
+            $("#id_eastlimit").val(spatialCoverage.eastlimit);
+            $("#id_northlimit").val(spatialCoverage.northlimit);
+            $("#id_westlimit").val(spatialCoverage.westlimit);
+            $("#id_southlimit").val(spatialCoverage.southlimit);
+            $("#div_id_north").hide();
+            $("#div_id_east").hide();
+            $("#div_id_elevation").hide();
+            $("#div_id_northlimit").show();
+            $("#div_id_eastlimit").show();
+            $("#div_id_southlimit").show();
+            $("#div_id_westlimit").show();
+            $("#div_id_uplimit").show();
+            $("#div_id_downlimit").show();
+        }
+        initMap();
+    }
 }
 
 // updates the UI temporal coverage elements

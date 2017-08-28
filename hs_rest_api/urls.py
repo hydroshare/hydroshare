@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url
 from hs_core import views
+from hs_file_types import views as file_type_views
 
 from rest_framework_swagger.views import get_swagger_view
 
@@ -104,6 +105,11 @@ urlpatterns = patterns(
     url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/move-or-rename/$',
         views.resource_folder_hierarchy.data_store_file_or_folder_move_or_rename_public),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/functions/set-file-type/(?P<file_path>.*)/'
+        r'(?P<hs_file_type>[A-z]+)/$',
+        file_type_views.set_file_type_public,
+        name="set_file_type_public"),
+
     # DEPRECATED: use form above instead. Added unused POST for simplicity
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
@@ -112,6 +118,9 @@ urlpatterns = patterns(
     url(r'^taskstatus/(?P<task_id>[A-z0-9\-]+)/$',
         views.resource_rest_api.CheckTaskStatus.as_view(),
         name='get_task_status'),
+
+    url(r'^user/$',
+        views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),

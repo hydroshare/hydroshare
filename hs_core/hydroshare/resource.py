@@ -693,7 +693,7 @@ def update_science_metadata(pk, metadata, user):
     Returns:
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.metadata.update(metadata)
+    resource.metadata.update(metadata, user)
     utils.resource_modified(resource, user, overwrite_bag=False)
 
     # set to private if metadata has become non-compliant
@@ -863,6 +863,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
+            # Pabitra: better to use f.delete() here and get rid of the
+            # delete_resource_file_only() util function
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django

@@ -161,6 +161,11 @@ class ToolIconForm(ModelForm):
         exclude = ['content_object']
 
 
+class ToolIconValidationForm(forms.Form):
+    value = forms.CharField(max_length=1024, required=False)
+    data_url = forms.URLField(required=False)
+
+
 class MetadataField(Field):
     def __init__(self, *args, **kwargs):
         kwargs['css_class'] = 'form-control input-sm'

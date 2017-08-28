@@ -151,29 +151,41 @@ class Command(BaseCommand):
             'user id'
         ]
         w.writerow(fields)
-
+        failed_resource_ids = []
         for r in BaseResource.objects.all():
-            values = [
-                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
-                r.metadata.title.value,
-                r.resource_type,
-                r.size,
-                r.raccess.sharing_status,
-                r.user.userprofile.user_type,
-                r.user_id
-            ]
-            w.writerow([unicode(v).encode("utf-8") for v in values])
+            try:
+                values = [
+                    r.metadata.dates.get(type="created").
+                    start_date.strftime("%m/%d/%Y %H:%M:%S.%f"),
+                    r.metadata.title.value,
+                    r.resource_type,
+                    r.size,
+                    r.raccess.sharing_status,
+                    r.user.userprofile.user_type,
+                    r.user_id
+                ]
+                w.writerow([unicode(v).encode("utf-8") for v in values])
 
-    def yesterdays_variables(self):
+            except Exception as e:
+                err.error(e)
+
+                # save the id of the broken resource
+                failed_resource_ids.append(r.short_id)
+
+        # print all failed resources for debugging purposes
+        for f in failed_resource_ids:
+            err.error('Error processing resource: %s' % f)
+
+    def yesterdays_variables(self, lookback=1):
 
         today_start = timezone.datetime.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
+           hour=0,
+           minute=0,
+           second=0,
+           microsecond=0)
 
-        yesterday_start = today_start - datetime.timedelta(days=1)
+        # adjust start date for look-back option
+        yesterday_start = today_start - datetime.timedelta(days=lookback)
         variables = hs_tracking.Variable.objects.filter(
             timestamp__gte=yesterday_start,
             timestamp__lt=today_start
@@ -181,13 +193,37 @@ class Command(BaseCommand):
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
 
+            # make sure values are | separated (i.e. replace legacy format)
+            vals = self.dict_spc_to_pipe(v.value)
+
             # encode variables as key value pairs (except for timestamp)
             values = [unicode(v.timestamp).encode('utf-8'),
                       'user_id=%s' % unicode(uid).encode(),
                       'session_id=%s' % unicode(v.session.id).encode(),
                       'action=%s' % unicode(v.name).encode(),
-                      v.value]
-            print(' '.join(values))
+                      vals]
+            print('|'.join(values))
+
+    def dict_spc_to_pipe(self, s):
+
+        # exit early if pipes already exist
+        if '|' in s:
+            return s
+
+        # convert from space separated to pipe separated
+        groups = s.split('=')
+
+        # need to take into account possible spaces in the dict values
+        formatted_str = ''
+        for i in range(1, len(groups)):
+            k = groups[i-1].split(' ')[-1]
+            if i < len(groups) - 1:
+                v = ' '.join(groups[i].split(' ')[:-1])
+                formatted_str += '%s=%s|' % (k, v)
+            else:
+                v = ' '.join(groups[i].split(' ')[:])
+                formatted_str += '%s=%s' % (k, v)
+        return formatted_str
 
     def handle(self, *args, **options):
         START_YEAR = 2016
@@ -212,4 +248,9 @@ class Command(BaseCommand):
         if options["resources_details"]:
             self.resources_details()
         if options["yesterdays_variables"]:
-            self.yesterdays_variables()
+            if len(args) > 0:
+                # run look-back mode
+                self.yesterdays_variables(lookback=int(args[0]))
+            else:
+                # run default mode
+                self.yesterdays_variables()
