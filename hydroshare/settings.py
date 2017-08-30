@@ -315,6 +315,7 @@ INSTALLED_APPS = (
     "hs_file_types",
     "hs_composite_resource",
     "hs_rest_api",
+    "hs_dictionary",
     "security",
 )
 
