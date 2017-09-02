@@ -548,6 +548,10 @@ function showFileTypeMetadata(file_type_time_series, url){
                  // make a recursive call to this function
                  showFileTypeMetadata(true, $url);
              });
+             $(".hs-coordinates-picker").each(function() {
+                    const instance = $(this);
+                    instance.coordinatesPicker();
+             })
          }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);
