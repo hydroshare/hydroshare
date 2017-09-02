@@ -310,26 +310,32 @@ class MethodFormHelper(BaseFormHelper):
                  show_method_code_selection=False, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
                          Field('selected_series_id', css_class=field_width, type="hidden"),
                          Field('available_methods', css_class=field_width, type="hidden"),
                          Field('method_code', css_class=field_width,
+                               id=_get_field_id('method_code', file_type=file_type),
                                title="A brief and unique code that identifies the method used to "
                                      "create the observations (e.g., 'Hydrolab')."),
                          Field('method_name', css_class=field_width,
+                               id=_get_field_id('method_name', file_type=file_type),
                                title="A brief but descriptive name for the method used to create "
                                      "the observations (e.g., 'Hydrolab MiniSonde 5')."),
                          Field('method_type', css_class=field_width,
+                               id=_get_field_id('method_type', file_type=file_type),
                                title="A term selected from a controlled vocabulary to describe the "
                                      "type of method used to create the observations. For "
                                      "sensor measurements use 'Instrument deployment'.\n"
                                      "Select 'Other...' to specify a new method type term."),
                          Field('method_description', css_class=field_width,
+                               id=_get_field_id('method_description', file_type=file_type),
                                title="A longer text description of the method "
                                      "(e.g., 'Water temperature measured using a "
                                      "Hydrolab Multiparameter Sonde')."),
                          Field('method_link', css_class=field_width,
+                               id=_get_field_id('method_link', file_type=file_type),
                                title="A URL link to a website that contains more information "
                                      "about or a detailed description of the method "
                                      "(e.g., 'http://www.hydrolab.com')."),
@@ -353,11 +359,13 @@ class MethodForm(ModelForm):
         selected_series_id = kwargs.pop('selected_series_id', None)
         available_methods = kwargs.pop('available_methods', [])
         show_method_code_selection = kwargs.pop('show_method_code_selection', False)
+        file_type = kwargs.pop('file_type', False)
         super(MethodForm, self).__init__(*args, **kwargs)
         self.selected_series_id = selected_series_id
         show_method_code_selection = len(available_methods) > 0 and show_method_code_selection
         self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method',
-                                       show_method_code_selection=show_method_code_selection)
+                                       show_method_code_selection=show_method_code_selection,
+                                       file_type=file_type)
 
         self.fields['selected_series_id'].initial = selected_series_id
         _set_available_elements_form_field(self, available_methods, "method")
@@ -412,17 +420,21 @@ class ProcessingLevelFormHelper(BaseFormHelper):
                  show_processing_level_code_selection=False, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         common_layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('available_processinglevels', css_class=field_width, type="hidden"),
                      Field('processing_level_code', css_class=field_width,
+                           id=_get_field_id('processing_level_code', file_type=file_type),
                            title="A brief and unique code that identifies the processing level "
                                  "of the observations (e.g., 'QC1')."),
                      Field('definition', css_class=field_width,
+                           id=_get_field_id('definition', file_type=file_type),
                            title="A brief description of the processing level "
                                  "(e.g., 'Quality Controlled Data')."),
                      Field('explanation', css_class=field_width,
+                           id=_get_field_id('explanation', file_type=file_type),
                            title="A longer text description of the processing level that provides "
                                  "more detail about how the processing was done "
                                  "(e.g., 'Data that have passed quality control processing')."),
@@ -449,11 +461,13 @@ class ProcessingLevelForm(ModelForm):
         available_processinglevels = kwargs.pop('available_processinglevels', [])
         show_processing_level_code_selection = kwargs.pop('show_processing_level_code_selection',
                                                           False)
+        file_type = kwargs.pop('file_type', False)
         super(ProcessingLevelForm, self).__init__(*args, **kwargs)
         self.helper = ProcessingLevelFormHelper(
             allow_edit, res_short_id, element_id,
             element_name='ProcessingLevel',
-            show_processing_level_code_selection=show_processing_level_code_selection)
+            show_processing_level_code_selection=show_processing_level_code_selection,
+            file_type=file_type)
 
         self.fields['selected_series_id'].initial = selected_series_id
         _set_available_elements_form_field(self, available_processinglevels, "processinglevel")
@@ -495,33 +509,41 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
                  *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
+        file_type = kwargs.pop('file_type', False)
         field_width = 'form-control input-sm'
         layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('units_type', css_class=field_width,
+                           id=_get_field_id('units_type', file_type=file_type),
                            title="A term selected from a controlled vocabulary that describes the "
                                  "type of units used for the Time Series result values "
                                  "(e.g., 'Temperature').\n"
                                  "Select 'Other...' to specify a new units type term."),
                      Field('units_name', css_class=field_width,
+                           id=_get_field_id('units_name', file_type=file_type),
                            title="A brief, but descriptive name of the units used for the "
                                  "Time Series result values (e.g., 'Degrees Celsius')."),
                      Field('units_abbreviation', css_class=field_width,
+                           id=_get_field_id('units_abbreviation', file_type=file_type),
                            title="A text abbreviation for the units (e.g., 'Deg. C')."),
                      Field('status', css_class=field_width,
+                           id=_get_field_id('status', file_type=file_type),
                            title="A term selected from a controlled vocabulary to describe the "
                                  "status of the time series. Completed datasets use 'Complete'. "
                                  "Where data collection is ongoing, use 'Ongoing'.\n"
                                  "Select 'Other...' to specify a new status term."),
                      Field('sample_medium', css_class=field_width,
+                           id=_get_field_id('sample_medium', file_type=file_type),
                            title="A term selected from a controlled vocabulary to specify the "
                                  "environmental medium in which the observation was made "
                                  "(e.g., 'Liquid aqueous').\n"
                                  "Select 'Other...' to specify a new sample medium term."),
                      Field('value_count', css_class=field_width,
+                           id=_get_field_id('value_count', file_type=file_type),
                            title="The total number of data values in the Time Series "
                                  "(e.g., 24205)."),
                      Field('aggregation_statistics', css_class=field_width,
+                           id=_get_field_id('aggregation_statistics', file_type=file_type),
                            title="An indication of whether the values are 'Continuous' or "
                                  "represent recorded values of some statistic aggregated over a "
                                  "time interval (e.g., 'Average').\n"
@@ -542,10 +564,11 @@ class TimeSeriesResultForm(ModelForm):
         self.cv_units_types = list(kwargs.pop('cv_units_types'))
         self.cv_aggregation_statistics = list(kwargs.pop('cv_aggregation_statistics'))
         self.cv_statuses = list(kwargs.pop('cv_statuses'))
-
+        file_type = kwargs.pop('file_type', False)
         super(TimeSeriesResultForm, self).__init__(*args, **kwargs)
         self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='TimeSeriesResult')
+                                                 element_name='TimeSeriesResult',
+                                                 file_type=file_type)
         self.fields['selected_series_id'].initial = selected_series_id
 
     def set_dropdown_widgets(self, current_sample_medium=None, current_units_type=None,

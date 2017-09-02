@@ -161,7 +161,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             series_selection_div = self.get_series_selection_html(selected_series_id=series_id)
             with series_selection_div:
                 with div(cls="row"):
-                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="site-filetype"):
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms hs-coordinates-picker",
+                             id="site-filetype", data_coordinates_type="point"):
                         with form(id="id-site-file-type",
                                   action="{{ site_form.action }}",
                                   method="post", enctype="multipart/form-data"):
@@ -172,12 +173,50 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
-                # with div(cls="row"):
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms",
+                             id="processinglevel-filetype"):
+                        with form(id="id-processinglevel-file-type",
+                                  action="{{ processinglevel_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy processinglevel_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+                with div(cls="row"):
                     with div(cls="col-sm-6 col-xs-12 time-series-forms", id="variable-filetype"):
                         with form(id="id-variable-file-type",
                                   action="{{ variable_form.action }}",
                                   method="post", enctype="multipart/form-data"):
                             div("{% crispy variable_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms",
+                             id="timeseriesresult-filetype"):
+                        with form(id="id-timeseriesresult-file-type",
+                                  action="{{ timeseriesresult_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy timeseriesresult_form %}")
+                            with div(cls="row", style="margin-top:10px;"):
+                                with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                             "col-md-2 col-xs-6"):
+                                    button("Save changes", type="button",
+                                           cls="btn btn-primary pull-right",
+                                           style="display: none;")
+
+                with div(cls="row"):
+                    with div(cls="col-sm-6 col-xs-12 time-series-forms", id="method-filetype"):
+                        with form(id="id-method-file-type",
+                                  action="{{ method_form.action }}",
+                                  method="post", enctype="multipart/form-data"):
+                            div("{% crispy method_form %}")
                             with div(cls="row", style="margin-top:10px;"):
                                 with div(cls="col-md-offset-10 col-xs-offset-6 "
                                              "col-md-2 col-xs-6"):
@@ -194,6 +233,19 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         variable = self.get_element_by_series_id(series_id=series_id, elements=self.variables)
         if variable:
             context_dict["variable_form"] = create_variable_form(self.logical_file, series_id)
+        method = self.get_element_by_series_id(series_id=series_id, elements=self.methods)
+        if method:
+            context_dict["method_form"] = create_method_form(self.logical_file, series_id)
+        proc_level = self.get_element_by_series_id(series_id=series_id,
+                                                   elements=self.processing_levels)
+        if proc_level:
+            context_dict["processinglevel_form"] = create_processing_level_form(self.logical_file,
+                                                                                series_id)
+        ts_result = self.get_element_by_series_id(series_id=series_id,
+                                                  elements=self.time_series_results)
+        if ts_result:
+            context_dict["timeseriesresult_form"] = create_timeseries_result_form(self.logical_file,
+                                                                                  series_id)
         context = Context(context_dict)
         return template.render(context)
 
@@ -1023,6 +1075,168 @@ def create_variable_form(target, selected_series_id):
         variable_form.set_dropdown_widgets()
 
     return variable_form
+
+
+def create_method_form(target, selected_series_id):
+    """
+    Creates an instance of MethodForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of MethodForm
+    """
+
+    from hs_app_timeseries.forms import MethodForm
+
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+    else:
+        res_short_id = target.short_id
+        file_type = False
+
+    if target.metadata.methods:
+        method = target.metadata.methods.filter(
+            series_ids__contains=[selected_series_id]).first()
+        method_form = MethodForm(instance=method, res_short_id=res_short_id,
+                                 element_id=method.id if method else None,
+                                 cv_method_types=target.metadata.cv_method_types.all(),
+                                 show_method_code_selection=len(target.metadata.series_names) > 0,
+                                 available_methods=target.metadata.methods,
+                                 selected_series_id=selected_series_id,
+                                 file_type=file_type)
+
+        if file_type:
+            target_id = target.id
+        else:
+            target_id = target.short_id
+
+        if method is not None:
+            method_form.action = _get_element_update_form_action('method', target_id, method.id,
+                                                                 file_type=file_type)
+            method_form.number = method.id
+            method_form.set_dropdown_widgets(method_form.initial['method_type'])
+        else:
+            # this case can only happen in case of csv upload
+            method_form.set_dropdown_widgets()
+    else:
+        # this case can happen only in case of CSV upload
+        method_form = MethodForm(instance=None, res_short_id=res_short_id,
+                                 element_id=None,
+                                 cv_method_types=target.metadata.cv_method_types.all(),
+                                 selected_series_id=selected_series_id, file_type=file_type)
+
+        method_form.set_dropdown_widgets()
+    return method_form
+
+
+def create_processing_level_form(target, selected_series_id):
+    """
+    Creates an instance of ProcessingLevelForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of ProcessingLevelForm
+    """
+    from hs_app_timeseries.forms import ProcessingLevelForm
+
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+    else:
+        res_short_id = target.short_id
+        file_type = False
+
+    if target.metadata.processing_levels:
+        pro_level = target.metadata.processing_levels.filter(
+            series_ids__contains=[selected_series_id]).first()
+        processing_level_form = ProcessingLevelForm(
+            instance=pro_level,
+            res_short_id=res_short_id,
+            element_id=pro_level.id if pro_level else None,
+            show_processing_level_code_selection=len(target.metadata.series_names) > 0,
+            available_processinglevels=target.metadata.processing_levels,
+            selected_series_id=selected_series_id,
+            file_type=file_type)
+
+        if file_type:
+            target_id = target.id
+        else:
+            target_id = target.short_id
+
+        if pro_level is not None:
+            processing_level_form.action = _get_element_update_form_action('processinglevel',
+                                                                           target_id,
+                                                                           pro_level.id,
+                                                                           file_type=file_type)
+            processing_level_form.number = pro_level.id
+    else:
+        # this case can happen only in case of CSV upload
+        processing_level_form = ProcessingLevelForm(instance=None, res_short_id=res_short_id,
+                                                    element_id=None,
+                                                    selected_series_id=selected_series_id,
+                                                    file_type=file_type)
+
+    return processing_level_form
+
+
+def create_timeseries_result_form(target, selected_series_id):
+    """
+    Creates an instance of ProcessingLevelForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of ProcessingLevelForm
+    """
+    from hs_app_timeseries.forms import TimeSeriesResultForm
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+    else:
+        res_short_id = target.short_id
+        file_type = False
+
+    time_series_result = target.metadata.time_series_results.filter(
+        series_ids__contains=[selected_series_id]).first()
+    timeseries_result_form = TimeSeriesResultForm(
+        instance=time_series_result,
+        res_short_id=res_short_id,
+        element_id=time_series_result.id if time_series_result else None,
+        cv_sample_mediums=target.metadata.cv_mediums.all(),
+        cv_units_types=target.metadata.cv_units_types.all(),
+        cv_aggregation_statistics=target.metadata.cv_aggregation_statistics.all(),
+        cv_statuses=target.metadata.cv_statuses.all(),
+        selected_series_id=selected_series_id,
+        file_type=file_type)
+
+    if file_type:
+        target_id = target.id
+    else:
+        target_id = target.short_id
+
+    if time_series_result is not None:
+        timeseries_result_form.action = _get_element_update_form_action('timeseriesresult',
+                                                                        target_id,
+                                                                        time_series_result.id,
+                                                                        file_type=file_type)
+        timeseries_result_form.number = time_series_result.id
+        timeseries_result_form.set_dropdown_widgets(timeseries_result_form.initial['sample_medium'],
+                                                    timeseries_result_form.initial['units_type'],
+                                                    timeseries_result_form.initial[
+                                                        'aggregation_statistics'],
+                                                    timeseries_result_form.initial['status'])
+    else:
+        series_ids = target.metadata.series_ids_with_labels
+        if series_ids and selected_series_id is not None:
+            selected_series_label = series_ids[selected_series_id]
+        else:
+            selected_series_label = ''
+        ts_result_value_count = None
+        if target.metadata.series_names and selected_series_id is not None:
+            sorted_series_names = sorted(target.metadata.series_names)
+            selected_series_name = sorted_series_names[int(selected_series_id)]
+            ts_result_value_count = int(target.metadata.value_counts[selected_series_name])
+        timeseries_result_form.set_dropdown_widgets()
+        timeseries_result_form.set_series_label(selected_series_label)
+        timeseries_result_form.set_value_count(ts_result_value_count)
+    return timeseries_result_form
 
 
 def _get_element_update_form_action(element_name, target_id, element_id, file_type=False):

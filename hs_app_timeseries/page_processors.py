@@ -108,12 +108,8 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                ts_result_value_count, extended_metadata_exists):
 
-    from hs_file_types.models.timeseries import create_site_form, create_variable_form
-
-    if series_ids and selected_series_id is not None:
-        selected_series_label = series_ids[selected_series_id]
-    else:
-        selected_series_label = ''
+    from hs_file_types.models.timeseries import create_site_form, create_variable_form, \
+        create_method_form, create_processing_level_form, create_timeseries_result_form
 
     utcoffset_form = None
     if content_model.has_csv_file:
@@ -126,36 +122,12 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     site_form = create_site_form(target=content_model, selected_series_id=selected_series_id)
     variable_form = create_variable_form(target=content_model,
                                          selected_series_id=selected_series_id)
-    method_form = _create_method_form(resource=content_model, selected_series_id=selected_series_id)
-    processing_level_form = _create_processing_level_form(resource=content_model,
-                                                          selected_series_id=selected_series_id)
+    method_form = create_method_form(target=content_model, selected_series_id=selected_series_id)
+    processing_level_form = create_processing_level_form(target=content_model,
+                                                         selected_series_id=selected_series_id)
 
-    time_series_result = content_model.metadata.time_series_results.filter(
-        series_ids__contains=[selected_series_id]).first()
-    timeseries_result_form = TimeSeriesResultForm(
-        instance=time_series_result,
-        res_short_id=content_model.short_id,
-        element_id=time_series_result.id if time_series_result else None,
-        cv_sample_mediums=content_model.metadata.cv_mediums.all(),
-        cv_units_types=content_model.metadata.cv_units_types.all(),
-        cv_aggregation_statistics=content_model.metadata.cv_aggregation_statistics.all(),
-        cv_statuses=content_model.metadata.cv_statuses.all(),
-        selected_series_id=selected_series_id)
-
-    if time_series_result is not None:
-        timeseries_result_form.action = _get_element_update_form_action('timeseriesresult',
-                                                                        content_model.short_id,
-                                                                        time_series_result.id)
-        timeseries_result_form.number = time_series_result.id
-        timeseries_result_form.set_dropdown_widgets(timeseries_result_form.initial['sample_medium'],
-                                                    timeseries_result_form.initial['units_type'],
-                                                    timeseries_result_form.initial[
-                                                        'aggregation_statistics'],
-                                                    timeseries_result_form.initial['status'])
-    else:
-        timeseries_result_form.set_dropdown_widgets()
-        timeseries_result_form.set_series_label(selected_series_label)
-        timeseries_result_form.set_value_count(ts_result_value_count)
+    timeseries_result_form = create_timeseries_result_form(target=content_model,
+                                                           selected_series_id=selected_series_id)
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
                            SeriesSelectionLayout,
@@ -184,62 +156,6 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     context['processing_level_form'] = processing_level_form
     context['timeseries_result_form'] = timeseries_result_form
     return context
-
-
-def _create_method_form(resource, selected_series_id):
-    if resource.metadata.methods:
-        method = resource.metadata.methods.filter(
-            series_ids__contains=[selected_series_id]).first()
-        method_form = MethodForm(instance=method, res_short_id=resource.short_id,
-                                 element_id=method.id if method else None,
-                                 cv_method_types=resource.metadata.cv_method_types.all(),
-                                 show_method_code_selection=len(resource.metadata.series_names) > 0,
-                                 available_methods=resource.metadata.methods,
-                                 selected_series_id=selected_series_id)
-
-        if method is not None:
-            method_form.action = _get_element_update_form_action('method', resource.short_id,
-                                                                 method.id)
-            method_form.number = method.id
-            method_form.set_dropdown_widgets(method_form.initial['method_type'])
-        else:
-            # this case can only happen in case of csv upload
-            method_form.set_dropdown_widgets()
-    else:
-        # this case can happen only in case of CSV upload
-        method_form = MethodForm(instance=None, res_short_id=resource.short_id,
-                                 element_id=None,
-                                 cv_method_types=resource.metadata.cv_method_types.all(),
-                                 selected_series_id=selected_series_id)
-
-        method_form.set_dropdown_widgets()
-    return method_form
-
-
-def _create_processing_level_form(resource, selected_series_id):
-    if resource.metadata.processing_levels:
-        pro_level = resource.metadata.processing_levels.filter(
-            series_ids__contains=[selected_series_id]).first()
-        processing_level_form = ProcessingLevelForm(
-            instance=pro_level,
-            res_short_id=resource.short_id,
-            element_id=pro_level.id if pro_level else None,
-            show_processing_level_code_selection=len(resource.metadata.series_names) > 0,
-            available_processinglevels=resource.metadata.processing_levels,
-            selected_series_id=selected_series_id)
-
-        if pro_level is not None:
-            processing_level_form.action = _get_element_update_form_action('processinglevel',
-                                                                           resource.short_id,
-                                                                           pro_level.id)
-            processing_level_form.number = pro_level.id
-    else:
-        # this case can happen only in case of CSV upload
-        processing_level_form = ProcessingLevelForm(instance=None, res_short_id=resource.short_id,
-                                                    element_id=None,
-                                                    selected_series_id=selected_series_id)
-
-    return processing_level_form
 
 
 def _get_series_label(series_id, resource):
