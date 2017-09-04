@@ -513,8 +513,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
+        html_string = super(RefTimeseriesFileMetaData, self).get_html(include_extra_metadata=False)
         with root_div:
-            super(RefTimeseriesFileMetaData, self).get_html_forms(temporal_coverage=False)
+            self.get_extra_metadata_html_form()
             abstract_div = div(cls="col-xs-12 content-block")
             with abstract_div:
                 legend("Abstract")
@@ -536,9 +537,10 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             self.get_ts_series_html()
             self.get_json_file_data_html()
 
-        template = Template(root_div.render())
+        html_string += root_div.render()
+        template = Template(html_string)
         context_dict = dict()
-        temp_cov_form = self.get_temporal_coverage_form()
+        temp_cov_form = self.get_temporal_coverage_form(allow_edit=False)
         spatial_cov_form = self.get_spatial_coverage_form()
 
         context_dict["temp_form"] = temp_cov_form
@@ -682,8 +684,6 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     msg = "RefTimeseries file type. Error when setting file type. Error:{}"
                     msg = msg.format(ex.message)
                     log.exception(msg)
-                    # TODO: in case of any error put the original file back and
-                    # delete the folder that was created
                     raise ValidationError(msg)
                 finally:
                     # remove temp dir
@@ -709,7 +709,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
-    if resource.metadata.title.value == 'Untitled resource':
+    if resource.metadata.title.value == 'Untitled Resource':
         resource.metadata.update_element('title', resource.metadata.title.id,
                                          value=logical_file.metadata.title)
 

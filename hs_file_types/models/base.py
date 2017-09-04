@@ -49,9 +49,11 @@ class AbstractFileMetaData(models.Model):
         self.keywords = []
         self.save()
 
-    def get_html(self):
+    def get_html(self, include_extra_metadata=True):
         """Generates html for displaying all metadata elements associated with this logical file.
         Subclass must override to include additional html for additional metadata it supports.
+        :param include_extra_metadata: a flag to control if necessary html for displaying key/value
+        metadata will be included
         """
 
         root_div = div()
@@ -91,7 +93,7 @@ class AbstractFileMetaData(models.Model):
             root_div.add(dataset_name_div)
         if self.keywords:
             root_div.add(keywords_div)
-        if self.extra_metadata:
+        if self.extra_metadata and include_extra_metadata:
             root_div.add(extra_metadata_div)
 
         return root_div.render()
@@ -147,9 +149,9 @@ class AbstractFileMetaData(models.Model):
         return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
                                               allow_edit=allow_edit, file_type=True)
 
-    def get_temporal_coverage_form(self):
+    def get_temporal_coverage_form(self, allow_edit=True):
         return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage,
-                                               file_type=True)
+                                               file_type=True, allow_edit=allow_edit)
 
     def get_extra_metadata_html_form(self):
         def get_add_keyvalue_button():
