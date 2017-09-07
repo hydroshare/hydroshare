@@ -239,11 +239,23 @@ class UserQuota(models.Model):
         return self.used_value + convert_file_size_to_unit(size, self.unit)
 
 
+degree_choices = [
+    ("high_school", "High School Diploma"),
+    ("associates", "Associate Degree"),
+    ("bachelors", "Bachelors Degree"),
+    ("masters", "Masters Degree"),
+    ("doctorate", "Doctorate / Postdoc")
+]
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
+    highest_degree_completed = models.CharField(
+        max_length=1024, null=True, blank=True, choices=degree_choices,
+        help_text='e.g. High School, Associate, Bachelors, Masters, Ph.D., Postdoc, other')
     title = models.CharField(
         max_length=1024, null=True, blank=True,
         help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')

@@ -21,6 +21,8 @@ from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
 
+import autocomplete_light
+
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
 
@@ -261,7 +263,8 @@ class SignupForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         data = self.cleaned_data
-        return create_account(
+
+        user = create_account(
             email=data['email'],
             username=data['username'],
             first_name=data['first_name'],
@@ -270,6 +273,14 @@ class SignupForm(forms.ModelForm):
             password=data['password'],
             active=False,
         )
+
+
+        user.userprofile.title = self.request.POST['title']
+        user.userprofile.organization = self.request.POST['organization']
+        user.userprofile.highest_degree_completed = self.request.POST['highest_degree_completed']
+        user.userprofile.save()
+
+        return user
 
 
 class UserForm(forms.ModelForm):
@@ -295,11 +306,19 @@ class UserForm(forms.ModelForm):
             raise forms.ValidationError("Email is a required field.")
         return data
 
+    def clean_username(self):
+        data = self.cleaned_data['username']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Username is a required field.")
+        return data
 
-class UserProfileForm(forms.ModelForm):
+
+class UserProfileForm(autocomplete_light.ModelForm):
+    organization = forms.CharField()
+
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ['user', 'public', 'create_irods_user_account', 'organization']
 
     def clean_organization(self):
         data = self.cleaned_data['organization']

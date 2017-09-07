@@ -324,6 +324,15 @@ $(document).ready(function () {
 
     $("tr[data-type='all']").find(".badge").text(collection["total"]);
 
+    var autocomplete = $('#id_organization').yourlabsAutocomplete({
+        url: '{% url "autocomplete_light_autocomplete" autocomplete="OrganizationAutocomplete" %}',
+    });
+
+    autocomplete.input.bind('selectChoice', function(e, choice) {
+        var autocompleteInfo = $(this).yourlabsAutocomplete();
+        var chosenValue = autocompleteInfo.box.children('.hilight').text();
+        $(this).val(chosenValue);
+    });
 
     // Unspecified goes away as soon as a user clicks.
     $("input[name='state']").click(function () {
