@@ -118,7 +118,7 @@
                       method="POST">
                     {% csrf_token %}
 
-                    <input name="t" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
+                    <input name="flag" type="hidden" {% if cm.raccess.require_download_agreement %}value="make_not_require_lic_agreement"
                            {% else %}value="make_require_lic_agreement"{% endif %}/>
 
                     <br>
