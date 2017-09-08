@@ -332,4 +332,11 @@ $(document).ready(function () {
             }
         }
     );
+
+    $.get("/hsapi/dictionary/universities/", function(universities) {
+        $('.tagsinput').tagsInput({
+            limit: 2,
+            autocomplete: {source: universities}
+        });
+    });
 });
