@@ -634,6 +634,16 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
         container_to_add_to = super(RefTimeseriesFileMetaData, self).add_to_xml_container(container)
         # TODO: abstract also needs to be added
+        # create the abstract element
+        NAMESPACES = CoreMetaData.NAMESPACES
+        if self.abstract:
+            dc_description = etree.SubElement(container_to_add_to,
+                                              '{%s}description' % NAMESPACES['dc'])
+            dc_des_rdf_Desciption = etree.SubElement(dc_description,
+                                                     '{%s}Description' % NAMESPACES['rdf'])
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.abstract
         for series in self.time_series_list:
             series.add_to_xml_container(container_to_add_to)
 
