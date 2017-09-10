@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
-    th, td, a
+    th, td, a, textarea
 
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
@@ -313,18 +313,30 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     # field to store the content of the json file (the file that is part
     # of the RefTimeseriesLogicalFile type
     json_file_content = models.TextField()
+    # this is to store abstract
+    abstract = models.TextField(null=True, blank=True)
 
     @property
-    def title(self):
-        """get the title associated with this ref time series"""
+    def has_title_in_json(self):
+        """checks if title is in the uploaded json file"""
+        json_data_dict = self._json_to_dict()
+        return 'title' in json_data_dict['timeSeriesReferenceFile']
+
+    def get_title_from_json(self):
+        """gets the title associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
         if 'title' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['title']
         return ''
 
     @property
-    def abstract(self):
-        """get the abstract associated with this ref time series"""
+    def has_abstract_in_json(self):
+        """checks if abstract is in the uploaded json file"""
+        json_data_dict = self._json_to_dict()
+        return 'abstract' in json_data_dict['timeSeriesReferenceFile']
+
+    def get_abstract_from_json(self):
+        """get the abstract associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
         if 'abstract' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['abstract']
@@ -332,16 +344,21 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
 
     @property
     def file_version(self):
-        """get the file version associated with this ref time series"""
+        """get the file version associated with this ref time series from the json file"""
         json_data_dict = self._json_to_dict()
         if 'fileVersion' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['fileVersion']
         return ''
 
     @property
-    def key_words(self):
-        """get a list of all keywords associated with this ref time series"""
-        # had to name this property as key_words since the parent class has a model field keywords
+    def has_keywords_in_json(self):
+        """checks if keywords exists in the uploaded json file"""
+
+        json_data_dict = self._json_to_dict()
+        return 'keyWords' in json_data_dict['timeSeriesReferenceFile']
+
+    def get_keywords_from_json(self):
+        """get a list of all keywords associated with this ref time series from json file"""
         json_data_dict = self._json_to_dict()
         if 'keyWords' in json_data_dict['timeSeriesReferenceFile']:
             return json_data_dict['timeSeriesReferenceFile']['keyWords']
@@ -477,12 +494,13 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                 h4("No file level metadata exists for the selected file.")
             html_string = root_div.render()
         else:
-            abstract_div = div(cls="col-xs-12 content-block")
-            with abstract_div:
-                legend("Abstract")
-                p(self.abstract)
+            if self.abstract:
+                abstract_div = div(cls="col-xs-12 content-block")
+                with abstract_div:
+                    legend("Abstract")
+                    p(self.abstract)
 
-            html_string += abstract_div.render()
+                html_string += abstract_div.render()
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
 
@@ -512,14 +530,27 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """overrides the base class function"""
 
-        root_div = div("{% load crispy_forms_tags %}")
-        html_string = super(RefTimeseriesFileMetaData, self).get_html(include_extra_metadata=False)
+        root_div = div()
         with root_div:
+            div("{% load crispy_forms_tags %}")
+            if self.has_title_in_json:
+                self.get_dataset_name_html()
+            else:
+                self.get_dataset_name_form()
+            if self.has_keywords_in_json:
+                self.get_keywords_html()
+            else:
+                self.get_keywords_html_form()
+
             self.get_extra_metadata_html_form()
             abstract_div = div(cls="col-xs-12 content-block")
             with abstract_div:
-                legend("Abstract")
-                p(self.abstract)
+                if self.has_abstract_in_json:
+                    legend("Abstract")
+                    p(self.abstract)
+                else:
+                    self.get_abstract_form()
+
             self.get_temporal_coverage_html_form()
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
@@ -537,8 +568,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
             self.get_ts_series_html()
             self.get_json_file_data_html()
 
-        html_string += root_div.render()
-        template = Template(html_string)
+        template = Template(root_div.render())
         context_dict = dict()
         temp_cov_form = self.get_temporal_coverage_form(allow_edit=False)
         spatial_cov_form = self.get_spatial_coverage_form()
@@ -548,6 +578,34 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         context = Context(context_dict)
         rendered_html = template.render(context)
         return rendered_html
+
+    def get_abstract_form(self):
+        form_action = "/hsapi/_internal/{}/update-reftimeseries-abstract/"
+        form_action = form_action.format(self.logical_file.id)
+        root_div = div(cls="col-xs-12")
+
+        # if json file contains abstract then we don't need this form since abstract can't be
+        # edited in that case
+        if self.has_abstract_in_json:
+            return
+
+        with root_div:
+            with form(action=form_action, id="filetype-abstract",
+                      method="post", enctype="multipart/form-data"):
+                div("{% csrf_token %}")
+                with div(cls="form-group"):
+                    with div(cls="control-group"):
+                        legend('Abstract')
+                        with div(cls="controls"):
+                            textarea(self.abstract,
+                                  cls="form-control input-sm textinput textInput",
+                                  id="file_abstract", cols=40, rows=5,
+                                  name="abstract")
+                with div(cls="row", style="margin-top:10px;"):
+                    with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                        button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                               style="display: none;", type="button")
+        return root_div
 
     def get_json_file_data_html(self):
         """
@@ -575,6 +633,7 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         logical file type instance"""
 
         container_to_add_to = super(RefTimeseriesFileMetaData, self).add_to_xml_container(container)
+        # TODO: abstract also needs to be added
         for series in self.time_series_list:
             series.add_to_xml_container(container_to_add_to)
 
@@ -675,7 +734,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
                     # make the resource file we added as part of the logical file
                     logical_file.add_resource_file(new_res_file)
                     logical_file.metadata.save()
-                    logical_file.dataset_name = logical_file.metadata.title
+                    logical_file.dataset_name = logical_file.metadata.get_title_from_json()
                     logical_file.save()
                     # extract metadata
                     _extract_metadata(resource, logical_file)
@@ -709,21 +768,25 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
-    if resource.metadata.title.value == 'Untitled Resource':
+    if resource.metadata.title.value == 'Untitled Resource' \
+            and logical_file.metadata.has_title_in_json:
         resource.metadata.update_element('title', resource.metadata.title.id,
-                                         value=logical_file.metadata.title)
+                                         value=logical_file.dataset_name)
 
-    # add resource level abstract id necessary
-    if resource.metadata.description is None:
-        resource.metadata.create_element('description', abstract=logical_file.metadata.abstract)
+    # add resource level abstract if necessary
+    if resource.metadata.description is None and logical_file.metadata.has_abstract_in_json:
+        resource.metadata.create_element('description',
+                                         abstract=logical_file.metadata.get_abstract_from_json())
     # add resource level keywords
-    resource_keywords = [kw.value.lower() for kw in resource.metadata.subjects.all()]
-    for kw in logical_file.metadata.key_words:
-        if kw.lower() not in resource_keywords:
-            resource.metadata.create_element('subject', value=kw)
+    if logical_file.metadata.has_keywords_in_json:
+        resource_keywords = [kw.value.lower() for kw in resource.metadata.subjects.all()]
+        for kw in logical_file.metadata.get_keywords_from_json():
+            if kw.lower() not in resource_keywords:
+                resource.metadata.create_element('subject', value=kw)
 
     # add to the file level metadata
-    logical_file.metadata.keywords = logical_file.metadata.key_words
+    logical_file.metadata.keywords = logical_file.metadata.get_keywords_from_json()
+    logical_file.metadata.abstract = logical_file.metadata.get_abstract_from_json()
     logical_file.metadata.save()
 
     # add file level temporal coverage
