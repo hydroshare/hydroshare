@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, form, button, h4, p, textarea, legend, table, tbody, tr, \
-    th, td, a, textarea
+    th, td, a
 
 from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.hydroshare import utils
@@ -598,9 +598,9 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                         legend('Abstract')
                         with div(cls="controls"):
                             textarea(self.abstract,
-                                  cls="form-control input-sm textinput textInput",
-                                  id="file_abstract", cols=40, rows=5,
-                                  name="abstract")
+                                     cls="form-control input-sm textinput textInput",
+                                     id="file_abstract", cols=40, rows=5,
+                                     name="abstract")
                 with div(cls="row", style="margin-top:10px;"):
                     with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
                         button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
@@ -768,7 +768,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
 
 def _extract_metadata(resource, logical_file):
     # add resource level title if necessary
-    if resource.metadata.title.value == 'Untitled Resource' \
+    if resource.metadata.title.value.lower() == 'untitled resource' \
             and logical_file.metadata.has_title_in_json:
         resource.metadata.update_element('title', resource.metadata.title.id,
                                          value=logical_file.dataset_name)
