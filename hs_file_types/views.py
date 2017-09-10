@@ -38,7 +38,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     file_type_map = {"GeoRaster": GeoRasterLogicalFile, "NetCDF": NetCDFLogicalFile,
                      'GeoFeature': GeoFeatureLogicalFile,
                      'RefTimeseries': RefTimeseriesLogicalFile}
-    response_data = {}
+    response_data = {'status': 'error'}
     if not authorized:
         err_msg = "Permission denied"
         response_data['message'] = err_msg
@@ -60,6 +60,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to selected file type. " \
               "Metadata extraction was successful."
+        response_data['status'] = 'success'
         response_data['message'] = msg
         spatial_coverage_dict = get_coverage_data_dict(res)
         response_data['spatial_coverage'] = spatial_coverage_dict
