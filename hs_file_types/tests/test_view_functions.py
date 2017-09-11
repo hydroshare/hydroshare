@@ -482,7 +482,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
 
     def test_update_abstract_refts_success(self):
         # we should be able to update abstract since the json file
-        # does not have the abstract element
+        # does't have the abstract element
         self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
         self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
             self.refts_missing_abstract_file_name)
