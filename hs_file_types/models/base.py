@@ -56,17 +56,27 @@ class AbstractFileMetaData(models.Model):
         metadata will be included
         """
 
-        # TODO: replace the following code block for dataset_name with
-        # call to function: self.get_dataset_name_html()
         root_div = div()
-        dataset_name_div = div(cls="col-xs-12 content-block")
         if self.logical_file.dataset_name:
+            root_div.add(self.get_dataset_name_html())
+        if self.keywords:
+            root_div.add(self.get_keywords_html())
+        if self.extra_metadata and include_extra_metadata:
+            root_div.add(self.get_key_value_metadata_html())
+
+        return root_div.render()
+
+    def get_dataset_name_html(self):
+        """generates html for viewing dataset name (title)"""
+        if self.logical_file.dataset_name:
+            dataset_name_div = div(cls="col-xs-12 content-block")
             with dataset_name_div:
                 legend("Title")
                 p(self.logical_file.dataset_name)
+            return dataset_name_div
 
-        # TODO: replace the following code block for keywords with
-        # call to function: self.get_keywords_html()
+    def get_keywords_html(self):
+        """generates html for viewing keywords"""
         keywords_div = div()
         if self.keywords:
             keywords_div = div(cls="col-sm-12 content-block")
@@ -77,7 +87,10 @@ class AbstractFileMetaData(models.Model):
                         for kw in self.keywords:
                             with li():
                                 a(kw, cls="tag")
+        return keywords_div
 
+    def get_key_value_metadata_html(self):
+        """generates html for viewing key/vale extra metadata"""
         extra_metadata_div = div()
         if self.extra_metadata:
             extra_metadata_div = div(cls="col-sm-12 content-block")
@@ -92,36 +105,7 @@ class AbstractFileMetaData(models.Model):
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
-
-        if self.logical_file.dataset_name:
-            root_div.add(dataset_name_div)
-        if self.keywords:
-            root_div.add(keywords_div)
-        if self.extra_metadata and include_extra_metadata:
-            root_div.add(extra_metadata_div)
-
-        return root_div.render()
-
-    def get_dataset_name_html(self):
-        if self.logical_file.dataset_name:
-            dataset_name_div = div(cls="col-xs-12 content-block")
-            with dataset_name_div:
-                legend("Title")
-                p(self.logical_file.dataset_name)
-            return dataset_name_div
-
-    def get_keywords_html(self):
-        keywords_div = div()
-        if self.keywords:
-            keywords_div = div(cls="col-sm-12 content-block")
-            with keywords_div:
-                legend('Keywords')
-                with div(cls="tags"):
-                    with ul(id="list-keywords-file-type", cls="tag-list custom-well"):
-                        for kw in self.keywords:
-                            with li():
-                                a(kw, cls="tag")
-        return keywords_div
+        return extra_metadata_div
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """generates html forms for all the metadata elements associated with this logical file
@@ -135,38 +119,7 @@ class AbstractFileMetaData(models.Model):
             if dataset_name_form:
                 self.get_dataset_name_form()
 
-            # TODO: 9/9/2017 replace the following code block that generates html form
-            # elements for editing keywords with function call: self.get_keywords_html_form()
-
-            keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
-            action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
-            action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-            delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
-            delete_action = delete_action.format(self.logical_file.__class__.__name__,
-                                                 self.logical_file.id)
-            with keywords_div:
-                legend("Keywords")
-                with form(id="id-keywords-filetype", action=action, method="post",
-                          enctype="multipart/form-data"):
-
-                    input(id="id-delete-keyword-filetype-action", type="hidden",
-                          value=delete_action)
-                    with div(cls="tags"):
-                        with div(id="add-keyword-wrapper", cls="input-group"):
-                            input(id="txt-keyword-filetype", cls="form-control",
-                                  placeholder="keyword",
-                                  type="text", name="keywords")
-                            with span(cls="input-group-btn"):
-                                a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
-                                  type="button")
-                    with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
-                        for kw in self.keywords:
-                            with li(cls="tag"):
-                                span(kw)
-                                with a():
-                                    span(cls="glyphicon glyphicon-remove-circle icon-remove")
-                p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
-                  cls="text-danger small", style="display: none;")
+            self.get_keywords_html_form()
 
             self.get_extra_metadata_html_form()
             if temporal_coverage:
