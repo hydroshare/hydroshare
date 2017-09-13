@@ -351,6 +351,14 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
         return ''
 
     @property
+    def symbol(self):
+        """get the symbol associated with this ref time series from the json file"""
+        json_data_dict = self._json_to_dict()
+        if 'symbol' in json_data_dict['timeSeriesReferenceFile']:
+            return json_data_dict['timeSeriesReferenceFile']['symbol']
+        return ''
+
+    @property
     def has_keywords_in_json(self):
         """checks if keywords exists in the uploaded json file"""
 
@@ -501,6 +509,22 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                     p(self.abstract)
 
                 html_string += abstract_div.render()
+            if self.file_version:
+                file_ver_div = div(cls="col-xs-12 content-block")
+                with file_ver_div:
+                    legend("File Version")
+                    p(self.file_version)
+                html_string += file_ver_div.render()
+            if self.symbol:
+                symbol_div = div(cls="col-xs-12 content-block")
+                with symbol_div:
+                    legend("Symbol")
+                    if self.symbol.startswith('http'):
+                        with p():
+                            a(self.symbol, href=self.symbol, target="_blank")
+                    else:
+                        p(self.symbol)
+                html_string += symbol_div.render()
             if self.temporal_coverage:
                 html_string += self.temporal_coverage.get_html()
 
@@ -550,6 +574,21 @@ class RefTimeseriesFileMetaData(AbstractFileMetaData):
                     p(self.abstract)
                 else:
                     self.get_abstract_form()
+            if self.file_version:
+                file_ver_div = div(cls="col-xs-12 content-block")
+                with file_ver_div:
+                    legend("File Version")
+                    p(self.file_version)
+
+            if self.symbol:
+                symbol_div = div(cls="col-xs-12 content-block")
+                with symbol_div:
+                    legend("Symbol")
+                    if self.symbol.startswith('http'):
+                        with p():
+                            a(self.symbol, href=self.symbol, target="_blank")
+                    else:
+                        p(self.symbol)
 
             self.get_temporal_coverage_html_form()
             with div(cls="col-lg-6 col-xs-12"):
@@ -856,8 +895,8 @@ def _validate_json_file(res_json_file):
         msg = "Not a valid reference time series json file. {}".format(ex.message)
         raise Exception(msg)
 
-    ts_serieses = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
-    _validate_json_data(ts_serieses)
+    ts_series_list = json_data['timeSeriesReferenceFile']['referencedTimeSeries']
+    _validate_json_data(ts_series_list)
     return json_file_content
 
 
@@ -865,6 +904,8 @@ def _validate_json_data(series_data):
     # 1. here we need to test that the date values are actually date type data
     # the beginDate <= endDate
     # 2. the url is valid and live
+    # 3. 'sampleMedium' key is present in each series
+    # 4. 'valueCount' key is present in each series
 
     err_msg = "Invalid json file. {}"
     urls = []
@@ -893,6 +934,13 @@ def _validate_json_data(series_data):
         # validate serviceType
         if request_info['serviceType'] not in RefTimeseriesLogicalFile.get_allowed_service_types():
             raise ValidationError("Invalid value for serviceType")
+
+        # chek that sampleMedium key is there
+        if 'sampleMedium' not in series:
+            raise ValidationError("sampleMedium is missing")
+        # check  that valueCount key is there
+        if 'valueCount' not in series:
+            raise ValidationError("valueCount is missing")
 
         url = Request(request_info['url'])
         if url not in urls:
@@ -984,7 +1032,7 @@ TS_SCHEMA = {
                     "additionalProperties": False
                 }
             },
-            "required": ["fileVersion", "referencedTimeSeries"],
+            "required": ["fileVersion", "symbol", "referencedTimeSeries"],
             "additionalProperties": False
         }
     },
