@@ -833,19 +833,21 @@ def _extract_metadata(resource, logical_file):
                                          value=logical_file.dataset_name)
 
     # add resource level abstract if necessary
+    logical_file_abstract = logical_file.metadata.get_abstract_from_json()
     if resource.metadata.description is None and logical_file.metadata.has_abstract_in_json:
         resource.metadata.create_element('description',
-                                         abstract=logical_file.metadata.get_abstract_from_json())
+                                         abstract=logical_file_abstract)
     # add resource level keywords
+    logical_file_keywords = logical_file.metadata.get_keywords_from_json()
     if logical_file.metadata.has_keywords_in_json:
         resource_keywords = [kw.value.lower() for kw in resource.metadata.subjects.all()]
-        for kw in logical_file.metadata.get_keywords_from_json():
+        for kw in logical_file_keywords:
             if kw.lower() not in resource_keywords:
                 resource.metadata.create_element('subject', value=kw)
 
     # add to the file level metadata
-    logical_file.metadata.keywords = logical_file.metadata.get_keywords_from_json()
-    logical_file.metadata.abstract = logical_file.metadata.get_abstract_from_json()
+    logical_file.metadata.keywords = logical_file_keywords
+    logical_file.metadata.abstract = logical_file_abstract
     logical_file.metadata.save()
 
     # add file level temporal coverage
