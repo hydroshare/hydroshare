@@ -23,7 +23,7 @@ class AbstractFileMetaData(models.Model):
 
     # one temporal coverage and one spatial coverage
     coverages = GenericRelation(Coverage)
-    # kye/value metadata
+    # key/value metadata
     extra_metadata = HStoreField(default={})
     # keywords
     keywords = ArrayField(models.CharField(max_length=100, null=True, blank=True), default=[])
@@ -49,18 +49,34 @@ class AbstractFileMetaData(models.Model):
         self.keywords = []
         self.save()
 
-    def get_html(self):
+    def get_html(self, include_extra_metadata=True):
         """Generates html for displaying all metadata elements associated with this logical file.
         Subclass must override to include additional html for additional metadata it supports.
+        :param include_extra_metadata: a flag to control if necessary html for displaying key/value
+        metadata will be included
         """
 
         root_div = div()
-        dataset_name_div = div(cls="col-xs-12 content-block")
         if self.logical_file.dataset_name:
+            root_div.add(self.get_dataset_name_html())
+        if self.keywords:
+            root_div.add(self.get_keywords_html())
+        if self.extra_metadata and include_extra_metadata:
+            root_div.add(self.get_key_value_metadata_html())
+
+        return root_div.render()
+
+    def get_dataset_name_html(self):
+        """generates html for viewing dataset name (title)"""
+        if self.logical_file.dataset_name:
+            dataset_name_div = div(cls="col-xs-12 content-block")
             with dataset_name_div:
                 legend("Title")
                 p(self.logical_file.dataset_name)
+            return dataset_name_div
 
+    def get_keywords_html(self):
+        """generates html for viewing keywords"""
         keywords_div = div()
         if self.keywords:
             keywords_div = div(cls="col-sm-12 content-block")
@@ -71,7 +87,10 @@ class AbstractFileMetaData(models.Model):
                         for kw in self.keywords:
                             with li():
                                 a(kw, cls="tag")
+        return keywords_div
 
+    def get_key_value_metadata_html(self):
+        """generates html for viewing key/vale extra metadata"""
         extra_metadata_div = div()
         if self.extra_metadata:
             extra_metadata_div = div(cls="col-sm-12 content-block")
@@ -86,15 +105,7 @@ class AbstractFileMetaData(models.Model):
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
-
-        if self.logical_file.dataset_name:
-            root_div.add(dataset_name_div)
-        if self.keywords:
-            root_div.add(keywords_div)
-        if self.extra_metadata:
-            root_div.add(extra_metadata_div)
-
-        return root_div.render()
+        return extra_metadata_div
 
     def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
         """generates html forms for all the metadata elements associated with this logical file
@@ -106,50 +117,52 @@ class AbstractFileMetaData(models.Model):
 
         with root_div:
             if dataset_name_form:
-                self._get_dataset_name_form()
+                self.get_dataset_name_form()
 
-            keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
-            action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
-            action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
-            delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
-            delete_action = delete_action.format(self.logical_file.__class__.__name__,
-                                                 self.logical_file.id)
-            with keywords_div:
-                legend("Keywords")
-                with form(id="id-keywords-filetype", action=action, method="post",
-                          enctype="multipart/form-data"):
-
-                    input(id="id-delete-keyword-filetype-action", type="hidden",
-                          value=delete_action)
-                    with div(cls="tags"):
-                        with div(id="add-keyword-wrapper", cls="input-group"):
-                            input(id="txt-keyword-filetype", cls="form-control",
-                                  placeholder="keyword",
-                                  type="text", name="keywords")
-                            with span(cls="input-group-btn"):
-                                a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
-                                  type="button")
-                    with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
-                        for kw in self.keywords:
-                            with li(cls="tag"):
-                                span(kw)
-                                with a():
-                                    span(cls="glyphicon glyphicon-remove-circle icon-remove")
-                p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
-                  cls="text-danger small", style="display: none;")
+            self.get_keywords_html_form()
 
             self.get_extra_metadata_html_form()
             if temporal_coverage:
                 self.get_temporal_coverage_html_form()
         return root_div
 
+    def get_keywords_html_form(self):
+        keywords_div = div(cls="col-sm-12 content-block", id="filetype-keywords")
+        action = "/hsapi/_internal/{0}/{1}/add-file-keyword-metadata/"
+        action = action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        delete_action = "/hsapi/_internal/{0}/{1}/delete-file-keyword-metadata/"
+        delete_action = delete_action.format(self.logical_file.__class__.__name__,
+                                             self.logical_file.id)
+        with keywords_div:
+            legend("Keywords")
+            with form(id="id-keywords-filetype", action=action, method="post",
+                      enctype="multipart/form-data"):
+                input(id="id-delete-keyword-filetype-action", type="hidden",
+                      value=delete_action)
+                with div(cls="tags"):
+                    with div(id="add-keyword-wrapper", cls="input-group"):
+                        input(id="txt-keyword-filetype", cls="form-control",
+                              placeholder="keyword",
+                              type="text", name="keywords")
+                        with span(cls="input-group-btn"):
+                            a("Add", id="btn-add-keyword-filetype", cls="btn btn-success",
+                              type="button")
+                with ul(id="lst-tags-filetype", cls="custom-well tag-list"):
+                    for kw in self.keywords:
+                        with li(cls="tag"):
+                            span(kw)
+                            with a():
+                                span(cls="glyphicon glyphicon-remove-circle icon-remove")
+            p("Duplicate. Keywords not added.", id="id-keywords-filetype-msg",
+              cls="text-danger small", style="display: none;")
+
     def get_spatial_coverage_form(self, allow_edit=False):
         return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
                                               allow_edit=allow_edit, file_type=True)
 
-    def get_temporal_coverage_form(self):
+    def get_temporal_coverage_form(self, allow_edit=True):
         return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage,
-                                               file_type=True)
+                                               file_type=True, allow_edit=allow_edit)
 
     def get_extra_metadata_html_form(self):
         def get_add_keyvalue_button():
@@ -379,7 +392,7 @@ class AbstractFileMetaData(models.Model):
         specified metadata element (element_name)"""
         raise NotImplementedError
 
-    def _get_dataset_name_form(self):
+    def get_dataset_name_form(self):
         form_action = "/hsapi/_internal/{0}/{1}/update-filetype-dataset-name/"
         form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
         root_div = div(cls="col-xs-12")
