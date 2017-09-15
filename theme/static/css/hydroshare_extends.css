@@ -289,3 +289,10 @@ float the buttons inside it. This prevents collapsing. */
 {
     display:none;
 }
+
+.ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+}

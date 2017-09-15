@@ -333,10 +333,15 @@ $(document).ready(function () {
         }
     );
 
-    $.get("/hsapi/dictionary/universities/", function(universities) {
-        $('.tagsinput').tagsInput({
-            limit: 2,
-            autocomplete: {source: universities}
-        });
+    $('.tagsinput').tagsInput({
+        limit: 2,
+        autocomplete: {
+            source: "/hsapi/dictionary/universities/",
+            minLength: 3,
+            delay: 500,
+            classes: {
+                "ui-autocomplete": "minHeight"
+            }
+        }
     });
 });
