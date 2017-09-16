@@ -61,6 +61,7 @@ urlpatterns = i18n_patterns("",
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
     url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
         name='update_sqlite_file'),
+    url(r'^apps/$', hs_core_views.apps.AppsView.as_view(), name="apps")
 )
 
 # Filebrowser admin media library.

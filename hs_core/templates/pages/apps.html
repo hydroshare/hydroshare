@@ -1,0 +1,29 @@
+{% extends "pages/page.html" %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block title %}My Resources{% endblock %}
+
+{% block main %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>HydroShare Apps</h1>
+        <p>Quick block of text describing the apps, our methodology, etc...</p>
+      </div>
+    </div>
+
+    <div class="row">
+      {% for resource in webapp_resources %}
+        <a class="webapp-link"
+           href="{{resource.metadata.app_home_page_url.value}}"
+           target="_blank" title="Open {{ resource.title }} in new tab">
+          <div class="col-md-4">
+            <div class="webapp-listing">
+              <img src="{{ resource.metadata.app_icon.value }}" alt="" />
+              <h3>{{ resource.title }}</h3>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
