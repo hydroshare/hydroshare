@@ -593,6 +593,7 @@ def current_site_url():
 def get_file_mime_type(file_name):
     # TODO: looks like the mimetypes module can't find all mime types
     # We may need to user the python magic module instead
+    file_name = u"{}".format(file_name)
     file_format_type = mimetypes.guess_type(file_name)[0]
     if not file_format_type:
         # TODO: this is probably not the right way to get the mime type
