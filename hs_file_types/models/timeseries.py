@@ -8,7 +8,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
-from dominate.tags import div, legend, strong, form, select, option, hr, h3, button
+from dominate.tags import div, legend, strong, form, select, option, hr, h3, button, input, p, \
+    textarea
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -63,6 +64,8 @@ class CVAggregationStatistic(AbstractCVLookupTable):
 class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     # the metadata element models are from the timeseries resource type app
     model_app_label = 'hs_app_timeseries'
+    # this is to store abstract
+    abstract = models.TextField(null=True, blank=True)
 
     def get_metadata_elements(self):
         elements = super(TimeSeriesFileMetaData, self).get_metadata_elements()
@@ -84,6 +87,12 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         html_string = super(TimeSeriesFileMetaData, self).get_html()
+        if self.abstract:
+            abstract_div = div(cls="col-xs-12 content-block")
+            with abstract_div:
+                legend("Abstract")
+                p(self.abstract)
+            html_string += abstract_div.render()
         if self.spatial_coverage:
             html_string += self.spatial_coverage.get_html()
 
@@ -151,7 +160,9 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         root_div = div("{% load crispy_forms_tags %}")
         # TODO: implement metadata editing html for remaining elements
         with root_div:
+            self.get_update_sqlite_file_html_form()
             super(TimeSeriesFileMetaData, self).get_html_forms(temporal_coverage=False)
+            self.get_abstract_form()
             if self.spatial_coverage:
                 self.spatial_coverage.get_html()
 
@@ -274,6 +285,47 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             hr()
         return root_div
 
+    def get_update_sqlite_file_html_form(self):
+        form_action = "/hsapi/_internal/{}/update-sqlite-file/".format(self.id)
+        style = "display:none;"
+        if self.is_dirty:
+            style = "margin-bottom:10px"
+        root_div = div(id="div-sqlite-file-update", cls="row", style=style)
+
+        with root_div:
+            with div(cls="col-sm-12"):
+                with div(cls="alert alert-warning alert-dismissible", role="alert"):
+                    strong("SQLite file needs to be synced with metadata changes.")
+                    input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    with form(action=form_action, method="post", id="update-sqlite-file"):
+                        button("Update SQLite File", type="button", cls="btn btn-primary",
+                               id="id-update-sqlite-file")
+
+        return root_div
+
+    def get_abstract_form(self):
+        form_action = "/hsapi/_internal/{}/update-timeseries-abstract/"
+        form_action = form_action.format(self.logical_file.id)
+        root_div = div(cls="col-xs-12")
+
+        with root_div:
+            with form(action=form_action, id="filetype-abstract",
+                      method="post", enctype="multipart/form-data"):
+                div("{% csrf_token %}")
+                with div(cls="form-group"):
+                    with div(cls="control-group"):
+                        legend('Abstract')
+                        with div(cls="controls"):
+                            textarea(self.abstract,
+                                     cls="form-control input-sm textinput textInput",
+                                     id="file_abstract", cols=40, rows=5,
+                                     name="abstract")
+                with div(cls="row", style="margin-top:10px;"):
+                    with div(cls="col-md-offset-10 col-xs-offset-6 col-md-2 col-xs-6"):
+                        button("Save changes", cls="btn btn-primary pull-right btn-form-submit",
+                               style="display: none;", type="button")
+        return root_div
+
     @classmethod
     def validate_element_data(cls, request, element_name):
         """overriding the base class method"""
@@ -344,11 +396,45 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         return False
 
     @property
+    def has_sqlite_file(self):
+        for res_file in self.files.all():
+            if res_file.extension == '.sqlite':
+                return True
+        return False
+
+    @property
     def has_csv_file(self):
         for res_file in self.files.all():
             if res_file.extension == '.csv':
                 return True
         return False
+
+    @property
+    def can_add_blank_sqlite_file(self):
+        # use this property as a guard to decide when to add a blank SQLIte file
+        # to the resource
+        if self.has_sqlite_file:
+            return False
+        if not self.has_csv_file:
+            return False
+
+        return True
+
+    def add_blank_sqlite_file(self, user):
+        # add the blank SQLite file to this resource (self)
+        # TODO: need to implement this when CSV file is implement as this file type
+        pass
+
+    def update_sqlite_file(self, user):
+        # get sqlite resource file
+        sqlite_file_to_update = None
+        for res_file in self.files.all():
+            if res_file.extension == '.sqlite':
+                sqlite_file_to_update = res_file
+                break
+        if sqlite_file_to_update is None:
+            raise Exception("Logical file has no SQLite file. Invalid operation.")
+        sqlite_file_update(self, sqlite_file_to_update, user)
 
     @classmethod
     def set_file_type(cls, resource, file_id, user):
@@ -545,12 +631,18 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                         or resource.metadata.title.value.lower() == 'untitled resource':
                     resource.metadata.update_element('title', element_id=resource.metadata.title.id,
                                                      value=dataset["DataSetTitle"])
+                if logical_file is not None:
+                    logical_file.dataset_name = dataset["DataSetTitle"]
+                    logical_file.save()
 
             # create abstract/description element
             if dataset["DataSetAbstract"]:
                 if logical_file is None or resource.metadata.description is None:
                     resource.metadata.create_element('description',
                                                      abstract=dataset["DataSetAbstract"])
+                if logical_file is not None:
+                    logical_file.metadata.abstract = dataset["DataSetAbstract"]
+                    logical_file.metadata.save()
 
             # extract keywords/subjects
             # these are the comma separated values in the VariableNameCV column of the Variables
@@ -1237,6 +1329,85 @@ def create_timeseries_result_form(target, selected_series_id):
         timeseries_result_form.set_series_label(selected_series_label)
         timeseries_result_form.set_value_count(ts_result_value_count)
     return timeseries_result_form
+
+
+def sqlite_file_update(instance, sqlite_res_file, user):
+    # instance either an instance of TimeSeriesLogicalFile or TimeSeriesResource
+    if not instance.metadata.is_dirty:
+        return
+
+    if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
+        instance.add_blank_sqlite_file(user)
+
+    log = logging.getLogger()
+
+    is_file_type = isinstance(instance, TimeSeriesLogicalFile)
+
+    sqlite_file_to_update = sqlite_res_file
+    # retrieve the sqlite file from iRODS and save it to temp directory
+    temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+
+    if instance.has_csv_file and instance.metadata.series_names:
+        # TODO: populate_blank_sqlite_file() needs to me moved to the mixin class
+        # so that the following can be called as
+        # instance.populate_blank_sqlite_file(temp_sqlite_file, user)
+        instance.metadata.populate_blank_sqlite_file(temp_sqlite_file, user)
+    else:
+        try:
+            con = sqlite3.connect(temp_sqlite_file)
+            with con:
+                # get the records in python dictionary format
+                con.row_factory = sqlite3.Row
+                cur = con.cursor()
+                # update dataset table for changes in title and abstract
+                instance.metadata.update_datasets_table(con, cur)
+                if not is_file_type:
+                    # update people related tables (People, Affiliations, Organizations, ActionBy)
+                    # using updated creators/contributors in django db
+
+                    # insert record to People table
+                    people_data = instance.metadata.update_people_table_insert(con, cur)
+
+                    # insert record to Organizations table
+                    instance.metadata.update_organizations_table_insert(con, cur)
+
+                    # insert record to Affiliations table
+                    instance.metadata.update_affiliations_table_insert(con, cur, people_data)
+
+                    # insert record to ActionBy table
+                    instance.metadata.update_actionby_table_insert(con, cur, people_data)
+
+                # since we are allowing user to set the UTC offset in case of CSV file
+                # upload we have to update the actions table
+                instance.metadata.update_utcoffset_related_tables(con, cur)
+
+                # update resource specific metadata
+                instance.metadata.update_variables_table(con, cur)
+                instance.metadata.update_methods_table(con, cur)
+                instance.metadata.update_processinglevels_table(con, cur)
+                instance.metadata.update_sites_related_tables(con, cur)
+                instance.metadata.update_results_related_tables(con, cur)
+
+                # update CV terms related tables
+                instance.metadata.update_CV_tables(con, cur)
+
+                # push the updated sqlite file to iRODS
+                utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
+                                                     user)
+                metadata = instance.metadata
+                metadata.is_dirty = False
+                metadata.save()
+                log.info("SQLite file update was successful.")
+        except sqlite3.Error as ex:
+            sqlite_err_msg = str(ex.args[0])
+            log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
+            raise Exception(sqlite_err_msg)
+        except Exception as ex:
+            log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
+            raise ex
+        finally:
+            if os.path.exists(temp_sqlite_file):
+                shutil.rmtree(os.path.dirname(temp_sqlite_file))
 
 
 def _get_element_update_form_action(element_name, target_id, element_id, file_type=False):

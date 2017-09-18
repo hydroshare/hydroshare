@@ -726,8 +726,7 @@ class TimeSeriesResource(BaseResource):
     @property
     def has_sqlite_file(self):
         for res_file in self.files.all():
-            fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
-            if fl_ext == '.sqlite':
+            if res_file.extension == '.sqlite':
                 return True
         return False
 
@@ -1083,6 +1082,399 @@ class TimeSeriesMetaDataMixin(models.Model):
                              method_name=method.method_name)
         return label
 
+    def update_CV_tables(self, con, cur):
+        # here 'is_dirty' true means a new term has been added
+        # so a new record needs to be added to the specific CV table
+        # used both for writing to blank sqlite file and non-blank sqlite file
+        def insert_cv_record(cv_elements, cv_table_name):
+            for cv_element in cv_elements:
+                if cv_element.is_dirty:
+                    insert_sql = "INSERT INTO {table_name}(Term, Name) VALUES(?, ?)"
+                    insert_sql = insert_sql.format(table_name=cv_table_name)
+                    cur.execute(insert_sql, (cv_element.term, cv_element.name))
+                    con.commit()
+                    cv_element.is_dirty = False
+                    cv_element.save()
+
+        insert_cv_record(self.cv_variable_names.all(), 'CV_VariableName')
+        insert_cv_record(self.cv_variable_types.all(), 'CV_VariableType')
+        insert_cv_record(self.cv_speciations.all(), 'CV_Speciation')
+        insert_cv_record(self.cv_site_types.all(), 'CV_SiteType')
+        insert_cv_record(self.cv_elevation_datums.all(), 'CV_ElevationDatum')
+        insert_cv_record(self.cv_method_types.all(), 'CV_MethodType')
+        insert_cv_record(self.cv_units_types.all(), 'CV_UnitsType')
+        insert_cv_record(self.cv_statuses.all(), 'CV_Status')
+        insert_cv_record(self.cv_mediums.all(), 'CV_Medium')
+        insert_cv_record(self.cv_aggregation_statistics.all(), 'CV_AggregationStatistic')
+
+    def update_datasets_table(self, con, cur):
+        # updates the Datasets table
+        # used for updating the sqlite file that is not blank
+        update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
+                     "WHERE DatasetID=1"
+        # TODO: we need to grab title and abstract differently depending on whether self is
+        # TimeSeriesMetaData or TimeSeriesFileMetaData
+        if isinstance(self, TimeSeriesMetaData):
+            ds_title = self.title.value
+            ds_abstract = self.description.abstract
+        else:
+            # self must be TimeSeriesFileMetaData
+            ds_title = self.logical_file.dataset_name
+            ds_abstract = self.abstract
+
+        cur.execute(update_sql, (ds_title, ds_abstract), )
+        con.commit()
+
+    def update_datasets_table_insert(self, con, cur):
+        # insert record to Datasets table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Datasets")
+        con.commit()
+        insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
+                     "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
+
+        ds_title = self.title.value
+        ds_abstract = self.description.abstract
+        ds_code = self.resource.short_id
+        cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
+                                 ds_abstract), )
+
+    def update_datatsetsresults_table_insert(self, con, cur):
+        # insert record to DatasetsResults table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM DatasetsResults")
+        con.commit()
+        insert_sql = "INSERT INTO DatasetsResults (BridgeID, DatasetID, " \
+                     "ResultID) VALUES(?,?,?)"
+
+        cur.execute("SELECT ResultID FROM Results")
+        results = cur.fetchall()
+        for index, result in enumerate(results):
+            bridge_id = index + 1
+            cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+
+    def update_utcoffset_related_tables(self, con, cur):
+        # updates Actions, Results, TimeSeriesResultValues tables
+        # used for updating a sqlite file that is not blank and a csv file exists
+        if isinstance(self, TimeSeriesMetaData):
+            target_obj = self.resource
+        else:
+            target_obj = self.logical_file
+        if target_obj.has_csv_file and self.utc_offset.is_dirty:
+            update_sql = "UPDATE Actions SET BeginDateTimeUTCOffset=?, EndDateTimeUTCOffset=?"
+            utc_offset = self.utc_offset.value
+            param_values = (utc_offset, utc_offset)
+            cur.execute(update_sql, param_values)
+
+            update_sql = "UPDATE Results SET ResultDateTimeUTCOffset=?"
+            param_values = (utc_offset,)
+            cur.execute(update_sql, param_values)
+
+            update_sql = "UPDATE TimeSeriesResultValues SET ValueDateTimeUTCOffset=?"
+            param_values = (utc_offset,)
+            cur.execute(update_sql, param_values)
+
+            con.commit()
+            self.utc_offset.is_dirty = False
+            self.utc_offset.save()
+
+    def update_variables_table(self, con, cur):
+        # updates Variables table
+        # used for updating a sqlite file that is not blank
+        for variable in self.variables:
+            if variable.is_dirty:
+                # get the VariableID from Results table to update the corresponding row in
+                # Variables table
+                series_id = variable.series_ids[0]
+                cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
+                ts_result = cur.fetchone()
+                update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, " \
+                             "VariableNameCV=?, VariableDefinition=?, SpeciationCV=?, " \
+                             "NoDataValue=?  WHERE VariableID=?"
+
+                params = (variable.variable_code, variable.variable_type, variable.variable_name,
+                          variable.variable_definition, variable.speciation, variable.no_data_value,
+                          ts_result['VariableID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                variable.is_dirty = False
+                variable.save()
+
+    def update_variables_table_insert(self, con, cur):
+        # insert record to Variables table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Variables")
+        con.commit()
+        insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
+                     "VariableCode, VariableNameCV, VariableDefinition, " \
+                     "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
+        variables_data = []
+        for index, variable in enumerate(self.variables):
+            variable_id = index + 1
+            cur.execute(insert_sql, (variable_id, variable.variable_type,
+                                     variable.variable_code, variable.variable_name,
+                                     variable.variable_definition, variable.speciation,
+                                     variable.no_data_value), )
+            variables_data.append({'variable_id': variable_id, 'object_id': variable.id})
+        return variables_data
+
+    def update_methods_table(self, con, cur):
+        # updates the Methods table
+        # used for updating a sqlite file that is not blank
+        for method in self.methods:
+            if method.is_dirty:
+                # get the MethodID to update the corresponding row in Methods table
+                series_id = method.series_ids[0]
+                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
+                            (result["FeatureActionID"],))
+                feature_action = cur.fetchone()
+                cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
+                            (feature_action["ActionID"],))
+                action = cur.fetchone()
+
+                update_sql = "UPDATE Methods SET MethodCode=?, MethodName=?, MethodTypeCV=?, " \
+                             "MethodDescription=?, MethodLink=?  WHERE MethodID=?"
+
+                params = (method.method_code, method.method_name, method.method_type,
+                          method.method_description, method.method_link,
+                          action['MethodID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                method.is_dirty = False
+                method.save()
+
+    def update_methods_table_insert(self, con, cur):
+        # insert record to Methods table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Methods")
+        con.commit()
+        insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
+                     "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
+        methods_data = []
+        for index, method in enumerate(self.methods):
+            method_id = index + 1
+            cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
+                                     method.method_name, method.method_description,
+                                     method.method_link), )
+            methods_data.append({'method_id': method_id, 'series_ids': method.series_ids})
+
+        return methods_data
+
+    def update_processinglevels_table(self, con, cur):
+        # updates the ProcessingLevels table
+        # used for updating a sqlite file that is not blank
+        for processing_level in self.processing_levels:
+            if processing_level.is_dirty:
+                # get the ProcessingLevelID to update the corresponding row in ProcessingLevels
+                # table
+                series_id = processing_level.series_ids[0]
+                cur.execute("SELECT ProcessingLevelID FROM Results WHERE ResultUUID=?",
+                            (series_id,))
+                result = cur.fetchone()
+
+                update_sql = "UPDATE ProcessingLevels SET ProcessingLevelCode=?, Definition=?, " \
+                             "Explanation=? WHERE ProcessingLevelID=?"
+
+                params = (processing_level.processing_level_code, processing_level.definition,
+                          processing_level.explanation, result['ProcessingLevelID'])
+
+                cur.execute(update_sql, params)
+                con.commit()
+                processing_level.is_dirty = False
+                processing_level.save()
+
+    def update_processinglevels_table_insert(self, con, cur):
+        # insert record to ProcessingLevels table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM ProcessingLevels")
+        con.commit()
+        insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
+                     "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
+        pro_levels_data = []
+        for index, pro_level in enumerate(self.processing_levels):
+            pro_level_id = index + 1
+            cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
+                                     pro_level.definition, pro_level.explanation), )
+
+            pro_levels_data.append({'pro_level_id': pro_level_id,
+                                    'object_id': pro_level.id})
+
+        return pro_levels_data
+
+    def update_sites_related_tables(self, con, cur):
+        # updates 'Sites' and 'SamplingFeatures' tables
+        # used for updating a sqlite file that is not blank
+        for site in self.sites:
+            if site.is_dirty:
+                # get the SamplingFeatureID to update the corresponding row in Sites and
+                # SamplingFeatures tables
+                # No need to process each series id associated with a site element. This
+                # is due to the fact that for each site there can be only one value for
+                # SamplingFeatureID. If we take into account all the series ids associated
+                # with a site we will end up updating the same record in site table multiple
+                # times with the same data.
+                series_id = site.series_ids[0]
+                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+                cur.execute("SELECT SamplingFeatureID FROM FeatureActions WHERE FeatureActionID=?",
+                            (result["FeatureActionID"],))
+                feature_action = cur.fetchone()
+
+                # first update the sites table
+                update_sql = "UPDATE Sites SET SiteTypeCV=?, Latitude=?, Longitude=? " \
+                             "WHERE SamplingFeatureID=?"
+                params = (site.site_type, site.latitude, site.longitude,
+                          feature_action["SamplingFeatureID"])
+                cur.execute(update_sql, params)
+
+                # then update the SamplingFeatures table
+                update_sql = "UPDATE SamplingFeatures SET SamplingFeatureCode=?, " \
+                             "SamplingFeatureName=?, Elevation_m=?, ElevationDatumCV=? " \
+                             "WHERE SamplingFeatureID=?"
+
+                params = (site.site_code, site.site_name, site.elevation_m,
+                          site.elevation_datum, feature_action["SamplingFeatureID"])
+                cur.execute(update_sql, params)
+                con.commit()
+                site.is_dirty = False
+                site.save()
+
+    def update_sites_table_insert(self, con, cur):
+        # insert record to Sites table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM Sites")
+        con.commit()
+        insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
+                     "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
+        for index, site in enumerate(self.sites):
+            sampling_feature_id = index + 1
+            spatial_ref_id = 1
+            cur.execute(insert_sql, (sampling_feature_id, site.site_type, site.latitude,
+                                     site.longitude, spatial_ref_id), )
+
+    def update_results_related_tables(self, con, cur):
+        # updates 'Results', 'Units' and 'TimeSeriesResults' tables
+        # this function is used for writing data to a sqlite file that is not blank
+        for ts_result in self.time_series_results:
+            if ts_result.is_dirty:
+                # get the UnitsID and ResultID to update the corresponding row in Results,
+                # Units and TimeSeriesResults tables
+                series_id = ts_result.series_ids[0]
+                cur.execute("SELECT UnitsID, ResultID FROM Results WHERE ResultUUID=?",
+                            (series_id,))
+                result = cur.fetchone()
+
+                # update Units table
+                update_sql = "UPDATE Units SET UnitsTypeCV=?, UnitsName=?, UnitsAbbreviation=? " \
+                             "WHERE UnitsID=?"
+                params = (ts_result.units_type, ts_result.units_name, ts_result.units_abbreviation,
+                          result['UnitsID'])
+                cur.execute(update_sql, params)
+
+                # update TimeSeriesResults table
+                update_sql = "UPDATE TimeSeriesResults SET AggregationStatisticCV=? " \
+                             "WHERE ResultID=?"
+                params = (ts_result.aggregation_statistics, result['ResultID'])
+                cur.execute(update_sql, params)
+
+                # then update the Results table
+                update_sql = "UPDATE Results SET StatusCV=?, SampledMediumCV=?, ValueCount=? " \
+                             "WHERE ResultID=?"
+
+                params = (ts_result.status, ts_result.sample_medium, ts_result.value_count,
+                          result['ResultID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                ts_result.is_dirty = False
+                ts_result.save()
+
+    def update_units_table_insert(self, con, cur):
+        # insert record to Units table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM Units")
+        con.commit()
+        insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
+                     "UnitsName) VALUES(?,?,?,?)"
+        for index, ts_result in enumerate(self.time_series_results):
+            units_id = index + 1
+            cur.execute(insert_sql, (units_id, ts_result.units_type,
+                                     ts_result.units_abbreviation, ts_result.units_name), )
+
+    def update_metadata_element_series_ids_with_guids(self):
+        # replace sequential series ids (0, 1, 2 ...) with GUID
+        # only needs to be done in case of csv file upload before
+        # writing metadata to the blank sqlite file
+        if self.series_names:
+            series_ids = {}
+            # generate GUID for each of the series ids
+            for ts_result in self.time_series_results:
+                guid = uuid4().hex
+                if ts_result.series_ids[0] not in series_ids:
+                    series_ids[ts_result.series_ids[0]] = guid
+
+            for ts_result in self.time_series_results:
+                ts_result.series_ids = [series_ids[ts_result.series_ids[0]]]
+                ts_result.save()
+
+            def update_to_guids(elements):
+                for element in elements:
+                    guids = []
+                    for series_id in element.series_ids:
+                        guids.append(series_ids[series_id])
+                    element.series_ids = guids
+                    element.save()
+
+            update_to_guids(self.sites)
+            update_to_guids(self.variables)
+            update_to_guids(self.methods)
+            update_to_guids(self.processing_levels)
+            # delete all value_counts
+            self.value_counts = {}
+            self.save()
+
+    def update_samplingfeatures_table_insert(self, con, cur):
+        # insert records to SamplingFeatures table - first delete any existing records
+        cur.execute("DELETE FROM SamplingFeatures")
+        con.commit()
+        insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
+                     "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
+                     "SamplingFeatureCode, SamplingFeatureName, " \
+                     "SamplingFeatureGeotypeCV, Elevation_m, ElevationDatumCV) " \
+                     "VALUES(?,?,?,?,?,?,?,?)"
+        for index, site in enumerate(self.sites):
+            sampling_feature_id = index + 1
+            cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
+                                     site.site_code, site.site_name, 'Point', site.elevation_m,
+                                     site.elevation_datum), )
+
+    def update_spatialreferences_table_insert(self, con, cur):
+        # insert record to SpatialReferences table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM SpatialReferences")
+        con.commit()
+        insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
+                     "SRSCode, SRSName) VALUES(?,?,?)"
+        if self.coverages.all():
+            # NOTE: It looks like there will be always maximum of only one record created
+            # for SpatialReferences table
+            coverage = self.coverages.all().exclude(type='period').first()
+            if coverage:
+                spatial_ref_id = 1
+                # this is the default projection system for coverage in HydroShare
+                srs_name = 'World Geodetic System 1984 (WGS84)'
+                srs_code = 'EPSG:4326'
+                cur.execute(insert_sql, (spatial_ref_id, srs_code, srs_name), )
+
 
 class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
     is_dirty = models.BooleanField(default=False)
@@ -1253,74 +1645,11 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
         copy_cv_terms(CVAggregationStatistic, src_md.cv_aggregation_statistics.all())
 
     def update_sqlite_file(self, user):
-        if not self.is_dirty:
-            return
 
-        if not self.resource.has_sqlite_file and self.resource.can_add_blank_sqlite_file:
-            self.resource.add_blank_sqlite_file(user)
-
-        log = logging.getLogger()
+        from hs_file_types.models.timeseries import sqlite_file_update
 
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
-        # retrieve the sqlite file from iRODS and save it to temp directory
-        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
-
-        if self.resource.has_csv_file and self.resource.metadata.series_names:
-            self.populate_blank_sqlite_file(temp_sqlite_file, user)
-        else:
-            try:
-                con = sqlite3.connect(temp_sqlite_file)
-                with con:
-                    # get the records in python dictionary format
-                    con.row_factory = sqlite3.Row
-                    cur = con.cursor()
-                    self._update_datasets_table(con, cur)
-
-                    # update people related tables (People, Affiliations, Organizations, ActionBy)
-                    # using updated creators/contributors in django db
-
-                    # insert record to People table
-                    people_data = self._update_people_table_insert(con, cur)
-
-                    # insert record to Organizations table
-                    self._update_organizations_table_insert(con, cur)
-
-                    # insert record to Affiliations table
-                    self._update_affiliations_table_insert(con, cur, people_data)
-
-                    # insert record to ActionBy table
-                    self._update_actionby_table_insert(con, cur, people_data)
-
-                    # since we are allowing user to set the UTC offset in case of CSV file
-                    # upload we have to update the actions table
-                    self._update_utcoffset_related_tables(con, cur)
-
-                    # update resource specific metadata
-                    self._update_variables_table(con, cur)
-                    self._update_methods_table(con, cur)
-                    self._update_processinglevels_table(con, cur)
-                    self._update_sites_related_tables(con, cur)
-                    self._update_results_related_tables(con, cur)
-
-                    # update CV terms related tables
-                    self._update_CV_tables(con, cur)
-
-                    # push the updated sqlite file to iRODS
-                    utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
-                                                         user)
-                    self.is_dirty = False
-                    self.save()
-                    log.info("SQLite file update was successful.")
-            except sqlite3.Error as ex:
-                sqlite_err_msg = str(ex.args[0])
-                log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
-                raise Exception(sqlite_err_msg)
-            except Exception as ex:
-                log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
-                raise ex
-            finally:
-                if os.path.exists(temp_sqlite_file):
-                    shutil.rmtree(os.path.dirname(temp_sqlite_file))
+        sqlite_file_update(self.resource, sqlite_file_to_update, user)
 
     def populate_blank_sqlite_file(self, temp_sqlite_file, user):
         """
@@ -1339,7 +1668,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
             raise Exception(msg)
 
         # update resource specific metadata element series ids with generated GUID
-        self._update_metadata_element_series_ids_with_guids()
+        self.update_metadata_element_series_ids_with_guids()
 
         blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
         csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
@@ -1353,62 +1682,62 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                 con.row_factory = sqlite3.Row
                 cur = con.cursor()
                 # insert records to SamplingFeatures table
-                self._update_samplingfeatures_table_insert(con, cur)
+                self.update_samplingfeatures_table_insert(con, cur)
 
                 # insert record to SpatialReferences table
-                self._update_spatialreferences_table_insert(con, cur)
+                self.update_spatialreferences_table_insert(con, cur)
 
                 # insert record to Sites table
-                self._update_sites_table_insert(con, cur)
+                self.update_sites_table_insert(con, cur)
 
                 # insert record to Methods table
-                methods_data = self._update_methods_table_insert(con, cur)
+                methods_data = self.update_methods_table_insert(con, cur)
 
                 # insert record to Variables table
-                variables_data = self._update_variables_table_insert(con, cur)
+                variables_data = self.update_variables_table_insert(con, cur)
 
                 # insert record to Units table
-                self._update_units_table_insert(con, cur)
+                self.update_units_table_insert(con, cur)
 
                 # insert record to ProcessingLevels table
-                pro_levels_data = self._update_processinglevels_table_insert(con, cur)
+                pro_levels_data = self.update_processinglevels_table_insert(con, cur)
 
                 # insert record to People table
-                people_data = self._update_people_table_insert(con, cur)
+                people_data = self.update_people_table_insert(con, cur)
 
                 # insert record to Organizations table
-                self._update_organizations_table_insert(con, cur)
+                self.update_organizations_table_insert(con, cur)
 
                 # insert record to Affiliations table
-                self._update_affiliations_table_insert(con, cur, people_data)
+                self.update_affiliations_table_insert(con, cur, people_data)
 
                 # insert record to Actions table
-                self._update_actions_table_insert(con, cur, methods_data)
+                self.update_actions_table_insert(con, cur, methods_data)
 
                 # insert record to ActionBy table
-                self._update_actionby_table_insert(con, cur, people_data)
+                self.update_actionby_table_insert(con, cur, people_data)
 
                 # insert record to FeatureActions table
-                self._update_featureactions_table_insert(con, cur)
+                self.update_featureactions_table_insert(con, cur)
 
                 # insert record to Results table
-                results_data = self._update_results_table_insert(con, cur, variables_data,
+                results_data = self.update_results_table_insert(con, cur, variables_data,
                                                                  pro_levels_data)
 
                 # insert record to TimeSeriesResults table
-                self._update_timeseriesresults_table_insert(con, cur, results_data)
+                self.update_timeseriesresults_table_insert(con, cur, results_data)
 
                 # insert record to TimeSeriesResultValues table
-                self._update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
+                self.update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
                                                                  results_data)
 
                 # insert record to Datasets table
-                self._update_datasets_table_insert(con, cur)
+                self.update_datasets_table_insert(con, cur)
 
                 # insert record to DatasetsResults table
-                self._update_datatsetsresults_table_insert(con, cur)
+                self.update_datatsetsresults_table_insert(con, cur)
 
-                self._update_CV_tables(con, cur)
+                self.update_CV_tables(con, cur)
                 con.commit()
                 # push the updated sqlite file to iRODS
                 utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
@@ -1433,73 +1762,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
         for row in csv_reader:
             yield row[0], row[data_column_index]
 
-    def _update_metadata_element_series_ids_with_guids(self):
-        # replace sequential series ids (0, 1, 2 ...) with GUID
-        # only needs to be done in case of csv file upload before
-        # writing metadata to the blank sqlite file
-        if self.series_names:
-            series_ids = {}
-            # generate GUID for each of the series ids
-            for ts_result in self.time_series_results:
-                guid = uuid4().hex
-                if ts_result.series_ids[0] not in series_ids:
-                    series_ids[ts_result.series_ids[0]] = guid
-
-            for ts_result in self.time_series_results:
-                ts_result.series_ids = [series_ids[ts_result.series_ids[0]]]
-                ts_result.save()
-
-            def update_to_guids(elements):
-                for element in elements:
-                    guids = []
-                    for series_id in element.series_ids:
-                        guids.append(series_ids[series_id])
-                    element.series_ids = guids
-                    element.save()
-
-            update_to_guids(self.sites)
-            update_to_guids(self.variables)
-            update_to_guids(self.methods)
-            update_to_guids(self.processing_levels)
-            # delete all value_counts
-            self.value_counts = {}
-            self.save()
-
-    def _update_samplingfeatures_table_insert(self, con, cur):
-        # insert records to SamplingFeatures table - first delete any existing records
-        cur.execute("DELETE FROM SamplingFeatures")
-        con.commit()
-        insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
-                     "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
-                     "SamplingFeatureCode, SamplingFeatureName, " \
-                     "SamplingFeatureGeotypeCV, Elevation_m, ElevationDatumCV) " \
-                     "VALUES(?,?,?,?,?,?,?,?)"
-        for index, site in enumerate(self.sites):
-            sampling_feature_id = index + 1
-            cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
-                                     site.site_code, site.site_name, 'Point', site.elevation_m,
-                                     site.elevation_datum), )
-
-    def _update_spatialreferences_table_insert(self, con, cur):
-        # insert record to SpatialReferences table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM SpatialReferences")
-        con.commit()
-        insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
-                     "SRSCode, SRSName) VALUES(?,?,?)"
-        if self.coverages.all():
-            # NOTE: It looks like there will be always maximum of only one record created
-            # for SpatialReferences table
-            coverage = self.coverages.all().exclude(type='period').first()
-            if coverage:
-                spatial_ref_id = 1
-                # this is the default projection system for coverage in HydroShare
-                srs_name = 'World Geodetic System 1984 (WGS84)'
-                srs_code = 'EPSG:4326'
-                cur.execute(insert_sql, (spatial_ref_id, srs_code, srs_name), )
-
-    def _update_people_table_insert(self, con, cur):
+    def update_people_table_insert(self, con, cur):
         # insert record to People table - first delete any existing records
 
         cur.execute("DELETE FROM People")
@@ -1530,7 +1793,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                 'object_id': person.id})
         return people_data
 
-    def _update_organizations_table_insert(self, con, cur):
+    def update_organizations_table_insert(self, con, cur):
         # insert record to Organizations table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1548,7 +1811,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                          organization_name), )
                 org_id += 1
 
-    def _update_affiliations_table_insert(self, con, cur, people_data):
+    def update_affiliations_table_insert(self, con, cur, people_data):
         # insert record to Affiliations table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1581,7 +1844,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                      now(), person_data['phone'], person_data['email'],
                                      person_data['address']), )
 
-    def _update_actions_table_insert(self, con, cur, methods_data):
+    def update_actions_table_insert(self, con, cur, methods_data):
         # insert record to Actions table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1609,7 +1872,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                      'An observation action that generated a time '
                                      'series result.'), )
 
-    def _update_actionby_table_insert(self, con, cur, people_data):
+    def update_actionby_table_insert(self, con, cur, people_data):
         # insert record to ActionBy table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1647,7 +1910,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                          is_action_lead, role_description), )
                 bridge_id += 1
 
-    def _update_featureactions_table_insert(self, con, cur):
+    def update_featureactions_table_insert(self, con, cur):
         # insert record to FeatureActions table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1666,7 +1929,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
             cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
                                      action['ActionID']), )
 
-    def _update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
+    def update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
         # insert record to Results table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1708,7 +1971,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
             results_data.append({'result_id': result_id, 'object_id': ts_res.id})
         return results_data
 
-    def _update_timeseriesresults_table_insert(self, con, cur, results_data):
+    def update_timeseriesresults_table_insert(self, con, cur, results_data):
         # insert record to TimeSeriesResults table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1725,7 +1988,7 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                          ts_item.id == res_item['object_id']][0]
             cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics), )
 
-    def _update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
+    def update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
         # insert record to TimeSeriesResultValues table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
 
@@ -1773,321 +2036,6 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                              date_time, utc_offset, 'Unknown', 'Unknown',
                                              time_interval, 102), )
                     value_id += 1
-
-    def _update_CV_tables(self, con, cur):
-        # here 'is_dirty' true means a new term has been added
-        # so a new record needs to be added to the specific CV table
-        # used both for writing to blank sqlite file and non-blank sqlite file
-        def insert_cv_record(cv_elements, cv_table_name):
-            for cv_element in cv_elements:
-                if cv_element.is_dirty:
-                    insert_sql = "INSERT INTO {table_name}(Term, Name) VALUES(?, ?)"
-                    insert_sql = insert_sql.format(table_name=cv_table_name)
-                    cur.execute(insert_sql, (cv_element.term, cv_element.name))
-                    con.commit()
-                    cv_element.is_dirty = False
-                    cv_element.save()
-
-        insert_cv_record(self.cv_variable_names.all(), 'CV_VariableName')
-        insert_cv_record(self.cv_variable_types.all(), 'CV_VariableType')
-        insert_cv_record(self.cv_speciations.all(), 'CV_Speciation')
-        insert_cv_record(self.cv_site_types.all(), 'CV_SiteType')
-        insert_cv_record(self.cv_elevation_datums.all(), 'CV_ElevationDatum')
-        insert_cv_record(self.cv_method_types.all(), 'CV_MethodType')
-        insert_cv_record(self.cv_units_types.all(), 'CV_UnitsType')
-        insert_cv_record(self.cv_statuses.all(), 'CV_Status')
-        insert_cv_record(self.cv_mediums.all(), 'CV_Medium')
-        insert_cv_record(self.cv_aggregation_statistics.all(), 'CV_AggregationStatistic')
-
-    def _update_datasets_table(self, con, cur):
-        # updates the Datasets table
-        # used for updating the sqlite file that is not blank
-        update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
-                     "WHERE DatasetID=1"
-        ds_title = self.title.value
-        ds_abstract = self.description.abstract
-        cur.execute(update_sql, (ds_title, ds_abstract), )
-        con.commit()
-
-    def _update_datasets_table_insert(self, con, cur):
-        # insert record to Datasets table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM Datasets")
-        con.commit()
-        insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
-                     "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
-
-        ds_title = self.title.value
-        ds_abstract = self.description.abstract
-        ds_code = self.resource.short_id
-        cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
-                                 ds_abstract), )
-
-    def _update_datatsetsresults_table_insert(self, con, cur):
-        # insert record to DatasetsResults table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM DatasetsResults")
-        con.commit()
-        insert_sql = "INSERT INTO DatasetsResults (BridgeID, DatasetID, " \
-                     "ResultID) VALUES(?,?,?)"
-
-        cur.execute("SELECT ResultID FROM Results")
-        results = cur.fetchall()
-        for index, result in enumerate(results):
-            bridge_id = index + 1
-            cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
-
-    def _update_utcoffset_related_tables(self, con, cur):
-        # updates Actions, Results, TimeSeriesResultValues tables
-        # used for updating a sqlite file that is not blank and a csv file exists
-        if self.resource.has_csv_file and self.utc_offset.is_dirty:
-            update_sql = "UPDATE Actions SET BeginDateTimeUTCOffset=?, EndDateTimeUTCOffset=?"
-            utc_offset = self.utc_offset.value
-            param_values = (utc_offset, utc_offset)
-            cur.execute(update_sql, param_values)
-
-            update_sql = "UPDATE Results SET ResultDateTimeUTCOffset=?"
-            param_values = (utc_offset,)
-            cur.execute(update_sql, param_values)
-
-            update_sql = "UPDATE TimeSeriesResultValues SET ValueDateTimeUTCOffset=?"
-            param_values = (utc_offset,)
-            cur.execute(update_sql, param_values)
-
-            con.commit()
-            self.utc_offset.is_dirty = False
-            self.utc_offset.save()
-
-    def _update_variables_table(self, con, cur):
-        # updates Variables table
-        # used for updating a sqlite file that is not blank
-        for variable in self.variables:
-            if variable.is_dirty:
-                # get the VariableID from Results table to update the corresponding row in
-                # Variables table
-                series_id = variable.series_ids[0]
-                cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
-                ts_result = cur.fetchone()
-                update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, " \
-                             "VariableNameCV=?, VariableDefinition=?, SpeciationCV=?, " \
-                             "NoDataValue=?  WHERE VariableID=?"
-
-                params = (variable.variable_code, variable.variable_type, variable.variable_name,
-                          variable.variable_definition, variable.speciation, variable.no_data_value,
-                          ts_result['VariableID'])
-                cur.execute(update_sql, params)
-                con.commit()
-                variable.is_dirty = False
-                variable.save()
-
-    def _update_variables_table_insert(self, con, cur):
-        # insert record to Variables table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM Variables")
-        con.commit()
-        insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
-                     "VariableCode, VariableNameCV, VariableDefinition, " \
-                     "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
-        variables_data = []
-        for index, variable in enumerate(self.variables):
-            variable_id = index + 1
-            cur.execute(insert_sql, (variable_id, variable.variable_type,
-                                     variable.variable_code, variable.variable_name,
-                                     variable.variable_definition, variable.speciation,
-                                     variable.no_data_value), )
-            variables_data.append({'variable_id': variable_id, 'object_id': variable.id})
-        return variables_data
-
-    def _update_methods_table(self, con, cur):
-        # updates the Methods table
-        # used for updating a sqlite file that is not blank
-        for method in self.methods:
-            if method.is_dirty:
-                # get the MethodID to update the corresponding row in Methods table
-                series_id = method.series_ids[0]
-                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
-                result = cur.fetchone()
-                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
-                            (result["FeatureActionID"],))
-                feature_action = cur.fetchone()
-                cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
-                            (feature_action["ActionID"],))
-                action = cur.fetchone()
-
-                update_sql = "UPDATE Methods SET MethodCode=?, MethodName=?, MethodTypeCV=?, " \
-                             "MethodDescription=?, MethodLink=?  WHERE MethodID=?"
-
-                params = (method.method_code, method.method_name, method.method_type,
-                          method.method_description, method.method_link,
-                          action['MethodID'])
-                cur.execute(update_sql, params)
-                con.commit()
-                method.is_dirty = False
-                method.save()
-
-    def _update_methods_table_insert(self, con, cur):
-        # insert record to Methods table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM Methods")
-        con.commit()
-        insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
-                     "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
-        methods_data = []
-        for index, method in enumerate(self.methods):
-            method_id = index + 1
-            cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
-                                     method.method_name, method.method_description,
-                                     method.method_link), )
-            methods_data.append({'method_id': method_id, 'series_ids': method.series_ids})
-
-        return methods_data
-
-    def _update_processinglevels_table(self, con, cur):
-        # updates the ProcessingLevels table
-        # used for updating a sqlite file that is not blank
-        for processing_level in self.processing_levels:
-            if processing_level.is_dirty:
-                # get the ProcessingLevelID to update the corresponding row in ProcessingLevels
-                # table
-                series_id = processing_level.series_ids[0]
-                cur.execute("SELECT ProcessingLevelID FROM Results WHERE ResultUUID=?",
-                            (series_id,))
-                result = cur.fetchone()
-
-                update_sql = "UPDATE ProcessingLevels SET ProcessingLevelCode=?, Definition=?, " \
-                             "Explanation=? WHERE ProcessingLevelID=?"
-
-                params = (processing_level.processing_level_code, processing_level.definition,
-                          processing_level.explanation, result['ProcessingLevelID'])
-
-                cur.execute(update_sql, params)
-                con.commit()
-                processing_level.is_dirty = False
-                processing_level.save()
-
-    def _update_processinglevels_table_insert(self, con, cur):
-        # insert record to ProcessingLevels table - first delete any existing records
-        # this function used only in case of writing data to a blank database (case of CSV upload)
-
-        cur.execute("DELETE FROM ProcessingLevels")
-        con.commit()
-        insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
-                     "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
-        pro_levels_data = []
-        for index, pro_level in enumerate(self.processing_levels):
-            pro_level_id = index + 1
-            cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
-                                     pro_level.definition, pro_level.explanation), )
-
-            pro_levels_data.append({'pro_level_id': pro_level_id,
-                                    'object_id': pro_level.id})
-
-        return pro_levels_data
-
-    def _update_sites_related_tables(self, con, cur):
-        # updates 'Sites' and 'SamplingFeatures' tables
-        # used for updating a sqlite file that is not blank
-        for site in self.sites:
-            if site.is_dirty:
-                # get the SamplingFeatureID to update the corresponding row in Sites and
-                # SamplingFeatures tables
-                # No need to process each series id associated with a site element. This
-                # is due to the fact that for each site there can be only one value for
-                # SamplingFeatureID. If we take into account all the series ids associated
-                # with a site we will end up updating the same record in site table multiple
-                # times with the same data.
-                series_id = site.series_ids[0]
-                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
-                result = cur.fetchone()
-                cur.execute("SELECT SamplingFeatureID FROM FeatureActions WHERE FeatureActionID=?",
-                            (result["FeatureActionID"],))
-                feature_action = cur.fetchone()
-
-                # first update the sites table
-                update_sql = "UPDATE Sites SET SiteTypeCV=?, Latitude=?, Longitude=? " \
-                             "WHERE SamplingFeatureID=?"
-                params = (site.site_type, site.latitude, site.longitude,
-                          feature_action["SamplingFeatureID"])
-                cur.execute(update_sql, params)
-
-                # then update the SamplingFeatures table
-                update_sql = "UPDATE SamplingFeatures SET SamplingFeatureCode=?, " \
-                             "SamplingFeatureName=?, Elevation_m=?, ElevationDatumCV=? " \
-                             "WHERE SamplingFeatureID=?"
-
-                params = (site.site_code, site.site_name, site.elevation_m,
-                          site.elevation_datum, feature_action["SamplingFeatureID"])
-                cur.execute(update_sql, params)
-                con.commit()
-                site.is_dirty = False
-                site.save()
-
-    def _update_sites_table_insert(self, con, cur):
-        # insert record to Sites table - first delete any existing records
-        # this function used only in case of writing data to a blank database (case of CSV upload)
-
-        cur.execute("DELETE FROM Sites")
-        con.commit()
-        insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
-                     "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
-        for index, site in enumerate(self.sites):
-            sampling_feature_id = index + 1
-            spatial_ref_id = 1
-            cur.execute(insert_sql, (sampling_feature_id, site.site_type, site.latitude,
-                                     site.longitude, spatial_ref_id), )
-
-    def _update_results_related_tables(self, con, cur):
-        # updates 'Results', 'Units' and 'TimeSeriesResults' tables
-        # this function is used for writing data to a sqlite file that is not blank
-        for ts_result in self.time_series_results:
-            if ts_result.is_dirty:
-                # get the UnitsID and ResultID to update the corresponding row in Results,
-                # Units and TimeSeriesResults tables
-                series_id = ts_result.series_ids[0]
-                cur.execute("SELECT UnitsID, ResultID FROM Results WHERE ResultUUID=?",
-                            (series_id,))
-                result = cur.fetchone()
-
-                # update Units table
-                update_sql = "UPDATE Units SET UnitsTypeCV=?, UnitsName=?, UnitsAbbreviation=? " \
-                             "WHERE UnitsID=?"
-                params = (ts_result.units_type, ts_result.units_name, ts_result.units_abbreviation,
-                          result['UnitsID'])
-                cur.execute(update_sql, params)
-
-                # update TimeSeriesResults table
-                update_sql = "UPDATE TimeSeriesResults SET AggregationStatisticCV=? " \
-                             "WHERE ResultID=?"
-                params = (ts_result.aggregation_statistics, result['ResultID'])
-                cur.execute(update_sql, params)
-
-                # then update the Results table
-                update_sql = "UPDATE Results SET StatusCV=?, SampledMediumCV=?, ValueCount=? " \
-                             "WHERE ResultID=?"
-
-                params = (ts_result.status, ts_result.sample_medium, ts_result.value_count,
-                          result['ResultID'])
-                cur.execute(update_sql, params)
-                con.commit()
-                ts_result.is_dirty = False
-                ts_result.save()
-
-    def _update_units_table_insert(self, con, cur):
-        # insert record to Units table - first delete any existing records
-        # this function used only in case of writing data to a blank database (case of CSV upload)
-
-        cur.execute("DELETE FROM Units")
-        con.commit()
-        insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
-                     "UnitsName) VALUES(?,?,?,?)"
-        for index, ts_result in enumerate(self.time_series_results):
-            units_id = index + 1
-            cur.execute(insert_sql, (units_id, ts_result.units_type,
-                                     ts_result.units_abbreviation, ts_result.units_name), )
 
 
 def _update_resource_coverage_element(site_element):
