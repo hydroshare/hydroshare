@@ -60,6 +60,7 @@ def data_store_structure(request):
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
+
     istorage = resource.get_irods_storage()
     res_coll = os.path.join(resource.root_path, store_path)
     try:
@@ -95,6 +96,8 @@ def data_store_structure(request):
 
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as ex:
+        return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
                      'folders': store[0],
