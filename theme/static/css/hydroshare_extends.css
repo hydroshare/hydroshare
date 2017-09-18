@@ -289,33 +289,3 @@ float the buttons inside it. This prevents collapsing. */
 {
     display:none;
 }
-
-.webapp-listing {
-    min-height: 250px;
-    position: relative;
-    background: white;
-    box-shadow: 2px 2px 4px #d1d1d1;
-    width: 250px;
-    margin: 15px auto 15px auto;
-}
-
-.webapp-listing img {
-    max-height: 210px;
-    margin: 0 auto;
-    display: block;
-}
-
-.webapp-listing h3 {
-    position: absolute;
-    background: rgba(0,0,0,0.78);
-    width: 100%;
-    bottom: 0;
-    left: 0;
-    margin: 0;
-    padding: .5em;
-    color: #1dcaff;
-}
-
-a.webapp-link {
-    color: #1dcaff;
-}

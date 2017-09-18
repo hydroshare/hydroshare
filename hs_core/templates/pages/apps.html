@@ -1,29 +1,125 @@
 {% extends "pages/page.html" %}
 {% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-{% block title %}My Resources{% endblock %}
+{% block meta_title %}HydroShare Apps{% endblock %}
+
+{% block extra_css %}
+<style>
+  .apps-container {
+      border-top: 1px solid #cdcdcd;
+      background: #efefef;
+      margin-bottom: 0;
+  }
+
+  .webapp-listing {
+      min-height: 250px;
+      position: relative;
+      background: white;
+      border: 1px solid #cdcdcd;
+      width: 250px;
+      margin: 15px auto 30px auto;
+      padding: 1em;
+  }
+
+  .webapp-listing .app-description {
+      display: none;
+      position: absolute;
+      top: 14px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      padding: 9px;
+  }
+
+  .webapp-listing img {
+      max-height: 210px;
+      margin: 0 auto;
+      display: block;
+  }
+
+  .webapp-listing h3 {
+      position: absolute;
+      background: #093e54;
+      width: 100%;
+      bottom: 0;
+      left: 0;
+      margin: 0;
+      padding: .5em;
+      color: #B5E655;
+  }
+
+  .webapp-listing .app-info-toggle {
+      position: absolute;
+      left: 10px;
+      top: 6px;
+      height: 18px;
+      width: 18px;
+      font-size: 13px;
+      background: white;
+      border-radius: 50%;
+      text-align: center;
+      text-decoration: none;
+      box-shadow: 0px 0px 1px #000;
+  }
+
+  a.webapp-link {
+      color: #B5E655;
+  }
+</style>
+{% endblock %}
 
 {% block main %}
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1>HydroShare Apps</h1>
-        <p>Quick block of text describing the apps, our methodology, etc...</p>
+        <h1>HydroShare Apps Library</h1>
+        <p>
+          HydroShare apps allow you to visualize, analyze, and work with resources
+          (data and models) in HydroShare. Apps are hosted on separate web servers
+          from the HydroShare website (www.hydroshare.org) and access HydroShare
+          resources using web services via the REST applications programmers
+          interface (API). Anyone can write an app an then create a "Web App" resource
+          that holds the configuration information for launching the App from HydroShare.
+          This page lists CUAHSI approved web apps that are supported as part of HydroShare.</p>
       </div>
     </div>
+  </div>
 
+  <div class="container-fluid apps-container">
     <div class="row">
       {% for resource in webapp_resources %}
-        <a class="webapp-link"
-           href="{{resource.metadata.app_home_page_url.value}}"
-           target="_blank" title="Open {{ resource.title }} in new tab">
-          <div class="col-md-4">
-            <div class="webapp-listing">
+        <div class="webapp col-lg-3 col-md-4 col-sm-12">
+          <div class="webapp-listing">
+            <a class="webapp-link"
+               href="{{resource.metadata.app_home_page_url.value}}"
+               target="_blank" title="Open {{ resource.title }} in new tab">
               <img src="{{ resource.metadata.app_icon.value }}" alt="" />
-              <h3>{{ resource.title }}</h3>
-            </div>
+              <h3>
+                {{ resource.title }}
+              </h3>
+            </a>
+            <p class="app-description">{{ resource.metadata.description }}</p>
+            <a href="#" class="app-info-toggle">i</a>
           </div>
-        </a>
+        </div>
       {% endfor %}
     </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    $(document).ready(function() {
+      $('.app-info-toggle').on('click', function() {
+        $(this).parent().find('.app-description').toggle("fast");
+        var text = $(this).html();
+        if(text === "i") {
+          $(this).html('X');
+        } else {
+          $(this).html('i');
+        }
+        return false;
+      });
+    });
+  </script>
 {% endblock %}
