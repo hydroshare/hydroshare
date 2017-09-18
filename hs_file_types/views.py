@@ -419,9 +419,11 @@ def add_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     keywords = keywords.split(",")
     existing_keywords = [kw.lower() for kw in logical_file.metadata.keywords]
     if not any(kw.lower() in keywords for kw in existing_keywords):
-        logical_file.metadata.keywords += keywords
-        logical_file.metadata.is_dirty = True
-        logical_file.metadata.save()
+        metadata = logical_file.metadata
+        metadata.keywords += keywords
+        if hs_file_type != "TimeSeriesLogicalFile":
+            metadata.is_dirty = True
+        metadata.save()
         # add keywords to resource
         resource_keywords = [subject.value.lower() for subject in resource.metadata.subjects.all()]
         for kw in keywords:
@@ -472,8 +474,10 @@ def delete_keyword_metadata(request, hs_file_type, file_type_id, **kwargs):
     if keyword.lower() in existing_keywords:
         logical_file.metadata.keywords = [kw for kw in logical_file.metadata.keywords if
                                           kw.lower() != keyword.lower()]
-        logical_file.metadata.is_dirty = True
-        logical_file.metadata.save()
+        if hs_file_type != "TimeSeriesLogicalFile":
+            metadata = logical_file.metadata
+            metadata.is_dirty = True
+            metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'deleted_keyword': keyword,
@@ -512,11 +516,13 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
     logical_file.save()
-    logical_file.metadata.is_dirty = True
-    logical_file.metadata.save()
+    metadata = logical_file.metadata
+    metadata.is_dirty = True
+    metadata.save()
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                          'element_name': 'datatset_name', 'message': "Update was successful"}
+                          'element_name': 'datatset_name', "is_dirty": metadata.is_dirty,
+                          'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
@@ -540,6 +546,39 @@ def update_refts_abstract(request, file_type_id, **kwargs):
 
     if logical_file.metadata.has_abstract_in_json:
         # if json file has abstract, we can't update abstract
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    abstract = request.POST['abstract']
+    if abstract.strip():
+        logical_file.metadata.abstract = abstract
+        logical_file.metadata.is_dirty = True
+        logical_file.metadata.save()
+        resource_modified(resource, request.user, overwrite_bag=False)
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract', 'message': "Update was successful"}
+    else:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'abstract', 'message': "Data is missing for abstract"}
+
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def update_timeseries_abstract(request, file_type_id, **kwargs):
+    """updates the abstract for time series specified logical file object
+    """
+
+    logical_file, json_response = _get_logical_file('TimeSeriesLogicalFile', file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Permission denied"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
@@ -589,6 +628,39 @@ def update_netcdf_file(request, file_type_id, **kwargs):
     resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'message': "NetCDF file update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def update_sqlite_file(request, file_type_id, **kwargs):
+    """updates (writes the metadata) the SQLite file associated with a instance of a specified
+    TimeSeriesLogicalFile file object
+    """
+
+    hs_file_type = "TimeSeriesLogicalFile"
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'datatset_name', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    try:
+        logical_file.update_sqlite_file(request.user)
+    except Exception as ex:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'message': ex.message}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    resource_modified(resource, request.user, overwrite_bag=False)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'message': "SQLite file update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

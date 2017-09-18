@@ -568,7 +568,10 @@ function metadata_update_ajax_submit(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
-
+                // show update sqlite file update option for TimeSeriesLogicalFile
+                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  && json_response.is_dirty) {
+                    $("#div-sqlite-file-update").show();
+                }
                 // show update netcdf resource
                 if (resourceType === 'Multidimensional (NetCDF)' &&
                     json_response.is_dirty) {
@@ -576,11 +579,10 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 // start timeseries resource specific DOM manipulation
-                if ($("#can-update-sqlite-file").val() === "True") {
-                    $("#sql-file-update").show();
-                }
-                else if(json_response.metadata_status === "Sufficient to publish or make public"){
-                    $("#sql-file-update").show();
+                if(resourceType === 'Time Series') {
+                    if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
+                        $("#sql-file-update").show();
+                    }
                 }
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
@@ -857,6 +859,37 @@ function update_netcdf_file_ajax_submit() {
             json_response = JSON.parse(result);
             if (json_response.status === 'success') {
                 $("#div-netcdf-file-update").hide();
+                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-success").alert('close');
+                });
+                // refetch file metadata to show the updated header file info
+                showFileTypeMetadata(false, "");
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
+        }
+    });
+}
+
+function update_sqlite_file_ajax_submit() {
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File update was successful.\
+    </div>';
+
+    var url = $('#update-sqlite-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-sqlite-file-update").hide();
                 $alert_success = $alert_success.replace("File update was successful.", json_response.message);
                 $("#fb-inner-controls").before($alert_success);
                 $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
@@ -1493,7 +1526,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 function setFileTypeMetadataFormsClickHandlers(){
     $("#fileTypeMetaDataTab").find('form').each(function () {
         var formId = $(this).attr('id');
-        if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
+        if (formId !== "update-netcdf-file" && formId !== "update-sqlite-file"&& formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {
                 metadata_update_ajax_submit(formId);
               });
