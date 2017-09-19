@@ -1859,7 +1859,7 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
         """ Get URL of the science metadata file resourcemetadata.xml """
         res = BaseResource.objects.get(short_id=resource_id)
         scimeta_path = res.scimeta_path
-        scimeta_url = reverse('rest_download', krwargs={'path': scimeta_path})
+        scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
     # TODO: there are too many ways to get to the resourcemap.
