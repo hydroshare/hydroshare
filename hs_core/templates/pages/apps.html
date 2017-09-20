@@ -36,7 +36,12 @@
                 {{ resource.title }}
               </h3>
             </a>
-            <p class="app-description">{{ resource.metadata.description }}</p>
+            <p class="app-description">
+              {{ resource.metadata.description|truncatechars:300 }}
+              <br /><br />
+              <a href="/resource/{{ resource.short_id }}">View Resource Page</a>
+            </p>
+
             <a href="#" class="app-info-toggle">i</a>
           </div>
         </div>
