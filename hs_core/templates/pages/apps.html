@@ -37,7 +37,7 @@
               </h3>
             </a>
             <p class="app-description">
-              {{ resource.metadata.description|truncatechars:300 }}
+              {{ resource.metadata.description|truncatewords:35 }}
               <br /><br />
               <a href="/resource/{{ resource.short_id }}">View Resource Page</a>
             </p>
