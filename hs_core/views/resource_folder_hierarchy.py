@@ -60,7 +60,6 @@ def data_store_structure(request):
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
-
     istorage = resource.get_irods_storage()
     res_coll = os.path.join(resource.root_path, store_path)
     try:
