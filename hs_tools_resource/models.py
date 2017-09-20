@@ -22,9 +22,9 @@ class ToolResource(BaseResource):
         verbose_name = 'Web App Resource'
 
     @classmethod
-    def get_approved_apps(self):
-        webapp_resources = ToolResource.objects.all()
-        APPROVED_APPLICATIONS = [
+    def get_approved_apps(cls):
+        webapp_resources = cls.objects.all()
+        approved_applications = [
             "3fb11de2432e46aaacd70499fd680e6d",  # SWATShare
             "9674a0af9f30410e9e02397c91284f54",  # Hydroshare GIS
             "7d472293c09a46c59cdef9160665603a",  # JupyterHub NCSA
@@ -35,7 +35,7 @@ class ToolResource(BaseResource):
         final_resource_list = []
         for resource in webapp_resources:
             if resource.metadata.app_icon and resource.metadata.app_home_page_url \
-                    and resource.short_id in APPROVED_APPLICATIONS:
+                    and resource.short_id in approved_applications:
                 final_resource_list.append(resource)
 
         return final_resource_list
