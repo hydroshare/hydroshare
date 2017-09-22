@@ -203,6 +203,8 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               'metadata_status': metadata_status,
                               'logical_file_type': logical_file.type_name()
                               }
+        if logical_file.type_name() == "TimeSeriesLogicalFile":
+            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -269,6 +271,9 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
                               'element_name': element_name, 'form_action': form_action,
                               'element_id': element.id,
                               'metadata_status': metadata_status}
+
+        if logical_file.type_name() == "TimeSeriesLogicalFile":
+            ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -585,12 +590,13 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
 
     abstract = request.POST['abstract']
     if abstract.strip():
-        logical_file.metadata.abstract = abstract
-        logical_file.metadata.is_dirty = True
-        logical_file.metadata.save()
+        metadata = logical_file.metadata
+        metadata.abstract = abstract
+        metadata.is_dirty = True
+        metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'abstract', 'message': "Update was successful"}
+                              'element_name': 'abstract', "is_dirty": metadata.is_dirty, 'message': "Update was successful"}
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Data is missing for abstract"}
