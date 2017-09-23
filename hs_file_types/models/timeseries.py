@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import sqlite3
+from lxml import etree
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -13,6 +14,8 @@ from dominate.tags import div, legend, strong, form, select, option, hr, h3, but
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
+from hs_core.models import CoreMetaData
+
 from hs_app_timeseries.models import TimeSeriesMetaDataMixin, AbstractCVLookupTable
 from hs_app_timeseries.forms import SiteValidationForm, VariableValidationForm, \
     MethodValidationForm, ProcessingLevelValidationForm, TimeSeriesResultValidationForm, \
@@ -353,6 +356,23 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         else:
             return {'is_valid': False, 'element_data_dict': None,
                     "errors": element_validation_form.errors}
+
+    def add_to_xml_container(self, container):
+        """Generates xml+rdf representation of all metadata elements associated with this
+        logical file type instance"""
+
+        NAMESPACES = CoreMetaData.NAMESPACES
+        container_to_add_to = super(TimeSeriesFileMetaData, self).add_to_xml_container(container)
+        if self.abstract:
+            dc_description = etree.SubElement(container_to_add_to,
+                                              '{%s}description' % NAMESPACES['dc'])
+            dc_des_rdf_Desciption = etree.SubElement(dc_description,
+                                                     '{%s}Description' % NAMESPACES['rdf'])
+            dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption,
+                                                '{%s}abstract' % NAMESPACES['dcterms'])
+            dcterms_abstract.text = self.abstract
+
+        add_to_xml_container_helper(self, container_to_add_to)
 
 
 class TimeSeriesLogicalFile(AbstractLogicalFile):
@@ -1408,6 +1428,44 @@ def sqlite_file_update(instance, sqlite_res_file, user):
         finally:
             if os.path.exists(temp_sqlite_file):
                 shutil.rmtree(os.path.dirname(temp_sqlite_file))
+
+
+def add_to_xml_container_helper(target_obj, container):
+    """Generates xml+rdf representation of all metadata elements associated with the *target_obj*
+    :param  target_obj: either an instance of TimeSeriesMetaData or TimeSeriesFileMetaData
+    :param  container: xml container element to which xml nodes need to be added
+    """
+
+    for time_series_result in target_obj.time_series_results:
+        ts_result_root_container = time_series_result.add_to_xml_container(
+            container=container)
+        # generate xml for 'site' element
+        sites = [site for site in target_obj.sites if time_series_result.series_ids[0] in
+                 site.series_ids]
+        if sites:
+            site = sites[0]
+            site.add_to_xml_container(container=ts_result_root_container)
+
+        # generate xml for 'variable' element
+        variables = [variable for variable in target_obj.variables if
+                     time_series_result.series_ids[0] in variable.series_ids]
+        if variables:
+            variable = variables[0]
+            variable.add_to_xml_container(container=ts_result_root_container)
+
+        # generate xml for 'method' element
+        methods = [method for method in target_obj.methods if time_series_result.series_ids[0] in
+                   method.series_ids]
+        if methods:
+            method = methods[0]
+            method.add_to_xml_container(container=ts_result_root_container)
+
+        # generate xml for 'processing_level' element
+        processing_levels = [processing_level for processing_level in target_obj.processing_levels
+                             if time_series_result.series_ids[0] in processing_level.series_ids]
+        if processing_levels:
+            processing_level = processing_levels[0]
+            processing_level.add_to_xml_container(container=ts_result_root_container)
 
 
 def _get_element_update_form_action(element_name, target_id, element_id, file_type=False):
