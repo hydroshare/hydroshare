@@ -740,6 +740,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         hsterms_statistics.text = self.aggregation_statistics
         return hsterms_time_series_result_rdf_Description
 
+
 class UTCOffSet(TimeSeriesAbstractMetaDataElement):
     # this element is not part of the science metadata
     term = 'UTCOffSet'
@@ -1713,14 +1714,14 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
                 # insert record to Results table
                 results_data = self.update_results_table_insert(con, cur, variables_data,
-                                                                 pro_levels_data)
+                                                                pro_levels_data)
 
                 # insert record to TimeSeriesResults table
                 self.update_timeseriesresults_table_insert(con, cur, results_data)
 
                 # insert record to TimeSeriesResultValues table
                 self.update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
-                                                                 results_data)
+                                                                results_data)
 
                 # insert record to Datasets table
                 self.update_datasets_table_insert(con, cur)

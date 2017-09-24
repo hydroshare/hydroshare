@@ -596,7 +596,8 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
         metadata.save()
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
-                              'element_name': 'abstract', "is_dirty": metadata.is_dirty, 'message': "Update was successful"}
+                              'element_name': 'abstract', "is_dirty": metadata.is_dirty,
+                              'message': "Update was successful"}
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', 'message': "Data is missing for abstract"}

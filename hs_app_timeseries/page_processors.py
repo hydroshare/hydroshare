@@ -4,9 +4,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from crispy_forms.layout import Layout, HTML
 
-from forms import SiteForm, VariableForm, MethodForm, ProcessingLevelForm, TimeSeriesResultForm, \
-    UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, UTCOffSetLayout, \
-    UTCOffSetForm
+from forms import UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, \
+    UTCOffSetLayout, UTCOffSetForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_app_timeseries.models import TimeSeriesResource
