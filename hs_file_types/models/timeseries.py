@@ -652,7 +652,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                     resource.metadata.update_element('title', element_id=resource.metadata.title.id,
                                                      value=dataset["DataSetTitle"])
                 if logical_file is not None:
-                    logical_file.dataset_name = dataset["DataSetTitle"]
+                    logical_file.dataset_name = dataset["DataSetTitle"].strip()
                     logical_file.save()
 
             # create abstract/description element
@@ -661,7 +661,7 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
                     resource.metadata.create_element('description',
                                                      abstract=dataset["DataSetAbstract"])
                 if logical_file is not None:
-                    logical_file.metadata.abstract = dataset["DataSetAbstract"]
+                    logical_file.metadata.abstract = dataset["DataSetAbstract"].strip()
                     logical_file.metadata.save()
 
             # extract keywords/subjects
@@ -1040,6 +1040,9 @@ def _extract_coverage_metadata(resource, cur, logical_file=None):
                     if spatialref:
                         if spatialref["SRSName"]:
                             bbox['projection'] = spatialref["SRSName"]
+
+            if bbox['projection'] == 'Unknown':
+                bbox['projection'] = 'WGS 84 EPSG:4326'
 
         target_obj.metadata.create_element('coverage', type='box', value=bbox)
 
