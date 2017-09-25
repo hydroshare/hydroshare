@@ -2072,6 +2072,30 @@ def _update_resource_coverage_element(site_element):
 
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
+    if not isinstance(site_element.metadata, TimeSeriesMetaData):
+        # metadata must be an instance of TimeSeriesFileMetaData
+        # which means the above update was for file level coverage update
+        # and we have to do another update at the resource level
+        logical_file = site_element.metadata.logical_file
+        resource = logical_file.resource
+        spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+        if spatial_cov:
+            spatial_cov.type = cov_type
+            if cov_type == 'point':
+                point_value['projection'] = spatial_cov.value['projection']
+                spatial_cov._value = json.dumps(point_value)
+            else:
+                bbox_value['projection'] = spatial_cov.value['projection']
+                spatial_cov._value = json.dumps(bbox_value)
+            spatial_cov.save()
+        else:
+            if cov_type == 'point':
+                value_dict = point_value
+            else:
+                value_dict = bbox_value
+
+            resource.metadata.create_element("coverage", type=cov_type, value=value_dict)
+
 
 def _create_site_related_cv_terms(element, data_dict):
     # if the user has entered a new elevation datum, then create a corresponding new cv term
