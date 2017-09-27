@@ -315,6 +315,7 @@ class ToolMetaData(CoreMetaData):
     tool_icon = GenericRelation(ToolIcon)
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
     homepage_url = GenericRelation(AppHomePageUrl)
+    approved = models.BooleanField(default=False)
 
     @property
     def resource(self):
@@ -493,3 +494,10 @@ class ToolMetaData(CoreMetaData):
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+
+    def __str__(self):
+        return self.title.value
+
+    class Meta:
+        verbose_name="Application Approval"
+        verbose_name_plural="Application Approvals"
