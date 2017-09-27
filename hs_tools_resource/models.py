@@ -24,18 +24,10 @@ class ToolResource(BaseResource):
     @classmethod
     def get_approved_apps(cls):
         webapp_resources = cls.objects.all()
-        approved_applications = [
-            "3fb11de2432e46aaacd70499fd680e6d",  # SWATShare
-            "9674a0af9f30410e9e02397c91284f54",  # Hydroshare GIS
-            "7d472293c09a46c59cdef9160665603a",  # JupyterHub NCSA
-            "d5ac4340c7ff454f9c57dce43da2d625",  # CUAHSI Data Series Viewer
-            "269c0363a47c421e9b227071c8318b16"  # National Water Model Forecast viewer
-        ]
 
         final_resource_list = []
         for resource in webapp_resources:
-            if resource.metadata.app_icon and resource.metadata.app_home_page_url \
-                    and resource.short_id in approved_applications:
+            if resource.metadata.approved:
                 final_resource_list.append(resource)
 
         return final_resource_list
