@@ -51,8 +51,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'HydroShare'
-copyright = u'2017, https://pages.hydroshare.org/about-hydroshare/team/'
-author = u'https://pages.hydroshare.org/about-hydroshare/team/'
+copyright = u'2017, https://help.hydroshare.org/about-hydroshare/team/'
+author = u'https://help.hydroshare.org/about-hydroshare/team/'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -132,7 +132,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'HydroShare.tex', u'HydroShare Documentation',
-     u'https://pages.hydroshare.org/about-hydroshare/team/', 'manual'),
+     u'https://help.hydroshare.org/about-hydroshare/team/', 'manual'),
 ]
 
 

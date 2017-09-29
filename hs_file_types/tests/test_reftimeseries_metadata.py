@@ -251,23 +251,6 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
 
         self.composite_resource.delete()
 
-    def test_set_file_type_to_file_with_missing_symbol(self):
-        # here we are using a valid time series json file for setting it
-        # to RefTimeseries file type which should be successful even though it is missing symbol
-
-        self.refts_missing_symbol_file_name = 'refts_valid_symbol_missing.json.refts'
-        self.refts_missing_symbol_file = 'hs_file_types/tests/{}'.format(
-            self.refts_missing_symbol_file_name)
-
-        tgt_temp_refts_missing_symbol_file = os.path.join(
-            self.temp_dir, self.refts_missing_symbol_file_name)
-        shutil.copy(self.refts_missing_symbol_file, tgt_temp_refts_missing_symbol_file)
-        self.refts_file_obj = open(tgt_temp_refts_missing_symbol_file, 'r')
-        self._create_composite_resource()
-        self._test_valid_missing_optional_elements()
-
-        self.composite_resource.delete()
-
     def test_set_file_type_to_file_with_duplicate_keywords(self):
         # here we are using an invalid time series json file for setting it
         # to RefTimeseries file type which should fail

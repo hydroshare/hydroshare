@@ -1411,7 +1411,9 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
         });
     }
 
-    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" || logical_type != 'GeoFeatureLogicalFile'){
+    // #id_type_1 is the box radio button
+    if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
+        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile')) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();

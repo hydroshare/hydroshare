@@ -1360,7 +1360,7 @@ class Coverage(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
     @classmethod
-    def get_temporal_html_form(cls, resource, element=None, file_type=False):
+    def get_temporal_html_form(cls, resource, element=None, file_type=False, allow_edit=True):
         """Return CoverageTemporalForm for Coverage model."""
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
@@ -1371,7 +1371,7 @@ class Coverage(AbstractMetaDataElement):
             coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
             coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
 
-        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                              res_short_id=resource.short_id if resource else None,
                                              element_id=element.id if element else None,
                                              file_type=file_type)

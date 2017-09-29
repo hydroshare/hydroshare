@@ -178,7 +178,7 @@ class QuotaMessage(models.Model):
                                        'reasonable requests for additional quota. If you have a '
                                        'large quota request you may need to contribute toward the '
                                        'costs of providing the additional space you need. See '
-                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'https://help.hydroshare.org/about-hydroshare/policies/'
                                        'quota/ for more information about the quota policy.')
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)

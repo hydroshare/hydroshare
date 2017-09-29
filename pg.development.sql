@@ -2361,7 +2361,8 @@ CREATE TABLE hs_access_control_resourceaccess (
     shareable boolean NOT NULL,
     published boolean NOT NULL,
     immutable boolean NOT NULL,
-    resource_id integer NOT NULL
+    resource_id integer NOT NULL,
+    require_download_agreement boolean NOT NULL
 );
 
 
@@ -3115,7 +3116,7 @@ CREATE TABLE hs_app_timeseries_site (
     object_id integer NOT NULL,
     site_code character varying(200) NOT NULL,
     site_name character varying(255) NOT NULL,
-    elevation_m integer,
+    elevation_m double precision,
     elevation_datum character varying(50),
     site_type character varying(100),
     content_type_id integer NOT NULL,
@@ -4276,6 +4277,75 @@ ALTER SEQUENCE hs_file_types_genericlogicalfile_id_seq OWNED BY hs_file_types_ge
 
 
 --
+-- Name: hs_file_types_geofeaturefilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_geofeaturefilemetadata (
+    id integer NOT NULL,
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_geofeaturefilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_geofeaturefilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_geofeaturefilemetadata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_geofeaturefilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_geofeaturefilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_geofeaturefilemetadata_id_seq OWNED BY hs_file_types_geofeaturefilemetadata.id;
+
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_geofeaturelogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_geofeaturelogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_geofeaturelogicalfile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_geofeaturelogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_geofeaturelogicalfile_id_seq OWNED BY hs_file_types_geofeaturelogicalfile.id;
+
+
+--
 -- Name: hs_file_types_georasterfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -4411,6 +4481,76 @@ ALTER TABLE hs_file_types_netcdflogicalfile_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE hs_file_types_netcdflogicalfile_id_seq OWNED BY hs_file_types_netcdflogicalfile.id;
+
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_reftimeseriesfilemetadata (
+    id integer NOT NULL,
+    extra_metadata hstore NOT NULL,
+    keywords character varying(100)[] NOT NULL,
+    is_dirty boolean NOT NULL,
+    json_file_content text NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_reftimeseriesfilemetadata OWNER TO postgres;
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_reftimeseriesfilemetadata_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_reftimeseriesfilemetadata_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_reftimeseriesfilemetadata_id_seq OWNED BY hs_file_types_reftimeseriesfilemetadata.id;
+
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_file_types_reftimeserieslogicalfile (
+    id integer NOT NULL,
+    dataset_name character varying(255),
+    metadata_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_file_types_reftimeserieslogicalfile OWNER TO postgres;
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_file_types_reftimeserieslogicalfile_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_file_types_reftimeserieslogicalfile_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_file_types_reftimeserieslogicalfile_id_seq OWNED BY hs_file_types_reftimeserieslogicalfile.id;
 
 
 --
@@ -4673,45 +4813,6 @@ ALTER TABLE hs_geographic_feature_resource_originalcoverage_id_seq OWNER TO post
 --
 
 ALTER SEQUENCE hs_geographic_feature_resource_originalcoverage_id_seq OWNED BY hs_geographic_feature_resource_originalcoverage.id;
-
-
---
--- Name: hs_geographic_feature_resource_originalfileinfo; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE hs_geographic_feature_resource_originalfileinfo (
-    id integer NOT NULL,
-    object_id integer NOT NULL,
-    "fileType" text NOT NULL,
-    "baseFilename" text NOT NULL,
-    "fileCount" integer NOT NULL,
-    "filenameString" text,
-    content_type_id integer NOT NULL,
-    CONSTRAINT hs_geographic_feature_resource_originalfileinfo_object_id_check CHECK ((object_id >= 0))
-);
-
-
-ALTER TABLE hs_geographic_feature_resource_originalfileinfo OWNER TO postgres;
-
---
--- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE hs_geographic_feature_resource_originalfileinfo_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE hs_geographic_feature_resource_originalfileinfo_id_seq OWNER TO postgres;
-
---
--- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE hs_geographic_feature_resource_originalfileinfo_id_seq OWNED BY hs_geographic_feature_resource_originalfileinfo.id;
 
 
 --
@@ -7390,8 +7491,8 @@ ALTER SEQUENCE theme_userprofile_id_seq OWNED BY theme_userprofile.id;
 
 CREATE TABLE theme_userquota (
     id integer NOT NULL,
-    allocated_value bigint NOT NULL,
-    used_value bigint NOT NULL,
+    allocated_value double precision NOT NULL,
+    used_value double precision NOT NULL,
     unit character varying(10) NOT NULL,
     zone character varying(100) NOT NULL,
     remaining_grace_period integer NOT NULL,
@@ -8168,6 +8269,20 @@ ALTER TABLE ONLY hs_file_types_genericlogicalfile ALTER COLUMN id SET DEFAULT ne
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_file_types_geofeaturefilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_geofeaturefilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_geofeaturelogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_geofeaturelogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_file_types_georasterfilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_georasterfilemetadata_id_seq'::regclass);
 
 
@@ -8190,6 +8305,20 @@ ALTER TABLE ONLY hs_file_types_netcdffilemetadata ALTER COLUMN id SET DEFAULT ne
 --
 
 ALTER TABLE ONLY hs_file_types_netcdflogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_netcdflogicalfile_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeseriesfilemetadata ALTER COLUMN id SET DEFAULT nextval('hs_file_types_reftimeseriesfilemetadata_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile ALTER COLUMN id SET DEFAULT nextval('hs_file_types_reftimeserieslogicalfile_id_seq'::regclass);
 
 
 --
@@ -8232,13 +8361,6 @@ ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation ALTER COLUMN
 --
 
 ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_originalcoverage_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo ALTER COLUMN id SET DEFAULT nextval('hs_geographic_feature_resource_originalfileinfo_id_seq'::regclass);
 
 
 --
@@ -9849,6 +9971,18 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 687	Can add csp report	215	add_cspreport
 688	Can change csp report	215	change_cspreport
 689	Can delete csp report	215	delete_cspreport
+690	Can add geo feature file meta data	216	add_geofeaturefilemetadata
+691	Can change geo feature file meta data	216	change_geofeaturefilemetadata
+692	Can delete geo feature file meta data	216	delete_geofeaturefilemetadata
+693	Can add geo feature logical file	217	add_geofeaturelogicalfile
+694	Can change geo feature logical file	217	change_geofeaturelogicalfile
+695	Can delete geo feature logical file	217	delete_geofeaturelogicalfile
+696	Can add ref timeseries file meta data	218	add_reftimeseriesfilemetadata
+697	Can change ref timeseries file meta data	218	change_reftimeseriesfilemetadata
+698	Can delete ref timeseries file meta data	218	delete_reftimeseriesfilemetadata
+699	Can add ref timeseries logical file	219	add_reftimeserieslogicalfile
+700	Can change ref timeseries logical file	219	change_reftimeserieslogicalfile
+701	Can delete ref timeseries logical file	219	delete_reftimeserieslogicalfile
 \.
 
 
@@ -9856,7 +9990,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 689, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 701, true);
 
 
 --
@@ -9864,7 +9998,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 689, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-02-02 17:28:12.316836+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
+4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2017-09-01 18:11:00.078101+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -10071,6 +10205,15 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 38	2017-02-02 17:26:10.173151+00	1	Hydroshare Author	2	Changed permissions.	2	4
 39	2017-02-02 17:26:32.707066+00	1	Hydroshare Author	2	Changed permissions.	2	4
 40	2017-02-02 17:26:47.958444+00	1	Hydroshare Author	2	Changed permissions.	2	4
+41	2017-09-01 18:12:16.42384+00	5	Help	3		33	4
+42	2017-09-01 18:12:49.58398+00	14	Help	1		34	4
+43	2017-09-01 18:13:41.541669+00	15	About	1		34	4
+44	2017-09-01 18:13:50.020573+00	14	Help	2	Changed slug.	34	4
+45	2017-09-01 18:25:48.020365+00	9	Terms of Use	2	Changed content, in_menus, slug, description and keywords.	33	4
+46	2017-09-01 18:26:27.338099+00	10	Statement of Privacy	2	Changed content, in_menus, slug, description and keywords.	33	4
+47	2017-09-01 18:30:38.121036+00	1	terms-of-use ---> https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/	1		10	4
+48	2017-09-01 18:33:16.492416+00	2	/privacy/ ---> https://help.hydroshare.org/about-hydroshare/policies/statement-of-privacy/	1		10	4
+49	2017-09-01 18:33:32.402925+00	1	/terms-of-use/ ---> https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/	2	Changed old_path.	10	4
 \.
 
 
@@ -10078,7 +10221,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 40, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 49, true);
 
 
 --
@@ -10330,6 +10473,10 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 213	hs_file_types	netcdflogicalfile
 214	security	passwordexpiry
 215	security	cspreport
+216	hs_file_types	geofeaturefilemetadata
+217	hs_file_types	geofeaturelogicalfile
+218	hs_file_types	reftimeseriesfilemetadata
+219	hs_file_types	reftimeserieslogicalfile
 \.
 
 
@@ -10337,7 +10484,7 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 215, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 219, true);
 
 
 --
@@ -10711,6 +10858,12 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 184	theme	0005_userquota	2017-05-18 23:34:18.968212+00
 185	theme	0006_auto_20170309_1516	2017-05-18 23:34:18.99764+00
 186	theme	0007_auto_20170427_1553	2017-05-18 23:34:22.056523+00
+187	hs_access_control	0022_resourceaccess_require_download_agreement	2017-08-17 21:08:41.410271+00
+188	hs_app_timeseries	0002_auto_20170602_2007	2017-08-17 21:08:41.607018+00
+189	hs_file_types	0004_geofeaturefilemetadata_geofeaturelogicalfile	2017-08-17 21:08:41.659203+00
+190	hs_file_types	0005_reftimeseriesfilemetadata_reftimeserieslogicalfile	2017-08-17 21:08:41.719251+00
+191	hs_geographic_feature_resource	0002_auto_20170612_2159	2017-08-17 21:08:42.181189+00
+192	theme	0008_auto_20170622_2141	2017-08-17 21:08:43.301783+00
 \.
 
 
@@ -10718,7 +10871,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 186, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 192, true);
 
 
 --
@@ -10726,6 +10879,8 @@ SELECT pg_catalog.setval('django_migrations_id_seq', 186, true);
 --
 
 COPY django_redirect (id, site_id, old_path, new_path) FROM stdin;
+2	1	/privacy/	https://help.hydroshare.org/about-hydroshare/policies/statement-of-privacy/
+1	1	/terms-of-use/	https://help.hydroshare.org/about-hydroshare/policies/terms-of-use/
 \.
 
 
@@ -10733,7 +10888,7 @@ COPY django_redirect (id, site_id, old_path, new_path) FROM stdin;
 -- Name: django_redirect_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
+SELECT pg_catalog.setval('django_redirect_id_seq', 2, true);
 
 
 --
@@ -10747,6 +10902,8 @@ yq96gavkvlu0skywfwgvdock65xnq3tc	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWU
 5eflr6q0pn7qgkuu6mbo84kuqoxk5plt	ZjZmMTlkMThkOGJmNWIzY2IxODNjODM5ZTA2MmFjNTRmNTlmYTRkOTp7InF1ZXJ5X2NoYW5nZWQiOmZhbHNlLCJoc190cmFja2luZ19pZCI6ImV5SnBaQ0k2TW4wOjFiRzg2ZDpGNWs4M3pGcnQ2Mzg5WWMyZUhRc3BNRGVBR2siLCJmYWNldHNfaXRlbXMiOnsiZmllbGRzIjp7ImF1dGhvciI6W10sIm93bmVyc19uYW1lcyI6W10sInN1YmplY3RzIjpbXSwiZGlzY292ZXJhYmxlIjpbXSwicHVibGljIjpbXSwicmVzb3VyY2VfdHlwZSI6W119LCJkYXRlcyI6e30sInF1ZXJpZXMiOnt9fSwidG90YWxfcmVzdWx0cyI6MH0=	2016-07-07 17:17:57.67608+00
 yg9nko1xsebjvcc6wk4ynygw4m8l3ofk	ZTg1M2RhMWVmMzk3YTcwYTFlMWE5MDhlNWRiYjAyZGU0Yzk2YmVmYzp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZObjA6MWNaTEJZOnhCdHhZT3oxQ3RXb0lBVFR2aFVqcW5UaDBwOCJ9	2017-02-16 17:28:40.816975+00
 mtzyl7dumuj30g4jb8tmyf7scec5ni6y	MmQ4MTVjNDgwY2RlOGVkY2JkZGIyMWU3NzFkMDY4N2JjYmFmMzEyZjp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZOMzA6MWRCVjBMOlFXNHRRWmpRR0xvendJZVJUNUliMWI4YkhvVSJ9	2017-06-01 23:38:49.600605+00
+y094t1jbv59xrxfczsvga85awa6ubxvm	MmMzMTRlM2M4OWE3ODc3ZWFiNGUwNzc5MDQ3MDFhYTczMGI4OGY4Yjp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZPSDA6MWRpaVNrOm5YTmU5ZVNtcXowdU5uWTViaEFzdW9PQVdDTSIsIl9hdXRoX3VzZXJfaGFzaCI6IjBjZGYxNDBkN2Q1NDRhMGUyMWMwM2EyMTdjMDJlNGQyMjFhZjhiYTUiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjoiNCJ9	2017-09-01 14:43:23.173974+00
+diphhiv8ucfe8it42h9hobejjw96ejc5	NzEwY2NkZGY3MWJjOWQ1MzFmYjcxY2M0NmUzNTZiNGIyNTQ3ZGEzMDp7ImhzX3RyYWNraW5nX2lkIjoiZXlKcFpDSTZNVEI5OjFkbnFsdTo0bFRzQUxPTnh1TnM2czJzWkZ0YWFIZ25VaVUifQ==	2017-09-15 18:34:26.171288+00
 \.
 
 
@@ -11166,7 +11323,7 @@ SELECT pg_catalog.setval('hs_access_control_groupresourceprovenance_id_seq', 1, 
 -- Data for Name: hs_access_control_resourceaccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_access_control_resourceaccess (id, active, discoverable, public, shareable, published, immutable, resource_id) FROM stdin;
+COPY hs_access_control_resourceaccess (id, active, discoverable, public, shareable, published, immutable, resource_id, require_download_agreement) FROM stdin;
 \.
 
 
@@ -11938,6 +12095,36 @@ SELECT pg_catalog.setval('hs_file_types_genericlogicalfile_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_file_types_geofeaturefilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_geofeaturefilemetadata (id, extra_metadata, keywords, is_dirty) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_geofeaturefilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_geofeaturefilemetadata_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_geofeaturelogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_geofeaturelogicalfile (id, dataset_name, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_geofeaturelogicalfile_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_file_types_georasterfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -11995,6 +12182,36 @@ COPY hs_file_types_netcdflogicalfile (id, dataset_name, metadata_id) FROM stdin;
 --
 
 SELECT pg_catalog.setval('hs_file_types_netcdflogicalfile_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_reftimeseriesfilemetadata; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_reftimeseriesfilemetadata (id, extra_metadata, keywords, is_dirty, json_file_content) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_reftimeseriesfilemetadata_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_file_types_reftimeserieslogicalfile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_file_types_reftimeserieslogicalfile (id, dataset_name, metadata_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_file_types_reftimeserieslogicalfile_id_seq', 1, false);
 
 
 --
@@ -12101,21 +12318,6 @@ COPY hs_geographic_feature_resource_originalcoverage (id, object_id, northlimit,
 --
 
 SELECT pg_catalog.setval('hs_geographic_feature_resource_originalcoverage_id_seq', 1, false);
-
-
---
--- Data for Name: hs_geographic_feature_resource_originalfileinfo; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY hs_geographic_feature_resource_originalfileinfo (id, object_id, "fileType", "baseFilename", "fileCount", "filenameString", content_type_id) FROM stdin;
-\.
-
-
---
--- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('hs_geographic_feature_resource_originalfileinfo_id_seq', 1, false);
 
 
 --
@@ -12839,6 +13041,9 @@ COPY hs_tracking_session (id, begin, visitor_id) FROM stdin;
 5	2017-02-02 17:27:56.526549+00	1
 6	2017-02-02 17:28:40.81141+00	6
 7	2017-05-18 23:38:49.595277+00	7
+8	2017-08-18 14:41:26.36915+00	1
+9	2017-09-01 18:10:51.832185+00	1
+10	2017-09-01 18:34:26.166302+00	10
 \.
 
 
@@ -12846,7 +13051,7 @@ COPY hs_tracking_session (id, begin, visitor_id) FROM stdin;
 -- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_session_id_seq', 7, true);
+SELECT pg_catalog.setval('hs_tracking_session_id_seq', 10, true);
 
 
 --
@@ -12932,6 +13137,137 @@ COPY hs_tracking_variable (id, "timestamp", name, type, value, session_id) FROM 
 76	2017-02-02 17:28:40.814548+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=None user_email_domain=None request_url=/	6
 77	2017-05-18 23:38:49.596672+00	begin_session	2	user_ip=192.168.56.1 user_type=None user_email_domain=None	7
 78	2017-05-18 23:38:49.598486+00	visit	2	user_ip=192.168.56.1 http_method=GET http_code=200 user_type=None user_email_domain=None request_url=/	7
+79	2017-08-18 14:41:26.37093+00	begin_session	2	user_ip=192.168.56.1|user_type=None|user_email_domain=None	8
+80	2017-08-18 14:41:26.372707+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	8
+81	2017-08-18 14:41:26.68745+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	8
+82	2017-08-18 14:41:31.109255+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/help/	8
+83	2017-08-18 14:41:31.330216+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	8
+84	2017-08-18 14:41:59.495708+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/terms-of-use/	8
+85	2017-08-18 14:41:59.707129+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	8
+86	2017-08-18 14:42:09.01361+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/privacy/	8
+87	2017-08-18 14:42:09.222581+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	8
+88	2017-08-18 14:43:08.418714+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	8
+89	2017-08-18 14:43:08.640749+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	8
+90	2017-08-18 14:43:23.172241+00	login	2	user_ip=192.168.56.1|user_type=Unspecified|user_email_domain=com	8
+91	2017-08-18 14:43:23.273113+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=Unspecified|user_email_domain=com|request_url=/	8
+92	2017-08-18 14:43:23.540091+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=Unspecified|user_email_domain=com|request_url=/hsapi/userInfo/	8
+93	2017-08-18 14:43:30.327452+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=Unspecified|user_email_domain=com|request_url=/user/4/	8
+94	2017-08-18 14:43:30.607109+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=Unspecified|user_email_domain=com|request_url=/hsapi/userInfo/	8
+95	2017-08-18 14:44:04.119077+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/user/4/	8
+96	2017-08-18 14:44:04.386389+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	8
+97	2017-08-18 14:49:06.870383+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/	8
+98	2017-08-18 14:49:11.581645+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	8
+99	2017-08-18 14:49:11.663938+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	8
+100	2017-08-18 14:49:15.093103+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/9/	8
+101	2017-08-18 14:49:15.170222+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	8
+102	2017-08-18 14:49:36.961493+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	8
+103	2017-08-18 14:49:37.017793+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	8
+104	2017-08-18 14:49:39.935549+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/9/	8
+105	2017-08-18 14:49:39.986086+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	8
+106	2017-08-18 14:49:51.985418+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	8
+107	2017-08-18 14:49:52.030657+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	8
+108	2017-09-01 18:10:51.835432+00	begin_session	2	user_ip=192.168.56.1|user_type=None|user_email_domain=None	9
+109	2017-09-01 18:10:51.838809+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	9
+110	2017-09-01 18:10:52.092611+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	9
+111	2017-09-01 18:10:54.913194+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/accounts/login/	9
+112	2017-09-01 18:10:55.126297+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	9
+113	2017-09-01 18:11:00.096183+00	login	2	user_ip=192.168.56.1|user_type=|user_email_domain=com	9
+114	2017-09-01 18:11:00.198224+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/	9
+115	2017-09-01 18:11:00.549976+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+116	2017-09-01 18:11:11.925214+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/	9
+117	2017-09-01 18:11:16.792542+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/auth/user/	9
+118	2017-09-01 18:11:16.896024+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+119	2017-09-01 18:11:22.014511+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+120	2017-09-01 18:11:22.130432+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+121	2017-09-01 18:11:24.415939+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/5/	9
+122	2017-09-01 18:11:24.523589+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+123	2017-09-01 18:12:13.301857+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/5/delete/	9
+124	2017-09-01 18:12:16.676691+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+125	2017-09-01 18:12:16.721076+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+126	2017-09-01 18:12:25.227323+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/link/add/	9
+127	2017-09-01 18:12:25.306909+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+128	2017-09-01 18:12:49.855774+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+129	2017-09-01 18:12:49.905028+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+130	2017-09-01 18:13:03.552141+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/link/add/	9
+131	2017-09-01 18:13:03.616113+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+132	2017-09-01 18:13:41.882203+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+133	2017-09-01 18:13:41.931486+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+134	2017-09-01 18:13:44.496554+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/link/14/	9
+135	2017-09-01 18:13:44.550091+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+136	2017-09-01 18:13:50.290076+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+137	2017-09-01 18:13:50.335162+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+138	2017-09-01 18:14:07.489304+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin_page_ordering/	9
+139	2017-09-01 18:14:24.062034+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin_page_ordering/	9
+140	2017-09-01 18:14:28.216599+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin_page_ordering/	9
+141	2017-09-01 18:14:31.06684+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/	9
+142	2017-09-01 18:14:31.44987+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+143	2017-09-01 18:23:19.040525+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/terms-of-use/	9
+144	2017-09-01 18:23:19.309727+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+145	2017-09-01 18:23:25.330575+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/privacy/	9
+146	2017-09-01 18:23:25.573448+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+147	2017-09-01 18:23:30.396642+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/sitemap/	9
+148	2017-09-01 18:23:30.659632+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+149	2017-09-01 18:24:24.515638+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/	9
+150	2017-09-01 18:24:28.71583+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+151	2017-09-01 18:24:28.778898+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+152	2017-09-01 18:24:31.13236+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/9/	9
+153	2017-09-01 18:24:31.174932+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+154	2017-09-01 18:25:47.92566+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin_keywords_submit/	9
+155	2017-09-01 18:25:48.319793+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+156	2017-09-01 18:25:48.386326+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+157	2017-09-01 18:26:05.228541+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/10/	9
+158	2017-09-01 18:26:05.298139+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+159	2017-09-01 18:26:27.274143+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin_keywords_submit/	9
+160	2017-09-01 18:26:27.602237+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+161	2017-09-01 18:26:27.64587+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+162	2017-09-01 18:27:19.67518+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/	9
+163	2017-09-01 18:27:20.051144+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+164	2017-09-01 18:27:42.390151+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/	9
+165	2017-09-01 18:27:45.715743+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+166	2017-09-01 18:27:45.772333+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+167	2017-09-01 18:27:48.44955+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/richtextpage/9/	9
+168	2017-09-01 18:27:48.516585+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+169	2017-09-01 18:28:03.248267+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/	9
+170	2017-09-01 18:28:03.530175+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+171	2017-09-01 18:28:50.577674+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/	9
+172	2017-09-01 18:28:59.241291+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+173	2017-09-01 18:28:59.308313+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+174	2017-09-01 18:29:04.107942+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/add/	9
+175	2017-09-01 18:29:04.159245+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+176	2017-09-01 18:29:42.523937+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/add/	9
+177	2017-09-01 18:29:42.599272+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+178	2017-09-01 18:29:59.362776+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/sites/site/	9
+179	2017-09-01 18:29:59.414452+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+180	2017-09-01 18:30:04.134304+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+181	2017-09-01 18:30:04.181827+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+182	2017-09-01 18:30:08.469813+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/sites/site/	9
+183	2017-09-01 18:30:10.861791+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/sites/site/	9
+184	2017-09-01 18:30:12.092742+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+185	2017-09-01 18:30:14.572093+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/add/	9
+186	2017-09-01 18:30:14.628338+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+187	2017-09-01 18:30:38.236852+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+188	2017-09-01 18:30:38.284108+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+189	2017-09-01 18:30:41.966393+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/add/	9
+190	2017-09-01 18:30:42.024719+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+191	2017-09-01 18:33:12.02615+00	visit	2	user_ip=192.168.56.1|http_method=POST|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/add/	9
+192	2017-09-01 18:33:12.085458+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+193	2017-09-01 18:33:16.62184+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+194	2017-09-01 18:33:16.699057+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+195	2017-09-01 18:33:20.787212+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/1/	9
+196	2017-09-01 18:33:20.862496+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+197	2017-09-01 18:33:32.516301+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/redirects/redirect/	9
+198	2017-09-01 18:33:32.582932+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+199	2017-09-01 18:33:36.93989+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+200	2017-09-01 18:33:36.989427+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+201	2017-09-01 18:33:43.364234+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/link/6/	9
+202	2017-09-01 18:33:43.423753+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/jsi18n/	9
+203	2017-09-01 18:33:52.602182+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/admin/pages/page/	9
+204	2017-09-01 18:33:55.134136+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/	9
+205	2017-09-01 18:33:55.528412+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=|user_email_domain=com|request_url=/hsapi/userInfo/	9
+206	2017-09-01 18:34:26.09324+00	logout	2	user_ip=192.168.56.1|user_type=|user_email_domain=com	9
+207	2017-09-01 18:34:26.167777+00	begin_session	2	user_ip=192.168.56.1|user_type=None|user_email_domain=None	10
+208	2017-09-01 18:34:26.169191+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/	10
+209	2017-09-01 18:34:26.397144+00	visit	2	user_ip=192.168.56.1|http_method=GET|http_code=200|user_type=None|user_email_domain=None|request_url=/hsapi/userInfo/	10
 \.
 
 
@@ -12939,7 +13275,7 @@ COPY hs_tracking_variable (id, "timestamp", name, type, value, session_id) FROM 
 -- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_variable_id_seq', 78, true);
+SELECT pg_catalog.setval('hs_tracking_variable_id_seq', 209, true);
 
 
 --
@@ -12954,6 +13290,9 @@ COPY hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 5	2017-02-02 17:27:56.524908+00	\N
 6	2017-02-02 17:28:40.809782+00	\N
 7	2017-05-18 23:38:49.592669+00	\N
+8	2017-08-18 14:41:26.366412+00	\N
+9	2017-09-01 18:10:51.822911+00	\N
+10	2017-09-01 18:34:26.164483+00	\N
 \.
 
 
@@ -12961,7 +13300,7 @@ COPY hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
 -- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_tracking_visitor_id_seq', 7, true);
+SELECT pg_catalog.setval('hs_tracking_visitor_id_seq', 10, true);
 
 
 --
@@ -13030,6 +13369,8 @@ SELECT pg_catalog.setval('oauth2_provider_refreshtoken_id_seq', 1, false);
 
 COPY pages_link (page_ptr_id) FROM stdin;
 6
+14
+15
 \.
 
 
@@ -13038,18 +13379,19 @@ COPY pages_link (page_ptr_id) FROM stdin;
 --
 
 COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, description, gen_description, created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order, parent_id, in_menus, titles, content_model, login_required) FROM stdin;
-11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	10	\N		Create Resource	richtextpage	f
-12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	11	\N		Sign Up	richtextpage	f
+8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	8	\N		Resend Verification Email	form	f
+11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	11	\N		Create Resource	richtextpage	f
+12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	12	\N		Sign Up	richtextpage	f
+9		1	Terms of Use	https://help.hydroshare.org/about-hydroshare/policies/terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2017-09-01 18:25:48.01336+00	2	2016-01-25 19:33:24+00	\N	\N	t	9	\N		Terms of Use	richtextpage	f
+10		1	Statement of Privacy	https://help.hydroshare.org/about-hydroshare/policies/statement-of-privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2017-09-01 18:26:27.33157+00	2	2016-01-25 19:34:22+00	\N	\N	t	10	\N		Statement of Privacy	richtextpage	f
 2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
 3		1	My Resources	my-resources	My Resources	my-resources	t	2016-01-25 19:22:48.667099+00	2016-01-25 19:29:50.956511+00	2	2016-01-25 19:22:48+00	\N	\N	t	1	\N	1,2,3	My Resources	richtextpage	f
 4		1	Discover	search	Discover	Discover	t	2016-01-25 19:23:52.174668+00	2016-01-25 19:52:37.387455+00	2	2016-01-25 19:23:52+00	\N	\N	t	2	\N	1,2,3	Discover	richtextpage	f
 13		1	Collaborate	collaborate		collaborate	t	2016-06-23 17:07:04.042277+00	2016-06-23 17:07:04.042277+00	2	2016-06-23 17:07:04.008329+00	\N	\N	t	3	\N	1	Collaborate	richtextpage	f
 6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
-5		1	Help	help	Help	help	t	2016-01-25 19:25:35.644671+00	2016-01-25 19:25:35.644671+00	2	2016-01-25 19:25:35.643697+00	\N	\N	t	5	\N	1,2,3	Help	richtextpage	f
-7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	6	\N		Verify Account	richtextpage	f
-8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	7	\N		Resend Verification Email	form	f
-9		1	Terms of Use	terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2016-01-25 19:37:08.21102+00	2	2016-01-25 19:33:24+00	\N	\N	t	8	\N		Terms of Use	richtextpage	f
-10		1	Statement of Privacy	privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2016-01-25 19:36:36.646829+00	2	2016-01-25 19:34:22+00	\N	\N	t	9	\N		Statement of Privacy	richtextpage	f
+14		1	Help	http://help.hydroshare.org/	\N	Help	t	2017-09-01 18:12:49.579765+00	2017-09-01 18:13:50.018396+00	2	2017-09-01 18:12:49+00	\N	\N	f	5	\N	1	Help	link	f
+15		1	About	http://help.hydroshare.org//about-hydroshare/	\N	About	t	2017-09-01 18:13:41.539301+00	2017-09-01 18:13:50.015184+00	2	2017-09-01 18:13:41.539168+00	\N	\N	f	6	\N	1	About	link	f
+7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	7	\N		Verify Account	richtextpage	f
 \.
 
 
@@ -13057,7 +13399,7 @@ COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, descrip
 -- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('pages_page_id_seq', 13, true);
+SELECT pg_catalog.setval('pages_page_id_seq', 15, true);
 
 
 --
@@ -13065,15 +13407,14 @@ SELECT pg_catalog.setval('pages_page_id_seq', 13, true);
 --
 
 COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
-5	<p>help</p>
 7	<p class="p1">Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.</p>\n<p class="p2"><a href="http://dev.hydroshare.org/hsapi/_internal/resend_verification_email/">Please click here if you do not receive a verification email within 1 hour.</a></p>
 3	<p>my-resources</p>
 11	<p>create resource</p>
-10	<h2 class="p1"><b>HydroShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
-9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
 12	<p>sign up</p>
 4	<p>Discover</p>
 13	<p>collaborate</p>
+9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
+10	<h2 class="p1"><b>HydroShare Statement of Privacy</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">HydroShare is operated by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI.  In the following these are referred to as participating institutions.</p>\n<p class="p2">We respect your privacy. We will only use your personal identification information to support and manage your use of hydroshare.org, including the use of tracking cookies to facilitate hydroshare.org security procedures. The HydroShare participating institutions and the National Science Foundation (which funds hydroshare.org development) regularly request hydroshare.org usages statistics and other information. Usage of hydroshare.org is monitored and usage statistics are collected and reported on a regular basis. Hydroshare.org also reserves the right to contact you to request additional information or to keep you updated on changes to Hydroshare.org. You may opt out of receiving newsletters and other non-essential communications. No information that would identify you personally will be provided to sponsors or third parties without your permission.</p>\n<p class="p2">While HydroShare uses policies and procedures to manage the access to content according to the access control settings set by users all information posted or stored on hydroshare.org is potentially available to other users of hydroshare.org and the public. The HydroShare participating institutions and hydroshare.org disclaim any responsibility for the preservation of confidentiality of such information. <i>Do not post or store information on hydroshare.org if you expect to or are obligated to protect the confidentiality of that information.</i></p>
 \.
 
 
@@ -13317,6 +13658,7 @@ SELECT pg_catalog.setval('theme_iconbox_id_seq', 1, false);
 --
 
 COPY theme_quotamessage (id, warning_content_prepend, grace_period_content_prepend, enforce_content_prepend, content, soft_limit_percent, hard_limit_percent, grace_period) FROM stdin;
+1	Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. Once your quota reaches 100% you will no longer be able to create new resources in HydroShare. 	You have exceeded your HydroShare quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. You have a grace period until {cut_off_date} to reduce your use to below your quota, or to acquire additional quota, after which you will no longer be able to create new resources in HydroShare. 	Your action was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. 	To request additional quota, please contact support@hydroshare.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.	80	125	7
 \.
 
 
@@ -13324,7 +13666,7 @@ COPY theme_quotamessage (id, warning_content_prepend, grace_period_content_prepe
 -- Name: theme_quotamessage_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('theme_quotamessage_id_seq', 1, false);
+SELECT pg_catalog.setval('theme_quotamessage_id_seq', 1, true);
 
 
 --
@@ -13348,7 +13690,7 @@ SELECT pg_catalog.setval('theme_siteconfiguration_id_seq', 1, true);
 --
 
 COPY theme_userprofile (id, picture, title, subject_areas, organization, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id, country, middle_name, state, user_type, website, create_irods_user_account) FROM stdin;
-4		\N	\N	\N	\N	\N	\N	\N	t		\N	4	\N	\N	\N	Unspecified	\N	f
+4		Research Software Engineer		RENCI		Mobile		Mobile	t			4	Unspecified		Unspecified			f
 \.
 
 
@@ -14711,6 +15053,30 @@ ALTER TABLE ONLY hs_file_types_genericlogicalfile
 
 
 --
+-- Name: hs_file_types_geofeaturefilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_geofeaturefilemetadata
+    ADD CONSTRAINT hs_file_types_geofeaturefilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_geofeaturelogicalfile
+    ADD CONSTRAINT hs_file_types_geofeaturelogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_geofeaturelogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_geofeaturelogicalfile
+    ADD CONSTRAINT hs_file_types_geofeaturelogicalfile_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_file_types_georasterfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -14756,6 +15122,30 @@ ALTER TABLE ONLY hs_file_types_netcdflogicalfile
 
 ALTER TABLE ONLY hs_file_types_netcdflogicalfile
     ADD CONSTRAINT hs_file_types_netcdflogicalfile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_reftimeseriesfilemetadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeseriesfilemetadata
+    ADD CONSTRAINT hs_file_types_reftimeseriesfilemetadata_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_metadata_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile
+    ADD CONSTRAINT hs_file_types_reftimeserieslogicalfile_metadata_id_key UNIQUE (metadata_id);
+
+
+--
+-- Name: hs_file_types_reftimeserieslogicalfile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile
+    ADD CONSTRAINT hs_file_types_reftimeserieslogicalfile_pkey PRIMARY KEY (id);
 
 
 --
@@ -14807,14 +15197,6 @@ ALTER TABLE ONLY hs_geo_raster_resource_rastermetadata
 
 
 --
--- Name: hs_geographic_feature_res_content_type_id_28e85abff23b5f53_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
-    ADD CONSTRAINT hs_geographic_feature_res_content_type_id_28e85abff23b5f53_uniq UNIQUE (content_type_id, object_id);
-
-
---
 -- Name: hs_geographic_feature_res_content_type_id_304dc81d9f5c66f1_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -14860,14 +15242,6 @@ ALTER TABLE ONLY hs_geographic_feature_resource_geometryinformation
 
 ALTER TABLE ONLY hs_geographic_feature_resource_originalcoverage
     ADD CONSTRAINT hs_geographic_feature_resource_originalcoverage_pkey PRIMARY KEY (id);
-
-
---
--- Name: hs_geographic_feature_resource_originalfileinfo_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
-    ADD CONSTRAINT hs_geographic_feature_resource_originalfileinfo_pkey PRIMARY KEY (id);
 
 
 --
@@ -17148,13 +17522,6 @@ CREATE INDEX hs_geographic_feature_resource_originalcoverage_417f1b1c ON hs_geog
 
 
 --
--- Name: hs_geographic_feature_resource_originalfileinfo_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_geographic_feature_resource_originalfileinfo_417f1b1c ON hs_geographic_feature_resource_originalfileinfo USING btree (content_type_id);
-
-
---
 -- Name: hs_labels_userresourceflags_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -17769,6 +18136,14 @@ ALTER TABLE ONLY ref_ts_reftsmetadata
 
 
 --
+-- Name: D14f4d644c6fd8096a3e6064242122ef; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_geofeaturelogicalfile
+    ADD CONSTRAINT "D14f4d644c6fd8096a3e6064242122ef" FOREIGN KEY (metadata_id) REFERENCES hs_file_types_geofeaturefilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D160961fcba05fdd989826403bd5f914; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -18238,6 +18613,14 @@ ALTER TABLE ONLY auth_user_groups
 
 ALTER TABLE ONLY auth_user_user_permissions
     ADD CONSTRAINT auth_user_user_permiss_user_id_7f0938558328534a_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: b20d482030b02e9f2ccb0e6458b6c281; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_file_types_reftimeserieslogicalfile
+    ADD CONSTRAINT b20d482030b02e9f2ccb0e6458b6c281 FOREIGN KEY (metadata_id) REFERENCES hs_file_types_reftimeseriesfilemetadata(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -19110,14 +19493,6 @@ ALTER TABLE ONLY hs_geo_raster_resource_cellinformation
 
 ALTER TABLE ONLY hs_geographic_feature_resource_fieldinformation
     ADD CONSTRAINT hs_g_content_type_id_322c34901bfae5cb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs_g_content_type_id_3a67e16436568536_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_geographic_feature_resource_originalfileinfo
-    ADD CONSTRAINT hs_g_content_type_id_3a67e16436568536_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
