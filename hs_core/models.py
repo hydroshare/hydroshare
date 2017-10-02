@@ -1754,7 +1754,8 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
                 # TODO: Should it be run when a NetcdfResource becomes private?
                 # Anwser to TODO above: it is intentional not to run it when a target resource
                 # becomes private for performance reasons. The nightly script run will clean up
-                # to make sure all private resources are not available to hyrax server.
+                # to make sure all private resources are not available to hyrax server as well as to make sure all resources files available to hyrax server are up to date with the HydroShare iRODS data store.
+
                 # run script to update hyrax input files when private netCDF resource becomes
                 # public or private composite resource that includes netCDF files becomes public
 
