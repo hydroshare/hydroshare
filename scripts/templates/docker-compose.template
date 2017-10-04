@@ -15,8 +15,8 @@ solr:
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
-  ports:
-    - "8983"
+  # ports:
+    # - "8983"
   command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
 hydroshare:
   build: .
