@@ -1,10 +1,8 @@
 import os
-import sqlite3
 import shutil
 import logging
 import csv
 from dateutil import parser
-import tempfile
 
 from django.dispatch import receiver
 
@@ -12,13 +10,12 @@ from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, post_add_files_to_resource, post_create_resource, \
     pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare import utils, delete_resource_file_only
-from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, \
-    CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
-    CVAggregationStatistic, TimeSeriesMetaData
+from hs_app_timeseries.models import TimeSeriesResource, TimeSeriesMetaData
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
-from hs_file_types.models.timeseries import extract_metadata, validate_odm2_db_file
+from hs_file_types.models.timeseries import extract_metadata, validate_odm2_db_file, \
+    extract_cv_metadata_from_blank_sqlite_file, validate_csv_file
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
 
@@ -150,7 +147,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                delete_existing_metadata=True):
     # get the csv file from iRODS to a temp directory
     fl_obj_name = utils.get_file_from_irods(res_file)
-    validate_err_message = _validate_csv_file(resource, fl_obj_name)
+    validate_err_message = validate_csv_file(fl_obj_name)
     if not validate_err_message:
         # first delete relevant existing metadata elements
         if delete_existing_metadata:
@@ -164,64 +161,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
         resource.add_blank_sqlite_file(user)
 
         # populate CV metadata django models from the blank sqlite file
-
-        # copy the blank sqlite file to a temp directory
-        temp_dir = tempfile.mkdtemp()
-        odm2_sqlite_file_name = 'ODM2.sqlite'
-        odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
-        target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
-        shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
-
-        con = sqlite3.connect(target_temp_sqlite_file)
-        with con:
-            # get the records in python dictionary format
-            con.row_factory = sqlite3.Row
-            cur = con.cursor()
-
-            # populate the lookup CV tables that are needed later for metadata editing
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableType', CVVariableType)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableName', CVVariableName)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_Speciation', CVSpeciation)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_SiteType', CVSiteType)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_ElevationDatum',
-                                     CVElevationDatum)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_MethodType', CVMethodType)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_UnitsType', CVUnitsType)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_Status', CVStatus)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_Medium', CVMedium)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
-                                     CVAggregationStatistic)
-
-        # save some data from the csv file
-        with open(fl_obj_name, 'r') as fl_obj:
-            csv_reader = csv.reader(fl_obj, delimiter=',')
-            # read the first row - header
-            header = csv_reader.next()
-            # read the 1st data row
-            start_date_str = csv_reader.next()[0]
-            last_row = None
-            data_row_count = 1
-            for row in csv_reader:
-                last_row = row
-                data_row_count += 1
-            end_date_str = last_row[0]
-
-            # save the series names along with number of data points for each series
-            # columns starting with the 2nd column are data series names
-            value_counts = {}
-            for data_col_name in header[1:]:
-                value_counts[data_col_name] = str(data_row_count)
-
-            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(
-                value_counts=value_counts)
-
-            # create the temporal coverage element
-            resource.metadata.create_element('coverage', type='period',
-                                             value={'start': start_date_str, 'end': end_date_str})
-
-        # cleanup the temp sqlite file directory
-        if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
+        extract_cv_metadata_from_blank_sqlite_file(resource)
 
     else:  # file validation failed
         # delete the invalid file just uploaded
@@ -318,13 +258,6 @@ def _validate_metadata(request, element_name):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-
-def _create_cv_lookup_models(sql_cur, metadata_obj, table_name, model_class):
-    sql_cur.execute("SELECT Term, Name FROM {}".format(table_name))
-    table_rows = sql_cur.fetchall()
-    for row in table_rows:
-        model_class.objects.create(metadata=metadata_obj, term=row['Term'], name=row['Name'])
 
 
 def _delete_extracted_metadata(resource):

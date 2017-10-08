@@ -3,6 +3,9 @@ import shutil
 import logging
 import sqlite3
 from lxml import etree
+import csv
+from dateutil import parser
+import tempfile
 
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
@@ -486,10 +489,15 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             raise ValidationError("Selected file must be part of a generic file type.")
 
         # get the file from irods to temp dir
-        temp_sqlite_file = utils.get_file_from_irods(res_file)
+        temp_res_file = utils.get_file_from_irods(res_file)
         # hold on to temp dir for final clean up
-        temp_dir = os.path.dirname(temp_sqlite_file)
-        validate_err_message = validate_odm2_db_file(temp_sqlite_file)
+        temp_dir = os.path.dirname(temp_res_file)
+        if res_file.extension == '.sqlite':
+            validate_err_message = validate_odm2_db_file(temp_res_file)
+        else:
+            # file must be a csv file
+            validate_err_message = validate_csv_file(temp_res_file)
+
         if validate_err_message is not None:
             log.error(validate_err_message)
             # remove temp dir
@@ -513,7 +521,7 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             logical_file.dataset_name = base_file_name
             logical_file.save()
             try:
-                # create a folder for the geofeature file type using the base file
+                # create a folder for the timeseries file type using the base file
                 # name as the name for the new folder
                 new_folder_path = cls.compute_file_type_folder(resource, file_folder,
                                                                base_file_name)
@@ -525,9 +533,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                     upload_folder = new_folder_name
                 else:
                     upload_folder = os.path.join(file_folder, new_folder_name)
-                # add the sqlite file to the resource
-                uploaded_file = UploadedFile(file=open(temp_sqlite_file, 'rb'),
-                                             name=os.path.basename(temp_sqlite_file))
+
+                # add the file to the resource
+                uploaded_file = UploadedFile(file=open(temp_res_file, 'rb'),
+                                             name=os.path.basename(temp_res_file))
                 new_res_file = utils.add_file_to_resource(
                     resource, uploaded_file, folder=upload_folder
                 )
@@ -535,15 +544,24 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 # make each resource file we added part of the logical file
                 logical_file.add_resource_file(new_res_file)
 
-                log.info("TimeSeries file type - sqlite file was added to the file type.")
-                extract_err_message = extract_metadata(resource, temp_sqlite_file, logical_file)
+                # add the blank sqlite file
+                if res_file.extension == '.csv':
+                    new_res_file = add_blank_sqlite_file(resource, upload_folder)
+                    logical_file.add_resource_file(new_res_file)
+
+                info_msg = "TimeSeries file type - {} file was added to the file type."
+                info_msg = info_msg.format(res_file.extension[1:])
+                log.info(info_msg)
+                if res_file.extension == ".sqlite":
+                    extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
+
                 if extract_err_message:
                     raise ValidationError(extract_err_message)
 
                 log.info("TimeSeries file type and resource level metadata updated.")
                 # delete the original sqlite file used as part of setting file type
                 delete_resource_file(resource.short_id, file_id, user)
-                log.info("Deleted original sqlite file.")
+                log.info("Deleted original resource file.")
                 file_type_success = True
             except Exception as ex:
                 msg = msg.format(ex.message)
@@ -614,6 +632,94 @@ def validate_odm2_db_file(sqlite_file_path):
     except Exception, e:
         log.error(e.message)
         return e.message
+
+
+def validate_csv_file(csv_file_path):
+    err_message = "Uploaded file is not a valid timeseries csv file."
+    log = logging.getLogger()
+    with open(csv_file_path, 'r') as fl_obj:
+        csv_reader = csv.reader(fl_obj, delimiter=',')
+        # read the first row
+        header = csv_reader.next()
+        header = [el.strip() for el in header]
+        if any(len(h) == 0 for h in header):
+            err_message += " Column heading is missing."
+            log.error(err_message)
+            return err_message
+
+        # check that there are at least 2 headings
+        if len(header) < 2:
+            err_message += " There needs to be at least 2 columns of data."
+            log.error(err_message)
+            return err_message
+
+        # check the header has only string values
+        for hdr in header:
+            try:
+                float(hdr)
+                err_message += " Column heading must be a string."
+                log.error(err_message)
+                return err_message
+            except ValueError:
+                pass
+
+        # check that there are no duplicate column headings
+        if len(header) != len(set(header)):
+            err_message += " There are duplicate column headings."
+            log.error(err_message)
+            return err_message
+
+        # process data rows
+        for row in csv_reader:
+            # check that data row has the same number of columns as the header
+            if len(row) != len(header):
+                err_message += " Number of columns in the header is not same as the data columns."
+                log.error(err_message)
+                return err_message
+            # check that the first column data is of type datetime
+            try:
+                parser.parse(row[0])
+            except Exception:
+                err_message += " Data for the first column must be a date value."
+                log.error(err_message)
+                return err_message
+
+            # check that the data values (2nd column onwards) are of numeric
+            for data_value in row[1:]:
+                try:
+                    float(data_value)
+                except ValueError:
+                    err_message += " Data values must be numeric."
+                    log.error(err_message)
+                    return err_message
+
+    return None
+
+
+def add_blank_sqlite_file(resource, upload_folder):
+    """add the blank SQLite file to the resource to the specified folder **upload_folder**
+    :param  upload_folder: folder to which the blank sqlite file needs to be uploaded
+    :return the uploaded resource file object - an instance of ResourceFile
+    """
+
+    log = logging.getLogger()
+
+    # add the sqlite file to the resource
+    odm2_sqlite_file_name = 'ODM2.sqlite'
+    odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+
+    try:
+        uploaded_file = UploadedFile(file=open(odm2_sqlite_file, 'rb'),
+                                     name=os.path.basename(odm2_sqlite_file))
+        new_res_file = utils.add_file_to_resource(
+            resource, uploaded_file, folder=upload_folder
+        )
+
+        log.info("Blank SQLite file was added.")
+        return new_res_file
+    except Exception as ex:
+        log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
+        raise ex
 
 
 def extract_metadata(resource, sqlite_file_name, logical_file=None):
@@ -887,6 +993,77 @@ def extract_metadata(resource, sqlite_file_name, logical_file=None):
     except Exception as ex:
         log.error(ex.message)
         return err_message
+
+
+def extract_cv_metadata_from_blank_sqlite_file(target):
+    """extracts CV metadata from the blank sqlite file and populates the django metadata
+    models - this function is applicable only in the case of a CSV file being used as the
+    source of time series data
+    :param  target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    """
+
+    # find the csv file
+    csv_res_file = None
+    for f in target.files.all():
+        if f.extension == ".csv":
+            csv_res_file = f
+            break
+    if csv_res_file is None:
+        raise Exception("No CSV file was found")
+
+    # copy the blank sqlite file to a temp directory
+    temp_dir = tempfile.mkdtemp()
+    odm2_sqlite_file_name = 'ODM2.sqlite'
+    odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+    target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
+    shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
+
+    con = sqlite3.connect(target_temp_sqlite_file)
+    with con:
+        # get the records in python dictionary format
+        con.row_factory = sqlite3.Row
+        cur = con.cursor()
+
+        # populate the lookup CV tables that are needed later for metadata editing
+        target.metadata.create_cv_lookup_models(cur)
+
+    # save some data from the csv file
+    # get the csv file from iRODS to a temp directory
+    temp_csv_file = utils.get_file_from_irods(csv_res_file)
+    with open(temp_csv_file, 'r') as fl_obj:
+        csv_reader = csv.reader(fl_obj, delimiter=',')
+        # read the first row - header
+        header = csv_reader.next()
+        # read the 1st data row
+        start_date_str = csv_reader.next()[0]
+        last_row = None
+        data_row_count = 1
+        for row in csv_reader:
+            last_row = row
+            data_row_count += 1
+        end_date_str = last_row[0]
+
+        # save the series names along with number of data points for each series
+        # columns starting with the 2nd column are data series names
+        value_counts = {}
+        for data_col_name in header[1:]:
+            value_counts[data_col_name] = str(data_row_count)
+
+        metadata_obj = target.metadata
+        metadata_obj.value_counts = value_counts
+        metadata_obj.save()
+
+        # create the temporal coverage element
+        target.metadata.create_element('coverage', type='period',
+                                       value={'start': start_date_str, 'end': end_date_str})
+
+    # cleanup the temp sqlite file directory
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+
+    # cleanup the temp csv file
+    if os.path.exists(temp_csv_file):
+        shutil.rmtree(os.path.dirname(temp_csv_file))
 
 
 def _extract_creators_contributors(resource, cur, file_type=False):
