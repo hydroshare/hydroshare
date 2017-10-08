@@ -89,7 +89,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         series_id = kwargs.get('series_id', None)
         if series_id is None:
             series_id = self.series_ids_with_labels.keys()[0]
-        elif series_id not in self.series_ids:
+        elif series_id not in self.series_ids_with_labels.keys():
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         html_string = super(TimeSeriesFileMetaData, self).get_html()
@@ -112,23 +112,23 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                 # create 1st column of the row
                 with div(cls="col-md-6 col-xs-12"):
                     # generate html for display of site element
-                    legend("Site")
                     site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
                     if site:
+                        legend("Site")
                         site.get_html()
 
                     # generate html for variable element
-                    legend("Variable")
                     variable = self.get_element_by_series_id(series_id=series_id,
                                                              elements=self.variables)
                     if variable:
+                        legend("Variable")
                         variable.get_html()
 
                     # generate html for method element
-                    legend("Method")
                     method = self.get_element_by_series_id(series_id=series_id,
                                                            elements=self.methods)
                     if method:
+                        legend("Method")
                         method.get_html()
 
                 # create 2nd column of the row
@@ -160,11 +160,10 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         series_id = kwargs.get('series_id', None)
         if series_id is None:
             series_id = self.series_ids_with_labels.keys()[0]
-        elif series_id not in self.series_ids:
+        elif series_id not in self.series_ids_with_labels.keys():
             raise ValidationError("Series id:{} is not a valid series id".format(series_id))
 
         root_div = div("{% load crispy_forms_tags %}")
-        # TODO: implement metadata editing html for remaining elements
         with root_div:
             self.get_update_sqlite_file_html_form()
             super(TimeSeriesFileMetaData, self).get_html_forms(temporal_coverage=False)
@@ -243,26 +242,13 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
 
         template = Template(root_div.render(pretty=True))
         context_dict = dict()
-        site = self.get_element_by_series_id(series_id=series_id, elements=self.sites)
-        if site:
-            context_dict["site_form"] = create_site_form(self.logical_file, series_id)
-
-        variable = self.get_element_by_series_id(series_id=series_id, elements=self.variables)
-        if variable:
-            context_dict["variable_form"] = create_variable_form(self.logical_file, series_id)
-        method = self.get_element_by_series_id(series_id=series_id, elements=self.methods)
-        if method:
-            context_dict["method_form"] = create_method_form(self.logical_file, series_id)
-        proc_level = self.get_element_by_series_id(series_id=series_id,
-                                                   elements=self.processing_levels)
-        if proc_level:
-            context_dict["processinglevel_form"] = create_processing_level_form(self.logical_file,
-                                                                                series_id)
-        ts_result = self.get_element_by_series_id(series_id=series_id,
-                                                  elements=self.time_series_results)
-        if ts_result:
-            context_dict["timeseriesresult_form"] = create_timeseries_result_form(self.logical_file,
-                                                                                  series_id)
+        context_dict["site_form"] = create_site_form(self.logical_file, series_id)
+        context_dict["variable_form"] = create_variable_form(self.logical_file, series_id)
+        context_dict["method_form"] = create_method_form(self.logical_file, series_id)
+        context_dict["processinglevel_form"] = create_processing_level_form(self.logical_file,
+                                                                            series_id)
+        context_dict["timeseriesresult_form"] = create_timeseries_result_form(self.logical_file,
+                                                                              series_id)
         context = Context(context_dict)
         return template.render(context)
 
@@ -273,7 +259,11 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         root_div = div(id="div-series-selection-file_type", cls="content-block col-xs-12 col-sm-12",
                        style="margin-top:10px;")
         heading = "Select a timeseries to see corresponding metadata (Number of time series:{})"
-        heading = heading.format(str(self.time_series_results.count()))
+        if self.series_names:
+            time_series_count = len(self.series_names)
+        else:
+            time_series_count = self.time_series_results.count()
+        heading = heading.format(str(time_series_count))
         with root_div:
             strong(heading)
             action_url = "/hsapi/_internal/{logical_file_id}/series_id/resource_mode/"
@@ -313,7 +303,10 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         form_action = "/hsapi/_internal/{}/update-timeseries-abstract/"
         form_action = form_action.format(self.logical_file.id)
         root_div = div(cls="col-xs-12")
-
+        if self.abstract:
+            abstract = self.abstract
+        else:
+            abstract = ''
         with root_div:
             with form(action=form_action, id="filetype-abstract",
                       method="post", enctype="multipart/form-data"):
@@ -322,7 +315,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                     with div(cls="control-group"):
                         legend('Abstract')
                         with div(cls="controls"):
-                            textarea(self.abstract,
+                            textarea(abstract,
                                      cls="form-control input-sm textinput textInput",
                                      id="file_abstract", cols=40, rows=5,
                                      name="abstract")
@@ -554,12 +547,14 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
                 log.info(info_msg)
                 if res_file.extension == ".sqlite":
                     extract_err_message = extract_metadata(resource, temp_res_file, logical_file)
-
-                if extract_err_message:
-                    raise ValidationError(extract_err_message)
+                    if extract_err_message:
+                        raise ValidationError(extract_err_message)
+                else:
+                    # populate CV metadata django models from the blank sqlite file
+                    extract_cv_metadata_from_blank_sqlite_file(logical_file)
 
                 log.info("TimeSeries file type and resource level metadata updated.")
-                # delete the original sqlite file used as part of setting file type
+                # delete the original sqlite/csv file used as part of setting file type
                 delete_resource_file(resource.short_id, file_id, user)
                 log.info("Deleted original resource file.")
                 file_type_success = True
@@ -1265,9 +1260,11 @@ def create_site_form(target, selected_series_id):
     if isinstance(target, TimeSeriesLogicalFile):
         res_short_id = None
         file_type = True
+        target_id = target.id
     else:
         res_short_id = target.short_id
         file_type = False
+        target_id = target.short_id
 
     if target.metadata.sites:
         site = target.metadata.sites.filter(
@@ -1281,10 +1278,6 @@ def create_site_form(target, selected_series_id):
                              selected_series_id=selected_series_id,
                              file_type=file_type)
 
-        if file_type:
-            target_id = target.id
-        else:
-            target_id = target.short_id
         if site is not None:
             site_form.action = _get_element_update_form_action('site', target_id, site.id,
                                                                file_type=file_type)
@@ -1293,6 +1286,8 @@ def create_site_form(target, selected_series_id):
             site_form.set_dropdown_widgets(site_form.initial['site_type'],
                                            site_form.initial['elevation_datum'])
         else:
+            site_form.action = _get_element_create_form_action('site', target_id,
+                                                               file_type=file_type)
             site_form.set_dropdown_widgets()
 
     else:
@@ -1304,6 +1299,7 @@ def create_site_form(target, selected_series_id):
                              selected_series_id=selected_series_id,
                              file_type=file_type)
 
+        site_form.action = _get_element_create_form_action('site', target_id, file_type=file_type)
         site_form.set_dropdown_widgets()
     return site_form
 
@@ -1319,9 +1315,11 @@ def create_variable_form(target, selected_series_id):
     if isinstance(target, TimeSeriesLogicalFile):
         res_short_id = None
         file_type = True
+        target_id = target.id
     else:
         res_short_id = target.short_id
         file_type = False
+        target_id = target.short_id
 
     if target.metadata.variables:
         variable = target.metadata.variables.filter(
@@ -1337,11 +1335,6 @@ def create_variable_form(target, selected_series_id):
             selected_series_id=selected_series_id,
             file_type=file_type)
 
-        if file_type:
-            target_id = target.id
-        else:
-            target_id = target.short_id
-
         if variable is not None:
             variable_form.action = _get_element_update_form_action('variable', target_id,
                                                                    variable.id, file_type=file_type)
@@ -1352,6 +1345,8 @@ def create_variable_form(target, selected_series_id):
                                                variable_form.initial['speciation'])
         else:
             # this case can only happen in case of csv upload
+            variable_form.action = _get_element_create_form_action('variable', target_id,
+                                                                   file_type=file_type)
             variable_form.set_dropdown_widgets()
     else:
         # this case can happen only in case of CSV upload
@@ -1364,6 +1359,8 @@ def create_variable_form(target, selected_series_id):
                                      selected_series_id=selected_series_id,
                                      file_type=file_type)
 
+        variable_form.action = _get_element_create_form_action('variable', target_id,
+                                                               file_type=file_type)
         variable_form.set_dropdown_widgets()
 
     return variable_form
@@ -1382,9 +1379,11 @@ def create_method_form(target, selected_series_id):
     if isinstance(target, TimeSeriesLogicalFile):
         res_short_id = None
         file_type = True
+        target_id = target.id
     else:
         res_short_id = target.short_id
         file_type = False
+        target_id = target.short_id
 
     if target.metadata.methods:
         method = target.metadata.methods.filter(
@@ -1397,11 +1396,6 @@ def create_method_form(target, selected_series_id):
                                  selected_series_id=selected_series_id,
                                  file_type=file_type)
 
-        if file_type:
-            target_id = target.id
-        else:
-            target_id = target.short_id
-
         if method is not None:
             method_form.action = _get_element_update_form_action('method', target_id, method.id,
                                                                  file_type=file_type)
@@ -1409,6 +1403,8 @@ def create_method_form(target, selected_series_id):
             method_form.set_dropdown_widgets(method_form.initial['method_type'])
         else:
             # this case can only happen in case of csv upload
+            method_form.action = _get_element_create_form_action('method', target_id,
+                                                                 file_type=file_type)
             method_form.set_dropdown_widgets()
     else:
         # this case can happen only in case of CSV upload
@@ -1417,6 +1413,8 @@ def create_method_form(target, selected_series_id):
                                  cv_method_types=target.metadata.cv_method_types.all(),
                                  selected_series_id=selected_series_id, file_type=file_type)
 
+        method_form.action = _get_element_create_form_action('method', target_id,
+                                                             file_type=file_type)
         method_form.set_dropdown_widgets()
     return method_form
 
@@ -1433,9 +1431,11 @@ def create_processing_level_form(target, selected_series_id):
     if isinstance(target, TimeSeriesLogicalFile):
         res_short_id = None
         file_type = True
+        target_id = target.id
     else:
         res_short_id = target.short_id
         file_type = False
+        target_id = target.short_id
 
     if target.metadata.processing_levels:
         pro_level = target.metadata.processing_levels.filter(
@@ -1449,23 +1449,24 @@ def create_processing_level_form(target, selected_series_id):
             selected_series_id=selected_series_id,
             file_type=file_type)
 
-        if file_type:
-            target_id = target.id
-        else:
-            target_id = target.short_id
-
         if pro_level is not None:
             processing_level_form.action = _get_element_update_form_action('processinglevel',
                                                                            target_id,
                                                                            pro_level.id,
                                                                            file_type=file_type)
             processing_level_form.number = pro_level.id
+        else:
+            processing_level_form.action = _get_element_create_form_action('processinglevel',
+                                                                           target_id,
+                                                                           file_type=file_type)
     else:
         # this case can happen only in case of CSV upload
         processing_level_form = ProcessingLevelForm(instance=None, res_short_id=res_short_id,
                                                     element_id=None,
                                                     selected_series_id=selected_series_id,
                                                     file_type=file_type)
+        processing_level_form.action = _get_element_create_form_action('processinglevel', target_id,
+                                                                       file_type=file_type)
 
     return processing_level_form
 
@@ -1481,9 +1482,11 @@ def create_timeseries_result_form(target, selected_series_id):
     if isinstance(target, TimeSeriesLogicalFile):
         res_short_id = None
         file_type = True
+        target_id = target.id
     else:
         res_short_id = target.short_id
         file_type = False
+        target_id = target.short_id
 
     time_series_result = target.metadata.time_series_results.filter(
         series_ids__contains=[selected_series_id]).first()
@@ -1497,11 +1500,6 @@ def create_timeseries_result_form(target, selected_series_id):
         cv_statuses=target.metadata.cv_statuses.all(),
         selected_series_id=selected_series_id,
         file_type=file_type)
-
-    if file_type:
-        target_id = target.id
-    else:
-        target_id = target.short_id
 
     if time_series_result is not None:
         timeseries_result_form.action = _get_element_update_form_action('timeseriesresult',
@@ -1528,6 +1526,9 @@ def create_timeseries_result_form(target, selected_series_id):
         timeseries_result_form.set_dropdown_widgets()
         timeseries_result_form.set_series_label(selected_series_label)
         timeseries_result_form.set_value_count(ts_result_value_count)
+        timeseries_result_form.action = _get_element_create_form_action('timeseriesresult',
+                                                                        target_id,
+                                                                        file_type=file_type)
     return timeseries_result_form
 
 
@@ -1661,3 +1662,17 @@ def _get_element_update_form_action(element_name, target_id, element_id, file_ty
                  "{element_id}/update-file-metadata/"
         return action.format(logical_file_id=target_id, element_name=element_name,
                              element_id=element_id)
+
+
+def _get_element_create_form_action(element_name, target_id, file_type=False):
+    if not file_type:
+        # TimeSeries resource level metadata update
+        # target_id is resource short_id
+        action = "/hsapi/_internal/{res_id}/{element_name}/create-metadata/"
+        return action.format(res_id=target_id, element_name=element_name)
+    else:
+        # Time series file type metadata update
+        # target_id is logical file object id
+        action = "/hsapi/_internal/TimeSeriesLogicalFile/{logical_file_id}/{element_name}/" \
+                 "add-file-metadata/"
+        return action.format(logical_file_id=target_id, element_name=element_name)

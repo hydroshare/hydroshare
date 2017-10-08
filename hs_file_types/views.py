@@ -722,10 +722,13 @@ def get_timeseries_metadata(request, file_type_id, series_id, resource_mode):
     logical_file, json_response = _get_logical_file("TimeSeriesLogicalFile", file_type_id)
     if json_response is not None:
         return json_response
-    if series_id not in logical_file.metadata.series_ids:
-        err_msg = "Invalid time series id."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    series_ids = logical_file.metadata.series_ids_with_labels
+    if series_id not in series_ids.keys():
+        # this will happen only in case of CSV file upload when data is written
+        # first time to the blank sqlite file as the series ids get changed to
+        # uuids
+        series_id = series_ids.keys()[0]
     try:
         if resource_mode == 'view':
             metadata = logical_file.metadata.get_html(series_id=series_id)
