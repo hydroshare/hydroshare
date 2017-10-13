@@ -335,9 +335,7 @@ function bindFileBrowserItemEvents() {
                     $("#id_east_filetype").attr("data-map-item", "longitude");
                     $("#id_north_filetype").attr("data-map-item", "latitude");
 
-                    $("#id-coverage-spatial-filetype input:radio").trigger("change");
-
-
+                    updateEditCoverageState();
 
                     $("#id-coverage-spatial-filetype").coordinatesPicker();
                 }

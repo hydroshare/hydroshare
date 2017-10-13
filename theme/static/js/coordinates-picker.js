@@ -162,6 +162,9 @@ $(document).ready(function () {
                 currentInstance.find("input[data-map-item='eastlimit']").val(bounds.east.toFixed(4));
                 currentInstance.find("input[data-map-item='southlimit']").val(bounds.south.toFixed(4));
                 currentInstance.find("input[data-map-item='westlimit']").val(bounds.west.toFixed(4));
+
+                // Issue a text change
+                currentInstance.find("input[data-map-item='northlimit']").trigger("change");
                 $('#coordinates-picker-modal').modal('hide')
             });
         }
@@ -170,6 +173,9 @@ $(document).ready(function () {
             $("#btn-confirm-coordinates").click(function () {
                 currentInstance.find("input[data-map-item='longitude']").val(coordinates.lng().toFixed(4));
                 currentInstance.find("input[data-map-item='latitude']").val(coordinates.lat().toFixed(4));
+
+                // Issue a text change
+                currentInstance.find("input[data-map-item='latitude']").trigger("change");
                 $('#coordinates-picker-modal').modal('hide')
             });
         }
