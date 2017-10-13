@@ -1375,7 +1375,7 @@ function initializeDatePickers(){
 function setFileTypeSpatialCoverageFormFields(logical_type){
     // Don't allow the user to change the coverage type
     var $id_type_filetype_div = $("#id_type_filetype");
-
+    console.log("set");
     if (logical_type !== "GenericLogicalFile"){
         // don't allow changing coverage type
         $id_type_filetype_div.parent().closest("div").css('pointer-events', 'none');
@@ -1390,24 +1390,32 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(function () {
-        if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
-            // coverage type is box
-            $("#id_north_filetype").parent().closest("#div_id_north").hide();
-            $("#id_east_filetype").parent().closest("#div_id_east").hide();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
-        }
-        else {
-            // coverage type is point
-            $("#id_north_filetype").parent().closest("#div_id_north").show();
-            $("#id_east_filetype").parent().closest("#div_id_east").show();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
-        }
+            // Set state for composite resource file metadata editing
+            if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
+                $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
+            }
+            else {
+                $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
+            }
+
+            if ($(this).val() == 'box' && $(this).attr("checked") == "checked") {
+                // coverage type is box
+                $("#id_north_filetype").parent().closest("#div_id_north").hide();
+                $("#id_east_filetype").parent().closest("#div_id_east").hide();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
+            }
+            else {
+                // coverage type is point
+                $("#id_north_filetype").parent().closest("#div_id_north").show();
+                $("#id_east_filetype").parent().closest("#div_id_east").show();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+            }
         });
     }
 

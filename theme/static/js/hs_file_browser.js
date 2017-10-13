@@ -328,6 +328,18 @@ function bindFileBrowserItemEvents() {
                 // check if this is a left mouse button click
                 if(e.which == 1) {
                     showFileTypeMetadata();
+                    $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
+                    $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
+                    $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
+                    $("#id_westlimit_filetype").attr("data-map-item", "westlimit");
+                    $("#id_east_filetype").attr("data-map-item", "longitude");
+                    $("#id_north_filetype").attr("data-map-item", "latitude");
+
+                    $("#id-coverage-spatial-filetype input:radio").trigger("change");
+
+
+
+                    $("#id-coverage-spatial-filetype").coordinatesPicker();
                 }
             }
             else{
@@ -537,7 +549,6 @@ function showFileTypeMetadata(){
          }
 
          $("#div_id_type_filetype input:radio").trigger("change");
-
     });
 }
 
@@ -610,7 +621,6 @@ function sort(method, order) {
             else {
                 size1 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
                 size2 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
-
             }
 
             if (isNaN(size1)) size1 = 0;
