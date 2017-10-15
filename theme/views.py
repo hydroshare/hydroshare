@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate,logout as auth_logout, login as auth_login
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -30,7 +30,6 @@ from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
-from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
 from theme.utils import get_quota_message
@@ -38,22 +37,19 @@ from theme.utils import get_quota_message
 from .forms import SignupForm
 
 
+class HomePageView(TemplateView):
+    template_name = 'pages/homepage.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(HomePageView, self).get_context_data(**kwargs)
+        context['user'] = self.request.user
+        return context
+
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
 
-    def get_context_data(self, **kwargs):
-        if 'user' in kwargs:
-            try:
-                u = User.objects.get(pk=int(kwargs['user']))
-            except:
-                u = User.objects.get(username=kwargs['user'])
-
-        else:
-            try:
-                u = User.objects.get(pk=int(self.request.GET['user']))
-            except:
-                u = User.objects.get(username=self.request.GET['user'])
-
+    def get_context_data(self, user_id, **kwargs):
+        u = User.objects.get(pk=int(user_id))
         # get all resources the profile user owns
         resources = u.uaccess.owned_resources
         # get a list of groupmembershiprequests
@@ -80,39 +76,6 @@ class UserProfileView(TemplateView):
             'quota_message': get_quota_message(u),
             'group_membership_requests': group_membership_requests,
         }
-
-
-# added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
-def comment(request, template="generic/comments.html"):
-    """
-    Handle a ``ThreadedCommentForm`` submission and redirect back to its
-    related object.
-    """
-    response = initial_validation(request, "comment")
-    if isinstance(response, HttpResponse):
-        return response
-    obj, post_data = response
-    resource_mode = post_data.get('resource-mode', 'view')
-    request.session['resource-mode'] = resource_mode
-    form = ThreadedCommentForm(request, obj, post_data)
-    if form.is_valid():
-        url = obj.get_absolute_url()
-        if is_spam(request, form, url):
-            return redirect(url)
-        comment = form.save(request)
-        response = redirect(add_cache_bypass(comment.get_absolute_url()))
-        # Store commenter's details in a cookie for 90 days.
-        # for field in ThreadedCommentForm.cookie_fields:
-        #     cookie_name = ThreadedCommentForm.cookie_prefix + field
-        #     cookie_value = post_data.get(field, "")
-        #     set_cookie(response, cookie_name, cookie_value)
-        return response
-    elif request.is_ajax() and form.errors:
-        return HttpResponse(dumps({"errors": form.errors}))
-    # Show errors with stand-alone comment form.
-    context = {"obj": obj, "posted_comment_form": form}
-    response = render(request, template, context)
-    return response
 
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based rating form and view
@@ -155,7 +118,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
             new_user = form.save()
         except ValidationError as e:
             messages.error(request, e.message)
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+            return HttpResponseRedirect(reverse('home'))
         else:
             if not new_user.is_active:
                 if settings.ACCOUNTS_APPROVAL_REQUIRED:
@@ -191,7 +154,7 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
     # return render(request, template, context)
 
     # This one keeps the css but not able to retained user entered data.
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(reverse('home'))
 
 
 @login_required
@@ -265,7 +228,7 @@ def update_user_profile(request):
     except Exception as ex:
         messages.error(request, ex.message)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(reverse('profile', kwargs={'user_id':user.id}))
 
 
 def send_verification_mail_for_email_update(request, user, new_email, verification_type):
@@ -317,6 +280,11 @@ def login(request, template="accounts/account_login.html",
     return TemplateResponse(request, template, context)
 
 
+def logout(request):
+    auth_logout(request)
+    return HttpResponseRedirect(reverse('home'))
+
+
 def email_verify(request, new_email, uidb36=None, token=None):
     """
     View for the link in the verification email sent to a user
@@ -332,10 +300,10 @@ def email_verify(request, new_email, uidb36=None, token=None):
         auth_login(request, user)
         messages.info(request, _("Successfully updated email"))
         # redirect to user profile page
-        return HttpResponseRedirect('/user/{}/'.format(user.id))
+        return HttpResponseRedirect(reverse('profile', kwargs={'user_id':user.id}))
     else:
         messages.error(request, _("The link you clicked is no longer valid."))
-        return redirect("/")
+        return redirect(reverse('home'))
 
 
 @login_required
@@ -344,7 +312,7 @@ def deactivate_user(request):
     user.is_active = False
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
-    return HttpResponseRedirect('/accounts/logout/')
+    return HttpResponseRedirect(reverse('logout'))
 
 @login_required
 def delete_irods_account(request):

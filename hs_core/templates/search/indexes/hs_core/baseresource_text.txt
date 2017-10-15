@@ -38,10 +38,7 @@
 {% endif %} 
 {% if object.editors_count %}
     {{ object.editors_count }}
-{% endif %} 
-{% if object.comments_count %}
-    {{ object.comments_count }}
-{% endif %} 
+{% endif %}
 {% for creator in object.metadata.creators.all %}
     {% if creator.name %}
         {{ creator.name }}
@@ -136,11 +133,6 @@
 {% endfor %}
 {% for editor in object.raccess.edit_users.all %}
     {{ editor.first_name }} {{editor.last_name}}
-{% endfor %}
-{% for comment in object.comments.all %}
-    {% if comment %} 
-        {{ comment }}
-    {% endif %} 
 {% endfor %}
 {% if object.metadata.geometryinformation.geometryType  %}
     {{ object.metadata.geometryinformation.geometryType }}

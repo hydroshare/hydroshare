@@ -70,7 +70,7 @@ def get_resource_by_shortkey(shortkey, or_404=True):
         res = BaseResource.objects.get(short_id=shortkey)
     except BaseResource.DoesNotExist:
         if or_404:
-            raise Http404(shortkey)
+            raise Http404('Resource not found: {}'.format(shortkey))
         else:
             raise
     content = res.get_content_model()

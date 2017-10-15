@@ -1,18 +1,16 @@
-{% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags hydroshare_tags %}
+{% extends "base.html" %}
+{% load hydroshare_tags %}
+
 {% block title %}My Resources{% endblock %}
 
 {% block main %}
-
 <div class="container" id="main">
     <div class="row">
         <div class="col-sm-12">
-            <h2 class="page-title">My Resources
-                <small class="text-muted"><i>Interact with your HydroShare Content.</i></small>
-            </h2>
+            <h2 class="page-title">My Resources</h2>
         </div>
         <div class="col-lg-2" id="facets">
-            <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
+            <a class="btn btn-success" href="{% url 'create_resource' %}"><i class="fa fa-plus"></i> Create new</a>
 
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -183,7 +181,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                    {% for res in collection %}
+                    {% for res in my_resources %}
                         <tr class="data-row">
                             {# Selection controls #}
                             <td>
@@ -329,7 +327,7 @@
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                <strong><a href="{% url 'resource_detail' short_id=res.short_id %}">{{ res.metadata.title }}</a></strong>
                             </td>
                             {# First Author #}
                             {% if res.first_creator.description %}
@@ -397,14 +395,6 @@
             </table>
 
             <br>
-
-            <div class="alert alert-info">
-                <strong>
-                    <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
-                </strong>
-                <p>Public resources not owned are searchable from
-                    <strong><a href="/search">Discover</a></strong></p>
-            </div>
             {% include "includes/legend.html" %}
 
         </div>

@@ -6,15 +6,19 @@
 
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width">
-<meta name="keywords" content="{% block meta_keywords %}{% endblock %}">
-<meta name="description" content="{% block meta_description %}{% endblock %}">
-<title>{% block meta_title %}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
-<link rel="shortcut icon" href="{% static "img/favicon.png" %}">
 
-{% ifinstalled mezzanine.blog %}
-<link rel="alternate" type="application/rss+xml" title="RSS" href="{% url "blog_post_feed" "rss" %}">
-<link rel="alternate" type="application/atom+xml" title="Atom" href="{% url "blog_post_feed" "atom" %}">
-{% endifinstalled %}
+<meta name="keywords" content="{% block meta_keywords %}
+    {% for keyword in keywords %}
+        {% if not forloop.first %}, {% endif %}
+        {{ keyword }}
+    {% endfor %}
+{% endblock %}">
+<meta name="description" content="{% block meta_description %}{{ mega_description }}{% endblock %}">
+
+
+<title>{% block meta_title %}{{ title }}{% endblock %}{% if settings.SITE_TITLE %} | {{ settings.SITE_TITLE }}{% endif %}</title>
+
+<link rel="shortcut icon" href="{% static "img/favicon.png" %}">
 
 <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
 <link href="//netdna.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.css" rel="stylesheet">
@@ -81,81 +85,7 @@
                                                       alt="{{ settings.SITE_TITLE }}"/></a>
             </div>
             <div class="collapse navbar-collapse">
-                {% page_menu "pages/menus/dropdown.html" %}
-                {% comment %}
-                <!-- Search form for extra small screens -->
-                <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search" name="q">
-                        <span class="input-group-btn">
-                            <button class="hl-btn hl-btn-blue" type="button">Go!</button>
-                        </span>
-                    </div>
-                </form>
-                {% endcomment %}
-                <ul class="nav navbar-nav navbar-right hidden-xs">
-                    {% ifinstalled mezzanine.accounts %}
-                    {% if request.user.is_authenticated %}
-                        <li id="profile-menu" class="display-block">
-                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                         class="round-image profile-pic-thumbnail pull-left">
-                                    </div>
-                                </a>
-                            {% else %}
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
-                                </a>
-                            {% endif %}
-                            <ul class="dropdown-menu arrow_box">
-                                <li class="account">
-                                    <div class="row">
-                                        <div class="col-sm-4">
-                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="col-sm-8">
-                                            <div id="profile-menu-fullname">{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</div>
-                                            {% if request.user.email %}
-                                                <div id="profile-menu-email" class="text-muted">{{ request.user.email }}</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="dropdown-footer">
-                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
-                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
-                                            <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                    {% else %}
-                    <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
-                    <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
-                    {% endif %}
-                    {% endifinstalled %}
-                    {% comment %}
-                    <!-- Search Button -->
-                    <li id="search">
-                        <a href="#" id="search-btn" onclick="return false;"><i class="fa fa-search" id="search-icon"></i> Search</a>
-                        <div class="search-box" id="search-box">
-                            <form class="input-group"role="search" action="{% url 'search' %}">
-                                <input type="text" class="form-control" placeholder="Search" name="q">
-                                <span class="input-group-btn">
-                                    <button class="hl-btn hl-btn-default" type="button">Go!</button>
-                                </span>
-                            </form>
-                        </div>
-                    </li>
-                    {% endcomment %}
-                </ul>
+                {%  include 'nopages/nav_menu.html' %}
             </div>
         </div>
     </div>
@@ -195,94 +125,76 @@
         <div class="container">
             <div class="row">
                 <!-- Contact Us
-                =================  -->
+                    =================  -->
                 <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col1_heading siteconf.col1_content %}
                     <div class="headline">
-                        <h3>{{ siteconf.col1_heading }}</h3>
+                        <h3>
+                            Contact us
+                        </h3>
                     </div>
                     <div class="content">
-                        {{ siteconf.col1_content|richtext_filters|safe }}
+                        <p class="p1">
+                            Email us at <a href="mailto:support@hydroshare.org">hydroshare.org</a>
+                        </p>
                     </div>
-                    {% endeditable %}
-                </div>
-                <!-- Social icons
-                ===================== -->
+                </div><!-- Social icons
+                    ===================== -->
                 <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col2_heading siteconf.twitter_link siteconf.facebook_link siteconf.pinterest_link siteconf.youtube_link siteconf.github_link siteconf.linkedin_link siteconf.vk_link siteconf.gplus_link %}
-                    <div class="headline"><h3>{{ siteconf.col2_heading }}</h3></div>
-                    {% endeditable %}
+                    <div class="headline">
+                        <h3>
+                            Follow
+                        </h3>
+                    </div>
                     <div class="content social">
-                        {% editable siteconf.col2_content %}
-                        {{ siteconf.col2_content|richtext_filters|safe }}
-                        {% endeditable %}
-                        {% if siteconf.has_social_network_links %}
-                        <ul>{% if siteconf.twitter_link %}
+                        <ul>
                             <li>
-                                <a href="{{ siteconf.twitter_link }}" target="_blank"><i class="fa fa-twitter"></i></a>
+                                <a href="http://twitter.com/cuahsi" target="_blank"><i class="fa fa-twitter"></i></a>
                             </li>
-                            {% endif %}
-                            {% if siteconf.facebook_link %}
                             <li>
-                                <a href="{{ siteconf.facebook_link }}" target="_blank"><i class="fa fa-facebook"></i></a>
+                                <a href="https://www.facebook.com/pages/CUAHSI-Consortium-of-Universities-for-the-Advancement-of-Hydrologic-Science-Inc/179921902590" target="_blank"><i class="fa fa-facebook"></i></a>
                             </li>
-                            {% endif %}
-                            {% if siteconf.pinterest_link %}
                             <li>
-                                <a href="{{ siteconf.pinterest_link }}" target="_blank"><i class="fa fa-pinterest"></i></a>
+                                <a href="http://youtube.hydroshare.org/" target="_blank"><i class="fa fa-youtube"></i></a>
                             </li>
-                            {% endif %}
-                            {% if siteconf.youtube_link %}
                             <li>
-                                <a href="{{ siteconf.youtube_link }}" target="_blank"><i class="fa fa-youtube"></i></a>
+                                <a href="http://github.com/hydroshare" target="_blank"><i class="fa fa-github"></i></a>
                             </li>
-                            {% endif %}
-                            {% if siteconf.github_link %}
                             <li>
-                                <a href="{{ siteconf.github_link }}" target="_blank"><i class="fa fa-github"></i></a>
+                                <a href="https://www.linkedin.com/company/2632114" target="_blank"><i class="fa fa-linkedin"></i></a>
                             </li>
-                            {% endif %}
-                            {% if siteconf.linkedin_link %}
-                            <li>
-                                <a href="{{ siteconf.linkedin_link }}" target="_blank"><i class="fa fa-linkedin"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.vk_link %}
-                            <li>
-                                <a href="{{ siteconf.vk_link }}" target="_blank"><i class="fa fa-vk"></i></a>
-                            </li>
-                            {% endif %}
-                            {% if siteconf.gplus_link %}
-                            <li>
-                                <a href="{{ siteconf.gplus_link }}" target="_blank"><i class="fa fa-google-plus"></i></a>
-                            </li>
-                            {% endif %}
                         </ul>
-                        {% endif %}
                         <div class="clearfix"></div>
                     </div>
-                </div>
-                <!-- Subscribe
-                =============== -->
+                </div><!-- Subscribe
+                    =============== -->
                 <div class="col-md-4 col-sm-4">
-                    {% editable siteconf.col3_heading siteconf.col3_content %}
-                    <div class="headline"><h3>{{ siteconf.col3_heading }}</h3></div>
-                    <div class="content">
-                        {{ siteconf.col3_content|richtext_filters|safe }}
+                    <div class="headline">
+                        <h3>
+                            Open Source
+                        </h3>
                     </div>
-                    {% endeditable %}
+                    <div class="content">
+                        <p class="p1">
+                            HydroShare is Open Source. Find us on <a href="https://github.com/hydroshare/"><strong>Github</strong></a>.
+                        </p>
+                        <p class="p1">
+                            Report a bug <strong><a href="https://github.com/hydroshare/hydroshare/issues?state=open">here</a></strong>
+                        </p>
+                        <p class="p1">
+                            This is HydroShare Version <b>1.12.1</b>
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Legal
-        ============= -->
+        </div><!-- Legal
+            ============= -->
         <div class="legal">
             <div class="container">
                 <div class="row">
                     <div class="col-md-12">
-                        {% editable siteconf.copyright %}
-                        <p>{{ siteconf.render_copyright }} | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a> | <a href="{% url "sitemap" %}">Site Map</a></p>
-                        {% endeditable %}
+                        <p>
+                            &copy; 2017 CUAHSI. This material is based upon work supported by the National Science Foundation (NSF) under awards 1148453 and 1148090. Any opinions, findings, conclusions, or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the NSF. | <a href="/terms-of-use">Terms Of Use</a> | <a href="/privacy">Statement of Privacy</a> | <a href="/sitemap/">Site Map</a>
+                        </p>
                     </div>
                 </div>
             </div>

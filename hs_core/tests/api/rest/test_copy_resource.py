@@ -1,3 +1,5 @@
+from django.core.urlresolvers import reverse
+
 from rest_framework import status
 
 from hs_core.hydroshare import resource
@@ -19,12 +21,12 @@ class TestPublicCopyResourceEndpoint(HSRESTTestCase):
         self.resources_to_delete.append(self.pid)
 
     def test_copy_resource(self):
-        copy_url = "/hsapi/resource/%s/copy/" % self.pid
+        copy_url = reverse('copy_resource_public', kwargs={'short_id': self.pid})
         response = self.client.post(copy_url, {}, format='json')
         self.resources_to_delete.append(response.content)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_copy_bad_resource(self):
-        copy_url = "/hsapi/resource/%s/copy/" % "lalalal"
+        copy_url = reverse('copy_resource_public', kwargs={'short_id': '10101101010'})
         response = self.client.post(copy_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

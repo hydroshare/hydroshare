@@ -1,0 +1,46 @@
+{% extends "comments/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Preview your comment" %}{% endblock %}
+{% block main %}
+  <div class="container">
+  {% load comments %}
+  <form action="{% comment_form_target %}" method="post">{% csrf_token %}
+    {% if next %}
+      <div><input type="hidden" name="next" value="{{ next }}"/></div>{% endif %}
+    {% if form.errors %}
+      <h1>{% blocktrans count counter=form.errors|length %}Please correct the error below{% plural %}Please correct the errors below{% endblocktrans %}</h1>
+    {% else %}
+      <h1>{% trans "Preview your comment" %}</h1>
+      <blockquote>{{ comment|linebreaks }}</blockquote>
+      <p>
+        {% trans "and" %} <input id="submit" type="submit" name="submit" class="submit-post"
+                                 value="{% trans "Post your comment" %}"/>
+        {# Translators: This string follows the 'Post your comment' submit button. #}
+        {% trans "or make changes" %}:
+      </p>
+    {% endif %}
+    {% for field in form %}
+      {% if field.is_hidden %}
+        <div>{{ field }}</div>
+      {% else %}
+        {% ifequal field.name "honeypot" %}
+          {% if field.errors %}{{ field.errors }}{% endif %}
+          <p {% if field.errors %} class="error"{% endif %} style="display: none;">
+            {{ field }}
+          </p>
+        {% endifequal %}
+        {% ifequal field.name "comment" %}
+          {% if field.errors %}{{ field.errors }}{% endif %}
+          <p {% if field.errors %} class="error"{% endif %} >
+            {{ field }}
+          </p>
+          {% endifequal %}
+      {% endif %}
+    {% endfor %}
+    <p class="submit">
+      <input type="submit" name="submit" class="submit-post" value="{% trans "Post" %}"/>
+    </p>
+  </form>
+  </div class="container">
+{% endblock %}

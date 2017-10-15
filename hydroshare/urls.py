@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, include, url,\
+    handler400, handler403, handler404, handler500
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from django.views.generic import TemplateView
 
-from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
 import autocomplete_light
@@ -13,7 +14,7 @@ from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
 from hs_tracking import views as tracking
-from hs_core import views as hs_core_views
+import hs_core.views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
 from hs_app_netCDF import views as nc_views
 
@@ -21,57 +22,47 @@ from hs_app_netCDF import views as nc_views
 autocomplete_light.autodiscover()
 admin.autodiscover()
 
-# Add the urlpatterns for any custom Django applications here.
-# You can also change the ``home`` view to add your own functionality
-# to the project's homepage.
-
 urlpatterns = i18n_patterns("",
-
-    # Change the admin prefix here to use an alternate URL for the
-    # admin interface, which would be marginally more secure.
     url("^admin/", include(admin.site.urls)),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    url("^inplaceeditform/", include("inplaceeditform.urls")),
-    url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
-    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(),
-        name='tracking-report-profiles'),
-    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
-        name='tracking-report-history'),
-    url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
-    url(r'^tracking/applaunch/', tracking.AppLaunch.as_view(), name='tracking-applaunch'),
-    url(r'^user/$', theme.UserProfileView.as_view()),
-    url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
-    url(r'^comment/$', theme.comment),
+
+    # CMS Stuff
+    url("^$", theme.HomePageView.as_view(), name="home"),
+    url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
+    url(r'^comments/', include('django_comments.urls')),
     url(r'^rating/$', theme.rating),
+
+    # XDCIShare Basics
+    url( r'^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
+    url(r'^rn/(?P<short_id>[A-z0-9\-_]+)', hs_core_views.resource_frontend.resource_detail, name='resource_detail'),
+
+    url(r'^search/$', hs_core_views.discovery_view.DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^searchjson/$', hs_core_views.discovery_json_view.DiscoveryJsonView.as_view(), name='haystack_json_search'),
+    url(r'^my-resources/$', hs_core_views.resource_frontend.my_resources, name='my_resources'),
+    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
+
+
+    url("^inplaceeditform/", include("inplaceeditform.urls")),
+
+
+    url(r'^user/(?P<user_id>\d*)/', theme.UserProfileView.as_view(), name='profile'),
     url(r'^profile/$', theme.update_user_profile, name='update_profile'),
+    url(r'^accounts/signup/', 'theme.views.signup', name='signup'),
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
     url(r'^accounts/login/$', theme.login, name='login'),
-    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
-        theme.email_verify, name='email_verify'),
+    url(r'^accounts/logout/$', theme.logout, name='logout'),
+    url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/', theme.email_verify, name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
+
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
-    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
-    url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
-    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
-    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
-    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
-    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
-        name='update_sqlite_file'),
-)
 
-# Filebrowser admin media library.
-if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
-    urlpatterns += i18n_patterns("",
-        ("^admin/media-library/", include("%s.urls" %
-                                        settings.PACKAGE_NAME_FILEBROWSER)),
-    )
+    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file, name='update_sqlite_file'),
 
-# Put API URLs before Mezzanine so that Mezzanine doesn't consume them
-urlpatterns += patterns('',
     url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
@@ -85,12 +76,23 @@ urlpatterns += patterns('',
     url('^hsapi/', include('hs_collection_resource.urls')),
     url('^hsapi/', include('hs_file_types.urls')),
     url('^hsapi/', include('hs_app_netCDF.urls')),
+
+    url(r"^tests/$", TemplateView.as_view(template_name='tests.html'), name="tests"),
+    url(r'^robots\.txt$', include('robots.urls')),
+    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
+    url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
+    url(r'^tracking/applaunch/', tracking.AppLaunch.as_view(), name='tracking-applaunch'),
+
+    url("^", include("mezzanine.urls")),
 )
 
-# robots.txt URLs for django-robots
-urlpatterns += patterns('',
-    (r'^robots\.txt$', include('robots.urls')),
-)
+# Filebrowser admin media library.
+if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
+    urlpatterns += i18n_patterns("",
+        ("^admin/media-library/", include("%s.urls" %
+                                        settings.PACKAGE_NAME_FILEBROWSER)),
+    )
 
 if settings.DEBUG is False:   # if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
@@ -104,81 +106,9 @@ if 'heartbeat' in settings.INSTALLED_APPS:
     url(r'^heartbeat/', include(heartbeat_urls))
   ]
 
-urlpatterns += patterns('',
-
-    # We don't want to presume how your homepage works, so here are a
-    # few patterns you can use to set it up.
-
-    # HOMEPAGE AS STATIC TEMPLATE
-    # ---------------------------
-    # This pattern simply loads the index.html template. It isn't
-    # commented out like the others, so it's the default. You only need
-    # one homepage pattern, so if you use a different one, comment this
-    # one out.
-
-    # url("^$", direct_to_template, {"template": "index.html"}, name="home"),
-    url(r"^tests/$", direct_to_template, {"template": "tests.html"}, name="tests"),
-
-    # HOMEPAGE AS AN EDITABLE PAGE IN THE PAGE TREE
-    # ---------------------------------------------
-    # This pattern gives us a normal ``Page`` object, so that your
-    # homepage can be managed via the page tree in the admin. If you
-    # use this pattern, you'll need to create a page in the page tree,
-    # and specify its URL (in the Meta Data section) as "/", which
-    # is the value used below in the ``{"slug": "/"}`` part.
-    # Also note that the normal rule of adding a custom
-    # template per page with the template name using the page's slug
-    # doesn't apply here, since we can't have a template called
-    # "/.html" - so for this case, the template "pages/index.html"
-    # should be used if you want to customize the homepage's template.
-
-    url("^$", "mezzanine.pages.views.page", {"slug": "/"}, name="home"),
-
-    # HOMEPAGE FOR A BLOG-ONLY SITE
-    # -----------------------------
-    # This pattern points the homepage to the blog post listing page,
-    # and is useful for sites that are primarily blogs. If you use this
-    # pattern, you'll also need to set BLOG_SLUG = "" in your
-    # ``settings.py`` module, and delete the blog page object from the
-    # page tree in the admin if it was installed.
-
-    # url("^$", "mezzanine.blog.views.blog_post_list", name="home"),
-
-    # Override Mezzanine URLs here, before the Mezzanine URL include
-    ("^accounts/signup/", "theme.views.signup"),
-
-    # MEZZANINE'S URLS
-    # ----------------
-    # ADD YOUR OWN URLPATTERNS *ABOVE* THE LINE BELOW.
-    # ``mezzanine.urls`` INCLUDES A *CATCH ALL* PATTERN
-    # FOR PAGES, SO URLPATTERNS ADDED BELOW ``mezzanine.urls``
-    # WILL NEVER BE MATCHED!
-
-    # If you'd like more granular control over the patterns in
-    # ``mezzanine.urls``, go right ahead and take the parts you want
-    # from it, and use them directly below instead of using
-    # ``mezzanine.urls``.
-    ("^", include("mezzanine.urls")),
-
-    # MOUNTING MEZZANINE UNDER A PREFIX
-    # ---------------------------------
-    # You can also mount all of Mezzanine's urlpatterns under a
-    # URL prefix if desired. When doing this, you need to define the
-    # ``SITE_PREFIX`` setting, which will contain the prefix. Eg:
-    # SITE_PREFIX = "my/site/prefix"
-    # For convenience, and to avoid repeating the prefix, use the
-    # commented out pattern below (commenting out the one above of course)
-    # which will make use of the ``SITE_PREFIX`` setting. Make sure to
-    # add the import ``from django.conf import settings`` to the top
-    # of this file as well.
-    # Note that for any of the various homepage patterns above, you'll
-    # need to use the ``SITE_PREFIX`` setting as well.
-
-    # ("^%s/" % settings.SITE_PREFIX, include("mezzanine.urls"))
-
-)
-
 # Adds ``STATIC_URL`` to the context of error pages, so that error
 # pages can use JS, CSS and images.
-handler404 = "mezzanine.core.views.page_not_found"
-handler500 = "mezzanine.core.views.server_error"
+handler400 = "hs_core.views.error_handlers.bad_request"
+handler403 = "hs_core.views.error_handlers.permission_denied"
+handler404 = "hs_core.views.error_handlers.page_not_found"
+handler500 = "hs_core.views.error_handlers.server_error"
