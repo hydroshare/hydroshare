@@ -305,7 +305,7 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
             can_update_sqlite_file = 'True'
         if self.is_dirty:
             style = "margin-bottom:10px"
-            is_dirty='True'
+            is_dirty = 'True'
         root_div = div(id="div-sqlite-file-update", cls="row", style=style)
 
         with root_div:
