@@ -13,7 +13,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.template import Template, Context
 
 from dominate.tags import div, legend, strong, form, select, option, hr, button, input, p, \
-    textarea
+    textarea, span
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import delete_resource_file
@@ -239,6 +239,19 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                     button("Save changes", type="button",
                                            cls="btn btn-primary pull-right",
                                            style="display: none;")
+                    if self.logical_file.has_csv_file:
+                        with div(cls="col-sm-6 col-xs-12 time-series-forms",
+                                 id="utcoffset-filetype"):
+                            with form(id="id-utcoffset-file-type",
+                                      action="{{ utcoffset_form.action }}",
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% crispy utcoffset_form %}")
+                                with div(cls="row", style="margin-top:10px;"):
+                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                 "col-md-2 col-xs-6"):
+                                        button("Save changes", type="button",
+                                               cls="btn btn-primary pull-right",
+                                               style="display: none;")
 
         template = Template(root_div.render(pretty=True))
         context_dict = dict()
@@ -249,6 +262,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
                                                                             series_id)
         context_dict["timeseriesresult_form"] = create_timeseries_result_form(self.logical_file,
                                                                               series_id)
+        if self.logical_file.has_csv_file:
+            context_dict['utcoffset_form'] = create_utcoffset_form(self.logical_file, series_id)
         context = Context(context_dict)
         return template.render(context)
 
@@ -284,15 +299,29 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
     def get_update_sqlite_file_html_form(self):
         form_action = "/hsapi/_internal/{}/update-sqlite-file/".format(self.id)
         style = "display:none;"
+        is_dirty = 'False'
+        can_update_sqlite_file = 'False'
+        if self.logical_file.can_update_sqlite_file:
+            can_update_sqlite_file = 'True'
         if self.is_dirty:
             style = "margin-bottom:10px"
+            is_dirty='True'
         root_div = div(id="div-sqlite-file-update", cls="row", style=style)
 
         with root_div:
             with div(cls="col-sm-12"):
                 with div(cls="alert alert-warning alert-dismissible", role="alert"):
                     strong("SQLite file needs to be synced with metadata changes.")
-                    input(id="metadata-dirty", type="hidden", value=self.is_dirty)
+                    if self.series_names:
+                        # this is the case of CSV file based time series file type
+                        with div():
+                            with strong():
+                                span("NOTE:", style="color:red;")
+                                span("New resource specific metadata elements can't be created "
+                                     "after you update the SQLite file.")
+                    input(id="metadata-dirty", type="hidden", value=is_dirty)
+                    input(id="can-update-sqlite-file", type="hidden",
+                          value=can_update_sqlite_file)
                     with form(action=form_action, method="post", id="update-sqlite-file"):
                         button("Update SQLite File", type="button", cls="btn btn-primary",
                                id="id-update-sqlite-file")
@@ -435,6 +464,12 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             return False
 
         return True
+
+    @property
+    def can_update_sqlite_file(self):
+        # guard property to determine when the sqlite file can be updated as result of
+        # metadata changes
+        return self.has_sqlite_file and self.metadata.has_all_required_elements()
 
     def add_blank_sqlite_file(self, user):
         # add the blank SQLite file to this resource (self)
@@ -1249,6 +1284,37 @@ def _update_element_series_ids(element, series_id):
     element.save()
 
 
+def create_utcoffset_form(target, selected_series_id):
+    """
+    Creates an instance of UTCOffSetForm
+    :param target: an instance of TimeSeriesResource or TimeSeriesLogicalFile
+    :param selected_series_id: id of the selected time series
+    :return: an instance of UTCOffSetForm
+    """
+    from hs_app_timeseries.forms import UTCOffSetForm
+    if isinstance(target, TimeSeriesLogicalFile):
+        res_short_id = None
+        file_type = True
+        target_id = target.id
+    else:
+        res_short_id = target.short_id
+        file_type = False
+        target_id = target.short_id
+    utc_offset = target.metadata.utc_offset
+    utcoffset_form = UTCOffSetForm(instance=utc_offset,
+                                   res_short_id=res_short_id,
+                                   element_id=utc_offset.id if utc_offset else None,
+                                   selected_series_id=selected_series_id,
+                                   file_type=file_type)
+    if utc_offset is not None:
+        utcoffset_form.action = _get_element_update_form_action('utcoffset', target_id,
+                                                                utc_offset.id, file_type=file_type)
+    else:
+        utcoffset_form.action = _get_element_create_form_action('utcoffset', target_id,
+                                                                file_type=file_type)
+    return utcoffset_form
+
+
 def create_site_form(target, selected_series_id):
     """
     Creates an instance of SiteForm
@@ -1580,9 +1646,10 @@ def sqlite_file_update(instance, sqlite_res_file, user):
 
                 # since we are allowing user to set the UTC offset in case of CSV file
                 # upload we have to update the actions table
-                instance.metadata.update_utcoffset_related_tables(con, cur)
+                if instance.metadata.utc_offset is not None:
+                    instance.metadata.update_utcoffset_related_tables(con, cur)
 
-                # update resource specific metadata
+                # update resource/file specific metadata
                 instance.metadata.update_variables_table(con, cur)
                 instance.metadata.update_methods_table(con, cur)
                 instance.metadata.update_processinglevels_table(con, cur)

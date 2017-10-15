@@ -569,7 +569,8 @@ function metadata_update_ajax_submit(form_id){
                     $("#div-netcdf-file-update").show();
                 }
                 // show update sqlite file update option for TimeSeriesLogicalFile
-                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  && json_response.is_dirty) {
+                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  &&
+                    json_response.is_dirty && json_response.can_update_sqlite) {
                     $("#div-sqlite-file-update").show();
                 }
                 // show update netcdf resource

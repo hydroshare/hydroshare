@@ -205,6 +205,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                               }
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
+            ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -274,6 +275,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
 
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
+            ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -528,6 +530,9 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'datatset_name', "is_dirty": metadata.is_dirty,
                           'message': "Update was successful"}
+    if logical_file.type_name() == "TimeSeriesLogicalFile":
+        ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 
@@ -597,6 +602,7 @@ def update_timeseries_abstract(request, file_type_id, **kwargs):
         resource_modified(resource, request.user, overwrite_bag=False)
         ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                               'element_name': 'abstract', "is_dirty": metadata.is_dirty,
+                              'can_update_sqlite': logical_file.can_update_sqlite_file,
                               'message': "Update was successful"}
     else:
         ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),

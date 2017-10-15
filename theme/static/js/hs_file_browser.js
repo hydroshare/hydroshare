@@ -458,7 +458,7 @@ function bindFileBrowserItemEvents() {
 
 function showFileTypeMetadata(file_type_time_series, url){
     // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
-    // set to true and the *url* msut be set
+    // set to true and the *url* must be set
     var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
      if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
@@ -549,6 +549,9 @@ function showFileTypeMetadata(file_type_time_series, url){
                  // make a recursive call to this function
                  showFileTypeMetadata(true, $url);
              });
+             if ($("#metadata-dirty").val() !== 'True' || $("#can-update-sqlite-file").val() !== 'True'){
+                 $("#div-sqlite-file-update").hide();
+             }
              $(".hs-coordinates-picker").each(function() {
                     const instance = $(this);
                     instance.coordinatesPicker();

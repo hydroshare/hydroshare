@@ -142,15 +142,18 @@ class Site(TimeSeriesAbstractMetaDataElement):
                     with tr():
                         get_th('Name')
                         td(self.site_name)
-                    with tr():
-                        get_th('Elevation M')
-                        td(self.elevation_m)
-                    with tr():
-                        get_th('Elevation Datum')
-                        td(self.elevation_datum)
-                    with tr():
-                        get_th('Site Type')
-                        td(self.site_type)
+                    if self.elevation_m:
+                        with tr():
+                            get_th('Elevation M')
+                            td(self.elevation_m)
+                    if self.elevation_datum:
+                        with tr():
+                            get_th('Elevation Datum')
+                            td(self.elevation_datum)
+                    if self.site_type:
+                        with tr():
+                            get_th('Site Type')
+                            td(self.site_type)
                     with tr():
                         get_th('Latitude')
                         td(self.latitude)
@@ -1173,6 +1176,11 @@ class TimeSeriesMetaDataMixin(models.Model):
                 return element
         return None
 
+    def _read_csv_specified_column(self, csv_reader, data_column_index):
+        # generator function to read (one row) the datetime column and the specified data column
+        for row in csv_reader:
+            yield row[0], row[data_column_index]
+
     def _get_series_label(self, series_id, source):
         """Generate a label given a series id
         :param  series_id: id of the time series
@@ -1248,9 +1256,16 @@ class TimeSeriesMetaDataMixin(models.Model):
         insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
                      "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
 
-        ds_title = self.title.value
-        ds_abstract = self.description.abstract
-        ds_code = self.resource.short_id
+        if isinstance(self, TimeSeriesMetaData):
+            ds_title = self.title.value
+            ds_abstract = self.description.abstract
+            ds_code = self.resource.short_id
+        else:
+            # self must be TimeSeriesFileMetaData
+            ds_title = self.logical_file.dataset_name
+            ds_abstract = self.abstract
+            ds_code = self.logical_file.resource.short_id
+
         cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
                                  ds_abstract), )
 
@@ -1510,6 +1525,48 @@ class TimeSeriesMetaDataMixin(models.Model):
                 ts_result.is_dirty = False
                 ts_result.save()
 
+    def update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
+        # insert record to Results table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Results")
+        con.commit()
+        insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
+                     "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
+                     "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
+                     "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+
+        results_data = []
+        utc_offset = self.utc_offset.value
+        for index, ts_res in enumerate(self.time_series_results.all()):
+            result_id = index + 1
+            cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
+            feature_act = cur.fetchone()
+            related_var = self.variables.all().filter(
+                series_ids__contains=[ts_res.series_ids[0]]).first()
+            variable_id = 1
+            for var_item in variables_data:
+                if var_item['object_id'] == related_var.id:
+                    variable_id = var_item['variable_id']
+                    break
+
+            related_pro_level = self.processing_levels.all().filter(
+                series_ids__contains=[ts_res.series_ids[0]]).first()
+            pro_level_id = 1
+            for pro_level_item in pro_levels_data:
+                if pro_level_item['object_id'] == related_pro_level.id:
+                    pro_level_id = pro_level_item['pro_level_id']
+                    break
+            cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
+            unit = cur.fetchone()
+            cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
+                                     feature_act['FeatureActionID'], 'Time series coverage',
+                                     variable_id, unit['UnitsID'], pro_level_id, now(), utc_offset,
+                                     ts_res.status, ts_res.sample_medium,
+                                     ts_res.value_count), )
+            results_data.append({'result_id': result_id, 'object_id': ts_res.id})
+        return results_data
+
     def update_units_table_insert(self, con, cur):
         # insert record to Units table - first delete any existing records
         # this function used only in case of writing data to a blank database (case of CSV upload)
@@ -1589,6 +1646,245 @@ class TimeSeriesMetaDataMixin(models.Model):
                 srs_code = 'EPSG:4326'
                 cur.execute(insert_sql, (spatial_ref_id, srs_code, srs_name), )
 
+    def update_featureactions_table_insert(self, con, cur):
+        # insert record to FeatureActions table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM FeatureActions")
+        con.commit()
+        insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
+                     "ActionID) VALUES(?,?,?)"
+        cur.execute("SELECT * FROM Actions")
+        actions = cur.fetchall()
+        for action in actions:
+            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                        (action['ActionID'],))
+            sampling_feature = cur.fetchone()
+            sampling_feature_id = sampling_feature['SamplingFeatureID'] \
+                if sampling_feature else 1
+            cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
+                                     action['ActionID']), )
+
+    def update_actions_table_insert(self, con, cur, methods_data):
+        # insert record to Actions table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Actions")
+        con.commit()
+        insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
+                     "BeginDateTime, BeginDateTimeUTCOffset, " \
+                     "EndDateTime, EndDateTimeUTCOffset, " \
+                     "ActionDescription) VALUES(?,?,?,?,?,?,?,?)"
+        # get the begin and end date of timeseries data from the temporal coverage
+        temp_coverage = self.coverages.filter(type='period').first()
+        start_date = parser.parse(temp_coverage.value['start'])
+        end_date = parser.parse(temp_coverage.value['end'])
+
+        utc_offset = self.utc_offset.value
+        for index, ts_result in enumerate(self.time_series_results.all()):
+            action_id = index + 1
+            method_id = 1
+            for method_data_item in methods_data:
+                if ts_result.series_ids[0] in method_data_item['series_ids']:
+                    method_id = method_data_item['method_id']
+                    break
+            cur.execute(insert_sql, (action_id, 'Observation', method_id, start_date, utc_offset,
+                                     end_date, utc_offset,
+                                     'An observation action that generated a time '
+                                     'series result.'), )
+
+    def update_timeseriesresults_table_insert(self, con, cur, results_data):
+        # insert record to TimeSeriesResults table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM TimeSeriesResults")
+        con.commit()
+        insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
+                     "VALUES(?,?)"
+        cur.execute("SELECT * FROM Results")
+        results = cur.fetchall()
+        for result in results:
+            res_item = [dict_item for dict_item in results_data if
+                        dict_item['result_id'] == result['ResultID']][0]
+            ts_result = [ts_item for ts_item in self.time_series_results.all() if
+                         ts_item.id == res_item['object_id']][0]
+            cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics), )
+
+    def update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
+        # insert record to TimeSeriesResultValues table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM TimeSeriesResultValues")
+        con.commit()
+        insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
+                     "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
+                     "QualityCodeCV, TimeAggregationInterval, " \
+                     "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
+
+        # read the csv file to determine time interval (in minutes) between each reading
+        # we will use the first 2 rows of data to determine this value
+        utc_offset = self.utc_offset.value
+        with open(temp_csv_file, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row (header)
+            header = csv_reader.next()
+            first_row_data = csv_reader.next()
+            second_row_data = csv_reader.next()
+            time_interval = (parser.parse(second_row_data[0]) -
+                             parser.parse(first_row_data[0])).seconds / 60
+
+        with open(temp_csv_file, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row (header) and skip
+            csv_reader.next()
+            value_id = 1
+            data_header = header[1:]
+            for col, value in enumerate(data_header):
+                # get the ts_result object with matching series_label
+                ts_result = [ts_item for ts_item in self.time_series_results if
+                             ts_item.series_label == value][0]
+                # get the result id associated with ts_result object
+                result_data_item = [dict_item for dict_item in results_data if
+                                    dict_item['object_id'] == ts_result.id][0]
+                result_id = result_data_item['result_id']
+                data_col_index = col + 1
+                # start at the beginning of data row
+                fl_obj.seek(0)
+                csv_reader.next()
+                for date_time, data_value in self._read_csv_specified_column(
+                        csv_reader, data_col_index):
+                    date_time = parser.parse(date_time)
+                    cur.execute(insert_sql, (value_id, result_id, data_value,
+                                             date_time, utc_offset, 'Unknown', 'Unknown',
+                                             time_interval, 102), )
+                    value_id += 1
+
+    def populate_blank_sqlite_file(self, temp_sqlite_file, user):
+        """
+        writes data to a blank sqlite file. This function is executed only in case
+        of CSV file upload and executed only once when updating the sqlite file for the first time.
+        :param temp_sqlite_file: this is the sqlite file copied from irods to a temp location on
+         Django.
+        :param user: current user (must have edit permission on resource) who is updating the
+        sqlite file to sync metadata changes in django database.
+        :return:
+        """
+        log = logging.getLogger()
+        msg = ''
+        is_file_type = not isinstance(self, TimeSeriesMetaData)
+        if not is_file_type:
+            if not self.resource.has_csv_file:
+                msg = "Resource needs to have a CSV file before a blank SQLite file can be updated"
+        else:
+            if not self.logical_file.has_csv_file:
+                msg = "Logical file needs to have a CSV file before a blank SQLite file " \
+                      "can be updated"
+        if msg:
+            log.exception(msg)
+            raise Exception(msg)
+
+        # update resource specific metadata element series ids with generated GUID
+        self.update_metadata_element_series_ids_with_guids()
+
+        if not is_file_type:
+            blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
+            csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
+        else:
+            # self must be an instance of TimeSeriesFileMetaData
+            logical_file = self.logical_file
+            for f in logical_file.files.all():
+                if f.extension == '.sqlite':
+                    blank_sqlite_file = f
+                elif f.extension == '.csv':
+                    csv_file = f
+
+        # csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
+
+        # retrieve the csv file from iRODS and save it to temp directory
+        temp_csv_file = utils.get_file_from_irods(csv_file)
+        try:
+            con = sqlite3.connect(temp_sqlite_file)
+            with con:
+                # get the records in python dictionary format
+                con.row_factory = sqlite3.Row
+                cur = con.cursor()
+                # insert records to SamplingFeatures table
+                self.update_samplingfeatures_table_insert(con, cur)
+
+                # insert record to SpatialReferences table
+                self.update_spatialreferences_table_insert(con, cur)
+
+                # insert record to Sites table
+                self.update_sites_table_insert(con, cur)
+
+                # insert record to Methods table
+                methods_data = self.update_methods_table_insert(con, cur)
+
+                # insert record to Variables table
+                variables_data = self.update_variables_table_insert(con, cur)
+
+                # insert record to Units table
+                self.update_units_table_insert(con, cur)
+
+                # insert record to ProcessingLevels table
+                pro_levels_data = self.update_processinglevels_table_insert(con, cur)
+
+                # insert record to People table
+                if not is_file_type:
+                    people_data = self.update_people_table_insert(con, cur)
+
+                    # insert record to Organizations table
+                    self.update_organizations_table_insert(con, cur)
+
+                    # insert record to Affiliations table
+                    self.update_affiliations_table_insert(con, cur, people_data)
+
+                    # insert record to ActionBy table
+                    self.update_actionby_table_insert(con, cur, people_data)
+
+                # insert record to Actions table
+                self.update_actions_table_insert(con, cur, methods_data)
+
+                # insert record to FeatureActions table
+                self.update_featureactions_table_insert(con, cur)
+
+                # insert record to Results table
+                results_data = self.update_results_table_insert(con, cur, variables_data,
+                                                                pro_levels_data)
+
+                # insert record to TimeSeriesResults table
+                self.update_timeseriesresults_table_insert(con, cur, results_data)
+
+                # insert record to TimeSeriesResultValues table
+                self.update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
+                                                                results_data)
+
+                # insert record to Datasets table
+                self.update_datasets_table_insert(con, cur)
+
+                # insert record to DatasetsResults table
+                self.update_datatsetsresults_table_insert(con, cur)
+
+                self.update_CV_tables(con, cur)
+                con.commit()
+                # push the updated sqlite file to iRODS
+                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
+                self.is_dirty = False
+                self.save()
+                log.info("Blank SQLite file was updated successfully.")
+        except sqlite3.Error as ex:
+            sqlite_err_msg = str(ex.args[0])
+            log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
+            raise Exception(sqlite_err_msg)
+        except Exception as ex:
+            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
+            raise ex
+        finally:
+            if os.path.exists(temp_sqlite_file):
+                shutil.rmtree(os.path.dirname(temp_sqlite_file))
+            if os.path.exists(temp_csv_file):
+                shutil.rmtree(os.path.dirname(temp_csv_file))
+
 
 class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
     is_dirty = models.BooleanField(default=False)
@@ -1642,117 +1938,6 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
         sqlite_file_update(self.resource, sqlite_file_to_update, user)
-
-    def populate_blank_sqlite_file(self, temp_sqlite_file, user):
-        """
-        writes data to a blank sqlite file. This function is executed only in case
-        of CSV file upload and executed only once when updating the sqlite file for the first time.
-        :param temp_sqlite_file: this the sqlite file copied from irods to a temp location on
-         Django.
-        :param user: current user (must have edit permission on resource) who is updating the
-        sqlite file to sync metadata changes in django database.
-        :return:
-        """
-        log = logging.getLogger()
-        if not self.resource.has_csv_file:
-            msg = "Resource needs to have a CSV file before a blank SQLite file can be updated"
-            log.exception(msg)
-            raise Exception(msg)
-
-        # update resource specific metadata element series ids with generated GUID
-        self.update_metadata_element_series_ids_with_guids()
-
-        blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
-        csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
-
-        # retrieve the csv file from iRODS and save it to temp directory
-        temp_csv_file = utils.get_file_from_irods(csv_file)
-        try:
-            con = sqlite3.connect(temp_sqlite_file)
-            with con:
-                # get the records in python dictionary format
-                con.row_factory = sqlite3.Row
-                cur = con.cursor()
-                # insert records to SamplingFeatures table
-                self.update_samplingfeatures_table_insert(con, cur)
-
-                # insert record to SpatialReferences table
-                self.update_spatialreferences_table_insert(con, cur)
-
-                # insert record to Sites table
-                self.update_sites_table_insert(con, cur)
-
-                # insert record to Methods table
-                methods_data = self.update_methods_table_insert(con, cur)
-
-                # insert record to Variables table
-                variables_data = self.update_variables_table_insert(con, cur)
-
-                # insert record to Units table
-                self.update_units_table_insert(con, cur)
-
-                # insert record to ProcessingLevels table
-                pro_levels_data = self.update_processinglevels_table_insert(con, cur)
-
-                # insert record to People table
-                people_data = self.update_people_table_insert(con, cur)
-
-                # insert record to Organizations table
-                self.update_organizations_table_insert(con, cur)
-
-                # insert record to Affiliations table
-                self.update_affiliations_table_insert(con, cur, people_data)
-
-                # insert record to Actions table
-                self.update_actions_table_insert(con, cur, methods_data)
-
-                # insert record to ActionBy table
-                self.update_actionby_table_insert(con, cur, people_data)
-
-                # insert record to FeatureActions table
-                self.update_featureactions_table_insert(con, cur)
-
-                # insert record to Results table
-                results_data = self.update_results_table_insert(con, cur, variables_data,
-                                                                pro_levels_data)
-
-                # insert record to TimeSeriesResults table
-                self.update_timeseriesresults_table_insert(con, cur, results_data)
-
-                # insert record to TimeSeriesResultValues table
-                self.update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
-                                                                results_data)
-
-                # insert record to Datasets table
-                self.update_datasets_table_insert(con, cur)
-
-                # insert record to DatasetsResults table
-                self.update_datatsetsresults_table_insert(con, cur)
-
-                self.update_CV_tables(con, cur)
-                con.commit()
-                # push the updated sqlite file to iRODS
-                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
-                self.is_dirty = False
-                self.save()
-                log.info("Blank SQLite file was updated successfully.")
-        except sqlite3.Error as ex:
-            sqlite_err_msg = str(ex.args[0])
-            log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
-            raise Exception(sqlite_err_msg)
-        except Exception as ex:
-            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
-            raise ex
-        finally:
-            if os.path.exists(temp_sqlite_file):
-                shutil.rmtree(os.path.dirname(temp_sqlite_file))
-            if os.path.exists(temp_csv_file):
-                shutil.rmtree(os.path.dirname(temp_csv_file))
-
-    def _read_csv_specified_column(self, csv_reader, data_column_index):
-        # generator function to read (one row) the datetime column and the specified data column
-        for row in csv_reader:
-            yield row[0], row[data_column_index]
 
     def update_people_table_insert(self, con, cur):
         # insert record to People table - first delete any existing records
@@ -1836,34 +2021,6 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                      now(), person_data['phone'], person_data['email'],
                                      person_data['address']), )
 
-    def update_actions_table_insert(self, con, cur, methods_data):
-        # insert record to Actions table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM Actions")
-        con.commit()
-        insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
-                     "BeginDateTime, BeginDateTimeUTCOffset, " \
-                     "EndDateTime, EndDateTimeUTCOffset, " \
-                     "ActionDescription) VALUES(?,?,?,?,?,?,?,?)"
-        # get the begin and end date of timeseries data from the temporal coverage
-        temp_coverage = self.coverages.filter(type='period').first()
-        start_date = parser.parse(temp_coverage.value['start'])
-        end_date = parser.parse(temp_coverage.value['end'])
-
-        utc_offset = self.utc_offset.value
-        for index, ts_result in enumerate(self.time_series_results.all()):
-            action_id = index + 1
-            method_id = 1
-            for method_data_item in methods_data:
-                if ts_result.series_ids[0] in method_data_item['series_ids']:
-                    method_id = method_data_item['method_id']
-                    break
-            cur.execute(insert_sql, (action_id, 'Observation', method_id, start_date, utc_offset,
-                                     end_date, utc_offset,
-                                     'An observation action that generated a time '
-                                     'series result.'), )
-
     def update_actionby_table_insert(self, con, cur, people_data):
         # insert record to ActionBy table - first delete any existing records
         # used for updating a sqlite file that is blank (case of CSV upload)
@@ -1902,132 +2059,132 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
                                          is_action_lead, role_description), )
                 bridge_id += 1
 
-    def update_featureactions_table_insert(self, con, cur):
-        # insert record to FeatureActions table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
+    # def update_featureactions_table_insert(self, con, cur):
+    #     # insert record to FeatureActions table - first delete any existing records
+    #     # used for updating a sqlite file that is blank (case of CSV upload)
+    #
+    #     cur.execute("DELETE FROM FeatureActions")
+    #     con.commit()
+    #     insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
+    #                  "ActionID) VALUES(?,?,?)"
+    #     cur.execute("SELECT * FROM Actions")
+    #     actions = cur.fetchall()
+    #     for action in actions:
+    #         cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+    #                     (action['ActionID'],))
+    #         sampling_feature = cur.fetchone()
+    #         sampling_feature_id = sampling_feature['SamplingFeatureID'] \
+    #             if sampling_feature else 1
+    #         cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
+    #                                  action['ActionID']), )
 
-        cur.execute("DELETE FROM FeatureActions")
-        con.commit()
-        insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
-                     "ActionID) VALUES(?,?,?)"
-        cur.execute("SELECT * FROM Actions")
-        actions = cur.fetchall()
-        for action in actions:
-            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
-                        (action['ActionID'],))
-            sampling_feature = cur.fetchone()
-            sampling_feature_id = sampling_feature['SamplingFeatureID'] \
-                if sampling_feature else 1
-            cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
-                                     action['ActionID']), )
+    # def update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
+    #     # insert record to Results table - first delete any existing records
+    #     # used for updating a sqlite file that is blank (case of CSV upload)
+    #
+    #     cur.execute("DELETE FROM Results")
+    #     con.commit()
+    #     insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
+    #                  "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
+    #                  "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
+    #                  "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+    #
+    #     results_data = []
+    #     utc_offset = self.utc_offset.value
+    #     for index, ts_res in enumerate(self.time_series_results.all()):
+    #         result_id = index + 1
+    #         cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
+    #         feature_act = cur.fetchone()
+    #         related_var = self.variables.all().filter(
+    #             series_ids__contains=[ts_res.series_ids[0]]).first()
+    #         variable_id = 1
+    #         for var_item in variables_data:
+    #             if var_item['object_id'] == related_var.id:
+    #                 variable_id = var_item['variable_id']
+    #                 break
+    #
+    #         related_pro_level = self.processing_levels.all().filter(
+    #             series_ids__contains=[ts_res.series_ids[0]]).first()
+    #         pro_level_id = 1
+    #         for pro_level_item in pro_levels_data:
+    #             if pro_level_item['object_id'] == related_pro_level.id:
+    #                 pro_level_id = pro_level_item['pro_level_id']
+    #                 break
+    #         cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
+    #         unit = cur.fetchone()
+    #         cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
+    #                                  feature_act['FeatureActionID'], 'Time series coverage',
+    #                                  variable_id, unit['UnitsID'], pro_level_id, now(), utc_offset,
+    #                                  ts_res.status, ts_res.sample_medium,
+    #                                  ts_res.value_count), )
+    #         results_data.append({'result_id': result_id, 'object_id': ts_res.id})
+    #     return results_data
 
-    def update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
-        # insert record to Results table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
+    # def update_timeseriesresults_table_insert(self, con, cur, results_data):
+    #     # insert record to TimeSeriesResults table - first delete any existing records
+    #     # used for updating a sqlite file that is blank (case of CSV upload)
+    #
+    #     cur.execute("DELETE FROM TimeSeriesResults")
+    #     con.commit()
+    #     insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
+    #                  "VALUES(?,?)"
+    #     cur.execute("SELECT * FROM Results")
+    #     results = cur.fetchall()
+    #     for result in results:
+    #         res_item = [dict_item for dict_item in results_data if
+    #                     dict_item['result_id'] == result['ResultID']][0]
+    #         ts_result = [ts_item for ts_item in self.time_series_results.all() if
+    #                      ts_item.id == res_item['object_id']][0]
+    #         cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics), )
 
-        cur.execute("DELETE FROM Results")
-        con.commit()
-        insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
-                     "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
-                     "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
-                     "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
-
-        results_data = []
-        utc_offset = self.utc_offset.value
-        for index, ts_res in enumerate(self.time_series_results.all()):
-            result_id = index + 1
-            cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
-            feature_act = cur.fetchone()
-            related_var = self.variables.all().filter(
-                series_ids__contains=[ts_res.series_ids[0]]).first()
-            variable_id = 1
-            for var_item in variables_data:
-                if var_item['object_id'] == related_var.id:
-                    variable_id = var_item['variable_id']
-                    break
-
-            related_pro_level = self.processing_levels.all().filter(
-                series_ids__contains=[ts_res.series_ids[0]]).first()
-            pro_level_id = 1
-            for pro_level_item in pro_levels_data:
-                if pro_level_item['object_id'] == related_pro_level.id:
-                    pro_level_id = pro_level_item['pro_level_id']
-                    break
-            cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
-            unit = cur.fetchone()
-            cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
-                                     feature_act['FeatureActionID'], 'Time series coverage',
-                                     variable_id, unit['UnitsID'], pro_level_id, now(), utc_offset,
-                                     ts_res.status, ts_res.sample_medium,
-                                     ts_res.value_count), )
-            results_data.append({'result_id': result_id, 'object_id': ts_res.id})
-        return results_data
-
-    def update_timeseriesresults_table_insert(self, con, cur, results_data):
-        # insert record to TimeSeriesResults table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM TimeSeriesResults")
-        con.commit()
-        insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
-                     "VALUES(?,?)"
-        cur.execute("SELECT * FROM Results")
-        results = cur.fetchall()
-        for result in results:
-            res_item = [dict_item for dict_item in results_data if
-                        dict_item['result_id'] == result['ResultID']][0]
-            ts_result = [ts_item for ts_item in self.time_series_results.all() if
-                         ts_item.id == res_item['object_id']][0]
-            cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics), )
-
-    def update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
-        # insert record to TimeSeriesResultValues table - first delete any existing records
-        # used for updating a sqlite file that is blank (case of CSV upload)
-
-        cur.execute("DELETE FROM TimeSeriesResultValues")
-        con.commit()
-        insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
-                     "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
-                     "QualityCodeCV, TimeAggregationInterval, " \
-                     "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
-
-        # read the csv file to determine time interval (in minutes) between each reading
-        # we will use the first 2 rows of data to determine this value
-        utc_offset = self.utc_offset.value
-        with open(temp_csv_file, 'r') as fl_obj:
-            csv_reader = csv.reader(fl_obj, delimiter=',')
-            # read the first row (header)
-            header = csv_reader.next()
-            first_row_data = csv_reader.next()
-            second_row_data = csv_reader.next()
-            time_interval = (parser.parse(second_row_data[0]) -
-                             parser.parse(first_row_data[0])).seconds / 60
-
-        with open(temp_csv_file, 'r') as fl_obj:
-            csv_reader = csv.reader(fl_obj, delimiter=',')
-            # read the first row (header) and skip
-            csv_reader.next()
-            value_id = 1
-            data_header = header[1:]
-            for col, value in enumerate(data_header):
-                # get the ts_result object with matching series_label
-                ts_result = [ts_item for ts_item in self.time_series_results if
-                             ts_item.series_label == value][0]
-                # get the result id associated with ts_result object
-                result_data_item = [dict_item for dict_item in results_data if
-                                    dict_item['object_id'] == ts_result.id][0]
-                result_id = result_data_item['result_id']
-                data_col_index = col + 1
-                # start at the beginning of data row
-                fl_obj.seek(0)
-                csv_reader.next()
-                for date_time, data_value in self._read_csv_specified_column(
-                        csv_reader, data_col_index):
-                    date_time = parser.parse(date_time)
-                    cur.execute(insert_sql, (value_id, result_id, data_value,
-                                             date_time, utc_offset, 'Unknown', 'Unknown',
-                                             time_interval, 102), )
-                    value_id += 1
+    # def update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
+    #     # insert record to TimeSeriesResultValues table - first delete any existing records
+    #     # used for updating a sqlite file that is blank (case of CSV upload)
+    #
+    #     cur.execute("DELETE FROM TimeSeriesResultValues")
+    #     con.commit()
+    #     insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
+    #                  "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
+    #                  "QualityCodeCV, TimeAggregationInterval, " \
+    #                  "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
+    #
+    #     # read the csv file to determine time interval (in minutes) between each reading
+    #     # we will use the first 2 rows of data to determine this value
+    #     utc_offset = self.utc_offset.value
+    #     with open(temp_csv_file, 'r') as fl_obj:
+    #         csv_reader = csv.reader(fl_obj, delimiter=',')
+    #         # read the first row (header)
+    #         header = csv_reader.next()
+    #         first_row_data = csv_reader.next()
+    #         second_row_data = csv_reader.next()
+    #         time_interval = (parser.parse(second_row_data[0]) -
+    #                          parser.parse(first_row_data[0])).seconds / 60
+    #
+    #     with open(temp_csv_file, 'r') as fl_obj:
+    #         csv_reader = csv.reader(fl_obj, delimiter=',')
+    #         # read the first row (header) and skip
+    #         csv_reader.next()
+    #         value_id = 1
+    #         data_header = header[1:]
+    #         for col, value in enumerate(data_header):
+    #             # get the ts_result object with matching series_label
+    #             ts_result = [ts_item for ts_item in self.time_series_results if
+    #                          ts_item.series_label == value][0]
+    #             # get the result id associated with ts_result object
+    #             result_data_item = [dict_item for dict_item in results_data if
+    #                                 dict_item['object_id'] == ts_result.id][0]
+    #             result_id = result_data_item['result_id']
+    #             data_col_index = col + 1
+    #             # start at the beginning of data row
+    #             fl_obj.seek(0)
+    #             csv_reader.next()
+    #             for date_time, data_value in self._read_csv_specified_column(
+    #                     csv_reader, data_col_index):
+    #                 date_time = parser.parse(date_time)
+    #                 cur.execute(insert_sql, (value_id, result_id, data_value,
+    #                                          date_time, utc_offset, 'Unknown', 'Unknown',
+    #                                          time_interval, 102), )
+    #                 value_id += 1
 
 
 def _update_resource_coverage_element(site_element):

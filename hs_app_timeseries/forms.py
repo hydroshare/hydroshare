@@ -646,9 +646,11 @@ class UTCOffSetFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
         field_width = 'form-control input-sm'
+        file_type = kwargs.pop('file_type', False)
         layout = Layout(
             Field('selected_series_id', css_class=field_width, type="hidden"),
             Field('value', css_class=field_width,
+                  id=_get_field_id('utcoffset', file_type=file_type),
                   title="The value of the UTCOffset for timestamp values accompanying your "
                         "time series data."),
         )
@@ -662,9 +664,10 @@ class UTCOffSetForm(ModelForm):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         selected_series_id = kwargs.pop('selected_series_id', None)
+        file_type = kwargs.pop('file_type', False)
         super(UTCOffSetForm, self).__init__(*args, **kwargs)
         self.helper = UTCOffSetFormHelper(allow_edit, res_short_id, element_id,
-                                          element_name='UTCOffSet')
+                                          element_name='UTCOffSet', file_type=file_type)
         self.fields['selected_series_id'].initial = selected_series_id
         if not element_id:
             self.fields['value'].initial = ""
