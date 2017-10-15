@@ -79,7 +79,7 @@ function license_agreement_ajax_submit(event) {
     var datastring = form.serialize();
     var url = form.attr('action');
     var element = $(this);
-    var action = $(this).closest("form").find("input[name='t']").val();
+    var action = $(this).closest("form").find("input[name='flag']").val();
     element.attr("disabled", true);
 
     $.ajax({
@@ -90,10 +90,10 @@ function license_agreement_ajax_submit(event) {
         success: function () {
             element.attr("disabled", false);
             if (action == "make_not_require_lic_agreement") {
-                element.closest("form").find("input[name='t']").val("make_require_lic_agreement");
+                element.closest("form").find("input[name='flag']").val("make_require_lic_agreement");
             }
             else {
-                element.closest("form").find("input[name='t']").val("make_not_require_lic_agreement");
+                element.closest("form").find("input[name='flag']").val("make_not_require_lic_agreement");
             }
             // page refresh is needed to update if license agreement popup to show or not prior
             // to download of files/bag

@@ -28,4 +28,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _user documentation: https://pages.hydroshare.org/
+.. _user documentation: https://help.hydroshare.org/

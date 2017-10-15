@@ -282,7 +282,7 @@ class AbstractFileMetaData(models.Model):
                                                 '{%s}dataFile' % NAMESPACES['hsterms'])
             rdf_dataFile_Description = etree.SubElement(hsterms_datafile,
                                                         '{%s}Description' % NAMESPACES['rdf'])
-            file_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            file_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url(),
                 res_id=self.logical_file.resource.short_id,
                 file_name=res_file.short_path)
