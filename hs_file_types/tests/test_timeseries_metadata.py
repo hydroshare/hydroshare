@@ -469,8 +469,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         res_file = self.composite_resource.files.first()
         # set the sqlite file to TimeSeries file type
         TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
-        res_file = self.composite_resource.files.first()
-        
+
         # test that we have one logical file of type TimeSeries
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
         self.assertEqual(TimeSeriesFileMetaData.objects.count(), 1)

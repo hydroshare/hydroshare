@@ -1827,6 +1827,9 @@ class TimeSeriesMetaDataMixin(models.Model):
                 # insert record to ProcessingLevels table
                 pro_levels_data = self.update_processinglevels_table_insert(con, cur)
 
+                # insert record to Actions table
+                self.update_actions_table_insert(con, cur, methods_data)
+
                 # insert record to People table
                 if not is_file_type:
                     people_data = self.update_people_table_insert(con, cur)
@@ -1839,9 +1842,6 @@ class TimeSeriesMetaDataMixin(models.Model):
 
                     # insert record to ActionBy table
                     self.update_actionby_table_insert(con, cur, people_data)
-
-                # insert record to Actions table
-                self.update_actions_table_insert(con, cur, methods_data)
 
                 # insert record to FeatureActions table
                 self.update_featureactions_table_insert(con, cur)
