@@ -158,7 +158,7 @@ $(document).ready(function () {
                 notOwned.push($(selectedRows[i]));
                 // No permission to delete non owned resources.
             }
-            else if (status == "published") {
+            else if (status.toUpperCase() == "PUBLISHED") {
                 published.push($(selectedRows[i]));
             }
             else {

@@ -134,7 +134,7 @@ def create_bag_files(resource):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        res_uri = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+        res_uri = u'{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
             hs_url=current_site_url,
             res_id=resource.short_id,
             file_name=f.short_path)
