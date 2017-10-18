@@ -73,8 +73,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if not resource_edit:  # In view mode
         content_model_str = str(content_model.content_model).lower()
         if content_model_str.lower() == "toolresource":
-            if content_model.metadata.homepage_url.exists():
-                tool_homepage_url = content_model.metadata.homepage_url.first().value
+            if content_model.metadata.app_home_page_url:
+                tool_homepage_url = content_model.metadata.app_home_page_url.value
 
         relevant_tools = []
         # loop through all SupportedResTypes objs (one webapp resources has one

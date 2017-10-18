@@ -6,7 +6,8 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
-                                    SupportedSharingStatusValidationForm
+                                    SupportedSharingStatusValidationForm, \
+                                    SupportedFileTypesValidationForm
 
 
 @receiver(pre_create_resource, sender=ToolResource)
@@ -38,6 +39,8 @@ def validate_form(request, element_name):
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':
         element_form = SupportedResTypesValidationForm(data=request.POST)
+    elif element_name == 'supportedfiletypes':
+        element_form = SupportedFileTypesValidationForm(data=request.POST)
     elif element_name == 'toolicon':
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
