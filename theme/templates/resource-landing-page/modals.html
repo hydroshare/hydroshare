@@ -413,7 +413,7 @@
                     user zone, then download the large file via iRODS clients such as
                     <a href="https://docs.irods.org/master/icommands/user/" target="_blank">
                     icommands</a> and
-                    <a href="https://pages.hydroshare.org/accessing-hydroshare-irods-from-a-windows-pc-or-mac/"
+                    <a href="https://help.hydroshare.org/accessing-hydroshare-irods-from-a-windows-pc-or-mac/"
                        target="_blank">Cyberduck</a>.
                 </p>
             </div>
@@ -514,8 +514,14 @@
                 <h4 class="modal-title" id="copy-resource-title">Copy This Resource</h4>
             </div>
             <div class="modal-body">
-                {{ rights.statement|remove_last_char }} License.
-                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>.
+                {% if rights.statement|length > 1000 %}
+                    <div class="pre-scrollable">
+                        <span>{{ rights.statement|linebreaks }}</span>
+                    </div>
+                {% else %}
+                    <span>{{ rights.statement|linebreaks }}</span>
+                {% endif %}
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
                 <p>
                 In copying this resource you are ethically bound to respect the terms of this license.
                 Please confirm that you accept the terms of this license below before you can copy this resource.
@@ -524,8 +530,70 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" class="btn btn-danger" id="copy-btn"
+                <a type="button" class="btn btn-success" id="copy-btn"
                    href="/hsapi/_internal/{{ cm.short_id }}/copy-resource/" disabled>Copy this resource</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="license-agree-dialog-bag" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="license-agree-title">Resource License Agreement</h4>
+            </div>
+            <div class="modal-body">
+                {% if rights.statement|length > 1000 %}
+                    <div class="pre-scrollable">
+                        <span>{{ rights.statement|linebreaks }}</span>
+                    </div>
+                {% else %}
+                    <span>{{ rights.statement|linebreaks }}</span>
+                {% endif %}
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <p style="margin-top: 5px">
+                In downloading this resource contents you are ethically bound to respect the terms of this license.
+                Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
+                </p>
+                <input type="checkbox" id="agree-chk-download-bag"><label for="agree-chk-download" class="checkbox-label">I accept the terms of this license.</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-success" id="download-bag-btn"
+                   href="{{ cm.bag_url }}" disabled>Download</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="license-agree-dialog-file" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="license-agree-title">Resource License Agreement</h4>
+            </div>
+            <div class="modal-body">
+                {% if rights.statement|length > 1000 %}
+                    <div class="pre-scrollable">
+                        <span>{{ rights.statement|linebreaks }}</span>
+                    </div>
+                {% else %}
+                    <span>{{ rights.statement|linebreaks }}</span>
+                {% endif %}
+                <span class="rights-url"><a href="{{ rights.url }}">&nbsp{{ rights.url }}</a></span>
+                <p style="margin-top: 5px">
+                In downloading this resource contents you are ethically bound to respect the terms of this license.
+                Please confirm that you accept the terms of this license below before you can do any downloads for this resource.
+                </p>
+                <input type="checkbox" id="agree-chk-download-file"><label for="agree-chk-download-file" class="checkbox-label">I accept the terms of this license.</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="download-file-btn"
+                   disabled>Download</button>
             </div>
         </div>
     </div>

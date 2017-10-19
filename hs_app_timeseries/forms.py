@@ -119,7 +119,7 @@ class SiteForm(ModelForm):
 class SiteValidationForm(forms.Form):
     site_code = forms.CharField(max_length=200)
     site_name = forms.CharField(max_length=255)
-    elevation_m = forms.IntegerField(required=False)
+    elevation_m = forms.FloatField(required=False)
     elevation_datum = forms.CharField(max_length=50, required=False)
     site_type = forms.CharField(max_length=100, required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)

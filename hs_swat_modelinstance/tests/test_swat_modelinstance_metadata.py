@@ -892,3 +892,76 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertFalse(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no ModelInput metadata objects
         self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the SWATModelInstanceMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
+
+        # create modeloutput element using the update()
+        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': False}}],
+                                                  self.user)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
+
+        self.resSWATModelInstance.metadata.update([{'modeloutput': {'includes_output': True}}],
+                                                  self.user)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_output.includes_output, True)
+
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.resSWATModelInstance.metadata.creators.count(), 1)
+        self.resSWATModelInstance.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                                   {'creator': {'name': 'Third Creator'}}],
+                                                  self.user)
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.resSWATModelInstance.metadata.creators.count(), 2)
+
+        # test multiple updates in a single call to update()
+        metadata = list()
+        metadata.append({'executedby': {'model_name': self.resGenModelProgram.short_id}})
+        metadata.append({'modeloutput': {'includes_output': False}})
+        metadata.append({'modelobjective': {'swat_model_objectives':
+                                            ["BMPs", "Hydrology", "Water quality"],
+                                            'other_objectives': 'elon musk'}})
+        metadata.append({'simulationtype': {'simulation_type_name': 'Normal Simulation'}})
+        metadata.append({'modelmethod': {'runoffCalculationMethod': 'aaa',
+                                         'flowRoutingMethod': 'bbb', 'petEstimationMethod': 'ccc'}})
+        metadata.append({'modelparameter': {'model_parameters':
+                                            ["Crop rotation", "Tillage operation"],
+                                            'other_parameters': 'spongebob'}})
+        metadata.append({'modelinput': {'warmupPeriodValue': 'a',
+                                        'rainfallTimeStepType': 'Daily',
+                                        'rainfallTimeStepValue': 'c',
+                                        'routingTimeStepType': 'Daily',
+                                        'routingTimeStepValue': 'e',
+                                        'simulationTimeStepType': 'Hourly',
+                                        'simulationTimeStepValue': 'g',
+                                        'watershedArea': 'h',
+                                        'numberOfSubbasins': 'i',
+                                        'numberOfHRUs': 'j',
+                                        'demResolution': 'k',
+                                        'demSourceName': 'l',
+                                        'demSourceURL': 'http://dem-source.org',
+                                        'landUseDataSourceName': 'n',
+                                        'landUseDataSourceURL': 'http://land-data.org',
+                                        'soilDataSourceName': 'p',
+                                        'soilDataSourceURL': 'http://soil-data.org'}})
+
+        self.resSWATModelInstance.metadata.update(metadata, self.user)
+
+        # check that there are extended metadata elements at this point
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_objective, None)

@@ -1,3 +1,5 @@
+"""Declare critical models for Hydroshare hs_core app."""
+
 import os.path
 import json
 import arrow
@@ -6,6 +8,7 @@ from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
+
 from django_irods.icommands import SessionException
 
 from django.contrib.postgres.fields import HStoreField
@@ -35,14 +38,18 @@ from mezzanine.pages.managers import PageManager
 
 from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
+from hs_core.irods import ResourceIRODSMixin, ResourceFileIRODSMixin
+
 
 class GroupOwnership(models.Model):
+    """Define lookup table allowing django auth users to own django auth groups."""
+
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
 
 
 def get_user(request):
-    """authorize user based on API key if it was passed, otherwise just use the request's user.
+    """Authorize user based on API key if it was passed, otherwise just use the request's user.
 
     NOTE: The API key portion has been removed with TastyPie and will be restored when the
     new API is built.
@@ -50,7 +57,6 @@ def get_user(request):
     :param request:
     :return: django.contrib.auth.User
     """
-
     if request.user.is_authenticated():
         return User.objects.get(pk=request.user.pk)
     else:
@@ -58,6 +64,7 @@ def get_user(request):
 
 
 def validate_user_url(value):
+    """Validate that a URL is a valid URL for a hydroshare user."""
     err_message = '%s is not a valid url for hydroshare user' % value
     if value:
         url_parts = value.split('/')
@@ -77,22 +84,29 @@ def validate_user_url(value):
 
 
 class ResourcePermissionsMixin(Ownable):
+    """Mix in can_* permission helper functions between users and resources."""
+
     creator = models.ForeignKey(User,
                                 related_name='creator_of_%(app_label)s_%(class)s',
                                 help_text='This is the person who first uploaded the resource',
                                 )
 
     class Meta:
+        """Define meta properties for ResourcePermissionsMixin, make abstract."""
+
         abstract = True
 
     @property
     def permissions_store(self):
+        """Use PERMISSIONS_DB constant. Unsure what 's' is here."""
         return s.PERMISSIONS_DB
 
     def can_add(self, request):
+        """Pass through can_change to determine if user can make changes to a resource."""
         return self.can_change(request)
 
     def can_delete(self, request):
+        """Use utils.authorize method to determine if user can delete a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -100,6 +114,7 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
     def can_change(self, request):
+        """Use utils.authorize method to determine if user can change a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -107,6 +122,7 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
     def can_view(self, request):
+        """Use utils.authorize method to determine if user can view a resource."""
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id,
@@ -114,9 +130,8 @@ class ResourcePermissionsMixin(Ownable):
                          raises_exception=False)[1]
 
 
-# this should be used as the page processor for anything with pagepermissionsmixin
-# page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
+    """Return a dict describing permissions for current user."""
     from hs_access_control.models import PrivilegeCodes
 
     cm = page.get_content_model()
@@ -205,6 +220,8 @@ def page_permissions_page_processor(request, page):
 
 
 class AbstractMetaDataElement(models.Model):
+    """Define abstract class for all metadata elements."""
+
     term = None
 
     object_id = models.PositiveIntegerField()
@@ -216,40 +233,55 @@ class AbstractMetaDataElement(models.Model):
 
     @property
     def metadata(self):
+        """Return content object that describes metadata."""
         return self.content_object
 
     @classmethod
     def create(cls, **kwargs):
+        """Pass through kwargs to object.create method."""
         return cls.objects.create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Pass through kwargs to update specific metadata object."""
         element = cls.objects.get(id=element_id)
         for key, value in kwargs.iteritems():
                 setattr(element, key, value)
         element.save()
         return element
 
-    # could not name this method as 'delete' since the parent 'Model' class has such a method
     @classmethod
     def remove(cls, element_id):
+        """Pass through element id to objects.get and then delete() method.
+
+        Could not name this method as 'delete' since the parent 'Model' class has such a method
+        """
         element = cls.objects.get(id=element_id)
         element.delete()
 
     class Meta:
+        """Define meta properties for AbstractMetaDataElement class."""
+
         abstract = True
 
 
-# Adaptor class added for Django inplace editing to honor HydroShare user-resource permissions
 class HSAdaptorEditInline(object):
+    """Define permissions-based helper to determine if user can edit adapter field.
+
+    Adaptor class added for Django inplace editing to honor HydroShare user-resource permissions
+    """
+
     @classmethod
     def can_edit(cls, adaptor_field):
+        """Define permissions-based helper to determine if user can edit adapter field."""
         obj = adaptor_field.obj
         cm = obj.get_content_model()
         return cm.can_change(adaptor_field.request)
 
 
 class ExternalProfileLink(models.Model):
+    """Define External Profile Link model."""
+
     type = models.CharField(max_length=50)
     url = models.URLField()
 
@@ -258,10 +290,14 @@ class ExternalProfileLink(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
+        """Define meta properties for ExternalProfileLink class."""
+
         unique_together = ("type", "url", "object_id")
 
 
 class Party(AbstractMetaDataElement):
+    """Define party model to define a person."""
+
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
     name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
@@ -272,13 +308,17 @@ class Party(AbstractMetaDataElement):
     external_links = GenericRelation(ExternalProfileLink)
 
     def __unicode__(self):
+        """Return name field for unicode representation."""
         return self.name
 
     class Meta:
+        """Define meta properties for Party class."""
+
         abstract = True
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Party model."""
         element_name = cls.__name__
 
         profile_links = None
@@ -321,6 +361,7 @@ class Party(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Party model."""
         element_name = cls.__name__
         creator_order = None
         if 'description' in kwargs:
@@ -370,6 +411,7 @@ class Party(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Party model."""
         party = cls.objects.get(id=element_id)
 
         # if we are deleting a creator, then we have to update the order attribute of remaining
@@ -392,6 +434,7 @@ class Party(AbstractMetaDataElement):
 
     @classmethod
     def _create_profile_link(cls, party, link):
+        """Validate and create ExternalProfileLink model linked to Party model."""
         if 'type' in link and 'url' in link:
             # check that the type is unique for the party
             if party.external_links.filter(type=link['type']).count() > 0:
@@ -409,8 +452,9 @@ class Party(AbstractMetaDataElement):
 
     @classmethod
     def _update_profile_link(cls, party, link):
-        """
-        if the link dict contains only key 'link_id' then the link will be deleted
+        """Clean up, validate, and update ExternalProfileLink linked to Party model.
+
+        If the link dict contains only key 'link_id' then the link will be deleted
         otherwise the link will be updated
         """
         p_link = ExternalProfileLink.objects.get(id=link['link_id'])
@@ -441,30 +485,41 @@ class Party(AbstractMetaDataElement):
 
 
 class Contributor(Party):
+    """Extend Party model with the term of 'Contributor'."""
+
     term = 'Contributor'
 
 
-# Example of repeatable metadata element
 class Creator(Party):
+    """Extend Party model with the term of 'Creator' and a proper ordering."""
+
     term = "Creator"
     order = models.PositiveIntegerField()
 
     class Meta:
+        """Define meta properties for Creator class."""
+
         ordering = ['order']
 
 
 class Description(AbstractMetaDataElement):
+    """Define Description metadata element model."""
+
     term = 'Description'
     abstract = models.TextField()
 
     def __unicode__(self):
+        """Return abstract field for unicode representation."""
         return self.abstract
 
     class Meta:
+        """Define meta properties for Description model."""
+
         unique_together = ("content_type", "object_id")
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Create custom update method for Description model."""
         element = Description.objects.get(id=element_id)
         resource = element.metadata.resource
         if resource.resource_type == "TimeSeriesResource":
@@ -475,21 +530,28 @@ class Description(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Create custom remove method for Description model."""
         raise ValidationError("Description element of a resource can't be deleted.")
 
 
 class Title(AbstractMetaDataElement):
+    """Define Title metadata element model."""
+
     term = 'Title'
     value = models.CharField(max_length=300)
 
     def __unicode__(self):
+        """Return value field for unicode representation."""
         return self.value
 
     class Meta:
+        """Define meta properties for Title class."""
+
         unique_together = ("content_type", "object_id")
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update function for Title class."""
         element = Title.objects.get(id=element_id)
         resource = element.metadata.resource
         if resource.resource_type == "TimeSeriesResource":
@@ -500,25 +562,34 @@ class Title(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove function for Title class."""
         raise ValidationError("Title element of a resource can't be deleted.")
 
 
 class Type(AbstractMetaDataElement):
+    """Define Type metadata element model."""
+
     term = 'Type'
     url = models.URLField()
 
     def __unicode__(self):
+        """Return url field for unicode representation."""
         return self.url
 
     class Meta:
+        """Define meta properties for Type class."""
+
         unique_together = ("content_type", "object_id")
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove function for Type model."""
         raise ValidationError("Type element of a resource can't be deleted.")
 
 
 class Date(AbstractMetaDataElement):
+    """Define Date metadata model."""
+
     DATE_TYPE_CHOICES = (
         ('created', 'Created'),
         ('modified', 'Modified'),
@@ -533,16 +604,20 @@ class Date(AbstractMetaDataElement):
     end_date = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
+        """Return either {type} {start} or {type} {start} {end} for unicode representation."""
         if self.end_date:
             return "{type} {start} {end}".format(type=self.type, start=self.start_date,
                                                  end=self.end_date)
         return "{type} {start}".format(type=self.type, start=self.start_date)
 
     class Meta:
+        """Define meta properties for Date class."""
+
         unique_together = ("type", "content_type", "object_id")
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Date model."""
         if 'type' in kwargs:
             if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
@@ -579,6 +654,7 @@ class Date(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update model for Date model."""
         dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
@@ -615,6 +691,7 @@ class Date(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Date model."""
         dt = Date.objects.get(id=element_id)
 
         if dt.type in ['created', 'modified']:
@@ -624,6 +701,8 @@ class Date(AbstractMetaDataElement):
 
 
 class Relation(AbstractMetaDataElement):
+    """Define Relation custom metadata model."""
+
     SOURCE_TYPES = (
         ('isHostedBy', 'Hosted By'),
         ('isCopiedFrom', 'Copied From'),
@@ -647,14 +726,16 @@ class Relation(AbstractMetaDataElement):
     value = models.CharField(max_length=500)
 
     def __str__(self):
+        """Return {type} {value} for string representation."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
     def __unicode__(self):
-        """ deprecated """
+        """Return {type} {value} for unicode representation (deprecated)."""
         return "{type} {value}".format(type=self.type, value=self.value)
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Relation class."""
         if 'type' not in kwargs:
             ValidationError("Type of relation element is missing.")
         if 'value' not in kwargs:
@@ -690,6 +771,7 @@ class Relation(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Relation class."""
         if 'type' not in kwargs:
             ValidationError("Type of relation element is missing.")
         if 'value' not in kwargs:
@@ -728,15 +810,19 @@ class Relation(AbstractMetaDataElement):
 
 
 class Identifier(AbstractMetaDataElement):
+    """Create Identifier custom metadata element."""
+
     term = 'Identifier'
     name = models.CharField(max_length=100)
     url = models.URLField(unique=True)
 
     def __unicode__(self):
+        """Return {name} {url} for unicode representation."""
         return "{name} {url}".format(name=self.name, url=self.url)
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Identifier model."""
         if 'name' in kwargs:
             metadata_obj = kwargs['content_object']
             # get matching resource
@@ -761,6 +847,7 @@ class Identifier(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Identifier model."""
         idf = Identifier.objects.get(id=element_id)
 
         if 'name' in kwargs:
@@ -795,6 +882,7 @@ class Identifier(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Idenfitier method."""
         idf = Identifier.objects.get(id=element_id)
 
         # get matching resource
@@ -810,18 +898,24 @@ class Identifier(AbstractMetaDataElement):
 
 
 class Publisher(AbstractMetaDataElement):
+    """Define Publisher custom metadata model."""
+
     term = 'Publisher'
     name = models.CharField(max_length=200)
     url = models.URLField()
 
     def __unicode__(self):
+        """Return {name} {url} for unicode representation of Publisher model."""
         return "{name} {url}".format(name=self.name, url=self.url)
 
     class Meta:
+        """Define meta properties for Publisher model."""
+
         unique_together = ("content_type", "object_id")
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Publisher model."""
         metadata_obj = kwargs['content_object']
         # get matching resource
         resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
@@ -858,25 +952,33 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Publisher model."""
         raise ValidationError("Publisher element can't be updated.")
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Publisher model."""
         raise ValidationError("Publisher element can't be deleted.")
 
 
 class Language(AbstractMetaDataElement):
+    """Define language custom metadata model."""
+
     term = 'Language'
     code = models.CharField(max_length=3, choices=iso_languages)
 
     class Meta:
+        """Define meta properties for Language model."""
+
         unique_together = ("content_type", "object_id")
 
     def __unicode__(self):
+        """Return code field for unicode representation."""
         return self.code
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Language model."""
         if 'code' in kwargs:
             # check the code is a valid code
             if not [t for t in iso_languages if t[0] == kwargs['code']]:
@@ -888,6 +990,7 @@ class Language(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Language model."""
         if 'code' in kwargs:
             # validate language code
             if not [t for t in iso_languages if t[0] == kwargs['code']]:
@@ -899,6 +1002,8 @@ class Language(AbstractMetaDataElement):
 
 
 class Coverage(AbstractMetaDataElement):
+    """Define Coverage custom metadata element model."""
+
     COVERAGE_TYPES = (
         ('box', 'Box'),
         ('point', 'Point'),
@@ -909,9 +1014,12 @@ class Coverage(AbstractMetaDataElement):
     type = models.CharField(max_length=20, choices=COVERAGE_TYPES)
 
     def __unicode__(self):
+        """Return {type} {value} for unicode representation."""
         return "{type} {value}".format(type=self.type, value=self._value)
 
     class Meta:
+        """Define meta properties for Coverage model."""
+
         unique_together = ("type", "content_type", "object_id")
     """
     _value field stores a json string. The content of the json
@@ -948,17 +1056,18 @@ class Coverage(AbstractMetaDataElement):
 
     @property
     def value(self):
+        """Return json representation of coverage values."""
         return json.loads(self._value)
 
     @classmethod
     def create(cls, **kwargs):
-        """
+        """Define custom create method for Coverage model.
+
         data for the coverage value attribute must be provided as a dictionary
         Note that kwargs['_value'] is a JSON-serialized unicode string dictionary
         generated from django.forms.models.model_to_dict() which converts model values
         to dictionaries.
         """
-
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
             metadata_obj = kwargs['content_object']
@@ -989,7 +1098,7 @@ class Coverage(AbstractMetaDataElement):
                 value_arg_dict = json.loads(kwargs['_value'])
 
             if value_arg_dict is not None:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
+                cls.validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
                     value_dict = {k: v for k, v in value_arg_dict.iteritems()
@@ -1022,10 +1131,10 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        """
+        """Define custom create method for Coverage model.
+
         data for the coverage value attribute must be provided as a dictionary
         """
-
         cov = Coverage.objects.get(id=element_id)
 
         changing_coverage_type = False
@@ -1033,7 +1142,7 @@ class Coverage(AbstractMetaDataElement):
         if 'type' in kwargs:
             changing_coverage_type = cov.type != kwargs['type']
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                cls.validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
             else:
                 raise ValidationError('Coverage value is missing.')
 
@@ -1069,9 +1178,11 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Coverage model."""
         raise ValidationError("Coverage element can't be deleted.")
 
     def add_to_xml_container(self, container):
+        """Update etree SubElement container with coverage values."""
         NAMESPACES = CoreMetaData.NAMESPACES
         dc_coverage = etree.SubElement(container, '{%s}coverage' % NAMESPACES['dc'])
         cov_dcterm = '{%s}' + self.type
@@ -1122,7 +1233,8 @@ class Coverage(AbstractMetaDataElement):
         rdf_coverage_value.text = cov_value
 
     @classmethod
-    def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
+    def validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
+        """Validate values based on coverage type."""
         if coverage_type == 'period':
             # check that all the required sub-elements exist
             if 'start' not in value_dict or 'end' not in value_dict:
@@ -1187,10 +1299,11 @@ class Coverage(AbstractMetaDataElement):
                                       "in the range of -180 to 180")
 
     def get_html(self, pretty=True):
-        # Using the dominate module to generate the
-        # html to display data for this element (resource view mode)
-        # this function should be used for displaying one spatial coverage element
-        # or one temporal coverage element
+        """Use the dominate module to generate element display HTML.
+
+        This function should be used for displaying one spatial coverage element
+        or one temporal coverage element
+        """
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
 
         def get_th(heading_name):
@@ -1229,7 +1342,7 @@ class Coverage(AbstractMetaDataElement):
                             get_th('North')
                             td(self.value['north'])
                         with tr():
-                            get_th('Eest')
+                            get_th('East')
                             td(self.value['east'])
             else:
                 legend('Temporal Coverage')
@@ -1247,7 +1360,8 @@ class Coverage(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
     @classmethod
-    def get_temporal_html_form(cls, resource, element=None, file_type=False):
+    def get_temporal_html_form(cls, resource, element=None, file_type=False, allow_edit=True):
+        """Return CoverageTemporalForm for Coverage model."""
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
         if element is not None:
@@ -1257,7 +1371,7 @@ class Coverage(AbstractMetaDataElement):
             coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
             coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
 
-        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                              res_short_id=resource.short_id if resource else None,
                                              element_id=element.id if element else None,
                                              file_type=file_type)
@@ -1265,6 +1379,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def get_spatial_html_form(cls, resource, element=None, allow_edit=True, file_type=False):
+        """Return SpatialCoverageForm for Coverage model."""
         from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
 
@@ -1289,17 +1404,24 @@ class Coverage(AbstractMetaDataElement):
 
 
 class Format(AbstractMetaDataElement):
+    """Define Format custom metadata element model."""
+
     term = 'Format'
     value = models.CharField(max_length=150)
 
     class Meta:
+        """Define meta properties for Format model."""
+
         unique_together = ("value", "content_type", "object_id")
 
     def __unicode__(self):
+        """Return value field for unicode representation."""
         return self.value
 
 
 class FundingAgency(AbstractMetaDataElement):
+    """Define FundingAgency custom metadata element mode."""
+
     term = 'FundingAgency'
     agency_name = models.TextField(null=False)
     award_title = models.TextField(null=True, blank=True)
@@ -1307,10 +1429,12 @@ class FundingAgency(AbstractMetaDataElement):
     agency_url = models.URLField(null=True, blank=True)
 
     def __unicode__(self):
+        """Return agency_name field for unicode representation."""
         return self.agency_name
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for FundingAgency model."""
         agency_name = kwargs.get('agency_name', None)
         if agency_name is None or len(agency_name.strip()) == 0:
             raise ValidationError("Agency name is missing")
@@ -1319,6 +1443,7 @@ class FundingAgency(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        """Define custom update method for Agency model."""
         agency_name = kwargs.get('agency_name', None)
         if agency_name and len(agency_name.strip()) == 0:
             raise ValidationError("Agency name is missing")
@@ -1327,17 +1452,23 @@ class FundingAgency(AbstractMetaDataElement):
 
 
 class Subject(AbstractMetaDataElement):
+    """Define Subject custom metadata element model."""
+
     term = 'Subject'
     value = models.CharField(max_length=100)
 
     class Meta:
+        """Define meta properties for Subject model."""
+
         unique_together = ("value", "content_type", "object_id")
 
     def __unicode__(self):
+        """Return value field for unicode representation."""
         return self.value
 
     @classmethod
     def create(cls, **kwargs):
+        """Define custom create method for Subject model."""
         metadata_obj = kwargs['content_object']
         value = kwargs.get('value', None)
         if value is not None:
@@ -1348,7 +1479,7 @@ class Subject(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-
+        """Define custom remove method for Subject model."""
         sub = Subject.objects.get(id=element_id)
 
         if Subject.objects.filter(object_id=sub.object_id,
@@ -1358,22 +1489,30 @@ class Subject(AbstractMetaDataElement):
 
 
 class Source(AbstractMetaDataElement):
+    """Define Source custom metadata element model."""
+
     term = 'Source'
     derived_from = models.CharField(max_length=300)
 
     class Meta:
+        """Define meta properties for Source model."""
+
         unique_together = ("derived_from", "content_type", "object_id")
 
     def __unicode__(self):
+        """Return derived_from field for unicode representation."""
         return self.derived_from
 
 
 class Rights(AbstractMetaDataElement):
+    """Define Rights custom metadata element model."""
+
     term = 'Rights'
     statement = models.TextField(null=True, blank=True)
     url = models.URLField(null=True, blank=True)
 
     def __unicode__(self):
+        """Return either statement or statement + url for unicode representation."""
         value = ''
         if self.statement:
             value += self.statement + ' '
@@ -1383,37 +1522,47 @@ class Rights(AbstractMetaDataElement):
         return value
 
     class Meta:
+        """Define meta properties for Rights model."""
+
         unique_together = ("content_type", "object_id")
 
     @classmethod
     def remove(cls, element_id):
+        """Define custom remove method for Rights model."""
         raise ValidationError("Rights element of a resource can't be deleted.")
 
 
 def short_id():
+    """Generate a uuid4 hex to be used as a resource or element short_id."""
     return uuid4().hex
 
 
 class ResourceManager(PageManager):
+    """Extend mezzanine PageManager to manage Resource pages."""
 
     def __init__(self, resource_type=None, *args, **kwargs):
+        """Extend mezzanine PageManager to manage Resource pages based on resource_type."""
         self.resource_type = resource_type
         super(ResourceManager, self).__init__(*args, **kwargs)
 
     def create(self, *args, **kwargs):
+        """Create new mezzanine page based on resource_type."""
         if self.resource_type is None:
             kwargs.pop('resource_type', None)
         return super(ResourceManager, self).create(*args, **kwargs)
 
     def get_queryset(self):
+        """Get mezzanine-like queryset based on resource_type."""
         qs = super(ResourceManager, self).get_queryset()
         if self.resource_type:
             qs = qs.filter(resource_type=self.resource_type)
         return qs
 
 
-class AbstractResource(ResourcePermissionsMixin):
+class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     """
+    Create Abstract Class for all Resources.
+
     All hydroshare objects inherit from this mixin.  It defines things that must
     be present to be considered a hydroshare resource.  Additionally, all
     hydroshare resources should inherit from Page.  This gives them what they
@@ -1469,12 +1618,12 @@ class AbstractResource(ResourcePermissionsMixin):
     # definition of resource logic
     @property
     def supports_folders(self):
-        """ returns whether folder operations are supported. Computed for polymorphic types"""
+        """Return whether folder operations are supported. Computed for polymorphic types."""
         return False
 
     @property
     def has_required_metadata(self):
-        """ return True only if all required metadata is present. """
+        """Return True only if all required metadata is present."""
         if self.metadata is None or not self.metadata.has_all_required_elements():
             return False
         for f in self.logical_files:
@@ -1484,8 +1633,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def can_be_public_or_discoverable(self):
-        """
-        Return True if the resource can be set to public or discoverable
+        """Return True if the resource can be set to public or discoverable.
 
         This is True if
 
@@ -1499,8 +1647,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return has_files and has_metadata
 
     def set_discoverable(self, value, user=None):
-        """
-        Set the discoverable flag for a resource.
+        """Set the discoverable flag for a resource.
 
         :param value: True or False
         :param user: user requesting the change, or None for changes that are not user requests.
@@ -1543,12 +1690,10 @@ class AbstractResource(ResourcePermissionsMixin):
         else:  # state change is allowed
             self.raccess.discoverable = value
             self.raccess.save()
-            if not value:  # not discoverable means also not public
-                self.set_public(value)  # This must be called, as it sets the AVU isPublic
+            self.set_public(False)
 
     def set_public(self, value, user=None):
-        """
-        set the public flag for a resource.
+        """Set the public flag for a resource.
 
         :param value: True or False
         :param user: user requesting the change, or None for changes that are not user requests.
@@ -1607,29 +1752,67 @@ class AbstractResource(ResourcePermissionsMixin):
 
                 # TODO: why does this only run when something becomes public?
                 # TODO: Should it be run when a NetcdfResource becomes private?
-                # run script to update hyrax input files when private netCDF resource changes state
-                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                # Answer to TODO above: it is intentional not to run it when a target resource
+                # becomes private for performance reasons. The nightly script run will clean up
+                # to make sure all private resources are not available to hyrax server as well as
+                # to make sure all resources files available to hyrax server are up to date with
+                # the HydroShare iRODS data store.
+
+                # run script to update hyrax input files when private netCDF resource becomes
+                # public or private composite resource that includes netCDF files becomes public
+
+                is_netcdf_to_public = False
+                if self.resource_type == 'NetcdfResource':
+                    is_netcdf_to_public = True
+                elif self.resource_type == 'CompositeResource' and \
+                        self.get_logical_files('NetCDFLogicalFile'):
+                    is_netcdf_to_public = True
+
+                if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
+    def set_require_download_agreement(self, user, value):
+        """Set resource require_download_agreement flag to True or False.
+        If require_download_agreement is True then user will be prompted to agree to resource
+        rights statement before he/she can download resource files or bag.
+
+        :param user: user requesting the change
+        :param value: True or False
+        :raises PermissionDenied: if the user lacks permission to change resource flag
+        """
+        if not user.uaccess.can_change_resource_flags(self):
+            raise PermissionDenied("You don't have permission to change resource download agreement"
+                                   " status")
+        self.raccess.require_download_agreement = value
+        self.raccess.save()
+
     def update_public_and_discoverable(self):
-        """ update the settings of the public and discoverable flags for changes in metadata """
+        """Update the settings of the public and discoverable flags for changes in metadata."""
         if self.raccess.discoverable and not self.can_be_public_or_discoverable:
             self.set_discoverable(False)  # also sets Public
 
     def set_quota_holder(self, setter, new_holder):
-        # set quota holder of the resource to new_holder who must be an owner
-        # setter is the requesting user to transfer quota holder and setter must also be an owner
+        """Set quota holder of the resource to new_holder who must be an owner.
+
+        setter is the requesting user to transfer quota holder and setter must also be an owner
+        """
+        from hs_core.hydroshare.utils import validate_user_quota
         if __debug__:
             assert(isinstance(setter, User))
             assert(isinstance(new_holder, User))
         if not setter.uaccess.owns_resource(self) or \
                 not new_holder.uaccess.owns_resource(self):
             raise PermissionDenied("Only owners can set or be set as quota holder for the resource")
+        # QuotaException will be raised if new_holder does not have enough quota to hold this
+        # new resource, in which case, set_quota_holder to the new user fails
+        validate_user_quota(new_holder, self.size)
         self.setAVU("quotaUserName", new_holder.username)
 
     def get_quota_holder(self):
-        # get quota holder of the resource
-        # return User instance of the quota holder for the resource or None if it does not exist
+        """Get quota holder of the resource.
+
+        return User instance of the quota holder for the resource or None if it does not exist
+        """
         try:
             uname = self.getAVU("quotaUserName")
         except SessionException:
@@ -1643,8 +1826,7 @@ class AbstractResource(ResourcePermissionsMixin):
             return None
 
     def setAVU(self, attribute, value):
-        """
-        set an AVU at the resource level
+        """Set an AVU at the resource level.
 
         This avoids mistakes in setting AVUs by assuring that the appropriate root path
         is alway used.
@@ -1656,8 +1838,7 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage.setAVU(root_path, attribute, value)
 
     def getAVU(self, attribute):
-        """
-        get an AVU for a resource
+        """Get an AVU for a resource.
 
         This avoids mistakes in getting AVUs by assuring that the appropriate root path
         is alway used.
@@ -1665,33 +1846,34 @@ class AbstractResource(ResourcePermissionsMixin):
         istorage = self.get_irods_storage()
         root_path = self.root_path
         value = istorage.getAVU(root_path, attribute)
+
+        # Convert selected boolean attribute values to bool; non-existence implies False
+        # "Private" is the appropriate response if "isPublic" is None
         if attribute == 'isPublic':
-            if value.lower() == 'true':
+            if value is not None and value.lower() == 'true':
                 return True
             else:
                 return False
+
+        # Convert selected boolean attribute values to bool; non-existence implies True
+        # If bag_modified or metadata_dirty does not exist, then we do not know the
+        # state of metadata files and/or bags. They may not exist. Thus we interpret
+        # None as "true", which will generate the appropriate files if they do not exist.
+        if attribute == 'bag_modified' or attribute == 'metadata_dirty':
+            if value is None or value.lower() == 'true':
+                return True
+            else:
+                return False
+
+        # return strings for all other attributes
         else:
             return value
 
-    # TODO: Why isn't this a regular method? Why does it need to be a class method?
-    # It would seem to me that one only creates a bag after a resource has been created,
-    # so that this would be an instance method....
-    @classmethod
-    def bag_url(cls, resource_id):
-        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
-        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
-                                                           resource_id=resource_id,
-                                                           postfix=bagit_postfix)
-        # type resolution is not relevant; grab base class instance.
-        res = BaseResource.objects.get(short_id=resource_id)
-        istorage = res.get_irods_storage()
-        bag_url = istorage.url(bag_path)
-        return bag_url
-
     @classmethod
     def scimeta_url(cls, resource_id):
-        scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
+        """ Get URL of the science metadata file resourcemetadata.xml """
+        res = BaseResource.objects.get(short_id=resource_id)
+        scimeta_path = res.scimeta_path
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
 
@@ -1701,6 +1883,7 @@ class AbstractResource(ResourcePermissionsMixin):
     # Choose one!
     @classmethod
     def resmap_url(cls, resource_id):
+        """ Get URL of the resource map resourcemap.xml."""
         resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
         resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
         return resmap_url
@@ -1708,9 +1891,11 @@ class AbstractResource(ResourcePermissionsMixin):
     # TODO: this is inaccurate; resourcemap.xml != systemmetadata.xml
     @classmethod
     def sysmeta_path(cls, resource_id):
+        """Get URL of resource map xml."""
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
     def delete(self, using=None):
+        """Delete resource along with all of its metadata and data bag."""
         from hydroshare import hs_bagit
         for fl in self.files.all():
             if fl.logical_file is not None:
@@ -1729,8 +1914,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def metadata(self):
-        """
-        Return a pointer to the metadata object for this resource.
+        """Return a pointer to the metadata object for this resource.
 
         This object can vary based upon resource type. Please override this function to
         return the appropriate object for each resource type.
@@ -1740,16 +1924,22 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def first_creator(self):
+        """Get first creator of resource from metadata."""
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
 
-    def get_metadata_xml(self, pretty_print=True):
-        # Resource types that support file types
-        # must override this method. See Composite Resource
-        # type as an example
-        return self.metadata.get_xml(pretty_print=pretty_print)
+    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
+        """Get metadata xml for Resource.
+
+        Resource types that support file types
+        must override this method. See Composite Resource
+        type as an example
+        """
+        return self.metadata.get_xml(pretty_print=pretty_print,
+                                     include_format_elements=include_format_elements)
 
     def _get_metadata(self, metatdata_obj):
+        """Get resource metadata from content_object."""
         md_type = ContentType.objects.get_for_model(metatdata_obj)
         res_type = ContentType.objects.get_for_model(self)
         self.content_object = res_type.model_class().objects.get(id=self.id).content_object
@@ -1763,13 +1953,16 @@ class AbstractResource(ResourcePermissionsMixin):
             return metatdata_obj
 
     def extra_capabilites(self):
-        """This is not terribly well defined yet, but should return at least a JSON serializable
+        """Return None. No-op method.
+
+        This is not terribly well defined yet, but should return at least a JSON serializable
         object of URL endpoints where extra self-describing services exist and can be queried by
         the user in the form of { "name" : "endpoint" }
         """
         return None
 
     def parse_citation_name(self, name, first_author=False):
+        """Return properly formatted citation name from metadata."""
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         first_names = None
         if "," in name:
@@ -1810,6 +2003,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return author_name + ", "
 
     def get_citation(self):
+        """Get citation or citations from resource metadata."""
         citation_str_lst = []
 
         CITATION_ERROR = "Failed to generate citation."
@@ -1876,8 +2070,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        """
-        Get a list of permissible upload types
+        """Get a list of permissible upload types.
 
         Subclasses override this function to allow only specific file types.
         Any version should return a tuple of those file extensions
@@ -1905,8 +2098,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def can_have_multiple_files(cls):
-        """
-        Return whether this kind of resource can contain multiple files.
+        """Return whether this kind of resource can contain multiple files.
+
         Subclasses of BaseResource override this function to tailor file upload.
 
         To allow resource to have only 1 file or no file, return False
@@ -1916,8 +2109,11 @@ class AbstractResource(ResourcePermissionsMixin):
         return True
 
     def has_required_content_files(self):
-        # Any subclass of this class may need to override this function
-        # to apply specific requirements as it relates to resource content files
+        """Check whether a resource has the required content files.
+
+        Any subclass of this class may need to override this function
+        to apply specific requirements as it relates to resource content files
+        """
         if len(self.get_supported_upload_file_types()) > 0:
             if self.files.all().count() > 0:
                 return True
@@ -1928,6 +2124,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def logical_files(self):
+        """Get list of logical files for resource."""
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
@@ -1937,6 +2134,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def non_logical_files(self):
+        """Get list of non-logical files for resource."""
         non_logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is None:
@@ -1946,6 +2144,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def generic_logical_files(self):
+        """Get list of generic logical files for resource."""
         generic_logical_files_list = []
         for res_file in self.files.all():
             if res_file.has_generic_logical_file:
@@ -1954,6 +2153,7 @@ class AbstractResource(ResourcePermissionsMixin):
         return generic_logical_files_list
 
     def get_logical_files(self, logical_file_class_name):
+        """Get list of logical files for a specified class name."""
         logical_files_list = []
         for res_file in self.files.all():
             if res_file.logical_file is not None:
@@ -1964,44 +2164,48 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @property
     def supports_logical_file(self):
-        """If this resource allows associating resource file objects with logical file"""
+        """Check if resource allows associating resource file objects with logical file."""
         return False
 
     def set_default_logical_file(self):
-        """Sets an instance of default logical file type to any resource file objects of
+        """Do nothing (noop).
+
+        Sets an instance of default logical file type to any resource file objects of
         this instance of the resource that is not already associated with a logical file.
         Each specific resource type needs to override this function in order to to support logical
-        file types"""
+        file types
+        """
         pass
 
     def supports_folder_creation(self, folder_full_path):
-        """If resource supports creation of folder at the specified path"""
+        """Check if resource supports creation of folder at the specified path."""
         return True
 
     def supports_rename_path(self, src_full_path, tgt_full_path):
-        """If file/folder rename/move is allowed by this resource"""
+        """Check if file/folder rename/move is allowed by this resource."""
         return True
 
     def supports_zip(self, folder_to_zip):
-        """if resource supports the specified folder to be zipped"""
+        """Check if resource supports the specified folder to be zipped."""
         return True
 
     def supports_unzip(self, file_to_unzip):
-        """if resource supports the unzipping of the specified file"""
+        """Check if resource supports the unzipping of the specified file."""
         return True
 
     def supports_delete_folder_on_zip(self, original_folder):
-        """if resource allows the original folder to be deleted upon zipping of that folder"""
+        """Check if resource allows the original folder to be deleted upon zip."""
         return True
 
     class Meta:
+        """Define meta properties for AbstractResource class."""
+
         abstract = True
         unique_together = ("content_type", "object_id")
 
     def check_relations(self, stop_on_error=False, log_errors=True,
                         echo_errors=False, return_errors=False):
-        """
-        Check for dangling relations due to deleted resource files
+        """Check for dangling relations due to deleted resource files.
 
         :param stop_on_error: whether to raise a ValidationError exception on first error
         :param log_errors: whether to log errors to Django log
@@ -2019,8 +2223,7 @@ class AbstractResource(ResourcePermissionsMixin):
                           .format(self.short_id, r.type, target))
 
     def fix_irods_user_paths(self, log_actions=True, echo_actions=False, return_actions=False):
-        """
-        Move iRODS user paths to the locations specified in settings
+        """Move iRODS user paths to the locations specified in settings.
 
         :param log_actions: whether to log actions to Django log
         :param echo_actions: whether to print actions on stdout
@@ -2109,8 +2312,7 @@ class AbstractResource(ResourcePermissionsMixin):
     def check_irods_files(self, stop_on_error=False, log_errors=True,
                           echo_errors=False, return_errors=False,
                           sync_ispublic=False, clean_irods=False, clean_django=False):
-        """
-        Check whether files in self.files and on iRODS agree
+        """Check whether files in self.files and on iRODS agree.
 
         :param stop_on_error: whether to raise a ValidationError exception on first error
         :param log_errors: whether to log errors to Django log
@@ -2262,8 +2464,7 @@ class AbstractResource(ResourcePermissionsMixin):
                                 stop_on_error=False, log_errors=True,
                                 echo_errors=False, return_errors=False,
                                 clean=False):
-        """
-        list a directory and check files there for conformance with django ResourceFiles
+        """List a directory and check files there for conformance with django ResourceFiles.
 
         :param stop_on_error: whether to raise a ValidationError exception on first error
         :param log_errors: whether to log errors to Django log
@@ -2321,8 +2522,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
 
 def get_path(instance, filename, folder=None):
-    """
-    Get a path from a ResourceFile, filename, and folder
+    """Get a path from a ResourceFile, filename, and folder.
 
     :param instance: instance of ResourceFile to use
     :param filename: file name to use (without folder)
@@ -2344,8 +2544,7 @@ def get_path(instance, filename, folder=None):
 
 # TODO: make this an instance method of BaseResource.
 def get_resource_file_path(resource, filename, folder=None):
-    """
-    Dynamically determine storage path for a FileField based upon whether resource is federated
+    """Determine storage path for a FileField based upon whether resource is federated.
 
     :param resource: resource containing the file.
     :param filename: name of file without folder.
@@ -2376,8 +2575,8 @@ def get_resource_file_path(resource, filename, folder=None):
         return os.path.join(resource.file_path, filename)
 
 
-def _path_is_allowed(path):
-    """ paths containing '/../' are suspicious """
+def path_is_allowed(path):
+    """Check for suspicious paths containing '/../'."""
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
     if '/../' in path:
@@ -2387,22 +2586,23 @@ def _path_is_allowed(path):
 
 
 class FedStorage(IrodsStorage):
-    """
+    """Define wrapper class to fix Django storage object limitations for iRODS.
+
     The constructor of a Django storage object must have no arguments.
     This simple workaround accomplishes that.
     """
+
     def __init__(self):
+        """Initialize method with no arguments for federated storage."""
         super(FedStorage, self).__init__("federated")
 
 
 # TODO: revise path logic for rename_resource_file_in_django for proper path.
 # TODO: utilize antibugging to check that paths are coherent after each operation.
-
-class ResourceFile(models.Model):
+class ResourceFile(ResourceFileIRODSMixin):
     """
     Represent a file in a resource.
     """
-
     # A ResourceFile is a sub-object of a resource, which can have several types.
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
@@ -2433,6 +2633,7 @@ class ResourceFile(models.Model):
                                                     'logical_file_object_id')
 
     def __str__(self):
+        """Return resource filename or federated resource filename for string representation."""
         if self.resource.resource_federation_path:
             return self.fed_resource_file.name
         else:
@@ -2440,7 +2641,8 @@ class ResourceFile(models.Model):
 
     @classmethod
     def create(cls, resource, file, folder=None, source=None, move=False):
-        """
+        """Create custom create method for ResourceFile model.
+
         Create takes arguments that are invariant of storage medium.
         These are turned into a path that is suitable for the medium.
         Federation must be initialized first at the resource level.
@@ -2484,7 +2686,7 @@ class ResourceFile(models.Model):
 
         # if file is an open file, use native copy by setting appropriate variables
         if isinstance(file, File):
-            if resource.resource_federation_path:
+            if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = file
             else:
@@ -2514,17 +2716,16 @@ class ResourceFile(models.Model):
                     raise ValidationError("ResourceFile.create: move did not work")
             elif file is not None and source is None:
                 # file points to an existing iRODS file
+                # no need to verify whether the file exists in iRODS since the file
+                # name is returned from iRODS ils list dir command which already
+                # confirmed the file exists already in iRODS
                 target = get_resource_file_path(resource, file, folder=folder)
-                istorage = resource.get_irods_storage()
-                if not istorage.exists(target):
-                    raise ValidationError("ResourceFile.create: target {} does not exist"
-                                          .format(target))
             else:
                 raise ValidationError(
                     "ResourceFile.create: exactly one of source or file must be specified")
 
             # we've copied or moved if necessary; now set the paths
-            if resource.resource_federation_path:
+            if resource.is_federated:
                 kwargs['resource_file'] = None
                 kwargs['fed_resource_file'] = target
             else:
@@ -2538,8 +2739,7 @@ class ResourceFile(models.Model):
 
     # TODO: automagically handle orphaned logical files
     def delete(self):
-        """
-        Delete a resource file record and the file contents
+        """Delete a resource file record and the file contents.
 
         model.delete does not cascade to delete files themselves,
         and these must be explicitly deleted.
@@ -2554,11 +2754,13 @@ class ResourceFile(models.Model):
 
     @property
     def resource(self):
+        """Return content_object representing the resource from a resource file."""
         return self.content_object
 
     # TODO: write unit test
     @property
     def size(self):
+        """Retturn file size for federated or non-federated files."""
         if self.resource.resource_federation_path:
             if __debug__:
                 assert self.resource_file.name is None or \
@@ -2573,8 +2775,9 @@ class ResourceFile(models.Model):
     # TODO: write unit test
     @property
     def exists(self):
+        """Check existence of files for both federated and non-federated."""
         istorage = self.resource.get_irods_storage()
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -2585,10 +2788,18 @@ class ResourceFile(models.Model):
                     self.fed_resource_file.name == ''
             return istorage.exists(self.resource_file.name)
 
+    # TODO: write unit test
+    @property
+    def read(self):
+        if self.resource.is_federated:
+            return self.fed_resource_file.read
+        else:
+            return self.resource_file.read
+
     @property
     def storage_path(self):
-        """
-        Return the qualified name for a file in the storage hierarchy.
+        """Return the qualified name for a file in the storage hierarchy.
+
         This is a valid input to IrodsStorage for manipulating the file.
         The output depends upon whether the IrodsStorage instance is running
         in federated mode.
@@ -2597,7 +2808,7 @@ class ResourceFile(models.Model):
         # instance.content_object can be stale after changes.
         # Re-fetch based upon key; bypass type system; it is not relevant
         resource = self.resource
-        if resource.resource_federation_path:  # false if None or empty
+        if resource.is_federated:  # false if None or empty
             if __debug__:
                 assert self.resource_file.name is None or \
                     self.resource_file.name == ''
@@ -2610,8 +2821,7 @@ class ResourceFile(models.Model):
 
     # ResourceFile API handles file operations
     def set_storage_path(self, path, test_exists=True):
-        """
-        Bind this ResourceFile instance to an existing file.
+        """Bind this ResourceFile instance to an existing file.
 
         :param path: the path of the object.
         :param test_exists: if True, test for path existence in iRODS
@@ -2643,7 +2853,7 @@ class ResourceFile(models.Model):
         resource = self.resource
 
         # switch FileFields based upon federation path
-        if resource.resource_federation_path:
+        if resource.is_federated:
             # uses file_folder; must come after that setting.
             self.fed_resource_file = get_path(self, base)
             self.resource_file = None
@@ -2654,8 +2864,7 @@ class ResourceFile(models.Model):
 
     @property
     def short_path(self):
-        """
-        Return the unqualified path to the file object.
+        """Return the unqualified path to the file object.
 
         * This path is invariant of where the object is stored.
 
@@ -2663,7 +2872,7 @@ class ResourceFile(models.Model):
 
         This is the path that should be used as a key to index things such as file type.
         """
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             folder, base = self.path_is_acceptable(self.fed_resource_file.name, test_exists=False)
         else:
             folder, base = self.path_is_acceptable(self.resource_file.name, test_exists=False)
@@ -2673,8 +2882,7 @@ class ResourceFile(models.Model):
             return base
 
     def set_short_path(self, path):
-        """
-        Set a path to a given path, relative to resource root
+        """Set a path to a given path, relative to resource root.
 
         There is some question as to whether the short path should be stored explicitly or
         derived as in short_path above. The latter is computationally expensive but results
@@ -2684,7 +2892,7 @@ class ResourceFile(models.Model):
         if folder == "":
             folder = None
         self.file_folder = folder  # must precede call to get_path
-        if self.resource.resource_federation_path:
+        if self.resource.is_federated:
             self.resource_file = None
             self.fed_resource_file = get_path(self, base)
         else:
@@ -2693,12 +2901,11 @@ class ResourceFile(models.Model):
         self.save()
 
     def parse(self):
-        """ parse a path into folder and basename """
+        """Parse a path into folder and basename."""
         return self.path_is_acceptable(self.storage_path, test_exists=False)
 
     def path_is_acceptable(self, path, test_exists=True):
-        """
-        Determine whether a path is acceptable for this resource file
+        """Determine whether a path is acceptable for this resource file.
 
         Called inside ResourceFile objects to check paths
 
@@ -2710,8 +2917,7 @@ class ResourceFile(models.Model):
 
     @classmethod
     def resource_path_is_acceptable(cls, resource, path, test_exists=True):
-        """
-        Determine whether a path is acceptable for this resource file
+        """Determine whether a path is acceptable for this resource file.
 
         Called outside ResourceFile objects or before such an object exists
 
@@ -2778,9 +2984,7 @@ class ResourceFile(models.Model):
 
     @classmethod
     def get(cls, resource, file, folder=None):
-        """
-        Get a ResourceFile record via its short path.
-        """
+        """Get a ResourceFile record via its short path."""
         if resource.resource_federation_path:
             return ResourceFile.objects.get(object_id=resource.id,
                                             fed_resource_file=get_resource_file_path(resource,
@@ -2795,8 +2999,7 @@ class ResourceFile(models.Model):
     # TODO: move to BaseResource as instance method
     @classmethod
     def list_folder(cls, resource, folder):
-        """
-        List a given folder
+        """List a given folder.
 
         :param resource: resource for which to list the folder
         :param folder: folder listed as either short_path or fully qualified path
@@ -2805,7 +3008,7 @@ class ResourceFile(models.Model):
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
-        if resource.resource_federation_path:
+        if resource.is_federated:
             return ResourceFile.objects.filter(
                 object_id=resource.id,
                 fed_resource_file__startswith=folder)
@@ -2817,85 +3020,86 @@ class ResourceFile(models.Model):
     # TODO: move to BaseResource as instance method
     @classmethod
     def create_folder(cls, resource, folder):
-        """ create a folder for a resource """
+        """Create a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import create_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         create_folder(resource.short_id, os.path.join('data', 'contents', folder))
 
     # TODO: move to BaseResource as instance method
     @classmethod
     def remove_folder(cls, resource, folder, user):
-        """ remove a folder for a resource """
+        """Remove a folder for a resource."""
         # avoid import loop
         from hs_core.views.utils import remove_folder
-        _path_is_allowed(folder)
+        path_is_allowed(folder)
         # TODO: move code from location used below to here
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
     @property
     def has_logical_file(self):
+        """Check existence of logical file."""
         return self.logical_file is not None
 
     @property
     def logical_file(self):
+        """Return content_object of logical file."""
         return self.logical_file_content_object
 
     @property
     def logical_file_type_name(self):
+        """Return classname of logical file's content object."""
         return self.logical_file_content_object.__class__.__name__
 
     @property
     def has_generic_logical_file(self):
+        """Return True of logical file type's classname is 'GenericLogicalFile'."""
         return self.logical_file_type_name == "GenericLogicalFile"
 
     @property
     def metadata(self):
+        """Return logical file metadata."""
         if self.logical_file is not None:
             return self.logical_file.metadata
         return None
 
     @property
     def mime_type(self):
+        """Return MIME type of represented file."""
         from .hydroshare.utils import get_file_mime_type
         return get_file_mime_type(self.file_name)
 
     @property
     def extension(self):
-        from .hydroshare.utils import get_resource_file_name_and_extension
-        return get_resource_file_name_and_extension(self)[2]
+        """Return extension of resource file."""
+        _, file_ext = os.path.splitext(self.storage_path)
+        return file_ext
 
-    # TODO: these are much simpler than this now. use storage_path, short_path, etc.
     @property
     def dir_path(self):
-        from .hydroshare.utils import get_resource_file_name_and_extension
-        return os.path.dirname(get_resource_file_name_and_extension(self)[0])
+        """Return directory path of resource file."""
+        return os.path.dirname(self.storage_path)
 
     @property
     def full_path(self):
-        # from .hydroshare.utils import get_resource_file_name_and_extension
-        # return get_resource_file_name_and_extension(self)[0]
+        """Return full path of resource file."""
         return self.storage_path
 
     @property
     def file_name(self):
-        # from .hydroshare.utils import get_resource_file_name_and_extension
-        # return get_resource_file_name_and_extension(self)[1]
+        """Return filename of resource file."""
         return os.path.basename(self.storage_path)
 
     @property
     def can_set_file_type(self):
-        # currently user can set file type only for files with extension
-        # tif, zip and nc.
-        return self.extension in ('.tif', '.zip', '.nc') and (self.logical_file is None or
-                                                              self.logical_file_type_name ==
-                                                              "GenericLogicalFile")
+        """Check if file type can be set for this resource file instance."""
+        return self.extension in ('.tif', '.zip', '.nc', '.shp', '.refts') and \
+            (self.logical_file is None or self.logical_file_type_name == "GenericLogicalFile")
 
     @property
     def url(self):
-        """
-        return the URL of the file contained in this ResourceFile.
+        """Return the URL of the file contained in this ResourceFile.
 
         A GET of this URL simply returns the file. This URL is independent of federation.
         PUT, POST, and DELETE are not supported.
@@ -2917,8 +3121,7 @@ class ResourceFile(models.Model):
 
     @property
     def irods_url(self):
-        """
-        Return the iRODS URL of the file
+        """Return the iRODS URL of the file.
 
         This is a direct link and independent of the Django path in ResourceFile.url
         """
@@ -2931,6 +3134,8 @@ class ResourceFile(models.Model):
 
 
 class Bags(models.Model):
+    """Represent data bags format as django model."""
+
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
@@ -2938,19 +3143,28 @@ class Bags(models.Model):
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
+        """Define meta properties of Bags model."""
+
         ordering = ['-timestamp']
 
     def get_content_model(self):
+        """Return content model of Bags' content object."""
         return self.content_object.get_content_model()
 
 
 class PublicResourceManager(models.Manager):
+    """Extend Django model Manager to allow for public resource access."""
+
     def get_queryset(self):
+        """Extend Django model Manager to allow for public resource access."""
         return super(PublicResourceManager, self).get_queryset().filter(raccess__public=True)
 
 
 class DiscoverableResourceManager(models.Manager):
+    """Extend Django model Manager to filter for public or discoverable resources."""
+
     def get_queryset(self):
+        """Extend Django model Manager to filter for public or discoverable resources."""
         return super(DiscoverableResourceManager, self).get_queryset().filter(
             Q(raccess__discoverable=True) |
             Q(raccess__public=True))
@@ -2959,6 +3173,7 @@ class DiscoverableResourceManager(models.Manager):
 # remove RichText parent class from the parameters for Django inplace editing to work;
 # otherwise, get internal edit error when saving changes
 class BaseResource(Page, AbstractResource):
+    """Combine mezzanine Page model and AbstractResource model to establish base resource."""
 
     resource_type = models.CharField(max_length=50, default="GenericResource")
     # this locked_time field is added for resource versioning locking representing
@@ -2980,22 +3195,29 @@ class BaseResource(Page, AbstractResource):
     collections = models.ManyToManyField('BaseResource', related_name='resources')
 
     class Meta:
+        """Define meta properties for BaseResource model."""
+
         verbose_name = 'Generic'
         db_table = 'hs_core_genericresource'
 
     def can_add(self, request):
+        """Pass through to abstract resource can_add function."""
         return AbstractResource.can_add(self, request)
 
     def can_change(self, request):
+        """Pass through to abstract resource can_add function."""
         return AbstractResource.can_change(self, request)
 
     def can_delete(self, request):
+        """Pass through to abstract resource can_delete function."""
         return AbstractResource.can_delete(self, request)
 
     def can_view(self, request):
+        """Pass through to abstract resource can_view function."""
         return AbstractResource.can_view(self, request)
 
     def get_irods_storage(self):
+        """Return either IrodsStorage or FedStorage."""
         if self.resource_federation_path:
             return FedStorage()
         else:
@@ -3003,14 +3225,14 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def is_federated(self):
+        """Return existence of resource_federation_path."""
         return self.resource_federation_path is not None and \
             self.resource_federation_path != ''
 
     # Paths relative to the resource
     @property
     def root_path(self):
-        """
-        Return the root folder of the iRODS structure containing resource files
+        """Return the root folder of the iRODS structure containing resource files.
 
         Note that this folder doesn't directly contain the resource files;
         They are contained in ./data/contents/* instead.
@@ -3022,18 +3244,22 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def file_path(self):
-        """
-        Return the file path of the resource. This is the root path plus "data/contents".
+        """Return the file path of the resource.
 
+        This is the root path plus "data/contents".
         This is the root of the folder structure for resource files.
         """
         return os.path.join(self.root_path, "data", "contents")
 
-    # These are currently classmethods
-    # @property
-    # def scimeta_path(self):
-    #     """ path to science metadata file (in iRODS) """
-    #     return os.path.join(self.root_path, "data", "sciencemetadata.xml")
+    @property
+    def scimeta_path(self):
+        """ path to science metadata file (in iRODS) """
+        return os.path.join(self.root_path, "data", "resourcemetadata.xml")
+
+    @property
+    def resmap_path(self):
+        """ path to resource map file (in iRODS) """
+        return os.path.join(self.root_path, "data", "resourcemap.xml")
 
     # @property
     # def sysmeta_path(self):
@@ -3042,15 +3268,29 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def bag_path(self):
-        """
-        return the unique iRODS path to the bag for the resource
+        """Return the unique iRODS path to the bag for the resource.
 
         Since this is a cache, it is stored in a different place than the resource files.
         """
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         if self.is_federated:
-            return os.path.join(self.resource_federation_path, "bags", self.short_id + '.zip')
+            return os.path.join(self.resource_federation_path, bagit_path,
+                                self.short_id + '.' + bagit_postfix)
         else:
-            return os.path.join("bags", self.short_id + '.zip')
+            return os.path.join(bagit_path, self.short_id + '.' + bagit_postfix)
+
+    @property
+    def bag_url(self):
+        """Get bag url of resource data bag."""
+        bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
+        bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
+        bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
+                                                           resource_id=self.short_id,
+                                                           postfix=bagit_postfix)
+        istorage = self.get_irods_storage()
+        bag_url = istorage.url(bag_path)
+        return bag_url
 
     # URIs relative to resource
     # these are independent of federation strategy
@@ -3076,6 +3316,7 @@ class BaseResource(Page, AbstractResource):
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
+        """Return XML structure describing crossref deposit."""
         # importing here to avoid circular import problem
         from hydroshare.resource import get_activated_doi
 
@@ -3131,8 +3372,7 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def size(self):
-        """
-        Return the total size of all data files in iRODS.
+        """Return the total size of all data files in iRODS.
 
         This size does not include metadata. Just files. Specifically,
         resourcemetadata.xml, systemmetadata.xml are not included in this
@@ -3146,12 +3386,12 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def verbose_name(self):
+        """Return verbose name of content_model."""
         return self.get_content_model()._meta.verbose_name
 
     @property
     def can_be_published(self):
-        """
-        Determine when data and metadata are complete enough for the resource to be published.
+        """Determine when data and metadata are complete enough for the resource to be published.
 
         The property can be overriden by specific resource type which is not appropriate for
         publication such as the Web App resource
@@ -3161,8 +3401,7 @@ class BaseResource(Page, AbstractResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        """
-        Get supported upload types for a resource.
+        """Get supported upload types for a resource.
 
         This can be overridden to choose which types of file can be uploaded by a subclass.
 
@@ -3173,8 +3412,7 @@ class BaseResource(Page, AbstractResource):
 
     @classmethod
     def can_have_multiple_files(cls):
-        """
-        Return True if multiple files can be uploaded.
+        """Return True if multiple files can be uploaded.
 
         This can be overridden to choose how many files can be uploaded by a subclass.
 
@@ -3185,8 +3423,7 @@ class BaseResource(Page, AbstractResource):
 
     @classmethod
     def can_have_files(cls):
-        """
-        Return whether the resource supports files at all.
+        """Return whether the resource supports files at all.
 
         This can be overridden to choose whether files can be uploaded by a subclass.
 
@@ -3196,15 +3433,14 @@ class BaseResource(Page, AbstractResource):
         return True
 
     def get_hs_term_dict(self):
-        '''
-        this func returns a dict of HS Terms and their values, which will be used to parse
-        webapp url templates
+        """Return a dict of HS Terms and their values.
+
+        Will be used to parse webapp url templates
 
         NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
         resource types that inherit this class should add/merge their resource-specific HS Terms
         into this dict
-        '''
-
+        """
         hs_term_dict = {}
 
         hs_term_dict["HS_RES_ID"] = self.short_id
@@ -3214,13 +3450,18 @@ class BaseResource(Page, AbstractResource):
 
 
 class GenericResource(BaseResource):
+    """Define GenericResource model."""
+
     objects = ResourceManager('GenericResource')
 
     @property
     def supports_folders(self):
+        """Return True always."""
         return True
 
     class Meta:
+        """Define meta properties for GenericResource model."""
+
         verbose_name = 'Generic'
         proxy = True
 
@@ -3229,6 +3470,7 @@ old_get_content_model = Page.get_content_model
 
 
 def new_get_content_model(self):
+    """Override mezzanine get_content_model function for pages for resources."""
     from hs_core.hydroshare.utils import get_resource_types
     content_model = self.content_model
     if content_model.endswith('resource'):
@@ -3242,6 +3484,8 @@ Page.get_content_model = new_get_content_model
 
 # This model has a one-to-one relation with the AbstractResource model
 class CoreMetaData(models.Model):
+    """Define CoreMetaData model."""
+
     XML_HEADER = '''<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF PUBLIC "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
 "http://dublincore.org/documents/2002/07/31/dcmes-xml/dcmes-xml-dtd.dtd">'''
@@ -3273,34 +3517,96 @@ class CoreMetaData(models.Model):
 
     @property
     def resource(self):
+        """Return base resource object that the metadata defines."""
         return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def title(self):
+        """Return the first title object from metadata."""
         return self._title.all().first()
 
     @property
     def description(self):
+        """Return the first description object from metadata."""
         return self._description.all().first()
 
     @property
     def language(self):
+        """Return the first _language object from metadata."""
         return self._language.all().first()
 
     @property
     def rights(self):
+        """Return the first rights object from metadata."""
         return self._rights.all().first()
 
     @property
     def type(self):
+        """Return the first _type object from metadata."""
         return self._type.all().first()
 
     @property
     def publisher(self):
+        """Return the first _publisher object from metadata."""
         return self._publisher.all().first()
+
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self
+        Note: Subclass must override this property
+        """
+        from views.resource_metadata_rest_api import CoreMetaDataSerializer
+        return CoreMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Parse the input *metadata* dict to needed format and store it in
+        *parsed_metadata* list
+        :param  metadata: a dict of metadata that needs to be parsed to get the metadata in the
+        format needed for updating the metadata elements supported by generic resource type
+        :param  parsed_metadata: a list of dicts that will be appended with parsed data
+        """
+
+        keys_to_update = metadata.keys()
+        if 'title' in keys_to_update:
+            parsed_metadata.append({"title": {"value": metadata.pop('title')}})
+
+        if 'creators' in keys_to_update:
+            for creator in metadata.pop('creators'):
+                parsed_metadata.append({"creator": creator})
+
+        if 'contributors' in keys_to_update:
+            for contributor in metadata.pop('contributors'):
+                parsed_metadata.append({"contributor": contributor})
+
+        if 'coverages' in keys_to_update:
+            for coverage in metadata.pop('coverages'):
+                parsed_metadata.append({"coverage": coverage})
+
+        if 'dates' in keys_to_update:
+            for date in metadata.pop('dates'):
+                parsed_metadata.append({"date": date})
+
+        if 'description' in keys_to_update:
+            parsed_metadata.append({"description": {"abstract": metadata.pop('description')}})
+
+        if 'language' in keys_to_update:
+            parsed_metadata.append({"language": {"code": metadata.pop('language')}})
+
+        if 'rights' in keys_to_update:
+            parsed_metadata.append({"rights": {"statement": metadata.pop('rights')}})
+
+        if 'sources' in keys_to_update:
+            for source in metadata.pop('sources'):
+                parsed_metadata.append({"source": source})
+
+        if 'subjects' in keys_to_update:
+            for subject in metadata.pop('subjects'):
+                parsed_metadata.append({"subject": {"value": subject['value']}})
 
     @classmethod
     def get_supported_element_names(cls):
+        """Return a list of supported metadata element names."""
         return ['Description',
                 'Creator',
                 'Contributor',
@@ -3318,8 +3624,18 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
-    def set_dirty(self, flag):
+    @classmethod
+    def get_form_errors_as_string(cls, form):
+        """Helper method to generate a string from form.errors
+        :param  form: an instance of Django Form class
         """
+        error_string = ", ".join(key + ":" + form.errors[key][0]
+                                 for key in form.errors.keys())
+        return error_string
+
+    def set_dirty(self, flag):
+        """Track whethrer metadata object is dirty.
+
         Subclasses that have the attribute to track whether metadata object is dirty
         should override this method to allow setting that attribute
 
@@ -3329,9 +3645,11 @@ class CoreMetaData(models.Model):
         pass
 
     def has_all_required_elements(self):
-        # this method needs to be overriden by any subclass of this class
-        # if they implement additional metadata elements that are required
+        """Determine whether metadata has all required elements.
 
+        This method needs to be overriden by any subclass of this class
+        if they implement additional metadata elements that are required
+        """
         if not self.title:
             return False
         elif self.title.value.lower() == 'untitled resource':
@@ -3356,8 +3674,11 @@ class CoreMetaData(models.Model):
         return True
 
     def get_required_missing_elements(self):
-        # this method needs to be overriden by any subclass of this class
-        # if they implement additional metadata elements that are required
+        """Return a list of required missing metadata elements.
+
+        This method needs to be overriden by any subclass of this class
+        if they implement additional metadata elements that are required
+        """
         missing_required_elements = []
 
         if not self.title:
@@ -3372,9 +3693,11 @@ class CoreMetaData(models.Model):
         return missing_required_elements
 
     def delete_all_elements(self):
-        # this method needs to be overriden by any subclass of this class if that class
-        # has additional metadata elements
+        """Delete all metadata elements.
 
+        This method needs to be overriden by any subclass of this class if that class
+        has additional metadata elements
+        """
         if self.title:
             self.title.delete()
         if self.description:
@@ -3400,6 +3723,7 @@ class CoreMetaData(models.Model):
         self.funding_agencies.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
+        """Copy all metadata elements from another resource."""
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
@@ -3419,24 +3743,83 @@ class CoreMetaData(models.Model):
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
-    def update(self, metadata):
+    def update(self, metadata, user):
+        """Define custom update method for CoreMetaData model.
+
+        :param metadata: a list of dicts - each dict in the format of {element_name: **kwargs}
+        element_name must be in lowercase.
+        example of a dict in metadata list:
+            {'creator': {'name': 'John Howard', 'email: 'jh@gmail.com'}}
+        :param  user: user who is updating metadata
+        :return:
+        """
+        from forms import TitleValidationForm, AbstractValidationForm, LanguageValidationForm, \
+            RightsValidationForm, CreatorValidationForm, ContributorValidationForm, \
+            SourceValidationForm, RelationValidationForm
+
+        validation_forms_mapping = {'title': TitleValidationForm,
+                                    'description': AbstractValidationForm,
+                                    'language': LanguageValidationForm,
+                                    'rights': RightsValidationForm,
+                                    'creator': CreatorValidationForm,
+                                    'contributor': ContributorValidationForm,
+                                    'source': SourceValidationForm,
+                                    'relation': RelationValidationForm
+                                    }
         # updating non-repeatable elements
         with transaction.atomic():
             for element_name in ('title', 'description', 'language', 'rights'):
                 for dict_item in metadata:
                     if element_name in dict_item:
-                        element = getattr(self, element_name, None)
-                        if element:
-                            self.update_element(element_id=element.id,
-                                                element_model_name=element_name,
-                                                **dict_item[element_name])
-                        else:
-                            self.create_element(element_model_name=element_name,
-                                                **dict_item[element_name])
-
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                self.update_non_repeatable_element(element_name, metadata)
             for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation',
                                  'subject'):
-                self._update_repeatable_element(element_name=element_name, metadata=metadata)
+                subjects = []
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if element_name == 'subject':
+                            subject_data = dict_item['subject']
+                            if 'value' not in subject_data:
+                                raise ValidationError("Subject value is missing")
+                            subjects.append(dict_item['subject']['value'])
+                            continue
+                        if element_name == 'coverage':
+                            # coverage metadata is not allowed for update for composite
+                            # and time series resource
+                            if self.resource.resource_type in ("CompositeResource",
+                                                               "TimeSeriesResource"):
+                                err_msg = "Coverage metadata can't be updated for {} resource"
+                                err_msg = err_msg.format(self.resource.resource_type)
+                                raise ValidationError(err_msg)
+                            coverage_data = dict_item[element_name]
+                            if 'type' not in coverage_data:
+                                raise ValidationError("Coverage type data is missing")
+                            if 'value' not in coverage_data:
+                                raise ValidationError("Coverage value data is missing")
+                            coverage_value_dict = coverage_data['value']
+                            coverage_type = coverage_data['type']
+                            Coverage.validate_coverage_type_value_attributes(coverage_type,
+                                                                             coverage_value_dict)
+                            continue
+
+                        else:
+                            validation_form = validation_forms_mapping[element_name](
+                                dict_item[element_name])
+
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            err_string += " element name:{}".format(element_name)
+                            raise ValidationError(err_string)
+                if subjects:
+                    subjects_set = set([s.lower() for s in subjects])
+                    if len(subjects_set) < len(subjects):
+                        raise ValidationError("Duplicate subject values found")
+                self.update_repeatable_element(element_name=element_name, metadata=metadata)
 
             # allow only updating or creating date element of type valid
             element_name = 'date'
@@ -3462,7 +3845,8 @@ class CoreMetaData(models.Model):
                             self.create_element(element_model_name=element_name,
                                                 **id_item[element_name])
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
+        """Get metadata XML rendering."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url, get_resource_types
 
@@ -3546,9 +3930,10 @@ class CoreMetaData(models.Model):
                 else:
                     rdf_date_value.text = dt.start_date.isoformat()
 
-        for fmt in self.formats.all():
-            dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
-            dc_format.text = fmt.value
+        if include_format_elements:
+            for fmt in self.formats.all():
+                dc_format = etree.SubElement(rdf_Description, '{%s}format' % self.NAMESPACES['dc'])
+                dc_format.text = fmt.value
 
         for res_id in self.identifiers.all():
             dc_identifier = etree.SubElement(rdf_Description,
@@ -3655,8 +4040,9 @@ class CoreMetaData(models.Model):
     # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
     # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
-        """
-        helper function to generate xml elements for a given metadata element that belongs to
+        """Generate XML elements for a given metadata element.
+
+        Helper function to generate xml elements for a given metadata element that belongs to
         'hsterms' namespace
 
         :param root: the xml document root element to which xml elements for the specified
@@ -3707,7 +4093,7 @@ class CoreMetaData(models.Model):
                     field.text = str(attr)
 
     def _create_person_element(self, etree, parent_element, person):
-
+        """Create a metadata element for a person (Creator, Contributor, etc)."""
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url
 
@@ -3763,21 +4149,25 @@ class CoreMetaData(models.Model):
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
+        """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
+        """Update metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
 
     def delete_element(self, element_model_name, element_id):
+        """Delete Metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
         model_type.model_class().remove(element_id)
 
     def _get_metadata_element_model_type(self, element_model_name):
+        """Get type of metadata element based on model type."""
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
@@ -3802,28 +4192,97 @@ class CoreMetaData(models.Model):
         return model_type
 
     def _is_valid_element(self, element_name):
+        """Check whether metadata element is valid."""
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
-    def _update_repeatable_element(self, element_name, metadata):
-        # make a list of dict that are for a specific element as specified by element_name
+    def update_non_repeatable_element(self, element_name, metadata, property_name=None):
+        """Update a non-repeatable metadata element.
+
+        This helper function is to create/update a specific metadata element as specified by
+        *element_name*
+        :param element_name: metadata element class name (e.g. title)
+        :param metadata: a list of dicts - each dict has data to update/create a specific metadata
+        element (e.g. {'title': {'value': 'my resource title'}}
+        :param property_name: name of the property/attribute name in this class or its sub class
+        to access the metadata element instance of *metadata_element*. This is needed only when
+        the property/attribute name differs from the element class name
+
+            Example:
+            class ModelProgramMetaData(CoreMetaData):
+                _mpmetadata = GenericRelation(MpMetadata)
+
+                @property
+                def program(self):
+                    return self._mpmetadata.all().first()
+
+            For the above class to update the metadata element MpMetadata, this function needs to
+            be called with element_name='mpmetadata' and property_name='program'
+        :return:
+        """
+        for dict_item in metadata:
+            if element_name in dict_item:
+                if property_name is None:
+                    element = getattr(self, element_name, None)
+                else:
+                    element = getattr(self, property_name, None)
+                if element:
+                    self.update_element(element_id=element.id,
+                                        element_model_name=element_name,
+                                        **dict_item[element_name])
+                else:
+                    self.create_element(element_model_name=element_name,
+                                        **dict_item[element_name])
+
+    def update_repeatable_element(self, element_name, metadata, property_name=None):
+        """Update a repeatable metadata element.
+
+        Creates new metadata elements of type *element_name*. Any existing metadata elements of
+        matching type get deleted first.
+        :param element_name: class name of the metadata element (e.g. creator)
+        :param metadata: a list of dicts containing data for each of the metadata elements that
+        needs to be created/updated as part of bulk update
+        :param property_name: (Optional) the property/attribute name used in this instance of
+        CoreMetaData (or its sub class) to access all the objects of type *element_type*
+            Example:
+            class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
+                 _model_input = GenericRelation(ModelInput)
+
+                @property
+                def model_inputs(self):
+                    return self._model_input.all()
+
+            For the above class to update the metadata element ModelInput, this function needs to
+            be called with element_name='modelinput' and property_name='model_inputs'. If in the
+            above class instead of using the attribute name '_model_inputs' we have used
+            'modelinputs' then this function needs to be called with element_name='modelinput' and
+            no need to pass a value for the property_name.
+
+        :return:
+        """
         element_list = [element_dict for element_dict in metadata if element_name in element_dict]
         if len(element_list) > 0:
-            elements = getattr(self, element_name + 's')
+            if property_name is None:
+                elements = getattr(self, element_name + 's')
+            else:
+                elements = getattr(self, property_name)
+
             elements.all().delete()
             for element in element_list:
                 self.create_element(element_model_name=element_name, **element[element_name])
 
 
 def resource_processor(request, page):
+    """Return mezzanine page processor for resource page."""
     extra = page_permissions_page_processor(request, page)
     return extra
 
 
 @receiver(post_save)
 def resource_creation_signal_handler(sender, instance, created, **kwargs):
-    """
-    for now this is just a placeholder for some actions to be taken when a resource gets saved
+    """Return resource update signal handler for newly created resource.
+
+    For now this is just a placeholder for some actions to be taken when a resource gets saved
     """
     if isinstance(instance, AbstractResource):
         if created:
@@ -3833,4 +4292,5 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 
 
 def resource_update_signal_handler(sender, instance, created, **kwargs):
+    """Do nothing (noop)."""
     pass

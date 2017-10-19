@@ -39,10 +39,12 @@ logger = logging.getLogger(__name__)
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
         site_url = hydroshare.utils.current_site_url()
-        bag_url = site_url + AbstractResource.bag_url(r.short_id)
+        bag_url = site_url + r.bag_url
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
         resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
+        coverages = [{"type": v['type'], "value": json.loads(v['_value'])}
+                     for v in r.metadata.coverages.values()]
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
@@ -55,6 +57,7 @@ class ResourceToListItemMixin(object):
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
+                                                          coverages=coverages,
                                                           science_metadata_url=science_metadata_url,
                                                           resource_map_url=resource_map_url,
                                                           resource_url=resource_url)
@@ -353,8 +356,20 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     :param  types: (optional) - to get a list of resources of the specified resource types
     :param  from_date: (optional) - to get a list of resources created on or after this date
     :param  to_date: (optional) - to get a list of resources created on or before this date
+    :param  include_obsolete: (optional) - default is False which means the returned resource list
+    does not include obsoleted resource; if set to True, obsoleted resource will be included
     :param  edit_permission: (optional) - to get a list of resources for which the authorised user
     has edit permission
+    :param  coverage_type: (optional) - to get a list of resources that fall within the specified
+    spatial coverage boundary (must be either 'box' or 'point')
+    :param  north:  (optional) - north coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified
+    :param  south:  (optional) - north coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified with a value of 'box'
+    :param  east:  (optional) - east coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified
+    :param  west:  (optional) - west coordinate of spatial coverage. This parameter is required
+    if *coverage_type* has been specified with a value of 'box'
     :rtype:  json string
     :return:  a paginated list of resources with data for resource id, title, resource type,
     creator, public, date created, date last updated, resource bag url path, and science
@@ -526,7 +541,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             filter_parms['type'] = list(filter_parms['type'])
 
         filter_parms['public'] = not self.request.user.is_authenticated()
-
         filtered_res_list = []
 
         for r in hydroshare.get_resource_list(**filter_parms):
@@ -758,7 +772,7 @@ class ResourceMapRetrieve(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET')
+    allowed_methods = ('GET',)
 
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)

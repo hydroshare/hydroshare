@@ -1,7 +1,7 @@
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
@@ -149,7 +149,7 @@ class SimulationType(AbstractMetaDataElement):
     @classmethod
     def _validate_simulation_type(cls, swat_simulation_type):
         types = [c[0] for c in cls.type_choices]
-        if swat_simulation_type not in types:
+        if swat_simulation_type != '' and swat_simulation_type not in types:
             raise ValidationError('Invalid swat_model_simulation_type:{} not in {}'.format(
                 swat_simulation_type, types)
             )
@@ -332,17 +332,15 @@ class ModelInput(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if val == 'Choose a type':
                 kwargs[key] = ''
-            else:
+            elif val != '':
+                time_step = val
                 if key == 'rainfallTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.rainfall_type_choices]
                     cls.check_time_steps(time_step, types)
                 elif key == 'routingTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.routing_type_choices]
                     cls.check_time_steps(time_step, types)
                 elif key == 'simulationTimeStepType':
-                    time_step = val
                     types = [c[0] for c in cls.simulation_type_choices]
                     cls.check_time_steps(time_step, types)
         return kwargs
@@ -407,6 +405,33 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     def model_input(self):
         return self._model_input.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import SWATModelInstanceMetaDataSerializer
+        return SWATModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'modelobjective' in keys_to_update:
+            parsed_metadata.append({"modelobjective": metadata.pop('modelobjective')})
+
+        if 'simulationtype' in keys_to_update:
+            parsed_metadata.append({"simulationtype": metadata.pop('simulationtype')})
+
+        if 'modelmethod' in keys_to_update:
+            parsed_metadata.append({"modelmethod": metadata.pop('modelmethod')})
+
+        if 'modelparameter' in keys_to_update:
+            parsed_metadata.append({"modelparameter": metadata.pop('modelparameter')})
+
+        if 'modelinput' in keys_to_update:
+            parsed_metadata.append({"modelinput": metadata.pop('modelinput')})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -433,7 +458,41 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
-    def get_xml(self, pretty_print=True):
+    def update(self, metadata, user):
+        # overriding the base class update method for bulk update of metadata
+        from forms import ModelInputValidationForm, ModelMethodValidationForm, \
+            SimulationTypeValidationForm, ModelObjectiveValidationForm, \
+            ModelParameterValidationForm, ModelOutputValidationForm, ExecutedByValidationForm
+        super(SWATModelInstanceMetaData, self).update(metadata, user)
+        attribute_mappings = {'modelobjective': 'model_objective',
+                              'simulationtype': 'simulation_type',
+                              'modelmethod': 'model_method',
+                              'modelparameter': 'model_parameter',
+                              'modelinput': 'model_input',
+                              'modeloutput': 'model_output',
+                              'executedby': 'executed_by'}
+        validation_forms_mapping = {'modelobjective': ModelObjectiveValidationForm,
+                                    'simulationtype': SimulationTypeValidationForm,
+                                    'modelmethod': ModelMethodValidationForm,
+                                    'modelparameter': ModelParameterValidationForm,
+                                    'modelinput': ModelInputValidationForm,
+                                    'modeloutput': ModelOutputValidationForm,
+                                    'executedby': ExecutedByValidationForm}
+        with transaction.atomic():
+            # update/create non-repeatable element
+            for element_name in attribute_mappings.keys():
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
 
         # get the xml string representation of the core metadata elements
         xml_string = super(SWATModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)

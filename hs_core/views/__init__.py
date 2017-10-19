@@ -116,6 +116,11 @@ def change_quota_holder(request, shortkey):
                            context=context)
     except PermissionDenied:
         return HttpResponseForbidden()
+    except utils.QuotaException as ex:
+        msg = 'Failed to change quota holder to {0} since {0} does not have ' \
+              'enough quota to hold this new resource. The exception quota message ' \
+              'reported for {0} is: '.format(new_holder_u.username) + ex.message
+        request.session['validation_error'] = msg
 
     return HttpResponseRedirect(res.get_absolute_url())
 
@@ -580,7 +585,11 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         json.dumps({"error": ex.stderr}),
         content_type="application/json"
         )
-
+    except utils.QuotaException as ex:
+        return HttpResponse(
+            json.dumps({"error": ex.message}),
+            content_type="application/json"
+        )
 
 def copy_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey,
@@ -674,17 +683,21 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = resolve_request(request).get('t', None)
-    if t == 'make_public':
+    flag = resolve_request(request).get('flag', None)
+    if flag == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
-    elif t == 'make_private' or t == 'make_not_discoverable':
+    elif flag == 'make_private' or flag == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=False)
-    elif t == 'make_discoverable':
+    elif flag == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
-    elif t == 'make_not_shareable':
+    elif flag == 'make_not_shareable':
         _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
-    elif t == 'make_shareable':
+    elif flag == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
+    elif flag == 'make_require_lic_agreement':
+        res.set_require_download_agreement(user, value=True)
+    elif flag == 'make_not_require_lic_agreement':
+        res.set_require_download_agreement(user, value=False)
 
     if request.META.get('HTTP_REFERER', None):
         request.session['resource-mode'] = request.POST.get('resource-mode', 'view')

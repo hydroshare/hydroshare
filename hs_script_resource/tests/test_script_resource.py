@@ -107,3 +107,34 @@ class TestScriptResource(TransactionTestCase):
                                                   request=request)
 
         self.assertFalse(data["is_valid"])
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the ScriptMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resScript.metadata.program, None)
+
+        # create program metadata
+        self.resScript.metadata.update([{'scriptspecificmetadata': {'scriptLanguage': 'R',
+                                                                    'languageVersion': '3.5',
+                                                                    'scriptVersion': '1.0',
+                                                                    'scriptDependencies': 'None',
+                                                                    'scriptReleaseDate':
+                                                                        '2015-12-01 00:00',
+                                                                    'scriptCodeRepository':
+                                                                        'http://www.google.com'}}],
+                                       self.user)
+        # check that there is now extended metadata elements at this point
+        self.assertNotEqual(self.resScript.metadata.program, None)
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.resScript.metadata.creators.count(), 1)
+        self.resScript.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                        {'creator': {'name': 'Third Creator'}},
+                                        {'scriptspecificmetadata': {'scriptVersion': '1.5'}}],
+                                       self.user)
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.resScript.metadata.creators.count(), 2)
+        # check that there is now extended metadata elements at this point
+        self.assertNotEqual(self.resScript.metadata.program, None)

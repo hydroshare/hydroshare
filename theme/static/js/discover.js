@@ -1379,7 +1379,7 @@ $(document).ready(function () {
     var hash = window.location.hash;
     $('#switch-view a[href="' + hash + '"]').tab('show');
 
-    $("#id_q").attr('placeholder', 'Search...');
+    $("#id_q").attr('placeholder', 'Search All Public and Discoverable Resources');
     reorderDivs();
 
     $('.collapse').on('shown.bs.collapse', function() {
@@ -1434,7 +1434,7 @@ $(document).ready(function () {
     $("#solr-help-info").popover({
         html: true,
         container: '#body',
-        content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
+        content: '<p>Search here to find all public and discoverable resources. This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
         trigger: 'click'
     });
 

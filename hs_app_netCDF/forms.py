@@ -126,6 +126,24 @@ class OriginalCoverageForm(forms.Form):
         return self.cleaned_data
 
 
+class OriginalCoverageValidationForm(forms.Form):
+    PRO_STR_TYPES = (
+        ('', '---------'),
+        ('WKT String', 'WKT String'),
+        ('Proj4 String', 'Proj4 String')
+    )
+
+    projection = forms.CharField(max_length=100, required=False)
+    northlimit = forms.DecimalField()
+    eastlimit = forms.DecimalField()
+    southlimit = forms.DecimalField()
+    westlimit = forms.DecimalField()
+    units = forms.CharField(max_length=100)
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, required=False)
+    projection_string_text = forms.CharField(max_length=1000, required=False)
+    datum = forms.CharField(max_length=300, required=False)
+
+
 class OriginalCoverageMetaDelete(MetaDataElementDeleteForm):
     def __init__(self, res_short_id, element_name, element_id, *args, **kwargs):
         super(OriginalCoverageMetaDelete, self).__init__(res_short_id, element_name,

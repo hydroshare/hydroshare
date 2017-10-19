@@ -75,6 +75,7 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
             fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
             move=False,
             metadata=metadata)
+        utils.resource_post_create_actions(self.resNetcdf, self.user, metadata)
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
 
         # test metadata is deleted after content file is deleted in user zone space

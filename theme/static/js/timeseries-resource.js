@@ -16,8 +16,20 @@ $(document).ready(function(){
     }
 
     $("#coverage-spatial :input").prop('readonly', true);
-    $("#id_type_1").attr('onclick', 'return false');
-    $("#id_type_2").attr('onclick', 'return false');
+    // Don't allow the user to change the coverage type
+    var $id_type_div = $("#div_id_type");
+    var $box_radio = $id_type_div.find("#id_type_1");
+    var $point_radio = $id_type_div.find("#id_type_2");
+    if ($box_radio.attr("checked") !== "checked") {
+        $box_radio.parent().closest("label").addClass("text-muted");
+        $box_radio.attr('disabled', true);
+    }
+    else {
+        $point_radio.parent().closest("label").addClass("text-muted");
+        $point_radio.attr('disabled', true);
+    }
+    $point_radio.attr('onclick', 'return false');
+    $box_radio.attr('onclick', 'return false');
 
     if ($('#id_north').val() || $('#id_northlimit').val()){
         $("#id_name").prop('readonly', false);

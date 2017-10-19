@@ -6,6 +6,7 @@ import string
 from collections import namedtuple
 import paramiko
 import logging
+from dateutil import parser
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -457,12 +458,11 @@ def show_relations_section(res_obj):
 
 
 # TODO: no handling of pre_create or post_create signals
-def link_irods_file_to_django(resource, filepath, size=0):
+def link_irods_file_to_django(resource, filepath):
     """
     Link a newly created irods file to Django resource model
 
     :param filepath: full path to file
-    :size: deprecated; size of file; not needed
     """
     # link the newly created file (**filepath**) to Django resource model
     b_add_file = False
@@ -500,7 +500,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     if __debug__:
         assert(isinstance(resource, BaseResource))
-    istorage = resource.get_irods_storage()
+    if istorage is None:
+        istorage = resource.get_irods_storage()
 
     if foldername:
         store = istorage.listdir(foldername)
@@ -508,9 +509,8 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
-                size = istorage.size(file_path)
                 # This assumes that file_path is a full path
-                link_irods_file_to_django(resource, file_path, size)
+                link_irods_file_to_django(resource, file_path)
         # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
@@ -620,7 +620,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 
     output_zip_size = istorage.size(output_zip_full_path)
 
-    link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
+    link_irods_file_to_django(resource, output_zip_full_path)
 
     if bool_remove_original:
         for f in ResourceFile.objects.filter(object_id=resource.id):
@@ -772,6 +772,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     # ensure the target_full_path contains the file name to be moved or renamed to
     # if we are moving to a directory, put the filename into the request.
+    # This created some confusion in the UI, so we use it only in the public REST API
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
@@ -781,8 +782,92 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
             raise ValidationError("File/folder move/rename is not allowed.")
 
     istorage.moveFile(src_full_path, tgt_full_path)
-
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+# TODO: modify this to take short paths not including data/contents
+def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True):
+    """
+    Rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param src_path: the relative path for the source file or folder under res_id collection
+    :param tgt_path: the relative path for the target file or folder under res_id collection
+    :param validate_rename: if True, then only ask resource type to check if this action is
+            allowed. Sometimes resource types internally want to take this action but disallow
+            this action by a user. In that case resource types set this parameter to False to allow
+            this action.
+    :return:
+
+    Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'.
+    Also, this foregoes extensive antibugging of arguments because that is done in the
+    REST API.
+    """
+    if __debug__:
+        assert(src_path.startswith("data/contents/"))
+        assert(tgt_path.startswith("data/contents/"))
+
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    src_full_path = os.path.join(resource.root_path, src_path)
+    tgt_full_path = os.path.join(resource.root_path, tgt_path)
+
+    if validate_rename:
+        # this must raise ValidationError if move/rename is not allowed by specific resource type
+        if not resource.supports_rename_path(src_full_path, tgt_full_path):
+            raise ValidationError("File/folder move/rename is not allowed.")
+
+    istorage.moveFile(src_full_path, tgt_full_path)
+    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    hydroshare.utils.resource_modified(resource, user, overwrite_bag=False)
+
+
+# TODO: modify this to take short paths not including data/contents
+def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
+    """
+    Move a file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param src_paths: the relative paths for the source files and/or folders under res_id collection
+    :param tgt_path: the relative path for the target folder under res_id collection
+    :param validate_move: if True, then only ask resource type to check if this action is
+            allowed. Sometimes resource types internally want to take this action but disallow
+            this action by a user. In that case resource types set this parameter to False to allow
+            this action.
+    :return:
+
+    Note: this utilizes partly qualified pathnames data/contents/foo rather than just 'foo'
+    Also, this foregoes extensive antibugging of arguments because that is done in the
+    REST API.
+    """
+    if __debug__:
+        for s in src_paths:
+            assert(s.startswith('data/contents/'))
+        assert(tgt_path == 'data/contents' or tgt_path.startswith("data/contents/"))
+
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    tgt_full_path = os.path.join(resource.root_path, tgt_path)
+
+    if validate_move:
+        # this must raise ValidationError if move is not allowed by specific resource type
+        for src_path in src_paths:
+            src_full_path = os.path.join(resource.root_path, src_path)
+            if not resource.supports_rename_path(src_full_path, tgt_full_path):
+                raise ValidationError("File/folder move/rename is not allowed.")
+
+    for src_path in src_paths:
+        src_full_path = os.path.join(resource.root_path, src_path)
+        src_base_name = os.path.basename(src_path)
+        tgt_qual_path = os.path.join(tgt_full_path, src_base_name)
+        # logger = logging.getLogger(__name__)
+        # logger.info("moving file {} to {}".format(src_full_path, tgt_qual_path))
+
+        istorage.moveFile(src_full_path, tgt_qual_path)
+        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_qual_path)
 
     # TODO: should check can_be_public_or_discoverable here
 
@@ -799,6 +884,13 @@ def irods_path_is_allowed(path):
         raise SuspiciousFileOperation("File paths cannot contain '/./'")
 
 
+def irods_path_is_directory(istorage, path):
+    """ return True if the path is a directory. """
+    folder, base = os.path.split(path.rstrip('/'))
+    listing = istorage.listdir(folder)
+    return base in listing[0]
+
+
 def get_coverage_data_dict(resource, coverage_type='spatial'):
     """Get coverage data as a dict for the specified resource
     :param  resource: An instance of BaseResource for which coverage data is needed
@@ -810,6 +902,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']
                 spatial_coverage_dict['north'] = spatial_coverage.value['north']
@@ -824,7 +917,10 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         temporal_coverage = resource.metadata.coverages.filter(type='period').first()
         temporal_coverage_dict = {}
         if temporal_coverage:
+            temporal_coverage_dict['element_id'] = temporal_coverage.id
             temporal_coverage_dict['type'] = temporal_coverage.type
-            temporal_coverage_dict['start'] = temporal_coverage.value['start']
-            temporal_coverage_dict['end'] = temporal_coverage.value['end']
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
+            temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict

@@ -280,7 +280,7 @@
 
                                                 <div class="metadata-wrapper">
                                                     <div class="shared-resource-info">
-                                                        <strong>{{ profile_user|contact|safe }}</strong>
+                                                        <strong>{{ profile_user|contact }}</strong>
                                                         <span class="text-muted"> shared </span>
                                                         <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                                     </div>
@@ -354,8 +354,7 @@
                                                 {% else %}
                                                     <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                {#  Hide quota message for now until backend script is hooked up #}
-                                                {#  <div class="text-muted">{{ quota_message }}</div> #}
+                                                <div class="text-muted">{{ quota_message }}</div>
                                             {% endif %}    
                                         </div>
 

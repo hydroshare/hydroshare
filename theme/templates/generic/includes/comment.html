@@ -4,12 +4,12 @@
         {% editable comment.is_public comment.is_removed %}
             {% if not comment.is_removed and comment.is_public or request.user.is_staff %}
                 <div class="media-body">
-                    <h4>{{ comment.user|contact|safe }}
+                    <h4>{{ comment.user|contact }}
                         <small class="timespan">
                         {% blocktrans with sometime=comment.submit_date|timesince %}{{ sometime }} ago{% endblocktrans %}
                         </small>
                     </h4>
-                    <p style="color:black"> {{comment.comment|linebreaksbr|safe }}  </p>
+                    <p style="color:black"> {{comment.comment|comment_filter }}  </p>
             {% endif %}
 
             {% if not comment.is_removed and comment.is_public %}

@@ -38,6 +38,7 @@ urlpatterns = i18n_patterns("",
     url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
         name='tracking-report-history'),
     url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
+    url(r'^tracking/applaunch/', tracking.AppLaunch.as_view(), name='tracking-applaunch'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
@@ -71,6 +72,7 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
+    url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),

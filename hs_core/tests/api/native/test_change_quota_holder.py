@@ -7,6 +7,7 @@ from hs_core.hydroshare import resource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare.utils import QuotaException
 
 
 class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
@@ -14,7 +15,7 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         super(TestChangeQuotaHolder, self).setUp()
 
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
+        # create two users
         self.user1 = hydroshare.create_account(
             'test_user1@email.com',
             username='owner1',
@@ -57,6 +58,15 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         # test to make sure quota holder cannot be removed from ownership
         with self.assertRaises(PermissionDenied):
             self.user1.uaccess.unshare_resource_with_user(res, self.user2)
+
+        # test to make sure quota holder cannot be changed to an owner who is over-quota
+        uquota = self.user1.quotas.first()
+        # make user1's quota over hard limit 125%
+        uquota.used_value = uquota.allocated_value * 1.3
+        uquota.save()
+        # QuotaException should be raised when attempting to change quota holder to user1
+        with self.assertRaises(QuotaException):
+            res.set_quota_holder(self.user2, self.user1)
 
         if res:
             res.delete()

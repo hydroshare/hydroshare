@@ -1,3 +1,5 @@
+"""Django forms for hs_core module."""
+
 import copy
 
 from models import Party, Creator, Contributor, validate_user_url, Relation, Source, Identifier, \
@@ -13,14 +15,22 @@ from hydroshare import utils
 
 
 class HorizontalRadioRenderer(forms.RadioSelect.renderer):
+    """Return a horizontal list of radio buttons."""
+
     def render(self):
+        """Return a newline separated list of radio button elements."""
         return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
 class Helper(object):
+    """Render resusable elements to use in Django forms."""
 
     @classmethod
     def get_element_add_modal_form(cls, element_name, modal_form_context_name):
+        """Apply a modal UI element to a given form.
+
+        Used in netCDF and modflow_modelinstance apps
+        """
         modal_title = "Add %s" % element_name.title()
         layout = Layout(
                         HTML('<div class="modal fade" id="add-element-dialog" tabindex="-1" '
@@ -102,7 +112,13 @@ def _get_modal_confirm_delete_matadata_element():
 
 
 class MetaDataElementDeleteForm(forms.Form):
+    """Render a modal that confirms element deletion."""
+
     def __init__(self, res_short_id, element_name, element_id, *args, **kwargs):
+        """Render a modal that confirms element deletion.
+
+        uses _get_modal_confirm_delete_matadata_element
+        """
         super(MetaDataElementDeleteForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.delete_element_action = '"/hsapi/_internal/%s/%s/%s/delete-metadata/"' % \
@@ -117,7 +133,10 @@ class MetaDataElementDeleteForm(forms.Form):
 
 
 class ExtendedMetadataForm(forms.Form):
+    """Render an extensible metadata form via the extended_metadata_layout kwarg."""
+
     def __init__(self, resource_mode='edit', extended_metadata_layout=None, *args, **kwargs):
+        """Render an extensible metadata form via the extended_metadata_layout kwarg."""
         super(ExtendedMetadataForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -125,7 +144,10 @@ class ExtendedMetadataForm(forms.Form):
 
 
 class CreatorFormSetHelper(FormHelper):
+    """Render a creator form with custom HTML5 validation and error display."""
+
     def __init__(self, *args, **kwargs):
+        """Render a creator form with custom HTML5 validation and error display."""
         super(CreatorFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order
         # these fields will be displayed
@@ -149,7 +171,13 @@ class CreatorFormSetHelper(FormHelper):
 
 
 class PartyForm(ModelForm):
+    """Render form for creating and editing Party models, aka people."""
+
     def __init__(self, *args, **kwargs):
+        """Render form for creating and editing Party models, aka people.
+
+        Removes profile link formset and renders proper description URL
+        """
         if 'initial' in kwargs:
             if 'description' in kwargs['initial']:
                 if kwargs['initial']['description']:
@@ -160,8 +188,12 @@ class PartyForm(ModelForm):
         self.number = 0
 
     class Meta:
+        """Describe meta properties of PartyForm.
+
+        Fields that will be displayed are specified here - but not necessarily in the same order
+        """
+
         model = Party
-        # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['name', 'description', 'organization', 'email', 'address', 'phone', 'homepage']
 
         # TODO: field labels and widgets types to be specified
@@ -169,7 +201,10 @@ class PartyForm(ModelForm):
 
 
 class CreatorForm(PartyForm):
+    """Render form for creating and editing Creator models, as in creators of resources."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render form for creating and editing Creator models, as in creators of resources."""
         super(CreatorForm, self).__init__(*args, **kwargs)
         self.helper = CreatorFormSetHelper()
         self.delete_modal_form = None
@@ -190,15 +225,19 @@ class CreatorForm(PartyForm):
 
     @property
     def form_id(self):
+        """Render proper form id by prepending 'id_creator_'."""
         form_id = 'id_creator_%s' % self.number
         return form_id
 
     @property
     def form_id_button(self):
+        """Render proper form id with quotes around it."""
         form_id = 'id_creator_%s' % self.number
         return "'" + form_id + "'"
 
     class Meta:
+        """Describe meta properties of PartyForm."""
+
         model = Creator
         fields = PartyForm.Meta.fields
         fields.append("order")
@@ -206,6 +245,8 @@ class CreatorForm(PartyForm):
 
 
 class PartyValidationForm(forms.Form):
+    """Validate form for Party models."""
+
     description = forms.URLField(required=False, validators=[validate_user_url])
     name = forms.CharField(required=False, max_length=100)
     organization = forms.CharField(max_length=200, required=False)
@@ -215,6 +256,7 @@ class PartyValidationForm(forms.Form):
     homepage = forms.URLField(required=False)
 
     def clean_description(self):
+        """Create absolute URL for Party.description field."""
         user_absolute_url = self.cleaned_data['description']
         if user_absolute_url:
             url_parts = user_absolute_url.split('/')
@@ -222,6 +264,7 @@ class PartyValidationForm(forms.Form):
         return user_absolute_url
 
     def clean(self):
+        """Validate that name and/or organization are present in form data."""
         cleaned_data = super(PartyValidationForm, self).clean()
         name = cleaned_data.get('name', None)
         org = cleaned_data.get('organization', None)
@@ -234,18 +277,26 @@ class PartyValidationForm(forms.Form):
 
 
 class CreatorValidationForm(PartyValidationForm):
+    """Validate form for Creator models. Extends PartyValidationForm."""
+
     order = forms.IntegerField(required=False)
 
 
 class ContributorValidationForm(PartyValidationForm):
+    """Validate form for Contributor models. Extends PartyValidationForm."""
+
     pass
 
 
 class BaseCreatorFormSet(BaseFormSet):
+    """Render BaseFormSet for working with Creator models."""
+
     def add_fields(self, form, index):
+        """Pass through add_fields function to super."""
         super(BaseCreatorFormSet, self).add_fields(form, index)
 
     def get_metadata(self):
+        """Collect and append creator data to form fields."""
         creators_data = []
         for form in self.forms:
             creator_data = {k: v for k, v in form.cleaned_data.iteritems()}
@@ -256,7 +307,10 @@ class BaseCreatorFormSet(BaseFormSet):
 
 
 class ContributorFormSetHelper(FormHelper):
+    """Render layout for Contributor model form and activate required fields."""
+
     def __init__(self, *args, **kwargs):
+        """Render layout for Contributor model form and activate required fields."""
         super(ContributorFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order
         # these fields will be displayed
@@ -278,7 +332,10 @@ class ContributorFormSetHelper(FormHelper):
 
 
 class ContributorForm(PartyForm):
+    """Render Contributor model form with appropriate attributes."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render Contributor model form with appropriate attributes."""
         super(ContributorForm, self).__init__(*args, **kwargs)
         self.helper = ContributorFormSetHelper()
         self.delete_modal_form = None
@@ -294,15 +351,19 @@ class ContributorForm(PartyForm):
 
     @property
     def form_id(self):
+        """Render proper form id by prepending 'id_contributor_'."""
         form_id = 'id_contributor_%s' % self.number
         return form_id
 
     @property
     def form_id_button(self):
+        """Render proper form id  with quotes around it."""
         form_id = 'id_contributor_%s' % self.number
         return "'" + form_id + "'"
 
     class Meta:
+        """Describe meta properties of ContributorForm, removing 'order' field."""
+
         model = Contributor
         fields = PartyForm.Meta.fields
         labels = PartyForm.Meta.labels
@@ -311,10 +372,14 @@ class ContributorForm(PartyForm):
 
 
 class BaseContributorFormSet(BaseFormSet):
+    """Render BaseFormSet for working with Contributor models."""
+
     def add_fields(self, form, index):
+        """Pass through add_fields function to super."""
         super(BaseContributorFormSet, self).add_fields(form, index)
 
     def get_metadata(self):
+        """Collect and append contributor data to form fields."""
         contributors_data = []
         for form in self.forms:
             contributor_data = {k: v for k, v in form.cleaned_data.iteritems()}
@@ -325,7 +390,10 @@ class BaseContributorFormSet(BaseFormSet):
 
 
 class RelationFormSetHelper(FormHelper):
+    """Render layout for Relation form including HTML5 valdiation and errors."""
+
     def __init__(self, *args, **kwargs):
+        """Render layout for Relation form including HTML5 valdiation and errors."""
         super(RelationFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order
         # these fields will be displayed
@@ -343,7 +411,10 @@ class RelationFormSetHelper(FormHelper):
 
 
 class RelationForm(ModelForm):
+    """Render Relation model form with appropriate attributes."""
+
     def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
+        """Render Relation model form with appropriate attributes."""
         super(RelationForm, self).__init__(*args, **kwargs)
         self.helper = RelationFormSetHelper()
         self.number = 0
@@ -360,15 +431,19 @@ class RelationForm(ModelForm):
 
     @property
     def form_id(self):
+        """Render proper form id by prepending 'id_relation_'."""
         form_id = 'id_relation_%s' % self.number
         return form_id
 
     @property
     def form_id_button(self):
+        """Render form_id with quotes around it."""
         form_id = 'id_relation_%s' % self.number
         return "'" + form_id + "'"
 
     class Meta:
+        """Describe meta properties of RelationForm."""
+
         model = Relation
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['type', 'value']
@@ -376,12 +451,17 @@ class RelationForm(ModelForm):
 
 
 class RelationValidationForm(forms.Form):
+    """Validate RelationForm 'type' and 'value' CharFields."""
+
     type = forms.CharField(max_length=100)
     value = forms.CharField(max_length=500)
 
 
 class SourceFormSetHelper(FormHelper):
+    """Render layout for Source form including HTML5 valdiation and errors."""
+
     def __init__(self, *args, **kwargs):
+        """Render layout for Source form including HTML5 valdiation and errors."""
         super(SourceFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
@@ -398,7 +478,10 @@ class SourceFormSetHelper(FormHelper):
 
 
 class SourceForm(ModelForm):
+    """Render Source model form with appropriate attributes."""
+
     def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
+        """Render Source model form with appropriate attributes."""
         super(SourceForm, self).__init__(*args, **kwargs)
         self.helper = SourceFormSetHelper()
         self.number = 0
@@ -414,26 +497,35 @@ class SourceForm(ModelForm):
 
     @property
     def form_id(self):
+        """Render proper form id by prepending 'id_source_'."""
         form_id = 'id_source_%s' % self.number
         return form_id
 
     @property
     def form_id_button(self):
+        """Render proper form id with quotes."""
         form_id = 'id_source_%s' % self.number
         return "'" + form_id + "'"
 
     class Meta:
+        """Define meta properties for SourceForm."""
+
         model = Source
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['derived_from']
 
 
 class SourceValidationForm(forms.Form):
+    """Validate derived_from field from SourceForm."""
+
     derived_from = forms.CharField(max_length=300)
 
 
 class IdentifierFormSetHelper(FormHelper):
+    """Render layout for Identifier form including HTML5 valdiation and errors."""
+
     def __init__(self, *args, **kwargs):
+        """Render layout for Identifier form including HTML5 valdiation and errors."""
         super(IdentifierFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
@@ -451,7 +543,10 @@ class IdentifierFormSetHelper(FormHelper):
 
 
 class IdentifierForm(ModelForm):
+    """Render Identifier model form with appropriate attributes."""
+
     def __init__(self, res_short_id=None, *args, **kwargs):
+        """Render Identifier model form with appropriate attributes."""
         super(IdentifierForm, self).__init__(*args, **kwargs)
         self.fields['name'].widget.attrs['readonly'] = True
         self.fields['name'].widget.attrs['style'] = "background-color:white;"
@@ -467,11 +562,14 @@ class IdentifierForm(ModelForm):
             self.action = ""
 
     class Meta:
+        """Define meta properties for IdentifierForm class."""
+
         model = Identifier
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['name', 'url']
 
     def clean(self):
+        """Ensure that identifier name attribute is not blank."""
         data = self.cleaned_data
         if data['name'].lower() == 'hydroshareidentifier':
             raise forms.ValidationError("Identifier name attribute can't have a value "
@@ -480,7 +578,10 @@ class IdentifierForm(ModelForm):
 
 
 class FundingAgencyFormSetHelper(FormHelper):
+    """Render layout for FundingAgency form."""
+
     def __init__(self, *args, **kwargs):
+        """Render layout for FundingAgency form."""
         super(FundingAgencyFormSetHelper, self).__init__(*args, **kwargs)
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
@@ -500,7 +601,10 @@ class FundingAgencyFormSetHelper(FormHelper):
 
 
 class FundingAgencyForm(ModelForm):
+    """Render FundingAgency model form with appropriate attributes."""
+
     def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
+        """Render FundingAgency model form with appropriate attributes."""
         super(FundingAgencyForm, self).__init__(*args, **kwargs)
         self.helper = FundingAgencyFormSetHelper()
         self.number = 0
@@ -517,15 +621,19 @@ class FundingAgencyForm(ModelForm):
 
     @property
     def form_id(self):
+        """Render proper form id by prepending 'id_fundingagency_'."""
         form_id = 'id_fundingagency_%s' % self.number
         return form_id
 
     @property
     def form_id_button(self):
+        """Render proper form id with quotes."""
         form_id = 'id_fundingagency_%s' % self.number
         return "'" + form_id + "'"
 
     class Meta:
+        """Define meta properties of FundingAgencyForm class."""
+
         model = FundingAgency
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['agency_name', 'award_title', 'award_number', 'agency_url']
@@ -534,16 +642,20 @@ class FundingAgencyForm(ModelForm):
 
 
 class FundingAgencyValidationForm(forms.Form):
+    """Validate FundingAgencyForm with agency_name, award_title, award_number and agency_url."""
+
     agency_name = forms.CharField(required=True)
     award_title = forms.CharField(required=False)
     award_number = forms.CharField(required=False)
     agency_url = forms.URLField(required=False)
 
 
-# Non repeatable element related forms
 class BaseFormHelper(FormHelper):
+    """Render non-repeatable element related forms."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  element_layout=None,  *args, **kwargs):
+        """Render non-repeatable element related forms."""
         coverage_type = kwargs.pop('coverage', None)
         element_name_label = kwargs.pop('element_name_label', None)
 
@@ -599,18 +711,26 @@ class BaseFormHelper(FormHelper):
 
 
 class TitleValidationForm(forms.Form):
+    """Validate Title form with value."""
+
     value = forms.CharField(max_length=300)
 
 
-# This form handles multiple subject elements - this was not implemented as formset
-# since we are providing one input field to enter multiple keywords (subjects) as comma
-# separated values
 class SubjectsFormHelper(BaseFormHelper):
+    """Render Subject form.
+
+    This form handles multiple subject elements - this was not implemented as formset
+    since we are providing one input field to enter multiple keywords (subjects) as comma
+    separated values
+    """
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
+        """Render subject form.
 
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
+        The order in which the model fields are listed for the FieldSet is the order these
+        fields will be displayed
+        """
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('value', css_class=field_width),
@@ -621,12 +741,15 @@ class SubjectsFormHelper(BaseFormHelper):
 
 
 class SubjectsForm(forms.Form):
+    """Render Subjects model form with appropriate attributes."""
+
     value = forms.CharField(max_length=500,
                             label='',
                             widget=forms.TextInput(attrs={'placeholder': 'Keywords'}),
                             help_text='Enter each keyword separated by a comma.')
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render Subjects model form with appropriate attributes."""
         super(SubjectsForm, self).__init__(*args, **kwargs)
         self.helper = SubjectsFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='subject')
@@ -644,11 +767,15 @@ class SubjectsForm(forms.Form):
 
 
 class AbstractFormHelper(BaseFormHelper):
+    """Render Abstract form."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
+        """Render Abstract form.
 
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
+        The order in which the model fields are listed for the FieldSet is the order these
+        fields will be displayed
+        """
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('abstract', css_class=field_width),
@@ -659,7 +786,10 @@ class AbstractFormHelper(BaseFormHelper):
 
 
 class AbstractForm(ModelForm):
+    """Render Abstract model form with appropriate attributes."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render Abstract model form with appropriate attributes."""
         super(AbstractForm, self).__init__(*args, **kwargs)
         self.helper = AbstractFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='description')
@@ -668,6 +798,8 @@ class AbstractForm(ModelForm):
             self.fields['abstract'].widget.attrs['style'] = "background-color:white;"
 
     class Meta:
+        """Describe meta properties of AbstractForm."""
+
         model = Description
         fields = ['abstract']
         exclude = ['content_object']
@@ -675,14 +807,19 @@ class AbstractForm(ModelForm):
 
 
 class AbstractValidationForm(forms.Form):
+    """Validate Abstract form with abstract field."""
+
     abstract = forms.CharField(max_length=5000)
 
 
 class RightsValidationForm(forms.Form):
+    """Validate Rights form with statement and URL field."""
+
     statement = forms.CharField(required=False)
     url = forms.URLField(required=False, max_length=500)
 
     def clean(self):
+        """Clean data and render proper error messages."""
         cleaned_data = super(RightsValidationForm, self).clean()
         statement = cleaned_data.get('statement', None)
         url = cleaned_data.get('url', None)
@@ -694,12 +831,15 @@ class RightsValidationForm(forms.Form):
 
 
 class CoverageTemporalFormHelper(BaseFormHelper):
+    """Render Temporal Coverage form."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
+        """Render Temporal Coverage form.
 
-        # the order in which the model fields are listed for the FieldSet is the order these
-        # fields will be displayed
-
+        The order in which the model fields are listed for the FieldSet is the order these
+        fields will be displayed
+        """
         file_type = kwargs.pop('file_type', False)
         form_field_names = ['type', 'start', 'end']
         crispy_form_fields = get_crispy_form_fields(form_field_names, file_type=file_type)
@@ -712,10 +852,13 @@ class CoverageTemporalFormHelper(BaseFormHelper):
 
 
 class CoverageTemporalForm(forms.Form):
+    """Render Coverage Temporal Form."""
+
     start = forms.DateField(label='Start Date')
     end = forms.DateField(label='End Date')
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render Coverage Temporal Form."""
         file_type = kwargs.pop('file_type', False)
         super(CoverageTemporalForm, self).__init__(*args, **kwargs)
         self.helper = CoverageTemporalFormHelper(allow_edit, res_short_id, element_id,
@@ -731,10 +874,9 @@ class CoverageTemporalForm(forms.Form):
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
-        # modify the form's cleaned_data dictionary
+        """Modify the form's cleaned_data dictionary."""
         is_form_errors = False
         super(CoverageTemporalForm, self).clean()
         start_date = self.cleaned_data.get('start', None)
@@ -771,9 +913,11 @@ class CoverageTemporalForm(forms.Form):
 
 
 class CoverageSpatialFormHelper(BaseFormHelper):
+    """Render layout for CoverageSpatial form."""
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  *args, **kwargs):
-
+        """Render layout for CoverageSpatial form."""
         file_type = kwargs.pop('file_type', False)
 
         layout = Layout()
@@ -792,6 +936,8 @@ class CoverageSpatialFormHelper(BaseFormHelper):
 
 
 class CoverageSpatialForm(forms.Form):
+    """Render CoverateSpatial form."""
+
     TYPE_CHOICES = (
         ('box', 'Box'),
         ('point', 'Point')
@@ -812,6 +958,7 @@ class CoverageSpatialForm(forms.Form):
     westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        """Render CoverateSpatial form."""
         file_type = kwargs.pop('file_type', False)
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
 
@@ -844,7 +991,7 @@ class CoverageSpatialForm(forms.Form):
             self.fields['units'].widget.attrs['readonly'] = True
 
     def clean(self):
-        # modify the form's cleaned_data dictionary
+        """Modify the form's cleaned_data dictionary."""
         super(CoverageSpatialForm, self).clean()
         temp_cleaned_data = copy.deepcopy(self.cleaned_data)
         spatial_coverage_type = temp_cleaned_data['type']
@@ -952,14 +1099,19 @@ class CoverageSpatialForm(forms.Form):
 
 
 class LanguageValidationForm(forms.Form):
+    """Validate LanguageValidation form with code attribute."""
+
     code = forms.CharField(max_length=3)
 
 
 class ValidDateValidationForm(forms.Form):
+    """Validate DateValidationForm with start_date and end_date attribute."""
+
     start_date = forms.DateField()
     end_date = forms.DateField()
 
     def clean(self):
+        """Modify the form's cleaned data dictionary."""
         cleaned_data = super(ValidDateValidationForm, self).clean()
         start_date = cleaned_data.get('start_date', None)
         end_date = cleaned_data.get('end_date', None)
@@ -980,8 +1132,8 @@ class ValidDateValidationForm(forms.Form):
 
 
 def get_crispy_form_fields(field_names, file_type=False):
-    """
-    This creates a list of objects of type Field
+    """Return a list of objects of type Field.
+
     :param field_names: list of form field names
     :param file_type: if true, then this is a metadata form for file type, otherwise, a form
     for resource
