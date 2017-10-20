@@ -15,7 +15,7 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if content_model.metadata.supported_sharing_statuses is None:
+    if content_model.metadata.supported_sharing_status is None:
         content_model.metadata.create_element('SupportedSharingStatus',
                                               sharing_status=['Published', 'Public',
                                                               'Discoverable', 'Private'],)
@@ -57,9 +57,9 @@ def landing_page(request, page):
 
             context['supported_file_types'] = ", ".join(new_supported_file_types_array)
 
-        if content_model.metadata.supported_sharing_statuses is not None:
+        if content_model.metadata.supported_sharing_status is not None:
             extended_metadata_exists = True
-            sharing_status_str = content_model.metadata.supported_sharing_statuses\
+            sharing_status_str = content_model.metadata.supported_sharing_status\
                 .get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
@@ -104,7 +104,7 @@ def landing_page(request, page):
                                                            element_id=supported_file_types_obj.id
                                                            if supported_file_types_obj else None)
 
-        sharing_status_obj = content_model.metadata.supported_sharing_statuses
+        sharing_status_obj = content_model.metadata.supported_sharing_status
         sharing_status_obj_form = \
             SupportedSharingStatusForm(instance=sharing_status_obj,
                                        res_short_id=content_model.short_id,

@@ -85,7 +85,9 @@ class SupportedResTypeChoices(models.Model):
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
-    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, blank=True)
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices,
+                                                 blank=True,
+                                                 related_name="associated_with")
 
     def get_supported_res_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
@@ -163,7 +165,9 @@ class SupportedSharingStatusChoices(models.Model):
 
 class SupportedSharingStatus(AbstractMetaDataElement):
     term = 'SupportedSharingStatus'
-    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, blank=True)
+    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices,
+                                            blank=True,
+                                            related_name="associated_with")
 
     def get_sharing_status_str(self):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])
@@ -241,7 +245,9 @@ class SupportedFileTypeChoices(models.Model):
 
 class SupportedFileTypes(AbstractMetaDataElement):
     term = 'SupportedFileTypes'
-    supported_file_types = models.ManyToManyField(SupportedFileTypeChoices, blank=True)
+    supported_file_types = models.ManyToManyField(SupportedFileTypeChoices,
+                                                  blank=True,
+                                                  related_name="associated_with")
 
     def get_supported_file_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_file_types.all()])
@@ -369,7 +375,7 @@ class ToolIcon(AbstractMetaDataElement):
 
 class ToolMetaData(CoreMetaData):
     _url_base = GenericRelation(RequestUrlBase)
-    _versions = GenericRelation(ToolVersion)
+    _version = GenericRelation(ToolVersion)
     _supported_res_types = GenericRelation(SupportedResTypes)
     _supported_file_types = GenericRelation(SupportedFileTypes)
     _tool_icon = GenericRelation(ToolIcon)
@@ -386,7 +392,7 @@ class ToolMetaData(CoreMetaData):
 
     @property
     def version(self):
-        return self._versions.all().first()
+        return self._version.all().first()
 
     @property
     def supported_res_types(self):
@@ -397,7 +403,7 @@ class ToolMetaData(CoreMetaData):
         return self._supported_file_types.all().first()
 
     @property
-    def supported_sharing_statuses(self):
+    def supported_sharing_status(self):
         return self._supported_sharing_status.all().first()
 
     @property
