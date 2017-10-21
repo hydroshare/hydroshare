@@ -55,6 +55,12 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         target_temp_sqlite_invalid_file = os.path.join(self.temp_dir, self.sqlite_invalid_file_name)
         shutil.copy(self.sqlite_invalid_file, target_temp_sqlite_invalid_file)
 
+        self.odm2_csv_file_name = 'ODM2_Multi_Site_One_Variable_Test.csv'
+        self.odm2_csv_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_csv_file_name)
+        target_temp_csv_file = os.path.join(self.temp_dir, self.odm2_csv_file_name)
+        shutil.copy(self.odm2_csv_file, target_temp_csv_file)
+        self.odm2_csv_file_obj = open(target_temp_csv_file, 'r')
+
     def tearDown(self):
         super(TimeSeriesFileTypeMetaDataTest, self).tearDown()
         if os.path.exists(self.temp_dir):
@@ -89,6 +95,105 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # self.assertEqual(logical_file.metadata.keywords[0], 'Snow water equivalent')
         self.composite_resource.delete()
 
+    def test_CSV_set_file_type_to_timeseries(self):
+        # here we are using a valid CSV file for setting it
+        # to TimeSeries file type which includes metadata extraction
+        self.odm2_csv_file_obj = open(self.odm2_csv_file, 'r')
+        file_to_upload = UploadedFile(file=self.odm2_csv_file_obj,
+                                      name=os.path.basename(self.odm2_csv_file_obj.name))
+        self._create_composite_resource(title='Untitled Resource', file_to_upload=file_to_upload)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that there is one GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # check that there is no TimeSeriesLogicalFile object
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
+
+        # set the CSV file to TimeSeries file type
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that the ODM2.sqlite blank file got added to the resource
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        csv_res_file = None
+        sqlite_res_file = None
+        for res_file in self.composite_resource.files.all():
+            if res_file.extension == '.sqlite':
+                sqlite_res_file = res_file
+            elif res_file.extension == '.csv':
+                csv_res_file = res_file
+        self.assertNotEqual(csv_res_file, None)
+        self.assertNotEqual(sqlite_res_file, None)
+
+        self.assertEqual(csv_res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        self.assertEqual(sqlite_res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
+        logical_file = csv_res_file.logical_file
+
+        # test that both csv and sqlite files of the logical file are in a folder
+        csv_file_name = os.path.basename(self.odm2_csv_file_obj.name)
+        for res_file in logical_file.files.all():
+            self.assertEqual(res_file.file_folder, csv_file_name[:-4])
+
+        # since the uploaded csv file has 2 data columns, the metadata should have 2 series names
+        self.assertEqual(len(logical_file.metadata.series_names), 2)
+        csv_data_column_names = set(['Temp_DegC_Mendon', 'Temp_DegC_Paradise'])
+        self.assertEqual(set(logical_file.metadata.series_names), csv_data_column_names)
+
+        # since the uploaded csv file has 2 data columns, the metadata should have
+        # the attribute value_counts (dict) 2 elements
+        self.assertEqual(len(logical_file.metadata.value_counts), 2)
+        self.assertEqual(set(logical_file.metadata.value_counts.keys()), csv_data_column_names)
+
+        # there should be 20 data values for each series
+        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Mendon'], '20')
+        self.assertEqual(logical_file.metadata.value_counts['Temp_DegC_Paradise'], '20')
+
+        # the dataset name (title) must be set the name of the CSV file
+        self.assertEqual(logical_file.dataset_name, csv_file_name[:-4])
+
+        # there should not be any file level abstract
+        self.assertEqual(logical_file.metadata.abstract, None)
+
+        # there should not be any file level keywords
+        self.assertEqual(logical_file.metadata.keywords, [])
+
+        # there should be 1 coverage element of type period at the file level
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
+        self.assertEqual(logical_file.metadata.coverages.filter(type='period').count(), 1)
+        self.assertEqual(logical_file.has_csv_file, True)
+
+        # at file level there should not be any site element
+        self.assertEqual(logical_file.metadata.sites.all().count(), 0)
+
+        # at file level there should not be any method element
+        self.assertEqual(logical_file.metadata.methods.all().count(), 0)
+
+        # at file level there should not be any variable element
+        self.assertEqual(logical_file.metadata.variables.all().count(), 0)
+
+        # at file level there should not an any site processing level
+        self.assertEqual(logical_file.metadata.processing_levels.all().count(), 0)
+
+        # at file level there should not be any result element
+        self.assertEqual(logical_file.metadata.time_series_results.all().count(), 0)
+
+        # resource title does not get updated when csv is set to file type
+        self.assertEqual(self.composite_resource.metadata.title.value, 'Untitled Resource')
+        # self._test_no_change_in_metadata()
+        # there should be  2 format elements - since the resource has a csv file and a sqlite file
+        self.assertEqual(self.composite_resource.metadata.formats.all().count(), 2)
+
+        # there should be 1 coverage element of type period
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
+        self.assertEqual(self.composite_resource.metadata.coverages.filter(type='period').count(), 1)
+        self.composite_resource.delete()
+
     def test_set_file_type_to_sqlite_invalid_file(self):
         # here we are using an invalid sqlite file for setting it
         # to TimeSeries file type which should fail
@@ -96,6 +201,51 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self._create_composite_resource()
         self._test_invalid_file()
         self.composite_resource.delete()
+
+    def test_invalid_csv_file(self):
+        # This file contains invalid number of data column headings
+        invalid_csv_file_name = 'Invalid_Headings_Test_1.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file missing a data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_2.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has an additional data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_3.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file contains a duplicate data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_4.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has no data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_5.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has not a CSV file
+        invalid_csv_file_name = 'Invalid_format_Test.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a bad datetime value
+        invalid_csv_file_name = 'Invalid_Data_Test_1.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a bad data value (not numeric)
+        invalid_csv_file_name = 'Invalid_Data_Test_2.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file is missing a data value
+        invalid_csv_file_name = 'Invalid_Data_Test_3.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a additional data value
+        invalid_csv_file_name = 'Invalid_Data_Test_4.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has no data values
+        invalid_csv_file_name = 'Invalid_Data_Test_5.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
 
     def test_sqlite_metadata_update(self):
         # here we are using a valid sqlite file for setting it
@@ -510,15 +660,17 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         self.composite_resource.delete()
 
-    def _create_composite_resource(self, title='Test Time series File Type Metadata'):
-        uploaded_file = UploadedFile(file=self.sqlite_file_obj,
-                                     name=os.path.basename(self.sqlite_file_obj.name))
+    def _create_composite_resource(self, title='Test Time series File Type Metadata',
+                                   file_to_upload=None):
+        if file_to_upload is None:
+            file_to_upload = UploadedFile(file=self.sqlite_file_obj,
+                                          name=os.path.basename(self.sqlite_file_obj.name))
 
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
             title=title,
-            files=(uploaded_file,)
+            files=(file_to_upload,)
         )
 
         # set the generic logical file as part of resource post create signal
@@ -533,7 +685,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
 
-        # trying to set this invalid tif file to NetCDF file type should raise
+        # trying to set this invalid sqlite file to timeseries file type should raise
         # ValidationError
         with self.assertRaises(ValidationError):
             TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
@@ -544,3 +696,41 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # check that the resource file is not associated with generic logical file
         self.assertEqual(res_file.has_logical_file, True)
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
+    def _test_invalid_csv_file(self, invalid_csv_file_name):
+        invalid_csv_file_obj = self._get_invalid_csv_file_obj(invalid_csv_file_name)
+
+        file_to_upload = UploadedFile(file=invalid_csv_file_obj,
+                                      name=os.path.basename(invalid_csv_file_obj.name))
+        self._create_composite_resource(title='Untitled Resource', file_to_upload=file_to_upload)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that there is one GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+
+        # check that there is no TimeSeriesLogicalFile object
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
+
+        # trying to set this invalid csv file to timeseries file type should raise
+        # ValidationError
+        with self.assertRaises(ValidationError):
+            TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that the invalid file did not get deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        # check that the resource file is still associated with generic logical file
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        self.composite_resource.delete()
+
+    def _get_invalid_csv_file_obj(self, invalid_csv_file_name):
+        invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
+        target_temp_csv_file = os.path.join(self.temp_dir, invalid_csv_file_name)
+        shutil.copy(invalid_csv_file, target_temp_csv_file)
+        return open(target_temp_csv_file, 'r')
