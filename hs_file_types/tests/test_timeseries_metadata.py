@@ -191,7 +191,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         # there should be 1 coverage element of type period
         self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
-        self.assertEqual(self.composite_resource.metadata.coverages.filter(type='period').count(), 1)
+        self.assertEqual(self.composite_resource.metadata.coverages.filter(
+            type='period').count(), 1)
         self.composite_resource.delete()
 
     def test_set_file_type_to_sqlite_invalid_file(self):
