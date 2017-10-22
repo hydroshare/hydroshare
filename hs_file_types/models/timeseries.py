@@ -456,8 +456,9 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
     @property
     def can_add_blank_sqlite_file(self):
-        # use this property as a guard to decide when to add a blank SQLIte file
-        # to the resource
+        """use this property as a guard to decide when to add a blank SQLIte file
+        to the resource
+        """
         if self.has_sqlite_file:
             return False
         if not self.has_csv_file:
@@ -467,14 +468,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
     @property
     def can_update_sqlite_file(self):
-        # guard property to determine when the sqlite file can be updated as result of
-        # metadata changes
+        """guard property to determine when the sqlite file can be updated as result of
+        metadata changes
+        """
         return self.has_sqlite_file and self.metadata.has_all_required_elements()
-
-    def add_blank_sqlite_file(self, user):
-        # add the blank SQLite file to this resource (self)
-        # TODO: need to implement this when CSV file is implement as this file type
-        pass
 
     def update_sqlite_file(self, user):
         # get sqlite resource file
@@ -496,8 +493,6 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         :param user: user who is setting the file type
         :return:
         """
-
-        # TODO: need to code for setting csv file as time series file type
 
         # had to import it here to avoid import loop
         from hs_core.views.utils import create_folder, remove_folder
@@ -1599,25 +1594,26 @@ def create_timeseries_result_form(target, selected_series_id):
 
 
 def sqlite_file_update(instance, sqlite_res_file, user):
-    # instance either an instance of TimeSeriesLogicalFile or TimeSeriesResource
+    """updates the sqlite file on metadata changes
+    :param  instance: an instance of either TimeSeriesLogicalFile or TimeSeriesResource
+    """
+
     if not instance.metadata.is_dirty:
         return
-
-    if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
-        instance.add_blank_sqlite_file(user)
+    is_file_type = isinstance(instance, TimeSeriesLogicalFile)
+    if not is_file_type:
+        # adding the blank sqlite file is necessary only in case of TimeSeriesResource
+        if not instance.has_sqlite_file and instance.can_add_blank_sqlite_file:
+            add_blank_sqlite_file(instance, upload_folder=None)
+        # instance.add_blank_sqlite_file(user)
 
     log = logging.getLogger()
-
-    is_file_type = isinstance(instance, TimeSeriesLogicalFile)
 
     sqlite_file_to_update = sqlite_res_file
     # retrieve the sqlite file from iRODS and save it to temp directory
     temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
 
     if instance.has_csv_file and instance.metadata.series_names:
-        # TODO: populate_blank_sqlite_file() needs to me moved to the mixin class
-        # so that the following can be called as
-        # instance.populate_blank_sqlite_file(temp_sqlite_file, user)
         instance.metadata.populate_blank_sqlite_file(temp_sqlite_file, user)
     else:
         try:
@@ -1629,6 +1625,8 @@ def sqlite_file_update(instance, sqlite_res_file, user):
                 # update dataset table for changes in title and abstract
                 instance.metadata.update_datasets_table(con, cur)
                 if not is_file_type:
+                    # here we are updating sqlite file time series resource
+
                     # update people related tables (People, Affiliations, Organizations, ActionBy)
                     # using updated creators/contributors in django db
 

@@ -9,13 +9,13 @@ from django.dispatch import receiver
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, post_add_files_to_resource, post_create_resource, \
     pre_metadata_element_create, pre_metadata_element_update
-from hs_core.hydroshare import utils, delete_resource_file_only
+from hs_core.hydroshare import utils, delete_resource_file_only, resource_modified
 from hs_app_timeseries.models import TimeSeriesResource, TimeSeriesMetaData
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
 from hs_file_types.models.timeseries import extract_metadata, validate_odm2_db_file, \
-    extract_cv_metadata_from_blank_sqlite_file, validate_csv_file
+    extract_cv_metadata_from_blank_sqlite_file, validate_csv_file, add_blank_sqlite_file
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
 
@@ -158,7 +158,8 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
         _delete_resource_file(resource, ".sqlite")
 
         # add the blank sqlite file
-        resource.add_blank_sqlite_file(user)
+        add_blank_sqlite_file(resource, upload_folder=None)
+        resource_modified(resource, user, overwrite_bag=False)
 
         # populate CV metadata django models from the blank sqlite file
         extract_cv_metadata_from_blank_sqlite_file(resource)

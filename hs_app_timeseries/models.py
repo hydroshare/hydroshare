@@ -901,32 +901,6 @@ class TimeSeriesResource(BaseResource):
         # sqlite file is the required content file
         return self.has_sqlite_file
 
-    def add_blank_sqlite_file(self, user):
-        # add the blank SQLite file to this resource (self)
-        if not self.can_add_blank_sqlite_file:
-            err_msg = """Can't add blank ODM2 SQLite file to the resource.
-             Resource may already have a SQLite file or there may not be enough metadata
-             for the resource."""
-            raise Exception(err_msg)
-
-        log = logging.getLogger()
-
-        # add the sqlite file to the resource
-        odm2_sqlite_file_name = 'ODM2.sqlite'
-        odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
-        files = [UploadedFile(file=open(odm2_sqlite_file, 'rb'), name=odm2_sqlite_file_name)]
-
-        try:
-            add_resource_files(self.short_id, *files)
-            log.info("Blank SQLite file was added.")
-
-            # need to do this so that the bag will be regenerated prior to download of the bag
-            utils.resource_modified(self, by_user=user, overwrite_bag=False)
-        except Exception as ex:
-            log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
-            raise ex
-
-
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(TimeSeriesResource)(resource_processor)
@@ -1234,7 +1208,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         # used for updating the sqlite file that is not blank
         update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
                      "WHERE DatasetID=1"
-        # TODO: we need to grab title and abstract differently depending on whether self is
+        # we need to grab title and abstract differently depending on whether self is
         # TimeSeriesMetaData or TimeSeriesFileMetaData
         if isinstance(self, TimeSeriesMetaData):
             ds_title = self.title.value
