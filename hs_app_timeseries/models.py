@@ -141,7 +141,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
                         td(self.site_code)
                     with tr():
                         get_th('Name')
-                        td(self.site_name)
+                        td(self.site_name, style="word-break: normal;")
                     if self.elevation_m:
                         with tr():
                             get_th('Elevation M')
@@ -346,7 +346,7 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                 if self.variable_definition:
                     with tr():
                         get_th('Definition')
-                        td(self.variable_definition)
+                        td(self.variable_definition, style="word-break: normal;")
                 if self.speciation:
                     with tr():
                         get_th('Speciations')
@@ -472,14 +472,14 @@ class Method(TimeSeriesAbstractMetaDataElement):
                         td(self.method_code)
                     with tr():
                         get_th('Name')
-                        td(self.method_name)
+                        td(self.method_name, style="word-break: normal;")
                     with tr():
                         get_th('Type')
                         td(self.method_type)
                     if self.method_description:
                         with tr():
                             get_th('Description')
-                            td(self.method_description)
+                            td(self.method_description, style="word-break: normal;")
                     if self.method_link:
                         with tr():
                             get_th('Link')
@@ -586,11 +586,11 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
                     if self.definition:
                         with tr():
                             get_th('Definition')
-                            td(self.definition)
+                            td(self.definition, style="word-break: normal;")
                     if self.explanation:
                         with tr():
                             get_th('Explanation')
-                            td(self.explanation)
+                            td(self.explanation, style="word-break: normal;")
 
         return html_table.render(pretty=pretty)
 
