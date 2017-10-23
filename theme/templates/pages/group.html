@@ -510,6 +510,7 @@
                                                                 <select id="input-resource-type" class="form-control pull-left">
                                                                     <option value="" selected>All</option>
                                                                     <option value="collection resource">Collection</option>
+                                                                    <option value="composite resource">Composite</option>
                                                                     <option value="generic">Generic</option>
                                                                     <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                                     <option value="geographic raster">Geographic Raster</option>
@@ -619,6 +620,10 @@
                                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                                 {% if res|resource_type == "Generic" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Composite Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                                          class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Geographic Raster" %}
