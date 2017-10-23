@@ -401,37 +401,6 @@
                                                     <span class="fa fa-link icon-blue"></span>
                                                 </button>
 
-                                                {% if page.perms.change and resource_edit_mode %}
-                                                    <button id="fb-set-geo-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Raster File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Raster</span>
-                                                    </button>
-                                                    <button id="fb-set-netcdf-file-type"
-                                                            class="disabled"
-                                                            title="Set Multidimensional Data File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Multidimensional</span>
-                                                    </button>
-                                                    <button id="fb-set-geofeature-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Feature File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Feature</span>
-                                                    </button>
-                                                    <button id="fb-set-refts-file-type"
-                                                            class="disabled"
-                                                            title="Set Reference Timeseries File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                    </button>
-                                                    <button id="fb-set-timeseries-file-type"
-                                                            class="disabled"
-                                                            title="Set Timeseries File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                    </button>
-                                                 {% endif %}
-
                                                 {% if page.perms.change and metadata_form %}
                                                     <button id="fb-delete"
                                                             class="disabled"
