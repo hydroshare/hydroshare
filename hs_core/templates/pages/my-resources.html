@@ -375,7 +375,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
+                            <td>{{ res.updated|date:"U" }}</td>
                             <td>
                                 {% if res.raccess.published %}
                                     Published
@@ -387,7 +387,7 @@
                                     Private
                                 {% endif %}
                             </td>
-                            <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
+                            <td>{{ res.created|date:"U" }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

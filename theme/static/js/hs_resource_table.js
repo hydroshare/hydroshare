@@ -599,21 +599,22 @@ function updateLabelCount() {
     var collection = [];
     var favorites = 0;
     var ownedCount = 0;
-    // var ownedEditableCount = 0;
     var addedCount = 0;
     var sharedCount = 0;
+    var recentCount = 0;
+
+    var cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 5);
+    cutoff = Math.floor(cutoff.getTime() / 1000); // Seconds since the unix epoch
 
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
         // List of labels already applied to the resource;
         var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
         var dataColFavorite = this.data()[FAVORITE_COL].trim();
         var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
-        // var sharingStatus = this.data()[SHARING_STATUS_COL].trim();
 
         if (dataColPermissionLevel == "Owned") {
             ownedCount++;
-            // if (sharingStatus.indexOf('Published') == -1)
-            //     ownedEditableCount++;
         }
         else if (dataColPermissionLevel == "Discovered") {
             addedCount++;
@@ -624,6 +625,11 @@ function updateLabelCount() {
 
         if (dataColFavorite == "Favorite") {
             favorites++;
+        }
+
+        // Update Recent count
+        if (this.data()[LAST_MODIF_SORT_COL] >= cutoff) {
+            recentCount++;
         }
 
         // Loop through the labels in the row and update the collection count
@@ -641,6 +647,7 @@ function updateLabelCount() {
     $("#filter .badge[data-facet='shared']").text(sharedCount);
     $("#filter .badge[data-facet='discovered']").text(addedCount);
     $("#filter .badge[data-facet='favorites']").text(favorites);
+    $("#filter .badge[data-facet='recent']").text(recentCount);
 
     // Set label counts
     for (var key in collection) {
@@ -864,6 +871,19 @@ $.fn.dataTable.ext.search.push (
         if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
             isFiltered = true;
             if (data[FAVORITE_COL] == "Favorite") {
+                return true;
+            }
+        }
+
+        // Recent
+        if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
+            isFiltered = true;
+            var cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 5);
+            cutoff = Math.floor(cutoff.getTime()/1000); // Seconds since the unix epoch
+            // console.log("Cutoff: \t\t" + cutoff);
+            // console.log("Last modified: \t" + data[LAST_MODIF_SORT_COL]);
+            if (data[LAST_MODIF_SORT_COL] >= cutoff) {
                 return true;
             }
         }
