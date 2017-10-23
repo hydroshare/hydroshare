@@ -609,20 +609,90 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
 
         copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy()
         copy_of_logical_file.metadata.abstract = self.metadata.abstract
+        copy_of_logical_file.metadata.value_counts = self.metadata.value_counts
+        copy_of_logical_file.metadata.is_dirty = self.metadata.is_dirty
         copy_of_logical_file.metadata.save()
         copy_of_logical_file.save()
-        metadata = copy_of_logical_file.metadata
 
-        # make all the cv terms not dirty
-        cv_terms = metadata.cv_variable_names.all() + metadata.cv_variable_types.all() + \
-            metadata.cv_speciations.all() + metadata.cv_site_types.all() + \
-            metadata.cv_elevation_datums.all() + metadata.cv_method_types.all() + \
-            metadata.cv_units_types.all() + metadata.cv_statuses.all() + \
-            metadata.cv_mediums.all() + metadata.cv_aggregation_statistics.all()
-        for cv_term in cv_terms:
-            cv_term.is_dirty = False
-
+        copy_cv_terms(src_metadata=self.metadata, tgt_metadata=copy_of_logical_file.metadata)
         return copy_of_logical_file
+
+
+def copy_cv_terms(src_metadata, tgt_metadata):
+    """copy CV related metadata items from the source metadata *src_metadata*
+    to the target metadata *tgt_metadata*
+    This is a helper function to support resource copy or version creation
+    :param  src_metadata: an instance of TimeSeriesMetaData or TimeSeriesFileMetaData from which
+    cv related metadata items to copy from
+    :param  tgt_metadata: an instance of TimeSeriesMetaData or TimeSeriesFileMetaData to which
+    cv related metadata items to copy to
+    Note: src_metadata and tgt_metadata must be of the same type
+    """
+
+    # create CV terms
+    def copy_cv_terms(cv_class, cv_terms_to_copy):
+        for cv_term in cv_terms_to_copy:
+            cv_class.objects.create(metadata=tgt_metadata, name=cv_term.name,
+                                    term=cv_term.term,
+                                    is_dirty=cv_term.is_dirty)
+
+    if type(src_metadata) != type(tgt_metadata):
+        raise ValidationError("Source metadata and target metadata objects must be of the "
+                              "same type")
+
+    if not isinstance(src_metadata, TimeSeriesFileMetaData):
+        from hs_app_timeseries.models import CVElevationDatum as R_CVElevationDatum, \
+            CVMedium as R_CVMedium, CVMethodType as R_CVMethodType, \
+            CVAggregationStatistic as R_CVAggregationStatistic, CVSpeciation as R_CVSpeciation, \
+            CVVariableType as R_CVVariableType, CVVariableName as R_CVVariableName, \
+            CVSiteType as R_CVSiteType, CVStatus as R_CVStatus, CVUnitsType as R_CVUnitsType
+        cv_variable_type = R_CVVariableType
+        cv_variable_name = R_CVVariableName
+        cv_speciation = R_CVSpeciation
+        cv_elevation_datum = R_CVElevationDatum
+        cv_site_type = R_CVSiteType
+        cv_method_type = R_CVMethodType
+        cv_units_type = R_CVUnitsType
+        cv_status = R_CVStatus
+        cv_medium = R_CVMedium
+        cv_aggr_statistics = R_CVAggregationStatistic
+    else:
+        cv_variable_type = CVVariableType
+        cv_variable_name = CVVariableName
+        cv_speciation = CVSpeciation
+        cv_elevation_datum = CVElevationDatum
+        cv_site_type = CVSiteType
+        cv_method_type = CVMethodType
+        cv_units_type = CVUnitsType
+        cv_status = CVStatus
+        cv_medium = CVMedium
+        cv_aggr_statistics = CVAggregationStatistic
+
+    copy_cv_terms(cv_variable_type, src_metadata.cv_variable_types.all())
+    copy_cv_terms(cv_variable_name, src_metadata.cv_variable_names.all())
+    copy_cv_terms(cv_speciation, src_metadata.cv_speciations.all())
+    copy_cv_terms(cv_elevation_datum, src_metadata.cv_elevation_datums.all())
+    copy_cv_terms(cv_site_type, src_metadata.cv_site_types.all())
+    copy_cv_terms(cv_method_type, src_metadata.cv_method_types.all())
+    copy_cv_terms(cv_units_type, src_metadata.cv_units_types.all())
+    copy_cv_terms(cv_status, src_metadata.cv_statuses.all())
+    copy_cv_terms(cv_medium, src_metadata.cv_mediums.all())
+    copy_cv_terms(cv_aggr_statistics, src_metadata.cv_aggregation_statistics.all())
+
+    # set all cv terms is_dirty to false
+    cv_terms = list(tgt_metadata.cv_variable_names.all()) + \
+        list(tgt_metadata.cv_variable_types.all()) + \
+        list(tgt_metadata.cv_speciations.all()) + \
+        list(tgt_metadata.cv_site_types.all()) + \
+        list(tgt_metadata.cv_elevation_datums.all()) + \
+        list(tgt_metadata.cv_method_types.all()) + \
+        list(tgt_metadata.cv_units_types.all()) + \
+        list(tgt_metadata.cv_statuses.all()) + \
+        list(tgt_metadata.cv_mediums.all()) + \
+        list(tgt_metadata.cv_aggregation_statistics.all())
+    for cv_term in cv_terms:
+        cv_term.is_dirty = False
+        cv_term.save()
 
 
 def validate_odm2_db_file(sqlite_file_path):
