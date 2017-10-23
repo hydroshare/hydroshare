@@ -4458,7 +4458,6 @@ span.caption-file-type {
 #hsDropzone {
 	resize: vertical;
 	border: 0;
-	height: 200px;
 	min-height: 200px;
 }
 
