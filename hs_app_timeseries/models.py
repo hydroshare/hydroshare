@@ -408,7 +408,12 @@ class Method(TimeSeriesAbstractMetaDataElement):
             element = super(Method, cls).create(**kwargs)
 
         # if the user has entered a new method type, then create a corresponding new cv term
-        _create_cv_term(element=element, cv_term_class=CVMethodType,
+        cv_method_type_class = CVMethodType
+        if not isinstance(metadata, TimeSeriesMetaData):
+            from hs_file_types.models import timeseries
+            cv_method_type_class = timeseries.CVMethodType
+
+        _create_cv_term(element=element, cv_term_class=cv_method_type_class,
                         cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
@@ -429,7 +434,11 @@ class Method(TimeSeriesAbstractMetaDataElement):
         super(Method, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         # if the user has entered a new method type, then create a corresponding new cv term
-        _create_cv_term(element=element, cv_term_class=CVMethodType,
+        cv_method_type_class = CVMethodType
+        if not isinstance(element.metadata, TimeSeriesMetaData):
+            from hs_file_types.models import timeseries
+            cv_method_type_class = timeseries.CVMethodType
+        _create_cv_term(element=element, cv_term_class=cv_method_type_class,
                         cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
@@ -2033,6 +2042,17 @@ class TimeSeriesMetaData(TimeSeriesMetaDataMixin, CoreMetaData):
 
 
 def _update_resource_coverage_element(site_element):
+    if not isinstance(site_element.metadata, TimeSeriesMetaData):
+        # metadata must be an instance of TimeSeriesFileMetaData
+        # which means the above update was for file level coverage update
+        # and we have to do another update at the resource level
+        logical_file = site_element.metadata.logical_file
+        if logical_file.resource is None:
+            # this condition is true if site element is getting created for copied
+            # or new version of a composite resource in which case there is no need to
+            # update resource level coverage
+            return
+
     point_value = {'east': site_element.longitude, 'north': site_element.latitude,
                    'units': "Decimal degrees"}
 
@@ -2101,13 +2121,21 @@ def _update_resource_coverage_element(site_element):
 
 def _create_site_related_cv_terms(element, data_dict):
     # if the user has entered a new elevation datum, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVElevationDatum,
+
+    cv_elevation_datum_class = CVElevationDatum
+    cv_site_type_class = CVSiteType
+    if not isinstance(element.metadata, TimeSeriesMetaData):
+        from hs_file_types.models import timeseries
+        cv_elevation_datum_class = timeseries.CVElevationDatum
+        cv_site_type_class = timeseries.CVSiteType
+
+    _create_cv_term(element=element, cv_term_class=cv_elevation_datum_class,
                     cv_term_str='elevation_datum',
                     element_metadata_cv_terms=element.metadata.cv_elevation_datums.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new site type, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVSiteType,
+    _create_cv_term(element=element, cv_term_class=cv_site_type_class,
                     cv_term_str='site_type',
                     element_metadata_cv_terms=element.metadata.cv_site_types.all(),
                     data_dict=data_dict)
@@ -2115,19 +2143,29 @@ def _create_site_related_cv_terms(element, data_dict):
 
 def _create_variable_related_cv_terms(element, data_dict):
     # if the user has entered a new variable name, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVVariableName,
+
+    cv_variable_name_class = CVVariableName
+    cv_variable_type_class = CVVariableType
+    cv_speciation_class = CVSpeciation
+    if not isinstance(element.metadata, TimeSeriesMetaData):
+        from hs_file_types.models import timeseries
+        cv_variable_name_class = timeseries.CVVariableName
+        cv_variable_type_class = timeseries.CVVariableType
+        cv_speciation_class = timeseries.CVSpeciation
+
+    _create_cv_term(element=element, cv_term_class=cv_variable_name_class,
                     cv_term_str='variable_name',
                     element_metadata_cv_terms=element.metadata.cv_variable_names.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new variable type, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVVariableType,
+    _create_cv_term(element=element, cv_term_class=cv_variable_type_class,
                     cv_term_str='variable_type',
                     element_metadata_cv_terms=element.metadata.cv_variable_types.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new speciation, then create a corresponding new cv term
-    _create_cv_term(element=element, cv_term_class=CVSpeciation,
+    _create_cv_term(element=element, cv_term_class=cv_speciation_class,
                     cv_term_str='speciation',
                     element_metadata_cv_terms=element.metadata.cv_speciations.all(),
                     data_dict=data_dict)

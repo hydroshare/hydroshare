@@ -80,7 +80,8 @@ class TimeSeriesFileMetaData(TimeSeriesMetaDataMixin, AbstractFileMetaData):
         elements += list(self.methods)
         elements += list(self.processing_levels)
         elements += list(self.time_series_results)
-        elements += [self.utc_offset]
+        if self.utc_offset is not None:
+            elements += [self.utc_offset]
         return elements
 
     def get_html(self, **kwargs):
@@ -602,6 +603,26 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
             remove_folder(user, resource.short_id, folder_to_remove)
             log.info("Deleted newly created file type folder")
             raise ValidationError(msg)
+
+    def get_copy(self):
+        """Overrides the base class method"""
+
+        copy_of_logical_file = super(TimeSeriesLogicalFile, self).get_copy()
+        copy_of_logical_file.metadata.abstract = self.metadata.abstract
+        copy_of_logical_file.metadata.save()
+        copy_of_logical_file.save()
+        metadata = copy_of_logical_file.metadata
+
+        # make all the cv terms not dirty
+        cv_terms = metadata.cv_variable_names.all() + metadata.cv_variable_types.all() + \
+            metadata.cv_speciations.all() + metadata.cv_site_types.all() + \
+            metadata.cv_elevation_datums.all() + metadata.cv_method_types.all() + \
+            metadata.cv_units_types.all() + metadata.cv_statuses.all() + \
+            metadata.cv_mediums.all() + metadata.cv_aggregation_statistics.all()
+        for cv_term in cv_terms:
+            cv_term.is_dirty = False
+
+        return copy_of_logical_file
 
 
 def validate_odm2_db_file(sqlite_file_path):
