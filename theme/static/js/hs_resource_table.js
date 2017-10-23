@@ -759,6 +759,8 @@ $.fn.dataTable.ext.search.push (
         var inputSubject = "";
         var inputAuthor = "";
 
+        var isFiltered = false;
+
         // Split the occurrences at ':' and move to an array.
         var collection = [];
         if (occurrences) {
@@ -771,12 +773,15 @@ $.fn.dataTable.ext.search.push (
         // Extract the pieces of information
         for (var item in collection) {
             if (collection[item][0].toUpperCase() == "TYPE") {
+                isFiltered = true;
                 inputType = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "AUTHOR") {
+                isFiltered = true;
                 inputAuthor = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "SUBJECT") {
+                isFiltered = true;
                 inputSubject = collection[item][1];
             }
         }
@@ -798,6 +803,7 @@ $.fn.dataTable.ext.search.push (
         //---------------- Facet filters --------------------
         // Owned by me
         if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+            isFiltered = true;
             if (data[PERM_LEVEL_COL] == "Owned") {
                 return true;
             }
@@ -805,7 +811,7 @@ $.fn.dataTable.ext.search.push (
 
         // Shared with me
         if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
-            // Permission level
+            isFiltered = true;
             if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
                 return true;
             }
@@ -813,7 +819,7 @@ $.fn.dataTable.ext.search.push (
 
         // Added by me
         if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
-            // Permission level
+            isFiltered = true;
             if (data[PERM_LEVEL_COL] == "Discovered") {
                 return true;
             }
@@ -822,6 +828,7 @@ $.fn.dataTable.ext.search.push (
         // Shared by - Used in group resource listing
         var grantors = $('#filter-shared-by .grantor:checked');
         if (grantors.length) {
+            isFiltered = true;
             var grantorFlag = false;
             for (var i = 0; i < grantors.length; i++) {
                 var user = parseInt($(grantors[i]).attr("data-grantor-id"));
@@ -839,6 +846,7 @@ $.fn.dataTable.ext.search.push (
         var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
         for (var i = 0; i < labelCheckboxes.length; i++) {
             if ($(labelCheckboxes[i]).prop("checked") == true) {
+                isFiltered = true;
                 var label = $(labelCheckboxes[i]).attr("data-label");
 
                 var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
@@ -854,9 +862,15 @@ $.fn.dataTable.ext.search.push (
 
         // Favorite
         if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+            isFiltered = true;
             if (data[FAVORITE_COL] == "Favorite") {
                 return true;
             }
+        }
+
+        // If no filters selected, display all
+        if (!isFiltered) {
+            return true;
         }
 
         // Default
