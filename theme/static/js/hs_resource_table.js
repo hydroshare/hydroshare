@@ -783,39 +783,39 @@ $.fn.dataTable.ext.search.push (
 
         // Filter the table for each value
 
-        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
-            return false;
+        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) >= 0) {
+            return true;
         }
 
-        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
-            return false;
+        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) >= 0) {
+            return true;
         }
 
-        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
-            return false;
+        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) >= 0) {
+            return true;
         }
 
         //---------------- Facet filters --------------------
         // Owned by me
         if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-            if (data[PERM_LEVEL_COL] != "Owned") {
-                return false;
+            if (data[PERM_LEVEL_COL] == "Owned") {
+                return true;
             }
         }
 
         // Shared with me
         if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
             // Permission level
-            if (data[PERM_LEVEL_COL] == "Owned") {
-                return false;
+            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                return true;
             }
         }
 
         // Added by me
         if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
             // Permission level
-            if (data[PERM_LEVEL_COL] != "Discovered") {
-                return false;
+            if (data[PERM_LEVEL_COL] == "Discovered") {
+                return true;
             }
         }
 
@@ -830,8 +830,8 @@ $.fn.dataTable.ext.search.push (
                 }
             }
 
-            if (!grantorFlag) {
-                return false;
+            if (grantorFlag) {
+                return true;
             }
         }
 
@@ -846,20 +846,20 @@ $.fn.dataTable.ext.search.push (
                     dataColLabels[h] = dataColLabels[h].trim();
                 }
 
-                if (dataColLabels.indexOf(label) == -1) {
-                    return false;
+                if (dataColLabels.indexOf(label) >= 0) {
+                    return true;
                 }
             }
         }
 
         // Favorite
         if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-            if (data[FAVORITE_COL] != "Favorite") {
-                return false;
+            if (data[FAVORITE_COL] == "Favorite") {
+                return true;
             }
         }
 
         // Default
-        return true;
+        return false;
     }
 );
