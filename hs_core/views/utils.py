@@ -386,6 +386,9 @@ def get_my_resources_list(request):
     for res in viewable_resources:
         res.viewable = True
 
+    for res in discovered_resources:
+        res.discovered = True
+
     for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
         res.is_favorite = False
         if res in favorite_resources:

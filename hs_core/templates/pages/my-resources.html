@@ -24,21 +24,21 @@
                     <div class="panel-body">
                         <div class="list-group">
                             <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
-                            data-editable-count="{{ editable|length }}" data-view-count="{{ view|length }}" >
+                            data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}" >
                                 <li class="list-group-item">
                                     <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
                                         <input type="checkbox" data-facet="owned" value="Owned">Owned by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="editable" class="badge">0</span>
+                                    <span data-facet="shared" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
+                                        <input type="checkbox" data-facet="shared" value="Shared">Shared with me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="viewable by me" class="badge">0</span>
+                                    <span data-facet="discovered" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="viewable by me" value="View">Viewable by me</label>
+                                        <input type="checkbox" data-facet="discovered" value="Discovered">Added by me</label>
                                 </li>
                                 <li class="list-group-item">
                                     <span data-facet="favorites" class="badge">0</span>
@@ -70,7 +70,6 @@
         </div>
         <div class="col-lg-10" id="items">
             <div class="row">
-
                 <div class="col-sm-8 col-xs-12 pull-right">
                     <div id="search-container" class="input-group">
                         <span class="glyphicon glyphicon-search search-icon"></span>
@@ -146,8 +145,6 @@
                             </div>
                         </span>
 
-
-
                         <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
                               data-placement="bottom" title="Favorite"></span>
 
@@ -156,8 +153,6 @@
                             <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
                                   data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
                         </span>
-
-
                     </div>
                 </div>
             </div>
@@ -172,14 +167,14 @@
                     <th>First Author</th>
                     <th>Date Created</th>
                     <th>Last modified</th>
-                    <th>Subject</th>{# Used in table processing #}
-                    <th>Authors</th>{# Used in table processing #}
-                    <th>Permission Level</th>{# Used in table processing #}
-                    <th>Labels</th>{# Used in table processing #}
-                    <th>Favorite</th>{# Used in table processing #}
-                    <th>Last modified</th>{# Used in table processing #}
-                    <th>Sharing Status</th>{# Used in table processing #}
-                    <th>Date Created</th>{# Used in table processing #}
+                    <th>Subject</th>            {# Used in table processing #}
+                    <th>Authors</th>            {# Used in table processing #}
+                    <th>Permission Level</th>   {# Used in table processing #}
+                    <th>Labels</th>             {# Used in table processing #}
+                    <th>Favorite</th>           {# Used in table processing #}
+                    <th>Last modified</th>      {# Used in table processing #}
+                    <th>Sharing Status</th>     {# Used in table processing #}
+                    <th>Date Created</th>       {# Used in table processing #}
                 </tr>
                 </thead>
                 <tbody>
@@ -360,10 +355,8 @@
                             </td>
                             {% if res.owned %}
                                 <td>Owned</td>
-                            {% elif res.editable %}
-                                <td>Editable</td>
-                            {% elif res.viewable %}
-                                <td>Viewable</td>
+                            {% elif res.discovered %}
+                                <td>Discovered</td>
                             {% else %}
                                 <td></td>
                             {% endif %}
@@ -390,14 +383,11 @@
                                 {% endif %}
                             </td>
                             <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
-
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-
             <br>
-
             <div class="alert alert-info">
                 <strong>
                     <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
@@ -406,7 +396,6 @@
                     <strong><a href="/search">Discover</a></strong></p>
             </div>
             {% include "includes/legend.html" %}
-
         </div>
     </div>
 </div>

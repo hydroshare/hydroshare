@@ -599,26 +599,27 @@ function updateLabelCount() {
     var collection = [];
     var favorites = 0;
     var ownedCount = 0;
-    var ownedEditableCount = 0;
-    var editableCount = 0;
-    var viewableCount = 0;
+    // var ownedEditableCount = 0;
+    var addedCount = 0;
+    var sharedCount = 0;
 
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
-        var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
+        // List of labels already applied to the resource;
+        var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
         var dataColFavorite = this.data()[FAVORITE_COL].trim();
         var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
-        var sharingStatus = this.data()[SHARING_STATUS_COL].trim();
+        // var sharingStatus = this.data()[SHARING_STATUS_COL].trim();
 
         if (dataColPermissionLevel == "Owned") {
             ownedCount++;
-            if (sharingStatus.indexOf('Published') == -1)
-                ownedEditableCount++;
+            // if (sharingStatus.indexOf('Published') == -1)
+            //     ownedEditableCount++;
         }
-        else if (dataColPermissionLevel == "Editable") {
-            editableCount++;
+        else if (dataColPermissionLevel == "Discovered") {
+            addedCount++;
         }
-        else if (dataColPermissionLevel == "Viewable") {
-            viewableCount++;
+        else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
+            sharedCount++;
         }
 
         if (dataColFavorite == "Favorite") {
@@ -637,16 +638,14 @@ function updateLabelCount() {
 
     // Update filter badges count
     $("#filter .badge[data-facet='owned']").text(ownedCount);
-    $("#filter .badge[data-facet='editable']").text(ownedEditableCount + editableCount);
-    $("#filter .badge[data-facet='viewable by me']").text(viewableCount + editableCount + ownedCount);
+    $("#filter .badge[data-facet='shared']").text(sharedCount);
+    $("#filter .badge[data-facet='discovered']").text(addedCount);
+    $("#filter .badge[data-facet='favorites']").text(favorites);
 
     // Set label counts
     for (var key in collection) {
         $("#labels input[data-label='" + key + "']").parent().parent().find(".badge").text(collection[key]);
     }
-
-    // Set favorite count
-    $("#filter .badge[data-facet='favorites']").text(favorites);
 }
 
 //strips query inputs from a search string
@@ -796,7 +795,7 @@ $.fn.dataTable.ext.search.push (
             return false;
         }
 
-        //---------------- Facets filter--------------------
+        //---------------- Facet filters --------------------
         // Owned by me
         if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
             if (data[PERM_LEVEL_COL] != "Owned") {
@@ -804,26 +803,18 @@ $.fn.dataTable.ext.search.push (
             }
         }
 
-        // Editable by me
-        if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
-            // published resources are not editable
-            var sharingStatus = data[SHARING_STATUS_COL].trim();
-            if (sharingStatus.indexOf('Published') != -1)
-                return false;
-
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Editable") {
+        // Shared with me
+        if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
+            // Permission level
+            if (data[PERM_LEVEL_COL] == "Owned") {
                 return false;
             }
         }
 
-        // Viewable by me
-        if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-            // published resources are viewable
-            var sharingStatus = data[SHARING_STATUS_COL].trim();
-            if (sharingStatus.indexOf('Published') != -1)
-                return true;
-
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Viewable" && data[PERM_LEVEL_COL] != "Editable") {
+        // Added by me
+        if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
+            // Permission level
+            if (data[PERM_LEVEL_COL] != "Discovered") {
                 return false;
             }
         }
