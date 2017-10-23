@@ -62,7 +62,7 @@ def filetype_level_app_urls(file_type_str,
                     tl = {'title': str(tool_res_obj.metadata.title.value),
                           'icon_url': tool_icon_url,
                           'url': tool_url_new}
-                relevant_tools.append(tl)
+                    relevant_tools.append(tl)
     return relevant_tools
 
 

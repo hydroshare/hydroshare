@@ -232,7 +232,7 @@ class SupportedFileTypeFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for
         # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_file_types'))
-        kwargs['element_name_label'] = 'Supported File Types'
+        kwargs['element_name_label'] = 'Supported File Types (Composite Resource)'
         super(SupportedFileTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                           element_name, layout,  *args, **kwargs)
 

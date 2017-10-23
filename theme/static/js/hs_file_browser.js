@@ -243,6 +243,43 @@ function updateSelectionMenuContext() {
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
     menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
     $("#delete-separator").toggleClass("hidden", flagDisableUnzip && flagDisableZip);
+
+    // WebApp links
+    // remove existing links
+    $("#file-type-open-with-div").hide();
+    $("#file-type-open-with-list").empty();
+    // add available links
+    if (resourceType === 'Composite Resource')
+    {
+        if (selected.length == 1)
+        {
+            if(selected.hasClass("fb-file"))
+            {
+                var fileName_selected = $(selected[0]).children(".fb-file-name").text();
+                var resource_files = JSON.parse(sessionStorage.resource_files);
+                for(var i=0; i<resource_files.length; i++)
+                {
+                    var resource_file_obj = resource_files[i];
+                    if (resource_file_obj.name == fileName_selected)
+                    {
+                        // build right click menu
+                        if (resource_file_obj.app_list.length > 0)
+                        {
+                            $("#file-type-open-with-div").show();
+                            for(var j=0; j<resource_file_obj.app_list.length; j++)
+                            {
+                                var app_info = resource_file_obj.app_list[j];
+                                console.log(app_info.url);
+                                $("#file-type-open-with-list").append('<li class="ux-dropdown-menu-item"><a target="_blank" href="' + app_info.url + '">' + app_info.title + '</a></li>');
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 function bindFileBrowserItemEvents() {

@@ -89,9 +89,9 @@ def data_store_structure(request):
             if f_pk:  # file is found in Django
                 from hs_tools_resource.app_launch_helper import filetype_level_app_urls
                 app_list = filetype_level_app_urls(logical_file_type,
-                            logical_file_id,
-                            resource,
-                            request)
+                                                   logical_file_id,
+                                                   resource,
+                                                   request)
                 files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
                               'logical_type': logical_file_type,
                               'logical_file_id': logical_file_id,

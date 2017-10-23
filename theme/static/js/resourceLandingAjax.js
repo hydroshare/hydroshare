@@ -964,6 +964,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         },
         success: function (result) {
             var files = result.files;
+            sessionStorage.resource_files = JSON.stringify(files);
             var folders = result.folders;
             var can_be_public = result.can_be_public;
             $('#fb-files-container').empty();
