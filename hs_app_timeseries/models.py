@@ -11,7 +11,6 @@ from collections import OrderedDict
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
@@ -23,7 +22,6 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement, Creator
 from hs_core.hydroshare import utils
-from hs_core.hydroshare import add_resource_files
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
