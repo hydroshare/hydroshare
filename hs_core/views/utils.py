@@ -32,9 +32,9 @@ from hs_core.hydroshare.utils import get_file_mime_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 
-import requests
-import pytz
-from django.utils import timezone
+# import requests
+# import pytz
+# from django.utils import timezone
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
