@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('enforce_content_prepend', models.TextField(
                     default=b'Your action was refused because you have exceeded your quota. Your quota for HydroShare resources is {allocated}{unit} in {zone} zone. You currently have resources that consume {used}{unit}, {percent}% of your quota. ')),
                 ('content', models.TextField(
-                    default=b'To request additional quota, please contact support@hydroshare.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://pages.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.')),
+                    default=b'To request additional quota, please contact support@hydroshare.org. We will try to accommodate reasonable requests for additional quota. If you have a large quota request you may need to contribute toward the costs of providing the additional space you need. See https://help.hydroshare.org/about-hydroshare/policies/quota/ for more information about the quota policy.')),
                 ('soft_limit_percent', models.IntegerField(default=80)),
                 ('hard_limit_percent', models.IntegerField(default=125)),
                 ('grace_period', models.IntegerField(default=7)),

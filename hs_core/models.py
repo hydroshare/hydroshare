@@ -1360,7 +1360,7 @@ class Coverage(AbstractMetaDataElement):
         return root_div.render(pretty=pretty)
 
     @classmethod
-    def get_temporal_html_form(cls, resource, element=None, file_type=False):
+    def get_temporal_html_form(cls, resource, element=None, file_type=False, allow_edit=True):
         """Return CoverageTemporalForm for Coverage model."""
         from .forms import CoverageTemporalForm
         coverage_data_dict = dict()
@@ -1371,7 +1371,7 @@ class Coverage(AbstractMetaDataElement):
             coverage_data_dict['start'] = start_date.strftime('%m/%d/%Y')
             coverage_data_dict['end'] = end_date.strftime('%m/%d/%Y')
 
-        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                              res_short_id=resource.short_id if resource else None,
                                              element_id=element.id if element else None,
                                              file_type=file_type)
@@ -1752,8 +1752,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 # TODO: why does this only run when something becomes public?
                 # TODO: Should it be run when a NetcdfResource becomes private?
-                # run script to update hyrax input files when private netCDF resource changes state
-                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                # Answer to TODO above: it is intentional not to run it when a target resource
+                # becomes private for performance reasons. The nightly script run will clean up
+                # to make sure all private resources are not available to hyrax server as well as
+                # to make sure all resources files available to hyrax server are up to date with
+                # the HydroShare iRODS data store.
+
+                # run script to update hyrax input files when private netCDF resource becomes
+                # public or private composite resource that includes netCDF files becomes public
+
+                is_netcdf_to_public = False
+                if self.resource_type == 'NetcdfResource':
+                    is_netcdf_to_public = True
+                elif self.resource_type == 'CompositeResource' and \
+                        self.get_logical_files('NetCDFLogicalFile'):
+                    is_netcdf_to_public = True
+
+                if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
     def set_require_download_agreement(self, user, value):

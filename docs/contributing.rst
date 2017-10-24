@@ -22,7 +22,7 @@ Apps are generally developed as web applications that interact with our system v
 
 Documentation is available `here`_.
 
-.. _here: https://pages.hydroshare.org/apps/
+.. _here: https://help.hydroshare.org/apps/
 
 Want to Develop on Hydroshare Itself?
 -------------------------------------
