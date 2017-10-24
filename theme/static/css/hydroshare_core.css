@@ -2937,6 +2937,23 @@ span.you-flag {
 	overflow-y: auto;
 }
 
+#constraints > li {
+	display: none;
+    color: #3c763d;
+    background-color: #dff0d8;
+}
+
+#constraints {
+	display: none;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+#constraints li.invalid {
+    color: #a94442;
+    background-color: #f2dede;
+}
+
 .facet-list .panel-body {
 	padding: 0;
 }
@@ -4693,7 +4710,7 @@ div#resource-content {
 	color: #00c300;
 }
 
-#file-types .badge {
+#file-types .badge, #constraints .badge {
 	margin-right: 4px;
 	background-color: #009687;
 }

@@ -119,6 +119,7 @@ $(document).ready(function () {
 
                 $(".hs-upload-indicator").hide();
 
+                setConstraintsHelp();
                 checkConstraints();
             });
 
@@ -127,6 +128,7 @@ $(document).ready(function () {
                 if (myDropzone.files.length == 0) {
                     $(".hs-upload-indicator").show();
                 }
+                setConstraintsHelp();
                 checkConstraints();
             });
 
@@ -144,6 +146,9 @@ $(document).ready(function () {
                     formData.append($(this).attr("name"), $(this).val());
                 });
             });
+
+            checkConstraints();
+            setConstraintsHelp();
         }
     };
 
@@ -159,6 +164,7 @@ $(document).ready(function () {
     });
 
     $('#dropdown-resource-type li a').unbind("click");
+
     $('#dropdown-resource-type li a').on("click", function (event) {
         // Remove all previously queued files when the resource type changes.
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
@@ -284,6 +290,7 @@ $(document).ready(function () {
             }
         });
 
+        setConstraintsHelp();
         checkConstraints();
     });
 
@@ -293,9 +300,55 @@ $(document).ready(function () {
     });
 });
 
+// Shows help messages and their status for each relevant constraint
+function setConstraintsHelp() {
+    var type = $("#form-resource-type").val();
+    var rules = constraints[type];
+    var myDropzone = Dropzone.forElement("#hsDropzone");
+    var someDisplayed = false;
+
+    $("#constraints > li").css("display", "none");
+
+    if (type in constraints) {
+        if (!rules.canBeEmpty && myDropzone.files.length == 0) {
+            $("#res-empty").css("display", "block");
+            someDisplayed = true;
+        }
+
+        if (rules.requiredFiles && myDropzone.files.length > 0 && !(rules.singleFileFormat && myDropzone.files.length == 1)) {
+            $("#required-types").css("display", "block");
+            $("#required-types > span").empty();
+            rules.requiredFiles.forEach(function(ext) {
+                $("#required-types > span").append("<span class='badge'>" + ext.toLowerCase() + "</span>")
+            });
+            someDisplayed = true;
+        }
+
+        if (rules.singleFileFormat && myDropzone.files.length == 1) {
+            $("#single-file").css("display", "block");
+            $("#single-file-type").empty();
+            $("#single-file-type").append("<span class='badge'>" + rules.singleFileFormat.toLowerCase() + "</span>")
+            someDisplayed = true;
+        }
+
+        if (rules.sameFileNames && myDropzone.files.length > 1) {
+            $("#same-file-names").css("display", "block");
+            someDisplayed = true;
+        }
+
+        if (someDisplayed) {
+            $("#constraints").css("display", "block");
+        }
+    }
+    else {
+        $("#constraints").css("display", "none");
+    }
+}
+
 // Enables/disables Create Resource button based on resource type constraints
 function checkConstraints() {
     var invalid = false;
+    $("#constraints > li").toggleClass("invalid", false);
     var myDropzone = Dropzone.forElement("#hsDropzone");
 
     var type = $("#form-resource-type").val();
@@ -305,7 +358,8 @@ function checkConstraints() {
 
         // Check canBeEmpty
         if (!rules.canBeEmpty && myDropzone.files.length == 0) {
-            invalid = true
+            invalid = true;
+            $("#res-empty").toggleClass("invalid", true);
         }
 
         // Check required files. Ignore when single file and single file format flag
@@ -319,6 +373,7 @@ function checkConstraints() {
             rules.requiredFiles.forEach(function(element) {
                 if (!extensions.includes(element)) {
                     invalid = true;
+                    $("#required-types").toggleClass("invalid", true)
                 }
             });
         }
@@ -330,11 +385,12 @@ function checkConstraints() {
 
             if (fileTypeExt.toUpperCase() != rules.singleFileFormat) {
                 invalid = true;
+                $("#single-file").toggleClass("invalid", true)
             }
         }
 
         // Check for same file names
-        if (rules.sameFileNames) {
+        if (rules.sameFileNames && myDropzone.files.length > 1) {
             var fNames = [];
             myDropzone.files.forEach(function(element) {
                 // Check the exceptions first
@@ -362,6 +418,7 @@ function checkConstraints() {
 
             if (uniqueNames.length > 1) {
                 invalid = true;
+                $("#same-file-names").toggleClass("invalid", true)
             }
         }
     }
@@ -372,8 +429,8 @@ function checkConstraints() {
 // Resource type constraint definitions
 constraints = {
     GeographicFeatureResource: {
-        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // In caps
-        canBeEmpty: true,
+        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // File extensions in uppercase
+        canBeEmpty: true,                           // Optional. Defaults to true
         singleFileFormat: '.ZIP',
         sameFileNames: true,
         sameFileNamesExcep: ['SHP.XML']
