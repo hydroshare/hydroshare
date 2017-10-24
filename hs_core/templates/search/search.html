@@ -297,10 +297,10 @@
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.created|date:"m/d/Y" }}, {{ result.object.created|time }}</td>
-                                    <td>{{ result.object.created|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
-                                    <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
-                                    <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.object.created|date:"M d, Y" }} at {{ result.object.created|time }}</td>
+                                    <td>{{ result.object.created|date:"U" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
