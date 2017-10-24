@@ -401,9 +401,9 @@ def get_my_resources_list(request):
             res.labels = res.rlabels.get_labels(user)
 
     # Set or load the user session's timezone
-    middleware = UserTimezoneMiddleware()
-    middleware.process_request(request)
-    request.session.save()
+    # middleware = UserTimezoneMiddleware()
+    # middleware.process_request(request)
+    # request.session.save()
 
     resource_collection = (owned_resources + editable_resources + viewable_resources +
                            discovered_resources)
@@ -412,21 +412,21 @@ def get_my_resources_list(request):
 
 # 15,000 queries per hour by default. https://freegeoip.net
 # TODO: deploy our own instance of the project and use it instead
-class UserTimezoneMiddleware(object):
-    """ Middleware to check user timezone. """
-    def process_request(self, request):
-        user_time_zone = request.session.get('user_time_zone', None)
-        try:
-            if user_time_zone is None:
-                freegeoip_response = requests.get('http://freegeoip.net/json')
-                freegeoip_response_json = freegeoip_response.json()
-                user_time_zone = freegeoip_response_json['time_zone']
-                if user_time_zone:
-                    request.session['user_time_zone'] = user_time_zone
-            timezone.activate(pytz.timezone(user_time_zone))
-        except:
-            pass
-        return None
+# class UserTimezoneMiddleware(object):
+#     """ Middleware to check user timezone. """
+#     def process_request(self, request):
+#         user_time_zone = request.session.get('user_time_zone', None)
+#         try:
+#             if user_time_zone is None:
+#                 freegeoip_response = requests.get('http://freegeoip.net/json')
+#                 freegeoip_response_json = freegeoip_response.json()
+#                 user_time_zone = freegeoip_response_json['time_zone']
+#                 if user_time_zone:
+#                     request.session['user_time_zone'] = user_time_zone
+#             timezone.activate(pytz.timezone(user_time_zone))
+#         except:
+#             pass
+#         return None
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
     """
