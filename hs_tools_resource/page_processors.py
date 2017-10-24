@@ -126,22 +126,6 @@ def landing_page(request, page):
                                       if tool_icon_obj else None)
 
         ext_md_layout = Layout(
-                HTML("<div class='form-group col-lg-6 col-xs-12' id='homepage_url'> "
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy homepage_url_form %} '
-                     '</div>'),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy version_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy tool_icon_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy sharing_status_obj_form %} '
-                     '</div> '),
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy supported_res_types_form %} '
@@ -158,6 +142,22 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_template_file_type_form %} '
                      '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='homepage_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy homepage_url_form %} '
+                     '</div>'),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy version_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy tool_icon_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy sharing_status_obj_form %} '
+                     '</div> '),
         )
 
         # get the context from hs_core

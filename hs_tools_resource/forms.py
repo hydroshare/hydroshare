@@ -124,8 +124,8 @@ class ToolIconFormHelper(BaseFormHelper):
         data_url = ""
         if "instance" in kwargs:
             webapp_obj = kwargs.pop("instance")
-            if webapp_obj and webapp_obj.metadata.tool_icon:
-                data_url = webapp_obj.metadata.tool_icon.data_url
+            if webapp_obj and webapp_obj.metadata.app_icon:
+                data_url = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
                     Field('value', css_class=field_width),

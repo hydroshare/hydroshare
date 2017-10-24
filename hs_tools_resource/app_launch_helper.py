@@ -27,7 +27,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
                                                    request_obj.user.is_authenticated() \
                                                    else "anonymous"
                 tool_url_new = parse_app_url_template(
-                        tool_url, [tool_res_obj.get_hs_term_dict(), hs_term_dict_user])
+                        tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
                 if tool_url_new is not None:
                         tl = {'title': str(tool_res_obj.metadata.title.value),
                               'icon_url': tool_icon_url,
