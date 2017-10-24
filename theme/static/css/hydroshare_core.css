@@ -2708,9 +2708,11 @@ span.you-flag {
 
 /*-------- My resources page revamp ---------*/
 
-.dropdown.dropdown-lg .dropdown-menu {
-    margin-top: -1px;
-    padding: 6px 20px;
+#search-container .dropdown-menu {
+	border: 0;
+    padding: 20px;
+	left: -251px;
+	width: 284px;
 }
 .input-group-btn .btn-group {
     display: flex !important;
@@ -2800,11 +2802,6 @@ span.you-flag {
 
 .dropdown.dropdown-lg {
 	position: static !important;
-}
-
-.dropdown.dropdown-lg .dropdown-menu {
-	left: -251px;
-	width: 284px;
 }
 
 #search-container .btn-clear-search {
