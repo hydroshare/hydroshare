@@ -1,5 +1,5 @@
 {% extends "pages/page.html" %}
-{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags tz %}
 {% block title %}My Resources{% endblock %}
 
 {% block main %}
@@ -330,7 +330,9 @@
                             {# Title #}
                             <td>
                                 <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-{#                                {{ res.created|localtime}} {{ TIME_ZONE }}#}
+                                {{ res.created|localtime}} {{ TIME_ZONE }}
+                                    {% get_current_timezone as STIME_ZONE %}
+                                    {{ STIME_ZONE }}
                                 </strong>
                             </td>
                             {# First Author #}
