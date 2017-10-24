@@ -1,6 +1,18 @@
 /**
 * Created by Mauriel on 3/9/2017.
 */
+
+// Resource type constraint definitions
+constraints = {
+    GeographicFeatureResource: {
+        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // File extensions in uppercase
+        canBeEmpty: true,                           // Optional. Defaults to true
+        singleFileFormat: '.ZIP',                   // File format when uploading a single file
+        sameFileNames: true,                        // The files must share the same file name
+        sameFileNamesExcep: ['SHP.XML']                 // Additional file extensions to check for
+    }
+};
+
 $(document).ready(function () {
     var json_response_file_types = {};
     var json_response_multiple_file = {};
@@ -163,9 +175,10 @@ $(document).ready(function () {
         }
     });
 
+    // Prevents event from being defined twice
     $('#dropdown-resource-type li a').unbind("click");
 
-    $('#dropdown-resource-type li a').on("click", function (event) {
+    $('#dropdown-resource-type li a').on("click", function () {
         // Remove all previously queued files when the resource type changes.
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
         $('#irods-sel-file').text("No file selected.");
@@ -425,14 +438,3 @@ function checkConstraints() {
 
     $(".btn-create-resource").toggleClass("disabled", invalid);
 }
-
-// Resource type constraint definitions
-constraints = {
-    GeographicFeatureResource: {
-        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // File extensions in uppercase
-        canBeEmpty: true,                           // Optional. Defaults to true
-        singleFileFormat: '.ZIP',
-        sameFileNames: true,
-        sameFileNamesExcep: ['SHP.XML']
-    }
-};
