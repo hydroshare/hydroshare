@@ -293,6 +293,7 @@ $(document).ready(function () {
     });
 });
 
+// Enables/disables Create Resource button based on resource type constraints
 function checkConstraints() {
     var invalid = false;
     var myDropzone = Dropzone.forElement("#hsDropzone");
@@ -307,8 +308,8 @@ function checkConstraints() {
             invalid = true
         }
 
-        // Check required files
-        if (rules.requiredFiles && myDropzone.files.length > 0) {
+        // Check required files. Ignore when single file and single file format flag
+        if (rules.requiredFiles && myDropzone.files.length > 0 && !(rules.singleFileFormat && myDropzone.files.length == 1)) {
             var extensions = [];
             myDropzone.files.forEach(function(element) {
                 var fileTypeExt = element.name.substr(element.name.lastIndexOf("."), element.name.length).toUpperCase();
@@ -321,19 +322,60 @@ function checkConstraints() {
                 }
             });
         }
+
+        // Check single file format
+        if (rules.singleFileFormat && myDropzone.files.length == 1) {
+            var fileName = myDropzone.files[0].name;
+            var fileTypeExt = fileName.substr(fileName.lastIndexOf("."), fileName.length).toUpperCase();
+
+            if (fileTypeExt.toUpperCase() != rules.singleFileFormat) {
+                invalid = true;
+            }
+        }
+
+        // Check for same file names
+        if (rules.sameFileNames) {
+            var fNames = [];
+            myDropzone.files.forEach(function(element) {
+                // Check the exceptions first
+                var found = false;
+                if (rules.sameFileNamesExcep && rules.sameFileNamesExcep.length > 0) {
+                    rules.sameFileNamesExcep.forEach(function (excep) {
+                        if (element.name.toUpperCase().endsWith(excep)) {
+                            var fileName = element.name.substr(0, element.name.toUpperCase().lastIndexOf(excep) - 1);
+                            fNames.push(fileName);
+                            found = true;
+                        }
+                    });
+                }
+
+                // Check for file names
+                if (!found) {
+                    var fileName = element.name.substr(0, element.name.lastIndexOf("."));
+                    fNames.push(fileName)
+                }
+            });
+
+            var uniqueNames = fNames.filter(function (value, index, self) {
+                return self.indexOf(value) === index
+            });
+
+            if (uniqueNames.length > 1) {
+                invalid = true;
+            }
+        }
     }
 
     $(".btn-create-resource").toggleClass("disabled", invalid);
 }
 
+// Resource type constraint definitions
 constraints = {
     GeographicFeatureResource: {
         requiredFiles: ['.DBF', '.SHP', '.SHX'],    // In caps
         canBeEmpty: true,
         singleFileFormat: '.ZIP',
         sameFileNames: true,
-        sameFileNamesExcep: {
-            xml: 'SHP.XML'
-        }
+        sameFileNamesExcep: ['SHP.XML']
     }
 };
