@@ -330,9 +330,6 @@
                             {# Title #}
                             <td>
                                 <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
-                                {{ res.created|localtime}} {{ TIME_ZONE }}
-                                    {% get_current_timezone as STIME_ZONE %}
-                                    {{ STIME_ZONE }}
                                 </strong>
                             </td>
                             {# First Author #}
@@ -344,9 +341,9 @@
                                 <td>{{ res.first_creator.name }}</td>
                             {% endif %}
                             {# Date Created #}
-                            <td>{{ res.created|date:"m/d/Y" }}, {{ res.created|time }}</td>
+                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
+                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
                             <td>
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
