@@ -31,6 +31,15 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.CreateModel(
+            name='URLTemplateFileType',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('object_id', models.PositiveIntegerField()),
+                ('value', models.CharField(default=b'', max_length=1024, blank=True)),
+                ('content_type', models.ForeignKey(related_name='hs_tools_resource_urltemplatefiletype_related', to='contenttypes.ContentType')),
+            ],
+        ),
         migrations.AlterField(
             model_name='supportedrestypes',
             name='supported_res_types',
@@ -40,5 +49,9 @@ class Migration(migrations.Migration):
             model_name='supportedsharingstatus',
             name='sharing_status',
             field=models.ManyToManyField(related_name='associated_with', to='hs_tools_resource.SupportedSharingStatusChoices', blank=True),
+        ),
+        migrations.AlterUniqueTogether(
+            name='urltemplatefiletype',
+            unique_together=set([('content_type', 'object_id')]),
         ),
     ]

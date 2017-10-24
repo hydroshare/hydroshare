@@ -277,6 +277,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(NetCDFFileMetaData, related_name="logical_file")
     data_type = "Multidimensional"
 
+    class Meta:
+        verbose_name = 'Multidimensional File Type'
+
     @classmethod
     def get_allowed_uploaded_file_types(cls):
         """only .nc file can be set to this logical file group"""

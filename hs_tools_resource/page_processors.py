@@ -5,7 +5,8 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 
 from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
-                  SupportedSharingStatusForm, AppHomePageUrlForm, SupportedFileTypesForm
+                  SupportedSharingStatusForm, AppHomePageUrlForm, SupportedFileTypesForm, \
+                  URLTemplateFileTypeForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
@@ -69,6 +70,7 @@ def landing_page(request, page):
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_base
+        context['url_template_file_type'] = content_model.metadata.url_template_file_type
         context['version'] = content_model.metadata.version
         context['homepage_url'] = content_model.metadata.app_home_page_url
 
@@ -78,6 +80,12 @@ def landing_page(request, page):
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
                                     if url_base else None)
+
+        url_template_file_type = content_model.metadata.url_template_file_type
+        url_template_file_type_form = URLTemplateFileTypeForm(instance=url_template_file_type,
+                                                              res_short_id=content_model.short_id,
+                                                              element_id=url_template_file_type.id
+                                                              if url_template_file_type else None)
 
         homepage_url = content_model.metadata.app_home_page_url
         homepage_url_form = \
@@ -118,25 +126,9 @@ def landing_page(request, page):
                                       if tool_icon_obj else None)
 
         ext_md_layout = Layout(
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy supported_res_types_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedFileTypes"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy supported_file_types_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy sharing_status_obj_form %} '
-                     '</div> '),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='homepage_url'> "
                      '{% load crispy_forms_tags %} '
                      '{% crispy homepage_url_form %} '
-                     '</div>'),
-                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy url_base_form %} '
                      '</div>'),
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                      '{% load crispy_forms_tags %} '
@@ -146,6 +138,26 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy tool_icon_form %} '
                      '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy sharing_status_obj_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy supported_res_types_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedFileTypes"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy supported_file_types_form %} '
+                     '</div> '),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy url_base_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_template_file_type'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy url_template_file_type_form %} '
+                     '</div>'),
         )
 
         # get the context from hs_core
@@ -154,6 +166,7 @@ def landing_page(request, page):
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)
         context['url_base_form'] = url_base_form
+        context['url_template_file_type_form'] = url_template_file_type_form
         context['homepage_url_form'] = homepage_url_form
         context['version_form'] = version_form
         context['supported_res_types_form'] = supported_res_types_form

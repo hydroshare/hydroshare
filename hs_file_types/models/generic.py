@@ -122,3 +122,6 @@ class GenericLogicalFile(AbstractLogicalFile):
         # this custom method MUST be used to create an instance of this class
         generic_metadata = GenericFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=generic_metadata)
+
+    class Meta:
+        verbose_name = 'Generic File Type'

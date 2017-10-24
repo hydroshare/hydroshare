@@ -4,7 +4,7 @@ from django import forms
 from crispy_forms.layout import Layout, Field, HTML
 
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, SupportedFileTypes, ToolIcon,\
-    SupportedSharingStatus, AppHomePageUrl
+    SupportedSharingStatus, AppHomePageUrl, URLTemplateFileType
 from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
@@ -21,7 +21,7 @@ class UrlBaseFormHelper(BaseFormHelper):
             Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = \
-            "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "Resource-level App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).\
@@ -270,6 +270,39 @@ class SupportedFileTypesForm(ModelForm):
 class SupportedFileTypesValidationForm(forms.Form):
     supported_file_types = forms.MultipleChoiceField(choices=get_SupportedFileTypes_choices(),
                                                      required=False)
+
+
+class URLTemplateFileTypeFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = \
+            "FileType-level App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "<font size='3'>Help</font></a>"
+
+        super(URLTemplateFileTypeFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class URLTemplateFileTypeForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(URLTemplateFileTypeForm, self).__init__(*args, **kwargs)
+        self.helper = URLTemplateFileTypeFormHelper(allow_edit,
+                                                    res_short_id,
+                                                    element_id,
+                                                    element_name='urltemplatefiletype')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = URLTemplateFileType
+        fields = ['value']
+        exclude = ['content_object']
 
 
 SupportedSharingStatus_choices = (

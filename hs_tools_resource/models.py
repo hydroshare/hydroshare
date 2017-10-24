@@ -316,6 +316,15 @@ class SupportedFileTypes(AbstractMetaDataElement):
         raise ValidationError("SupportedFileTypes element can't be deleted.")
 
 
+class URLTemplateFileType(AbstractMetaDataElement):
+    term = 'URLTemplateFileType'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # URLTemplateFileType element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
     value = models.CharField(max_length=1024, blank=True, default="")
@@ -375,6 +384,7 @@ class ToolIcon(AbstractMetaDataElement):
 
 class ToolMetaData(CoreMetaData):
     _url_base = GenericRelation(RequestUrlBase)
+    _url_template_file_type = GenericRelation(URLTemplateFileType)
     _version = GenericRelation(ToolVersion)
     _supported_res_types = GenericRelation(SupportedResTypes)
     _supported_file_types = GenericRelation(SupportedFileTypes)
@@ -389,6 +399,10 @@ class ToolMetaData(CoreMetaData):
     @property
     def url_base(self):
         return self._url_base.all().first()
+
+    @property
+    def url_template_file_type(self):
+        return self._url_template_file_type.first()
 
     @property
     def version(self):
@@ -429,6 +443,9 @@ class ToolMetaData(CoreMetaData):
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
+        if 'urltemplatefiletype' in keys_to_update:
+            parsed_metadata.append({"urltemplatefiletype": metadata.pop('urltemplatefiletype')})
+
         if 'toolversion' in keys_to_update:
             parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
 
@@ -452,6 +469,7 @@ class ToolMetaData(CoreMetaData):
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()
         elements.append('RequestUrlBase')
+        elements.append('URLTemplateFileType')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         elements.append('SupportedFileTypes')
@@ -497,6 +515,7 @@ class ToolMetaData(CoreMetaData):
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()
         self.url_base.delete()
+        self.url_template_file_type.delete()
         self.versions.delete()
         self.supported_res_types.delete()
         self.supported_file_types.delete()
@@ -568,3 +587,12 @@ class ToolMetaData(CoreMetaData):
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                elif 'urltemplatefiletype' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['urltemplatefiletype'])
+                    validate_form(validation_form)
+                    url_template_file_type = self.url_template_file_type
+                    if url_template_file_type is not None:
+                        self.update_element('urltemplatefiletype', url_template_file_type.id,
+                                            value=dict_item['urltemplatefiletype'])
+                    else:
+                        self.create_element('urltemplatefiletype', value=dict_item['urltemplatefiletype'])

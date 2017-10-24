@@ -56,12 +56,12 @@ def get_SupportedResTypes_choices():
 def get_SupportedFileTypes_choices():
     """
     This function harvests all existing file types in system,
-    and puts them in a list (except for WebApp (ToolResource) Resource type):
+    and puts them in a list:
     [
-        ["RESOURCE_CLASS_NAME_1", "RESOURCE_VERBOSE_NAME_1"],
-        ["RESOURCE_CLASS_NAME_2", "RESOURCE_VERBOSE_NAME_2"],
+        ["FILE_TYPE_CLASS_NAME_1", "FILE_TYPE_VERBOSE_NAME_1"],
+        ["FILE_TYPE_CLASS_NAME_2", "FILE_TYPE_VERBOSE_NAME_2"],
         ...
-        ["RESOURCE_CLASS_NAME_N", "RESOURCE_VERBOSE_NAME_N"],
+        ["FILE_TYPE_CLASS_NAME_N", "FILE_TYPE_VERBOSE_NAME_N"],
     ]
     """
 
@@ -70,5 +70,5 @@ def get_SupportedFileTypes_choices():
     for r_type in file_types_list:
         class_name = r_type.__name__
         verbose_name = r_type._meta.verbose_name
-        result_list.append([class_name, class_name])
+        result_list.append([class_name, verbose_name])
     return result_list

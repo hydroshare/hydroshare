@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
+
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_tools_resource.models import SupportedResTypeChoices, ToolResource, SupportedFileTypeChoices
 from hs_tools_resource.utils import parse_app_url_template
@@ -47,17 +49,23 @@ def filetype_level_app_urls(file_type_str,
 
             if _check_user_can_view_app(request_obj, tool_res_obj) and \
                _check_app_supports_resource_sharing_status(res_obj, tool_res_obj):
-                tool_url = tool_res_obj.metadata.url_base.value \
-                           if tool_res_obj.metadata.url_base else None
+                tool_url = tool_res_obj.metadata.url_template_file_type.value \
+                           if tool_res_obj.metadata.url_template_file_type else None
                 tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
                                 if tool_res_obj.metadata.app_icon else "raise-img-error"
-                hs_term_dict_user = {}
-                hs_term_dict_user["HS_USR_NAME"] = request_obj.user.username if \
-                                                   request_obj.user.is_authenticated() \
-                                                   else "anonymous"
-                hs_term_dict_user["HS_LOGICAL_FID"] = str(logical_file_id)
+                hs_term_dict_additional = {}
+                hs_term_dict_additional["HS_USR_NAME"] = request_obj.user.username if \
+                                                         request_obj.user.is_authenticated() \
+                                                         else "anonymous"
+
+                file_type_ctype = ContentType.objects.get(app_label="hs_file_types",
+                                                          model=file_type_str.lower())
+                file_type_obj = file_type_ctype.get_object_for_this_type(id=logical_file_id)
+
                 tool_url_new = parse_app_url_template(
-                        tool_url, [tool_res_obj.get_hs_term_dict(), hs_term_dict_user])
+                        tool_url, [tool_res_obj.get_hs_term_dict(),
+                                   hs_term_dict_additional,
+                                   file_type_obj.get_hs_term_dict()])
                 if tool_url_new is not None:
                     tl = {'title': str(tool_res_obj.metadata.title.value),
                           'icon_url': tool_icon_url,
