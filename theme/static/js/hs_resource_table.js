@@ -605,7 +605,8 @@ function updateLabelCount() {
 
     var cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 5);
-    cutoff = Math.floor(cutoff.getTime() / 1000) - cutoff.getTimezoneOffset() * 60; // Seconds since the unix epoch
+    cutoff = Math.floor(cutoff.getTime() / 1000); // Seconds since the unix epoch,
+    // subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
 
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
         // List of labels already applied to the resource;
@@ -880,7 +881,8 @@ $.fn.dataTable.ext.search.push (
             isFiltered = true;
             var cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - 5);
-            cutoff = Math.floor(cutoff.getTime()/1000) - cutoff.getTimezoneOffset() * 60; // Seconds since the unix epoch
+            cutoff = Math.floor(cutoff.getTime()/1000); // Seconds since the unix epoch
+            // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
             if (data[LAST_MODIF_SORT_COL] >= cutoff) {
                 return true;
             }
