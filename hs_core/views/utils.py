@@ -398,6 +398,11 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources +
                            discovered_resources)
+
+    # Subtract UTC offset from dates
+    # for res in resource_collection:
+    #     res.created = res.created
+
     return resource_collection
 
 

@@ -329,7 +329,9 @@
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+{#                                {{ res.created|localtime}} {{ TIME_ZONE }}#}
+                                </strong>
                             </td>
                             {# First Author #}
                             {% if res.first_creator.description %}
