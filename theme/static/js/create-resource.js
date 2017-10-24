@@ -50,7 +50,6 @@ $(document).ready(function () {
 
         init: function () {
             myDropzone = this;
-
             $(".btn-create-resource").click(function () {
                 $("html, #dz-container").css("cursor", "progress");
 
@@ -119,6 +118,8 @@ $(document).ready(function () {
                 $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
 
                 $(".hs-upload-indicator").hide();
+
+                checkConstraints();
             });
 
             this.on("removedfile", function (file) {
@@ -126,6 +127,7 @@ $(document).ready(function () {
                 if (myDropzone.files.length == 0) {
                     $(".hs-upload-indicator").show();
                 }
+                checkConstraints();
             });
 
             this.on("error", function (file, error) {
@@ -156,7 +158,8 @@ $(document).ready(function () {
         }
     });
 
-    $('#dropdown-resource-type li a').click(function () {
+    $('#dropdown-resource-type li a').unbind("click");
+    $('#dropdown-resource-type li a').on("click", function (event) {
         // Remove all previously queued files when the resource type changes.
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
         $('#irods-sel-file').text("No file selected.");
@@ -279,7 +282,9 @@ $(document).ready(function () {
                     $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
                 }
             }
-        })
+        });
+
+        checkConstraints();
     });
 
     $("#btn-remove-all-files").click(function () {
@@ -287,3 +292,48 @@ $(document).ready(function () {
         $(".hs-upload-indicator").show();
     });
 });
+
+function checkConstraints() {
+    var invalid = false;
+    var myDropzone = Dropzone.forElement("#hsDropzone");
+
+    var type = $("#form-resource-type").val();
+
+    if (type in constraints) {
+        var rules = constraints[type];
+
+        // Check canBeEmpty
+        if (!rules.canBeEmpty && myDropzone.files.length == 0) {
+            invalid = true
+        }
+
+        // Check required files
+        if (rules.requiredFiles && myDropzone.files.length > 0) {
+            var extensions = [];
+            myDropzone.files.forEach(function(element) {
+                var fileTypeExt = element.name.substr(element.name.lastIndexOf("."), element.name.length).toUpperCase();
+                extensions.push(fileTypeExt)
+            });
+
+            rules.requiredFiles.forEach(function(element) {
+                if (!extensions.includes(element)) {
+                    invalid = true;
+                }
+            });
+        }
+    }
+
+    $(".btn-create-resource").toggleClass("disabled", invalid);
+}
+
+constraints = {
+    GeographicFeatureResource: {
+        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // In caps
+        canBeEmpty: true,
+        singleFileFormat: '.ZIP',
+        sameFileNames: true,
+        sameFileNamesExcep: {
+            xml: 'SHP.XML'
+        }
+    }
+};
