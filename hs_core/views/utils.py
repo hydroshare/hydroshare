@@ -395,6 +395,7 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources +
                            discovered_resources)
+
     return resource_collection
 
 
