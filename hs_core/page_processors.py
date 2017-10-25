@@ -215,6 +215,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
 
+        if not content_model.resource_federation_path:
+            zone = 'HydroShare default internal data zone'
+        elif 'hydroshareuserZone' in content_model.resource_federation_path:
+            zone = 'HydroShare default internal user zone'
+        else:
+            external_zone_name = content_model.resource_federation_path.split('/')[1]
+            zone = 'HydroShare external zone ' + external_zone_name
+
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
@@ -250,7 +258,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'is_resource_specific_tab_active': False,
                    'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
-                   'current_user': user
+                   'current_user': user,
+                   'zone': zone
         }
 
         if 'task_id' in request.session:
