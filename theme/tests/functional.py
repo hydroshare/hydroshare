@@ -8,6 +8,7 @@ from theme.tests.multiplatform import SeleniumTestsParentClass, create_driver
 
 
 class DesktopTests(SeleniumTestsParentClass.MultiPlatformTests):
+
     def setUp(self, driver=None):
         super(DesktopTests, self).setUp()
         self.driver = driver
@@ -38,12 +39,13 @@ class DesktopTests(SeleniumTestsParentClass.MultiPlatformTests):
 
     def test_folder_drag(self):
         self._login_helper(self.user.email, self.user_password)
-        self._create_resource_helper('./manage.py')
+        self._create_resource_helper()
 
         self.wait_for_visible(By.CSS_SELECTOR, '#edit-metadata').click()
 
         # Find the files area and click button to create new folder
-        self.wait_for_visible(By.CSS_SELECTOR, '#fb-files-container')
+        self.wait_for_visible(By.CSS_SELECTOR, '.fb-file-name').location_once_scrolled_into_view
+        time.sleep(1.5)
         self.wait_for_visible(By.CSS_SELECTOR, '.fb-file-name').click()
         self.wait_for_visible(By.CSS_SELECTOR, '#fb-create-folder').click()
 
@@ -58,20 +60,19 @@ class DesktopTests(SeleniumTestsParentClass.MultiPlatformTests):
         file_to_drag = self.wait_for_visible(By.CSS_SELECTOR, '.fb-file')
         action_chain = webdriver.ActionChains(self.driver)
         action_chain.drag_and_drop(file_to_drag, folder_drag_dest).perform()
-        time.sleep(3)
+        time.sleep(1.5)
 
         # Enter new folder and verify contents
         self.wait_for_visible(By.CSS_SELECTOR, '#fb-files-container').click()
-        folder = self.driver.find_element_by_css_selector('#hs-file-browser li.fb-folder')
 
         # Create a mouse down (not click) event on the folder in order to select
         # prior to sending the double click.
-        ac = webdriver.ActionChains(self.driver).move_to_element(folder).click_and_hold()
-        ac = ac.release().double_click()
-        ac.perform()
+        time.sleep(2.5)
+        self.driver.find_element_by_css_selector('#hs-file-browser li.fb-folder').click()
+        self.driver.execute_script('$("#hs-file-browser li.fb-folder").dblclick()')
         active_folder_in_crumbs = '//li[@class="active"]/span[contains(text(),"Button Folder")]'
         self.wait_for_visible(By.XPATH, active_folder_in_crumbs)
-        self.assertEqual(self.driver.find_element_by_class_name('fb-file-name').text, 'manage.py')
+        self.assertEqual(self.driver.find_element_by_class_name('fb-file-name').text, 'file.png')
 
 
 class MobileTests(SeleniumTestsParentClass.MultiPlatformTests):
