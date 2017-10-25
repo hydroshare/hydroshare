@@ -190,14 +190,14 @@ var drawShadeRectangles = function(boxes) {
         var southlimit = parseFloat(box.southlimit);
         var eastlimit = parseFloat(box.eastlimit);
         var westlimit = parseFloat(box.westlimit);
-        var box_ne = new google.maps.LatLng(northlimit, eastlimit);
-        var box_sw = new google.maps.LatLng(southlimit, westlimit);
 
         var rectCoords = [
-          {lat: northlimit, lng: westlimit},
-          {lat: northlimit, lng: eastlimit},
-          {lat: southlimit, lng: eastlimit},
-          {lat: southlimit, lng: westlimit}
+            {lat: northlimit, lng: westlimit},
+            {lat: northlimit, lng: (westlimit + eastlimit)/2},
+            {lat: northlimit, lng: eastlimit},
+            {lat: southlimit, lng: eastlimit},
+            {lat: southlimit, lng: (westlimit + eastlimit)/2},
+            {lat: southlimit, lng: westlimit}
         ];
 
         shade_rects[i] = {
