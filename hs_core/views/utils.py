@@ -401,6 +401,7 @@ def get_my_resources_list(request):
 
     return resource_collection
 
+
 def send_action_to_take_email(request, user, action_type, **kwargs):
     """
     Sends an email with an action link to a user.
