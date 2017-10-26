@@ -168,8 +168,8 @@
 
                                     {# Title #}
                                     <fieldset class="col-sm-6">
-                                        <label>Title</label>
-                                        <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
+                                        <label>Title *</label>
+                                        <input class="form-control form-required" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
                                         <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
                                             Professor, Software Developer.
                                         </small>
