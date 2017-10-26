@@ -180,10 +180,12 @@ $(document).ready(function () {
         success: function(user) {
             if(!user.title || !user.organization) {
                 // Disable publishing resources
-                $("#publish").toggleClass("disabled", true);
-                $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
-                $("#publish > [data-toggle='tooltip']").attr("data-original-title",
-                    "Your profile information must be complete before you can formally publish resources.");
+                if ($("#publish").length) {
+                    $("#publish").toggleClass("disabled", true);
+                    $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
+                    $("#publish > [data-toggle='tooltip']").attr("data-original-title",
+                        "Your profile information must be complete before you can formally publish resources.");
+                }
 
                 var message = 'Your profile is nearly complete. ';
                 message += 'Please fill in the ';
