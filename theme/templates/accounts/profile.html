@@ -360,7 +360,7 @@
                                                 {% else %}
                                                     <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                <div class="alert alert-info">{{ quota_message }}</div>
+                                                {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}    
                                         </div>
 
