@@ -11,6 +11,7 @@ class DiscoveryForm(FacetedSearchForm):
     SWlng = forms.CharField(widget = forms.HiddenInput(), required=False)
     start_date = forms.DateField(label='From Date', required=False)
     end_date = forms.DateField(label='To Date', required=False)
+    coverage_type = forms.CharField(widget = forms.HiddenInput(), required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):
@@ -53,6 +54,9 @@ class DiscoveryForm(FacetedSearchForm):
         # Check to see if an end_date was chosen.
         if self.cleaned_data['end_date']:
             sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
+
+        if self.cleaned_data['coverage_type']:
+            sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
         author_sq = SQ()
         subjects_sq = SQ()

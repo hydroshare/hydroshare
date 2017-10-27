@@ -27,6 +27,7 @@ class DiscoveryJsonView(FacetedSearchView):
                 json_obj = {}
 
                 # assign title and url values to the object
+                json_obj['short_id'] = result.object.short_id;
                 json_obj['title'] = result.object.metadata.title.value
                 json_obj['resource_type'] = result.object.verbose_name
                 json_obj['get_absolute_url'] = result.object.get_absolute_url()

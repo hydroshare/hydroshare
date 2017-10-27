@@ -175,7 +175,8 @@
 
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
-                <li><a href="#map-view"><i class="glyphicon glyphicon-map-marker"></i> Map</a></li>
+                <li><a href="#map-point-view"><i class="glyphicon glyphicon-map-marker"></i> Site</a></li>
+                <li><a href="#map-area-view"><i class="glyphicon glyphicon-unchecked"></i> Area</a></li>
             </ul>
 
             <div class="tab-content">
@@ -242,10 +243,36 @@
                     {% include "includes/legend.html" %}
                 </div>
 
-                <div id="map-view" class="tab-pane fade">
+                <div id="map-point-view" class="tab-pane fade">
+                    <span id="discover-point-map-loading-spinner" class="discover-loading-icon icon-blue">
+                        <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                    </span>
+                    <br />
+
+                    <div id="point-geocoder-panel"></div>
+
+                    <div id="discover-point-map"></div>
+
+                    <div class="discover-map-legend"></div>
+
+                    <div class="resetZoom"></div>
+                    <br />
+                    <table class="table-hover table-striped" id="point-map-items" style="width:100%; max-height:200px">
+                        <thead>
+                            <tr>
+                                <th><input id="point_select_all" name="select_all" type="checkbox"></th>
+                                <th>Show on Map</th>
+                                <th>Resource Type</th>
+                                <th>Title</th>
+                                <th>First Author</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div id="map-area-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
-                            <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
+                            <span id="discover-area-map-loading-spinner" class="discover-loading-icon icon-blue">
                                   <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
                             </span>
                             <br />
@@ -257,15 +284,24 @@
                                 {% endfor %}
                             </form>
 
-                            <div id="geocoder-panel"></div>
+                            <div id="area-geocoder-panel"></div>
 
-                            <div id="discover-map"></div>
+                            <div id="discover-area-map"></div>
 
-                            <div id="discover-map-legend"></div>
+                            <div class="discover-map-legend"></div>
 
-                            <div id="resetZoom"></div>
+                            <div class="resetZoom"></div>
                             <br />
-                            <table class="table-hover table-striped" id="map-items" style="width:100%; max-height:200px">
+                            <table class="table-hover table-striped" id="area-map-items" style="width:100%; max-height:200px">
+                                <thead>
+                                    <tr>
+                                        <th><input id="area_select_all" name="select_all" type="checkbox"></th>
+                                        <th>Show on Map</th>
+                                        <th>Resource Type</th>
+                                        <th>Title</th>
+                                        <th>First Author</th>
+                                    </tr>
+                                </thead>
                             </table>
                         </div>
                     </div>
