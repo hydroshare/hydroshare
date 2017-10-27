@@ -461,9 +461,9 @@ class ToolMetaData(CoreMetaData):
         if 'supportedfiletypes' in keys_to_update:
             parsed_metadata.append({"supportedfiletypes": metadata.pop('supportedfiletypes')})
 
-        if 'supportedsharingstatuses' in keys_to_update:
+        if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append({"supportedsharingstatus":
-                                    metadata.pop('supportedsharingstatuses')})
+                                    metadata.pop('supportedsharingstatus')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -514,14 +514,14 @@ class ToolMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()
-        self.url_base.delete()
-        self.url_template_file_type.delete()
-        self.versions.delete()
-        self.supported_res_types.delete()
-        self.supported_file_types.delete()
-        self.tool_icon.delete()
-        self.supported_sharing_status.delete()
-        self.homepage_url.delete()
+        self._url_base.all().delete()
+        self._url_template_file_type.all().delete()
+        self._version.all().delete()
+        self._supported_res_types.all().delete()
+        self._supported_file_types.all().delete()
+        self._tool_icon.all().delete()
+        self._supported_sharing_status.all().delete()
+        self._homepage_url.all().delete()
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
@@ -564,7 +564,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)
-                    tool_version = self.versions
+                    tool_version = self.version
                     if tool_version is not None:
                         self.update_element('toolversion', tool_version.id,
                                             **dict_item['toolversion'])
@@ -573,7 +573,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'toolicon' in dict_item:
                     validation_form = ToolIconValidationForm(dict_item['toolicon'])
                     validate_form(validation_form)
-                    tool_icon = self.tool_icon
+                    tool_icon = self.app_icon
                     if tool_icon is not None:
                         self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
                     else:
@@ -581,7 +581,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'apphomepageurl' in dict_item:
                     validation_form = UrlValidationForm(dict_item['apphomepageurl'])
                     validate_form(validation_form)
-                    app_url = self.homepage_url
+                    app_url = self.app_home_page_url
                     if app_url is not None:
                         self.update_element('apphomepageurl', app_url.id,
                                             **dict_item['apphomepageurl'])

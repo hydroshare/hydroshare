@@ -63,7 +63,7 @@ def filetype_level_app_urls(file_type_str,
                 file_type_obj = file_type_ctype.get_object_for_this_type(id=logical_file_id)
 
                 tool_url_new = parse_app_url_template(
-                        tool_url, [tool_res_obj.get_hs_term_dict(),
+                        tool_url, [res_obj.get_hs_term_dict(),
                                    hs_term_dict_additional,
                                    file_type_obj.get_hs_term_dict()])
                 if tool_url_new is not None:
