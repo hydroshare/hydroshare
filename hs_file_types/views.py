@@ -206,6 +206,10 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+            if element_name.lower() == 'site':
+                # get the updated spatial coverage of the resource
+                spatial_coverage_dict = get_coverage_data_dict(resource)
+                ajax_response_data['spatial_coverage'] = spatial_coverage_dict
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)
@@ -276,6 +280,10 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         if logical_file.type_name() == "TimeSeriesLogicalFile":
             ajax_response_data['is_dirty'] = logical_file.metadata.is_dirty
             ajax_response_data['can_update_sqlite'] = logical_file.can_update_sqlite_file
+            if element_name.lower() == 'site':
+                # get the updated spatial coverage of the resource
+                spatial_coverage_dict = get_coverage_data_dict(resource)
+                ajax_response_data['spatial_coverage'] = spatial_coverage_dict
 
         if element_name.lower() == 'coverage':
             spatial_coverage_dict = get_coverage_data_dict(resource)

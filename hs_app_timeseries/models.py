@@ -2040,13 +2040,10 @@ def _update_resource_coverage_element(site_element):
     point_value = {'east': site_element.longitude, 'north': site_element.latitude,
                    'units': "Decimal degrees"}
 
-    cov_type = "point"
-    if len(site_element.metadata.sites) > 1:
-        cov_type = 'box'
+    def compute_bounding_box(site_elements):
         bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
                       'projection': 'Unknown', 'units': "Decimal degrees"}
-        sites = site_element.metadata.sites.all()
-        for site in sites:
+        for site in site_elements:
             if site.latitude:
                 if bbox_value['northlimit'] < site.latitude:
                     bbox_value['northlimit'] = site.latitude
@@ -2059,6 +2056,12 @@ def _update_resource_coverage_element(site_element):
 
                 if bbox_value['westlimit'] > site.longitude:
                     bbox_value['westlimit'] = site.longitude
+        return bbox_value
+
+    cov_type = "point"
+    if len(site_element.metadata.sites) > 1:
+        cov_type = 'box'
+        bbox_value = compute_bounding_box(site_element.metadata.sites.all())
 
     spatial_cov = site_element.metadata.coverages.all().exclude(type='period').first()
     if spatial_cov:
@@ -2075,7 +2078,6 @@ def _update_resource_coverage_element(site_element):
             value_dict = point_value
         else:
             value_dict = bbox_value
-
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
     if not isinstance(site_element.metadata, TimeSeriesMetaData):
@@ -2084,6 +2086,14 @@ def _update_resource_coverage_element(site_element):
         # and we have to do another update at the resource level
         logical_file = site_element.metadata.logical_file
         resource = logical_file.resource
+        sites = []
+        for logical_file in resource.logical_files:
+            if logical_file.metadata.sites:
+                sites.extend(logical_file.metadata.sites.all())
+        if len(sites) > 1:
+            cov_type = 'box'
+            bbox_value = compute_bounding_box(sites)
+
         spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
         if spatial_cov:
             spatial_cov.type = cov_type
@@ -2099,7 +2109,6 @@ def _update_resource_coverage_element(site_element):
                 value_dict = point_value
             else:
                 value_dict = bbox_value
-
             resource.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
 
