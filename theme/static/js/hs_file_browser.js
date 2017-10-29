@@ -555,7 +555,8 @@ function showFileTypeMetadata(file_type_time_series, url){
              $(".hs-coordinates-picker").each(function() {
                     const instance = $(this);
                     instance.coordinatesPicker();
-             })
+             });
+             InitializeTimeSeriesFileTypeForms();
          }
          if (logical_type === "GeoRasterLogicalFile"){
              $spatial_type_radio_button_1.prop("checked", true);
@@ -577,6 +578,35 @@ function showFileTypeMetadata(file_type_time_series, url){
     });
 }
 
+function InitializeTimeSeriesFileTypeForms() {
+    var tsSelect = $(".time-series-forms select");
+
+    tsSelect.append('<option value="Other">Other...</option>');
+
+    tsSelect.parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
+
+    tsSelect.change(function(e){
+        if (e.target.value == "Other") {
+            var name = e.target.name;
+            $(e.target).parent().parent().find(".other-field").show();
+            $(e.target).parent().parent().find(".other-field input").attr("name", name);
+            $(e.target).removeAttr("name");
+        }
+        else {
+            if (!e.target.name.length) {
+                var name = $(e.target).parent().parent().find(".other-field input").attr("name");
+                $(e.target).attr("name", name);
+                $(e.target).parent().parent().find(".other-field input").removeAttr("name");
+                $(e.target).parent().parent().find(".other-field").hide();
+            }
+        }
+    });
+
+    processSiteMetadataElement();
+    processVariableMetadataElement();
+    processMethodMetadataElement();
+    processProcessingLevelMetadataElement();
+}
 function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();

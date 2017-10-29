@@ -2088,8 +2088,9 @@ def _update_resource_coverage_element(site_element):
         resource = logical_file.resource
         sites = []
         for logical_file in resource.logical_files:
-            if logical_file.metadata.sites:
-                sites.extend(logical_file.metadata.sites.all())
+            if logical_file.type_name() == "TimeSeriesLogicalFile":
+                if logical_file.metadata.sites:
+                    sites.extend(logical_file.metadata.sites.all())
         if len(sites) > 1:
             cov_type = 'box'
             bbox_value = compute_bounding_box(sites)

@@ -601,16 +601,16 @@ function metadata_update_ajax_submit(form_id){
                         updateResourceSpatialCoverage(spatialCoverage);
                     }
                 }
-                if (($form.attr("id") == "id-site")){
+                if ($form.attr("id") == "id-site" || $form.attr("id") == "id-site-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
                 }
-                else if (($form.attr("id") == "id-variable")){
+                else if ($form.attr("id") == "id-variable" || $form.attr("id") == "id-variable-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_variable");
                 }
-                else if (($form.attr("id") == "id-method")){
+                else if ($form.attr("id") == "id-method" || $form.attr("id") == "id-method-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_method");
                 }
-                else if (($form.attr("id") == "id-processinglevel")){
+                else if ($form.attr("id") == "id-processinglevel" || $form.attr("id") == "id-processinglevel-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_processinglevel");
                 }
                 // end of timeseries specific DOM manipulation
