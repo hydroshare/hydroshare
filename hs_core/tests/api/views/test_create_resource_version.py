@@ -43,13 +43,13 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, ViewTestCase):
 
         # we should have 1 resource at this point
         self.assertEqual(BaseResource.objects.count(), 1)
-        url_params = {'shortkey': self.gen_res.short_id}
+        url_params = {'short_id': self.gen_res.short_id}
         url = reverse('create_resource_version', kwargs=url_params)
         request = self.factory.post(url, data={})
         request.user = self.user
 
         self.add_session_to_request(request)
-        response = create_new_version_resource(request, shortkey=self.gen_res.short_id)
+        response = create_new_version_resource(request, short_id=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         res_id = response.url.split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
