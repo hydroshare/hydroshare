@@ -625,7 +625,7 @@ def copy_resource(request, short_id):
     # go to resource landing page
     request.session['just_created'] = True
     request.session['just_copied'] = True
-    return HttpResponse(new_resource.short_id, status=202)
+    return HttpResponse(new_resource.short_id, status=302)
 
 
 def create_new_version_resource(request, short_id, *args, **kwargs):
@@ -652,7 +652,7 @@ def create_new_version_resource(request, short_id, *args, **kwargs):
         # obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
-        new_resource = hydroshare.create_empty_resource(shortkey, user)
+        new_resource = hydroshare.create_empty_resource(short_id, user)
         new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
     except Exception as ex:
         if new_resource:
