@@ -1100,6 +1100,10 @@ def create_resource(request, *args, **kwargs):
     federated = request.POST.get("irods_federated").lower() == 'true'
     # TODO: need to make REST API consistent with internal API. This is just "move" now there.
     fed_copy_or_move = request.POST.get("copy-or-move")
+    ajax_response_data = {'message': None,
+                          'resource_url': None,
+                          'file_upload_status': None,
+                          'status': None}
     if irods_fnames:
         if federated:
             source_names = irods_fnames.split(',')
@@ -1114,10 +1118,12 @@ def create_resource(request, *args, **kwargs):
                                   zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except hydroshare.utils.ResourceFileSizeException as ex:
                 ajax_response_data['message'] = ex.message
+                ajax_response_data['status'] = 'error'
                 return JsonResponse(ajax_response_data)
 
             except SessionException as ex:
                 ajax_response_data['message'] = ex.stderr
+                ajax_response_data['status'] = 'error'
                 return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
@@ -1132,12 +1138,15 @@ def create_resource(request, *args, **kwargs):
                                                          **kwargs)
     except hydroshare.utils.ResourceFileSizeException as ex:
         ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
     except hydroshare.utils.ResourceFileValidationException as ex:
         ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
     except Exception as ex:
         ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
