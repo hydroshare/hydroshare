@@ -1626,7 +1626,6 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, null=True, blank=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
-    comments = CommentsField()
     rating = RatingField()
 
     # this is to establish a relationship between a resource and
@@ -3251,7 +3250,7 @@ class BaseResource(Page, AbstractResource):
             return IrodsStorage()
 
     def get_absolute_url(self):
-        reverse('resource_detail', kwargs={'short_id': self.short_id})
+        return reverse('resource_detail', kwargs={'short_id': self.short_id})
 
     @property
     def is_federated(self):
