@@ -1,8 +1,8 @@
 ### Local Configuration Variables ###
-HS_PATH: /home/ablemann/projects/hs_xdci
-HOST_SSL_DIR: /home/ablemann/projects/hs_xdci/hs-certs
+HS_PATH: /home/hydro/hydroshare
+HOST_SSL_DIR: /home/hydro/hs-certs
 HS_DATABASE: pg.development.sql
-HS_LOG_FILES: /home/ablemann/projects/hs_xdci/log
+HS_LOG_FILES: /home/hydro/hydroshare/log
 HS_SERVICE_UID: 1000
 HS_SERVICE_GID: 1000
 
@@ -14,7 +14,7 @@ USE_HTTP_AUTH: false
 
 ### nginx Configuration Variables ###
 FQDN_OR_IP: localhost
-NGINX_DIR: /home/ablemann/projects/hs_xdci/nginx
+NGINX_DIR: /home/hydro/hydroshare/nginx
 
 ### SSL Configuration Variables ###
 SSL_CERT_DIR: /home/hydro/hydroshare/nginx/cert-files
