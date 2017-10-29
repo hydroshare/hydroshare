@@ -1425,30 +1425,30 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
         $id_type_filetype_div.find("input:radio").change(function () {
-        if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
-            // coverage type is box
-            $("#id_north_filetype").parent().closest("#div_id_north").hide();
-            $("#id_east_filetype").parent().closest("#div_id_east").hide();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
-        }
-        else {
-            // coverage type is point
-            $("#id_north_filetype").parent().closest("#div_id_north").show();
-            $("#id_east_filetype").parent().closest("#div_id_east").show();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
-        }
-        });
+            if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
+                // coverage type is box
+                $("#id_north_filetype").parent().closest("#div_id_north").hide();
+                $("#id_east_filetype").parent().closest("#div_id_east").hide();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
+            }
+            else {
+                // coverage type is point
+                $("#id_north_filetype").parent().closest("#div_id_north").show();
+                $("#id_east_filetype").parent().closest("#div_id_east").show();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+            }
+            });
     }
 
     // #id_type_1 is the box radio button
     if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
-        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile')) {
+        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile')) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
