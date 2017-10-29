@@ -215,7 +215,7 @@
                     <div class="col-xs-12 col-sm-8 col-md-9">
                         <form id="hsDropzone" class="dropzone" role="form" method="POST"
                               enctype="multipart/form-data"
-                              action="/hsapi/_internal/create-resource/do/">
+                              action="{% url 'create_resource' %}">
                             {% csrf_token %}
 
                             <div class="hs-dropzone-header">
