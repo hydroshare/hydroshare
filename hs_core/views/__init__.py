@@ -628,7 +628,7 @@ def copy_resource(request, short_id):
     return HttpResponse(new_resource.short_id, status=202)
 
 
-def create_new_version_resource(request, shortkey, *args, **kwargs):
+def create_new_version_resource(request, short_id, *args, **kwargs):
     res, authorized, user = authorize(request, short_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
