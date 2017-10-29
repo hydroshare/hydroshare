@@ -152,25 +152,31 @@
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
-        {% if relevant_tools %}
-            <span id="apps-dropdown"/>
-            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
-                <span class="caret"></span></button>
-            <ul class="dropdown-menu">
-                {% for tool in relevant_tools %}
-                    <li title="{{ tool.title }}">
-			<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
-                            <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
-                            {% if tool.title|length > 20 %}
-                                <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                            {% else %}
-                                <span>{{ tool.title }}</span>
-                            {% endif %}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+        <span id="apps-dropdown"/>
+        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
+            <span class="caret"></span></button>
+        <ul class="dropdown-menu">
+          <li title="scidas">
+            <a href="{% url 'scidas_virtual_app' cm.short_id %}">
+                        <span>JupyterHub Appliance virtual infrastructure dynamically provisioned by SciDAS </span>
+            </a>
+          </li>
+          {% if relevant_tools %}
+            {% for tool in relevant_tools %}
+                <li title="{{ tool.title }}">
+        <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
+                        <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
+                        {% if tool.title|length > 20 %}
+                            <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                        {% else %}
+                            <span>{{ tool.title }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+          {% endif %}
+        </ul>
+
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"

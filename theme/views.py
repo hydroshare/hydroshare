@@ -1,4 +1,5 @@
 from json import dumps
+import requests
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -17,6 +18,8 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.utils.http import int_to_base36
 from django.template.response import TemplateResponse
+from rest_framework import status
+from django.http import HttpResponseBadRequest
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -410,3 +413,30 @@ def create_irods_account(request):
             dumps({"error": "Not POST request"}),
             content_type="application/json"
         )
+
+
+def create_scidas_virtual_app(request, res_id):
+    url = "http://sc17demo1.renci.org:9090/applicance"
+    p_data = {
+        "id": "test",
+        "image": "jupyter/r-notebook",
+        "resources": {
+            "cpus": 2,
+            "mem": 2048,
+            "disk": 10240
+        },
+        "data": [
+            "/scidasZone/home/wpoehlm/test.txt"
+        ]
+    }
+    response = requests.post(url, p_data)
+    if not response.status_code == status.HTTP_200_OK and \
+            not response.status_code == status.HTTP_201_CREATED:
+        return HttpResponseBadRequest(content=response.text)
+    app_id = response.content
+    response = requests.get(url+'/'+app_id)
+    if not response.status_code == status.HTTP_200_OK:
+        return HttpResponseBadRequest(content=response.text)
+    return_data = response.content
+    app_url = return_data['cluster']['url']
+    return HttpResponseRedirect(app_url)
