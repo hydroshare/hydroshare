@@ -1,4 +1,4 @@
-from json import dumps
+from json import dumps, loads
 import requests
 
 from django.contrib.auth.decorators import login_required
@@ -416,27 +416,51 @@ def create_irods_account(request):
 
 
 def create_scidas_virtual_app(request, res_id):
-    url = "http://sc17demo1.renci.org:9090/applicance"
+    url = "http://sc17demo1.scidas.org:9090/appliance"
     p_data = {
-        "id": "test",
-        "image": "jupyter/r-notebook",
-        "resources": {
-            "cpus": 2,
-            "mem": 2048,
-            "disk": 10240
-        },
-        "data": [
-            "/scidasZone/home/wpoehlm/test.txt"
+        "id": "jupyter",
+         "containers": [
+            {
+              "id": "jupyter",
+              "image": "scidas/irods-jupyter-base",
+              "resources": {
+                "cpus": 2,
+                "mem": 2048
+              },
+              "port_mappings": [
+                {
+                  "container_port": 8888,
+                  "host_port": 0,
+                  "protocol": "tcp"
+                }
+              ],
+              "args": [
+                "--ip=0.0.0.0",
+                "--NotebookApp.token=\"\""
+              ],
+              "data": [
+                "/scidasZone/home/wpoehlm/test.txt"
+              ]
+            }
         ]
     }
-    response = requests.post(url, p_data)
-    if not response.status_code == status.HTTP_200_OK and \
-            not response.status_code == status.HTTP_201_CREATED:
+    app_id = 'jupyter'
+    # delete the appliance before posting to create a new one in case it already exists
+    requests.delete(url+'/'+app_id)
+    response = requests.post(url, data=dumps(p_data))
+    if response.status_code != status.HTTP_200_OK and \
+            response.status_code != status.HTTP_201_CREATED:
         return HttpResponseBadRequest(content=response.text)
-    app_id = response.content
     response = requests.get(url+'/'+app_id)
     if not response.status_code == status.HTTP_200_OK:
         return HttpResponseBadRequest(content=response.text)
-    return_data = response.content
-    app_url = return_data['cluster']['url']
+    return_data = loads(response.content)
+    con_ret_data_list = return_data['containers']
+    con_ret_data = con_ret_data_list[0]
+    ep_data_list = con_ret_data['endpoints']
+    if not ep_data_list:
+        return HttpResponse('Internal Server Error: no endpoints are returned from the SciDAS server.',
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    ep_data = ep_data_list[0]
+    app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
     return HttpResponseRedirect(app_url)
