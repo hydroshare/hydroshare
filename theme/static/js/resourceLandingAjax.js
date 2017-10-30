@@ -666,6 +666,7 @@ function metadata_update_ajax_submit(form_id){
                                 }
                             }
                             $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                            $("#missing-metadata-file-type:not(.persistent)").fadeOut();
                         }
                     }
                 }

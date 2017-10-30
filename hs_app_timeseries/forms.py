@@ -654,7 +654,7 @@ class UTCOffSetFormHelper(BaseFormHelper):
                   title="The value of the UTCOffset for timestamp values accompanying your "
                         "time series data."),
         )
-        kwargs['element_name_label'] = 'UTC Offset'
+        kwargs['element_name_label'] = 'UTC Offset*'
         super(UTCOffSetFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                   element_name, layout, *args, **kwargs)
 
