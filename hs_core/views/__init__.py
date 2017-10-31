@@ -1108,7 +1108,7 @@ def create_resource(request, *args, **kwargs):
     fed_copy_or_move = request.POST.get("copy-or-move")
     ajax_response_data = {'message': None,
                           'resource_url': None,
-
+                          'status': 'error',
                           }
     if irods_fnames:
         if federated:
@@ -1174,12 +1174,17 @@ def create_resource(request, *args, **kwargs):
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
         ajax_response_data['message'] = ex.message
+        ajax_response_data['status'] = 'success'
         ajax_response_data['file_upload_status'] = 'error'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
         return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
-    if resource.files.all():
-        ajax_response_data['file_upload_status'] = 'success'
+    if not ajax_response_data['message']:
+        if resource.files.all():
+            ajax_response_data['file_upload_status'] = 'success'
+        ajax_response_data['status'] = 'success'
+        ajax_response_data['resource_url'] = resource.get_absolute_url()
 
     return JsonResponse(ajax_response_data)
 
