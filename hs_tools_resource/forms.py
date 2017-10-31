@@ -21,7 +21,8 @@ class UrlBaseFormHelper(BaseFormHelper):
             Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = \
-            "Resource-level App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "Resource-level App-launching URL Pattern "\
+            "<a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).\
@@ -283,7 +284,8 @@ class URLTemplateFileTypeFormHelper(BaseFormHelper):
             Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = \
-            "FileType-level App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "FileType-level App-launching URL Pattern " \
+            "<a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
         super(URLTemplateFileTypeFormHelper, self).\

@@ -13,7 +13,7 @@ from hs_core import languages_iso
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
     MetaDataElementDeleteForm, CoverageTemporalForm, CoverageSpatialForm, ExtendedMetadataForm
-from hs_core.views.utils import  show_relations_section,  can_user_copy_resource
+from hs_core.views.utils import show_relations_section,  can_user_copy_resource
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.app_launch_helper import resource_level_tool_urls
 

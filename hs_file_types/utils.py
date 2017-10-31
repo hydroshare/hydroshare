@@ -4,6 +4,7 @@ from operator import lt, gt
 from django.apps import apps
 from .models import AbstractLogicalFile
 
+
 def update_resource_coverage_element(resource):
     # update resource spatial coverage based on coverage metadata from the
     # logical files in the resource

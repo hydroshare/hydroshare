@@ -21,11 +21,11 @@ def resource_level_tool_urls(resource_obj, request_obj):
                 tool_url = tool_res_obj.metadata.url_base.value \
                            if tool_res_obj.metadata.url_base else None
                 tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
-                                if tool_res_obj.metadata.app_icon else "raise-img-error"
+                    if tool_res_obj.metadata.app_icon else "raise-img-error"
                 hs_term_dict_user = {}
                 hs_term_dict_user["HS_USR_NAME"] = request_obj.user.username if \
-                                                   request_obj.user.is_authenticated() \
-                                                   else "anonymous"
+                    request_obj.user.is_authenticated() \
+                    else "anonymous"
                 tool_url_new = parse_app_url_template(
                         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
                 if tool_url_new is not None:
@@ -52,11 +52,11 @@ def filetype_level_app_urls(file_type_str,
                 tool_url = tool_res_obj.metadata.url_template_file_type.value \
                            if tool_res_obj.metadata.url_template_file_type else None
                 tool_icon_url = tool_res_obj.metadata.app_icon.data_url \
-                                if tool_res_obj.metadata.app_icon else "raise-img-error"
+                    if tool_res_obj.metadata.app_icon else "raise-img-error"
                 hs_term_dict_additional = {}
                 hs_term_dict_additional["HS_USR_NAME"] = request_obj.user.username if \
-                                                         request_obj.user.is_authenticated() \
-                                                         else "anonymous"
+                    request_obj.user.is_authenticated() \
+                    else "anonymous"
 
                 file_type_ctype = ContentType.objects.get(app_label="hs_file_types",
                                                           model=file_type_str.lower())

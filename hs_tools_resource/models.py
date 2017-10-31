@@ -281,8 +281,9 @@ class SupportedFileTypes(AbstractMetaDataElement):
     def _validate_supported_file_types(cls, supported_file_types):
         for file_type in supported_file_types:
             if isinstance(file_type, basestring) \
-                    and file_type not in [supported_file_types[0]
-                                          for supported_file_types in get_SupportedFileTypes_choices()]:
+                    and file_type not in [supported_file_type[0]
+                                          for supported_file_type in
+                                          get_SupportedFileTypes_choices()]:
                 raise ValidationError('Invalid supported_file_types:%s' % file_type)
 
     @classmethod
@@ -296,7 +297,8 @@ class SupportedFileTypes(AbstractMetaDataElement):
             cls._add_supported_file_type(new_meta_instance, kwargs['supported_file_types'])
             return new_meta_instance
         else:
-            raise ValidationError("No supported_file_types parameter was found in the **kwargs list")
+            raise ValidationError("No supported_file_types parameter was "
+                                  "found in the **kwargs list")
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -309,7 +311,8 @@ class SupportedFileTypes(AbstractMetaDataElement):
             cls._add_supported_file_type(meta_instance, kwargs['supported_file_types'])
             meta_instance.save()
         else:
-            raise ValidationError("No supported_file_types parameter was found in the **kwargs list")
+            raise ValidationError("No supported_file_types parameter "
+                                  "was found in the **kwargs list")
 
     @classmethod
     def remove(cls, element_id):
@@ -595,4 +598,5 @@ class ToolMetaData(CoreMetaData):
                         self.update_element('urltemplatefiletype', url_template_file_type.id,
                                             value=dict_item['urltemplatefiletype'])
                     else:
-                        self.create_element('urltemplatefiletype', value=dict_item['urltemplatefiletype'])
+                        self.create_element('urltemplatefiletype',
+                                            value=dict_item['urltemplatefiletype'])

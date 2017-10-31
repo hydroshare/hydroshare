@@ -64,7 +64,6 @@ def landing_page(request, page):
                 .get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
-
         if content_model.metadata.app_icon:
             context['tool_icon_url'] = content_model.metadata.app_icon.data_url
 
