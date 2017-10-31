@@ -1,5 +1,7 @@
 from json import dumps, loads
 import requests
+import time
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -20,6 +22,7 @@ from django.utils.http import int_to_base36
 from django.template.response import TemplateResponse
 from rest_framework import status
 from django.http import HttpResponseBadRequest
+from django.conf import settings as ds
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
@@ -32,6 +35,8 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
+from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.models import ResourceFile
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -416,6 +421,22 @@ def create_irods_account(request):
 
 
 def create_scidas_virtual_app(request, res_id):
+    res = get_resource_by_shortkey(res_id)
+    file_data_list = []
+    file_path = '/'+ds.IRODS_ZONE+'/home/'+ds.IRODS_USERNAME
+    for rf in ResourceFile.objects.filter(object_id=res.id):
+        fname = ''
+        if rf.resource_file.name:
+            fname = os.path.join(file_path, rf.resource_file.name)
+        elif rf.fed_resource_file.name:
+            fname = rf.fed_resource_file.name
+        if fname:
+            file_data_list.append(fname)
+
+    if not file_data_list:
+        # for an empty resource, use the default scidasZone path for network-aware placement
+        file_data_list.append("/scidasZone/home/wpoehlm/test.txt")
+
     url = "http://sc17demo1.scidas.org:9090/appliance"
     p_data = {
         "id": "jupyter",
@@ -438,9 +459,7 @@ def create_scidas_virtual_app(request, res_id):
                 "--ip=0.0.0.0",
                 "--NotebookApp.token=\"\""
               ],
-              "data": [
-                "/scidasZone/home/wpoehlm/test.txt"
-              ]
+              "data": file_data_list
             }
         ]
     }
@@ -451,16 +470,20 @@ def create_scidas_virtual_app(request, res_id):
     if response.status_code != status.HTTP_200_OK and \
             response.status_code != status.HTTP_201_CREATED:
         return HttpResponseBadRequest(content=response.text)
-    response = requests.get(url+'/'+app_id)
-    if not response.status_code == status.HTTP_200_OK:
-        return HttpResponseBadRequest(content=response.text)
-    return_data = loads(response.content)
-    con_ret_data_list = return_data['containers']
-    con_ret_data = con_ret_data_list[0]
-    ep_data_list = con_ret_data['endpoints']
-    if not ep_data_list:
-        return HttpResponse('Internal Server Error: no endpoints are returned from the SciDAS server.',
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    while True:
+        response = requests.get(url+'/'+app_id)
+        if not response.status_code == status.HTTP_200_OK:
+            return HttpResponseBadRequest(content=response.text)
+        return_data = loads(response.content)
+        con_ret_data_list = return_data['containers']
+        con_ret_data = con_ret_data_list[0]
+        ep_data_list = con_ret_data['endpoints']
+        if ep_data_list:
+            break
+        else:
+            # the jupyter appliance is not ready yet, need to wait and poll again
+            time.sleep(2)
+
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
     return HttpResponseRedirect(app_url)
