@@ -33,8 +33,7 @@ urlpatterns = i18n_patterns("",
     url(r'^rating/$', theme.rating),
 
     # XDCIShare Basics
-    url( r'^r/(?P<shortkey>[A-z0-9\-_]+)', hs_core_views.short_url),
-    url(r'^rn/(?P<short_id>[A-z0-9\-_]+)', hs_core_views.resource_frontend.resource_detail, name='resource_detail'),
+    url(r'^resource/(?P<short_id>[A-z0-9\-_]+)/', hs_core_views.resource_frontend.resource_detail, name='resource_detail'),
 
     url(r'^search/$', hs_core_views.discovery_view.DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', hs_core_views.discovery_json_view.DiscoveryJsonView.as_view(), name='haystack_json_search'),

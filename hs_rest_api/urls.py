@@ -43,7 +43,7 @@ urlpatterns = patterns(
 
     # public copy resource endpoint
     url(r'^resource/(?P<pk>[0-9a-f-]+)/copy/$',
-        core_views.copy_resource, name='copy_resource'),
+        core_views.copy_resource_public, name='copy_resource_public'),
 
     # DEPRECATED: use form above instead
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$',

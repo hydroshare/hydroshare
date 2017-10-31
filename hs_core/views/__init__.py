@@ -625,11 +625,17 @@ def copy_resource(request, short_id):
     # go to resource landing page
     request.session['just_created'] = True
     request.session['just_copied'] = True
-    return HttpResponse(new_resource.short_id, status=302)
+    return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
-def create_new_version_resource(request, short_id, *args, **kwargs):
-    res, authorized, user = authorize(request, short_id,
+@api_view(['POST'])
+def copy_resource_public(request, pk):
+    response = copy_resource(request, pk)
+    return HttpResponse(response.url.split('/')[2], status=202)
+
+
+def create_new_version_resource(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey,
                                       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
     if res.locked_time:
@@ -652,7 +658,7 @@ def create_new_version_resource(request, short_id, *args, **kwargs):
         # obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
-        new_resource = hydroshare.create_empty_resource(short_id, user)
+        new_resource = hydroshare.create_empty_resource(shortkey, user)
         new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
     except Exception as ex:
         if new_resource:
@@ -1102,8 +1108,8 @@ def create_resource(request, *args, **kwargs):
     fed_copy_or_move = request.POST.get("copy-or-move")
     ajax_response_data = {'message': None,
                           'resource_url': None,
-                          'file_upload_status': None,
-                          'status': None}
+
+                          }
     if irods_fnames:
         if federated:
             source_names = irods_fnames.split(',')
@@ -1118,12 +1124,10 @@ def create_resource(request, *args, **kwargs):
                                   zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
             except hydroshare.utils.ResourceFileSizeException as ex:
                 ajax_response_data['message'] = ex.message
-                ajax_response_data['status'] = 'error'
                 return JsonResponse(ajax_response_data)
 
             except SessionException as ex:
                 ajax_response_data['message'] = ex.stderr
-                ajax_response_data['status'] = 'error'
                 return JsonResponse(ajax_response_data)
 
     url_key = "page_redirect_url"
@@ -1138,15 +1142,12 @@ def create_resource(request, *args, **kwargs):
                                                          **kwargs)
     except hydroshare.utils.ResourceFileSizeException as ex:
         ajax_response_data['message'] = ex.message
-        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
     except hydroshare.utils.ResourceFileValidationException as ex:
         ajax_response_data['message'] = ex.message
-        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
     except Exception as ex:
         ajax_response_data['message'] = ex.message
-        ajax_response_data['status'] = 'error'
         return JsonResponse(ajax_response_data)
 
     resource = hydroshare.create_resource(
