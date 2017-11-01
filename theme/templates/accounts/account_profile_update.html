@@ -16,15 +16,24 @@
             <form id="reset-password-form" action="{% url 'update_profile' %}" method="post"
                   enctype="multipart/form-data">
                 {% csrf_token %}
+
+                <fieldset>
+                    <label>Current Password</label>
+                    <input class="form-control" autocomplete="off" id="id_password"
+                           name="password"
+                           placeholder="Password" required type="password">
+                    <br>
+                </fieldset>
+
                 <fieldset>
                     <label>New Password</label>
                     <input class="form-control" autocomplete="off" id="id_password1"
                            name="password1"
                            placeholder="Password" required type="password">
+                    <br>
                 </fieldset>
 
                 <fieldset>
-                    <br>
                     <label>New Password (again)</label>
                     <input class="form-control" autocomplete="off" id="id_password2"
                            name="password2"
