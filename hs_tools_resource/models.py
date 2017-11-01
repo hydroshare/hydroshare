@@ -69,6 +69,79 @@ class AppHomePageUrl(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
+class TestingProtocolUrl(AbstractMetaDataElement):
+    # should be a link to a page that gives repeatable steps to fully test the app
+
+    term = 'TestingProtocolUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # TestingProtocolUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class HelpPageUrl(AbstractMetaDataElement):
+    # should be a link to a page that gives full help documentation
+    term = 'HelpPageUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # HelpPageUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class SourceCodeUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'SourceCodeUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # SourceCodeUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class IssuesPageUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'IssuesPageUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # SourceCodeUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class MailingListUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'MailingListUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # MailingListUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class Roadmap(AbstractMetaDataElement):
+    ''' should include information about why the app was developed, what's the development status,
+        future development plans, links to github issues, etc. - How we hope things will progress, etc.
+    '''
+    term = 'Roadmap'
+    value = models.TextField(blank=True, default='')
+
+    class Meta:
+        # MailingListUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class ShowOnOpenWithList(AbstractMetaDataElement):
+    # Option to show or not show the icon on a landing page with the "open app" button.
+    term = 'ShowOnOpenWithList'
+    value = models.BooleanField(default=False)
+
+    class Meta:
+        # ShowOnOpenWithList element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
     value = models.CharField(max_length=1024, blank=True, default="")
@@ -308,6 +381,13 @@ class ToolMetaData(CoreMetaData):
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
     homepage_url = GenericRelation(AppHomePageUrl)
     approved = models.BooleanField(default=False)
+    testing_protocol_url = GenericRelation(TestingProtocolUrl)
+    help_page_url = GenericRelation(HelpPageUrl)
+    source_code_url = GenericRelation(SourceCodeUrl)
+    issues_page_url = GenericRelation(IssuesPageUrl)
+    mailing_list_url = GenericRelation(MailingListUrl)
+    roadmap = GenericRelation(Roadmap)
+    show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
 
     @property
     def resource(self):
