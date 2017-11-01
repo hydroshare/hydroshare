@@ -478,8 +478,9 @@ def create_scidas_virtual_app(request, res_id):
         return_data = loads(response.content)
         con_ret_data_list = return_data['containers']
         con_ret_data = con_ret_data_list[0]
+        con_state = con_ret_data['state']
         ep_data_list = con_ret_data['endpoints']
-        if ep_data_list:
+        if ep_data_list and con_state=='running':
             break
         else:
             # the jupyter appliance is not ready yet, need to wait and poll again
