@@ -2708,9 +2708,11 @@ span.you-flag {
 
 /*-------- My resources page revamp ---------*/
 
-.dropdown.dropdown-lg .dropdown-menu {
-    margin-top: -1px;
-    padding: 6px 20px;
+#search-container .dropdown-menu {
+	border: 0;
+    padding: 20px;
+	left: -251px;
+	width: 284px;
 }
 .input-group-btn .btn-group {
     display: flex !important;
@@ -2800,11 +2802,6 @@ span.you-flag {
 
 .dropdown.dropdown-lg {
 	position: static !important;
-}
-
-.dropdown.dropdown-lg .dropdown-menu {
-	left: -251px;
-	width: 284px;
 }
 
 #search-container .btn-clear-search {
@@ -2937,6 +2934,23 @@ span.you-flag {
 	overflow-y: auto;
 }
 
+#constraints > li {
+	display: none;
+    color: #3c763d;
+    background-color: #dff0d8;
+}
+
+#constraints {
+	display: none;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+#constraints li.invalid {
+    color: #a94442;
+    background-color: #f2dede;
+}
+
 .facet-list .panel-body {
 	padding: 0;
 }
@@ -2947,6 +2961,7 @@ span.you-flag {
 	cursor: pointer;
 	padding-top: 5px;
 	padding-bottom: 5px;
+	padding-right: 32px;
 	margin: 0;
 }
 
@@ -4040,124 +4055,6 @@ form#covereage-search-fields {
     color: #777;
 }
 
-.fb-file .fb-file-icon.fa-file-zip-o, .dz-details .fb-file-icon.fa-file-zip-o {
-    color: rgb(140, 86, 75);
-}
-
-.fb-file .fb-file-icon.fa-file-excel-o, .dz-details .fb-file-icon.fa-file-excel-o {
-    color: rgb(44, 160, 44);
-}
-
-.fb-file .fb-file-icon.fa-file-o, .dz-details .fb-file-icon.fa-file-o {
-    color: rgb(127, 127, 127);
-}
-
-.fb-file .fb-file-icon.fa-file-pdf-o, .dz-details .fb-file-icon.fa-file-pdf-o {
-    color: rgb(214, 39, 40);
-}
-
-.fb-file .fb-file-icon.fa-file-word-o, .dz-details .fb-file-icon.fa-file-word-o {
-    color: rgb(31, 119, 180);
-}
-
-.fb-file .fb-file-icon.fa-file-audio-o, .dz-details .fb-file-icon.fa-file-audio-o {
-    color: rgb(148, 103, 189);
-}
-
-.fb-file .fb-file-icon.fa-file-movie-o, .dz-details .fb-file-icon.fa-file-movie-o {
-    color: rgb(227, 119, 194);
-}
-.fb-file .fb-file-icon.fa-file-image-o, .dz-details .fb-file-icon.fa-file-image-o {
-    color: rgb(255, 127, 14);
-}
-
-.fb-file .fb-file-icon.fa-file-text-o, .dz-details .fb-file-icon.fa-file-text-o {
-    color: rgb(127, 127, 127);
-}
-
-.fb-file .fb-file-icon.fa-file-powerpoint-o, .dz-details .fb-file-icon.fa-file-powerpoint-o {
-    color: rgb(255, 187, 120);
-}
-
-.fb-file .fb-file-icon.fa-file-code-o, .dz-details .fb-file-icon.fa-file-code-o {
-    color: rgb(102, 170, 0);
-}
-
-.fb-stack-database {
-	color: rgb(0, 170, 163);
-}
-
-.fb-stack-netcdf {
-	color: #244960;
-}
-
-.fb-stack-refts {
-	color: #4caf50;
-}
-
-.fb-stack-shape {
-	color: #777;
-}
-
-.fb-view-grid .fb-stack {
-	height: 32px;
-}
-
-.fb-view-list .fb-stack {
-	width: 18px;
-	height: 18px;
-	margin-right: 10px;
-	margin-left: 10px;
-}
-
-.fb-view-list .fb-stack .fa-file-o {
-	font-size: 18px;
-}
-
-.fb-view-grid .fb-stack-database .fa-database, .dz-details .fb-stack-database .fa-database {
-	top: 5px;
-	font-size: 14px;
-}
-
-.fb-view-list .fb-stack-database .fa-database {
-	font-size: 10px;
-	top: -4px;
-}
-
-.fb-view-grid .fb-stack-netcdf .fa-th-large, .dz-details .fb-stack-netcdf .fa-th-large {
-	margin-top: 6px;
-	font-size: 14px;
-}
-
-.fb-view-list .fb-stack-netcdf .fa-th-large {
-	font-size: 10px;
-	top: -4px;
-}
-
-.fb-view-grid .fb-stack-refts .fa-line-chart, .dz-details .fb-stack-refts .fa-line-chart {
-	top: 7px;
-	font-size: 14px;
-}
-
-.fb-view-list .fb-stack-refts .fa-line-chart {
-    font-size: 9px;
-    top: -3px;
-}
-
-.fb-view-grid .fb-stack-shape .fa-globe, .dz-details .fb-stack-shape .fa-globe {
-	top: 5px;
-	font-size: 14px;
-}
-
-.fb-view-list .fb-stack-shape .fa-globe {
-	font-size: 10px;
-	top: -4px;
-}
-
-.fb-view-grid .fb-stack .fa-file-o {
-	font-size: 32px;
-}
-
 ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
 }
@@ -4457,6 +4354,7 @@ span.caption-file-type {
 #hsDropzone {
 	resize: vertical;
 	border: 0;
+	min-height: 200px;
 }
 
 .hs-upload-indicator {
@@ -4530,6 +4428,7 @@ span.caption-file-type {
 
 .hs-dropzone-wrapper {
 	height: 350px;
+	min-height: 350px;
 	border: 1px solid #DDD;
 	overflow: auto;
 	resize: vertical;
@@ -4693,7 +4592,7 @@ div#resource-content {
 	color: #00c300;
 }
 
-#file-types .badge {
+#file-types .badge, #constraints .badge {
 	margin-right: 4px;
 	background-color: #009687;
 }
