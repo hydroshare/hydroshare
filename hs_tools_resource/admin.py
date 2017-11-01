@@ -17,7 +17,7 @@ class InlineAppHomePageUrlAdmin(GenericTabularInline):
 
 
 class InlineRoadmapAdmin(GenericTabularInline):
-    verbose_name_plural = "Help Page URL"
+    verbose_name_plural = "Roadmap"
     model = Roadmap
     max_num=1
     extra=1
