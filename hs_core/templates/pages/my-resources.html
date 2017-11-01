@@ -7,7 +7,9 @@
 <div class="container" id="main">
     <div class="row">
         <div class="col-sm-12">
-            <h2 class="page-title">My Resources</h2>
+            <h2 class="page-title">My Resources
+                <small class="text-muted"><i>Interact with your HydroShare Content.</i></small>
+            </h2>
         </div>
         <div class="col-lg-2" id="facets">
             <a class="btn btn-success" href="/hsapi/_internal/create-resource"><i class="fa fa-plus"></i> Create new</a>
@@ -16,32 +18,42 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Filter</a></h4>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">
+                            &nbsp;Filter</a></h4>
                 </div>
                 <div id="filter" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
                         <div class="list-group">
                             <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
-                            data-editable-count="{{ editable|length }}" data-view-count="{{ view|length }}" >
+                            data-shared-count="{{ shared|length }}" data-added-count="{{ discovered|length }}" >
                                 <li class="list-group-item">
                                     <span data-facet="owned" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="owned" value="Owned">Owned by me</label>
+                                        <input type="checkbox" data-facet="owned" value="Owned" checked>Owned
+                                        by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="editable" class="badge">0</span>
+                                    <span data-facet="shared" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
+                                        <input type="checkbox" data-facet="shared" value="Shared">Shared with me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="viewable by me" class="badge">0</span>
+                                    <span data-facet="discovered" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="viewable by me" value="View">Viewable by me</label>
+                                        <input type="checkbox" data-facet="discovered" value="Discovered"
+                                               checked>Added by me</label>
                                 </li>
                                 <li class="list-group-item">
                                     <span data-facet="favorites" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="favorites" value="Favorites">Favorites</label>
+                                        <input type="checkbox" data-facet="favorites"
+                                               value="Favorites" checked>Favorites</label>
+                                </li>
+                                <li class="list-group-item">
+                                    <span data-facet="recent" class="badge">0</span>
+                                    <label class="checkbox noselect">
+                                        <input type="checkbox" data-facet="recent" value="Recent">Recently
+                                        Updated</label>
                                 </li>
                             </ul>
                         </div>
@@ -53,7 +65,8 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon-tags"></span>
-                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;&nbsp;Labels</a></h4>
+                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">
+                            &nbsp;&nbsp;Labels</a></h4>
                 </div>
                 <div id="labels" class="facet-list panel-collapse collapse in">
                     <div class="panel-body">
@@ -68,7 +81,6 @@
         </div>
         <div class="col-lg-10" id="items">
             <div class="row">
-
                 <div class="col-sm-8 col-xs-12 pull-right">
                     <div id="search-container" class="input-group">
                         <span class="glyphicon glyphicon-search search-icon"></span>
@@ -77,12 +89,13 @@
                         <div class="input-group-btn">
                             <div class="btn-group" role="group">
                                 <div class="dropdown dropdown-lg">
-                                    <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+                                    <span id="btn-clear-search-input"
+                                          class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
 
                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                             aria-expanded="false"><span class="caret"></span></button>
 
-                                    <div class="dropdown-menu dropdown-menu-left" role="menu">
+                                    <div class="dropdown-menu dropdown-menu-left shadow-md" role="menu">
                                         <form class="form-horizontal" role="form">
                                             <div class="form-group">
                                                 <label for="filter">Resource Type</label>
@@ -91,15 +104,22 @@
                                                     <option value="collection resource">Collection</option>
                                                     <option value="composite resource">Composite Resource</option>
                                                     <option value="generic">Generic</option>
-                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
+                                                    <option value="geographic feature">Geographic Feature (ESRI
+                                                        Shapefiles)
+                                                    </option>
                                                     <option value="geographic raster">Geographic Raster</option>
-                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
+                                                    <option value="his referenced time series">HIS Referenced Time
+                                                        Series
+                                                    </option>
                                                     <option value="model instance resource">Model Instance</option>
                                                     <option value="model program">Model Program</option>
-                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
+                                                    <option value="modflow model instance resource">MODFLOW Model
+                                                        Instance
+                                                    </option>
                                                     <option value="multidimensional">Multidimensional (NetCDF)</option>
                                                     <option value="script resource">Script Resource</option>
-                                                    <option value="swat model instance resource">Swat Model Instance</option>
+                                                    <option value="swat model instance resource">Swat Model Instance
+                                                    </option>
                                                     <option value="time series">Time Series</option>
                                                     <option value="web app resource">Web App</option>
                                                 </select>
@@ -144,8 +164,6 @@
                             </div>
                         </span>
 
-
-
                         <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip"
                               data-placement="bottom" title="Favorite"></span>
 
@@ -154,8 +172,6 @@
                             <span id="btn-confirm-delete-resources" class="glyphicon glyphicon-trash btn-remove"
                                   data-toggle="modal" data-target="#delete-multiple-resources-dialog"></span>
                         </span>
-
-
                     </div>
                 </div>
             </div>
@@ -170,14 +186,14 @@
                     <th>First Author</th>
                     <th>Date Created</th>
                     <th>Last modified</th>
-                    <th>Subject</th>{# Used in table processing #}
-                    <th>Authors</th>{# Used in table processing #}
-                    <th>Permission Level</th>{# Used in table processing #}
-                    <th>Labels</th>{# Used in table processing #}
-                    <th>Favorite</th>{# Used in table processing #}
-                    <th>Last modified</th>{# Used in table processing #}
-                    <th>Sharing Status</th>{# Used in table processing #}
-                    <th>Date Created</th>{# Used in table processing #}
+                    <th>Subject</th>            {# Used in table processing #}
+                    <th>Authors</th>            {# Used in table processing #}
+                    <th>Permission Level</th>   {# Used in table processing #}
+                    <th>Labels</th>             {# Used in table processing #}
+                    <th>Favorite</th>           {# Used in table processing #}
+                    <th>Last modified</th>      {# Used in table processing #}
+                    <th>Sharing Status</th>     {# Used in table processing #}
+                    <th>Date Created</th>       {# Used in table processing #}
                 </tr>
                 </thead>
                 <tbody>
@@ -226,108 +242,12 @@
                             </td>
                             {# Type #}
                             <td>
-                                <span class="resource-type-text">{{ res|resource_type }}</span>
-                                {% if res|resource_type == "Generic" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Geographic Raster" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Model Program Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Time Series" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Web App Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "HIS Referenced Time Series" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Script Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Collection Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                         class="table-res-type-icon"/>
-                                {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                         class="table-res-type-icon"/>
-                                {% elif res|resource_type == "Composite Resource" %}
-                                    <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                         data-toggle="tooltip" data-placement="top"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                         class="table-res-type-icon"/>
-                                {% endif %}
-
-                                {#  Sharing Status icons #}
-                                <div class="access-icon-wrapper">
-                                    {% if res.raccess.published %}
-                                        <img src="{{ STATIC_URL }}img/published.png"
-                                             data-toggle="tooltip" data-placement="top"
-                                             alt="Published Resource" title="Published"/>
-                                    {% elif res.raccess.public %}
-                                        <img src="{{ STATIC_URL }}img/public.png"
-                                             data-toggle="tooltip" data-placement="top"
-                                             alt="Public Resource" title="Public"/>
-                                    {% elif res.raccess.discoverable %}
-                                        <img src="{{ STATIC_URL }}img/discoverable.png"
-                                             data-toggle="tooltip" data-placement="top"
-                                             alt="Discoverable Resource" title="Discoverable"/>
-                                    {% else %}
-                                        <img src="{{ STATIC_URL }}img/private.png"
-                                             data-toggle="tooltip" data-placement="top"
-                                             alt="Private Resource" title="Private"/>
-                                    {% endif %}
-
-                                    {% if res.raccess.published %}
-                                        {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
-                                                 data-toggle="tooltip" data-placement="top"
-                                                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if res.raccess.shareable %}
-                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                                 data-toggle="tooltip" data-placement="top" title="Shareable"/>
-                                        {% else %}
-                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                                                 data-toggle="tooltip" data-placement="top" title="Not Shareable"/>
-                                        {% endif %}
-                                    {% endif %}
-                                </div>
+                                {% include "includes/res_type_col.html" with resource=res %}
                             </td>
                             {# Title #}
                             <td>
-                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                </strong>
                             </td>
                             {# First Author #}
                             {% if res.first_creator.description %}
@@ -338,9 +258,9 @@
                                 <td>{{ res.first_creator.name }}</td>
                             {% endif %}
                             {# Date Created #}
-                            <td>{{ res.created|date:"m/d/Y" }}, {{ res.created|time }}</td>
+                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                             {# Last Modified #}
-                            <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
+                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
                             <td>
                                 {% for kw in res.metadata.subjects.all %}
                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
@@ -358,10 +278,8 @@
                             </td>
                             {% if res.owned %}
                                 <td>Owned</td>
-                            {% elif res.editable %}
-                                <td>Editable</td>
-                            {% elif res.viewable %}
-                                <td>Viewable</td>
+                            {% elif res.discovered %}
+                                <td>Discovered</td>
                             {% else %}
                                 <td></td>
                             {% endif %}
@@ -375,7 +293,7 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
+                            <td>{{ res.updated|date:"U" }}</td>
                             <td>
                                 {% if res.raccess.published %}
                                     Published
@@ -387,16 +305,20 @@
                                     Private
                                 {% endif %}
                             </td>
-                            <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
-
+                            <td>{{ res.created|date:"U" }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-
             <br>
+            <div class="alert alert-info">
+                <strong>
+                    <i class="glyphicon glyphicon-question-sign"></i> Not finding what you are looking for?
+                </strong>
+                <p>Public resources not owned are searchable from
+                    <strong><a href="/search">Discover</a></strong></p>
+            </div>
             {% include "includes/legend.html" %}
-
         </div>
     </div>
 </div>

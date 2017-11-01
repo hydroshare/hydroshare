@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 {#    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">#}
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
 {% endblock %}
 
 {% block main %}
@@ -120,14 +121,13 @@
                                             <div class="profile-pic-thumbnail round-image user-icon"></div>
                                         {% endif %}
                                         <div>
-                                            <h5 class="text-muted pull-right">{{ res.date_granted }}</h5>
+                                            <h5 class="text-muted pull-right">{{ res.date_granted|date:"M d, Y" }} at {{ res.date_granted|time }}</h5>
                                             <div class="shared-resource-info">
-                                                <strong><a>{{ res.grantor|contact|safe }}</a></strong><span class="text-muted"> shared</span>
+                                                <strong><a>{{ res.grantor|contact }}</a></strong><span class="text-muted"> shared</span>
                                                 <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                             </div>
                                             <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
                                             </h5>
-
                                         </div>
 
                                         {% if res.metadata.description %}
@@ -233,7 +233,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ owner|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ owner|contact }}</a></strong></h4>
                                             {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
 
@@ -331,7 +331,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ member|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ member|contact }}</a></strong></h4>
                                             {% if  member.userprofile.title %}
                                                 <span class="text-muted">{{ member.userprofile.title }}</span>
                                             {% endif %}
@@ -393,7 +393,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a>{{ pendingrequest.request_from|contact|safe }}</a></strong></h4>
+                                            <h4><strong><a>{{ pendingrequest.request_from|contact }}</a></strong></h4>
                                             {% if  pendingrequest.request_from.userprofile.title %}
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}
@@ -434,7 +434,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <h4><strong>{{ pendingrequest.invitation_to|contact|safe }}</strong>
+                                                <h4><strong>{{ pendingrequest.invitation_to|contact }}</strong>
                                                 </h4>
                                                 {% if  pendingrequest.invitation_to.userprofile.title %}
                                                     <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
@@ -503,13 +503,14 @@
                                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                                             aria-expanded="false"><span class="caret"></span></button>
 
-                                                    <div class="dropdown-menu dropdown-menu-left" role="menu">
+                                                    <div class="shadow-md dropdown-menu dropdown-menu-left" role="menu">
                                                         <form class="form-horizontal" role="form">
                                                             <div class="form-group">
                                                                 <label for="filter">Resource Type</label>
                                                                 <select id="input-resource-type" class="form-control pull-left">
                                                                     <option value="" selected>All</option>
                                                                     <option value="collection resource">Collection</option>
+                                                                    <option value="composite resource">Composite</option>
                                                                     <option value="generic">Generic</option>
                                                                     <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                                     <option value="geographic raster">Geographic Raster</option>
@@ -616,100 +617,13 @@
                                             </td>
                                             {# Type #}
                                             <td>
-                                                <span class="resource-type-text">{{ res|resource_type }}</span>
-                                                {% if res|resource_type == "Generic" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Geographic Raster" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Model Program Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Model Instance Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Time Series" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Web App Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "HIS Referenced Time Series" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Script Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "Collection Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
-                                                    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                         class="table-res-type-icon"/>
-                                                {% endif %}
-
-                                                {#  Sharing Status icons #}
-                                                <div class="access-icon-wrapper">
-                                                    {% if res.raccess.published %}
-                                                        <img src="{{ STATIC_URL }}img/published.png"
-                                                             alt="Published Resource" title="Published"/>
-                                                    {% elif res.raccess.public %}
-                                                        <img src="{{ STATIC_URL }}img/public.png"
-                                                             alt="Public Resource" title="Public"/>
-                                                    {% elif res.raccess.discoverable %}
-                                                        <img src="{{ STATIC_URL }}img/discoverable.png"
-                                                             alt="Discoverable Resource" title="Discoverable"/>
-                                                    {% else %}
-                                                        <img src="{{ STATIC_URL }}img/private.png"
-                                                             alt="Private Resource" title="Private"/>
-                                                    {% endif %}
-
-                                                    {% if res.raccess.published %}
-                                                        {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                            <img src="{{ STATIC_URL }}img/pending.png"
-                                                                 alt="Pending Publication"
-                                                                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        {% if res.raccess.shareable %}
-                                                            <img src="{{ STATIC_URL }}img/shareable.png"
-                                                                 alt="Sharable Resource"
-                                                                 title="Shareable"/>
-                                                        {% else %}
-                                                            <img src="{{ STATIC_URL }}img/non-shareable.png"
-                                                                 alt="Non Sharable Resource"
-                                                                 title="Not Shareable"/>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </div>
+                                                {% include "includes/res_type_col.html" with resource=res %}
                                             </td>
                                             {# Title #}
                                             <td>
-                                                <strong><a
-                                                        href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                                <strong>
+                                                    <a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a>
+                                                </strong>
                                             </td>
                                             {# First Author #}
                                             {% if res.first_creator.description %}
@@ -720,9 +634,9 @@
                                                 <td>{{ res.first_creator.name }}</td>
                                             {% endif %}
                                             {# Date Created #}
-                                            <td>{{ res.created|date:"m/d/Y" }}, {{ res.created|time }}</td>
+                                            <td>{{ res.created|date:"M d, Y" }} at {{ res.created|time }}</td>
                                             {# Last Modified #}
-                                            <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
+                                            <td>{{ res.updated|date:"M d, Y" }} at {{ res.updated|time }}</td>
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
                                                     {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
@@ -757,7 +671,7 @@
                                                     Favorite
                                                 {% endif %}
                                             </td>
-                                            <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
+                                            <td>{{ res.updated|date:"U" }}</td>
                                             <td>
                                                 {% if res.raccess.published %}
                                                     Published
@@ -769,7 +683,7 @@
                                                     Private
                                                 {% endif %}
                                             </td>
-                                            <td>{{ res.created|date:"Y/m/d H:i:s" }}</td>
+                                            <td>{{ res.created|date:"U" }}</td>
                                             <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
@@ -805,7 +719,7 @@
                                 {{ add_view_user_form.user }}
                                 <form action="">
                                     <a id="btn-group-invite"
-                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span
+                                       class="btn btn-add-access btn-success glyphicon glyphicon-send"><span
                                             class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>

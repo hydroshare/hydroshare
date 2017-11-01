@@ -86,6 +86,7 @@ class ResourceListRequestValidator(serializers.Serializer):
     south = serializers.CharField(required=False)
     east = serializers.CharField(required=False)
     west = serializers.CharField(required=False)
+    include_obsolete = serializers.BooleanField(required=False, default=False)
 
 
 class ResourceListItemSerializer(serializers.Serializer):
@@ -98,6 +99,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     public = serializers.BooleanField()
     discoverable = serializers.BooleanField()
     shareable = serializers.BooleanField()
+    coverages = serializers.JSONField(required=False)
     immutable = serializers.BooleanField()
     published = serializers.BooleanField()
     bag_url = serializers.URLField()
@@ -130,6 +132,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_created',
                                'date_last_updated',
                                'bag_url',
+                               'coverages',
                                'science_metadata_url',
                                'resource_map_url',
                                'resource_url'])

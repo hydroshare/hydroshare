@@ -109,7 +109,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
     site_code = models.CharField(max_length=200)
     site_name = models.CharField(max_length=255)
-    elevation_m = models.IntegerField(null=True, blank=True)
+    elevation_m = models.FloatField(null=True, blank=True)
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
@@ -789,7 +789,7 @@ class TimeSeriesMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(TimeSeriesMetaData, self).get_xml(pretty_print=pretty_print)

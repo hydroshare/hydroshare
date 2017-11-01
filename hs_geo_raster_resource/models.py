@@ -447,7 +447,62 @@ class RasterMetaData(GeoRasterMetaDataMixin, CoreMetaData):
     def resource(self):
         return RasterResource.objects.filter(object_id=self.id).first()
 
-    def get_xml(self, pretty_print=True):
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import GeoRasterMetaDataSerializer
+        return GeoRasterMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+
+        if 'bandinformations' in keys_to_update:
+            for bandinformation in metadata.pop('bandinformations'):
+                parsed_metadata.append({"bandinformation": bandinformation})
+
+    def update(self, metadata, user):
+        # overriding the base class update method for bulk update of metadata
+
+        from forms import BandInfoValidationForm
+        # update any core metadata
+        super(RasterMetaData, self).update(metadata, user)
+        # update resource specific metadata
+        # for geo raster resource type only band information can be updated
+        missing_file_msg = "Resource specific metadata can't be updated when there is no " \
+                           "content files"
+
+        # update repeatable element (BandInformation)
+        for dict_item in metadata:
+            if 'bandinformation' in dict_item:
+                if not self.resource.files.all():
+                    raise ValidationError(missing_file_msg)
+                bandinfo_data = dict_item['bandinformation']
+                if 'original_band_name' not in bandinfo_data:
+                    raise ValidationError("Invalid band information data")
+                # find the matching (lookup by name) bandinformation element to update
+                band_element = self.bandInformations.filter(
+                    name=bandinfo_data['original_band_name']).first()
+                if band_element is None:
+                    raise ValidationError("No matching band information element was found")
+
+                bandinfo_data.pop('original_band_name')
+                if 'name' not in bandinfo_data:
+                    bandinfo_data['name'] = band_element.name
+                if 'variableName' not in bandinfo_data:
+                    bandinfo_data['variableName'] = band_element.variableName
+                if 'variableUnit' not in bandinfo_data:
+                    bandinfo_data['variableUnit'] = band_element.variableUnit
+                validation_form = BandInfoValidationForm(bandinfo_data)
+                if not validation_form.is_valid():
+                    err_string = self.get_form_errors_as_string(validation_form)
+                    raise ValidationError(err_string)
+                self.update_element('bandinformation', band_element.id, **bandinfo_data)
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)

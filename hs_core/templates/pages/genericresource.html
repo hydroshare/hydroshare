@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -135,11 +136,17 @@
                         {% endif %}
 
                     {% endif %}
-                    <li id="btn-download" data-menu-name="download">
-                        <span class="glyphicon glyphicon-download icon-blue"></span>
-                        <span>Download</span>
-                    </li>
-
+                    {% if cm.raccess.require_download_agreement %}
+                        <li id="btn-download-with-agreement" data-menu-name="download" data-toggle="modal" data-target="#license-agree-dialog-file">
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
+                        </li>
+                    {% else %}
+                        <li id="btn-download" data-menu-name="download" >
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
+                        </li>
+                    {% endif %}
                     <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
                         <span class="fa fa-link icon-blue"></span>
                         <span>Get file URL</span>
@@ -152,6 +159,14 @@
                         <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Set Multidimensional Data File Type</span>
+                        </li>
+                        <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set Geographic Feature File Type</span>
+                        </li>
+                        <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set Reference Timeseries File Type</span>
                         </li>
                     {%  endif %}
                 </ul>
@@ -296,7 +311,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6 height-fix">
+                                            <div class="col-xs-12 col-sm-5 col-md-6" style="display: inline-block;">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                 <span id="btn-clear-search-input"
@@ -396,6 +411,17 @@
                                                         <span class="glyphicon glyphicon-check icon-blue"></span>
                                                         <span class="caption-file-type">Multidimensional</span>
                                                     </button>
+                                                    <button id="fb-set-geofeature-file-type"
+                                                            class="disabled"
+                                                            title="Set Geographic Feature File Type">
+                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                        <span class="caption-file-type">Geographic Feature</span>
+                                                    </button>
+                                                    <button id="fb-set-refts-file-type"
+                                                            class="disabled"
+                                                            title="Set Reference Timeseries File Type">
+                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
+                                                    </button>
                                                  {% endif %}
 
                                                 {% if page.perms.change and metadata_form %}
@@ -494,7 +520,7 @@
                                 Files</strong>
                             <ul>
                                 <li><span>To learn how to download files larger than 1 GB see <a
-                                        href="https://pages.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
+                                        href="https://help.hydroshare.org/creating-and-managing-resources/uploading-large-files-into-hydroshare/"
                                         target="_blank">Uploading/Downloading large files to/from HydroShare</a>.</span>
                                 </li>
                             </ul>
@@ -541,11 +567,16 @@
                         {% endif %}
                         {% for b in cm.bags.all %}
                             <div>
+                            {% if cm.raccess.require_download_agreement %}
                                 <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                   href="{{ bag_url }}">
+                                data-target="#license-agree-dialog-bag" data-toggle="modal" data-placement="auto">
+                            {% else %}
+                                <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                                   href="{{ cm.bag_url }}">
+                            {% endif %}
                                 <span class="glyphicon glyphicon-download-alt">
                                     <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                          class="button-label"> Download All Content as Zipped BagIt Archive</span>
                                 </span>
                                 </a>
                             </div>
@@ -1080,7 +1111,7 @@
                                     {% if not metadata_form %}
                                         {% for tool in relevant_tools %}
                                             <div title="{{ tool.title }}" id="web-app-item">
-                                                <a href="{{ tool.url }}" target="_blank">
+						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
                                                     {% if tool.title|length > 20 %}
                                                         <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
                                                     {% else %}
@@ -1127,10 +1158,16 @@
                                                         <td>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
                                                                   data-form-type="toggle-favorite"
-                                                                  class="glyphicon glyphicon-edit btn-inline-favorite btn-edit-extra-metadata"></span>
+                                                                  class="glyphicon glyphicon-pencil icon-blue btn-edit-extra-metadata table-icon"
+                                                                  data-toggle="tooltip" data-placement="top"
+                                                                  title="Edit">
+                                                            </span>
                                                             <span data-loop-counter="{{ forloop.counter0 }}"
                                                                   data-form-type="toggle-favorite"
-                                                                  class="glyphicon glyphicon-remove btn-inline-favorite btn-remove-extra-metadata"></span>
+                                                                  class="glyphicon glyphicon-trash btn-remove btn-remove-extra-metadata table-icon"
+                                                                  data-toggle="tooltip" data-placement="top"
+                                                                  title="Remove">
+                                                            </span>
                                                         </td>
                                                     {% endif %}
                                                 </tr>
@@ -1162,6 +1199,9 @@
 
             {# ======= Credits ======= #}
             {% include "resource-landing-page/credits.html" %}
+
+            {# ======= Change quota holder ======= #}
+            {% include "resource-landing-page/quota.html" %}
 
             {# ======= Ratings ======= #}
             {% include "resource-landing-page/ratings.html" %}

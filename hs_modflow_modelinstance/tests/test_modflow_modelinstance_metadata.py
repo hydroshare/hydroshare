@@ -822,7 +822,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          steadyStateValue=8888,
                                          transientStateValueType='Monthly',
                                          transientStateValue=9999)
-        self.res.metadata.create_element('GroundwaterFlow',
+        self.res.metadata.create_element('GroundWaterFlow',
                                          flowPackage='LPF',
                                          flowParameter='Hydraulic Conductivity')
         self.res.metadata.create_element('BoundaryCondition',
@@ -864,7 +864,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          steadyStateValue='',
                                          transientStateValueType='Choose a type',
                                          transientStateValue='')
-        self.res.metadata.update_element('GroundwaterFlow',
+        self.res.metadata.update_element('GroundWaterFlow',
                                          self.res.metadata.ground_water_flow.id,
                                          flowPackage='Choose a package',
                                          flowParameter='Choose a package')
@@ -948,7 +948,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          steadyStateValue=8888,
                                          transientStateValueType='Monthly',
                                          transientStateValue=9999)
-        self.res.metadata.create_element('GroundwaterFlow',
+        self.res.metadata.create_element('GroundWaterFlow',
                                          flowPackage='LPF',
                                          flowParameter='Hydraulic Conductivity')
         self.res.metadata.create_element('BoundaryCondition',
@@ -1007,25 +1007,14 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
     def test_metadata_on_content_file_delete(self):
         # Metadata should remain after content file deletion
-
-        # upload files
-        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
-        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
         for f in self.file_list:
-            f_obj = open(f, 'r')
-            files = [UploadedFile(file=f_obj, name=f_obj.name)]
-            utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+            if 'dis' not in f and 'nam' not in f:
+                f_obj = open(f, 'r')
+                files = [UploadedFile(file=f_obj, name=f_obj.name)]
+                utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+                                                    extract_metadata=False)
+                utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                                 extract_metadata=False)
-            utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
 
         # create metadata elements
         self.res.metadata.create_element('Description', abstract="test abstract")
@@ -1048,7 +1037,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          steadyStateValue=8888,
                                          transientStateValueType='Monthly',
                                          transientStateValue=9999)
-        self.res.metadata.create_element('GroundwaterFlow',
+        self.res.metadata.create_element('GroundWaterFlow',
                                          flowPackage='LPF',
                                          flowParameter='Hydraulic Conductivity')
         self.res.metadata.create_element('BoundaryCondition',
@@ -1070,15 +1059,16 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          output_control_package=['HYD', 'OC'],
                                          subsidencePackage='SWT')
 
-        # there should 12 content files
-        self.assertEqual(self.res.files.all().count(), 12)
+        # there should 9 content files
+        self.assertEqual(self.res.files.all().count(), 9)
 
-        # there should be 11 format elements (2 nam)
-        self.assertEqual(self.res.metadata.formats.all().count(), 11)
+        # there should be 9 format elements
+        self.assertEqual(self.res.metadata.formats.all().count(), 9)
 
         # delete content files that we added above
         for f in self.file_names:
-            hydroshare.delete_resource_file(self.res.short_id, f, self.user)
+            if 'nam' not in f and 'dis' not in f:
+                hydroshare.delete_resource_file(self.res.short_id, f, self.user)
 
         # there should no content file
         self.assertEqual(self.res.files.all().count(), 0)
@@ -1109,23 +1099,15 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
     def test_metadata_delete_on_resource_delete(self):
         # upload files
-        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
-        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
-        utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
-        utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                        extract_metadata=False)
         for f in self.file_list:
-            f_obj = open(f, 'r')
-            files = [UploadedFile(file=f_obj, name=f_obj.name)]
-            utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+            # do not upload dis file to test manual metadata creation and deletion
+            if 'dis' not in f and 'nam' not in f:
+                f_obj = open(f, 'r')
+                files = [UploadedFile(file=f_obj, name=f_obj.name)]
+                utils.resource_file_add_pre_process(resource=self.res, files=files, user=self.user,
+                                                    extract_metadata=False)
+                utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
                                                 extract_metadata=False)
-            utils.resource_file_add_process(resource=self.res, files=files, user=self.user,
-                                            extract_metadata=False)
 
         # create metadata elements
         self.res.metadata.create_element('Description', abstract="test abstract")
@@ -1148,7 +1130,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          steadyStateValue=8888,
                                          transientStateValueType='Monthly',
                                          transientStateValue=9999)
-        self.res.metadata.create_element('GroundwaterFlow',
+        self.res.metadata.create_element('GroundWaterFlow',
                                          flowPackage='LPF',
                                          flowParameter='Hydraulic Conductivity')
         self.res.metadata.create_element('BoundaryCondition',
@@ -1285,3 +1267,74 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be GeneralElements metadata objects
         self.assertFalse(GeneralElements.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the MODFLOWModelInstanceMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEqual(self.res.metadata.model_output, None)
+        self.assertEqual(self.res.metadata.executed_by, None)
+        self.assertEqual(self.res.metadata.study_area, None)
+        self.assertEqual(self.res.metadata.grid_dimensions, None)
+        self.assertEqual(self.res.metadata.stress_period, None)
+        self.assertEqual(self.res.metadata.ground_water_flow, None)
+        self.assertEqual(self.res.metadata.boundary_condition, None)
+        self.assertEqual(self.res.metadata.model_calibration, None)
+        self.assertEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertEqual(self.res.metadata.general_elements, None)
+
+        # create modeloutput element using the update()
+        self.res.metadata.update([{'modeloutput': {'includes_output': False}}], self.user)
+        self.assertNotEqual(self.res.metadata.model_output, None)
+
+        self.res.metadata.update([{'modeloutput': {'includes_output': True}}], self.user)
+        self.assertEqual(self.res.metadata.model_output.includes_output, True)
+
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.res.metadata.creators.count(), 1)
+        self.res.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                  {'creator': {'name': 'Third Creator'}}], self.user)
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.res.metadata.creators.count(), 2)
+
+        # test multiple updates in a single call to update()
+        metadata = list()
+        metadata.append({'executedby': {'model_name': self.resGenModelProgram.short_id}})
+        metadata.append({'studyarea': {'totalLength': 'a', 'totalWidth': 'b',
+                                       'maximumElevation': 'c', 'minimumElevation': 'd'}})
+        metadata.append({'griddimensions': {'numberOfLayers': 'a', 'typeOfRows': 'Regular',
+                                            'numberOfRows': 'c', 'typeOfColumns': 'Irregular',
+                                            'numberOfColumns': 'e'}})
+        metadata.append({'stressperiod': {'stressPeriodType': 'Steady', 'steadyStateValue': 'a',
+                                          'transientStateValueType': 'Daily',
+                                          'transientStateValue': 'b'}})
+        metadata.append({'groundwaterflow': {'flowPackage': 'BCF6',
+                                             'flowParameter': 'Transmissivity'}})
+        metadata.append({'boundarycondition': {'specified_head_boundary_packages': ['FHB'],
+                                               'specified_flux_boundary_packages': ['RCH'],
+                                               'head_dependent_flux_boundary_packages': ['GHB'],
+                                               'other_specified_head_boundary_packages': 'JMS',
+                                               'other_head_dependent_flux_boundary_packages':
+                                                   'JLG'}})
+        metadata.append({'modelinput': {'inputType': 'a', 'inputSourceName': 'b',
+                                        'inputSourceURL': 'http://www.RVOB.com'}})
+        metadata.append({'generalelements': {'modelParameter': 'BCF6', 'modelSolver': 'DE4',
+                                             'output_control_package': ['LMT6'],
+                                             'subsidencePackage': 'SUB'}})
+        metadata.append({'modelcalibration': {'calibratedParameter': 'a', 'observationType': 'b',
+                                              'observationProcessPackage': 'RVOB',
+                                              'calibrationMethod': 'c'}})
+        self.res.metadata.update(metadata, self.user)
+        # check that there are extended metadata elements at this point
+        self.assertNotEqual(self.res.metadata.model_output, None)
+        self.assertNotEqual(self.res.metadata.executed_by, None)
+        self.assertNotEqual(self.res.metadata.study_area, None)
+        self.assertNotEqual(self.res.metadata.grid_dimensions, None)
+        self.assertNotEqual(self.res.metadata.stress_period, None)
+        self.assertNotEqual(self.res.metadata.ground_water_flow, None)
+        self.assertNotEqual(self.res.metadata.boundary_condition, None)
+        self.assertNotEqual(self.res.metadata.model_calibration, None)
+        self.assertNotEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertNotEqual(self.res.metadata.general_elements, None)

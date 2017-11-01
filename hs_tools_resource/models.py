@@ -2,7 +2,7 @@ import requests
 import base64
 import imghdr
 
-from django.db import models
+from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse
@@ -245,7 +245,7 @@ class ToolIcon(AbstractMetaDataElement):
             raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               fromat(response.status_code))
+                               format(response.status_code))
         image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
@@ -301,6 +301,61 @@ class ToolMetaData(CoreMetaData):
     def resource(self):
         return ToolResource.objects.filter(object_id=self.id).first()
 
+    @property
+    def url_base(self):
+        return self.url_bases.all().first()
+
+    @property
+    def version(self):
+        return self.versions.all().first()
+
+    @property
+    def supported_resource_types(self):
+        return self.supported_res_types.all().first()
+
+    @property
+    def supported_sharing_statuses(self):
+        return self.supported_sharing_status.all().first()
+
+    @property
+    def app_home_page_url(self):
+        return self.homepage_url.all().first()
+
+    @property
+    def app_icon(self):
+        return self.tool_icon.all().first()
+
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ToolMetaDataSerializer
+        return ToolMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'requesturlbase' in keys_to_update:
+            parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
+
+        if 'toolversion' in keys_to_update:
+            parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
+
+        if 'toolicon' in keys_to_update:
+            parsed_metadata.append({"toolicon": metadata.pop('toolicon')})
+
+        if 'apphomepageurl' in keys_to_update:
+            parsed_metadata.append({"apphomepageurl": metadata.pop('apphomepageurl')})
+
+        if 'supportedrestypes' in keys_to_update:
+            parsed_metadata.append({"supportedrestypes": metadata.pop('supportedrestypes')})
+
+        if 'supportedsharingstatuses' in keys_to_update:
+            parsed_metadata.append({"supportedsharingstatus":
+                                    metadata.pop('supportedsharingstatuses')})
+
     @classmethod
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()
@@ -354,3 +409,68 @@ class ToolMetaData(CoreMetaData):
         self.tool_icon.all().delete()
         self.supported_sharing_status.all().delete()
         self.homepage_url.all().delete()
+
+    def update(self, metadata, user):
+        # overriding the base class update method for bulk update of metadata
+
+        from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+
+        # update any core metadata
+        super(ToolMetaData, self).update(metadata, user)
+
+        # update resource specific metadata
+
+        def validate_form(form):
+            if not form.is_valid():
+                err_string = self.get_form_errors_as_string(form)
+                raise ValidationError(err_string)
+
+        with transaction.atomic():
+            for dict_item in metadata:
+                if 'supportedrestypes' in dict_item:
+                    validation_form = SupportedResTypesValidationForm(
+                        dict_item['supportedrestypes'])
+                    validate_form(validation_form)
+                    self.create_element('supportedrestypes', **dict_item['supportedrestypes'])
+                elif 'supportedsharingstatus' in dict_item:
+                    validation_form = SupportedSharingStatusValidationForm(
+                        dict_item['supportedsharingstatus'])
+                    validate_form(validation_form)
+                    self.create_element('supportedsharingstatus',
+                                        **dict_item['supportedsharingstatus'])
+                elif 'requesturlbase' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['requesturlbase'])
+                    validate_form(validation_form)
+                    request_url = self.url_bases.all().first()
+                    if request_url is not None:
+                        self.update_element('requesturlbase', request_url.id,
+                                            value=dict_item['requesturlbase'])
+                    else:
+                        self.create_element('requesturlbase', value=dict_item['requesturlbase'])
+                elif 'toolversion' in dict_item:
+                    validation_form = VersionValidationForm(dict_item['toolversion'])
+                    validate_form(validation_form)
+                    tool_version = self.versions.all().first()
+                    if tool_version is not None:
+                        self.update_element('toolversion', tool_version.id,
+                                            **dict_item['toolversion'])
+                    else:
+                        self.create_element('toolversion', **dict_item['toolversion'])
+                elif 'toolicon' in dict_item:
+                    validation_form = ToolIconValidationForm(dict_item['toolicon'])
+                    validate_form(validation_form)
+                    tool_icon = self.tool_icon.all().first()
+                    if tool_icon is not None:
+                        self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
+                    else:
+                        self.create_element('toolicon', **dict_item['toolicon'])
+                elif 'apphomepageurl' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['apphomepageurl'])
+                    validate_form(validation_form)
+                    app_url = self.homepage_url.all().first()
+                    if app_url is not None:
+                        self.update_element('apphomepageurl', app_url.id,
+                                            **dict_item['apphomepageurl'])
+                    else:
+                        self.create_element('apphomepageurl', **dict_item['apphomepageurl'])

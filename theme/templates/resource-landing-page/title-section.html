@@ -146,6 +146,7 @@
 <div class="col-xs-12">
     {% if not metadata_form %}
         <h2 id="resource-title">{{ title }}</h2>
+        <hr>
         {% if tool_homepage_url %}
             <span id="apps-dropdown"/>
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
@@ -158,7 +159,7 @@
             <ul class="dropdown-menu">
                 {% for tool in relevant_tools %}
                     <li title="{{ tool.title }}">
-                        <a href="{{ tool.url }}" target="_blank">
+			<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
                             <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
                             {% if tool.title|length > 20 %}
                                 <span>{{ tool.title|slice:":21"|add:"..." }}</span>

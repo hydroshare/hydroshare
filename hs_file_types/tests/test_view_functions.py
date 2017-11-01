@@ -15,8 +15,8 @@ from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
-    delete_keyword_metadata, update_netcdf_file
-from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile
+    delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract
+from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, RefTimeseriesLogicalFile
 
 
 class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
@@ -56,6 +56,18 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
 
+        self.refts_file_name = 'multi_sites_formatted_version1.0.json.refts'
+        self.refts_file = 'hs_file_types/tests/{}'.format(self.refts_file_name)
+        target_temp_refts_file = os.path.join(self.temp_dir, self.refts_file_name)
+        shutil.copy(self.refts_file, target_temp_refts_file)
+
+        missing_title_refts_json_file = 'refts_valid_title_missing.json.refts'
+        self.refts_missing_title_file_name = missing_title_refts_json_file
+        self.refts_missing_title_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_title_file_name)
+        target_temp_refts_file = os.path.join(self.temp_dir, self.refts_missing_title_file_name)
+        shutil.copy(self.refts_missing_title_file, target_temp_refts_file)
+
     def tearDown(self):
         super(TestFileTypeViewFunctions, self).tearDown()
         if os.path.exists(self.temp_dir):
@@ -84,7 +96,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # this is the view function we are testing
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='GeoRaster')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_dict = json.loads(response.content)
         self.assertIn("File was successfully set to selected file type.",
                       response_dict['message'])
@@ -118,7 +130,7 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         # this is the view function we are testing
         response = set_file_type(request, resource_id=self.composite_resource.short_id,
                                  file_id=res_file.id, hs_file_type='NetCDF')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_dict = json.loads(response.content)
         self.assertIn("File was successfully set to selected file type.",
                       response_dict['message'])
@@ -285,6 +297,344 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual('success', response_dict['status'])
         variable = logical_file.metadata.variables.all().filter(id=variable.id).first()
         self.assertEqual(variable.name, 'variable_name_updated')
+
+        self.composite_resource.delete()
+
+    def test_update_dataset_name_raster_file_type(self):
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource(self.raster_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the tif file to GeoRasterFile type
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "GeoRasterLogicalFile")
+        # check dataset_name before updating via the view function
+        self.assertEqual(logical_file.dataset_name, "small_logan")
+        url_params = {'hs_file_type': 'GeoRasterLogicalFile',
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('update_filetype_datatset_name', kwargs=url_params)
+        request = self.factory.post(url, data={'dataset_name': 'Logan River'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_dataset_name(request, hs_file_type="GeoRasterLogicalFile",
+                                       file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check dataset_name after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.dataset_name, "Logan River")
+
+        self.composite_resource.delete()
+
+    def test_update_dataset_name_netcdf_file_type(self):
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource(self.netcdf_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDF File type
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        # check dataset_name before updating via the view function
+        dataset_name = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+        self.assertEqual(logical_file.dataset_name, dataset_name)
+        url_params = {'hs_file_type': 'NetCDFLogicalFile',
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('update_filetype_datatset_name', kwargs=url_params)
+        dataset_name = "Snow water equivalent estimation at TWDEF site from Oct 20010 to June 2015"
+        request = self.factory.post(url, data={'dataset_name': dataset_name})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_dataset_name(request, hs_file_type="NetCDFLogicalFile",
+                                       file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check dataset_name after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.dataset_name, dataset_name)
+
+        self.composite_resource.delete()
+
+    def test_update_dataset_name_refts_file_type_failure(self):
+        # we should not be able to update dataset name since the json file
+        # has the title element
+        self.refts_file_obj = open(self.refts_file, 'r')
+        self._create_composite_resource(self.refts_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
+        # check dataset_name before updating via the view function
+        orig_dataset_name = "Sites, Variable"
+        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        url_params = {'hs_file_type': 'RefTimeseriesLogicalFile',
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('update_filetype_datatset_name', kwargs=url_params)
+        dataset_name = "Multiple sites with one variable"
+        request = self.factory.post(url, data={'dataset_name': dataset_name})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_dataset_name(request, hs_file_type="RefTimeseriesLogicalFile",
+                                       file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('error', response_dict['status'])
+        # check dataset_name after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # dataset name should not have changed
+        self.assertNotEqual(logical_file.dataset_name, dataset_name)
+        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        self.composite_resource.delete()
+
+    def test_update_dataset_name_refts_file_type_success(self):
+        # we should be able to update dataset name since the json file
+        # does not have the title element
+        self.refts_missing_title_file_obj = open(self.refts_missing_title_file, 'r')
+        self._create_composite_resource(self.refts_missing_title_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertFalse(logical_file.metadata.has_title_in_json)
+        self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
+        # check dataset_name before updating via the view function
+        orig_dataset_name = ""
+        self.assertEqual(logical_file.dataset_name, orig_dataset_name)
+        url_params = {'hs_file_type': 'RefTimeseriesLogicalFile',
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('update_filetype_datatset_name', kwargs=url_params)
+        dataset_name = "Multiple sites with one variable"
+        request = self.factory.post(url, data={'dataset_name': dataset_name})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_dataset_name(request, hs_file_type="RefTimeseriesLogicalFile",
+                                       file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check dataset_name after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # dataset name should have been changed
+        self.assertEqual(logical_file.dataset_name, dataset_name)
+        self.composite_resource.delete()
+
+    def test_update_abstract_refts_failure(self):
+        # we should not be able to update abstract since the json file
+        # has the abstract element
+        self.refts_file_obj = open(self.refts_file, 'r')
+        self._create_composite_resource(self.refts_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
+        # test that the abstract key is in json file
+        self.assertTrue(logical_file.metadata.has_abstract_in_json)
+        # check abstract before updating via the view function
+        orig_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria), " \
+                        "phycocyanin data collected from 2016-04-06 to 2017-02-09 created on " \
+                        "Thu Apr 06 2017 09:15:56 GMT-0600 (Mountain Daylight Time) from the " \
+                        "following site(s): HOBBLE CREEK AT 1650 WEST AT SPRINGVILLE, UTAH, and " \
+                        "Provo River at Charleston Advanced Aquatic. Data created by " \
+                        "CUAHSI HydroClient: http://data.cuahsi.org/#."
+        self.assertEqual(logical_file.metadata.abstract, orig_abstract)
+        url_params = {'file_type_id': logical_file.id}
+        url = reverse('update_reftimeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_refts_abstract(request, file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('error', response_dict['status'])
+        # check abstract after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # abstract should not have changed
+        self.assertNotEqual(logical_file.metadata.abstract, new_abstract)
+        self.assertEqual(logical_file.metadata.abstract, orig_abstract)
+        self.composite_resource.delete()
+
+    def test_update_abstract_refts_success(self):
+        # we should be able to update abstract since the json file
+        # does't have the abstract element
+        self.refts_missing_abstract_file_name = 'refts_valid_abstract_missing.json.refts'
+        self.refts_missing_abstract_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_abstract_file_name)
+
+        tgt_temp_refts_abstract_file = os.path.join(
+            self.temp_dir, self.refts_missing_abstract_file_name)
+        shutil.copy(self.refts_missing_abstract_file, tgt_temp_refts_abstract_file)
+        self.refts_file_obj = open(self.refts_missing_abstract_file, 'r')
+        self._create_composite_resource(self.refts_file_obj)
+        res_file = self.composite_resource.files.first()
+
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "RefTimeseriesLogicalFile")
+        # test that the abstract key is not in json file
+        self.assertFalse(logical_file.metadata.has_abstract_in_json)
+        self.assertEqual(logical_file.metadata.abstract, "")
+        url_params = {'file_type_id': logical_file.id}
+        url = reverse('update_reftimeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_refts_abstract(request, file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check abstract after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # abstract should have changed
+        self.assertEqual(logical_file.metadata.abstract, new_abstract)
+        self.composite_resource.delete()
+
+    def test_add_delete_keywords_refts_failure(self):
+        # we should not be able to add/delete keywords since the json file
+        # has the keywords element
+        self.refts_file_obj = open(self.refts_file, 'r')
+        self._create_composite_resource(self.refts_file_obj)
+        res_file = self.composite_resource.files.first()
+        file_type = 'RefTimeseriesLogicalFile'
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, file_type)
+        # test that the keywords key is in json file
+        self.assertTrue(logical_file.metadata.has_keywords_in_json)
+        # check keywords before adding via the view function
+        for kw in ('Time Series', 'CUAHSI'):
+            self.assertIn(kw, logical_file.metadata.keywords)
+        # add keywords at the file level
+        url_params = {'hs_file_type': file_type,
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('add_file_keyword_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'keywords': 'keyword-1,keyword-2'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = add_keyword_metadata(request, hs_file_type=file_type,
+                                        file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('error', response_dict['status'])
+        self.assertEqual(len(logical_file.metadata.keywords), 2)
+        # check keywords after adding via the view function- should not have changed
+        for kw in ('Time Series', 'CUAHSI'):
+            self.assertIn(kw, logical_file.metadata.keywords)
+
+        # delete keyword
+        url = reverse('delete_file_keyword_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'keyword': 'CUAHSI'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_keyword_metadata(request, hs_file_type=file_type,
+                                           file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('error', response_dict['status'])
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 2)
+        # check keywords after deleting via the view function- should not have changed
+        for kw in ('Time Series', 'CUAHSI'):
+            self.assertIn(kw, logical_file.metadata.keywords)
+        self.composite_resource.delete()
+
+    def test_add_delete_keywords_refts_success(self):
+        # we should be able to add/delete keywords since the json file
+        # does not have the keywords element
+        self.refts_missing_keywords_file_name = 'refts_valid_keywords_missing.json.refts'
+        self.refts_missing_keywords_file = 'hs_file_types/tests/{}'.format(
+            self.refts_missing_keywords_file_name)
+
+        tgt_temp_refts_missing_keywords_file = os.path.join(
+            self.temp_dir, self.refts_missing_keywords_file_name)
+        shutil.copy(self.refts_missing_keywords_file, tgt_temp_refts_missing_keywords_file)
+        self.refts_file_obj = open(tgt_temp_refts_missing_keywords_file, 'r')
+        self._create_composite_resource(self.refts_file_obj)
+        res_file = self.composite_resource.files.first()
+        file_type = 'RefTimeseriesLogicalFile'
+        # set the json file to RefTimeSeries File type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, file_type)
+        # test that the keywords key is not in json file
+        self.assertFalse(logical_file.metadata.has_keywords_in_json)
+        self.assertEqual(len(logical_file.metadata.keywords), 0)
+
+        # add keywords at the file level
+        url_params = {'hs_file_type': file_type,
+                      'file_type_id': logical_file.id
+                      }
+        url = reverse('add_file_keyword_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'keywords': 'keyword-1,keyword-2'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = add_keyword_metadata(request, hs_file_type=file_type,
+                                        file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check keywords after adding via the view function- should have keywords now
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 2)
+        for kw in ('keyword-1', 'keyword-2'):
+            self.assertIn(kw, logical_file.metadata.keywords)
+
+        # delete keyword
+        url = reverse('delete_file_keyword_metadata', kwargs=url_params)
+        request = self.factory.post(url, data={'keyword': 'keyword-1'})
+        request.user = self.user
+        # this is the view function we are testing
+        response = delete_keyword_metadata(request, hs_file_type=file_type,
+                                           file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+
+        # check keywords after deleting via the view function- one keyword should have been deleted
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        self.assertEqual(len(logical_file.metadata.keywords), 1)
+        self.assertIn('keyword-2', logical_file.metadata.keywords)
 
         self.composite_resource.delete()
 

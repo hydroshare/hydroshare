@@ -1,3 +1,6 @@
+"""Page processors for hs_core app."""
+
+from dateutil import parser
 from functools import partial, wraps
 
 from django.core.exceptions import PermissionDenied
@@ -5,7 +8,7 @@ from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, GenericResource, Relation
+from hs_core.models import GenericResource, Relation
 from hs_core import languages_iso
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
@@ -19,15 +22,15 @@ from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
+    """Return resource landing page context."""
     edit_resource = check_resource_mode(request)
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
 
 
-# resource type specific app needs to call this method to inject a crispy_form layout
-# object for displaying metadata UI for the extended metadata for their resource
 def get_page_context(page, user, resource_edit=False, extended_metadata_layout=None, request=None):
-    """
+    """Inject a crispy_form layout into the page to display extended metadata.
+
     :param page: which page to get the template context for
     :param user: the user who is viewing the page
     :param resource_edit: True if and only if the page should render in edit mode
@@ -36,6 +39,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     :return: the basic template context (a python dict) used to render a resource page. can and
     should be extended by page/resource-specific page_processors
 
+    Resource type specific app needs to call this method to inject a crispy_form layout
+    object for displaying metadata UI for the extended metadata for their resource
 
     TODO: refactor to make it clear that there are two different modes = EDITABLE | READONLY
                 - split into two functions: get_readonly_page_context(...) and
@@ -146,7 +151,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_published' in request.session:
             del request.session['just_published']
 
-    bag_url = AbstractResource.bag_url(content_model.short_id)
+    bag_url = content_model.bag_url
 
     if user.is_authenticated():
         show_content_files = user.uaccess.can_view_resource(content_model)
@@ -157,14 +162,18 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     allow_copy = can_user_copy_resource(content_model, user)
 
+    qholder = content_model.get_quota_holder()
+
     # user requested the resource in READONLY mode
     if not resource_edit:
         temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
             temporal_coverage = temporal_coverages[0]
-            temporal_coverage_data_dict['start_date'] = temporal_coverage.value['start']
-            temporal_coverage_data_dict['end_date'] = temporal_coverage.value['end']
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
+            temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         else:
             temporal_coverage_data_dict = None
@@ -205,6 +214,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             content_model.metadata.description else None
 
         missing_metadata_elements = content_model.metadata.get_required_missing_elements()
+
         context = {
                    'resource_edit_mode': resource_edit,
                    'metadata_form': None,
@@ -238,6 +248,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'resource_is_mine': resource_is_mine,
                    'allow_resource_copy': allow_copy,
                    'is_resource_specific_tab_active': False,
+                   'quota_holder': qholder,
                    'belongs_to_collections': belongs_to_collections,
                    'current_user': user
         }
@@ -351,8 +362,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     temporal_coverage_data_dict = {}
     if len(temporal_coverages) > 0:
         temporal_coverage = temporal_coverages[0]
-        temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
-        temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
+        start_date = parser.parse(temporal_coverage.value['start'])
+        end_date = parser.parse(temporal_coverage.value['end'])
+        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:
@@ -420,6 +433,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
+               'rights': content_model.metadata.rights,
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'current_user': user,
@@ -427,6 +441,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
                'resource_is_mine': resource_is_mine,
+               'quota_holder': qholder,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and
@@ -440,8 +455,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
 
 def check_resource_mode(request):
-    """
-    Determines whether the `request` represents an attempt to edit a resource.
+    """Determine whether the `request` represents an attempt to edit a resource.
+
     A request is considered an attempt
     to edit if any of the following conditions are met:
         1. the HTTP verb is not "GET"
@@ -465,6 +480,7 @@ def check_resource_mode(request):
 
 
 def check_for_validation(request):
+    """Check for validation error in request session."""
     if request.method == "GET":
         validation_error = request.session.get('validation_error', None)
         if validation_error:

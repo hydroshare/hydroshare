@@ -139,11 +139,15 @@ def update_resource_file(pk, filename, f):
     for rf in ResourceFile.objects.filter(object_id=resource.id):
         if rf.short_path == filename:
             if rf.resource_file:
+                # TODO: should use delete_resource_file
                 rf.resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             if rf.fed_resource_file:
+                # TODO: should use delete_resource_file
                 rf.fed_resource_file.delete()
+                # TODO: should use add_file_to_resource
                 rf.fed_resource_file = File(f) if not isinstance(f, UploadedFile) else f
                 rf.save()
             return rf
@@ -199,27 +203,47 @@ def get_checksum(pk):
 def check_resource_files(files=()):
     """
     internally used method to check whether the uploaded files are within
-    the supported maximal size limit
+    the supported maximal size limit. Also returns sum size of all files for
+    quota check purpose if all files are within allowed size limit
 
     Parameters:
     files - list of Django File or UploadedFile objects to be attached to the resource
-    Returns:    True if files are supported; otherwise, returns False
+    Returns: (status, sum_size) tuple where status is True if files are within FILE_SIZE_LIMIT
+             and False if not, and sum_size is the size summation over all files if status is
+             True, and -1 if status is False
     """
+    sum = 0
     for file in files:
         if not isinstance(file, UploadedFile):
             # if file is already on the server, e.g., a file transferred directly from iRODS,
             # the file should not be subject to file size check since the file size check is
             # only prompted by file upload limit
+            if hasattr(file, '_size'):
+                sum += int(file._size)
+            elif hasattr(file, 'size'):
+                sum += int(file.size)
+            else:
+                try:
+                    size = os.stat(file).st_size
+                except (TypeError, OSError):
+                    size = 0
+                sum += size
             continue
-        if hasattr(file, '_size'):
-            if file._size > FILE_SIZE_LIMIT:
-                # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return False
+        if hasattr(file, '_size') and file._size is not None:
+            size = int(file._size)
+        elif hasattr(file, 'size') and file.size is not None:
+            size = int(file.size)
         else:
-            if os.stat(file).st_size > FILE_SIZE_LIMIT:
-                # file is greater than FILE_SIZE_LIMIT, which is not allowed
-                return False
-    return True
+            try:
+                size = int(os.stat(file.name).st_size)
+            except (TypeError, OSError):
+                size = 0
+        sum += size
+        if size > FILE_SIZE_LIMIT:
+            # file is greater than FILE_SIZE_LIMIT, which is not allowed
+            return False, -1
+
+    return True, sum
 
 
 def check_resource_type(resource_type):
@@ -435,6 +459,16 @@ def create_resource(
             resource.save()
         if create_bag:
             hs_bagit.create_bag(resource)
+
+    # set the resource to private
+    resource.setAVU('isPublic', resource.raccess.public)
+
+    # set the resource type (which is immutable)
+    resource.setAVU("resourceType", resource._meta.object_name)
+
+    # set quota of this resource to this creator
+    resource.set_quota_holder(owner, owner)
+
     return resource
 
 
@@ -487,7 +521,7 @@ def copy_resource(ori_res, new_res):
     Args:
         ori_res: the original resource that is to be copied.
         new_res: the new_res to be populated with metadata and content from the original resource
-        as a copy of the original resource
+        as a copy of the original resource.
     Returns:
         the new resource copied from the original resource
     """
@@ -619,7 +653,7 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-def update_science_metadata(pk, metadata):
+def update_science_metadata(pk, metadata, user):
     """
     Updates science metadata for a resource
 
@@ -628,6 +662,7 @@ def update_science_metadata(pk, metadata):
         updated.
         metadata: a list of dictionary items containing data for each metadata element that needs to
         be updated
+        user: user who is updating metadata
         example metadata format:
         [
             {'title': {'value': 'Updated Resource Title'}},
@@ -657,9 +692,12 @@ def update_science_metadata(pk, metadata):
 
     Returns:
     """
-
     resource = utils.get_resource_by_shortkey(pk)
-    resource.metadata.update(metadata)
+    resource.metadata.update(metadata, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
+
+    # set to private if metadata has become non-compliant
+    resource.update_public_and_discoverable()  # set to False if necessary
 
 
 def delete_resource(pk):
@@ -825,18 +863,18 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
+            # Pabitra: better to use f.delete() here and get rid of the
+            # delete_resource_file_only() util function
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django
             delete_format_metadata_after_delete_file(resource, file_name)
 
-            if resource.raccess.public or resource.raccess.discoverable:
-                if not resource.can_be_public_or_discoverable:
-                    resource.raccess.public = False
-                    resource.raccess.discoverable = False
-                    resource.raccess.save()
-
             signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
+
+            # set to private if necessary -- AFTER post_delete_file handling
+            resource.update_public_and_discoverable()  # set to False if necessary
+
             # generate bag
             utils.resource_modified(resource, user, overwrite_bag=False)
 
@@ -936,6 +974,8 @@ def publish_resource(user, pk):
     """
     resource = utils.get_resource_by_shortkey(pk)
 
+    # TODO: whether a resource can be published is not considered in can_be_published
+    # TODO: can_be_published is currently an alias for can_be_public_or_discoverable
     if not resource.can_be_published:
         raise ValidationError("This resource cannot be published since it does not have required "
                               "metadata or content files or this resource type is not allowed "
@@ -953,7 +993,7 @@ def publish_resource(user, pk):
         resource.doi = get_resource_doi(pk, 'failure')
         resource.save()
 
-    resource.raccess.public = True
+    resource.set_public(True)  # also sets discoverable to True
     resource.raccess.immutable = True
     resource.raccess.shareable = False
     resource.raccess.published = True

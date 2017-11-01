@@ -1,0 +1,8 @@
+{% load i18n %}
+{% block main %}
+{% trans "Dear " %} {{ new_quota_holder.first_name }}:
+{{ user.first_name }} {{ user.last_name }} {% trans " has transferred the quota holder to you for this resource:" %}
+{{ request.scheme }}://{{ request.get_host }}/resource/{{ resource_uuid }}
+{% trans "If you do not approve this, you can contact " %}{{ user.first_name }} {{ user.last_name }}.
+{% trans "The HydroShare Team" %}
+{% endblock %}

@@ -19,6 +19,7 @@ from django.contrib.auth.models import User, Group
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.storage import DefaultStorage
+from django.core.validators import validate_email
 
 from mezzanine.conf import settings
 
@@ -29,6 +30,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
+from theme.models import QuotaMessage
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,10 @@ class ResourceFileSizeException(Exception):
 
 
 class ResourceFileValidationException(Exception):
+    pass
+
+
+class QuotaException(Exception):
     pass
 
 
@@ -401,6 +407,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         # TODO: allow setting destination path
         tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
             userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+        fsize = istorage.size(src_file)
+        validate_user_quota(user, fsize)
         istorage.copyFiles(src_file, tgt_file)
     else:
         raise ValidationError("Resource {} does not exist in iRODS".format(res.short_id))
@@ -559,8 +567,6 @@ def set_dirty_bag_flag(resource):
 
 
 def _validate_email(email):
-    from django.core.validators import validate_email
-    from django.core.exceptions import ValidationError
     try:
         validate_email(email)
         return True
@@ -587,6 +593,7 @@ def current_site_url():
 def get_file_mime_type(file_name):
     # TODO: looks like the mimetypes module can't find all mime types
     # We may need to user the python magic module instead
+    file_name = u"{}".format(file_name)
     file_format_type = mimetypes.guess_type(file_name)[0]
     if not file_format_type:
         # TODO: this is probably not the right way to get the mime type
@@ -612,9 +619,11 @@ def raise_file_size_exception():
 
 def validate_resource_file_size(resource_files):
     from .resource import check_resource_files
-    valid = check_resource_files(resource_files)
+    valid, size = check_resource_files(resource_files)
     if not valid:
         raise_file_size_exception()
+    # if no exception, return the total size of all files
+    return size
 
 
 def validate_resource_file_type(resource_cls, files):
@@ -651,6 +660,63 @@ def validate_resource_file_count(resource_cls, files, resource=None):
                 raise ResourceFileValidationException(err_msg)
 
 
+def convert_file_size_to_unit(size, unit):
+    """
+    Convert file size to unit for quota comparison
+    :param size: in byte unit
+    :param unit: should be one of the four: 'KB', 'MB', 'GB', or 'TB'
+    :return: the size converted to the pass-in unit
+    """
+    unit = unit.lower()
+    if unit not in ('kb', 'mb', 'gb', 'tb'):
+        raise ValidationError('Pass-in unit for file size conversion must be one of KB, MB, GB, '
+                              'or TB')
+    factor = 1024.0
+    kbsize = size / factor
+    if unit == 'kb':
+        return kbsize
+    mbsize = kbsize / factor
+    if unit == 'mb':
+        return mbsize
+    gbsize = mbsize / factor
+    if unit == 'gb':
+        return gbsize
+    tbsize = gbsize / factor
+    if unit == 'tb':
+        return tbsize
+
+
+def validate_user_quota(user, size):
+    """
+    validate to make sure the user is not over quota with the newly added size
+    :param user: the user to be validated
+    :param size: the newly added file size to add on top of the user's used quota to be validated.
+                 size input parameter should be in byte unit
+    :return: raise exception for the over quota case
+    """
+    if user:
+        # validate it is within quota hard limit
+        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        if uq:
+            if not QuotaMessage.objects.exists():
+                QuotaMessage.objects.create()
+            qmsg = QuotaMessage.objects.first()
+            hard_limit = qmsg.hard_limit_percent
+            used_size = uq.add_to_used_value(size)
+            used_percent = uq.used_percent
+            rounded_percent = round(used_percent, 2)
+            rounded_used_val = round(used_size, 4)
+            if used_percent >= hard_limit or uq.remaining_grace_period == 0:
+                msg_template_str = '{}{}\n\n'.format(qmsg.enforce_content_prepend,
+                                                     qmsg.content)
+                msg_str = msg_template_str.format(used=rounded_used_val,
+                                                  unit=uq.unit,
+                                                  allocated=uq.allocated_value,
+                                                  zone=uq.zone,
+                                                  percent=rounded_percent)
+                raise QuotaException(msg_str)
+
+
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), source_names=[], metadata=None,
                                 requesting_user=None, **kwargs):
@@ -669,9 +735,11 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
 
     resource_cls = check_resource_type(resource_type)
     if len(files) > 0:
-        validate_resource_file_size(files)
+        size = validate_resource_file_size(files)
         validate_resource_file_count(resource_cls, files)
         validate_resource_file_type(resource_cls, files)
+        # validate it is within quota hard limit
+        validate_user_quota(requesting_user, size)
 
     if not metadata:
         metadata = []
@@ -811,9 +879,11 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
     if __debug__:
         assert(isinstance(source_names, list))
     resource_cls = resource.__class__
-    validate_resource_file_size(files)
-    validate_resource_file_type(resource_cls, files)
-    validate_resource_file_count(resource_cls, files, resource)
+    if len(files) > 0:
+        size = validate_resource_file_size(files)
+        validate_user_quota(resource.get_quota_holder(), size)
+        validate_resource_file_type(resource_cls, files)
+        validate_resource_file_count(resource_cls, files, resource)
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
@@ -842,7 +912,8 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                                     source_names=source_names,
                                     resource=resource, user=user,
                                     validate_files=file_validation_dict,
-                                    extract_metadata=extract_metadata, **kwargs)
+                                    extract_metadata=extract_metadata,
+                                    res_files=resource_file_objects, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 

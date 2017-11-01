@@ -158,7 +158,7 @@ $(document).ready(function () {
                 notOwned.push($(selectedRows[i]));
                 // No permission to delete non owned resources.
             }
-            else if (status == "published") {
+            else if (status.toUpperCase() == "PUBLISHED") {
                 published.push($(selectedRows[i]));
             }
             else {
@@ -599,30 +599,38 @@ function updateLabelCount() {
     var collection = [];
     var favorites = 0;
     var ownedCount = 0;
-    var ownedEditableCount = 0;
-    var editableCount = 0;
-    var viewableCount = 0;
+    var addedCount = 0;
+    var sharedCount = 0;
+    var recentCount = 0;
+
+    var cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 5);
+    cutoff = Math.floor(cutoff.getTime() / 1000); // Seconds since the unix epoch,
+    // subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
 
     resourceTable.rows().every(function(rowIndex, tableLoop, rowLoop) {
-        var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
+        // List of labels already applied to the resource;
+        var dataColLabels = this.data()[LABELS_COL].replace(/\s+/g, ' ').split(",");
         var dataColFavorite = this.data()[FAVORITE_COL].trim();
         var dataColPermissionLevel = this.data()[PERM_LEVEL_COL].trim();
-        var sharingStatus = this.data()[SHARING_STATUS_COL].trim();
 
         if (dataColPermissionLevel == "Owned") {
             ownedCount++;
-            if (sharingStatus.indexOf('Published') == -1)
-                ownedEditableCount++;
         }
-        else if (dataColPermissionLevel == "Editable") {
-            editableCount++;
+        else if (dataColPermissionLevel == "Discovered") {
+            addedCount++;
         }
-        else if (dataColPermissionLevel == "Viewable") {
-            viewableCount++;
+        else if (dataColPermissionLevel != "Owned" && dataColPermissionLevel != "Discovered") {
+            sharedCount++;
         }
 
         if (dataColFavorite == "Favorite") {
             favorites++;
+        }
+
+        // Update Recent count
+        if (this.data()[LAST_MODIF_SORT_COL] >= cutoff) {
+            recentCount++;
         }
 
         // Loop through the labels in the row and update the collection count
@@ -637,16 +645,15 @@ function updateLabelCount() {
 
     // Update filter badges count
     $("#filter .badge[data-facet='owned']").text(ownedCount);
-    $("#filter .badge[data-facet='editable']").text(ownedEditableCount + editableCount);
-    $("#filter .badge[data-facet='viewable by me']").text(viewableCount + editableCount + ownedCount);
+    $("#filter .badge[data-facet='shared']").text(sharedCount);
+    $("#filter .badge[data-facet='discovered']").text(addedCount);
+    $("#filter .badge[data-facet='favorites']").text(favorites);
+    $("#filter .badge[data-facet='recent']").text(recentCount);
 
     // Set label counts
     for (var key in collection) {
         $("#labels input[data-label='" + key + "']").parent().parent().find(".badge").text(collection[key]);
     }
-
-    // Set favorite count
-    $("#filter .badge[data-facet='favorites']").text(favorites);
 }
 
 //strips query inputs from a search string
@@ -760,6 +767,8 @@ $.fn.dataTable.ext.search.push (
         var inputSubject = "";
         var inputAuthor = "";
 
+        var isFiltered = false;
+
         // Split the occurrences at ':' and move to an array.
         var collection = [];
         if (occurrences) {
@@ -772,65 +781,62 @@ $.fn.dataTable.ext.search.push (
         // Extract the pieces of information
         for (var item in collection) {
             if (collection[item][0].toUpperCase() == "TYPE") {
+                isFiltered = true;
                 inputType = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "AUTHOR") {
+                isFiltered = true;
                 inputAuthor = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "SUBJECT") {
+                isFiltered = true;
                 inputSubject = collection[item][1];
             }
         }
 
         // Filter the table for each value
 
-        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
-            return false;
+        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) >= 0) {
+            return true;
         }
 
-        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
-            return false;
+        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) >= 0) {
+            return true;
         }
 
-        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
-            return false;
+        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) >= 0) {
+            return true;
         }
 
-        //---------------- Facets filter--------------------
+        //---------------- Facet filters --------------------
         // Owned by me
         if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-            if (data[PERM_LEVEL_COL] != "Owned") {
-                return false;
-            }
-        }
-
-        // Editable by me
-        if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
-            // published resources are not editable
-            var sharingStatus = data[SHARING_STATUS_COL].trim();
-            if (sharingStatus.indexOf('Published') != -1)
-                return false;
-
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Editable") {
-                return false;
-            }
-        }
-
-        // Viewable by me
-        if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-            // published resources are viewable
-            var sharingStatus = data[SHARING_STATUS_COL].trim();
-            if (sharingStatus.indexOf('Published') != -1)
+            isFiltered = true;
+            if (data[PERM_LEVEL_COL] == "Owned") {
                 return true;
+            }
+        }
 
-            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Viewable" && data[PERM_LEVEL_COL] != "Editable") {
-                return false;
+        // Shared with me
+        if ($('#filter input[type="checkbox"][value="Shared"]').prop("checked") == true) {
+            isFiltered = true;
+            if (data[PERM_LEVEL_COL] != "Owned" && data[PERM_LEVEL_COL] != "Discovered") {
+                return true;
+            }
+        }
+
+        // Added by me
+        if ($('#filter input[type="checkbox"][value="Discovered"]').prop("checked") == true) {
+            isFiltered = true;
+            if (data[PERM_LEVEL_COL] == "Discovered") {
+                return true;
             }
         }
 
         // Shared by - Used in group resource listing
         var grantors = $('#filter-shared-by .grantor:checked');
         if (grantors.length) {
+            isFiltered = true;
             var grantorFlag = false;
             for (var i = 0; i < grantors.length; i++) {
                 var user = parseInt($(grantors[i]).attr("data-grantor-id"));
@@ -839,8 +845,8 @@ $.fn.dataTable.ext.search.push (
                 }
             }
 
-            if (!grantorFlag) {
-                return false;
+            if (grantorFlag) {
+                return true;
             }
         }
 
@@ -848,6 +854,7 @@ $.fn.dataTable.ext.search.push (
         var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
         for (var i = 0; i < labelCheckboxes.length; i++) {
             if ($(labelCheckboxes[i]).prop("checked") == true) {
+                isFiltered = true;
                 var label = $(labelCheckboxes[i]).attr("data-label");
 
                 var dataColLabels = data[LABELS_COL].replace(/\s+/g,' ').split(",");
@@ -855,20 +862,38 @@ $.fn.dataTable.ext.search.push (
                     dataColLabels[h] = dataColLabels[h].trim();
                 }
 
-                if (dataColLabels.indexOf(label) == -1) {
-                    return false;
+                if (dataColLabels.indexOf(label) >= 0) {
+                    return true;
                 }
             }
         }
 
         // Favorite
         if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-            if (data[FAVORITE_COL] != "Favorite") {
-                return false;
+            isFiltered = true;
+            if (data[FAVORITE_COL] == "Favorite") {
+                return true;
             }
         }
 
+        // Recent
+        if ($('#filter input[type="checkbox"][value="Recent"]').prop("checked") == true) {
+            isFiltered = true;
+            var cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 5);
+            cutoff = Math.floor(cutoff.getTime()/1000); // Seconds since the unix epoch
+            // Subtract cutoff.getTimezoneOffset() * 60 to convert to local timezone
+            if (data[LAST_MODIF_SORT_COL] >= cutoff) {
+                return true;
+            }
+        }
+
+        // If no filters selected, display all
+        if (!isFiltered) {
+            return true;
+        }
+
         // Default
-        return true;
+        return false;
     }
 );

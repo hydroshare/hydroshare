@@ -9,8 +9,6 @@ from mezzanine.conf import settings
 
 import autocomplete_light
 
-from haystack.views import FacetedSearchView
-from hs_core.discovery_form import DiscoveryForm
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
@@ -40,6 +38,7 @@ urlpatterns = i18n_patterns("",
     url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(),
         name='tracking-report-history'),
     url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
+    url(r'^tracking/applaunch/', tracking.AppLaunch.as_view(), name='tracking-applaunch'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
@@ -48,6 +47,7 @@ urlpatterns = i18n_patterns("",
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
     url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
     url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
+    url(r'^accounts/login/$', theme.login, name='login'),
     url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/',
         theme.email_verify, name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
@@ -72,9 +72,11 @@ if getattr(settings, "PACKAGE_NAME_FILEBROWSER") in settings.INSTALLED_APPS:
 
 # Put API URLs before Mezzanine so that Mezzanine doesn't consume them
 urlpatterns += patterns('',
+    url('^hsapi/', include('hs_rest_api.urls')),
     url('^hsapi/', include('hs_core.urls')),
     url('', include('hs_core.resourcemap_urls')),
     url('', include('hs_core.metadata_terms_urls')),
+    url('', include('hs_core.debug_urls')),
     url('^hsapi/', include('ref_ts.urls')),
     url('^irods/', include('irods_browser_app.urls')),
     url('^hs_metrics/', include('hs_metrics.urls')),

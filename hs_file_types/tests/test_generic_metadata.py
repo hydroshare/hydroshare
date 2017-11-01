@@ -55,6 +55,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         #   coverage (spatial and temporal)
         #   key/value metadata
         #   title (dataset_name)
+        #   keywords
         self.generic_file_obj = open(self.generic_file, 'r')
         self._create_composite_resource()
 
@@ -105,6 +106,13 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.extra_metadata, {})
 
+        # test keywords
+        self.assertEqual(logical_file.metadata.keywords, [])
+        logical_file.metadata.keywords = ['kw-1', 'kw-2']
+        logical_file.metadata.save()
+        self.assertIn('kw-1', logical_file.metadata.keywords)
+        self.assertIn('kw-2', logical_file.metadata.keywords)
+
         # test coverage element CRUD
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GenericLogicalFile"][0]
@@ -142,6 +150,11 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(spatial_cov.value['units'], 'Decimal degree')
         self.assertEqual(spatial_cov.value['north'], 45.6789)
         self.assertEqual(spatial_cov.value['east'], -156.45678)
+        self.composite_resource.delete()
+        # there should be no GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # there should be no GenericFileMetaData object at this point
+        self.assertEqual(GenericFileMetaData.objects.count(), 0)
 
     def test_file_rename_or_move(self):
         # test that resource file that belongs to GenericLogicalFile object

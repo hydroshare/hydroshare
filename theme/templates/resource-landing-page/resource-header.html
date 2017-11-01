@@ -24,12 +24,12 @@
         <tr><th>Owners:</th><td>
             {% for u in owners %}
                 {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
-                <span>{{ u|contact|safe }}</span>
+                <span>{{ u|contact }}</span>
             {% endfor %}
         </td></tr>
         <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-        <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
-        <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+        <tr><th>Created:</th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
+        <tr><th>Last updated:</th><td> {{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
     </table>
 </div>
 {% else %}
@@ -61,12 +61,12 @@
             <tr><th>Owners:</th><td>
                 {% for u in owners %}
                     {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
-                    <span>{{ u|contact|safe }}</span>
+                    <span>{{ u|contact }}</span>
                 {% endfor %}
             </td></tr>
             <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
-            <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
-            <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+            <tr><th>Created: </th><td>{{ cm.created|date:"M d, Y" }} at {{ cm.created|time }}</td></tr>
+            <tr><th>Last updated:</th><td>{{ cm.updated|date:"M d, Y" }} at {{ cm.updated|time }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact }}{% endif %}</td></tr>
         </table>
     </div>
 {% endif %}

@@ -179,6 +179,24 @@
                     {% endif %}
                 </tr>
                 <tr>
+                    {% if ground_water_flow.unsaturatedZonePackage%}
+                        <th class="text-muted">Includes Unsaturated Zone Package (UZF)</th>
+                        <td>{{ ground_water_flow.includesUnsaturatedZonePackage }}</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    {% if ground_water_flow.horizontalFlowBarrierPackage %}
+                        <th class="text-muted">Includes Horizontal Flow Barrier Package (HFB6)</th>
+                        <td>{{ ground_water_flow.includesHorizontalFlowBarrierPackage }}</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    {% if ground_water_flow.seawaterIntrusionPackage %}
+                        <th class="text-muted">Includes Seawater Intrusion Package (SWI2)</th>
+                        <td>{{ ground_water_flow.includesSeawaterIntrusionPackage }}</td>
+                    {% endif %}
+                </tr>
+                <tr>
                     {% if ground_water_flow.flowParameter %}
                         <th class="text-muted">Flow parameter</th>
                         <td>{{ ground_water_flow.flowParameter }}</td>

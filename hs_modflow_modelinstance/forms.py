@@ -263,6 +263,9 @@ class GroundWaterFlowFormHelper(BaseFormHelper):
         # will be displayed
         layout = Layout(
                         MetadataField('flowPackage'),
+                        MetadataField('unsaturatedZonePackage'),
+                        MetadataField('horizontalFlowBarrierPackage'),
+                        MetadataField('seawaterIntrusionPackage'),
                         MetadataField('flowParameter'),
         )
         kwargs['element_name_label'] = 'Groundwater Flow'
@@ -275,6 +278,15 @@ class GroundWaterFlowForm(ModelForm):
         (('Choose a package', 'Choose a package'),) + GroundWaterFlow.flowPackageChoices
     flow_parameter_choices = \
         (('Choose a parameter', 'Choose a parameter'),) + GroundWaterFlow.flowParameterChoices
+    unsaturatedZonePackage = forms.BooleanField(
+        label='Includes Unsaturated Zone Package package (UZF) ', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
+    horizontalFlowBarrierPackage = forms.BooleanField(
+        label='Includes Horizontal Flow Barrier package (HFB6)', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
+    seawaterIntrusionPackage = forms.BooleanField(
+        label='Includes Seawater Intrusion package (SWI2)', widget=forms.CheckboxInput(
+            attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GroundWaterFlowForm, self).__init__(*args, **kwargs)
@@ -286,12 +298,18 @@ class GroundWaterFlowForm(ModelForm):
     class Meta:
         model = GroundWaterFlow
         fields = ('flowPackage',
+                  'unsaturatedZonePackage',
+                  'horizontalFlowBarrierPackage',
+                  'seawaterIntrusionPackage',
                   'flowParameter',
                   )
 
 
 class GroundWaterFlowValidationForm(forms.Form):
     flowPackage = forms.CharField(max_length=100, required=False)
+    unsaturatedZonePackage = forms.BooleanField(required=False)
+    horizontalFlowBarrierPackage = forms.BooleanField(required=False)
+    seawaterIntrusionPackage = forms.BooleanField(required=False)
     flowParameter = forms.CharField(max_length=100, required=False)
 
 

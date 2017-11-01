@@ -389,3 +389,36 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no ExecutedBy metadata objects
         self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_bulk_metadata_update(self):
+        # here we are testing the update() method of the ModelInstanceMetaData class
+
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resModelInstance.metadata.model_output, None)
+        self.assertEquals(self.resModelInstance.metadata.executed_by, None)
+        # create modeloutput element using the update()
+        self.resModelInstance.metadata.update([{'modeloutput': {'includes_output': False}}],
+                                              self.user)
+        self.assertNotEqual(self.resModelInstance.metadata.model_output, None)
+
+        self.resModelInstance.metadata.update([{'modeloutput': {'includes_output': True}}],
+                                              self.user)
+        self.assertEqual(self.resModelInstance.metadata.model_output.includes_output, True)
+
+        # test that we can also update core metadata using update()
+        # there should be a creator element
+        self.assertEqual(self.resModelInstance.metadata.creators.count(), 1)
+        self.resModelInstance.metadata.update([{'creator': {'name': 'Second Creator'}},
+                                               {'creator': {'name': 'Third Creator'}}], self.user)
+        # there should be 2 creators at this point (previously existed creator gets
+        # delete as part of the update() call
+        self.assertEqual(self.resModelInstance.metadata.creators.count(), 2)
+
+        # test multiple updates in a single call to update()
+        metadata = list()
+        metadata.append({'executedby': {'model_name': self.resModelProgram.short_id}})
+        metadata.append({'modeloutput': {'includes_output': False}})
+        self.resModelInstance.metadata.update(metadata, self.user)
+        # check that there are extended metadata elements at this point
+        self.assertNotEqual(self.resModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resModelInstance.metadata.executed_by, None)

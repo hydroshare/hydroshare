@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
@@ -8,13 +9,17 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core import exceptions
 from django.db.models import Q
 
-from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, Coverage
+from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, \
+    Coverage, Relation
 from .utils import user_from_id, group_from_id, get_profile
+from theme.models import UserQuota
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
+
+log = logging.getLogger(__name__)
 
 
 def create_account(
@@ -67,6 +72,9 @@ def create_account(
     user_access.save()
     user_labels = UserLabels(user=u)
     user_labels.save()
+    # create default UserQuota object for the new user
+    uq = UserQuota.objects.create(user=u)
+    uq.save()
     return u
 
 
@@ -243,7 +251,7 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                       to_date=None, start=None, count=None, full_text_search=None,
                       published=False, edit_permission=False, public=False,
                       type=None, author=None, contributor=None, subject=None, coverage_type=None,
-                      north=None, south=None, east=None, west=None):
+                      north=None, south=None, east=None, west=None, include_obsolete=False):
     """
     Return a list of pids for Resources that have been shared with a group identified by groupID.
 
@@ -327,13 +335,16 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 coverages.add(coverage.id)
 
         for coverage in Coverage.objects.filter(type="point"):
-            coverage_shape = Point(
-                coverage.value.get('east', None),
-                coverage.value.get('north', None),
-            )
+            try:
+                coverage_shape = Point(
+                    coverage.value.get('east', None),
+                    coverage.value.get('north', None),
+                )
 
-            if search_polygon.intersects(coverage_shape):
-                coverages.add(coverage.id)
+                if search_polygon.intersects(coverage_shape):
+                    coverages.add(coverage.id)
+            except Exception as e:
+                log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
         q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
@@ -371,10 +382,16 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(created__lte=to_date))
 
     if subject:
-        subjects = Subject.objects.filter(value__in=subject.split(','))
+        subjects = subject.split(',')
+        subjects = Subject.objects.filter(value__iregex=r'(' + '|'.join(subjects) + ')')
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()
+
+    if not include_obsolete:
+        flt = flt.exclude(object_id__in=Relation.objects.filter(
+            type='isReplacedBy').values('object_id'))
+
     for q in q:
         flt = flt.filter(q)
 

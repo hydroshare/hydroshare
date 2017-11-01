@@ -4,6 +4,7 @@
 
 {% block extra_head %}
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block meta_title %}Create resource{% endblock %}
@@ -38,7 +39,7 @@
 
                 <div class="alert alert-info">
                     <p>When you click Create Resource, the files will be uploaded to the HydroShare server. Click
-                        <strong><a href="https://pages.hydroshare.org/sharing-and-privacy/formally-publishing-resources/"
+                        <strong><a href="https://help.hydroshare.org/sharing-and-privacy/formally-publishing-resources/"
                            target="_blank">here</a></strong>
                         to learn more about next steps to share and formally publish your data.</p>
                 </div>
@@ -59,19 +60,12 @@
                          aria-haspopup="true" aria-expanded="true">
                         <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
                              alt="Composite Resource Icon" class="resource-type-icon"/>
-                        <div class="resource-type-name">&nbsp;Composite</div>
+                        <div class="resource-type-name">&nbsp;Composite&nbsp;<span class="caret"></span></div>
                     </div>
 
                     <ul class="dropdown-menu shadow-md" aria-labelledby="select-resource-type">
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A resource that holds a list of other resources in HydroShare."
-                               data-value="CollectionResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Collection</div>
-                            </a>
-                        </li>
+                        {# GENERAL #}
+                        <li class="dropdown-header">General</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A resource which can include multiple files without file format limitations."
@@ -92,6 +86,15 @@
                         </li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
+                               title="A resource that holds a list of other resources in HydroShare."
+                               data-value="CollectionResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                     alt="Collection Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Collection</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
                                title="A shortcut (or reference) to an external web application that functions with HydroShare data resources."
                                data-value="ToolResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
@@ -99,63 +102,10 @@
                                 <div class="resource-type-name">&nbsp;Web App</div>
                             </a>
                         </li>
-                        <li role="separator" class="divider"></li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
-                               data-value="ModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
-                               data-value="MODFLOWModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
-                               data-value="SWATModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Describes the software component of a generic model within the water domain."
-                               data-value="ModelProgramResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Program</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
-                               data-value="NetcdfResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
-                               data-value="ScriptResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                     alt="Script Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Script</div>
-                            </a>
-                        </li>
 
+                        {# GEOGRAPHIC RESOURCES #}
                         <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Geographic</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A set of point, line, or polygon features stored in ESRI Shapefile format. "
@@ -174,7 +124,69 @@
                                 <div class="resource-type-name">&nbsp;Geographic Raster</div>
                             </a>
                         </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
+                               data-value="NetcdfResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
+                            </a>
+                        </li>
+
+                        {# MODELING #}
                         <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Modeling</li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Describes the software component of a generic model within the water domain."
+                               data-value="ModelProgramResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Program</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
+                               data-value="ModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Model Instance</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
+                               data-value="SWATModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
+                               data-value="MODFLOWModelInstanceResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
+                                     alt="Collection Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a data-toggle="tooltip" data-placement="right"
+                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
+                               data-value="ScriptResource">
+                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                     alt="Script Resource Icon" class="resource-type-icon"/>
+                                <div class="resource-type-name">&nbsp;Script</div>
+                            </a>
+                        </li>
+
+                        {# TIME SERIES RESOURCES #}
+                        <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Time Series</li>
                         <li>
                             <a data-toggle="tooltip" data-placement="right"
                                title="A sequence of individual data values that are ordered in time to record the changing trend of a certain phenomenon."
@@ -199,7 +211,7 @@
 
             <div id="upload-content" class="col-xs-12">
                 <div class="row">
-                    <label for="title" class="col-xs-12 col-form-label">Add your files</label>
+                    <label for="hsDropzone" class="col-xs-12 col-form-label">Add your files</label>
 
                     <div class="col-xs-12 col-sm-8 col-md-9">
                         <form id="hsDropzone" class="dropzone" role="form" method="POST"
@@ -210,6 +222,7 @@
                             <div class="hs-dropzone-header">
                                 <i class="fa fa-info-circle" aria-hidden="true"></i>
                                 <span class="hs-dropzone-header-help">Drop files below or click to upload.</span>
+
                                 <span id="btn-remove-all-files" class="btn btn-default pull-right">
                                     <i class="fa fa-trash-o btn-remove" aria-hidden="true"></i>
                                     <span>&nbsp;&nbsp;Remove All Files</span>
@@ -217,6 +230,10 @@
                             </div>
 
                             <div class="hs-dropzone-wrapper">
+                                <div class="hs-upload-indicator text-center">
+                                    <i class="fa fa-file" aria-hidden="true"></i>
+                                    <h3>Drop files here or click to upload</h3>
+                                </div>
                                 <div id="dz-container">
                                     <input id="form-title" type="hidden" name="title" value=""/>
                                     {# Defaults to CompositeResource #}
@@ -241,8 +258,8 @@
 
                             <div class="row">
                                 <div class="col-xs-12">
-                                    <br>
-                                    <span>To load files from an iRODS server including your iRODS user HydroShare server:</span>
+                                    <hr>
+                                    <label>To load files from an iRODS server including your iRODS user HydroShare server:</label>
 
                                     <div id="irods-browse">
                                         <div id="log-into-irods">
@@ -353,23 +370,34 @@
                     </div>
 
                     <div class="col-xs-12 col-sm-4 col-md-3">
+                        <ul id="constraints" class="list-group">
+                            <li id="required-types" class="list-group-item list-group-item-success">The following file types are required:
+                                <span>
+                                </span>
+                            </li>
+                            <li id="res-empty" class="list-group-item list-group-item-danger">This resource must have content files.</li>
+                            <li id="single-file" class="list-group-item">
+                                Single file to upload must be of type <span id="single-file-type"></span>
+                            </li>
+                            <li id="same-file-names" class="list-group-item" >Your files must share the same file name.
+                            </li>
+                        </ul>
+
                         <ul class="list-group">
                             <li class="list-group-item">Files you upload here will be grouped together into a
                                 "Resource" in HydroShare.
                             </li>
-                            <li class="list-group-item">File size is limited to 1 GB per file for direct browser
-                                upload from your local disk.
+                            <li class="list-group-item">Files uploaded directly from a browser are limited to 1 GB per
+                                file.
                             </li>
-                            <li class="list-group-item"><p>Files larger than 1GB can be imported directly from any
-                                iRODS account. You can create
-                                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">User Profile</a>
-                                page.</p>
-                                <p>See <a href="https://pages.hydroshare.org/creating-and-managing-resources/"
-                                          target="_blank">Creating and Managing Resources</a> for information on working
-                                    with iRODS directly.</p>
-                            </li>
-                            <li class="list-group-item"> You can also add files directly from any iRODS server
-                                regardless of the file size.
+                            <li class="list-group-item">
+                                <p>Use iRODS to add files larger than 1 GB. Any iRODS server may be used. If you do not
+                                have an account on an iRODS server you can create a HydroShare iRODS account from your
+                                 <a href="/user/{{ user.id }}/">User Profile page</a>.</p>
+
+                                <p>See <a href="https://help.hydroshare.org/creating-and-managing-resources/"
+                                          target="_blank">Creating and Managing Resources</a> for more information on
+                                    working with iRODS directly.</p>
                             </li>
                         </ul>
                     </div>
@@ -390,261 +418,6 @@
     {% endblock %}
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs-file-icons.js"></script>
-
-    <script type="text/javascript">
-        $(document).ready(function () {
-            var json_response_file_types = {};
-            var json_response_multiple_file = {};
-            var selected_file = undefined;
-            var myDropzone;
-            var fileIcons = getFileIcons();
-
-            if (sessionStorage.signininfo) {
-                $("#sign-in-info").text(sessionStorage.signininfo);
-                $("#btn-select-irods-file").show();
-                $("#irods-sel-file").text("No file selected.");
-            }
-
-            Dropzone.options.hsDropzone = {
-                previewTemplate: document.getElementById('preview-template').innerHTML,
-                clickable: "#dz-container",
-                previewsContainer: "#dz-container:not(.dz-details)",
-                paramName: "files", // The name that will be used to transfer the file
-                maxFilesize: 1024, // MB
-                autoProcessQueue: false,
-                uploadMultiple: true,
-                parallelUploads: 99, // arbitrary large number for parallel uploads
-
-                success: function (file, response) {
-                    if (response.status == "success") {
-                        window.location = response['resource_url'];
-                    }
-                    else {
-                        console.log(response);
-                    }
-                },
-                error: function (file, response) {
-                    console.log(response);
-                },
-
-                init: function () {
-                    myDropzone = this;
-
-                    $(".btn-create-resource").click(function () {
-                        $("html, #dz-container").css("cursor", "progress");
-
-                        // Delete invalid files from queue before uploading
-                        $(".dz-error .btn-remove").trigger("click");
-
-                        var title = $("#txtTitle").val().trim();
-                        if (!title) {
-                            title = $("#txtTitle").attr("placeholder");
-                        }
-
-                        $("#form-title").val(title);
-
-                        if (myDropzone.files.length > 0) {
-                            myDropzone.processQueue();
-                        }
-                        else {
-                            var url = $("#hsDropzone").attr("action");
-                            var datastring = $("#hsDropzone").serialize();
-                            $.ajax({
-                                type: "POST",
-                                data: datastring,
-                                url: url,
-                                success: function (response) {
-                                    if (response.status == "success") {
-                                        window.location = response['resource_url'];
-                                    }
-                                },
-                                error: function (response) {
-                                    console.log(response);
-                                }
-                            });
-                        }
-                    });
-
-                    // The user dragged a file onto the Dropzone
-                    this.on("dragenter", function (file) {
-                        $("#hsDropzone").toggleClass("hs-dropzone-highlight", true);
-                    });
-
-                    // The user dragged a file out of the Dropzone
-                    this.on("dragleave", function (event) {
-                        $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
-                    });
-
-                    this.on("addedfile", function (file) {
-                        // Initialize tooltips
-                        var template = $(file.previewElement);
-                        template.find(".dz-filename").attr("title", template.find("span[data-dz-name]").text());
-
-                        // Set file type icon
-                        var fileName = template.find(".dz-filename").text();
-                        var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length).toUpperCase();
-                        if (fileIcons[fileTypeExt]) {
-                            template.find(".file-type-icon").append(fileIcons[fileTypeExt]);
-                        }
-                        else {
-                            template.find(".file-type-icon").append(fileIcons.DEFAULT);
-                        }
-
-                        template.find("[data-toggle='tooltip']").tooltip();
-
-                        if (!myDropzone.options.uploadMultiple && myDropzone.files[1] != null) {
-                            this.removeFile(this.files[0]);
-                        }
-                        $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
-                    });
-
-                    this.on("removedfile", function (file) {
-                        $('#hsDropzone .tooltip').remove();
-                    });
-
-                    this.on("error", function (file, error) {
-                        var template = $(file.previewElement);
-                        $(template).addClass("dz-error");
-                        $(template).attr("data-toggle", "tooltip");
-                        $(template).attr("data-placement", "top");
-                        $(template).attr("title", error);
-                        template.tooltip();
-                    });
-
-                    this.on('sendingmultiple', function (data, xhr, formData) {
-                        $("#upload-content").find("input[name]").each(function () {
-                            formData.append($(this).attr("name"), $(this).val());
-                        });
-                    });
-                }
-            };
-
-            $('input:radio[name="copy-move"]').change(function () {
-                if ($(this).val() == 'move') {
-                    $("#copy-or-move").val('move');
-                    $("#file-move-warning").show();
-                }
-                else {
-                    $("#copy-or-move").val('copy');
-                    $("#file-move-warning").hide();
-                }
-            });
-
-            $('#dropdown-resource-type li a').click(function () {
-{#                $('#irods-sel-file').text("No file selected.");#}
-
-                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
-
-                if (selected_file != undefined) {
-                    selected_file.value = '';
-                }
-
-                $("#form-resource-type").val($(this).attr("data-value"));
-
-                var template = this.innerHTML;
-                $("#select-resource-type")[0].innerHTML = template;
-
-                // Get supported file types
-                $.ajax({
-                    type: "GET",
-                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/supported-file-types/",
-                    success: function (result) {
-                        json_response_file_types = JSON.parse(result);
-
-                        if (JSON.parse(json_response_file_types.file_types).length == 0) {
-                            $("#upload-content").hide();    // No files needed
-                        }
-                        else {
-                            $("#upload-content").show();
-
-                            var supported_file_types = JSON.parse(json_response_file_types.file_types);
-
-                            $("#file-types").empty();
-
-                            if (supported_file_types != ".*") {
-                                // Append message
-                                $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i>" +
-                                        "<span>Only the following file types can be uploaded:</span><br>");
-
-                                // Render badge for each file type
-                                for (var i = 0; i < supported_file_types.length; i++) {
-                                    $("#file-types").append('<span class="badge">' + supported_file_types[i] + '</span>');
-                                }
-
-                                // Set controls
-                                myDropzone.options.acceptedFiles = supported_file_types.toString();
-                                $(myDropzone.hiddenFileInput).attr("accept", supported_file_types.toString());
-                            }
-                            else {
-                                // Append message
-                                $("#file-types").append("<i class='fa fa-check-circle' aria-hidden='true'></i>" +
-                                        "<span>Any file type can be uploaded.</span>");
-
-                                // Set controls
-                                myDropzone.options.acceptedFiles = "";
-                                $(myDropzone.hiddenFileInput).removeAttr("accept");
-                            }
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        $("#file-types").empty();
-
-                        // Append message
-                        $("#file-types").append("<i class='fa fa-info-circle' aria-hidden='true'></i>" +
-                                        "<span>Error in determining supported file types</span><br>");
-
-                        // Set controls
-                        myDropzone.options.acceptedFiles = "";
-                        $(myDropzone.hiddenFileInput).removeAttr("accept");
-                    }
-                });
-
-                // Get multiple files flag value
-                $.ajax({
-                    type: "GET",
-                    url: "/hsapi/_internal/" + $(this).attr("data-value") + "/allow-multiple-file/",
-                    success: function (result) {
-                        json_response_multiple_file = JSON.parse(result);
-
-                        $("#file-multiple").empty();
-                        if (json_response_multiple_file.allow_multiple_file == true) {
-                            // Append message
-                            $("#file-multiple").append("<i class='fa fa-check-circle' aria-hidden='true'></i>");
-                            $("#file-multiple").append("<span>Multiple file upload is allowed.</span>");
-
-                            // Set controls
-                            myDropzone.options.uploadMultiple = true;
-                            $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
-                        }
-                        else {
-                            // Append message
-                            $("#file-multiple").append("<i class='fa fa-info-circle' aria-hidden='true'></i>");
-                            $("#file-multiple").append("<span>Only one file can be uploaded.</span>");
-
-                            // Set controls
-                            myDropzone.options.uploadMultiple = false;
-                            $(myDropzone.hiddenFileInput).removeAttr('multiple');
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        $("#file-multiple").empty();
-
-                        // Append message
-                        $("#file-multiple").append("<i class='fa fa-check-circle' aria-hidden='true'></i>");
-                        $("#file-multiple").append("<span>Error in determining if multiple file upload is allowed for this resource type.</span>");
-
-                        // Set controls
-                        myDropzone.options.uploadMultiple = true;
-                        $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
-                    }
-                })
-            });
-
-            $("#btn-remove-all-files").click(function() {
-                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
-            });
-        });
-    </script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
     {% block extra_js %}
         {{ block.super }}
