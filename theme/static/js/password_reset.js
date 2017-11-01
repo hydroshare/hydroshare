@@ -7,10 +7,9 @@ $(document).ready(function () {
         }
     });
 
-    $("#id_password1, #id_password2").on("input", function(event) {
+    $("#id_password1, #id_password2").on("input", function() {
         resetValidationState();
     });
-
 });
 
 function validatePasswords() {
