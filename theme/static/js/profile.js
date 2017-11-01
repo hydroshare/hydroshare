@@ -75,7 +75,7 @@ function validateEmail() {
 }
 
 function errorLabel(message) {
-    return "<div class='label label-danger error-label'>" + message + "</div>";
+    return "<div class='error-label'><div class='label label-danger'>" + message + "</div></div>";
 }
 
 

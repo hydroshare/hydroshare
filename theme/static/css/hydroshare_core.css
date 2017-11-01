@@ -1313,11 +1313,11 @@ table.table-plain td{
     border-bottom: 1px solid #DDD;
 }
 
-.label-file-name{
+.label-file-name {
     font-weight: bold;
 }
 
-.label-file-size{
+.label-file-size {
     font-size:12px;
     margin-bottom: 0;
 }
@@ -1367,7 +1367,7 @@ body > .main-container {
 	outline: 0;
 }
 
-#success-alert, #error-alert{
+#success-alert, #error-alert {
     position: fixed;
     z-index: 999;
     margin-right: auto;
