@@ -437,13 +437,14 @@ def create_scidas_virtual_app(request, res_id):
         # for an empty resource, use the default scidasZone path for network-aware placement
         file_data_list.append("/scidasZone/home/wpoehlm/test.txt")
 
+    app_id = 'hs-jupyter'
     url = "http://sc17demo1.scidas.org:9090/appliance"
     p_data = {
-        "id": "jupyter",
+        "id": app_id,
          "containers": [
             {
-              "id": "jupyter",
-              "image": "scidas/irods-jupyter-base",
+              "id": app_id,
+              "image": "scidas/irods-jupyter-hydroshare",
               "resources": {
                 "cpus": 2,
                 "mem": 2048
@@ -463,7 +464,7 @@ def create_scidas_virtual_app(request, res_id):
             }
         ]
     }
-    app_id = 'jupyter'
+
     # delete the appliance before posting to create a new one in case it already exists
     requests.delete(url+'/'+app_id)
     response = requests.post(url, data=dumps(p_data))
