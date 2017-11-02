@@ -427,7 +427,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                              'modelSoftware': 'utilities.exe',
                                              'modelEngine': 'sourceCode.zip'}}
 
-        self.resModelProgram.metadata.update([model_program_data])
+        self.resModelProgram.metadata.update([model_program_data], self.user)
         # check that there is extended metadata elements at this point
         self.assertNotEqual(self.resModelProgram.metadata.program, None)
         # test that we can also update core metadata using update()
@@ -435,7 +435,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resModelProgram.metadata.creators.count(), 1)
         self.resModelProgram.metadata.update([{'creator': {'name': 'Second Creator'}},
                                               {'creator': {'name': 'Third Creator'}},
-                                              {'mpmetadata': {'modelVersion': '5.1.012'}}])
+                                              {'mpmetadata': {'modelVersion': '5.1.012'}}],
+                                             self.user)
         # there should be 2 creators at this point (previously existed creator gets
         # delete as part of the update() call
         self.assertEqual(self.resModelProgram.metadata.creators.count(), 2)

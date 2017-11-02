@@ -1,5 +1,6 @@
 """Page processors for hs_core app."""
 
+from dateutil import parser
 from functools import partial, wraps
 
 from django.core.exceptions import PermissionDenied
@@ -7,7 +8,7 @@ from django.forms.models import formset_factory
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import AbstractResource, GenericResource, Relation
+from hs_core.models import GenericResource, Relation
 from hs_core import languages_iso
 from forms import CreatorForm, ContributorForm, SubjectsForm, AbstractForm, RelationForm, \
     SourceForm, FundingAgencyForm, BaseCreatorFormSet, BaseContributorFormSet, BaseFormSet, \
@@ -150,7 +151,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_published' in request.session:
             del request.session['just_published']
 
-    bag_url = AbstractResource.bag_url(content_model.short_id)
+    bag_url = content_model.bag_url
 
     if user.is_authenticated():
         show_content_files = user.uaccess.can_view_resource(content_model)
@@ -169,8 +170,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if len(temporal_coverages) > 0:
             temporal_coverage_data_dict = {}
             temporal_coverage = temporal_coverages[0]
-            temporal_coverage_data_dict['start_date'] = temporal_coverage.value['start']
-            temporal_coverage_data_dict['end_date'] = temporal_coverage.value['end']
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_data_dict['start_date'] = start_date.strftime('%Y-%m-%d')
+            temporal_coverage_data_dict['end_date'] = end_date.strftime('%Y-%m-%d')
             temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         else:
             temporal_coverage_data_dict = None
@@ -359,8 +362,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     temporal_coverage_data_dict = {}
     if len(temporal_coverages) > 0:
         temporal_coverage = temporal_coverages[0]
-        temporal_coverage_data_dict['start'] = temporal_coverage.value['start']
-        temporal_coverage_data_dict['end'] = temporal_coverage.value['end']
+        start_date = parser.parse(temporal_coverage.value['start'])
+        end_date = parser.parse(temporal_coverage.value['end'])
+        temporal_coverage_data_dict['start'] = start_date.strftime('%m-%d-%Y')
+        temporal_coverage_data_dict['end'] = end_date.strftime('%m-%d-%Y')
         temporal_coverage_data_dict['name'] = temporal_coverage.value.get('name', '')
         temporal_coverage_data_dict['id'] = temporal_coverage.id
     else:
@@ -428,6 +433,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
+               'rights': content_model.metadata.rights,
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
                'current_user': user,

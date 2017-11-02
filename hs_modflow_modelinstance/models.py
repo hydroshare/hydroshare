@@ -176,13 +176,17 @@ class StressPeriod(AbstractMetaDataElement):
 
 class GroundWaterFlow(AbstractMetaDataElement):
     term = 'GroundWaterFlow'
-    flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
-                          ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2'),)
+    flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'), ('UPW', 'UPW'),)
     flowParameterChoices = (('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                             ('Transmissivity', 'Transmissivity'),)
 
     flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True,
                                    blank=True, verbose_name='Flow package')
+    unsaturatedZonePackage = models.BooleanField(default=False, verbose_name='Includes UZF package')
+    horizontalFlowBarrierPackage = models.BooleanField(default=False,
+                                                       verbose_name='Includes HFB6 package')
+    seawaterIntrusionPackage = models.BooleanField(default=False,
+                                                   verbose_name='Includes SWI2 package')
     flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True,
                                      blank=True, verbose_name='Flow parameter')
 
@@ -214,6 +218,27 @@ class GroundWaterFlow(AbstractMetaDataElement):
             elif key == 'flowParameter':
                 kwargs[key] = validate_choice(val, cls.flowParameterChoices)
         return kwargs
+
+    @property
+    def includesUnsaturatedZonePackage(self):
+        if self.unsaturatedZonePackage:
+            return "Yes"
+        else:
+            return "No"
+
+    @property
+    def includesHorizontalFlowBarrierPackage(self):
+        if self.horizontalFlowBarrierPackage:
+            return "Yes"
+        else:
+            return "No"
+
+    @property
+    def includesSeawaterIntrusionPackage(self):
+        if self.seawaterIntrusionPackage:
+            return "Yes"
+        else:
+            return "No"
 
 
 class AbstractChoices(models.Model):
@@ -338,12 +363,15 @@ class BoundaryCondition(AbstractMetaDataElement):
             other_head_dependent_flux_boundary_packages=kwargs.get(
                 'other_head_dependent_flux_boundary_packages', '')
                     )
-        model_boundary_condition._add_specified_head_boundary_packages(
-            kwargs['specified_head_boundary_packages'])
-        model_boundary_condition._add_specified_flux_boundary_packages(
-            kwargs['specified_flux_boundary_packages'])
-        model_boundary_condition._add_head_dependent_flux_boundary_packages(
-            kwargs['head_dependent_flux_boundary_packages'])
+        if kwargs.get('specified_head_boundary_packages', None):
+            model_boundary_condition._add_specified_head_boundary_packages(
+                kwargs['specified_head_boundary_packages'])
+        if kwargs.get('specified_flux_boundary_packages', None):
+            model_boundary_condition._add_specified_flux_boundary_packages(
+                kwargs['specified_flux_boundary_packages'])
+        if kwargs.get('head_dependent_flux_boundary_packages', None):
+            model_boundary_condition._add_head_dependent_flux_boundary_packages(
+                kwargs['head_dependent_flux_boundary_packages'])
 
         return model_boundary_condition
 
@@ -526,15 +554,10 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).create(content_object=kwargs[
-                                                                  'content_object'],
-                                                              modelParameter=kwargs[
-                                                                  'modelParameter'],
-                                                              modelSolver=kwargs[
-                                                                  'modelSolver'],
-                                                              subsidencePackage=kwargs[
-                                                                  'subsidencePackage'])
-        general_elements._add_output_control_package(kwargs['output_control_package'])
+        ocp = kwargs.pop('output_control_package', None)
+        general_elements = super(GeneralElements, cls).create(**kwargs)
+        if ocp:
+            general_elements._add_output_control_package(ocp)
 
         return general_elements
 
@@ -543,16 +566,12 @@ class GeneralElements(AbstractMetaDataElement):
         general_elements = GeneralElements.objects.get(id=element_id)
         kwargs = cls._validate_params(**kwargs)
         if general_elements:
-            if 'output_control_package' in kwargs:
-                general_elements = super(GeneralElements, cls).update(
-                    general_elements.id,
-                    content_object=kwargs['content_object'],
-                    modelParameter=kwargs['modelParameter'],
-                    modelSolver=kwargs['modelSolver'],
-                    subsidencePackage=kwargs['subsidencePackage'])
+            ocp = kwargs.pop('output_control_package', None)
+            general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
 
+            if ocp is not None:
                 general_elements.output_control_package.clear()
-                general_elements._add_output_control_package(kwargs['output_control_package'])
+                general_elements._add_output_control_package(ocp)
 
             general_elements.save()
             if len(general_elements.get_output_control_package()) == 0:
@@ -600,7 +619,7 @@ class MODFLOWModelInstanceResource(BaseResource):
         """
         missing_files = []
         if self.files.all().count() >= 1:
-            nam_files, reqd_files, existing_files = self.find_content_files()
+            nam_files, reqd_files, existing_files, model_packages = self.find_content_files()
             if not nam_files:
                 return ['.nam or .mfn']
             else:
@@ -623,10 +642,14 @@ class MODFLOWModelInstanceResource(BaseResource):
                  -reqd_files, (list of strings), the files listed in the .nam file that should be
                  included for the model to run
                  -existing_files, (list of strings), the names of files that have been uploaded
+                 -model packages (list of strings), the names of the packages for the uploaded model
+                 found in the .nam or .mfn file. These are the entries in the far left column of the
+                 .nam or .mfn file.
         """
         nam_file_count = 0
         existing_files = []
         reqd_files = []
+        model_packages = []
         for res_file in self.files.all():
                 ext = res_file.extension
                 existing_files.append(res_file.file_name)
@@ -639,8 +662,12 @@ class MODFLOWModelInstanceResource(BaseResource):
                         r = row[0].strip()
                         if not r.startswith('#') and r != '' and r.lower() != 'list' \
                                 and r.lower() != 'data' and r.lower() != 'data(binary)':
-                            reqd_files.append(row[-1].strip())
-        return nam_file_count, reqd_files, existing_files
+                            reqd_file = row[-1].strip()
+                            reqd_files.append(reqd_file)
+                            model_package_name = row[0].strip()
+                            model_package_ext = reqd_file.split('.')[-1].upper()
+                            model_packages.extend(set([model_package_name, model_package_ext]))
+        return nam_file_count, reqd_files, existing_files, model_packages
 
 
 processor_for(MODFLOWModelInstanceResource)(resource_processor)
@@ -693,6 +720,43 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     def general_elements(self):
         return self._general_elements.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import MODFLOWModelInstanceMetaDataSerializer
+        return MODFLOWModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'studyarea' in keys_to_update:
+            parsed_metadata.append({"studyarea": metadata.pop('studyarea')})
+
+        if 'griddimensions' in keys_to_update:
+            parsed_metadata.append({"griddimensions": metadata.pop('griddimensions')})
+
+        if 'stressperiod' in keys_to_update:
+            parsed_metadata.append({"stressperiod": metadata.pop('stressperiod')})
+
+        if 'groundwaterflow' in keys_to_update:
+            parsed_metadata.append({"groundwaterflow": metadata.pop('groundwaterflow')})
+
+        if 'boundarycondition' in keys_to_update:
+            parsed_metadata.append({"boundarycondition": metadata.pop('boundarycondition')})
+
+        if 'modelcalibration' in keys_to_update:
+            parsed_metadata.append({"modelcalibration": metadata.pop('modelcalibration')})
+
+        if 'generalelements' in keys_to_update:
+            parsed_metadata.append({"generalelements": metadata.pop('generalelements')})
+
+        if 'modelinputs' in keys_to_update:
+            for modelinput in metadata.pop('modelinputs'):
+                parsed_metadata.append({"modelinput": modelinput})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -708,9 +772,15 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         elements.append('GeneralElements')
         return elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method
-        super(MODFLOWModelInstanceMetaData, self).update(metadata)
+        from forms import StudyAreaValidationForm, GridDimensionsValidationForm, \
+            StressPeriodValidationForm, GroundWaterFlowValidationForm, \
+            BoundaryConditionValidationForm, ModelCalibrationValidationForm, \
+            GeneralElementsValidationForm, ModelOutputValidationForm, ExecutedByValidationForm, \
+            ModelInputValidationForm
+
+        super(MODFLOWModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'studyarea': 'study_area',
                               'griddimensions': 'grid_dimensions',
                               'stressperiod': 'stress_period',
@@ -719,14 +789,40 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                               'modelcalibration': 'model_calibration',
                               'generalelements': 'general_elements',
                               'modeloutput': 'model_output', 'executedby': 'executed_by'}
+
+        validation_forms_mapping = {'studyarea': StudyAreaValidationForm,
+                                    'griddimensions': GridDimensionsValidationForm,
+                                    'stressperiod': StressPeriodValidationForm,
+                                    'groundwaterflow': GroundWaterFlowValidationForm,
+                                    'boundarycondition': BoundaryConditionValidationForm,
+                                    'modelcalibration': ModelCalibrationValidationForm,
+                                    'generalelements': GeneralElementsValidationForm,
+                                    'modeloutput': ModelOutputValidationForm,
+                                    'executedby': ExecutedByValidationForm}
+
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
             # update possibly only one repeatable element 'modelinput'
-            self.update_repeatable_element(element_name='modelinput', metadata=metadata,
+            element_name = 'modelinput'
+            for dict_item in metadata:
+                if element_name in dict_item:
+                    validation_form = ModelInputValidationForm(dict_item[element_name])
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
+            self.update_repeatable_element(element_name=element_name, metadata=metadata,
                                            property_name='model_inputs')
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
@@ -754,7 +850,9 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             self.add_metadata_element_to_xml(container, self.stress_period, stressPeriodFields)
 
         if self.ground_water_flow:
-            groundWaterFlowFields = ['flowPackage', 'flowParameter']
+            groundWaterFlowFields = ['flowPackage', 'includesUnsaturatedZonePackage',
+                                     'includesHorizontalFlowBarrierPackage',
+                                     'includesSeawaterIntrusionPackage', 'flowParameter']
             self.add_metadata_element_to_xml(container, self.ground_water_flow,
                                              groundWaterFlowFields)
 

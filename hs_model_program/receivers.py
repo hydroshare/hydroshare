@@ -14,7 +14,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
 
     if element_name == "mpmetadata":
-        element_form = mp_form_validation(request.POST)
+        element_form = ModelProgramMetadataValidationForm(request.POST)
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -28,7 +28,7 @@ def mp_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
 
     if element_name == "mpmetadata":
-        element_form = mp_form_validation(request.POST)
+        element_form = ModelProgramMetadataValidationForm(request.POST)
 
     if element_form.is_valid():
         cleaned_form = element_form.cleaned_data

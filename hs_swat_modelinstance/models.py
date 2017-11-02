@@ -405,6 +405,33 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     def model_input(self):
         return self._model_input.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import SWATModelInstanceMetaDataSerializer
+        return SWATModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        ModelInstanceMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'modelobjective' in keys_to_update:
+            parsed_metadata.append({"modelobjective": metadata.pop('modelobjective')})
+
+        if 'simulationtype' in keys_to_update:
+            parsed_metadata.append({"simulationtype": metadata.pop('simulationtype')})
+
+        if 'modelmethod' in keys_to_update:
+            parsed_metadata.append({"modelmethod": metadata.pop('modelmethod')})
+
+        if 'modelparameter' in keys_to_update:
+            parsed_metadata.append({"modelparameter": metadata.pop('modelparameter')})
+
+        if 'modelinput' in keys_to_update:
+            parsed_metadata.append({"modelinput": metadata.pop('modelinput')})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -431,9 +458,12 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(SWATModelInstanceMetaData, self).update(metadata)
+        from forms import ModelInputValidationForm, ModelMethodValidationForm, \
+            SimulationTypeValidationForm, ModelObjectiveValidationForm, \
+            ModelParameterValidationForm, ModelOutputValidationForm, ExecutedByValidationForm
+        super(SWATModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modelobjective': 'model_objective',
                               'simulationtype': 'simulation_type',
                               'modelmethod': 'model_method',
@@ -441,11 +471,26 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                               'modelinput': 'model_input',
                               'modeloutput': 'model_output',
                               'executedby': 'executed_by'}
+        validation_forms_mapping = {'modelobjective': ModelObjectiveValidationForm,
+                                    'simulationtype': SimulationTypeValidationForm,
+                                    'modelmethod': ModelMethodValidationForm,
+                                    'modelparameter': ModelParameterValidationForm,
+                                    'modelinput': ModelInputValidationForm,
+                                    'modeloutput': ModelOutputValidationForm,
+                                    'executedby': ExecutedByValidationForm}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        validation_form = validation_forms_mapping[element_name](
+                            dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
     def get_xml(self, pretty_print=True, include_format_elements=True):
 

@@ -239,7 +239,7 @@ class TestWebAppFeature(TransactionTestCase):
         # create 1 RequestUrlBase obj with required params
         metadata = []
         metadata.append({'requesturlbase': {'value': 'https://www.google.com'}})
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
         # no ToolVersion obj
         self.assertEqual(ToolVersion.objects.all().count(), 0)
@@ -247,7 +247,7 @@ class TestWebAppFeature(TransactionTestCase):
         # create 1 ToolVersion obj with required params
         del metadata[:]
         metadata.append({'toolversion': {'value': '1.0'}})
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolVersion.objects.all().count(), 1)
 
         # update/create multiple metadata elements
@@ -262,7 +262,7 @@ class TestWebAppFeature(TransactionTestCase):
         # update tool version
         metadata.append({'toolversion': {'value': '2.0'}})
         # do the bulk metadata update
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedResTypes.objects.all().count(), 1)
         supported_res_type = SupportedResTypes.objects.first()
         for res_type in supported_res_type.supported_res_types.all():
@@ -276,7 +276,7 @@ class TestWebAppFeature(TransactionTestCase):
         metadata.append({'supportedsharingstatus': {'sharing_status':
                                                     ['Public', 'Discoverable']}})
         # do the bulk metadata update
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(SupportedSharingStatus.objects.all().count(), 1)
         supported_sharing_status = SupportedSharingStatus.objects.first()
         for sharing_status in supported_sharing_status.sharing_status.all():
@@ -290,7 +290,7 @@ class TestWebAppFeature(TransactionTestCase):
         metadata.append({'toolicon': {'value':
                                       'https://www.hydroshare.org/static/img/logo-sm.png'}})
         # do the bulk metadata update
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(ToolIcon.objects.all().count(), 1)
         self.assertEqual(ToolIcon.objects.first().value,
                          'https://www.hydroshare.org/static/img/logo-sm.png')
@@ -301,11 +301,11 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
 
         # create 1 AppHomePageUrl obj with required params
-        metadata.append({'apphomepageurl': {'value': 'https://my_web_app.com'}})
+        metadata.append({'apphomepageurl': {'value': 'https://mywebapp.com'}})
         # do the bulk metadata update
-        self.resWebApp.metadata.update(metadata)
+        self.resWebApp.metadata.update(metadata, self.user)
         self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
-        self.assertEqual(AppHomePageUrl.objects.first().value, 'https://my_web_app.com')
+        self.assertEqual(AppHomePageUrl.objects.first().value, 'https://mywebapp.com')
         self.resWebApp.delete()
 
     def test_utils(self):
