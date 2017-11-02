@@ -122,7 +122,7 @@ class MailingListUrl(AbstractMetaDataElement):
 
 class Roadmap(AbstractMetaDataElement):
     ''' should include information about why the app was developed, what's the development status,
-        future development plans, links to github issues, etc. - How we hope things will progress, etc.
+    future development plans, links to github issues, etc. - How we hope things will progress, etc
     '''
     term = 'Roadmap'
     value = models.TextField(blank=True, default='')
@@ -571,5 +571,5 @@ class ToolMetaData(CoreMetaData):
         return self.title.value
 
     class Meta:
-        verbose_name="Application Approval"
-        verbose_name_plural="Application Approvals"
+        verbose_name = "Application Approval"
+        verbose_name_plural = "Application Approvals"
