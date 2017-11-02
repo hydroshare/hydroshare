@@ -244,7 +244,7 @@ def update_user_profile(request):
                     <p>If you did not originate this request, there is a danger someone else has
                     accessed your account. You should log into HydroShare, change your password,
                     and set the email address to the correct address. If you are unable to do this
-                    contact support@hydroshare.org
+                    contact help@cuahsi.org
                     <p>Thank you</p>
                     <p>The HydroShare Team</p>
                     """.format(user.first_name, user.username, user.email, new_email)
