@@ -457,6 +457,13 @@ class ToolMetaData(CoreMetaData):
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
         elements.append('AppHomePageUrl')
+        elements.append('TestingProtocolUrl')
+        elements.append('SourceCodeUrl')
+        elements.append('HelpPageUrl')
+        elements.append('MailingListUrl')
+        elements.append('IssuesPageUrl')
+        elements.append('Roadmap')
+        elements.append('ShowOnOpenWithList')
         return elements
 
     def has_all_required_elements(self):
