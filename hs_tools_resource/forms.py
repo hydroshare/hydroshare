@@ -3,7 +3,10 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field, HTML
 
-from models import *
+from models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
+    HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
+    ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus
+
 from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices
 

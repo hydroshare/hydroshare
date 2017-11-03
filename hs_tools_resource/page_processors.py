@@ -4,7 +4,10 @@ from crispy_forms.layout import Layout, HTML
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from forms import *
+from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
+    SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
+    ShowOnOpenWithListForm, VersionForm, SupportedResTypesForm, \
+    SupportedSharingStatusForm, ToolIconForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
 
