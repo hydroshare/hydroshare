@@ -7,7 +7,7 @@ from hs_core.views import add_generic_context
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
     ShowOnOpenWithListForm, VersionForm, SupportedResTypesForm, \
-    SupportedSharingStatusForm, ToolIconForm
+    SupportedSharingStatusForm, ToolIconForm, UrlBaseForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
 
