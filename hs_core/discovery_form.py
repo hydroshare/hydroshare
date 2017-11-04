@@ -23,16 +23,20 @@ class DiscoveryForm(FacetedSearchForm):
         geo_sq = SQ()
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
             if float(self.cleaned_data['NElng']) > float(self.cleaned_data['SWlng']):
-                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
+		geo_sq = SQ(coverage_east__lte=float(self.cleaned_data['NElng']))
                 geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
             else:
-                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
+                geo_sq = SQ(coverage_east__gte=float(self.cleaned_data['SWlng']))
                 geo_sq.add(SQ(coverage_east__lte=float(180)), SQ.OR)
                 geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
                 geo_sq.add(SQ(coverage_east__gte=float(-180)), SQ.AND)
 
         if self.cleaned_data['NElat'] and self.cleaned_data['SWlat']:
-            geo_sq.add(SQ(coverage_north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
+            # latitude might be specified without longitude
+            if geo_sq is None:
+                geo_sq = SQ(coverage_north__lte=float(self.cleaned_data['NElat']))
+            else:
+                geo_sq.add(SQ(coverage_north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
             geo_sq.add(SQ(coverage_north__gte=float(self.cleaned_data['SWlat'])), SQ.AND)
 
         if geo_sq:
@@ -47,16 +51,17 @@ class DiscoveryForm(FacetedSearchForm):
         if self.cleaned_data['end_date']:
             sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
 
-        author_sq = SQ()
-        subjects_sq = SQ()
-        resource_sq = SQ()
-        public_sq = SQ()
-        owner_sq = SQ()
-        discoverable_sq = SQ()
-        published_sq = SQ()
-        variable_sq = SQ()
-        sample_medium_sq = SQ()
-        units_name_sq = SQ()
+	authors_sq = None
+        subjects_sq = None
+        resource_type_sq = None
+        public_sq = None
+        owners_names_sq = None
+        discoverable_sq = None
+        published_sq = None
+        variable_names_sq = None
+        sample_mediums_sq = None
+        units_names_sq = None
+
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
 
@@ -108,9 +113,9 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(resource_sq)
         if public_sq:
             sqs = sqs.filter(public_sq)
-        if owner_sq:
-            sqs = sqs.filter(owner_sq)
-        if discoverable_sq:
+        if owners_names_sq is not None:
+            sqs = sqs.filter(owners_names_sq)
+        if discoverable_sq is not None:
             sqs = sqs.filter(discoverable_sq)
         if published_sq:
             sqs = sqs.filter(published_sq)
