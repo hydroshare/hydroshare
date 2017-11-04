@@ -1,7 +1,7 @@
 from haystack.forms import FacetedSearchForm
 from haystack.query import SQ
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
+# from crispy_forms.layout import *
+# from crispy_forms.bootstrap import *
 from django import forms
 
 
