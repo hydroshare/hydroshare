@@ -82,6 +82,15 @@ class UserProfileView(TemplateView):
         }
 
 
+class UserPasswordResetView(TemplateView):
+    template_name = 'accounts/reset_password.html'
+
+    def get_context_data(self, **kwargs):
+        token = kwargs.pop('token', None)
+        if token is None:
+            raise ValidationError('Unauthorised access to reset password')
+        context = super(UserPasswordResetView).get_context_data(**kwargs)
+        return context
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
 def comment(request, template="generic/comments.html"):
     """
@@ -269,6 +278,57 @@ def update_user_profile(request):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+@login_required
+def update_user_password(request):
+    user = request.user
+    old_password = request.POST['password']
+    password1 = request.POST['password1']
+    password2 = request.POST['password2']
+    password1 = password1.strip()
+    password2 = password2.strip()
+    if not user.check_password(old_password):
+        messages.error(request, "Your current password does not match.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    if len(password1) < 6:
+        messages.error(request, "Password must be at least 6 characters long.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    if password1 == password2:
+        user.set_password(password1)
+        user.save()
+    else:
+        messages.error(request, "Passwords do not match.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    messages.info(request, 'Password reset was successful')
+    return HttpResponseRedirect('/user/{}/'.format(user.id))
+
+
+@login_required
+def reset_user_password(request):
+    user = request.user
+    password1 = request.POST['password1']
+    password2 = request.POST['password2']
+    password1 = password1.strip()
+    password2 = password2.strip()
+
+    if len(password1) < 6:
+        messages.error(request, "Password must be at least 6 characters long.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    if password1 == password2:
+        user.set_password(password1)
+        user.save()
+    else:
+        messages.error(request, "Passwords do not match.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    messages.info(request, 'Password reset was successful')
+    # redirect to home page
+    return HttpResponseRedirect('/')
+
+
 def send_verification_mail_for_email_update(request, user, new_email, verification_type):
     """
     Sends an email with a verification link to users when
@@ -338,6 +398,22 @@ def email_verify(request, new_email, uidb36=None, token=None):
         messages.error(request, _("The link you clicked is no longer valid."))
         return redirect("/")
 
+
+def email_verify_password_reset(request, uidb36=None, token=None):
+    """
+    View for the link in the reset password email sent to a user
+    when they clicked the forgot password link.
+    User is redirected to password reset page where the user can enter new password.
+    """
+
+    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if user is not None:
+        auth_login(request, user)
+        # redirect to user to password reset page
+        return HttpResponseRedirect(reverse('reset_password', kwargs={'token': token}))
+    else:
+        messages.error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")
 
 @login_required
 def deactivate_user(request):
