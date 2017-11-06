@@ -823,7 +823,8 @@ function initializeTable() {
         "paging": false,
         "searching": false,
         "info": false,
-        "order": [[TITLE_COL, "asc"]],
+        "ordering": false,
+        // "order": [[TITLE_COL, "asc"]],
         "columnDefs": colDefs
     });
 }
