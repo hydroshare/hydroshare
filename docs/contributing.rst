@@ -11,8 +11,7 @@ Just Have a Question or Want to Report a Bug?
 We defintely want your feedback. There's a few ways this can go.
 
 - If you have a bug, please open an `issue here on GitHub`_
-- If you want to have a discussion, or if you have a question, email support@hydroshare.org or seek us out on Freenode at #hydroshare
-
+- If you want to have a discussion, or if you have a question, email help@cuahsi.org. You can also request an invite to our Slack team.
 .. _issue here on GitHub: https://github.com/hydroshare/hydroshare/issues/new
 
 Want to Develop a Hydroshare App?
