@@ -193,6 +193,7 @@ class SeleniumTestsParentClass(object):
 
             # monkey patch SignUpForm to always verify the captcha
             from theme.forms import SignupForm
+
             def verify_captcha_patch(*args, **kwargs):
                 return True
             SignupForm.verify_captcha = verify_captcha_patch
@@ -204,12 +205,13 @@ class SeleniumTestsParentClass(object):
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="username"]').send_keys(usr['user'])
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password1"]').send_keys(usr['pass'])
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password2"]').send_keys(usr['pass'])
-            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="recaptcha_response_field"]').send_keys('response')
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="recaptcha_response_field"]') \
+                .send_keys('response')
             self.wait_for_visible(By.CSS_SELECTOR, 'input#signup').click()
 
             # Verify new account by clicking on link in that came in email
             self.wait_for_visible(By.CSS_SELECTOR, '#home-page-carousel')
-            alert_div =  self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
             alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
             self.assertIn('A verification email has been sent', alert_text)
 
@@ -218,32 +220,34 @@ class SeleniumTestsParentClass(object):
             user = User.objects.get(email=usr['email'])
             self.assertFalse(user.is_active)
             with self.assertRaises(ValueError):
-                _ = user.userprofile.cv.url
+                pass
 
             self.driver.get(url)
             # Now that we have clicked the verify URL, the user will get some popups and be verified
             self.assertTrue(User.objects.get(email=usr['email']).is_active)
             self.wait_for_visible(By.CSS_SELECTOR, '#home-page-carousel')
-            alert_div =  self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
             alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
             self.assertEqual('Successfully signed up', alert_text)
 
             alert_span = self.wait_for_visible(By.CSS_SELECTOR, '#universalMessage span')
             alert_span.find_element(By.LINK_TEXT, 'user profile').click()
 
-            # The user's name should be escaped in the profile so our user name should not parse as HTML.
+            # The user's name should be escaped in the profile so our user name
+            # should not parse as HTML.
             h2 = self.wait_for_visible(By.CSS_SELECTOR, 'h2')
             with self.assertRaises(NoSuchElementException):
                 h2.find_element(By.CSS_SELECTOR, 'strong')
             self.wait_for_visible(By.CSS_SELECTOR, '#btn-edit-profile').click()
 
-            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="organization"]').send_keys(usr['org'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="organization"]') \
+                .send_keys(usr['org'])
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="title"]').send_keys(usr['title'])
             upload_field = self.wait_for_visible(By.CSS_SELECTOR, 'input[name="cv"]')
             upload_file(self.driver, upload_field, './manage.py')
             self.wait_for_visible(By.CSS_SELECTOR, 'button#btn-save-profile').click()
 
-            alert_div =  self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
             alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
             self.assertEqual('Your profile has been successfully updated.', alert_text)
 
