@@ -1472,18 +1472,20 @@
                                 {# Empty row used as template to generate subsequent rows #}
                                 <tr id="templateRow">
                                     <td>
-                                        <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                        <div class="user-scope">
-                                            <div class="group-image-wrapper extra-small">
-                                                <div class="group-image-extra-small group-preview-image-default"
-                                                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                            </div>
-                                            <span data-col="name" class="user-name"></span>
-                                            <span class="badge you-flag">You</span>
-                                            <br>
-                                            <span data-col="user-name"
-                                                  class="user-username-content"></span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <td>
+                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                <div class="group-image-wrapper extra-small">
+                                                    <div class="group-image-extra-small group-preview-image-default"
+                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div data-col="name" class="user-name"></div>
+                                                <div class="badge you-flag">You</div>
+                                                <div data-col="user-name" class="user-username-content"></div>
+                                            </td>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">
@@ -1543,29 +1545,35 @@
                                 {% for u in owners %}
                                 <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user or u.pk == quota_holder.pk %}class="hide-actions"{% endif %}>
                                     <td>
-                                        <div class="user-scope">
-                                            {% if u.userprofile.picture %}
-                                                <div style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                class="profile-pic-thumbnail round-image"></div>
-                                            {% else %}
-                                                 <div class="profile-pic-thumbnail round-image user-icon"></div>
-                                            {% endif %}
-
-                                            <span data-col="name"
-                                                  class="user-name">{{ u|best_name }}</span>
-
-                                            {% if u.pk == current_user.pk %}
-                                                <span class="badge you-flag">You</span>
-                                            {% endif %}
-                                            {% if u.pk == quota_holder.pk %}
-                                                <span quota-holder class="badge you-flag">
-                                                    <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
-                                                </span>
-                                            {% endif %}
-                                            <br>
-                                            <span data-col="user-name"
-                                                  class="user-username-content">{{ u.username }}</span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <tr>
+                                                <td>
+                                                    {% if u.userprofile.picture %}
+                                                    <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                         class="profile-pic-thumbnail round-image"></div>
+                                                    {% else %}
+                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div data-col="name" class="user-name">
+                                                        <a href="/user/{{ u.id }}">{{ u|best_name }}</a>
+                                                    </div>
+                                                    <div data-col="user-name"
+                                                          class="user-username-content">{{ u.username }}</div>
+                                                    <div>
+                                                        {% if u.pk == current_user.pk %}
+                                                        <span class="badge you-flag">You</span>
+                                                        {% endif %}
+                                                        {% if u.pk == quota_holder.pk %}
+                                                        <span quota-holder class="badge you-flag">
+                                                            <i class="fa fa-pie-chart" aria-hidden="true"></i> Quota Holder
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">
@@ -1641,23 +1649,31 @@
                                 {% for u in edit_users %}
                                 <tr id="row-id-{{ u.pk }}">
                                     <td>
-                                        <div class="user-scope">
-                                            <div
-                                            {% if u.userprofile.picture %}
-                                                style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                class="profile-pic-thumbnail round-image"
-                                            {% else %}
-                                                 class="profile-pic-thumbnail round-image user-icon"
-                                            {% endif %}
-                                            >
-                                            </div>
-                                            <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
-                                            {% if u.pk == current_user.pk %}
-                                                <span class="badge you-flag">You</span>
-                                            {% endif %}
-                                            <br>
-                                            <span class="user-username-content">{{ u.username }}</span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <tr>
+                                                <td>
+                                                    {% if u.userprofile.picture %}
+                                                    <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                         class="profile-pic-thumbnail round-image"></div>
+                                                    {% else %}
+                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div data-col="name" class="user-name">
+                                                        <a href="/user/{{ u.id }}">{{ u|best_name }}</a>
+                                                    </div>
+                                                    <div data-col="user-name"
+                                                         class="user-username-content">{{ u.username }}
+                                                    </div>
+                                                    <div>
+                                                        {% if u.pk == current_user.pk %}
+                                                        <span class="badge you-flag">You</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">
@@ -1796,7 +1812,7 @@
                                 </tr>
                                 {% endfor %}
 
-                                {# Users who can view the content of this resource #}
+                                {# Groups who can view the content of this resource #}
                                 {% for u in view_groups %}
                                 <tr id="row-id-{{ u.pk }}">
                                     <td>
@@ -1875,23 +1891,31 @@
                                 {% for u in view_users %}
                                 <tr id="row-id-{{ u.pk }}">
                                     <td>
-                                        <div class="user-scope">
-                                            <div
-                                                {% if u.userprofile.picture %}
-                                                    style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                                    class="profile-pic-thumbnail round-image"
-                                                {% else %}
-                                                    class="profile-pic-thumbnail round-image user-icon"
-                                                {% endif %}
-                                                >
-                                            </div>
-                                            <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
-                                            {% if u.pk == current_user.pk %}
-                                                <span class="badge you-flag">You</span>
-                                            {% endif %}
-                                            <br>
-                                            <span class="user-username-content">{{ u.username }}</span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <tr>
+                                                <td>
+                                                    {% if u.userprofile.picture %}
+                                                    <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                         class="profile-pic-thumbnail round-image"></div>
+                                                    {% else %}
+                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div data-col="name" class="user-name">
+                                                        <a href="/user/{{ u.id }}">{{ u|best_name }}</a>
+                                                    </div>
+                                                    <div data-col="user-name"
+                                                         class="user-username-content">{{ u.username }}
+                                                    </div>
+                                                    <div>
+                                                        {% if u.pk == current_user.pk %}
+                                                        <span class="badge you-flag">You</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">

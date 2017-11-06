@@ -470,10 +470,10 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (json_response.name) {
-                    rowTemplate.find("span[data-col='name']").text(json_response.name);
+                    rowTemplate.find("div[data-col='name']").text(json_response.name);
                 }
                 else {
-                    rowTemplate.find("span[data-col='name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='name']").text(json_response.username);
                 }
 
                 if (!json_response.is_current_user) {
@@ -481,10 +481,10 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (shareType == "user") {
-                    rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='user-name']").text(json_response.username);
                 }
                 else {
-                    rowTemplate.find("span[data-col='user-name']").text("(Group)");
+                    rowTemplate.find("div[data-col='user-name']").text("(Group)");
                 }
 
                 if (shareType == "user") {
@@ -514,7 +514,7 @@ function share_resource_ajax_submit(form_id) {
                     rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                     rowTemplate.find(".share-form-owner").parent().addClass("active");
                 }
-                $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
+                $(".access-table > tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
                 updateActionsState(json_response.current_user_privilege);
             }

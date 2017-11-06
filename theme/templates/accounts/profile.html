@@ -3,6 +3,10 @@
 
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
+{% block extra_head %}
+    <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
     <div class="container">
         {% with profile_user.userprofile as profile %}
@@ -364,7 +368,7 @@
                                             <fieldset>
                                                 <label>Description</label>
                                                 <textarea class="form-control"
-                                                          name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
+                                                          name="details" rows="4">{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
                                             </fieldset>
 
                                             <hr>
