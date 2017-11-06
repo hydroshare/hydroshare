@@ -178,7 +178,7 @@ $(document).ready(function () {
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
-            if(!user.title || !user.organization) {
+            if(!user.organization) {
                 // Disable publishing resources
                 if ($("#publish").length) {
                     $("#publish").toggleClass("disabled", true);
@@ -189,14 +189,8 @@ $(document).ready(function () {
 
                 var message = 'Your profile is nearly complete. ';
                 message += 'Please fill in the ';
-                if(!user.title && !user.organization) {
-                    message += '<strong>title</strong> and <strong>organization</strong> fields';
-                } else if (!user.title) {
-                    message += '<strong>title</strong> field';
-                } else if (!user.organization) {
-                    message += '<strong>organization</strong> field';
-                }
-                message += ' on the <a href="/user/'+user.id+'/">user profile</a> page';
+                message += '<strong>Organization</strong> field';
+                message += ' on the <a href="/user/'+user.id+'/">User Profile</a> page';
                 showUniversalMessage("warn", message, 10000)();
             }
         },
