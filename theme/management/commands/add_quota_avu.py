@@ -6,6 +6,10 @@ from django_irods.icommands import SessionException
 
 
 class Command(BaseCommand):
+    """
+    This adds the quotaUserName AVU to iRODS from the resource database as needed.
+    It also -- additionally -- resets the quota system for existing quotaUserName AVUs.
+    """
     help = "Add quotaUserName AVU to all resources in iRODS as needed"
 
     def handle(self, *args, **options):
@@ -30,13 +34,34 @@ class Command(BaseCommand):
                             print res.short_id + ' does not have an owner'
                             continue
                     res.set_quota_holder(res.creator, res.creator)
-            except SessionException:
+
+                # Now reset the quota system by setting the AVU 'resetQuotaDir' to anything
+                istorage = res.get_irods_storage()
+                # Add a specific AVU to invoke quota recalculation
+                istorage.session.run("imeta", None, 'set', '-C', res.root_path,
+                                     'resetQuotaDir', '0')
+                # Now remove that AVU to clean up; this is not part of the resource API
+                istorage.session.run("imeta", None, 'rm', '-C', res.root_path,
+                                     'resetQuotaDir', '0')
+
+            except SessionException as ex:
                 # this is needed for migration testing where some resources copied from www
                 # for testing do not exist in the iRODS backend, hence need to skip these
                 # test artifects
+                print(res.short_id + ' raised SessionException when setting quota holder: ' +
+                      ex.stderr)
                 continue
-            except AttributeError:
+            except AttributeError as ex:
                 # when federation is not set up correctly, istorage does not have a session
                 # attribute, hence raise AttributeError - ignore for testing and it should not
                 # happen in production where federation is set up properly
+                print(res.short_id + ' raised AttributeError when setting quota holder: ' +
+                      ex.message)
+                continue
+            except ValueError as ex:
+                # when federation is not set up correctly, istorage does not have a session
+                # attribute, hence raise AttributeError - ignore for testing and it should not
+                # happen in production where federation is set up properly
+                print(res.short_id + ' raised ValueError when setting quota holder: ' +
+                      ex.message)
                 continue

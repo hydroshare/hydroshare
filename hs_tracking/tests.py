@@ -80,7 +80,7 @@ class ViewTests(TestCase):
         app_lauch_cnt = Variable.objects.filter(name='app_launch').count()
         self.assertEqual(app_lauch_cnt, 1)
         data = list(Variable.objects.filter(name='app_launch'))
-        values = dict(item.split("=") for item in data[0].value.split(" "))
+        values = dict(tuple(pair.split('=')) for pair in data[0].value.split('|'))
 
         self.assertTrue('res_type' in values.keys())
         self.assertTrue('name' in values.keys())
@@ -257,11 +257,11 @@ class TrackingTests(TestCase):
         self.assertEqual(Variable.objects.count(), 2)
         var1, var2 = Variable.objects.all()
 
-        kvp = dict((k, v) for k, v in (kv.split('=') for kv in var1.value.split()))
+        kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
         self.assertEqual(var1.name, 'begin_session')
         self.assertEqual(len(kvp.keys()),  3)
 
-        kvp = dict((k, v) for k, v in (kv.split('=') for kv in var2.value.split()))
+        kvp = dict(tuple(pair.split('=')) for pair in var2.value.split('|'))
         self.assertEqual(var2.name, 'login')
         self.assertEqual(len(kvp.keys()), 3)
 
@@ -269,9 +269,23 @@ class TrackingTests(TestCase):
 
         self.assertEqual(Variable.objects.count(), 3)
         var = Variable.objects.latest('timestamp')
-        kvp = dict((k, v) for k, v in (kv.split('=') for kv in var.value.split()))
+        kvp = dict(tuple(pair.split('=')) for pair in var.value.split('|'))
         self.assertEqual(var.name, 'logout')
         self.assertEqual(len(kvp.keys()), 3)
+
+    def test_activity_parsing(self):
+
+        client = Client()
+        client.login(username=self.user.username, password='password')
+
+        self.assertEqual(Variable.objects.count(), 2)
+        var1, var2 = Variable.objects.all()
+
+        kvp = dict(tuple(pair.split('=')) for pair in var1.value.split('|'))
+        self.assertEqual(var1.name, 'begin_session')
+        self.assertEqual(len(kvp.keys()),  3)
+
+        client.logout()
 
 
 class UtilsTests(TestCase):

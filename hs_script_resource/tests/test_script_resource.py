@@ -122,7 +122,8 @@ class TestScriptResource(TransactionTestCase):
                                                                     'scriptReleaseDate':
                                                                         '2015-12-01 00:00',
                                                                     'scriptCodeRepository':
-                                                                        'http://www.google.com'}}])
+                                                                        'http://www.google.com'}}],
+                                       self.user)
         # check that there is now extended metadata elements at this point
         self.assertNotEqual(self.resScript.metadata.program, None)
         # test that we can also update core metadata using update()
@@ -130,7 +131,8 @@ class TestScriptResource(TransactionTestCase):
         self.assertEqual(self.resScript.metadata.creators.count(), 1)
         self.resScript.metadata.update([{'creator': {'name': 'Second Creator'}},
                                         {'creator': {'name': 'Third Creator'}},
-                                        {'scriptspecificmetadata': {'scriptVersion': '1.5'}}])
+                                        {'scriptspecificmetadata': {'scriptVersion': '1.5'}}],
+                                       self.user)
         # there should be 2 creators at this point (previously existed creator gets
         # delete as part of the update() call
         self.assertEqual(self.resScript.metadata.creators.count(), 2)

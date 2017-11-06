@@ -66,6 +66,7 @@ def data_store_structure(request):
         store = istorage.listdir(res_coll)
         files = []
         for fname in store[1]:  # files
+            fname = fname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
@@ -95,6 +96,8 @@ def data_store_structure(request):
 
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as ex:
+        return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
                      'folders': store[0],

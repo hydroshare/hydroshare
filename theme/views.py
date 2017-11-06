@@ -164,12 +164,13 @@ def signup(request, template="accounts/account_signup.html", extra_context=None)
                                     "an email when your account is activated."))
                 else:
                     send_verification_mail(request, new_user, "signup_verify")
-                    info(request, _("A verification email has been sent with "
-                                    "a link that must be clicked prior to your account "
+                    info(request, _("A verification email has been sent to " + new_user.email +
+                                    " with a link that must be clicked prior to your account "
                                     "being activated. If you do not receive this email please "
-                                    "check your spam folder as sometimes the confirmation email "
-                                    "gets flagged as spam. If you entered an incorrect "
-                                    "email address, please request an account again."))
+                                    "check that you entered your address correctly, or your " 
+                                    "spam folder as sometimes the email gets flagged as spam. "
+                                    "If you entered an incorrect email address, please request "
+                                    "an account again."))
                 return redirect(next_url(request) or "/")
             else:
                 info(request, _("Successfully signed up"))
@@ -243,7 +244,7 @@ def update_user_profile(request):
                     <p>If you did not originate this request, there is a danger someone else has
                     accessed your account. You should log into HydroShare, change your password,
                     and set the email address to the correct address. If you are unable to do this
-                    contact support@hydroshare.org
+                    contact help@cuahsi.org
                     <p>Thank you</p>
                     <p>The HydroShare Team</p>
                     """.format(user.first_name, user.username, user.email, new_email)
@@ -306,10 +307,9 @@ def login(request, template="accounts/account_login.html",
     if request.method == "POST" and form.is_valid():
         login_msg = "Successfully logged in"
         authenticated_user = form.save()
-        # Comment out for now to hide quota info message until backend script is hooked up
-        # add_msg = get_quota_message(authenticated_user)
-        # if add_msg:
-        #    login_msg += add_msg
+        add_msg = get_quota_message(authenticated_user)
+        if add_msg:
+            login_msg += ' - ' + add_msg
         info(request, _(login_msg))
         auth_login(request, authenticated_user)
         return login_redirect(request)

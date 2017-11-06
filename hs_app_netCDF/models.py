@@ -420,6 +420,25 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
     def resource(self):
         return NetcdfResource.objects.filter(object_id=self.id).first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import NetCDFMetaDataSerializer
+        return NetCDFMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'originalcoverage' in keys_to_update:
+            parsed_metadata.append({"originalcoverage": metadata.pop('originalcoverage')})
+
+        if 'variables' in keys_to_update:
+            for variable in metadata.pop('variables'):
+                parsed_metadata.append({"variable": variable})
+
     def set_dirty(self, flag):
         """
         Overriding the base class method
@@ -429,9 +448,10 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
             self.is_dirty = flag
             self.save()
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(NetcdfMetaData, self).update(metadata)
+        from forms import VariableValidationForm, OriginalCoverageValidationForm
+        super(NetcdfMetaData, self).update(metadata, user)
         missing_file_msg = "Resource specific metadata can't be updated when there is no " \
                            "content files"
         with transaction.atomic():
@@ -443,9 +463,16 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                     coverage_data = dict_item['originalcoverage']
                     for key in ('datum', 'projection_string_type', 'projection_string_text'):
                         coverage_data.pop(key, None)
-
+                    if 'value' not in coverage_data:
+                        raise ValidationError("Coverage value data is missing")
                     if 'projection' in coverage_data['value']:
                         coverage_data['value'].pop('projection')
+                    coverage_value_dict = coverage_data.pop('value')
+                    validation_form = OriginalCoverageValidationForm(coverage_value_dict)
+                    coverage_data['value'] = coverage_value_dict
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
                     if self.originalCoverage:
                         self.update_element('originalcoverage', self.originalCoverage.id,
                                             **coverage_data)
@@ -467,10 +494,21 @@ class NetcdfMetaData(NetCDFMetaDataMixin, CoreMetaData):
                         raise ValidationError("No matching variable element was found")
                     for key in ('name', 'type', 'shape'):
                         variable_data.pop(key, None)
-
+                    variable_data['name'] = var_element.name
+                    variable_data['type'] = var_element.type
+                    variable_data['shape'] = var_element.shape
+                    if 'unit' not in variable_data:
+                        variable_data['unit'] = var_element.unit
+                    validation_form = VariableValidationForm(variable_data)
+                    if not validation_form.is_valid():
+                        err_string = self.get_form_errors_as_string(validation_form)
+                        raise ValidationError(err_string)
                     self.update_element('variable', var_element.id, **variable_data)
 
-    def get_xml(self, pretty_print=True):
+        # write updated metadata to netcdf file
+        self.resource.update_netcdf_file(user)
+
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)

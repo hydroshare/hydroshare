@@ -29,7 +29,7 @@ class Tracking(object):
         ip = utils.get_client_ip(request)
 
         # build the message string (key:value pairs)
-        msg = ' '.join([str(item) for item in
+        msg = '|'.join([str(item) for item in
                         ['user_ip=%s' % ip,
                          'http_method=%s' % request.method,
                          'http_code=%s' % response.status_code,

@@ -42,11 +42,14 @@ class CompositeResource(BaseResource):
         """ if this resource allows associating resource file objects with logical file"""
         return True
 
-    def get_metadata_xml(self, pretty_print=True):
+    def get_metadata_xml(self, pretty_print=True, include_format_elements=True):
         from lxml import etree
 
         # get resource level core metadata as xml string
-        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False)
+        # for composite resource we don't want the format elements at the resource level
+        # as they are included at the file level xml node
+        xml_string = super(CompositeResource, self).get_metadata_xml(pretty_print=False,
+                                                                     include_format_elements=False)
         # add file type metadata xml
 
         # create an etree xml object

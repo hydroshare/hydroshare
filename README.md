@@ -90,10 +90,11 @@ USE_SSL: true
 
 ## Contribute
 
-There are many ways to contribute to Hydroshare.
-
-1. Submit Pull Requests with code changes for review
-2. Open Issues for any bugs you find or suggestions you may have
+There are many ways to contribute to Hydroshare. Review [Contributing guidelines](https://github.com/hydroshare/hydroshare/blob/develop/docs/contributing.rst) and github practices for information on
+1. Opening issues for any bugs you find or suggestions you may have
+2. Developing code to contribute to HydroShare 
+3. Developing a HydroShare App
+4. Submiting pull requests with code changes for review
 
 ## License 
 

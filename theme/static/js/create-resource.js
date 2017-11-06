@@ -1,6 +1,18 @@
 /**
 * Created by Mauriel on 3/9/2017.
 */
+
+// Resource type constraint definitions
+constraints = {
+    GeographicFeatureResource: {
+        requiredFiles: ['.DBF', '.SHP', '.SHX'],    // File extensions in uppercase
+        canBeEmpty: true,                           // Optional. Defaults to true
+        singleFileFormat: '.ZIP',                   // File format when uploading a single file
+        sameFileNames: true,                        // The files must share the same file name
+        sameFileNamesExcep: ['SHP.XML']                 // Additional file extensions to check for
+    }
+};
+
 $(document).ready(function () {
     var json_response_file_types = {};
     var json_response_multiple_file = {};
@@ -13,7 +25,11 @@ $(document).ready(function () {
         $("#btn-select-irods-file").show();
         $("#irods-sel-file").text("No file selected.");
     }
-
+    $alert_error = '<div class="alert alert-danger" id="alert_error"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Error! </strong> \
+        Resource failed to create.\
+    </div>';
     Dropzone.options.hsDropzone = {
         previewTemplate: document.getElementById('preview-template').innerHTML,
         clickable: "#dz-container",
@@ -30,6 +46,14 @@ $(document).ready(function () {
             }
             else {
                 console.log(response);
+                $alert_error = $alert_error.replace("Resource failed to create.", response.message);
+                $('.btn-create-resource').before($alert_error);
+                $("#alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $("#alert-error").alert('close');
+                });
+                $("html, #dz-container").css("cursor", "initial");
+                Dropzone.forElement("#hsDropzone").removeAllFiles(true);
+                $(".hs-upload-indicator").show();
             }
         },
         error: function (file, response) {
@@ -38,7 +62,6 @@ $(document).ready(function () {
 
         init: function () {
             myDropzone = this;
-
             $(".btn-create-resource").click(function () {
                 $("html, #dz-container").css("cursor", "progress");
 
@@ -107,6 +130,9 @@ $(document).ready(function () {
                 $("#hsDropzone").toggleClass("hs-dropzone-highlight", false);
 
                 $(".hs-upload-indicator").hide();
+
+                setConstraintsHelp();
+                checkConstraints();
             });
 
             this.on("removedfile", function (file) {
@@ -114,6 +140,8 @@ $(document).ready(function () {
                 if (myDropzone.files.length == 0) {
                     $(".hs-upload-indicator").show();
                 }
+                setConstraintsHelp();
+                checkConstraints();
             });
 
             this.on("error", function (file, error) {
@@ -130,6 +158,9 @@ $(document).ready(function () {
                     formData.append($(this).attr("name"), $(this).val());
                 });
             });
+
+            checkConstraints();
+            setConstraintsHelp();
         }
     };
 
@@ -144,7 +175,10 @@ $(document).ready(function () {
         }
     });
 
-    $('#dropdown-resource-type li a').click(function () {
+    // Prevents event from being defined twice
+    $('#dropdown-resource-type li a').unbind("click");
+
+    $('#dropdown-resource-type li a').on("click", function () {
         // Remove all previously queued files when the resource type changes.
         Dropzone.forElement("#hsDropzone").removeAllFiles(true);
         $('#irods-sel-file').text("No file selected.");
@@ -267,7 +301,10 @@ $(document).ready(function () {
                     $(myDropzone.hiddenFileInput).attr("multiple", 'multiple');
                 }
             }
-        })
+        });
+
+        setConstraintsHelp();
+        checkConstraints();
     });
 
     $("#btn-remove-all-files").click(function () {
@@ -275,3 +312,129 @@ $(document).ready(function () {
         $(".hs-upload-indicator").show();
     });
 });
+
+// Shows help messages and their status for each relevant constraint
+function setConstraintsHelp() {
+    var type = $("#form-resource-type").val();
+    var rules = constraints[type];
+    var myDropzone = Dropzone.forElement("#hsDropzone");
+    var someDisplayed = false;
+
+    $("#constraints > li").css("display", "none");
+
+    if (type in constraints) {
+        if (!rules.canBeEmpty && myDropzone.files.length == 0) {
+            $("#res-empty").css("display", "block");
+            someDisplayed = true;
+        }
+
+        if (rules.requiredFiles && myDropzone.files.length > 0 && !(rules.singleFileFormat && myDropzone.files.length == 1)) {
+            $("#required-types").css("display", "block");
+            $("#required-types > span").empty();
+            rules.requiredFiles.forEach(function(ext) {
+                $("#required-types > span").append("<span class='badge'>" + ext.toLowerCase() + "</span>")
+            });
+            someDisplayed = true;
+        }
+
+        if (rules.singleFileFormat && myDropzone.files.length == 1) {
+            $("#single-file").css("display", "block");
+            $("#single-file-type").empty();
+            $("#single-file-type").append("<span class='badge'>" + rules.singleFileFormat.toLowerCase() + "</span>")
+            someDisplayed = true;
+        }
+
+        if (rules.sameFileNames && myDropzone.files.length > 1) {
+            $("#same-file-names").css("display", "block");
+            someDisplayed = true;
+        }
+
+        if (someDisplayed) {
+            $("#constraints").css("display", "block");
+        }
+    }
+    else {
+        $("#constraints").css("display", "none");
+    }
+}
+
+// Enables/disables Create Resource button based on resource type constraints
+function checkConstraints() {
+    var invalid = false;
+    $("#constraints > li").toggleClass("invalid", false);
+    var myDropzone = Dropzone.forElement("#hsDropzone");
+
+    var type = $("#form-resource-type").val();
+
+    if (type in constraints) {
+        var rules = constraints[type];
+
+        // Check canBeEmpty
+        if (!rules.canBeEmpty && myDropzone.files.length == 0) {
+            invalid = true;
+            $("#res-empty").toggleClass("invalid", true);
+        }
+
+        // Check required files. Ignore when single file and single file format flag
+        if (rules.requiredFiles && myDropzone.files.length > 0 && !(rules.singleFileFormat && myDropzone.files.length == 1)) {
+            var extensions = [];
+            myDropzone.files.forEach(function(element) {
+                var fileTypeExt = element.name.substr(element.name.lastIndexOf("."), element.name.length).toUpperCase();
+                extensions.push(fileTypeExt)
+            });
+
+            rules.requiredFiles.forEach(function(element) {
+                if (!extensions.includes(element)) {
+                    invalid = true;
+                    $("#required-types").toggleClass("invalid", true)
+                }
+            });
+        }
+
+        // Check single file format
+        if (rules.singleFileFormat && myDropzone.files.length == 1) {
+            var fileName = myDropzone.files[0].name;
+            var fileTypeExt = fileName.substr(fileName.lastIndexOf("."), fileName.length).toUpperCase();
+
+            if (fileTypeExt.toUpperCase() != rules.singleFileFormat) {
+                invalid = true;
+                $("#single-file").toggleClass("invalid", true)
+            }
+        }
+
+        // Check for same file names
+        if (rules.sameFileNames && myDropzone.files.length > 1) {
+            var fNames = [];
+            myDropzone.files.forEach(function(element) {
+                // Check the exceptions first
+                var found = false;
+                if (rules.sameFileNamesExcep && rules.sameFileNamesExcep.length > 0) {
+                    rules.sameFileNamesExcep.forEach(function (excep) {
+                        if (element.name.toUpperCase().endsWith(excep)) {
+                            var fileName = element.name.substr(0, element.name.toUpperCase().lastIndexOf(excep) - 1);
+                            fNames.push(fileName);
+                            found = true;
+                        }
+                    });
+                }
+
+                // Check for file names
+                if (!found) {
+                    var fileName = element.name.substr(0, element.name.lastIndexOf("."));
+                    fNames.push(fileName)
+                }
+            });
+
+            var uniqueNames = fNames.filter(function (value, index, self) {
+                return self.indexOf(value) === index
+            });
+
+            if (uniqueNames.length > 1) {
+                invalid = true;
+                $("#same-file-names").toggleClass("invalid", true)
+            }
+        }
+    }
+
+    $(".btn-create-resource").toggleClass("disabled", invalid);
+}

@@ -6,6 +6,7 @@ import string
 from collections import namedtuple
 import paramiko
 import logging
+from dateutil import parser
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -385,6 +386,9 @@ def get_my_resources_list(request):
     for res in viewable_resources:
         res.viewable = True
 
+    for res in discovered_resources:
+        res.discovered = True
+
     for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
         res.is_favorite = False
         if res in favorite_resources:
@@ -394,6 +398,7 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources +
                            discovered_resources)
+
     return resource_collection
 
 
@@ -901,6 +906,7 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         spatial_coverage_dict = {}
         if spatial_coverage:
             spatial_coverage_dict['type'] = spatial_coverage.type
+            spatial_coverage_dict['element_id'] = spatial_coverage.id
             if spatial_coverage.type == 'point':
                 spatial_coverage_dict['east'] = spatial_coverage.value['east']
                 spatial_coverage_dict['north'] = spatial_coverage.value['north']
@@ -915,7 +921,10 @@ def get_coverage_data_dict(resource, coverage_type='spatial'):
         temporal_coverage = resource.metadata.coverages.filter(type='period').first()
         temporal_coverage_dict = {}
         if temporal_coverage:
+            temporal_coverage_dict['element_id'] = temporal_coverage.id
             temporal_coverage_dict['type'] = temporal_coverage.type
-            temporal_coverage_dict['start'] = temporal_coverage.value['start']
-            temporal_coverage_dict['end'] = temporal_coverage.value['end']
+            start_date = parser.parse(temporal_coverage.value['start'])
+            end_date = parser.parse(temporal_coverage.value['end'])
+            temporal_coverage_dict['start'] = start_date.strftime('%m-%d-%Y')
+            temporal_coverage_dict['end'] = end_date.strftime('%m-%d-%Y')
         return temporal_coverage_dict

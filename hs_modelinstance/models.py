@@ -2,6 +2,7 @@ from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, transaction
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -9,6 +10,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
 from hs_core.hydroshare import utils
 
 from hs_model_program.models import ModelProgramResource
+
 
 # extended metadata elements for Model Instance resource type
 class ModelOutput(AbstractMetaDataElement):
@@ -28,6 +30,7 @@ class ModelOutput(AbstractMetaDataElement):
             return "Yes"
         else:
             return "No"
+
 
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
@@ -137,6 +140,24 @@ class ModelInstanceMetaData(CoreMetaData):
     def executed_by(self):
         return self._executed_by.all().first()
 
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ModelInstanceMetaDataSerializer
+        return ModelInstanceMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'modeloutput' in keys_to_update:
+            parsed_metadata.append({"modeloutput": metadata.pop('modeloutput')})
+
+        if 'executedby' in keys_to_update:
+            parsed_metadata.append({"executedby": metadata.pop('executedby')})
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -146,18 +167,29 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         return elements
 
-    def update(self, metadata):
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
-        super(ModelInstanceMetaData, self).update(metadata)
+        from forms import ModelOutputValidationForm, ExecutedByValidationForm
+
+        super(ModelInstanceMetaData, self).update(metadata, user)
         attribute_mappings = {'modeloutput': 'model_output', 'executedby': 'executed_by'}
         with transaction.atomic():
             # update/create non-repeatable element
             for element_name in attribute_mappings.keys():
-                element_property_name = attribute_mappings[element_name]
-                self.update_non_repeatable_element(element_name, metadata, element_property_name)
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        if element_name == 'modeloutput':
+                            validation_form = ModelOutputValidationForm(dict_item[element_name])
+                        else:
+                            validation_form = ExecutedByValidationForm(dict_item[element_name])
+                        if not validation_form.is_valid():
+                            err_string = self.get_form_errors_as_string(validation_form)
+                            raise ValidationError(err_string)
+                        element_property_name = attribute_mappings[element_name]
+                        self.update_non_repeatable_element(element_name, metadata,
+                                                           element_property_name)
 
-
-    def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True, include_format_elements=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
 

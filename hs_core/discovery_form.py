@@ -16,7 +16,16 @@ class DiscoveryForm(FacetedSearchForm):
         if not self.cleaned_data.get('q'):
             sqs = self.searchqueryset.filter(discoverable=True).filter(is_replaced_by=False)
         else:
-            sqs = super(FacetedSearchForm, self).search().filter(discoverable=True).filter(is_replaced_by=False)
+            # This corrects for an failed match of complete words, as documented in issue #2308.
+            # The text__startswith=cdata matches stemmed words in documents with an unstemmed cdata.
+            # The text=cdata matches stemmed words after stemming cdata as well.
+            # The stem of "Industrial", according to the aggressive default stemmer, is "industri".
+            # Thus "Industrial" does not match "Industrial" in the document according to
+            # startswith, but does match according to text=cdata.
+            cdata = self.cleaned_data.get('q')
+            sqs = self.searchqueryset.filter(SQ(text__startswith=cdata)|SQ(text=cdata))\
+                .filter(discoverable=True)\
+                .filter(is_replaced_by=False)
 
         geo_sq = SQ()
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:

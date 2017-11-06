@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
@@ -17,6 +18,8 @@ DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
 VIEW = 'view'
 PUBLIC = 'public'
+
+log = logging.getLogger(__name__)
 
 
 def create_account(
@@ -332,13 +335,16 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
                 coverages.add(coverage.id)
 
         for coverage in Coverage.objects.filter(type="point"):
-            coverage_shape = Point(
-                coverage.value.get('east', None),
-                coverage.value.get('north', None),
-            )
+            try:
+                coverage_shape = Point(
+                    coverage.value.get('east', None),
+                    coverage.value.get('north', None),
+                )
 
-            if search_polygon.intersects(coverage_shape):
-                coverages.add(coverage.id)
+                if search_polygon.intersects(coverage_shape):
+                    coverages.add(coverage.id)
+            except Exception as e:
+                log.error("Coverage value invalid for coverage id %d" % coverage.id)
 
         coverage_hits = (Coverage.objects.filter(id__in=coverages))
         q.append(Q(object_id__in=coverage_hits.values_list('object_id', flat=True)))
@@ -376,7 +382,8 @@ def get_resource_list(creator=None, group=None, user=None, owner=None, from_date
         q.append(Q(created__lte=to_date))
 
     if subject:
-        subjects = Subject.objects.filter(value__in=subject.split(','))
+        subjects = subject.split(',')
+        subjects = Subject.objects.filter(value__iregex=r'(' + '|'.join(subjects) + ')')
         q.append(Q(object_id__in=subjects.values_list('object_id', flat=True)))
 
     flt = BaseResource.objects.all()

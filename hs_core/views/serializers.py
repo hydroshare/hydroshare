@@ -99,6 +99,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     public = serializers.BooleanField()
     discoverable = serializers.BooleanField()
     shareable = serializers.BooleanField()
+    coverages = serializers.JSONField(required=False)
     immutable = serializers.BooleanField()
     published = serializers.BooleanField()
     bag_url = serializers.URLField()
@@ -131,6 +132,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_created',
                                'date_last_updated',
                                'bag_url',
+                               'coverages',
                                'science_metadata_url',
                                'resource_map_url',
                                'resource_url'])
