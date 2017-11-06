@@ -187,10 +187,9 @@ $(document).ready(function () {
                         "Your profile information must be complete before you can formally publish resources.");
                 }
 
-                var message = 'Your profile is nearly complete. ';
-                message += 'Please fill in the ';
-                message += '<strong>Organization</strong> field';
-                message += ' on the <a href="/user/'+user.id+'/">User Profile</a> page';
+                var message = 'Your profile is nearly complete. Please fill in the '
+                    + '<strong>Organization</strong> field'
+                    + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
                 showUniversalMessage("warn", message, 10000)();
             }
         },
