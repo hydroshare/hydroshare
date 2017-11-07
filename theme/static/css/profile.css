@@ -229,3 +229,20 @@ table.overview tr > td:first-child {
     margin-bottom: 20px;
     padding: 10px 0;
 }
+
+i.identifier-icon {
+    font-size: 36px;
+    margin-right: 12px;
+}
+
+i.identifier-icon.ai-orcid {
+    color: #a6ce39;
+}
+
+i.identifier-icon.ai-google-scholar-square {
+    color: #367df3;
+}
+
+i.identifier-icon.ai-researchgate-square {
+    color: #00CCBB;
+}

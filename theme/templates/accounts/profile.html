@@ -5,6 +5,7 @@
 
 {% block extra_head %}
     <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -428,125 +429,179 @@
 
                                 {#  CONTACT #}
                                 {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
-                                    <div class="panel panel-default">
-                                        <div class="panel-heading">
-                                            <h3 class="panel-title"><span
-                                                    class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
-                                        </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
+                                    </div>
 
-                                        <div class="panel-body">
-                                            <table class="overview" data-page-mode="view">
-                                                <tbody>
-                                                {#        Phone 1       #}
-                                                {% if profile.phone_1 %}
-                                                    <tr>
-                                                        <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                            {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                                        <td>{{ profile.phone_1 }}</td>
-                                                    </tr>
-                                                {% endif %}
-
-                                                {#        Phone 2       #}
-                                                {% if profile.phone_2 %}
-                                                    <tr>
-                                                        <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                                        <td>{{ profile.phone_2 }}</td>
-                                                    </tr>
-                                                {% endif %}
-
-                                                {#        Email       #}
-                                                {% if profile_user.email %}
-                                                    {% if not user.is_anonymous %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Email</span></td>
-                                                            <td>
-                                                                <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
-                                                                    {% if profile_user.first_name or profile_user.last_name %}
-                                                                        {{ profile_user.first_name }}
-                                                                        {{ profile_user.last_name }}
-                                                                    {% else %}
-                                                                        {{ profile_user.username }}
-                                                                    {% endif %}
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    {% else %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Email</span></td>
-                                                            <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                                        </tr>
-                                                    {% endif %}
-                                                {% endif %}
-
-                                                {#        Website       #}
-                                                {% if profile.website %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Website</span></td>
-                                                            <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
-                                                        </tr>
-                                                {% endif %}
-                                                </tbody>
-                                            </table>
-
-                                            {% if profile_user.id == user.id %}
-                                            <div class="row" data-page-mode="edit">
-                                                <fieldset>
-                                                    <div class="col-sm-12"><label>Phone 1</label></div>
-
-                                                    <div class="col-sm-6">
-                                                        <select name="phone_1_type" class="form-control">
-                                                            <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
-                                                                    value="Mobile">Mobile
-                                                            </option>
-                                                            <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
-                                                                Home
-                                                            </option>
-                                                            <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
-                                                                Work
-                                                            </option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-sm-6">
-                                                        <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
-                                                    </div>
-                                                </fieldset>
-
-                                                <fieldset>
-                                                    <div class="col-sm-12"><label>Phone 2</label></div>
-
-                                                    <div class="col-sm-6">
-                                                        <select name="phone_2_type" class="form-control">
-                                                            <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
-                                                                    value="Mobile">Mobile
-                                                            </option>
-                                                            <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
-                                                                Home
-                                                            </option>
-                                                            <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
-                                                                Work
-                                                            </option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-sm-6">
-                                                        <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
-                                                    </div>
-                                                </fieldset>
-                                                <fieldset class="col-sm-12">
-                                                    <label>Email address *</label>
-                                                    <input class="form-control form-required" id="id_email"
-                                                           value="{{ profile_user.email }}" name="email">
-                                                </fieldset>
-
-                                                <fieldset class="col-sm-12">
-                                                    <label>Website</label>
-                                                    <input class="form-control"
-                                                           {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
-                                                </fieldset>
-                                            </div>
+                                    <div class="panel-body">
+                                        <table class="overview" data-page-mode="view">
+                                            <tbody>
+                                            {#        Phone 1       #}
+                                            {% if profile.phone_1 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                        {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                    <td>{{ profile.phone_1 }}</td>
+                                                </tr>
                                             {% endif %}
+
+                                            {#        Phone 2       #}
+                                            {% if profile.phone_2 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                    <td>{{ profile.phone_2 }}</td>
+                                                </tr>
+                                            {% endif %}
+
+                                            {#        Email       #}
+                                            {% if profile_user.email %}
+                                                {% if not user.is_anonymous %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>
+                                                            <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
+                                                                {% if profile_user.first_name or profile_user.last_name %}
+                                                                    {{ profile_user.first_name }}
+                                                                    {{ profile_user.last_name }}
+                                                                {% else %}
+                                                                    {{ profile_user.username }}
+                                                                {% endif %}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {#        Website       #}
+                                            {% if profile.website %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Website</span></td>
+                                                        <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
+                                                    </tr>
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+
+                                        {% if profile_user.id == user.id %}
+                                        <div class="row" data-page-mode="edit">
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 1</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_1_type" class="form-control">
+                                                        <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 2</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_2_type" class="form-control">
+                                                        <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset class="col-sm-12">
+                                                <label>Email address *</label>
+                                                <input class="form-control form-required" id="id_email"
+                                                       value="{{ profile_user.email }}" name="email">
+                                            </fieldset>
+
+                                            <fieldset class="col-sm-12">
+                                                <label>Website</label>
+                                                <input class="form-control"
+                                                       {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
+                                            </fieldset>
+                                        </div>
+                                        {% endif %}
+                                </div>
+                            </div>
+                                {% endif %}
+
+                                {# AUTHOR IDENTIFIERS #}
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author Identifiers</h3>
+                                    </div>
+
+                                    <div class="panel-body">
+                                        <div><strong>Google Scholar</strong></div>
+                                        <table class="identifier">
+                                            <tr>
+                                                <td><i class="identifier-icon ai ai-google-scholar-square ai-3x"></i>
+                                                </td>
+                                                <td><a href="#"
+                                                       class="identifier-url">https://park.hydroshare.org/apps/</a></td>
+                                            </tr>
+                                        </table>
+                                        <hr>
+
+                                        <div><strong>ORCID</strong></div>
+                                        <table class="identifier">
+                                            <tr>
+                                                <td><i class="identifier-icon ai ai-orcid ai-3x"></i>
+                                                </td>
+                                                <td><a href="#"
+                                                       class="identifier-url">https://park.hydroshare.org/apps/</a></td>
+                                            </tr>
+                                        </table>
+                                        <hr>
+
+                                        <div><strong>Research Gate</strong></div>
+                                        <table class="identifier">
+                                            <tr>
+                                                <td><i class="identifier-icon ai ai-researchgate-square ai-3x"></i>
+                                                </td>
+                                                <td><a href="#"
+                                                       class="identifier-url">https://park.hydroshare.org/apps/</a></td>
+                                            </tr>
+                                        </table>
+                                        <hr>
+
+                                        <div><strong>ResearcherID</strong></div>
+                                        <table class="identifier">
+                                            <tr>
+                                                <td><i class="identifier-icon ai ai-google-scholar-square ai-3x"></i>
+                                                </td>
+                                                <td><a href="#"
+                                                       class="identifier-url">https://park.hydroshare.org/apps/</a></td>
+                                            </tr>
+                                        </table>
+                                        <hr>
                                     </div>
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
