@@ -2345,6 +2345,12 @@ div#coverage-spatial .coordinates-label-addon {
     background-position: 50% 50%;
 }
 
+.dropdown-profile-pic-thumbnail {
+    width: 80px;
+    height: 80px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
 
 h4.title {
     border-bottom: 1px solid #ddd;

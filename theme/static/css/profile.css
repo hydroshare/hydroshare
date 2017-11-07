@@ -20,13 +20,6 @@ textarea[name='details'] {
     color: #2D9EB3;
 }
 
-.dropdown-profile-pic-thumbnail {
-    width: 80px;
-    height: 80px;
-    margin-right: 10px;
-    margin-bottom: 10px;
-}
-
 .profile-header {
     margin: 40px 0;
 }
