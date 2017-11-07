@@ -235,6 +235,12 @@ i.identifier-icon {
     margin-right: 12px;
 }
 
+img.identifier-icon {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+}
+
 i.identifier-icon.ai-orcid {
     color: #a6ce39;
 }
@@ -245,4 +251,8 @@ i.identifier-icon.ai-google-scholar-square {
 
 i.identifier-icon.ai-researchgate-square {
     color: #00CCBB;
+}
+
+i.identifier-icon.fa-bookmark {
+    color: #b7b7b7;
 }
