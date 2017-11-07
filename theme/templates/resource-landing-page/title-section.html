@@ -156,10 +156,28 @@
         <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
             <span class="caret"></span></button>
         <ul class="dropdown-menu">
-          <li title="scidas">
-            <a href="{% url 'scidas_virtual_app' cm.short_id %}">
+          <li title="scidas-optimal">
+            <a href="{% url 'scidas_virtual_app' cm.short_id 'optimal' %}">
                 <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
-                <span>JupyterHub Appliance virtual infrastructure dynamically provisioned by SciDAS </span>
+                <span>JupyterHub Appliance (Optimal)</span>
+            </a>
+          </li>
+          <li title="scidas-aws">
+            <a href="{% url 'scidas_virtual_app' cm.short_id 'aws' %}">
+                <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                <span>JupyterHub Appliance (AWS)</span>
+            </a>
+          </li>
+          <li title="scidas-azure">
+            <a href="{% url 'scidas_virtual_app' cm.short_id 'azure' %}">
+                <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                <span>JupyterHub Appliance (Azure)</span>
+            </a>
+          </li>
+          <li title="scidas">
+            <a href="{% url 'scidas_virtual_app' cm.short_id 'chameleon' %}">
+                <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                <span>JupyterHub Appliance (Chameleon)</span>
             </a>
           </li>
           {% if relevant_tools %}

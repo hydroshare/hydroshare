@@ -420,8 +420,11 @@ def create_irods_account(request):
         )
 
 
-def create_scidas_virtual_app(request, res_id):
+def create_scidas_virtual_app(request, res_id, cluster):
     res = get_resource_by_shortkey(res_id)
+    cluster_name = cluster
+    if cluster_name != 'chameleon' and cluster_name != 'aws' and cluster_name != 'azure':
+        cluster_name = ''
     file_data_list = []
     file_path = '/'+ds.IRODS_ZONE+'/home/'+ds.IRODS_USERNAME
     for rf in ResourceFile.objects.filter(object_id=res.id):
@@ -464,6 +467,9 @@ def create_scidas_virtual_app(request, res_id):
             }
         ]
     }
+
+    if cluster_name:
+        p_data['cluster'] = cluster_name
 
     # delete the appliance before posting to create a new one in case it already exists
     requests.delete(url+'/'+app_id)

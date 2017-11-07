@@ -437,7 +437,9 @@ def _extract_metadata(resource, sqlite_file_name):
                         # create site element
                         resource.metadata.create_element('site', **data_dict)
                     else:
-                        _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
+                        matching_site = [s for s in resource.metadata.sites if
+                                         s.site_code == sampling_feature["SamplingFeatureCode"]][0]
+                        _update_element_series_ids(matching_site, result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
 
@@ -468,7 +470,9 @@ def _extract_metadata(resource, sqlite_file_name):
                         _update_element_series_ids(resource.metadata.variables[0],
                                                    result["ResultUUID"])
                 else:
-                    _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
+                    matching_variable = [v for v in resource.metadata.variables if
+                                         v.variable_code == variable["VariableCode"]][0]
+                    _update_element_series_ids(matching_variable, result["ResultUUID"])
 
                 # extract method element data
                 # Start with Results table -> FeatureActions table to -> Actions table to ->
@@ -497,8 +501,9 @@ def _extract_metadata(resource, sqlite_file_name):
                         # create method element
                         resource.metadata.create_element('method', **data_dict)
                     else:
-                        _update_element_series_ids(resource.metadata.methods[0],
-                                                   result["ResultUUID"])
+                        matching_method = [m for m in resource.metadata.methods if
+                                           m.method_code == method["MethodCode"]][0]
+                        _update_element_series_ids(matching_method, result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
 
@@ -527,8 +532,10 @@ def _extract_metadata(resource, sqlite_file_name):
                         _update_element_series_ids(resource.metadata.processing_levels[0],
                                                    result["ResultUUID"])
                 else:
-                    _update_element_series_ids(resource.metadata.processing_levels[0],
-                                               result["ResultUUID"])
+                    matching_pro_level = [p for p in resource.metadata.processing_levels if
+                                          p.processing_level_code == pro_level[
+                                              "ProcessingLevelCode"]][0]
+                    _update_element_series_ids(matching_pro_level, result["ResultUUID"])
 
                 # extract data for TimeSeriesResult element
                 # Start with Results table
