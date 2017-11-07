@@ -459,6 +459,7 @@ function share_resource_ajax_submit(form_id) {
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
                 rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
+
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
@@ -496,7 +497,14 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     rowTemplate.find(".profile-pic-thumbnail").remove();
-                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    if (json_response.group_pic != "No picture provided") {
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    }
+                    else {
+                        // Set default group picture
+                        var defaultImgURL = $("#templateRow .group-preview-image-default")[0].style.backgroundImage;
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: " + defaultImgURL);
+                    }
                 }
 
                 if (access_type == "view") {

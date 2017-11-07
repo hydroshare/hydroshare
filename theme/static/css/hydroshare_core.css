@@ -1902,7 +1902,7 @@ ul.resource-search-options {
 }
 
 /* New access panel style */
-div.user-scope .user-username-content {
+table.user-scope .user-username-content {
     color: rgba(0,0,0,0.54);
 }
 

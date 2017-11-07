@@ -1741,20 +1741,26 @@
                                 {% for u in edit_groups %}
                                 <tr id="row-id-{{ u.pk }}">
                                     <td>
-                                        <div class="user-scope">
-                                            <div class="group-image-wrapper extra-small">
-                                                {% if u.gaccess.picture and u.gaccess.picture.url %}
-                                                    <div class="group-image-extra-small group-preview-image-default"
-                                                     style="background-image: url({{ u.gaccess.picture.url }})"></div>
-                                                {% else %}
-                                                    <div class="group-image-extra-small group-preview-image-default"
-                                                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                {% endif %}
-                                            </div>
-                                            <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
-                                            <br>
-                                            <span class="user-username-content">(Group)</span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <tr>
+                                                <td>
+                                                    <div class="group-image-wrapper extra-small">
+                                                        {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                        <div class="group-image-extra-small group-preview-image-default"
+                                                             style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                                        {% else %}
+                                                        <div class="group-image-extra-small group-preview-image-default"
+                                                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div value="{{ u.pk }}" class="user-name">{{ u.name }}</div>
+
+                                                    <div class="user-username-content">(Group)</div>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">
@@ -1816,20 +1822,25 @@
                                 {% for u in view_groups %}
                                 <tr id="row-id-{{ u.pk }}">
                                     <td>
-                                        <div class="user-scope">
-                                            <div class="group-image-wrapper extra-small">
-                                                {% if u.gaccess.picture and u.gaccess.picture.url %}
-                                                    <div class="group-image-extra-small group-preview-image-default"
-                                                         style="background-image: url({{ u.gaccess.picture.url }})"></div>
-                                                {% else %}
-                                                    <div class="group-image-extra-small group-preview-image-default"
-                                                         style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
-                                                {% endif %}
-                                            </div>
-                                            <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
-                                            <br>
-                                            <span class="user-username-content">(Group)</span>
-                                        </div>
+                                        <table class="user-scope">
+                                            <tr>
+                                                <td>
+                                                    <div class="group-image-wrapper extra-small">
+                                                        {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                        <div class="group-image-extra-small group-preview-image-default"
+                                                             style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                                        {% else %}
+                                                        <div class="group-image-extra-small group-preview-image-default"
+                                                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div value="{{ u.pk }}" class="user-name">{{ u.name }}</div>
+                                                    <div class="user-username-content">(Group)</div>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
 
                                     <td class="user-roles">
