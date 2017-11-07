@@ -215,16 +215,6 @@ def update_user_profile(request):
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
-
-                password1 = request.POST['password1']
-                password2 = request.POST['password2']
-                if len(password1) > 0:
-                    if password1 == password2:
-                        user.set_password(password1)
-                        user.save()
-                    else:
-                        raise ValidationError("Passwords do not match.")
-
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
                 profile.save()
