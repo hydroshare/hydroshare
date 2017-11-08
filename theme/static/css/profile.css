@@ -29,21 +29,6 @@ textarea[name='details'] {
     height: auto !important;
 }
 
-.full-width-tabs-container .panel-heading {
-    color: #757575;
-    text-shadow: 0 1px 0 #fff;
-}
-
-.nav-tabs > li > a {
-    background: #FFF;
-    color:#757575;
-    -webkit-border-top-left-radius: 5px;
-    -webkit-border-top-right-radius: 5px;
-    -moz-border-radius-topleft: 5px;
-    -moz-border-radius-topright: 5px;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
 /* Layout pending back end functionality */
 /*#social > div > div > ul > li {*/
     /*border: 1px solid #0A91AB;*/
