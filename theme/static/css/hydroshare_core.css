@@ -2896,6 +2896,14 @@ span.you-flag {
     margin-bottom:10px;
 }
 
+.table-res-type-icon {
+    background-color: #FFF;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
 /*  Home page revamp */
 #home-page-carousel {
 	height: 400px;
