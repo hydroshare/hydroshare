@@ -27,9 +27,15 @@
                     <div class="row">
                         {% if profile_user.id == user.id %}
                             <div class="col-xs-12 col-sm-3 height-fix pull-right">
-                                <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button icon-blue" title="Edit profile"></span>
-                                <button type="submit" data-page-mode="edit" id="btn-save-profile" class="btn btn-primary pull-right">Save changes</button>
-                                <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
+                                <span data-page-mode="view" id="btn-edit-profile" data-toggle="tooltip"
+                                      data-placement="left"
+                                      class="glyphicon glyphicon-pencil pull-right icon-button icon-blue"
+                                      title="Edit profile"></span>
+                                <button type="submit" data-page-mode="edit" id="btn-save-profile"
+                                        class="btn btn-primary pull-right">Save changes
+                                </button>
+                                <span data-page-mode="edit" id="btn-cancel-profile-edit"
+                                      class="btn btn-default pull-right">Cancel</span>
                             </div>
                         {% endif %}
 
