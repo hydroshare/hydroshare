@@ -1358,6 +1358,11 @@ body > .main-container {
 	outline: 0;
 }
 
+.custom-btn-toolbar .disabled > span {
+	color: #999;
+	cursor: default;
+}
+
 #success-alert, #error-alert{
     position: fixed;
     z-index: 999;
