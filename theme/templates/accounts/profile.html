@@ -550,98 +550,145 @@
                                 {% endif %}
 
                                 {# AUTHOR IDENTIFIERS #}
-                                <div class="panel panel-default">
+                                <div class="panel panel-default {% if identifiers|length == 0 %}hidden{% endif %}"
+                                     data-page-mode="view">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
-                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author Identifiers</h3>
+                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author
+                                            Identifiers</h3>
                                     </div>
 
                                     <div class="panel-body">
-                                        <div data-page-mode="view">
-                                            <table class="identifiers">
-                                                <tr><td colspan="2"><strong>Google Scholar</strong></td></tr>
-                                                <tr>
-                                                    <td>
-                                                        <i class="identifier-icon ai ai-google-scholar-square ai-3x"></i>
-                                                    </td>
-                                                    <td><a href="#"
-                                                           class="identifier-url">https://www.hydroshare.org/resource/e8c66774c2394fcaacc71e12f95f9ab8/</a>
-                                                    </td>
-                                                </tr>
+                                        <table class="identifiers">
+                                            {% for identifier in identifiers %}
+                                            <tr>
+                                                <td colspan="2"><strong>{{ identifier.name }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    {% if identifier.name == 'Google Scholar' %}
+                                                    <i class="identifier-icon ai ai-google-scholar-square"></i>
+                                                    {% elif identifier.name == 'ORCID' %}
+                                                    <i class="identifier-icon ai ai-orcid"></i>
+                                                    {% elif identifier.name == 'Research Gate' %}
+                                                    <i class="identifier-icon ai ai-researchgate-square"></i>
+                                                    {% elif identifier.name == 'ResearcherID' %}
+                                                    <img class="identifier-icon"
+                                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                                         alt="ResearcherID icon"/>
+                                                    {% else %}
+                                                    <i class="identifier-icon fa fa-address-card"></i>
+                                                    {% endif %}
+                                                </td>
+                                                <td><a href="#"
+                                                       class="identifier-url">{{ identifier.link }}</a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
 
-                                                <tr><td colspan="2"><strong>ORCID</strong></td></tr>
-                                                <tr>
-                                                    <td><i class="identifier-icon ai ai-orcid ai-3x"></i>
-                                                    </td>
-                                                    <td><a href="#"
-                                                           class="identifier-url">http://orcid.org/0000-0002-1998-3479</a>
-                                                    </td>
-                                                </tr>
+                                            <!--Examples-->
+                                            <!--<tr>-->
+                                                <!--<td colspan="2"><strong>Google Scholar</strong></td>-->
+                                            <!--</tr>-->
+                                            <!--<tr>-->
+                                                <!--<td>-->
+                                                    <!--<i class="identifier-icon ai ai-google-scholar-square"></i>-->
+                                                <!--</td>-->
+                                                <!--<td><a href="#"-->
+                                                       <!--class="identifier-url">https://www.hydroshare.org/resource/e8c66774c2394fcaacc71e12f95f9ab8/</a>-->
+                                                <!--</td>-->
+                                            <!--</tr>-->
 
-                                                <tr><td colspan="2"><strong>Research Gate</strong></td></tr>
-                                                <tr>
-                                                    <td><i class="identifier-icon ai ai-researchgate-square ai-3x"></i>
-                                                    </td>
-                                                    <td><a href="#"
-                                                           class="identifier-url">https://park.hydroshare.org/apps/</a>
-                                                    </td>
-                                                </tr>
+                                            <!--<tr>-->
+                                                <!--<td colspan="2"><strong>ORCID</strong></td>-->
+                                            <!--</tr>-->
+                                            <!--<tr>-->
+                                                <!--<td><i class="identifier-icon ai ai-orcid"></i>-->
+                                                <!--</td>-->
+                                                <!--<td><a href="#"-->
+                                                       <!--class="identifier-url">http://orcid.org/0000-0002-1998-3479</a>-->
+                                                <!--</td>-->
+                                            <!--</tr>-->
 
-                                                <tr><td colspan="2"><strong>ResearcherID</strong></td></tr>
-                                                <tr>
-                                                    <td><img class="identifier-icon" src="{{ STATIC_URL }}img/researcherID.png"
-                                                             alt="ResearcherID icon"/></td>
-                                                    <td><a href="#"
-                                                           class="identifier-url">https://park.hydroshare.org/apps/</a>
-                                                    </td>
-                                                </tr>
+                                            <!--<tr>-->
+                                                <!--<td colspan="2"><strong>Research Gate</strong></td>-->
+                                            <!--</tr>-->
+                                            <!--<tr>-->
+                                                <!--<td><i class="identifier-icon ai ai-researchgate-square"></i>-->
+                                                <!--</td>-->
+                                                <!--<td><a href="#"-->
+                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
+                                                <!--</td>-->
+                                            <!--</tr>-->
 
-                                                <tr><td colspan="2"><strong>Some other</strong></td></tr>
-                                                <tr>
-                                                    <td><i class="identifier-icon fa fa-address-card"
-                                                           aria-hidden="true"></i></i>
-                                                    </td>
-                                                    <td><a href="#"
-                                                           class="identifier-url">https://park.hydroshare.org/apps/</a>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </div>
+                                            <!--<tr>-->
+                                                <!--<td colspan="2"><strong>ResearcherID</strong></td>-->
+                                            <!--</tr>-->
+                                            <!--<tr>-->
+                                                <!--<td><img class="identifier-icon"-->
+                                                         <!--src="{{ STATIC_URL }}img/researcherID.png"-->
+                                                         <!--alt="ResearcherID icon"/></td>-->
+                                                <!--<td><a href="#"-->
+                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
+                                                <!--</td>-->
+                                            <!--</tr>-->
 
-                                        <div data-page-mode="edit">
-                                            <div id="edit-identifiers-container">
-                                                <div id="identifier-template" class="well hidden">
-                                                    <div style="height:22px;">
-                                                        <button type="button" class="close">&times;</button>
-                                                    </div>
+                                            <!--<tr>-->
+                                                <!--<td colspan="2"><strong>Some other</strong></td>-->
+                                            <!--</tr>-->
+                                            <!--<tr>-->
+                                                <!--<td><i class="identifier-icon fa fa-address-card"-->
+                                                       <!--aria-hidden="true"></i></i>-->
+                                                <!--</td>-->
+                                                <!--<td><a href="#"-->
+                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
+                                                <!--</td>-->
+                                            <!--</tr>-->
+                                        </table>
+                                    </div>
+                                </div>
 
-                                                    <fieldset>
-                                                        <label for="selectIdentifier">Identifier Name</label>
-                                                        <select name="identifier_name"
-                                                                class="form-control select-identifier"
-                                                                id="selectIdentifier">
-                                                            <option value="Google Scholar">Google Scholar</option>
-                                                            <option value="ORCID">ORCID</option>
-                                                            <option value="ResearchGate">ResearchGate</option>
-                                                            <option value="ResearcherID">ResearcherID</option>
-                                                            <option value="Other">Other</option>
-                                                        </select>
-                                                    </fieldset>
+                                <div class="panel panel-default"  data-page-mode="edit">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author
+                                            Identifiers</h3>
+                                    </div>
 
-                                                    <fieldset class="hidden indentifier-specify">
-                                                        <label for="identifier_name">Specify</label>
-                                                        <input id="identifier_name" class="form-control">
-                                                    </fieldset>
-
-                                                    <fieldset>
-                                                        <label for="identifier_link">Identifier Link</label>
-                                                        <input id="identifier_link" name="identifier_link"
-                                                               class="form-control identifier-link">
-                                                    </fieldset>
+                                    <div class="panel-body">
+                                        <div id="edit-identifiers-container">
+                                            <div id="identifier-template" class="well hidden">
+                                                <div style="height:22px;">
+                                                    <button type="button" class="close">&times;</button>
                                                 </div>
+
+                                                <fieldset>
+                                                    <label for="selectIdentifier">Identifier Name</label>
+                                                    <select name="identifier_name"
+                                                            class="form-control select-identifier"
+                                                            id="selectIdentifier">
+                                                        <option value="Google Scholar">Google Scholar</option>
+                                                        <option value="ORCID">ORCID</option>
+                                                        <option value="ResearchGate">ResearchGate</option>
+                                                        <option value="ResearcherID">ResearcherID</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </fieldset>
+
+                                                <fieldset class="hidden indentifier-specify">
+                                                    <label for="identifier_name">Specify</label>
+                                                    <input id="identifier_name" class="form-control">
+                                                </fieldset>
+
+                                                <fieldset>
+                                                    <label for="identifier_link">Identifier Link</label>
+                                                    <input id="identifier_link" name="identifier_link"
+                                                           class="form-control identifier-link">
+                                                </fieldset>
                                             </div>
-                                            <button id="btn-add-identifier" type="button" class="btn btn-success">Add New</button>
                                         </div>
+                                        <button id="btn-add-identifier" type="button" class="btn btn-success">Add New
+                                        </button>
                                     </div>
                                 </div>
                             </div>
