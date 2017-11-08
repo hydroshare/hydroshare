@@ -1261,9 +1261,11 @@ class TimeSeriesMetaDataMixin(models.Model):
 
         cur.execute("SELECT ResultID FROM Results")
         results = cur.fetchall()
+        cur.execute("SELECT DatasetID FROM DataSets")
+        dataset = cur.fetchone()
         for index, result in enumerate(results):
             bridge_id = index + 1
-            cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+            cur.execute(insert_sql, (bridge_id, dataset['DatasetID'], result['ResultID']), )
 
     def update_utcoffset_related_tables(self, con, cur):
         # updates Actions, Results, TimeSeriesResultValues tables
@@ -1813,6 +1815,9 @@ class TimeSeriesMetaDataMixin(models.Model):
 
                 # insert record to People table
                 if not is_file_type:
+                    # since creators and contributors can only be created at the resource level
+                    # the following updates are applicable only in the case of TimeSeries resource
+                    # and not in the case of TimeSeries file type
                     people_data = self.update_people_table_insert(con, cur)
 
                     # insert record to Organizations table
