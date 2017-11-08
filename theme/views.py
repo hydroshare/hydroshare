@@ -469,7 +469,7 @@ def create_scidas_virtual_app(request, res_id, cluster):
     }
 
     if cluster_name:
-        p_data['cluster'] = cluster_name
+        p_data['containers'][0]['cluster'] = cluster_name
 
     # delete the appliance before posting to create a new one in case it already exists
     requests.delete(url+'/'+app_id)
