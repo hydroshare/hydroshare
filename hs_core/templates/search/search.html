@@ -201,95 +201,7 @@
                             {% for result in page_obj.object_list %}
                                 <tr>
                                     <td>
-                                        <span class="resource-type-text">{{ result.object|resource_type }}</span>
-                                        {% if  result.object|resource_type == "Generic" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Geographic Raster" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Model Program Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Model Instance Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "SWAT Model Instance Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Multidimensional (NetCDF)" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Time Series" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Web App Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "HIS Referenced Time Series" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Script Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Collection Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                                 alt="{{ result.object|resource_type }}"
-                                                 title="{{ result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% elif  result.object|resource_type == "Composite Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/composite48x48.png"
-                                                 alt="{{ result.object|resource_type }}"
-                                                 title="{{ result.object|resource_type }}"
-                                                 class="table-res-type-icon"/>
-                                        {% endif %}
-
-                                        {#  Sharing Status icons #}
-                                        <div class="access-icon-wrapper">
-                                            {% if result.object.raccess.published %}
-                                                <img src="{{ STATIC_URL }}img/published.png"
-                                                     alt="Published Resource" title="Published"/>
-                                            {% elif result.object.raccess.public %}
-                                                <img src="{{ STATIC_URL }}img/public.png"
-                                                     alt="Public Resource" title="Public"/>
-                                            {% elif result.object.raccess.discoverable %}
-                                                <img src="{{ STATIC_URL }}img/discoverable.png"
-                                                     alt="Discoverable Resource" title="Discoverable"/>
-                                            {% else %}
-                                                <img src="{{ STATIC_URL }}img/private.png"
-                                                     alt="Private Resource" title="Private"/>
-                                            {% endif %}
-
-                                            {% if result.object.raccess.published %}
-                                                {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                    <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
-                                                         title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                                {% endif %}
-                                            {% else %}
-                                                {% if result.object.raccess.shareable %}
-                                                    <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                                         title="Shareable"/>
-                                                {% else %}
-                                                    <img src="{{ STATIC_URL }}img/non-shareable.png"
-                                                         alt="Non Sharable Resource"
-                                                         title="Not Shareable"/>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
+                                        {% include "includes/res_type_col.html" with resource=result.object %}
                                     </td>
                                     <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></strong></td>
                                     {% if result.object.first_creator.description %}
@@ -297,10 +209,10 @@
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.created|date:"m/d/Y" }}, {{ result.object.created|time }}</td>
-                                    <td>{{ result.object.created|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
-                                    <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
-                                    <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.object.created|date:"M d, Y" }} at {{ result.object.created|time }}</td>
+                                    <td>{{ result.object.created|date:"U" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
