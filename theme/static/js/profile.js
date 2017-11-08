@@ -260,6 +260,34 @@ $(document).ready(function () {
         }
     });
 
+    $("#edit-identifiers-container").on("change", ".select-identifier", function() {
+        var value = $(this).val();
+        var showOther = value === "Other";
+
+        var other = $(this).closest(".well").find(".indentifier-specify");
+
+        other.toggleClass("hidden", !showOther);
+
+        if (showOther) {
+            other.find("input").attr("name", "identifier_name");
+            $(this).removeAttr("name");
+        }
+        else {
+            $(this).attr("name", "identifier_name");
+            other.find("input").removeAttr("name");
+        }
+    });
+
+    $("#edit-identifiers-container").on("click", ".close", function() {
+        $(this).closest(".well").remove();
+    });
+
+    $("#btn-add-identifier").click(function() {
+        var template = $("#identifier-template").clone();
+        template.toggleClass("hidden", false);
+        $("#edit-identifiers-container").append(template);
+    });
+
     $("[data-page-mode='edit']").hide();
     $("#btn-edit-profile").click(function () {
         setEditMode();
@@ -323,7 +351,6 @@ $(document).ready(function () {
     }
 
     $("tr[data-type='all']").find(".badge").text(collection["total"]);
-
 
     // Unspecified goes away as soon as a user clicks.
     $("input[name='state']").click(function () {

@@ -252,6 +252,10 @@ table.identifiers tr:nth-child(even) td:first-child {
     text-align: center;
 }
 
+table.identifiers tr td {
+    word-break: break-word;
+}
+
 i.identifier-icon {
     font-size: 36px;
     margin-right: 12px;
