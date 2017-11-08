@@ -566,13 +566,13 @@
                                             </tr>
                                             <tr>
                                                 <td>
-                                                    {% if identifier.name == 'Google Scholar' %}
+                                                    {% if identifier.name == "Google Scholar" %}
                                                     <i class="identifier-icon ai ai-google-scholar-square"></i>
-                                                    {% elif identifier.name == 'ORCID' %}
+                                                    {% elif identifier.name == "ORCID" %}
                                                     <i class="identifier-icon ai ai-orcid"></i>
-                                                    {% elif identifier.name == 'Research Gate' %}
+                                                    {% elif identifier.name == "Research Gate" %}
                                                     <i class="identifier-icon ai ai-researchgate-square"></i>
-                                                    {% elif identifier.name == 'ResearcherID' %}
+                                                    {% elif identifier.name == "ResearcherID" %}
                                                     <img class="identifier-icon"
                                                          src="{{ STATIC_URL }}img/researcherID.png"
                                                          alt="ResearcherID icon"/>
@@ -662,7 +662,7 @@
                                                     <button type="button" class="close">&times;</button>
                                                 </div>
 
-                                                <fieldset>
+                                                <fieldset class="select-identifier-fieldset">
                                                     <label for="selectIdentifier">Identifier Name</label>
                                                     <select name="identifier_name"
                                                             class="form-control select-identifier"
@@ -675,7 +675,7 @@
                                                     </select>
                                                 </fieldset>
 
-                                                <fieldset class="hidden indentifier-specify">
+                                                <fieldset class="hidden identifier-specify">
                                                     <label for="identifier_name">Specify</label>
                                                     <input id="identifier_name" class="form-control">
                                                 </fieldset>
@@ -686,6 +686,57 @@
                                                            class="form-control identifier-link">
                                                 </fieldset>
                                             </div>
+
+                                            <!--TODO: Pabitra, uncomment once context variable is set-->
+                                            {% comment %}
+                                            {% for identifier in identifiers %}
+                                            <div class="well hidden">
+                                                <div style="height:22px;">
+                                                    <button type="button" class="close">&times;</button>
+                                                </div>
+
+                                                <fieldset class="select-identifier-fieldset">
+                                                    <label for="select_identifier{{ forloop.counter }}">Identifier Name</label>
+                                                    <select class="form-control select-identifier"
+                                                            id="select_identifier{{ forloop.counter }}"
+                                                            {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "Research Gate" or identifier.name == "ResearcherID" %}
+                                                            name="identifiers[" + {{ forloop.counter }} + "][identifier_name]"
+                                                            value="{{ identifier.name }}"
+                                                            {% else %}
+                                                            value = "Other"
+                                                            {% endif %}
+                                                    >
+                                                        <option value="Google Scholar">Google Scholar</option>
+                                                        <option value="ORCID">ORCID</option>
+                                                        <option value="ResearchGate">ResearchGate</option>
+                                                        <option value="ResearcherID">ResearcherID</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </fieldset>
+
+                                                {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "Research Gate" or identifier.name == "ResearcherID" %}
+                                                <fieldset class="hidden identifier-specify">
+                                                    <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
+                                                    <input id="identifier_specify_name{{ forloop.counter }}"
+                                                           class="form-control">
+                                                </fieldset>
+                                                {% else %}
+                                                <fieldset class="identifier-specify">
+                                                    <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
+                                                    <input id="identifier_specify_name{{ forloop.counter }}"
+                                                           name="identifiers[{{ forloop.counter }}][identifier_name]"
+                                                           class="form-control">
+                                                </fieldset>
+                                                {% endif %}
+
+                                                <fieldset>
+                                                    <label for="identifier_link{{ forloop.counter }}">Identifier Link</label>
+                                                    <input id="identifier_link{{ forloop.counter }}" name="identifier_link"
+                                                           class="form-control identifier-link">
+                                                </fieldset>
+                                            </div>
+                                            {% endfor %}
+                                            {% endcomment %}
                                         </div>
                                         <button id="btn-add-identifier" type="button" class="btn btn-success">Add New
                                         </button>

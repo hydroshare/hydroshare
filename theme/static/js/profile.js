@@ -264,7 +264,7 @@ $(document).ready(function () {
         var value = $(this).val();
         var showOther = value === "Other";
 
-        var other = $(this).closest(".well").find(".indentifier-specify");
+        var other = $(this).closest(".well").find(".identifier-specify");
 
         other.toggleClass("hidden", !showOther);
 
@@ -296,6 +296,14 @@ $(document).ready(function () {
         identifiers.each(function(index, item) {
            $(item).find(".select-identifier").attr("name", "identifiers[" + index + "][identifier_name]");
            $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifiers[\" + index + \"][identifier_name]");
+
+
+           $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
+           $(item).find(".identifier-specify label").attr("for", "identifier_name" + index);
+
+           $(item).find(".select-identifier-fieldset select").attr("id", "select_identifier" + index);
+           $(item).find(".select-identifier-fieldset label").attr("for", "select_identifier" + index);
+
            $(item).find(".identifier-link").attr("name", "identifiers[" + index + "][identifier_link]");
         });
     }
