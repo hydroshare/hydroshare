@@ -294,21 +294,25 @@ $(document).ready(function () {
     function updateIdentifierFormIndexes() {
         var identifiers = $("#edit-identifiers-container").find(".well");
         identifiers.each(function(index, item) {
+            // Set name attributes
            $(item).find(".select-identifier").attr("name", "identifiers[" + index + "][identifier_name]");
            $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifiers[\" + index + \"][identifier_name]");
+           $(item).find(".identifier-link").attr("name", "identifiers[" + index + "][identifier_link]");
 
-
+            // Set labels and references for screen readers
            $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
            $(item).find(".identifier-specify label").attr("for", "identifier_name" + index);
 
            $(item).find(".select-identifier-fieldset select").attr("id", "select_identifier" + index);
            $(item).find(".select-identifier-fieldset label").attr("for", "select_identifier" + index);
 
-           $(item).find(".identifier-link").attr("name", "identifiers[" + index + "][identifier_link]");
+            $(item).find(".identifier-link-container input").attr("id", "identifier_link" + index);
+           $(item).find(".identifier-link-container label").attr("for", "identifier_link" + index);
         });
     }
 
     $("[data-page-mode='edit']").hide();
+
     $("#btn-edit-profile").click(function () {
         setEditMode();
     });
