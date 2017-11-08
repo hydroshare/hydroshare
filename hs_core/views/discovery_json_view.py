@@ -2,6 +2,7 @@ import json
 from django.http import HttpResponse
 from haystack.generic_views import FacetedSearchView
 from hs_core.discovery_form import DiscoveryForm
+import time
 
 # View class for generating JSON data format from Haystack
 # returned JSON objects array is used for building the map view
@@ -13,6 +14,7 @@ class DiscoveryJsonView(FacetedSearchView):
 
     # overwrite Haystack generic_view.py form_valid() function to generate JSON response
     def form_valid(self, form):
+        start = time.time()
         # initialize an empty array for holding the result objects with coordinate values
         coor_values = []
         # get query set
@@ -20,7 +22,7 @@ class DiscoveryJsonView(FacetedSearchView):
 
         # When we have a GET request with search query, build our JSON objects array
         if len(self.request.GET):
-
+            
             # iterate all the search results
             for result in self.get_queryset():
                 # initialize a null JSON object
@@ -60,4 +62,9 @@ class DiscoveryJsonView(FacetedSearchView):
             # encode the results results array to JSON array
             the_data = json.dumps(coor_values)
             # return JSON response
+            end = time.time()
+            elapsed_time = end - start
+            output_file = open('server_json_request.txt', 'a')
+            output_file.write(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)) + '\n')
+            output_file.close()
             return HttpResponse(the_data, content_type='application/json')

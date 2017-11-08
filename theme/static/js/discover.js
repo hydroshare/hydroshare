@@ -952,12 +952,18 @@ var updateListView = function (data) {
         requestURL += buildURLOnCheckboxes();
     }
     $("#discover-list-loading-spinner").show();
+    var djangoTemplateStart = new Date();
     $.ajax({
         type: "GET",
         url: requestURL,
         data: data,
         dataType: 'html',
         success: function (data) {
+            var djangoTemplateEnd = new Date();
+            var djangoElapsed = djangoTemplateEnd - djangoTemplateStart;
+            console.log("Django template elapsed: " + djangoElapsed);
+
+            var tableViewRenderStart = new Date();
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             var tableDiv = $("#items-discovered", data);
@@ -967,6 +973,9 @@ var updateListView = function (data) {
 
             initializeTable();
             $("#discover-list-loading-spinner").hide();
+            var tableViewRenderEnd = new Date();
+            var tableViewRenderElapsed = tableViewRenderEnd - tableViewRenderStart;
+            console.log("table view render elapsed: " + tableViewRenderElapsed);
         },
         failure: function (data) {
             console.error("Ajax call for updating list-view data failed");
@@ -997,11 +1006,16 @@ var updateFacetingItems = function (request_url) {
 };
 
 var updateListFaceting = function (request_url) {
+    var updateListFacetingStart = new Date();
     return $.ajax({
         type: "GET",
         url: request_url,
         dataType: 'html',
         success: function (data) {
+            var updateListFacetingEnd = new Date();
+            var updateListFacetingElapsed = new Date();
+            console.log("update list faceting elapsed: " + updateListFacetingElapsed);
+            var updateListFacetingRenderStart = new Date();
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             var tableDiv = $("#items-discovered", data);
@@ -1009,6 +1023,9 @@ var updateListFaceting = function (request_url) {
             var pageOptionDiv = $("#discover-page-options", data);
             $("#discover-page-options").html(pageOptionDiv);
             initializeTable();
+            var updateListFacetingRenderEnd = new Date();
+            var updateListFacetingRenderEplased = updateListFacetingRenderEnd - updateListFacetingRenderStart;
+            console.log("update list faceting render: " + updateListFacetingRenderEplased);
         },
         failure: function (data) {
             console.error("Ajax call for updating list-view data failed");
@@ -1032,6 +1049,7 @@ var updateMapFaceting = function (view_type){
         removeBoxes();
         coverage_type = "box";
     }
+    var updateMapFacetingStart = new Date();
     return $.ajax({
         type: "GET",
         url: map_update_url,
@@ -1046,6 +1064,10 @@ var updateMapFaceting = function (view_type){
         },
         dataType: 'json',
         success: function (data) {
+            var updateMapFacetingEnd = new Date();
+            var updateMapFacetingElapsed = updateMapFacetingEnd - updateMapFacetingStart; 
+            console.log("map update elapsed: " + updateMapFacetingElapsed);
+            var updateMapFacetingRenderStart = new Date();
             if (view_type == "point") {
                 raw_point_results = [];
                 for (var j = 0; j < data.length; j++) {
@@ -1060,7 +1082,9 @@ var updateMapFaceting = function (view_type){
                 }
             }
             updateMapView(view_type);
-
+            var updateMapFacetingRenderEnd = new Date();
+            var updateMapFacetingRenderElapsed = updateMapFacetingRenderEnd - updateMapFacetingRenderStart;
+            console.log("update map faceting render elapsed: " + updateMapFacetingRenderElapsed);
 
         },
         failure: function(data) {
@@ -1277,6 +1301,7 @@ $(document).ready(function () {
         var end_date = $("#id_end_date").val();
         if (tabId == "map-area-view") {
             if(maps["area_map"] == null){
+                var areaMapInitStart = new Date();
                 $("#discover-area-map-loading-spinner").show();
                 $.ajax({
                     type: "GET",
@@ -1292,6 +1317,10 @@ $(document).ready(function () {
                     },
                     dataType: 'json',
                     success: function (data) {
+                        var areaMapInitEnd = new Date();
+                        var areaMapInitElapsed = areaMapInitEnd - areaMapInitStart;
+                        console.log("are map init elapsed: " + areaMapInitElapsed);
+                        var areaMapInitRenderStart = new Date();
                         var json_box_results = [];
                         for (var j = 0; j < data.length; j++) {
                             var item = $.parseJSON(data[j]);
@@ -1302,6 +1331,9 @@ $(document).ready(function () {
                         setMapItemsList(json_box_results, "area_map",null);
                         $("#resource-search").show();
                         $("#discover-area-map-loading-spinner").hide();
+                        var areaMapInitRenderEnd = new Date();
+                        var areaMapInitRenderElapsed = areaMapInitRenderEnd - areaMapInitRenderStart;
+                        console.log("area map init elapsed: " + areaMapInitRenderElapsed);
                         if (maps["point_map"] == null) {
                             map_set = true;
                         }
@@ -1324,6 +1356,7 @@ $(document).ready(function () {
             }
         } else if (tabId == "map-point-view") {
             if (maps["point_map"] == null) {
+                var pointMapInitStart = new Date();
                 $("#discover-point-map-loading-spinner").show();
                 $.ajax({
                     type: "GET",
@@ -1339,6 +1372,10 @@ $(document).ready(function () {
                     },
                     dataType: 'json',
                     success: function (data) {
+                        var pointMapInitEnd = new Date();
+                        var pointMapInitElapsed = pointMapInitEnd - pointMapInitStart;
+                        console.log("point map init elapsed: " + pointMapInitElapsed);
+                        var pointMapInitRenderStart = new Date();
                         var json_point_results = [];
                         for (var j = 0; j < data.length; j++) {
                             var item = $.parseJSON(data[j]);
@@ -1348,6 +1385,9 @@ $(document).ready(function () {
                         initMap(json_point_results, "point_map");
                         setMapItemsList(json_point_results, "point_map", null);
                         $("#discover-point-map-loading-spinner").hide();
+                        var pointMapInitRenderEnd = new Date();
+                        var pointMapInitRenderElapsed = pointMapInitRenderEnd - pointMapInitRenderStart;
+                        console.log("point map init elapsed: " + pointMapInitRenderElapsed);
                         if (maps["area_map"] == null) {
                             map_set = true;
                         }
@@ -1359,7 +1399,7 @@ $(document).ready(function () {
                 });
             } else {
                 if (maps["area_map"] != null && map_set) {
-                    var current_map_bounds2 = maps["area_map"].getBounds();
+                   var current_map_bounds2 = maps["area_map"].getBounds();
                     var current_map_center2 = maps["area_map"].getCenter();
                     var current_map_zoom2 = maps["area_map"].getZoom();
                     maps["point_map"].fitBounds(current_map_bounds2);

@@ -2,14 +2,14 @@ from haystack.generic_views import FacetedSearchView
 from haystack.generic_views import FacetedSearchMixin
 from hs_core.discovery_form import DiscoveryForm
 from haystack.query import SearchQuerySet
-
+import time
 
 class DiscoveryView(FacetedSearchView):
     facet_fields = ['creators', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable', 'published', 'variable_names', 'sample_mediums' , 'units_names']
     form_class = DiscoveryForm
 
     def form_valid(self, form):
-
+        start = time.time()
         self.queryset = form.search()
         query_text = self.request.GET.get('q', '')
 
@@ -32,11 +32,16 @@ class DiscoveryView(FacetedSearchView):
             'query': form.cleaned_data.get(self.search_field),
             'object_list': self.queryset
         })
+        end = time.time()
+        elapsed_time = end - start
+        output_file = open('server_request_time.txt', 'a')
+        output_file.write(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)) + '\n')
+        output_file.close()
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         context = super(FacetedSearchMixin, self).get_context_data(**kwargs)
-        
+
         total_results = SearchQuerySet().all().count()
         # check whether total number of results is set
         if self.request.session.get('total_results', None):
