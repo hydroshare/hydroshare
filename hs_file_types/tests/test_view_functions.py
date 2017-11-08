@@ -15,8 +15,10 @@ from hs_core.hydroshare.utils import resource_post_create_actions
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_file_types.views import set_file_type, add_metadata_element, update_metadata_element, \
     update_key_value_metadata, delete_key_value_metadata, add_keyword_metadata, \
-    delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract
-from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, RefTimeseriesLogicalFile
+    delete_keyword_metadata, update_netcdf_file, update_dataset_name, update_refts_abstract, \
+    update_sqlite_file, update_timeseries_abstract, get_timeseries_metadata
+from hs_file_types.models import GeoRasterLogicalFile, NetCDFLogicalFile, \
+    RefTimeseriesLogicalFile, TimeSeriesLogicalFile
 
 
 class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
@@ -67,6 +69,12 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
             self.refts_missing_title_file_name)
         target_temp_refts_file = os.path.join(self.temp_dir, self.refts_missing_title_file_name)
         shutil.copy(self.refts_missing_title_file, target_temp_refts_file)
+
+        self.sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
+        self.sqlite_file = 'hs_file_types/tests/data/{}'.format(self.sqlite_file_name)
+
+        target_temp_sqlite_file = os.path.join(self.temp_dir, self.sqlite_file_name)
+        shutil.copy(self.sqlite_file, target_temp_sqlite_file)
 
     def tearDown(self):
         super(TestFileTypeViewFunctions, self).tearDown()
@@ -139,6 +147,40 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "NetCDFLogicalFile")
+        self.composite_resource.delete()
+
+    def test_sqlite_set_timeseries_file_type(self):
+        # here we are using a valid sqlite file for setting it
+        # to TimeSeries file type which includes metadata extraction
+        self.sqlite_file_obj = open(self.sqlite_file, 'r')
+        self._create_composite_resource(self.sqlite_file_obj)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # check that the resource file is associated with GenericLogicalFile
+        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+
+        url_params = {'resource_id': self.composite_resource.short_id,
+                      'file_id': res_file.id,
+                      'hs_file_type': 'TimeSeries'
+                      }
+        url = reverse('set_file_type', kwargs=url_params)
+        request = self.factory.post(url)
+        request.user = self.user
+        # this is the view function we are testing
+        response = set_file_type(request, resource_id=self.composite_resource.short_id,
+                                 file_id=res_file.id, hs_file_type='TimeSeries')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_dict = json.loads(response.content)
+        self.assertIn("File was successfully set to selected file type.",
+                      response_dict['message'])
+
+        # there should be still 1 file now (sqlite file)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+        self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
         self.composite_resource.delete()
 
     def test_add_update_metadata_to_raster_file_type(self):
@@ -520,6 +562,68 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(logical_file.metadata.abstract, new_abstract)
         self.composite_resource.delete()
 
+    def test_update_abstract_timeseries(self):
+        # we should be able to update abstract for time series file type
+        # does't have the abstract element
+        self.sqlite_file_obj = open(self.sqlite_file, 'r')
+        self._create_composite_resource(self.sqlite_file_obj)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the sqlite file to TimeSeries file type
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        url_params = {'file_type_id': logical_file.id}
+        url = reverse('update_timeseries_abstract', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_timeseries_abstract(request, file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        # check abstract after updating via the view function
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # abstract should have changed
+        self.assertEqual(logical_file.metadata.abstract, new_abstract)
+        self.composite_resource.delete()
+
+    def test_get_timeseries_metadata(self):
+        # we should be able to update abstract for time series file type
+        # does't have the abstract element
+        self.sqlite_file_obj = open(self.sqlite_file, 'r')
+        self._create_composite_resource(self.sqlite_file_obj)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        res_file = self.composite_resource.files.first()
+
+        # set the sqlite file to TimeSeries file type
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+
+        self.assertEqual(res_file.logical_file_type_name, "TimeSeriesLogicalFile")
+        series_id = logical_file.metadata.sites.first().series_ids[0]
+        url_params = {'file_type_id': logical_file.id, 'series_id': series_id,
+                      'resource_mode': 'edit'}
+        url = reverse('get_timeseries_file_metadata', kwargs=url_params)
+        new_abstract = "Discharge, cubic feet per second,Blue-green algae (cyanobacteria)"
+        request = self.factory.post(url, data={'abstract': new_abstract})
+        request.user = self.user
+        # this is the view function we are testing
+        response = get_timeseries_metadata(request, file_type_id=logical_file.id,
+                                           series_id=series_id, resource_mode='edit')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
+        self.composite_resource.delete()
+
     def test_add_delete_keywords_refts_failure(self):
         # we should not be able to add/delete keywords since the json file
         # has the keywords element
@@ -831,6 +935,30 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
                 break
         self.assertNotEqual(nc_dump_res_file, None)
         self.assertIn('keywords = "keyword-1, keyword-2"', nc_dump_res_file.resource_file.read())
+        self.composite_resource.delete()
+
+    def test_update_sqlite_file(self):
+        """test updating sqlite file for timeseries file type"""
+        self.sqlite_file_obj = open(self.sqlite_file, 'r')
+        self._create_composite_resource(self.sqlite_file_obj)
+        res_file = self.composite_resource.files.first()
+        # set the sqlite file to TimeSeries file type
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        logical_file.metadata.abstract = "new abstract for time series file type"
+        logical_file.metadata.is_dirty = True
+        logical_file.metadata.save()
+
+        url_params = {'file_type_id': logical_file.id}
+        url = reverse('update_sqlite_file', kwargs=url_params)
+        request = self.factory.post(url, data={})
+        request.user = self.user
+        # this is the view function we are testing
+        response = update_sqlite_file(request, file_type_id=logical_file.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_dict = json.loads(response.content)
+        self.assertEqual('success', response_dict['status'])
         self.composite_resource.delete()
 
     def _add_delete_keywords_file_type(self, file_obj, file_type):

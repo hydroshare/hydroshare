@@ -3683,6 +3683,8 @@ class CoreMetaData(models.Model):
 
         if not self.title:
             missing_required_elements.append('Title')
+        elif self.title.value.lower() == 'untitled resource':
+            missing_required_elements.append('Title')
         if not self.description:
             missing_required_elements.append('Abstract')
         if not self.rights:

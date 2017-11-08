@@ -511,7 +511,7 @@ class TestCaseCommonUtilities(object):
             type='period').count(), 1)
 
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'Unknown')
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 41.718473)
         self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
