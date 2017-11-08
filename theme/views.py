@@ -495,3 +495,4 @@ def create_scidas_virtual_app(request, res_id, cluster):
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
     return HttpResponseRedirect(app_url)
+
