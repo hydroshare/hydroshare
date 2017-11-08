@@ -560,7 +560,7 @@
 
                                     <div class="panel-body">
                                         <table class="identifiers">
-                                            {% for identifier in identifiers %}
+                                            {% for identifier in profile_user.author_identifiers %}
                                             <tr>
                                                 <td colspan="2"><strong>{{ identifier.name }}</strong></td>
                                             </tr>
@@ -692,7 +692,7 @@
 
                                             <!--TODO: Pabitra, uncomment once context variable is set-->
                                             {% comment %}
-                                            {% for identifier in identifiers %}
+                                            {% for identifier in profile_user.author_identifiers %}
                                             <div class="well hidden">
                                                 <div style="height:22px;">
                                                     <button type="button" class="close">&times;</button>
