@@ -269,24 +269,36 @@ $(document).ready(function () {
         other.toggleClass("hidden", !showOther);
 
         if (showOther) {
-            other.find("input").attr("name", "identifier_name");
+            other.find("input").attr("name", $(this).attr("name"));
             $(this).removeAttr("name");
         }
         else {
-            $(this).attr("name", "identifier_name");
+            $(this).attr("name", other.find("input").attr("name"));
             other.find("input").removeAttr("name");
         }
     });
 
     $("#edit-identifiers-container").on("click", ".close", function() {
         $(this).closest(".well").remove();
+        updateIdentifierFormIndexes();
     });
 
     $("#btn-add-identifier").click(function() {
-        var template = $("#identifier-template").clone();
-        template.toggleClass("hidden", false);
-        $("#edit-identifiers-container").append(template);
+        var templateInstance = $("#identifier-template").clone();
+        templateInstance.toggleClass("hidden", false);
+        templateInstance.removeAttr("id");
+        $("#edit-identifiers-container").append(templateInstance);
+        updateIdentifierFormIndexes();
     });
+
+    function updateIdentifierFormIndexes() {
+        var identifiers = $("#edit-identifiers-container").find(".well");
+        identifiers.each(function(index, item) {
+           $(item).find(".select-identifier").attr("name", "identifiers[" + index + "][identifier_name]");
+           $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifiers[\" + index + \"][identifier_name]");
+           $(item).find(".identifier-link").attr("name", "identifiers[" + index + "][identifier_link]");
+        });
+    }
 
     $("[data-page-mode='edit']").hide();
     $("#btn-edit-profile").click(function () {
