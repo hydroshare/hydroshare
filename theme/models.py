@@ -174,11 +174,11 @@ class QuotaMessage(models.Model):
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
-                                       'support@hydroshare.org. We will try to accommodate '
+                                       'help@cuahsi.org. We will try to accommodate '
                                        'reasonable requests for additional quota. If you have a '
                                        'large quota request you may need to contribute toward the '
                                        'costs of providing the additional space you need. See '
-                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'https://help.hydroshare.org/about-hydroshare/policies/'
                                        'quota/ for more information about the quota policy.')
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)

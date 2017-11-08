@@ -319,7 +319,9 @@
 
                                     <div class="panel-body">
                                         <div data-page-mode="view">
-                                            {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
+                                            {% if profile.details %}
+                                            <div id="profile-description">{{ profile.details }}</div><hr>
+                                            {% endif %}
 
                                             <table class="overview" data-page-mode="view">
                                                 <tbody>
@@ -342,7 +344,11 @@
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
-                                                    <td><span class="text-muted">User (username: <strong>{{ profile_user.username }}</strong>) since</span></td>
+                                                    <td class="text-muted">Username: </td>
+                                                    <td>{{ profile_user.username }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="text-muted">User since: </span></td>
                                                     <td>{{ profile_user.date_joined }}</td>
                                                 </tr>
                                                 </tbody>
@@ -350,11 +356,11 @@
                                             {% if profile_user.id == user.id %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
-                                                    <div class="text-muted">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% else %}
-                                                    <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                <div class="text-muted">{{ quota_message }}</div>
+                                                {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}    
                                         </div>
 
