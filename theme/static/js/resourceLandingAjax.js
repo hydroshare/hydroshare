@@ -471,11 +471,13 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (json_response.name) {
-                    rowTemplate.find("div[data-col='name']").text(json_response.name);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.name);
                 }
                 else {
-                    rowTemplate.find("div[data-col='name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.username);
                 }
+
+                rowTemplate.find("div[data-col='name'] a").attr("href", "/" + shareType + "/" + share_with);
 
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();

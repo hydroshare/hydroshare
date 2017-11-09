@@ -50,7 +50,9 @@
                     </div>
                 </td>
                 <td>
-                    <div value="{{ u.pk }}" class="user-name"><a href="/user/{{ u.pk }}">{{ u.name }}</a></div>
+                    <div value="{{ u.pk }}" class="user-name">
+                        <a href="/group/{{ u.pk }}">{{ u.name }}</a>
+                    </div>
                     <div class="user-username-content">(Group)</div>
                 </td>
             </tr>
