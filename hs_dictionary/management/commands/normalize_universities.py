@@ -51,7 +51,7 @@ class Command(BaseCommand):
                     new_organization = "%s,%s" % (new_match, secondary_match)
 
                 if (dry_run):
-                    print("[DRY RUN] Would rename %s to %s" % \
+                    print("[DRY RUN] Would rename %s to %s" %
                           (profile.organization, new_organization))
                 else:
                     profile.organization = new_organization
