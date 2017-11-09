@@ -29,6 +29,7 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
+from hs_core.models import get_user
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -89,8 +90,10 @@ class UserPasswordResetView(TemplateView):
         token = kwargs.pop('token', None)
         if token is None:
             raise ValidationError('Unauthorised access to reset password')
-        context = super(UserPasswordResetView).get_context_data(**kwargs)
+        context = super(UserPasswordResetView, self).get_context_data(**kwargs)
         return context
+
+
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
 def comment(request, template="generic/comments.html"):
     """
@@ -250,7 +253,8 @@ def update_user_profile(request):
                     send_mail(subject="Change of HydroShare email address.",
                               message=message,
                               html_message=message,
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
+                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
+                              fail_silently=True)
             else:
                 errors = {}
                 if not user_form.is_valid():
@@ -264,6 +268,28 @@ def update_user_profile(request):
 
     except Exception as ex:
         messages.error(request, ex.message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def request_password_reset(request):
+    username_or_email = request.POST['username']
+    try:
+        user = get_user(username_or_email)
+    except Exception as ex:
+        messages.error("No user is found for the provided username or email")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    messages.info(request,
+                  _("A verification email has been sent to your email with "
+                    "a link for resetting your password. If you "
+                    "do not receive this email please check your "
+                    "spam folder as sometimes the confirmation email "
+                    "gets flagged as spam."
+                    ))
+
+    # send an email to the the user notifying the password reset request
+    send_verification_mail_for_password_reset(request, user)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -344,6 +370,32 @@ def send_verification_mail_for_email_update(request, user, new_email, verificati
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/%s" % verification_type,
                        settings.DEFAULT_FROM_EMAIL, new_email,
+                       context=context)
+
+
+def send_verification_mail_for_password_reset(request, user):
+    """
+    Sends an email with a verification link to users when
+    they request to reset forgotten password to their email. The email is sent to the new email.
+    The actual reset of of password will begin after the user clicks the link
+    provided in the email.
+    The ``verification_type`` arg is both the name of the urlpattern for
+    the verification link, as well as the names of the email templates
+    to use.
+    """
+    reset_url = reverse('email_verify_password_reset', kwargs={
+        "uidb36": int_to_base36(user.id),
+        "token": default_token_generator.make_token(user)
+    }) + "?next=" + (next_url(request) or "/")
+    context = {
+        "request": request,
+        "user": user,
+        "reset_url": reset_url
+    }
+    subject_template_name = "email/reset_password_subject.txt"
+    subject = subject_template(subject_template_name, context)
+    send_mail_template(subject, "email/reset_password",
+                       settings.DEFAULT_FROM_EMAIL,
                        context=context)
 
 
