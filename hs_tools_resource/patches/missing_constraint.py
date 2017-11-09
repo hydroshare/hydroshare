@@ -1,4 +1,4 @@
-# This script is to investigate (github issue #1403)
+# This script is to investigate (github issue #2408)
 # how to run:
 # docker exec -i hydroshare python manage.py shell < "hs_tools_resource/patches/missing_constraint.py"
 # Note: use "-i" instead of "-it" in above command as
