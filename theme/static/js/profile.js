@@ -78,7 +78,6 @@ function errorLabel(message) {
     return "<div class='label label-danger error-label'>" + message + "</div>";
 }
 
-
 function setEditMode() {
     $("[data-page-mode='view']").hide();
     $("[data-page-mode='edit']").fadeIn();
@@ -287,7 +286,7 @@ $(document).ready(function () {
         var templateInstance = $("#identifier-template").clone();
         templateInstance.toggleClass("hidden", false);
         templateInstance.removeAttr("id");
-        $("#edit-identifiers-container").append(templateInstance);
+        $(templateInstance).hide().appendTo("#edit-identifiers-container").fadeIn(350);
         updateIdentifierFormIndexes();
     });
 
