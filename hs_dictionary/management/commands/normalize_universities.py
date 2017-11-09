@@ -5,12 +5,13 @@ import sys
 from csv import DictReader
 from os.path import dirname
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.models import UserProfile
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
 
 class Command(BaseCommand):
     help = 'Normalizes the University dataset according to normalize_universities.csv'
@@ -34,7 +35,7 @@ class Command(BaseCommand):
                 .exclude(organization='')
 
             for profile in profiles_with_organization:
-                organization =  profile.organization.strip().lower()
+                organization = profile.organization.strip().lower()
                 match = [tl for tl in transliterations if tl['Old'].lower() == organization][0]
                 new_match = match['New'].strip()
                 if(match['Secondary']):
@@ -50,7 +51,8 @@ class Command(BaseCommand):
                     new_organization = "%s,%s" % (new_match, secondary_match)
 
                 if (dry_run):
-                    print("[DRY RUN] Would rename %s to %s" % (profile.organization, new_organization))
+                    print("[DRY RUN] Would rename %s to %s" % \
+                          (profile.organization, new_organization))
                 else:
                     profile.organization = new_organization
                     profile.save()
