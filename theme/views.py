@@ -29,7 +29,7 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
-from hs_core.models import get_user
+from hs_core.hydroshare.utils import user_from_id
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -275,7 +275,7 @@ def update_user_profile(request):
 def request_password_reset(request):
     username_or_email = request.POST['username']
     try:
-        user = get_user(username_or_email)
+        user = user_from_id(username_or_email)
     except Exception as ex:
         messages.error("No user is found for the provided username or email")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
