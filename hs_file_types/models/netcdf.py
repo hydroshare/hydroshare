@@ -73,7 +73,7 @@ class NetCDFFileMetaData(NetCDFMetaDataMixin, AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """overrides the base class function"""
 
         root_div = div("{% load crispy_forms_tags %}")
