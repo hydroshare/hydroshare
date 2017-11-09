@@ -9,7 +9,7 @@ from django.forms.models import model_to_dict
 
 from django.contrib.postgres.fields import HStoreField, ArrayField
 
-from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
+from dominate.tags import div, legend, table, tr, tbody, thead, td, th, span, a, form, button, label, \
     textarea, h4, input, ul, li, p
 
 from lxml import etree
@@ -96,11 +96,12 @@ class AbstractFileMetaData(models.Model):
             extra_metadata_div = div(cls="col-sm-12 content-block")
             with extra_metadata_div:
                 legend('Extended Metadata')
-                with table(cls="table table-striped funding-agencies-table", style="width: 100%"):
-                    with tbody():
+                with table(cls="hs-table table dataTable no-footer", style="width: 100%"):
+                    with thead():
                         with tr(cls="header-row"):
                             th("Key")
                             th("Value")
+                    with tbody():
                         for k, v in self.extra_metadata.iteritems():
                             with tr(data_key=k):
                                 td(k)
@@ -181,13 +182,14 @@ class AbstractFileMetaData(models.Model):
             with root_div_extra:
                     legend('Extended Metadata')
                     get_add_keyvalue_button()
-                    with table(cls="table table-striped funding-agencies-table",
+                    with table(cls="hs-table table dataTable no-footer",
                                style="width: 100%"):
-                        with tbody():
+                        with thead():
                             with tr(cls="header-row"):
                                 th("Key")
                                 th("Value")
                                 th("Edit/Remove")
+                        with tbody():
                             counter = 0
                             for k, v in self.extra_metadata.iteritems():
                                 counter += 1
@@ -195,13 +197,13 @@ class AbstractFileMetaData(models.Model):
                                     td(k)
                                     td(v)
                                     with td():
-                                        a(data_toggle="modal", data_placement="auto", title="Edit",
-                                          cls="glyphicon glyphicon-pencil icon-button icon-blue",
+                                        span(data_toggle="modal", data_placement="auto", title="Edit",
+                                          cls="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon",
                                           data_target="#edit-keyvalue-filetype-modal"
                                                       "-{}".format(counter))
-                                        a(data_toggle="modal", data_placement="auto",
+                                        span(data_toggle="modal", data_placement="auto",
                                           title="Remove",
-                                          cls="glyphicon glyphicon-trash icon-button btn-remove",
+                                          cls="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon",
                                           data_target="#delete-keyvalue-filetype-modal"
                                                       "-{}".format(counter))
 
@@ -210,12 +212,11 @@ class AbstractFileMetaData(models.Model):
                     self._get_delete_key_value_modal_forms()
             return root_div_extra
         else:
-            root_div_extra = div(cls="row", id="filetype-extra-metadata")
+            root_div_extra = div(id="filetype-extra-metadata", cls="col-xs-12 content-block")
             with root_div_extra:
-                with div(cls="col-lg-12 content-block"):
-                    legend('Extended Metadata')
-                    get_add_keyvalue_button()
-                    self._get_add_key_value_modal_form()
+                legend('Extended Metadata')
+                get_add_keyvalue_button()
+                self._get_add_key_value_modal_form()
             return root_div_extra
 
     def get_temporal_coverage_html_form(self):
@@ -450,6 +451,7 @@ class AbstractFileMetaData(models.Model):
                                         textarea(cls="form-control input-sm textarea",
                                                  cols="40", rows="10",
                                                  id="file_extra_meta_value",
+                                                 style="resize: vertical;",
                                                  name="value", type="text")
                         with div(cls="modal-footer"):
                             button("Cancel", type="button", cls="btn btn-default",
@@ -515,6 +517,7 @@ class AbstractFileMetaData(models.Model):
                                                          cls="form-control input-sm textarea",
                                                          cols="40", rows="10",
                                                          id="file_extra_meta_value",
+                                                         style="resize: vertical;",
                                                          name="value", type="text")
                                 with div(cls="modal-footer"):
                                     button("Cancel", type="button", cls="btn btn-default",
@@ -566,6 +569,7 @@ class AbstractFileMetaData(models.Model):
                                                 textarea(v, cls="form-control input-sm textarea",
                                                          cols="40", rows="10",
                                                          id="file_extra_meta_value",
+                                                         style="resize: vertical;",
                                                          name="value", type="text",
                                                          readonly="readonly")
                                 with div(cls="modal-footer"):

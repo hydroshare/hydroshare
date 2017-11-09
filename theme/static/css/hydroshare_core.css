@@ -2392,7 +2392,7 @@ div#coverage-spatial .coordinates-label-addon {
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
-/* Layout pending back end functionality */
+/* Layout pending back end functionality  */
 /*#social > div > div > ul > li {*/
     /*border: 1px solid #0A91AB;*/
     /*background: #FFF;*/
@@ -2457,6 +2457,10 @@ div.affiliation {
 
 .metadata-wrapper > h5 {
     margin: 2px 0;
+}
+
+#filetype-extra-metadata {
+	margin-bottom: 20px;
 }
 
 .activity-description {
