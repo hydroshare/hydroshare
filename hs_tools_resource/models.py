@@ -90,6 +90,10 @@ class SupportedResTypes(AbstractMetaDataElement):
     def get_supported_res_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
 
+    class Meta:
+        # SupportedResTypes element is not repeatable
+        unique_together = ("content_type", "object_id")
+
     @classmethod
     def _add_supported_res_type(cls, meta_instance, supported_res_types):
 
@@ -167,6 +171,10 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 
     def get_sharing_status_str(self):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])
+
+    class Meta:
+        # SupportedSharingStatus element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     @classmethod
     def _add_sharing_status(cls, meta_instance, sharing_status_list):

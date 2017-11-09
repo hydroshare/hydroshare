@@ -1,6 +1,7 @@
-# This script is to investigate (github issue #2408)
+# This script is to investigate github issue #2408
 # how to run:
-# docker exec -i hydroshare python manage.py shell < "hs_tools_resource/patches/missing_constraint.py"
+# docker exec -i hydroshare python manage.py shell < \
+# "hs_tools_resource/patches/missing_constraint.py"
 # Note: use "-i" instead of "-it" in above command as
 # the latter may cause error "cannot enable tty mode on non tty input"
 
@@ -10,7 +11,7 @@ from hs_tools_resource.models import ToolResource
 tool_res_list = list(ToolResource.objects.all())
 tool_res_count = len(tool_res_list)
 print "[{0}] Find {1} Tools Resources\n".format(str(datetime.now()),
-                                                     tool_res_count)
+                                                tool_res_count)
 counter = 0
 success_check_counter = 0
 error_check_counter = 0
@@ -20,9 +21,9 @@ for tool_res_obj in tool_res_list:
     try:
         counter += 1
         print "[{0}] Checking Tool {1}: ({2}/{3})\n".format(str(datetime.now()),
-                                                                tool_res_obj.short_id,
-                                                                counter,
-                                                                tool_res_count)
+                                                            tool_res_obj.short_id,
+                                                            counter,
+                                                            tool_res_count)
         print "Checking supported_res_types:"
         if tool_res_obj.metadata.supported_res_types is not None:
             if tool_res_obj.metadata.supported_res_types.count() != 1:
@@ -37,7 +38,8 @@ for tool_res_obj in tool_res_list:
         print "Checking supported_sharing_status:"
         if tool_res_obj.metadata.supported_sharing_status is not None:
             if tool_res_obj.metadata.supported_sharing_status.count() != 1:
-                print "obj count: {0}".format(tool_res_obj.metadata.supported_sharing_status.count())
+                print "obj count: {0}".format(tool_res_obj.metadata.
+                                              supported_sharing_status.count())
                 error_supported_sharing_status.append(tool_res_obj.short_id)
             else:
                 print "Passed"
@@ -48,8 +50,8 @@ for tool_res_obj in tool_res_list:
         success_check_counter += 1
     except Exception as ex:
         print "[{0}] Failed to check Tools {1}: {2}\n".format(str(datetime.now()),
-                                                            tool_res_obj.short_id,
-                                                            ex.message)
+                                                              tool_res_obj.short_id,
+                                                              ex.message)
         error_check_counter += 1
 
 print "[{0}] Check Done!\n".format(str(datetime.now()))
