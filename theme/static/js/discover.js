@@ -975,10 +975,10 @@ $(document).ready(function () {
     });
 
 
-    // $("#solr-help-info").popover({
-    //     html: true,
-    //     container: '#body',
-    //     content: '<p>Search here to find all public and discoverable resources. This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
-    //     trigger: 'click'
-    // });
+    $("#solr-help-info").popover({
+        html: true,
+        container: '#body',
+        content: '<p>Type a list of keywords separated by spaces. Order is not important. Do not include punctuation.</p>',
+        trigger: 'click'
+    });
 });

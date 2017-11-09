@@ -1836,7 +1836,7 @@ a.tag:hover {
 }
 
 #discover-resource-search {
-	width: 100%;
+	width: calc(100% - 50px);
 	margin-bottom: 20px;
 	margin-left: 10px;
 	float: right;
