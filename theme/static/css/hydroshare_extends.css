@@ -62,6 +62,12 @@ fieldset[disabled].form-group input {
     background-color: #eee;
 }
 
+.form-group.half fieldset {
+    width: 49%;
+    display: inline-block;
+    margin: 0 0.5% 0 0;
+}
+
 /*========================================
           MEZZANINE GENERIC
 ==========================================*/

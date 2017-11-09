@@ -20,11 +20,9 @@
     <input type="hidden" name="challenge" />
     <input type="hidden" name="response" />
     <div class="row">
-        <div class="form-group">
-            {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
-        </div>
-        <div class="form-group">
-            {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+        <div class="form-group half">
+          {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
+          {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
         </div>
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.email inline_label=True %}
@@ -33,14 +31,14 @@
             {% include "includes/form_field.html" with field=form.username inline_label=True %}
         </div>
         <div class="form-group">
+          <input class="form-control form-required tagsinput" name="organization" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
+          <small class="text-muted">The names of up to two organizations you are associated with.</small>
+        </div>
+        <div class="form-group">
             {% include "includes/form_field.html" with field=form.password1 inline_label=True %}
         </div>
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.password2 inline_label=True %}
-        </div>
-        <div class="form-group">
-          <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-          <small class="text-muted">The names of up to two organizations you are associated with.</small>
         </div>
     </div>
     <div class="row">
@@ -110,8 +108,8 @@
             var pwconfirm = $("#id_password2").val();
             // These are the required form fields
             var requiredFieldsToCheck = ["#id_username", "#id_email", "#id_password1",
-                "#id_password2", "#recaptcha_response_field"];
-            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', 'ReCaptcha'];
+                "#id_password2", "#recaptcha_response_field", "[name='organization']"];
+            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', 'ReCaptcha', "Organization"];
             var empty = false;
             var missingFields = 'Data missing for:';
             var missingFieldCount = 0;
@@ -168,7 +166,8 @@
 
     $('.tagsinput').tagsInput({
         limit: 2,
-        placeholder: "Add Organization(s)",
+        interactive: true,
+        placeholder: "Organization(s)",
         autocomplete: {
             source: "/hsapi/dictionary/universities/",
             minLength: 3,
@@ -179,4 +178,10 @@
         }
     });
 
+    $('.ui-autocomplete-input').on('keydown', function(e) {
+      if(e.keyCode === 9 && $(this).val() !== '') {
+        e.preventDefault();
+        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+      }
+    });
 </script>
