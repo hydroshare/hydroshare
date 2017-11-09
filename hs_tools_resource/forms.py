@@ -4,7 +4,8 @@ from django import forms
 from crispy_forms.layout import Layout, Field, HTML
 
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, SupportedFileTypes, ToolIcon,\
-    SupportedSharingStatus, AppHomePageUrl, URLTemplateFileType
+    SupportedSharingStatus, AppHomePageUrl, URLTemplateFileType, SupportedResourcePermission, \
+    SupportedResourcePermission_choices
 from hs_core.forms import BaseFormHelper
 from utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
@@ -221,6 +222,44 @@ class SupportedResTypesForm(ModelForm):
 class SupportedResTypesValidationForm(forms.Form):
     supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                                                     required=False)
+
+
+class SupportedResourcePermissionFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True,
+                 res_short_id=None,
+                 element_id=None,
+                 element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('value'))
+        kwargs['element_name_label'] = 'Minimum Permission Required over Supported Resource'
+        super(SupportedResourcePermissionFormHelper, self).__init__(allow_edit, res_short_id,
+                                                                    element_id,
+                                                                    element_name, layout,
+                                                                    *args, **kwargs)
+
+
+class SupportedResourcePermissionForm(ModelForm):
+    value = forms.\
+        ChoiceField(choices=SupportedResourcePermission_choices,
+                    widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SupportedResourcePermissionForm, self).__init__(*args, **kwargs)
+        self.helper = \
+            SupportedResourcePermissionFormHelper(allow_edit, res_short_id, element_id,
+                                                  element_name='SupportedResourcePermission')
+        self.fields['value'].label = "Choose Permission:"
+
+    class Meta:
+        model = SupportedResourcePermission
+        fields = ('value',)
+
+
+class SupportedResourcePermissionValidationForm(forms.Form):
+    value = forms.CharField(max_length=100, required=True)
 
 
 class SupportedFileTypeFormHelper(BaseFormHelper):

@@ -7,15 +7,27 @@ from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
                                     SupportedSharingStatusValidationForm, \
-                                    SupportedFileTypesValidationForm
+                                    SupportedFileTypesValidationForm, \
+                                    SupportedResourcePermissionValidationForm
+from default_icon import default_icon_data_url
 
 
 @receiver(pre_create_resource, sender=ToolResource)
 def webapp_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
+
+    # by default, app supports all sharing status
     all_sharing_status = {'SupportedSharingStatus': {'sharing_status':
                           ["Published", "Public", "Discoverable", "Private"]}}
     metadata.append(all_sharing_status)
+
+    # by default set supported resource permission to "1: Read Metadata and Files"
+    supported_resource_permission_meta = {"SupportedResourcePermission": {"value": "1"}}
+    metadata.append(supported_resource_permission_meta)
+
+    # a default app icon
+    tool_icon_meta = {"ToolIcon": {"data_url": default_icon_data_url}}
+    metadata.append(tool_icon_meta)
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)
@@ -47,6 +59,8 @@ def validate_form(request, element_name):
         element_form = UrlValidationForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
+    elif element_name == 'supportedresourcepermission':
+        element_form = SupportedResourcePermissionValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
         element_form = UrlValidationForm(data=request.POST)
     else:

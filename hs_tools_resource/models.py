@@ -48,6 +48,22 @@ class ToolResource(BaseResource):
 
 processor_for(ToolResource)(resource_processor)
 
+SupportedResourcePermission_choices = (
+        ('2', 'Edit Resource Metadata and Files'),
+        ('1', 'Read Resource Metadata and Files'),
+        ('0', 'Read Resource Metadata'),
+    )
+
+
+class SupportedResourcePermission(AbstractMetaDataElement):
+    term = "SupportedResourcePermission"
+    value = models.CharField(max_length=1024, default="1",
+                             choices=SupportedResourcePermission_choices)
+
+    class Meta:
+        # UserPermissionOverAssociatedResource element is not repeatable
+        unique_together = ("content_type", "object_id")
+
 
 class AppHomePageUrl(AbstractMetaDataElement):
     term = 'AppHomePageUrl'
@@ -155,6 +171,10 @@ class SupportedResTypes(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("SupportedResTypes element can't be deleted.")
 
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
+
 
 class SupportedSharingStatusChoices(models.Model):
     description = models.CharField(max_length=128)
@@ -234,6 +254,10 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("SupportedSharingStatus element can't be deleted.")
+
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 
 class SupportedFileTypeChoices(models.Model):
@@ -318,6 +342,10 @@ class SupportedFileTypes(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("SupportedFileTypes element can't be deleted.")
 
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
+
 
 class URLTemplateFileType(AbstractMetaDataElement):
     term = 'URLTemplateFileType'
@@ -355,7 +383,7 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs:
+        if 'value' in kwargs and "data_url" not in kwargs:
             url = kwargs["value"]
             data_url = cls._validate_tool_icon(url)
 
@@ -363,6 +391,13 @@ class ToolIcon(AbstractMetaDataElement):
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
             new_meta_instance.data_url = data_url
+            new_meta_instance.save()
+            return new_meta_instance
+        elif "data_url" in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
+            new_meta_instance.data_url = kwargs["data_url"]
             new_meta_instance.save()
             return new_meta_instance
         else:
@@ -394,6 +429,11 @@ class ToolMetaData(CoreMetaData):
     _tool_icon = GenericRelation(ToolIcon)
     _supported_sharing_status = GenericRelation(SupportedSharingStatus)
     _homepage_url = GenericRelation(AppHomePageUrl)
+    _supported_resource_permission = GenericRelation(SupportedResourcePermission)
+
+    @property
+    def supported_resource_permission(self):
+        return self._supported_resource_permission.all().first()
 
     @property
     def resource(self):
@@ -468,6 +508,10 @@ class ToolMetaData(CoreMetaData):
             parsed_metadata.append({"supportedsharingstatus":
                                     metadata.pop('supportedsharingstatus')})
 
+        if 'supportedresourcepermission' in keys_to_update:
+            parsed_metadata.append({"supportedresourcepermission":
+                                    metadata.pop('supportedresourcepermission')})
+
     @classmethod
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()
@@ -479,6 +523,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
         elements.append('AppHomePageUrl')
+        elements.append('SupportedResourcePermission')
         return elements
 
     def has_all_required_elements(self):
@@ -525,12 +570,14 @@ class ToolMetaData(CoreMetaData):
         self._tool_icon.all().delete()
         self._supported_sharing_status.all().delete()
         self._homepage_url.all().delete()
+        self._supported_resource_permission.all().delete()
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
         from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
-            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
+            SupportedResourcePermissionValidationForm
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
@@ -600,3 +647,13 @@ class ToolMetaData(CoreMetaData):
                     else:
                         self.create_element('urltemplatefiletype',
                                             value=dict_item['urltemplatefiletype'])
+                elif 'supportedresourcepermission' in dict_item:
+                    validation_form = SupportedResourcePermissionValidationForm(dict_item['supportedresourcepermission'])
+                    validate_form(validation_form)
+                    supported_resource_permission = self.supported_resource_permission
+                    if supported_resource_permission is not None:
+                        self.update_element('supportedresourcepermission', supported_resource_permission.id,
+                                            value=dict_item['supportedresourcepermission'])
+                    else:
+                        self.create_element('supportedresourcepermission',
+                                            value=dict_item['supportedresourcepermission'])

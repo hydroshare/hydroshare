@@ -16,7 +16,8 @@ def resource_level_tool_urls(resource_obj, request_obj):
             tool_res_obj = ToolResource.objects.get(object_id=supported_res_types_obj.object_id)
 
             if _check_user_can_view_app(request_obj, tool_res_obj) and \
-               _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj):
+               _check_app_supports_resource_sharing_status(resource_obj, tool_res_obj) and \
+               _check_user_permission_over_resource(request_obj, tool_res_obj, resource_obj):
 
                 tool_url = tool_res_obj.metadata.url_base.value \
                            if tool_res_obj.metadata.url_base else None
@@ -72,6 +73,19 @@ def filetype_level_app_urls(file_type_str,
                           'url': tool_url_new}
                     relevant_tools.append(tl)
     return relevant_tools
+
+
+def _check_user_permission_over_resource(request_obj, tool_res_obj, resource_obj):
+
+    if tool_res_obj.metadata.supported_resource_permission:
+        permission_str = tool_res_obj.metadata.supported_resource_permission.value
+    else:
+        permission_str = "1"
+    user_has_enough_permission_over_resource = authorize(
+                request_obj, resource_obj.short_id,
+                needed_permission=int(permission_str),
+                raises_exception=False)[1]
+    return user_has_enough_permission_over_resource
 
 
 def _check_user_can_view_app(request_obj, tool_res_obj):

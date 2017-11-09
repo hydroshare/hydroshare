@@ -6,7 +6,7 @@ from hs_core.views import add_generic_context
 
 from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
                   SupportedSharingStatusForm, AppHomePageUrlForm, SupportedFileTypesForm, \
-                  URLTemplateFileTypeForm
+                  URLTemplateFileTypeForm, SupportedResourcePermissionForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
@@ -124,6 +124,13 @@ def landing_page(request, page):
                                       element_id=tool_icon_obj.id
                                       if tool_icon_obj else None)
 
+        supported_resource_permission_obj = content_model.metadata.supported_resource_permission
+        supported_resource_permission_form = SupportedResourcePermissionForm(
+            instance=supported_resource_permission_obj,
+            res_short_id=content_model.short_id,
+            element_id=supported_resource_permission_obj.id
+            if supported_resource_permission_obj else None)
+
         ext_md_layout = Layout(
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
                      '{% load crispy_forms_tags %} '
@@ -157,6 +164,10 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy sharing_status_obj_form %} '
                      '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResourcePermission"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy supported_resource_permission_form %} '
+                     '</div> '),
         )
 
         # get the context from hs_core
@@ -172,6 +183,7 @@ def landing_page(request, page):
         context['supported_file_types_form'] = supported_file_types_form
         context['tool_icon_form'] = tool_icon_form
         context['sharing_status_obj_form'] = sharing_status_obj_form
+        context['supported_resource_permission_form'] = supported_resource_permission_form
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
