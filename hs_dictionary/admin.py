@@ -7,6 +7,7 @@ class UniversityAdmin(admin.ModelAdmin):
 
 admin.site.register(University, UniversityAdmin)
 
+
 class UncategorizedTermAdmin(admin.ModelAdmin):
     pass
 

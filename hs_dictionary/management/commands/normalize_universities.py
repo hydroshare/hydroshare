@@ -2,15 +2,15 @@
 
 import sys
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 from csv import DictReader
 from os.path import dirname
 
 from django.core.management.base import BaseCommand, CommandError
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.models import UserProfile
+
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 class Command(BaseCommand):
     help = 'Normalizes the University dataset according to normalize_universities.csv'
