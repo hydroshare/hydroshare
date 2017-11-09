@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -167,6 +168,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Set Reference Timeseries File Type</span>
                         </li>
+                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set Timeseries File Type</span>
+                        </li>
                     {%  endif %}
                 </ul>
 
@@ -310,7 +315,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6">
+                                            <div class="col-xs-12 col-sm-5 col-md-6" style="display: inline-block;">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                 <span id="btn-clear-search-input"
@@ -396,32 +401,6 @@
                                                         title="Get file URL">
                                                     <span class="fa fa-link icon-blue"></span>
                                                 </button>
-
-                                                {% if page.perms.change and resource_edit_mode %}
-                                                    <button id="fb-set-geo-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Raster File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Raster</span>
-                                                    </button>
-                                                    <button id="fb-set-netcdf-file-type"
-                                                            class="disabled"
-                                                            title="Set Multidimensional Data File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Multidimensional</span>
-                                                    </button>
-                                                    <button id="fb-set-geofeature-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Feature File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Feature</span>
-                                                    </button>
-                                                    <button id="fb-set-refts-file-type"
-                                                            class="disabled"
-                                                            title="Set Reference Timeseries File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                    </button>
-                                                 {% endif %}
 
                                                 {% if page.perms.change and metadata_form %}
                                                     <button id="fb-delete"
@@ -575,7 +554,7 @@
                             {% endif %}
                                 <span class="glyphicon glyphicon-download-alt">
                                     <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                          class="button-label"> Download All Content as Zipped BagIt Archive</span>
                                 </span>
                                 </a>
                             </div>
