@@ -9,8 +9,8 @@ from django.forms.models import model_to_dict
 
 from django.contrib.postgres.fields import HStoreField, ArrayField
 
-from dominate.tags import div, legend, table, tr, tbody, thead, td, th, span, a, form, button, label, \
-    textarea, h4, input, ul, li, p
+from dominate.tags import div, legend, table, tr, tbody, thead, td, th, \
+    span, a, form, button, label, textarea, h4, input, ul, li, p
 
 from lxml import etree
 
@@ -198,12 +198,14 @@ class AbstractFileMetaData(models.Model):
                                     td(v)
                                     with td():
                                         span(data_toggle="modal", data_placement="auto", title="Edit",
-                                          cls="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon",
+                                          cls="btn-edit-icon glyphicon glyphicon-pencil "
+                                              "icon-blue table-icon",
                                           data_target="#edit-keyvalue-filetype-modal"
                                                       "-{}".format(counter))
                                         span(data_toggle="modal", data_placement="auto",
                                           title="Remove",
-                                          cls="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon",
+                                          cls="btn-remove-icon glyphicon glyphicon-trash "
+                                              "btn-remove table-icon",
                                           data_target="#delete-keyvalue-filetype-modal"
                                                       "-{}".format(counter))
 
