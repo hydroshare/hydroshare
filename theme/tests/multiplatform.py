@@ -6,6 +6,7 @@ from uuid import uuid4
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.urlresolvers import reverse
+from django.core import mail
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
@@ -170,16 +171,97 @@ class SeleniumTestsParentClass(object):
             return resource_title
 
         def test_register_account(self):
+            usr = {
+                'fn': '<strong>First</strong>',
+                'ln': 'last',
+                'email': 'u@example.com',
+                'user': 'uname',
+                'pass': 'drowssap',
+                'org': 'My University',
+                'title': 'Adjunct'
+             }
+
             login_link_css_selector = 'a[href="{}"]'.format(reverse('login'))
             for e in self.driver.find_elements(By.CSS_SELECTOR, login_link_css_selector):
                 if e.is_displayed():
                     e.click()
                     break
 
-            self.assertTrue(reverse('login') in self.driver.current_url)
             # there is nothing to reverse() for sign-up because it is hard coded via Mezzanine
             self.wait_for_visible(By.CSS_SELECTOR, 'a[href="/sign-up/?next="]').click()
             self.wait_for_visible(By.CSS_SELECTOR, '#form-signup')
+
+            # monkey patch SignUpForm to always verify the captcha
+            from theme.forms import SignupForm
+
+            def verify_captcha_patch(*args, **kwargs):
+                return True
+            SignupForm.verify_captcha = verify_captcha_patch
+
+            # Register a new account
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="first_name"]').send_keys(usr['fn'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="last_name"]').send_keys(usr['ln'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="email"]').send_keys(usr['email'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="username"]').send_keys(usr['user'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password1"]').send_keys(usr['pass'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="password2"]').send_keys(usr['pass'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="recaptcha_response_field"]') \
+                .send_keys('response')
+            self.wait_for_visible(By.CSS_SELECTOR, 'input#signup').click()
+
+            # Verify new account by clicking on link in that came in email
+            self.wait_for_visible(By.CSS_SELECTOR, '#home-page-carousel')
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
+            self.assertIn('A verification email has been sent', alert_text)
+
+            self.assertEqual(len(mail.outbox), 1)
+            url = re.search(r'(?P<url>https?://[^\s]+)', mail.outbox[0].body).groupdict()['url']
+            user = User.objects.get(email=usr['email'])
+            self.assertFalse(user.is_active)
+            with self.assertRaises(ValueError):
+                pass
+
+            self.driver.get(url)
+            # Now that we have clicked the verify URL, the user will get some popups and be verified
+            self.assertTrue(User.objects.get(email=usr['email']).is_active)
+            self.wait_for_visible(By.CSS_SELECTOR, '#home-page-carousel')
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
+            self.assertEqual('Successfully signed up', alert_text)
+
+            alert_span = self.wait_for_visible(By.CSS_SELECTOR, '#universalMessage span')
+            alert_span.find_element(By.LINK_TEXT, 'user profile').click()
+
+            # The user's name should be escaped in the profile so our user name
+            # should not parse as HTML.
+            h2 = self.wait_for_visible(By.CSS_SELECTOR, 'h2')
+            with self.assertRaises(NoSuchElementException):
+                h2.find_element(By.CSS_SELECTOR, 'strong')
+            self.wait_for_visible(By.CSS_SELECTOR, '#btn-edit-profile').click()
+
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="organization"]') \
+                .send_keys(usr['org'])
+            self.wait_for_visible(By.CSS_SELECTOR, 'input[name="title"]').send_keys(usr['title'])
+            upload_field = self.wait_for_visible(By.CSS_SELECTOR, 'input[name="cv"]')
+            upload_file(self.driver, upload_field, './manage.py')
+            self.wait_for_visible(By.CSS_SELECTOR, 'button#btn-save-profile').click()
+
+            alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
+            alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text
+            self.assertEqual('Your profile has been successfully updated.', alert_text)
+
+            user = User.objects.get(email=usr['email'])
+            self.assertFalse(user.is_staff)
+            self.assertFalse(user.is_superuser)
+            self.assertTrue(user.is_active)
+            self.assertEqual(user.email, usr['email'])
+            self.assertEqual(user.first_name, usr['fn'])
+            self.assertEqual(user.last_name, usr['ln'])
+            self.assertEqual(user.userprofile.title, usr['title'])
+            self.assertEqual(user.userprofile.organization, usr['org'])
+            self.assertTrue(user.check_password(usr['pass']))
+            self.assertNotEqual('', user.userprofile.cv.url)
 
         def test_login_email(self):
             self.driver.get(self.live_server_url)

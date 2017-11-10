@@ -1358,6 +1358,11 @@ body > .main-container {
 	outline: 0;
 }
 
+.custom-btn-toolbar .disabled > span {
+	color: #999;
+	cursor: default;
+}
+
 #success-alert, #error-alert {
     position: fixed;
     z-index: 999;
@@ -1836,7 +1841,7 @@ a.tag:hover {
 }
 
 #discover-resource-search {
-	width: calc(100% - 50px);
+	width: 100%;
 	margin-bottom: 20px;
 	margin-left: 10px;
 	float: right;

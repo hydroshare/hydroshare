@@ -48,7 +48,7 @@
                                     class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
                         {% endif %}
 
-                        {% if page.perms.delete and cm.can_be_published %}
+                        {% if page.perms.delete and cm.can_be_published and cm.raccess.public %}
                             <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
                                 <span data-toggle="tooltip" data-placement="bottom" title="Publish this resource"
                                       class="glyphicon glyphicon-globe icon-button icon-blue"></span>

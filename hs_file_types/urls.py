@@ -53,10 +53,27 @@ urlpatterns = patterns(
         views.update_refts_abstract,
         name="update_reftimeseries_abstract"),
 
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/'
+        r'update-timeseries-abstract/$',
+        views.update_timeseries_abstract,
+        name="update_timeseries_abstract"),
+
     url(r'^_internal/(?P<file_type_id>[0-9]+)/update-netcdf-file/$',
         views.update_netcdf_file,
         name="update_netcdf_file"),
 
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/update-sqlite-file/$',
+        views.update_sqlite_file,
+        name="update_sqlite_file"),
+
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<metadata_mode>[a-z]+)/'
-        r'get-file-metadata/$', views.get_metadata, name="get_file_metadata"),
+        r'get-file-metadata/$',
+        views.get_metadata,
+        name="get_file_metadata"),
+
+    url(r'^_internal/(?P<file_type_id>[0-9]+)/(?P<series_id>[A-Za-z0-9-]+)/'
+        r'(?P<resource_mode>[a-z]+)/'
+        r'get-timeseries-file-metadata/$',
+        views.get_timeseries_metadata,
+        name="get_timeseries_file_metadata"),
     )
