@@ -395,7 +395,7 @@ def send_verification_mail_for_password_reset(request, user):
     subject_template_name = "email/reset_password_subject.txt"
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/reset_password",
-                       settings.DEFAULT_FROM_EMAIL,
+                       settings.DEFAULT_FROM_EMAIL, user.email,
                        context=context)
 
 
