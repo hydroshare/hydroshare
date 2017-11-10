@@ -180,32 +180,32 @@ class AbstractFileMetaData(models.Model):
         if self.extra_metadata:
             root_div_extra = div(cls="col-xs-12", id="filetype-extra-metadata")
             with root_div_extra:
-                    legend('Extended Metadata')
-                    get_add_keyvalue_button()
-                    with table(cls="hs-table table dataTable no-footer",
-                               style="width: 100%"):
-                        with thead():
-                            with tr(cls="header-row"):
-                                th("Key")
-                                th("Value")
-                                th("Edit/Remove")
-                        with tbody():
-                            counter = 0
-                            for k, v in self.extra_metadata.iteritems():
-                                counter += 1
-                                with tr(data_key=k):
-                                    td(k)
-                                    td(v)
-                                    with td():
-                                        span(data_toggle="modal", data_placement="auto", title="Edit",
-                                          cls="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon",
-                                          data_target="#edit-keyvalue-filetype-modal"
-                                                      "-{}".format(counter))
-                                        span(data_toggle="modal", data_placement="auto",
-                                          title="Remove",
-                                          cls="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon",
-                                          data_target="#delete-keyvalue-filetype-modal"
-                                                      "-{}".format(counter))
+                legend('Extended Metadata')
+                get_add_keyvalue_button()
+                with table(cls="hs-table table dataTable no-footer",
+                           style="width: 100%"):
+                    with thead():
+                        with tr(cls="header-row"):
+                            th("Key")
+                            th("Value")
+                            th("Edit/Remove")
+                    with tbody():
+                        counter = 0
+                        for k, v in self.extra_metadata.iteritems():
+                            counter += 1
+                            with tr(data_key=k):
+                                td(k)
+                                td(v)
+                                with td():
+                                    span(data_toggle="modal", data_placement="auto", title="Edit",
+                                         cls="btn-edit-icon glyphicon glyphicon-pencil icon-blue table-icon",
+                                         data_target="#edit-keyvalue-filetype-modal"
+                                                     "-{}".format(counter))
+                                    span(data_toggle="modal", data_placement="auto",
+                                         title="Remove",
+                                         cls="btn-remove-icon glyphicon glyphicon-trash btn-remove table-icon",
+                                         data_target="#delete-keyvalue-filetype-modal"
+                                                     "-{}".format(counter))
 
                     self._get_add_key_value_modal_form()
                     self._get_edit_key_value_modal_forms()
