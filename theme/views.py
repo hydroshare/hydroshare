@@ -277,7 +277,7 @@ def request_password_reset(request):
     try:
         user = user_from_id(username_or_email)
     except Exception as ex:
-        messages.error("No user is found for the provided username or email")
+        messages.error(request, "No user is found for the provided username or email")
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     messages.info(request,
