@@ -452,7 +452,7 @@ def email_verify_password_reset(request, uidb36=None, token=None):
     if user is not None:
         auth_login(request, user)
         # redirect to user to password reset page
-        return HttpResponseRedirect(reverse('reset_password', kwargs={'token': token}))
+        return HttpResponseRedirect(reverse('new_password_for_reset', kwargs={'token': token}))
     else:
         messages.error(request, _("The link you clicked is no longer valid."))
         return redirect("/")
