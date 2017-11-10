@@ -961,7 +961,7 @@ var updateListView = function (data) {
         success: function (data) {
             var djangoTemplateEnd = new Date();
             var djangoElapsed = djangoTemplateEnd - djangoTemplateStart;
-            console.log("Django template elapsed: " + djangoElapsed);
+            console.log("Django template ajax elapsed: " + djangoElapsed);
 
             var tableViewRenderStart = new Date();
             $('#items-discovered_wrapper').empty();
@@ -1013,8 +1013,8 @@ var updateListFaceting = function (request_url) {
         dataType: 'html',
         success: function (data) {
             var updateListFacetingEnd = new Date();
-            var updateListFacetingElapsed = new Date();
-            console.log("update list faceting elapsed: " + updateListFacetingElapsed);
+            var updateListFacetingElapsed = updateListFacetingEnd - updateListFacetingStart;
+            console.log("update list faceting ajax elapsed: " + updateListFacetingElapsed);
             var updateListFacetingRenderStart = new Date();
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
@@ -1065,8 +1065,8 @@ var updateMapFaceting = function (view_type){
         dataType: 'json',
         success: function (data) {
             var updateMapFacetingEnd = new Date();
-            var updateMapFacetingElapsed = updateMapFacetingEnd - updateMapFacetingStart; 
-            console.log("map update elapsed: " + updateMapFacetingElapsed);
+            var updateMapFacetingElapsed = updateMapFacetingEnd - updateMapFacetingStart;
+            console.log("map update ajax elapsed: " + updateMapFacetingElapsed);
             var updateMapFacetingRenderStart = new Date();
             if (view_type == "point") {
                 raw_point_results = [];
@@ -1319,7 +1319,7 @@ $(document).ready(function () {
                     success: function (data) {
                         var areaMapInitEnd = new Date();
                         var areaMapInitElapsed = areaMapInitEnd - areaMapInitStart;
-                        console.log("are map init elapsed: " + areaMapInitElapsed);
+                        console.log("area map init ajax elapsed: " + areaMapInitElapsed);
                         var areaMapInitRenderStart = new Date();
                         var json_box_results = [];
                         for (var j = 0; j < data.length; j++) {
@@ -1333,7 +1333,7 @@ $(document).ready(function () {
                         $("#discover-area-map-loading-spinner").hide();
                         var areaMapInitRenderEnd = new Date();
                         var areaMapInitRenderElapsed = areaMapInitRenderEnd - areaMapInitRenderStart;
-                        console.log("area map init elapsed: " + areaMapInitRenderElapsed);
+                        console.log("area map init render elapsed: " + areaMapInitRenderElapsed);
                         if (maps["point_map"] == null) {
                             map_set = true;
                         }
@@ -1374,7 +1374,7 @@ $(document).ready(function () {
                     success: function (data) {
                         var pointMapInitEnd = new Date();
                         var pointMapInitElapsed = pointMapInitEnd - pointMapInitStart;
-                        console.log("point map init elapsed: " + pointMapInitElapsed);
+                        console.log("point map init ajax elapsed: " + pointMapInitElapsed);
                         var pointMapInitRenderStart = new Date();
                         var json_point_results = [];
                         for (var j = 0; j < data.length; j++) {
@@ -1387,7 +1387,7 @@ $(document).ready(function () {
                         $("#discover-point-map-loading-spinner").hide();
                         var pointMapInitRenderEnd = new Date();
                         var pointMapInitRenderElapsed = pointMapInitRenderEnd - pointMapInitRenderStart;
-                        console.log("point map init elapsed: " + pointMapInitRenderElapsed);
+                        console.log("point map init render elapsed: " + pointMapInitRenderElapsed);
                         if (maps["area_map"] == null) {
                             map_set = true;
                         }

@@ -107,21 +107,21 @@ DATABASES = {
 POSTGIS_VERSION=(2,1,1)
 
 # Local resource iRODS configuration
-USE_IRODS=True
-IRODS_ROOT='/tmp'
-IRODS_ICOMMANDS_PATH='/usr/bin'
-IRODS_HOST='cuahsi-irods-1.hydroshare.org'
-IRODS_PORT='1247'
-IRODS_DEFAULT_RESOURCE='cuahsi2ReplResc'
-IRODS_HOME_COLLECTION='/hydroshareZone/home/cuahsi2DataProxy'
-IRODS_CWD='/hydroshareZone/home/cuahsi2DataProxy'
-IRODS_ZONE='hydroshareZone'
-IRODS_USERNAME='cuahsi2DataProxy'
-IRODS_AUTH='beeyo7Eithei4Aexaput4goo4ahsheTh'
-IRODS_GLOBAL_SESSION=True
+USE_IRODS = True
+IRODS_ROOT = '/tmp'
+IRODS_ICOMMANDS_PATH = '/usr/bin'
+IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_PORT = '1247'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'proxywater1'
+IRODS_GLOBAL_SESSION = True
 
 # Remote user zone iRODS configuration
-REMOTE_USE_IRODS = True
+REMOTE_USE_IRODS = False
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
@@ -146,39 +146,38 @@ HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST='cuahsi-irods-2.hydroshare.org'
-HS_USER_ZONE_PROXY_USER='cuahsi2LinuxProxy'
-HS_USER_ZONE_PROXY_USER_PWD='oujeivaebahngo9Thee4Eemeijohjovi'
-HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD='/home/cuahsi2LinuxProxy/create_user.sh'
-HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD='/home/cuahsi2LinuxProxy/delete_user.sh'
+HS_USER_ZONE_HOST = ''
+HS_USER_ZONE_PROXY_USER = ''
+HS_USER_ZONE_PROXY_USER_PWD = ''
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
 HS_USER_ZONE_PRODUCTION_PATH = '/hydroshareuserZone/home/localHydroProxy'
 
 # the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
-HS_LOCAL_PROXY_USER_IN_FED_ZONE='cuahsi2UserProxy'
+HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not
-HS_WWW_IRODS_PROXY_USER='cuahsi2DataProxy'
-
+HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
 # credentials for HydroShare proxy user iRODS account which is set to have own access control
 # to all collections in any federated zone with HydroShare zone, which is only useful when
 # testing HydroShare federated zone in local test development environment since in www
 # production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
-HS_WWW_IRODS_PROXY_USER_PWD='beeyo7Eithei4Aexaput4goo4ahsheTh'
-HS_WWW_IRODS_HOST='cuahsi-irods-1.hydroshare.org'
-HS_IRODS_LOCAL_ZONE_DEF_RES='cuahsi2LocalResc'
-HS_WWW_IRODS_ZONE='hydroshareZone'
-HS_USER_IRODS_ZONE='hydroshareuserZone'
+HS_WWW_IRODS_PROXY_USER_PWD = ''
+HS_WWW_IRODS_HOST = ''
+HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
+HS_WWW_IRODS_ZONE = ''
+HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
-EMAIL_HOST_PASSWORD = '1Rycb8@2'
-EMAIL_HOST = 'mail.hydroshare.org'
-EMAIL_PORT = '587'
-EMAIL_USE_TLS= True
-DEFAULT_FROM_EMAIL= 'support@hydroshare.org'
-DEFAULT_SUPPORT_EMAIL= 'support@hydroshare.org'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_HOST = ''
+#EMAIL_PORT = ''
+#EMAIL_USE_TLS = True
+#DEFAULT_FROM_EMAIL = ''
+#DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
 

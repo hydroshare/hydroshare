@@ -14,24 +14,32 @@ class DiscoveryJsonView(FacetedSearchView):
 
     # overwrite Haystack generic_view.py form_valid() function to generate JSON response
     def form_valid(self, form):
-        start = time.time()
+        start1 = time.time()
         # initialize an empty array for holding the result objects with coordinate values
         coor_values = []
         # get query set
         self.queryset = form.search()
-
+        end1 = time.time()
+        elapsed_time1 = end1 - start1
         # When we have a GET request with search query, build our JSON objects array
         if len(self.request.GET):
-            
+
+            query_results = self.get_queryset()
+            end1 = time.time()
+            elapsed_time1 = end1 - start1
+
+            start2 = time.time()
             # iterate all the search results
-            for result in self.get_queryset():
+            for result in query_results:
                 # initialize a null JSON object
                 json_obj = {}
 
                 # assign title and url values to the object
                 json_obj['short_id'] = result.object.short_id;
+                # This hits the Django database
                 json_obj['title'] = result.object.metadata.title.value
                 json_obj['resource_type'] = result.object.verbose_name
+                # This hits the Django database 
                 json_obj['get_absolute_url'] = result.object.get_absolute_url()
                 json_obj['first_author'] = result.object.first_creator.name
                 if result.object.first_creator.description:
@@ -62,9 +70,9 @@ class DiscoveryJsonView(FacetedSearchView):
             # encode the results results array to JSON array
             the_data = json.dumps(coor_values)
             # return JSON response
-            end = time.time()
-            elapsed_time = end - start
-            output_file = open('server_json_request.txt', 'a')
-            output_file.write(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)) + '\n')
+            end2 = time.time()
+            elapsed_time2 = end2 - start2
+            output_file = open('hs_core/views/performance_results/server_json_request.txt', 'a')
+            output_file.write("solr query time: " + str(elapsed_time1) + " json building time:  "  + str(elapsed_time2) + '\n')
             output_file.close()
             return HttpResponse(the_data, content_type='application/json')

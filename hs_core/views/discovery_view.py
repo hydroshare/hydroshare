@@ -34,8 +34,8 @@ class DiscoveryView(FacetedSearchView):
         })
         end = time.time()
         elapsed_time = end - start
-        output_file = open('server_request_time.txt', 'a')
-        output_file.write(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)) + '\n')
+        output_file = open('hs_core/views/performance_results/server_request_time.txt', 'a')
+        output_file.write(query_text + ': ' + str(elapsed_time) + '\n')
         output_file.close()
         return self.render_to_response(context)
 
