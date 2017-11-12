@@ -1,4 +1,5 @@
 import requests
+import json
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
@@ -318,3 +319,20 @@ class UserProfileForm(forms.ModelForm):
         if len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
+
+    def clean_identifiers(self):
+        data = self.cleaned_data['identifiers']
+        try:
+            identifiers = json.loads(data)
+        except Exception:
+            raise forms.ValidationError("Invalid data found for identifiers.")
+        # validate identifier values - check for duplicate links
+        links = [l.lower() for l in identifiers.values()]
+        if len(links) != set(links):
+            raise forms.ValidationError("Invalid data found for identifiers.")
+
+        # validate identifier keys - check for duplicate names
+        names = [n.lower() for n in identifiers.keys()]
+        if len(names) != set(names):
+            raise forms.ValidationError("Invalid data found for identifiers.")
+        return identifiers
