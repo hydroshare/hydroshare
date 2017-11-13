@@ -705,7 +705,7 @@
                                                     <select class="form-control select-identifier"
                                                             id="select_identifier{{ forloop.counter }}"
                                                             {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "ResearchGate" or identifier.name == "ResearcherID" %}
-                                                            name="identifiers[identifier_name]"
+                                                            name="identifier_name"
                                                             value="{{ identifier.name }}"
                                                             {% else %}
                                                             value = "Other"
@@ -733,7 +733,7 @@
                                                 <fieldset class="identifier-specify">
                                                     <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
                                                     <input id="identifier_specify_name{{ forloop.counter }}"
-                                                           name="identifiers[identifier_name]"
+                                                           name="identifier_name"
                                                            class="form-control">
                                                 </fieldset>
                                                 {% endif %}
