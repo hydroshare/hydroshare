@@ -552,9 +552,8 @@
                                         </div>
                                         {% endif %}
                                 </div>
-                            </div>
+                                </div>
                                 {% endif %}
-
                                 {# AUTHOR IDENTIFIERS #}
                                 <div class="panel panel-default {% if identifiers|length == 0 %}hidden{% endif %}"
                                      data-page-mode="view">
@@ -672,8 +671,7 @@
 
                                                 <fieldset class="select-identifier-fieldset">
                                                     <label for="selectIdentifier">Identifier Name</label>
-                                                    <select name="identifier_name"
-                                                            class="form-control select-identifier"
+                                                    <select class="form-control select-identifier"
                                                             id="selectIdentifier">
                                                         <option disabled selected> -- Select an option -- </option>
                                                         <option value="Google Scholar">Google Scholar</option>
@@ -691,12 +689,10 @@
 
                                                 <fieldset class="identifier-link-container">
                                                     <label for="identifier_link">Identifier Link</label>
-                                                    <input id="identifier_link" name="identifier_link"
+                                                    <input id="identifier_link"
                                                            class="form-control identifier-link">
                                                 </fieldset>
                                             </div>
-
-                                            <!--TODO: Pabitra, uncomment once context variable is set-->
 
                                             {% for identifier in profile.identifiers %}
                                             <div class="well hidden">
@@ -709,7 +705,7 @@
                                                     <select class="form-control select-identifier"
                                                             id="select_identifier{{ forloop.counter }}"
                                                             {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "ResearchGate" or identifier.name == "ResearcherID" %}
-                                                            name="identifiers[" + {{ forloop.counter }} + "][identifier_name]"
+                                                            name="identifiers[identifier_name]"
                                                             value="{{ identifier.name }}"
                                                             {% else %}
                                                             value = "Other"
@@ -737,7 +733,7 @@
                                                 <fieldset class="identifier-specify">
                                                     <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
                                                     <input id="identifier_specify_name{{ forloop.counter }}"
-                                                           name="identifiers[{{ forloop.counter }}][identifier_name]"
+                                                           name="identifiers[identifier_name]"
                                                            class="form-control">
                                                 </fieldset>
                                                 {% endif %}
@@ -749,7 +745,6 @@
                                                 </fieldset>
                                             </div>
                                             {% endfor %}
-
                                         </div>
 
                                         <button id="btn-add-identifier" type="button" class="btn btn-success">Add New

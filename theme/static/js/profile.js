@@ -286,17 +286,21 @@ $(document).ready(function () {
         var templateInstance = $("#identifier-template").clone();
         templateInstance.toggleClass("hidden", false);
         templateInstance.removeAttr("id");
+
+        templateInstance.find("#selectIdentifier").attr("name", "identifier_name");
+        templateInstance.find("#identifier-link").attr("name", "identifier_link");
+
         $(templateInstance).hide().appendTo("#edit-identifiers-container").fadeIn(350);
         updateIdentifierFormIndexes();
     });
 
     function updateIdentifierFormIndexes() {
-        var identifiers = $("#edit-identifiers-container").find(".well");
+        var identifiers = $("#edit-identifiers-container").find(".well:not(#identifier-template)");
         identifiers.each(function(index, item) {
             // Set name attributes
-           $(item).find(".select-identifier").attr("name", "identifiers[" + index + "][identifier_name]");
-           $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifiers[\" + index + \"][identifier_name]");
-           $(item).find(".identifier-link").attr("name", "identifiers[" + index + "][identifier_link]");
+           $(item).find(".select-identifier").attr("name", "identifier_name");
+           $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifier_name");
+           $(item).find(".identifier-link").attr("name", "identifier_link");
 
             // Set labels and references for screen readers
            $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
