@@ -165,6 +165,10 @@ $(document).ready(function () {
 
                 // Issue a text change
                 currentInstance.find("input[data-map-item='northlimit']").trigger("change");
+                currentInstance.find("input[data-map-item='eastlimit']").trigger("change");
+                currentInstance.find("input[data-map-item='southlimit']").trigger("change");
+                currentInstance.find("input[data-map-item='westlimit']").trigger("change");
+
                 $('#coordinates-picker-modal').modal('hide')
             });
         }
@@ -175,7 +179,9 @@ $(document).ready(function () {
                 currentInstance.find("input[data-map-item='latitude']").val(coordinates.lat().toFixed(4));
 
                 // Issue a text change
+                currentInstance.find("input[data-map-item='longitude']").trigger("change");
                 currentInstance.find("input[data-map-item='latitude']").trigger("change");
+
                 $('#coordinates-picker-modal').modal('hide')
             });
         }
