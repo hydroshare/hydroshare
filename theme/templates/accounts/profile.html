@@ -695,7 +695,7 @@
                                             </div>
 
                                             {% for name, link in profile.identifiers.items %}
-                                            <div class="well hidden">
+                                            <div class="well">
                                                 <div style="height:22px;">
                                                     <button type="button" class="close">&times;</button>
                                                 </div>
@@ -741,7 +741,7 @@
                                                 <fieldset>
                                                     <label for="identifier_link{{ forloop.counter }}">Identifier Link</label>
                                                     <input id="identifier_link{{ forloop.counter }}" name="identifier_link"
-                                                           class="form-control identifier-link">
+                                                           class="form-control identifier-link" value="{{ link }}">
                                                 </fieldset>
                                             </div>
                                             {% endfor %}
