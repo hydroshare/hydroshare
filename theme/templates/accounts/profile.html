@@ -555,7 +555,7 @@
                                 </div>
                                 {% endif %}
                                 {# AUTHOR IDENTIFIERS #}
-                                <div class="panel panel-default {% if identifiers|length == 0 %}hidden{% endif %}"
+                                <div class="panel panel-default {% if not profile.identifiers %}hidden{% endif %}"
                                      data-page-mode="view">
                                     <div class="panel-heading">
                                         <h3 class="panel-title"><span
@@ -565,19 +565,19 @@
 
                                     <div class="panel-body">
                                         <table class="identifiers">
-                                            {% for identifier in profile.identifiers %}
+                                            {% for name, link in profile.identifiers.items %}
                                             <tr>
-                                                <td colspan="2"><strong>{{ identifier.name }}</strong></td>
+                                                <td colspan="2"><strong>{{ name }}</strong></td>
                                             </tr>
                                             <tr>
                                                 <td>
-                                                    {% if identifier.name == "Google Scholar" %}
+                                                    {% if name == "Google Scholar" %}
                                                     <i class="identifier-icon ai ai-google-scholar-square"></i>
-                                                    {% elif identifier.name == "ORCID" %}
+                                                    {% elif name == "ORCID" %}
                                                     <i class="identifier-icon ai ai-orcid"></i>
-                                                    {% elif identifier.name == "ResearchGate" %}
+                                                    {% elif name == "ResearchGate" %}
                                                     <i class="identifier-icon ai ai-researchgate-square"></i>
-                                                    {% elif identifier.name == "ResearcherID" %}
+                                                    {% elif name == "ResearcherID" %}
                                                     <img class="identifier-icon"
                                                          src="{{ STATIC_URL }}img/researcherID.png"
                                                          alt="ResearcherID icon"/>
@@ -586,7 +586,7 @@
                                                     {% endif %}
                                                 </td>
                                                 <td><a href="#"
-                                                       class="identifier-url">{{ identifier.link }}</a>
+                                                       class="identifier-url">{{ link }}</a>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -694,7 +694,7 @@
                                                 </fieldset>
                                             </div>
 
-                                            {% for identifier in profile.identifiers %}
+                                            {% for name, link in profile.identifiers.items %}
                                             <div class="well hidden">
                                                 <div style="height:22px;">
                                                     <button type="button" class="close">&times;</button>
@@ -704,26 +704,26 @@
                                                     <label for="select_identifier{{ forloop.counter }}">Identifier Name</label>
                                                     <select class="form-control select-identifier"
                                                             id="select_identifier{{ forloop.counter }}"
-                                                            {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "ResearchGate" or identifier.name == "ResearcherID" %}
+                                                            {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
                                                             name="identifier_name"
-                                                            value="{{ identifier.name }}"
+                                                            value="{{ name }}"
                                                             {% else %}
                                                             value = "Other"
                                                             {% endif %}
                                                     >
-                                                        <option value="Google Scholar" {% if identifier.name == "Google Scholar" %}selected{% endif %}>Google Scholar</option>
-                                                        <option value="ORCID" {% if identifier.name == "ORCID" %}selected{% endif %}>ORCID</option>
-                                                        <option value="ResearchGate" {% if identifier.name == "ResearchGate" %}selected{% endif %}>ResearchGate</option>
-                                                        <option value="ResearcherID" {% if identifier.name == "ResearcherID" %}selected{% endif %}>ResearcherID</option>
+                                                        <option value="Google Scholar" {% if name == "Google Scholar" %}selected{% endif %}>Google Scholar</option>
+                                                        <option value="ORCID" {% if name == "ORCID" %}selected{% endif %}>ORCID</option>
+                                                        <option value="ResearchGate" {% if name == "ResearchGate" %}selected{% endif %}>ResearchGate</option>
+                                                        <option value="ResearcherID" {% if name == "ResearcherID" %}selected{% endif %}>ResearcherID</option>
                                                         <option value="Other"
-                                                                {% if not identifier.name == "Google Scholar" and not identifier.name == "ORCID" and identifier.name == "ResearchGate" and not identifier.name == "ResearcherID" %}
+                                                                {% if not name == "Google Scholar" and not name == "ORCID" and name == "ResearchGate" and not name == "ResearcherID" %}
                                                                 selected
                                                                 {% endif %}
                                                         >Other</option>
                                                     </select>
                                                 </fieldset>
 
-                                                {% if identifier.name == "Google Scholar" or identifier.name == "ORCID" or identifier.name == "ResearchGate" or identifier.name == "ResearcherID" %}
+                                                {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
                                                 <fieldset class="hidden identifier-specify">
                                                     <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
                                                     <input id="identifier_specify_name{{ forloop.counter }}"

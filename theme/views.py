@@ -201,7 +201,22 @@ def update_user_profile(request):
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
-    profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+    # create a dict of identifier names and links for the identifiers field of the  UserProfile
+    identifier_names = request.POST.getlist('identifier_name')
+    identifier_links = request.POST.getlist('identifier_link')
+    try:
+        if len(identifier_names) != len(identifier_links):
+            raise Exception
+        identifiers = dict(zip(identifier_names, identifier_links))
+        if len(identifier_names) != len(identifiers.keys()):
+            raise Exception
+    except Exception:
+        messages.error(request, "Update failed. Invalid data found for identifiers.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    post_data_dict = request.POST.dict()
+    post_data_dict['identifiers'] = identifiers
+    profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():

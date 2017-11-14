@@ -322,17 +322,13 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
-        try:
-            identifiers = json.loads(data)
-        except Exception:
-            raise forms.ValidationError("Invalid data found for identifiers.")
         # validate identifier values - check for duplicate links
-        links = [l.lower() for l in identifiers.values()]
-        if len(links) != set(links):
+        links = [l.lower() for l in data.values()]
+        if len(links) != len(set(links)):
             raise forms.ValidationError("Invalid data found for identifiers.")
 
         # validate identifier keys - check for duplicate names
-        names = [n.lower() for n in identifiers.keys()]
-        if len(names) != set(names):
+        names = [n.lower() for n in data.keys()]
+        if len(names) != len(set(names)):
             raise forms.ValidationError("Invalid data found for identifiers.")
-        return identifiers
+        return data
