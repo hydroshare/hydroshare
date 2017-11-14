@@ -25,7 +25,19 @@ function validateForm() {
     var flagPasswords = validatePasswords();
     var flagEmail = validateEmail();
 
+    cleanIdentifiers();
+
     return  flagRequiredElements && flagPasswords && flagEmail;
+}
+
+function cleanIdentifiers() {
+    var identifiers = $("#edit-identifiers-container .well:not(#identifier-template)");
+
+    identifiers.each(function(index, item) {
+        if ($(item).find("[name='identifier_link']").val().trim() == "") {
+            $(item).remove();
+        }
+    });
 }
 
 function validateRequiredElements() {
