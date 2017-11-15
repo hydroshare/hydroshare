@@ -301,7 +301,7 @@ $(document).ready(function () {
         templateInstance.removeAttr("id");
 
         templateInstance.find("#selectIdentifier").attr("name", "identifier_name");
-        templateInstance.find("#identifier-link").attr("name", "identifier_link");
+        templateInstance.find(".identifier-link-container input").attr("name", "identifier_link");
 
         $(templateInstance).hide().appendTo("#edit-identifiers-container").fadeIn(350);
         updateIdentifierFormIndexes();
@@ -309,21 +309,16 @@ $(document).ready(function () {
 
     function updateIdentifierFormIndexes() {
         var identifiers = $("#edit-identifiers-container").find(".well:not(#identifier-template)");
-        identifiers.each(function(index, item) {
-            // Set name attributes
-           $(item).find(".select-identifier").attr("name", "identifier_name");
-           $(item).find(".identifier-specify:not(.hidden) input").attr("name", "identifier_name");
-           $(item).find(".identifier-link").attr("name", "identifier_link");
-
+        identifiers.each(function (index, item) {
             // Set labels and references for screen readers
-           $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
-           $(item).find(".identifier-specify label").attr("for", "identifier_name" + index);
+            $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
+            $(item).find(".identifier-specify label").attr("for", "identifier_name" + index);
 
-           $(item).find(".select-identifier-fieldset select").attr("id", "select_identifier" + index);
-           $(item).find(".select-identifier-fieldset label").attr("for", "select_identifier" + index);
+            $(item).find(".select-identifier-fieldset select").attr("id", "select_identifier" + index);
+            $(item).find(".select-identifier-fieldset label").attr("for", "select_identifier" + index);
 
             $(item).find(".identifier-link-container input").attr("id", "identifier_link" + index);
-           $(item).find(".identifier-link-container label").attr("for", "identifier_link" + index);
+            $(item).find(".identifier-link-container label").attr("for", "identifier_link" + index);
         });
     }
 
