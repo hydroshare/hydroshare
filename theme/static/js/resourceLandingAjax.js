@@ -17,25 +17,27 @@ function label_ajax_submit() {
         data: datastring,
         success: function (result) {
             var json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-
+            if (json_response.status === "success") {
                 var action = form.find("input[name='action']");
-                if (json_response.action == "CREATE") {
+
+                if (json_response.action === "CREATE") {
                     action.val("DELETE");
                     $("#btnMyResources").removeClass("btn-resource-add");
                     $("#btnMyResources").addClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Remove from my resources");
+                    $("#btnMyResources").attr("data-original-title", "Remove from my resources");
+
                 }
                 else {
                     action.val("CREATE");
                     $("#btnMyResources").addClass("btn-resource-add");
                     $("#btnMyResources").removeClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Add to my resources");
+                    $("#btnMyResources").attr("data-original-title", "Add to my resources");
                 }
+                $("#btnMyResources").tooltip('show')
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+            console.log(errorThrown);
         }
     });
     //don't submit the form
