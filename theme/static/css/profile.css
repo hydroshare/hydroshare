@@ -213,6 +213,14 @@ table.overview tr > td:first-child {
     padding-top: 5px;
 }
 
+table.identifiers {
+    width: 100%;
+}
+
+table.identifiers tr td:first-child {
+    width: 20px;
+}
+
 table.identifiers tr:nth-child(even) td {
     padding-bottom: 12px;
 }

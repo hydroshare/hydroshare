@@ -20,7 +20,10 @@
         {% endif %}
         <div class="row">
             {% if profile_user.id == user.id %}
-            <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
+                <div data-page-mode="edit" class="alert alert-info" role="alert">
+                    Information entered here may be publicly visible. Do not enter information that you want to keep
+                    private.
+                </div>
             {% endif %}
 
             <div class="col-sm-12">
@@ -945,6 +948,15 @@
         </div>
 
         {% if profile_user.id == user.id %}
+        <div class="col-xs-12 col-sm-3 height-fix pull-right">
+        <button type="submit" class="btn btn-primary pull-right
+            btn-save-profile" data-page-mode="edit">
+            Save changes
+        </button>
+        <span data-page-mode="edit"
+              class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
+    </div>
+
         <!-- Deactivate Account Modal -->
         <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
              aria-labelledby="Deactivate account">
@@ -1035,6 +1047,38 @@
             </div>
         </div>
 
+        <!-- Delete iRODS User Account Modal -->
+        <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Create iRODS user account">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-2 col-xs-12 text-center">
+                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
+                            </div>
+                            <div class="col-sm-10 col-xs-12">
+                                <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
+                                    HydroShare user zone as well as all data you have under that account. You cannot recover
+                                    your data after this action.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Create iRODS User Account Modal -->
         <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
              aria-labelledby="myModalLabel" aria-hidden="true">
@@ -1073,48 +1117,7 @@
             </div>
         </div>
 
-        <!-- Delete iRODS User Account Modal -->
-        <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Create iRODS user account">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-sm-2 col-xs-12 text-center">
-                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
-                            </div>
-                            <div class="col-sm-10 col-xs-12">
-                                <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
-                                    HydroShare user zone as well as all data you have under that account. You cannot recover
-                                    your data after this action.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if profile_user.id == user.id %}
-            <div class="col-xs-12 col-sm-3 height-fix pull-right">
-                <button type="submit" class="btn btn-primary pull-right btn-save-profile" data-page-mode="edit">Save
-                    changes
-                </button>
-                <span data-page-mode="edit"
-                      class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
-            </div>
-            </form>
+        </form>
         {% endif %}
         {% endwith %}
     </div>
