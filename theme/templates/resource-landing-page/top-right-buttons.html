@@ -2,7 +2,7 @@
 <div class="col-sm-12">
     <div class="custom-btn-toolbar height-fix">
         {% if not metadata_form %}
-            {% if not is_owner_user and not is_edit_user and not is_view_user %}
+            {% if not is_owner_user and not is_edit_user and not is_view_user and not cm.raccess.discoverable %}
                 {% if resource_is_mine %}
                     <form data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
