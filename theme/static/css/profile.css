@@ -209,6 +209,10 @@ table.overview tr > td:first-child {
 
 /*AUTHOR IDENTIFIERS*/
 
+#edit-identifiers-container .well {
+    padding-top: 5px;
+}
+
 table.identifiers tr:nth-child(even) td {
     padding-bottom: 12px;
 }

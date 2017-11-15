@@ -245,7 +245,7 @@ class SeleniumTestsParentClass(object):
             self.wait_for_visible(By.CSS_SELECTOR, 'input[name="title"]').send_keys(usr['title'])
             upload_field = self.wait_for_visible(By.CSS_SELECTOR, 'input[name="cv"]')
             upload_file(self.driver, upload_field, './manage.py')
-            self.wait_for_visible(By.CSS_SELECTOR, 'button#btn-save-profile').click()
+            self.wait_for_visible(By.CSS_SELECTOR, 'button.btn-save-profile').click()
 
             alert_div = self.wait_for_visible(By.CSS_SELECTOR, '.page-tip')
             alert_text = alert_div.find_element(By.CSS_SELECTOR, 'p').text

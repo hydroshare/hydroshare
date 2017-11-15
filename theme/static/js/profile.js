@@ -333,7 +333,7 @@ $(document).ready(function () {
         setEditMode();
     });
 
-    $("#btn-cancel-profile-edit").click(function () {
+    $(".btn-cancel-profile-edit").click(function () {
         setViewMode();
     });
 
