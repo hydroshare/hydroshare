@@ -233,6 +233,7 @@ def update_user_profile(request):
 
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
+                profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation

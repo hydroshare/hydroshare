@@ -10,6 +10,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 from mezzanine.core.forms import Html5Mixin
 from mezzanine.generic.models import ThreadedComment, Rating
@@ -298,6 +300,10 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(UserProfileForm, self).__init__(*args, **kwargs)
+        self.fields['identifiers'].required = False
+
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account']
@@ -322,13 +328,24 @@ class UserProfileForm(forms.ModelForm):
 
     def clean_identifiers(self):
         data = self.cleaned_data['identifiers']
-        # validate identifier values - check for duplicate links
-        links = [l.lower() for l in data.values()]
-        if len(links) != len(set(links)):
-            raise forms.ValidationError("Invalid data found for identifiers.")
+        if data:
+            # validate identifier values - check for duplicate links
+            links = [l.lower() for l in data.values()]
+            if len(links) != len(set(links)):
+                raise forms.ValidationError("Invalid data found for identifiers. "
+                                            "Duplicate identifier links found.")
 
-        # validate identifier keys - check for duplicate names
-        names = [n.lower() for n in data.keys()]
-        if len(names) != len(set(names)):
-            raise forms.ValidationError("Invalid data found for identifiers.")
+            for link in links:
+                validator = URLValidator()
+                try:
+                    validator(link)
+                except ValidationError:
+                    raise forms.ValidationError("Invalid data found for identifiers. "
+                                                "Identifier link must be a URL.")
+
+            # validate identifier keys - check for duplicate names
+            names = [n.lower() for n in data.keys()]
+            if len(names) != len(set(names)):
+                raise forms.ValidationError("Invalid data found for identifiers. "
+                                            "Duplicate identifier names found")
         return data
