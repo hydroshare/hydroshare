@@ -345,4 +345,11 @@ $(document).ready(function () {
         }
       }
     });
+
+    $('.ui-autocomplete-input').on('keydown', function(e) {
+      if(e.keyCode === 9 && $(this).val() !== '') {
+        e.preventDefault();
+        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+      }
+    });
 });
