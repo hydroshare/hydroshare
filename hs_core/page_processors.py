@@ -90,6 +90,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 # reverse lookup: metadata obj --> res obj
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
+                    if not tool_res_obj.rlabels.is_open_with_app(user):
+                        continue
+
                     sharing_status_supported = False
 
                     supported_sharing_status_obj = tool_res_obj.metadata.\

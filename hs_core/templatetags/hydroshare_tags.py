@@ -30,6 +30,14 @@ def user_permission(content, arg):
 
 
 @register.filter
+def app_on_open_with_list(content, arg):
+    user_obj = arg
+    res_obj = content
+    result = res_obj.rlabels.is_open_with_app(user_obj)
+    return result
+
+
+@register.filter
 def resource_type(content):
     return content.get_content_model()._meta.verbose_name
 

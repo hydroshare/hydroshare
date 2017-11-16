@@ -22,15 +22,35 @@ function label_ajax_submit() {
                 var action = form.find("input[name='action']");
                 if (json_response.action == "CREATE") {
                     action.val("DELETE");
-                    $("#btnMyResources").removeClass("btn-resource-add");
-                    $("#btnMyResources").addClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Remove from my resources");
+                    if (dataFormID == "form-add-to-my-resources")
+                    {
+                        $("#btnMyResources").removeClass("btn-resource-add");
+                        $("#btnMyResources").addClass("btn-resource-remove");
+                        $("#btnMyResources").attr("title", "Remove from my resources");
+                    }
+                    else if (dataFormID == "form-add-open-with-app")
+                    {
+                        $("#btnOpenWithApp").removeClass("btn-resource-add");
+                        $("#btnOpenWithApp").addClass("btn-resource-remove");
+                        $("#btnOpenWithApp").attr("title", "Remove from Open-With list");
+                        $("#btnOpenWithApp").attr("data-original-title", "Remove from Open-With list");
+
+                    }
                 }
                 else {
                     action.val("CREATE");
-                    $("#btnMyResources").addClass("btn-resource-add");
-                    $("#btnMyResources").removeClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Add to my resources");
+                     if (dataFormID == "form-add-to-my-resources") {
+                         $("#btnMyResources").addClass("btn-resource-add");
+                         $("#btnMyResources").removeClass("btn-resource-remove");
+                         $("#btnMyResources").attr("title", "Add to my resources");
+                     }
+                    else if (dataFormID == "form-add-open-with-app")
+                     {
+                         $("#btnOpenWithApp").addClass("btn-resource-add");
+                         $("#btnOpenWithApp").removeClass("btn-resource-remove");
+                         $("#btnOpenWithApp").attr("title", "Add to Open-With list");
+                         $("#btnOpenWithApp").attr("data-original-title", "Add to Open-With list");
+                     }
                 }
             }
         },
