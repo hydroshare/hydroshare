@@ -32,7 +32,7 @@
         </div>
         <div class="form-group">
           <input class="form-control form-required tagsinput" name="organization" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
-          <small class="text-muted">The names of up to two organizations you are associated with.</small>
+          <small class="text-muted">The names of the organizations you are associated with.</small>
         </div>
         <div class="form-group">
             {% include "includes/form_field.html" with field=form.password1 inline_label=True %}
@@ -165,17 +165,16 @@
     });
 
     $('.tagsinput').tagsInput({
-        limit: 2,
-        interactive: true,
-        placeholder: "Organization(s)",
-        autocomplete: {
-            source: "/hsapi/dictionary/universities/",
-            minLength: 3,
-            delay: 500,
-            classes: {
-                "ui-autocomplete": "minHeight"
-            }
-        }
+      interactive: true,
+      placeholder: "Organization(s)",
+      autocomplete: {
+          source: "/hsapi/dictionary/universities/",
+          minLength: 3,
+          delay: 500,
+          classes: {
+              "ui-autocomplete": "minHeight"
+          }
+      }
     });
 
     $('.ui-autocomplete-input').on('keydown', function(e) {
