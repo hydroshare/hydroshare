@@ -79,12 +79,15 @@ def create_account(
         user_profile.organization = organization
         user_profile.save()
 
-        # Update Dictionaries
-        try:
-            University.objects.get(name=organization)
-        except ObjectDoesNotExist:
-            new_term = UncategorizedTerm(name=organization)
-            new_term.save()
+        dict_items = organization.split(",")
+
+        for dict_item in dict_items:
+            # Update Dictionaries
+            try:
+                University.objects.get(name=dict_item)
+            except ObjectDoesNotExist:
+                new_term = UncategorizedTerm(name=dict_item)
+                new_term.save()
 
     # create default UserQuota object for the new user
     uq = UserQuota.objects.create(user=u)
