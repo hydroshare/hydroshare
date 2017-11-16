@@ -305,7 +305,12 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
+    # TODO: Pabitra (11/15/2017) once the Hstore type identifiers seem to work, delete
+    # the external_links fields
     external_links = GenericRelation(ExternalProfileLink)
+    # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
+    # each identifier is stored as a key/value pair {name:link}
+    #identifiers = HStoreField(default={})
 
     def __unicode__(self):
         """Return name field for unicode representation."""
@@ -315,6 +320,22 @@ class Party(AbstractMetaDataElement):
         """Define meta properties for Party class."""
 
         abstract = True
+
+    @classmethod
+    def get_identifiers(cls, request, as_json=True):
+        identifier_names = request.POST.getlist('identifier_name')
+        identifier_links = request.POST.getlist('identifier_link')
+        try:
+            if len(identifier_names) != len(identifier_links):
+                raise Exception("Invalid data for identifiers")
+            identifiers = dict(zip(identifier_names, identifier_links))
+            if len(identifier_names) != len(identifiers.keys()):
+                raise Exception("Invalid data for identifiers")
+        except Exception:
+            raise
+        if as_json:
+            identifiers = json.dumps(identifiers)
+        return identifiers
 
     @classmethod
     def create(cls, **kwargs):
