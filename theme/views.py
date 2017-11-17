@@ -34,7 +34,7 @@ from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
-from hs_core.views.utils import run_ssh_command
+from hs_core.views.utils import run_ssh_command, authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.models import ResourceFile
 from hs_access_control.models import GroupMembershipRequest
@@ -421,7 +421,7 @@ def create_irods_account(request):
 
 
 def create_scidas_virtual_app(request, res_id, cluster):
-    res = get_resource_by_shortkey(res_id)
+    res, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     cluster_name = cluster
     if cluster_name != 'chameleon' and cluster_name != 'aws' and cluster_name != 'azure':
         cluster_name = ''
@@ -495,4 +495,3 @@ def create_scidas_virtual_app(request, res_id, cluster):
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
     return HttpResponseRedirect(app_url)
-
