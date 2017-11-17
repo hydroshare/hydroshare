@@ -279,6 +279,7 @@ class HSAdaptorEditInline(object):
         return cm.can_change(adaptor_field.request)
 
 
+# TODO: This model needs to be deleted as part of issue#1666
 class ExternalProfileLink(models.Model):
     """Define External Profile Link model."""
 
@@ -305,12 +306,9 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
-    # TODO: Pabitra (11/15/2017) once the Hstore type identifiers seem to work, delete
-    # the external_links fields
-    external_links = GenericRelation(ExternalProfileLink)
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
-    #identifiers = HStoreField(default={})
+    identifiers = HStoreField(default={})
 
     def __unicode__(self):
         """Return name field for unicode representation."""
@@ -322,30 +320,37 @@ class Party(AbstractMetaDataElement):
         abstract = True
 
     @classmethod
-    def get_identifiers(cls, request, as_json=True):
+    def get_post_data_with_identifiers(cls, request, as_json=True):
         identifier_names = request.POST.getlist('identifier_name')
         identifier_links = request.POST.getlist('identifier_link')
-        try:
-            if len(identifier_names) != len(identifier_links):
-                raise Exception("Invalid data for identifiers")
-            identifiers = dict(zip(identifier_names, identifier_links))
-            if len(identifier_names) != len(identifiers.keys()):
-                raise Exception("Invalid data for identifiers")
-        except Exception:
-            raise
+
+        if len(identifier_names) != len(identifier_links):
+            raise Exception("Invalid data for identifiers")
+        identifiers = dict(zip(identifier_names, identifier_links))
+        if len(identifier_names) != len(identifiers.keys()):
+            raise Exception("Invalid data for identifiers")
+
         if as_json:
             identifiers = json.dumps(identifiers)
-        return identifiers
+
+        post_data_dict = request.POST.dict()
+        post_data_dict['identifiers'] = identifiers
+
+        return post_data_dict
 
     @classmethod
     def create(cls, **kwargs):
         """Define custom create method for Party model."""
         element_name = cls.__name__
 
-        profile_links = None
-        if 'profile_links' in kwargs:
-            profile_links = kwargs['profile_links']
-            del kwargs['profile_links']
+        # profile_links = None
+        # if 'profile_links' in kwargs:
+        #     profile_links = kwargs['profile_links']
+        #     del kwargs['profile_links']
+
+        if 'identifiers' in kwargs:
+            if not isinstance(kwargs['identifiers'], dict):
+                raise ValueError("Value for identifiers must be of type dict")
 
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
@@ -374,9 +379,9 @@ class Party(AbstractMetaDataElement):
         else:
             party = super(Party, cls).create(**kwargs)
 
-        if profile_links:
-            for link in profile_links:
-                cls._create_profile_link(party, link)
+        # if profile_links:
+        #     for link in profile_links:
+        #         cls._create_profile_link(party, link)
 
         return party
 
@@ -422,13 +427,13 @@ class Party(AbstractMetaDataElement):
                 party.save()
 
         # either create or update external profile links
-        if 'profile_links' in kwargs:
-            links = kwargs['profile_links']
-            for link in links:
-                if 'link_id' in link:  # need to update an existing profile link
-                    cls._update_profile_link(party, link)
-                elif 'type' in link and 'url' in link:  # add a new profile link
-                    cls._create_profile_link(party, link)
+        # if 'profile_links' in kwargs:
+        #     links = kwargs['profile_links']
+        #     for link in links:
+        #         if 'link_id' in link:  # need to update an existing profile link
+        #             cls._update_profile_link(party, link)
+        #         elif 'type' in link and 'url' in link:  # add a new profile link
+        #             cls._create_profile_link(party, link)
 
     @classmethod
     def remove(cls, element_id):
@@ -453,56 +458,56 @@ class Party(AbstractMetaDataElement):
                     cr.save()
         party.delete()
 
-    @classmethod
-    def _create_profile_link(cls, party, link):
-        """Validate and create ExternalProfileLink model linked to Party model."""
-        if 'type' in link and 'url' in link:
-            # check that the type is unique for the party
-            if party.external_links.filter(type=link['type']).count() > 0:
-                raise ValidationError("External profile link type:%s already exists "
-                                      "for this %s" % (link['type'], type(party).__name__))
+    # @classmethod
+    # def _create_profile_link(cls, party, link):
+    #     """Validate and create ExternalProfileLink model linked to Party model."""
+    #     if 'type' in link and 'url' in link:
+    #         # check that the type is unique for the party
+    #         if party.external_links.filter(type=link['type']).count() > 0:
+    #             raise ValidationError("External profile link type:%s already exists "
+    #                                   "for this %s" % (link['type'], type(party).__name__))
+    #
+    #         if party.external_links.filter(url=link['url']).count() > 0:
+    #             raise ValidationError("External profile link url:%s already exists "
+    #                                   "for this %s" % (link['url'], type(party).__name__))
+    #
+    #         p_link = ExternalProfileLink(type=link['type'], url=link['url'], content_object=party)
+    #         p_link.save()
+    #     else:
+    #         raise ValidationError("Invalid %s profile link data." % type(party).__name__)
 
-            if party.external_links.filter(url=link['url']).count() > 0:
-                raise ValidationError("External profile link url:%s already exists "
-                                      "for this %s" % (link['url'], type(party).__name__))
-
-            p_link = ExternalProfileLink(type=link['type'], url=link['url'], content_object=party)
-            p_link.save()
-        else:
-            raise ValidationError("Invalid %s profile link data." % type(party).__name__)
-
-    @classmethod
-    def _update_profile_link(cls, party, link):
-        """Clean up, validate, and update ExternalProfileLink linked to Party model.
-
-        If the link dict contains only key 'link_id' then the link will be deleted
-        otherwise the link will be updated
-        """
-        p_link = ExternalProfileLink.objects.get(id=link['link_id'])
-
-        if 'type' not in link and 'url' not in link:
-            # delete the link
-            p_link.delete()
-        else:
-            if 'type' in link:
-                # check that the type is unique for the party
-                if p_link.type != link['type']:
-                    if party.external_links.filter(type=link['type']).count() > 0:
-                        raise ValidationError("External profile link type:%s "
-                                              "already exists for this %s"
-                                              % (link['type'], type(party).__name__))
-                    else:
-                        p_link.type = link['type']
-            if 'url' in link:
-                # check that the url is unique for the party
-                if p_link.url != link['url']:
-                    if party.external_links.filter(url=link['url']).count() > 0:
-                        raise ValidationError("External profile link url:%s already exists "
-                                              "for this %s" % (link['url'], type(party).__name__))
-                    else:
-                        p_link.url = link['url']
-
-            p_link.save()
+    # @classmethod
+    # def _update_profile_link(cls, party, link):
+    #     """Clean up, validate, and update ExternalProfileLink linked to Party model.
+    #
+    #     If the link dict contains only key 'link_id' then the link will be deleted
+    #     otherwise the link will be updated
+    #     """
+    #     p_link = ExternalProfileLink.objects.get(id=link['link_id'])
+    #
+    #     if 'type' not in link and 'url' not in link:
+    #         # delete the link
+    #         p_link.delete()
+    #     else:
+    #         if 'type' in link:
+    #             # check that the type is unique for the party
+    #             if p_link.type != link['type']:
+    #                 if party.external_links.filter(type=link['type']).count() > 0:
+    #                     raise ValidationError("External profile link type:%s "
+    #                                           "already exists for this %s"
+    #                                           % (link['type'], type(party).__name__))
+    #                 else:
+    #                     p_link.type = link['type']
+    #         if 'url' in link:
+    #             # check that the url is unique for the party
+    #             if p_link.url != link['url']:
+    #                 if party.external_links.filter(url=link['url']).count() > 0:
+    #                     raise ValidationError("External profile link url:%s already exists "
+    #                                           "for this %s" % (link['url'], type(party).__name__))
+    #                 else:
+    #                     p_link.url = link['url']
+    #
+    #         p_link.save()
 
 
 class Contributor(Party):

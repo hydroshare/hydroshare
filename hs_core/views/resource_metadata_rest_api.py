@@ -16,7 +16,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
 
-
+# TODO: This serializer needs to be deleted as part of issue#1666
 class ExternalProfileLinkSerializer(serializers.Serializer):
     type = serializers.CharField(required=False)
     url = serializers.URLField(required=False)

@@ -29,6 +29,7 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
+from hs_core.models import Party
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -202,20 +203,13 @@ def update_user_profile(request):
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
     # create a dict of identifier names and links for the identifiers field of the  UserProfile
-    identifier_names = request.POST.getlist('identifier_name')
-    identifier_links = request.POST.getlist('identifier_link')
     try:
-        if len(identifier_names) != len(identifier_links):
-            raise Exception
-        identifiers = dict(zip(identifier_names, identifier_links))
-        if len(identifier_names) != len(identifiers.keys()):
-            raise Exception
-    except Exception:
-        messages.error(request, "Update failed. Invalid data found for identifiers.")
+        post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
+        identifiers = post_data_dict['identifiers']
+    except Exception as ex:
+        messages.error(request, "Update failed. {}".format(ex.message))
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    post_data_dict = request.POST.dict()
-    post_data_dict['identifiers'] = identifiers
     profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
