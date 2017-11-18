@@ -29,6 +29,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError, \
     SuspiciousFileOperation, PermissionDenied
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
+from django.core.validators import URLValidator
 
 from mezzanine.pages.models import Page
 from mezzanine.core.models import Ownable
@@ -343,15 +344,7 @@ class Party(AbstractMetaDataElement):
         """Define custom create method for Party model."""
         element_name = cls.__name__
 
-        # profile_links = None
-        # if 'profile_links' in kwargs:
-        #     profile_links = kwargs['profile_links']
-        #     del kwargs['profile_links']
-
-        if 'identifiers' in kwargs:
-            if not isinstance(kwargs['identifiers'], dict):
-                raise ValueError("Value for identifiers must be of type dict")
-
+        cls._validate_identifiers(kwargs)
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
         if element_name == 'Creator':
@@ -379,10 +372,6 @@ class Party(AbstractMetaDataElement):
         else:
             party = super(Party, cls).create(**kwargs)
 
-        # if profile_links:
-        #     for link in profile_links:
-        #         cls._create_profile_link(party, link)
-
         return party
 
     @classmethod
@@ -403,6 +392,7 @@ class Party(AbstractMetaDataElement):
                 creator_order = 1
             del kwargs['order']
 
+        cls._validate_identifiers(kwargs)
         party = super(Party, cls).update(element_id, **kwargs)
 
         if isinstance(party, Creator) and creator_order is not None:
@@ -425,15 +415,6 @@ class Party(AbstractMetaDataElement):
 
                 party.order = creator_order
                 party.save()
-
-        # either create or update external profile links
-        # if 'profile_links' in kwargs:
-        #     links = kwargs['profile_links']
-        #     for link in links:
-        #         if 'link_id' in link:  # need to update an existing profile link
-        #             cls._update_profile_link(party, link)
-        #         elif 'type' in link and 'url' in link:  # add a new profile link
-        #             cls._create_profile_link(party, link)
 
     @classmethod
     def remove(cls, element_id):
@@ -458,56 +439,32 @@ class Party(AbstractMetaDataElement):
                     cr.save()
         party.delete()
 
-    # @classmethod
-    # def _create_profile_link(cls, party, link):
-    #     """Validate and create ExternalProfileLink model linked to Party model."""
-    #     if 'type' in link and 'url' in link:
-    #         # check that the type is unique for the party
-    #         if party.external_links.filter(type=link['type']).count() > 0:
-    #             raise ValidationError("External profile link type:%s already exists "
-    #                                   "for this %s" % (link['type'], type(party).__name__))
-    #
-    #         if party.external_links.filter(url=link['url']).count() > 0:
-    #             raise ValidationError("External profile link url:%s already exists "
-    #                                   "for this %s" % (link['url'], type(party).__name__))
-    #
-    #         p_link = ExternalProfileLink(type=link['type'], url=link['url'], content_object=party)
-    #         p_link.save()
-    #     else:
-    #         raise ValidationError("Invalid %s profile link data." % type(party).__name__)
+    @classmethod
+    def _validate_identifiers(cls, kwargs):
+        if 'identifiers' in kwargs:
+            if not isinstance(kwargs['identifiers'], dict):
+                raise ValidationError("Value for identifiers must be of type dict")
+            identifiers = kwargs['identifiers']
+            if identifiers:
+                # validate identifier values - check for duplicate links
+                links = [l.lower() for l in identifiers.values()]
+                if len(links) != len(set(links)):
+                    raise ValidationError("Invalid data found for identifiers. "
+                                          "Duplicate identifier links found.")
 
-    # @classmethod
-    # def _update_profile_link(cls, party, link):
-    #     """Clean up, validate, and update ExternalProfileLink linked to Party model.
-    #
-    #     If the link dict contains only key 'link_id' then the link will be deleted
-    #     otherwise the link will be updated
-    #     """
-    #     p_link = ExternalProfileLink.objects.get(id=link['link_id'])
-    #
-    #     if 'type' not in link and 'url' not in link:
-    #         # delete the link
-    #         p_link.delete()
-    #     else:
-    #         if 'type' in link:
-    #             # check that the type is unique for the party
-    #             if p_link.type != link['type']:
-    #                 if party.external_links.filter(type=link['type']).count() > 0:
-    #                     raise ValidationError("External profile link type:%s "
-    #                                           "already exists for this %s"
-    #                                           % (link['type'], type(party).__name__))
-    #                 else:
-    #                     p_link.type = link['type']
-    #         if 'url' in link:
-    #             # check that the url is unique for the party
-    #             if p_link.url != link['url']:
-    #                 if party.external_links.filter(url=link['url']).count() > 0:
-    #                     raise ValidationError("External profile link url:%s already exists "
-    #                                           "for this %s" % (link['url'], type(party).__name__))
-    #                 else:
-    #                     p_link.url = link['url']
-    #
-    #         p_link.save()
+                for link in links:
+                    validator = URLValidator()
+                    try:
+                        validator(link)
+                    except ValidationError:
+                        raise ValidationError("Invalid data found for identifiers. "
+                                              "Identifier link must be a URL.")
+
+                # validate identifier keys - check for duplicate names
+                names = [n.lower() for n in identifiers.keys()]
+                if len(names) != len(set(names)):
+                    raise ValidationError("Invalid data found for identifiers. "
+                                          "Duplicate identifier names found")
 
 
 class Contributor(Party):
@@ -4171,10 +4128,15 @@ class CoreMetaData(models.Model):
                                                 '{%s}homepage' % self.NAMESPACES['hsterms'])
             hsterms_homepage.set('{%s}resource' % self.NAMESPACES['rdf'], person.homepage)
 
-        for link in person.external_links.all():
+        for name, link in person.identifiers.iteritems():
             hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
-                                                 '{%s}' % self.NAMESPACES['hsterms'] + link.type)
-            hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
+                                                 '{%s}' % self.NAMESPACES['hsterms'] + name)
+            hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
+
+        # for link in person.external_links.all():
+        #     hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
+        #                                          '{%s}' % self.NAMESPACES['hsterms'] + link.type)
+        #     hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
 
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
