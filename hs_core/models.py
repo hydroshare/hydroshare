@@ -4135,11 +4135,6 @@ class CoreMetaData(models.Model):
                                                  '{%s}' % self.NAMESPACES['hsterms'] + name)
             hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link)
 
-        # for link in person.external_links.all():
-        #     hsterms_link_type = etree.SubElement(dc_person_rdf_Description,
-        #                                          '{%s}' % self.NAMESPACES['hsterms'] + link.type)
-        #     hsterms_link_type.set('{%s}resource' % self.NAMESPACES['rdf'], link.url)
-
     def create_element(self, element_model_name, **kwargs):
         """Create any supported metadata element."""
         model_type = self._get_metadata_element_model_type(element_model_name)
