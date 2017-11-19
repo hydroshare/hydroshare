@@ -10,22 +10,15 @@ from rest_framework import serializers
 
 from hs_core import hydroshare
 from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
-    ExternalProfileLink, Format, FundingAgency, Identifier, Subject, Source, Relation
+    Format, FundingAgency, Identifier, Subject, Source, Relation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 logger = logging.getLogger(__name__)
 
-# TODO: This serializer needs to be deleted as part of issue#1666
-class ExternalProfileLinkSerializer(serializers.Serializer):
-    type = serializers.CharField(required=False)
-    url = serializers.URLField(required=False)
-    object_id = serializers.IntegerField(required=False)
-    # content_type = models.ForeignKey(ContentType)
-    # content_object = GenericForeignKey('content_type', 'object_id')
 
-    class Meta:
-        model = ExternalProfileLink
+class Identifiers(serializers.DictField):
+    child = serializers.CharField()
 
 
 class PartySerializer(serializers.Serializer):
@@ -36,12 +29,12 @@ class PartySerializer(serializers.Serializer):
     address = serializers.CharField(required=False)
     phone = serializers.CharField(required=False)
     homepage = serializers.URLField(required=False)
-    external_links = serializers = ExternalProfileLinkSerializer(required=False, many=True)
+    identifiers = Identifiers(required=False)
 
     class Meta:
         model = Creator
         fields = {'name', 'description', 'organization', 'email',
-                  'address', 'phone', 'homepage', 'external_links'}
+                  'address', 'phone', 'homepage', 'identifiers'}
 
 
 class CreatorSerializer(PartySerializer):

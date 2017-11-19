@@ -15,6 +15,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         res = resource.create_resource(self.rtype,
                                        self.user,
                                        self.title)
+        self.resource = res
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
@@ -44,14 +45,22 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "contributors": [{
                 "name": "Test Name 1",
-                "organization": "Org 1"
+                "organization": "Org 1",
+                "identifiers": {"ORCID": "http://orcid.org/012",
+                                "ResearchGate": "http://researchgate.org/002"}
             }, {
                 "name": None,
                 "organization": "Org 2"
             }],
             "creators": [{
-                "name": "Creator",
+                "name": "Creator 1",
                 "organization": None
+            },
+            {
+                "name": "Creator 2",
+                "organization": "USU",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -95,6 +104,8 @@ class TestResourceScienceMetadata(HSRESTTestCase):
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(self.resource.metadata.dates.all().count(), 3)
+        self.assertEqual(self.resource.metadata.sources.all().count(), 2)
 
     def test_put_scimeta_generic_resource_double_none(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
@@ -180,7 +191,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "dates": [
                 {
@@ -289,7 +302,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "dates": [
                 {
@@ -401,7 +416,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -530,7 +547,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -634,7 +653,9 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -733,11 +754,15 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "organization": "Org 1"
             }, {
                 "name": "Test Name 2",
-                "organization": "Org 2"
+                "organization": "Org 2",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -821,14 +846,18 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "contributors": [{
                 "name": "Test Name 1",
-                "organization": "Org 1"
+                "organization": "Org 1",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }, {
                 "name": "Test Name 2",
                 "organization": "Org 2"
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -1002,14 +1031,18 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             ],
             "contributors": [{
                 "name": "Test Name 1",
-                "organization": "Org 1"
+                "organization": "Org 1",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }, {
                 "name": "Test Name 2",
                 "organization": "Org 2"
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -1096,11 +1129,15 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "organization": "Org 1"
             }, {
                 "name": "Test Name 2",
-                "organization": "Org 2"
+                "organization": "Org 2",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",
@@ -1245,11 +1282,15 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "organization": "Org 1"
             }, {
                 "name": "Test Name 2",
-                "organization": "Org 2"
+                "organization": "Org 2",
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "creators": [{
                 "name": "Creator",
-                "organization": None
+                "organization": None,
+                "identifiers": {"ORCID": "http://orcid.org/011",
+                                "ResearchGate": "http://researchgate.org/001"}
             }],
             "coverages": [{
                 "type": "box",

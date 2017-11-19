@@ -280,23 +280,6 @@ class HSAdaptorEditInline(object):
         return cm.can_change(adaptor_field.request)
 
 
-# TODO: This model needs to be deleted as part of issue#1666
-class ExternalProfileLink(models.Model):
-    """Define External Profile Link model."""
-
-    type = models.CharField(max_length=50)
-    url = models.URLField()
-
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType)
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    class Meta:
-        """Define meta properties for ExternalProfileLink class."""
-
-        unique_together = ("type", "url", "object_id")
-
-
 class Party(AbstractMetaDataElement):
     """Define party model to define a person."""
 
@@ -443,7 +426,10 @@ class Party(AbstractMetaDataElement):
     def _validate_identifiers(cls, kwargs):
         if 'identifiers' in kwargs:
             if not isinstance(kwargs['identifiers'], dict):
-                raise ValidationError("Value for identifiers must be of type dict")
+                try:
+                    kwargs['identifiers'] = json.loads(kwargs['identifiers'])
+                except ValueError:
+                    raise ValidationError("Value for identifiers not in the correct format")
             identifiers = kwargs['identifiers']
             if identifiers:
                 # validate identifier values - check for duplicate links
@@ -3555,10 +3541,14 @@ class CoreMetaData(models.Model):
             parsed_metadata.append({"title": {"value": metadata.pop('title')}})
 
         if 'creators' in keys_to_update:
+            if not isinstance(metadata['creators'], list):
+                metadata['creators'] = json.loads(metadata['creators'])
             for creator in metadata.pop('creators'):
                 parsed_metadata.append({"creator": creator})
 
         if 'contributors' in keys_to_update:
+            if not isinstance(metadata['contributors'], list):
+                metadata['contributors'] = json.loads(metadata['contributors'])
             for contributor in metadata.pop('contributors'):
                 parsed_metadata.append({"contributor": contributor})
 
@@ -3791,7 +3781,19 @@ class CoreMetaData(models.Model):
                             Coverage.validate_coverage_type_value_attributes(coverage_type,
                                                                              coverage_value_dict)
                             continue
-
+                        if element_name in ['creator', 'contributor']:
+                            try:
+                                party_data = dict_item[element_name]
+                                if 'identifiers' in party_data:
+                                    if isinstance(party_data['identifiers'], dict):
+                                        # convert dict to json for form validation
+                                        party_data['identifiers'] = json.dumps(
+                                            party_data['identifiers'])
+                            except Exception as ex:
+                                raise ValidationError("Invalid identifier data for "
+                                                      "creator/contributor")
+                            validation_form = validation_forms_mapping[element_name](
+                                party_data)
                         else:
                             validation_form = validation_forms_mapping[element_name](
                                 dict_item[element_name])
