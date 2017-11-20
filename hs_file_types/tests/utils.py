@@ -2,7 +2,8 @@ from dateutil import parser
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile, \
-    NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile
+    NetCDFLogicalFile, GeoFeatureLogicalFile, GeoFeatureFileMetaData, RefTimeseriesLogicalFile, \
+    TimeSeriesLogicalFile, TimeSeriesFileMetaData
 
 
 def assert_raster_file_type_metadata(self):
@@ -403,3 +404,216 @@ def assert_ref_time_series_file_type_metadata(self):
     self.assertIn("WOF", web_reference_types)
     web_return_types = [web.return_type for web in logical_file.metadata.web_services]
     self.assertIn("WaterML 1.1", web_return_types)
+
+
+def assert_time_series_file_type_metadata(self):
+    """Test timeseries file type metadata extraction.  """
+
+    # check that there is one TimeSeriesLogicalFile object
+    self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
+
+    # check that there is one TimeSeriesFileMetaData object
+    self.assertEqual(TimeSeriesFileMetaData.objects.count(), 1)
+
+    res_file = self.composite_resource.files.first()
+    logical_file = res_file.logical_file
+    self.assertTrue(isinstance(logical_file.metadata, TimeSeriesFileMetaData))
+
+    # test extracted metadata that updates resource level metadata
+
+    # there should one content file - sqlite file
+    self.assertEqual(self.composite_resource.files.all().count(), 1)
+
+    # there should be one contributor element
+    self.assertEqual(self.composite_resource.metadata.contributors.all().count(), 1)
+
+    # test core metadata after metadata extraction
+    extracted_title = "Water temperature data from the Little Bear River, UT"
+    self.assertEqual(self.composite_resource.metadata.title.value, extracted_title)
+
+    # there should be an abstract element
+    self.assertNotEqual(self.composite_resource.metadata.description, None)
+    extracted_abstract = "This dataset contains time series of observations of water " \
+                         "temperature in the Little Bear River, UT. Data were recorded every " \
+                         "30 minutes. The values were recorded using a HydroLab MS5 " \
+                         "multi-parameter water quality sonde connected to a Campbell " \
+                         "Scientific datalogger."
+
+    self.assertEqual(self.composite_resource.metadata.description.abstract.strip(),
+                     extracted_abstract)
+
+    # there should be 2 coverage element -  box type and period type
+    self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
+    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(type='box').count(), 1)
+    self.assertEqual(self.composite_resource.metadata.coverages.all().filter(
+        type='period').count(), 1)
+
+    box_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
+    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
+    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
+    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+
+    temporal_coverage = self.composite_resource.metadata.coverages.all().filter(
+        type='period').first()
+    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
+                     parser.parse('01/01/2008').date())
+    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
+                     parser.parse('01/31/2008').date())
+
+    # there should be one format element
+    self.assertEqual(self.composite_resource.metadata.formats.all().count(), 1)
+    format_element = self.composite_resource.metadata.formats.all().first()
+    self.assertEqual(format_element.value, 'application/sqlite')
+
+    # there should be one subject element
+    self.assertEqual(self.composite_resource.metadata.subjects.all().count(), 1)
+    subj_element = self.composite_resource.metadata.subjects.all().first()
+    self.assertEqual(subj_element.value, 'Temperature')
+
+    # test that we put the sqlite file into a new directory
+    res_file = self.composite_resource.files.first()
+    file_path, base_file_name = res_file.full_path, res_file.file_name
+    expected_file_path = u"{}/data/contents/ODM2_Multi_Site_One_Variable/{}"
+    expected_file_path = expected_file_path.format(self.composite_resource.root_path,
+                                                   base_file_name)
+    self.assertEqual(file_path, expected_file_path)
+    logical_file = res_file.logical_file
+
+    # logical file should be associated with 1 file
+    self.assertEqual(logical_file.files.all().count(), 1)
+    res_file = logical_file.files.first()
+    self.assertIn('.sqlite', res_file.extension)
+
+    # test file level metadata extraction
+
+    # there should be a total of 7 timeseries
+    self.assertEqual(logical_file.metadata.time_series_results.all().count(), 7)
+
+    # testing extended metadata elements
+
+    # test title/dataset name
+    self.assertEqual(logical_file.dataset_name, extracted_title)
+
+    # test abstract
+    self.assertEqual(logical_file.metadata.abstract, extracted_abstract)
+
+    # there should be one keyword element
+    self.assertEqual(len(logical_file.metadata.keywords), 1)
+    self.assertIn('Temperature', logical_file.metadata.keywords)
+
+    # test spatial coverage
+    box_coverage = logical_file.metadata.spatial_coverage
+    self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+    self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+    self.assertEqual(box_coverage.value['northlimit'], 41.718473)
+    self.assertEqual(box_coverage.value['eastlimit'], -111.799324)
+    self.assertEqual(box_coverage.value['southlimit'], 41.495409)
+    self.assertEqual(box_coverage.value['westlimit'], -111.946402)
+
+    # test temporal coverage
+    temporal_coverage = logical_file.metadata.temporal_coverage
+    self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
+                     parser.parse('01/01/2008').date())
+    self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
+                     parser.parse('01/31/2008').date())
+
+    # test 'site' - there should be 7 sites
+    self.assertEqual(logical_file.metadata.sites.all().count(), 7)
+    # each site be associated with one series id
+    for site in logical_file.metadata.sites.all():
+        self.assertEqual(len(site.series_ids), 1)
+
+    # test the data for a specific site
+    site = logical_file.metadata.sites.filter(site_code='USU-LBR-Paradise').first()
+    self.assertNotEqual(site, None)
+    site_name = 'Little Bear River at McMurdy Hollow near Paradise, Utah'
+    self.assertEqual(site.site_name, site_name)
+    self.assertEqual(site.elevation_m, 1445)
+    self.assertEqual(site.elevation_datum, 'NGVD29')
+    self.assertEqual(site.site_type, 'Stream')
+    self.assertEqual(site.latitude, 41.575552)
+    self.assertEqual(site.longitude, -111.855217)
+
+    # test 'variable' - there should be 1 variable element
+    self.assertEqual(logical_file.metadata.variables.all().count(), 1)
+    variable = logical_file.metadata.variables.all().first()
+    # there should be 7 series ids associated with this one variable
+    self.assertEqual(len(variable.series_ids), 7)
+    # test the data for a variable
+    self.assertEqual(variable.variable_code, 'USU36')
+    self.assertEqual(variable.variable_name, 'Temperature')
+    self.assertEqual(variable.variable_type, 'Water Quality')
+    self.assertEqual(variable.no_data_value, -9999)
+    self.assertEqual(variable.variable_definition, None)
+    self.assertEqual(variable.speciation, 'Not Applicable')
+
+    # test 'method' - there should be 1 method element
+    self.assertEqual(logical_file.metadata.methods.all().count(), 1)
+    method = logical_file.metadata.methods.all().first()
+    # there should be 7 series ids associated with this one method element
+    self.assertEqual(len(method.series_ids), 7)
+    self.assertEqual(method.method_code, '28')
+    method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
+                  'using ODM Tools.'
+    self.assertEqual(method.method_name, method_name)
+    self.assertEqual(method.method_type, 'Instrument deployment')
+    method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
+                 'using ODM Tools.'
+    self.assertEqual(method.method_description, method_des)
+    self.assertEqual(method.method_link, None)
+
+    # test 'processing_level' - there should be 1 processing_level element
+    self.assertEqual(logical_file.metadata.processing_levels.all().count(), 1)
+    proc_level = logical_file.metadata.processing_levels.all().first()
+    # there should be 7 series ids associated with this one element
+    self.assertEqual(len(proc_level.series_ids), 7)
+    self.assertEqual(proc_level.processing_level_code, 1)
+    self.assertEqual(proc_level.definition, 'Quality controlled data')
+    explanation = 'Quality controlled data that have passed quality assurance procedures ' \
+                  'such as routine estimation of timing and sensor calibration or visual ' \
+                  'inspection and removal of obvious errors. An example is USGS published ' \
+                  'streamflow records following parsing through USGS quality control ' \
+                  'procedures.'
+    self.assertEqual(proc_level.explanation, explanation)
+
+    # test 'timeseries_result' - there should be 7 timeseries_result element
+    self.assertEqual(logical_file.metadata.time_series_results.all().count(), 7)
+    ts_result = logical_file.metadata.time_series_results.filter(
+        series_ids__contains=['182d8fa3-1ebc-11e6-ad49-f45c8999816f']).first()
+    self.assertNotEqual(ts_result, None)
+    # there should be only 1 series id associated with this element
+    self.assertEqual(len(ts_result.series_ids), 1)
+    self.assertEqual(ts_result.units_type, 'Temperature')
+    self.assertEqual(ts_result.units_name, 'degree celsius')
+    self.assertEqual(ts_result.units_abbreviation, 'degC')
+    self.assertEqual(ts_result.status, 'Unknown')
+    self.assertEqual(ts_result.sample_medium, 'Surface Water')
+    self.assertEqual(ts_result.value_count, 1441)
+    self.assertEqual(ts_result.aggregation_statistics, 'Average')
+
+    # test for CV lookup tables
+    # there should be 23 CV_VariableType records
+    self.assertEqual(logical_file.metadata.cv_variable_types.all().count(), 23)
+    # there should be 805 CV_VariableName records
+    self.assertEqual(logical_file.metadata.cv_variable_names.all().count(), 805)
+    # there should be 145 CV_Speciation records
+    self.assertEqual(logical_file.metadata.cv_speciations.all().count(), 145)
+    # there should be 51 CV_SiteType records
+    self.assertEqual(logical_file.metadata.cv_site_types.all().count(), 51)
+    # there should be 5 CV_ElevationDatum records
+    self.assertEqual(logical_file.metadata.cv_elevation_datums.all().count(), 5)
+    # there should be 25 CV_MethodType records
+    self.assertEqual(logical_file.metadata.cv_method_types.all().count(), 25)
+    # there should be 179 CV_UnitsType records
+    self.assertEqual(logical_file.metadata.cv_units_types.all().count(), 179)
+    # there should be 4 CV_Status records
+    self.assertEqual(logical_file.metadata.cv_statuses.all().count(), 4)
+    # there should be 17 CV_Medium records
+    self.assertEqual(logical_file.metadata.cv_mediums.all().count(), 18)
+    # there should be 17 CV_aggregationStatistics records
+    self.assertEqual(logical_file.metadata.cv_aggregation_statistics.all().count(), 17)
+    # there should not be any UTCOffset element
+    self.assertEqual(logical_file.metadata.utc_offset, None)

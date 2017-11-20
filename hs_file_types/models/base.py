@@ -49,7 +49,7 @@ class AbstractFileMetaData(models.Model):
         self.keywords = []
         self.save()
 
-    def get_html(self, include_extra_metadata=True):
+    def get_html(self, include_extra_metadata=True, **kwargs):
         """Generates html for displaying all metadata elements associated with this logical file.
         Subclass must override to include additional html for additional metadata it supports.
         :param include_extra_metadata: a flag to control if necessary html for displaying key/value
@@ -107,10 +107,12 @@ class AbstractFileMetaData(models.Model):
                                 td(v)
         return extra_metadata_div
 
-    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True):
+    def get_html_forms(self, dataset_name_form=True, temporal_coverage=True, **kwargs):
         """generates html forms for all the metadata elements associated with this logical file
         type
-        :param dataset_name_form If True then a form for editing dataset_name (title) attribute is
+        :param dataset_name_form: If True then a form for editing dataset_name (title) attribute is
+        included
+        :param  temporal_coverage: if True then form elements for editing temporal coverage are
         included
         """
         root_div = div()

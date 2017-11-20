@@ -178,17 +178,18 @@ $(document).ready(function () {
     $.ajax({
         url: "/hsapi/userInfo/",
         success: function(user) {
-            if(!user.title || !user.organization) {
-                var message = 'Your profile is nearly complete. ';
-                message += 'Please fill in the ';
-                if(!user.title && !user.organization) {
-                    message += '<strong>title</strong> and <strong>organization</strong> fields';
-                } else if (!user.title) {
-                    message += '<strong>title</strong> field';
-                } else if (!user.organization) {
-                    message += '<strong>organization</strong> field';
+            if(!user.organization) {
+                // Disable publishing resources
+                if ($("#publish").length) {
+                    $("#publish").toggleClass("disabled", true);
+                    $("#publish").removeAttr("data-toggle");   // Disable the agreement modal
+                    $("#publish > [data-toggle='tooltip']").attr("data-original-title",
+                        "Your profile information must be complete before you can formally publish resources.");
                 }
-                message += ' on the <a href="/user/'+user.id+'/">user profile</a> page';
+
+                var message = 'Your profile is nearly complete. Please fill in the '
+                    + '<strong>Organization</strong> field'
+                    + ' on the <a href="/user/' + user.id + '/">User Profile</a> page';
                 showUniversalMessage("warn", message, 10000)();
             }
         },
