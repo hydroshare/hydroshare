@@ -302,3 +302,8 @@ float the buttons inside it. This prevents collapsing. */
     /* prevent horizontal scrollbar */
     overflow-x: hidden;
 }
+
+.tagsinput .tag {
+    background: #DDD;
+    color: #111;
+}
