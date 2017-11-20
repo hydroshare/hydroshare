@@ -888,6 +888,20 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <style>
+    .tagsinput {
+      border: 1px solid #ccc;
+    }
+
+    .tagsinput div input::-webkit-input-placeholder {
+      color: #777;
+    }
+
+    .tagsinput .tag {
+      background: #DDD;
+      color: #111;
+    }
+  </style>
 {%  endblock %}
 
 {% block extra_js %}
