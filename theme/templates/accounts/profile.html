@@ -555,7 +555,7 @@
                                             </fieldset>
                                         </div>
                                         {% endif %}
-                                </div>
+                                    </div>
                                 </div>
                                 {% endif %}
                                 {# AUTHOR IDENTIFIERS #}
@@ -589,70 +589,11 @@
                                                     <i class="identifier-icon fa fa-address-card"></i>
                                                     {% endif %}
                                                 </td>
-                                                <td><a href="#"
+                                                <td><a href="{{ link }}" target="_blank"
                                                        class="identifier-url">{{ link }}</a>
                                                 </td>
                                             </tr>
                                             {% endfor %}
-
-                                            <!--Examples-->
-                                            <!--<tr>-->
-                                                <!--<td colspan="2"><strong>Google Scholar</strong></td>-->
-                                            <!--</tr>-->
-                                            <!--<tr>-->
-                                                <!--<td>-->
-                                                    <!--<i class="identifier-icon ai ai-google-scholar-square"></i>-->
-                                                <!--</td>-->
-                                                <!--<td><a href="#"-->
-                                                       <!--class="identifier-url">https://www.hydroshare.org/resource/e8c66774c2394fcaacc71e12f95f9ab8/</a>-->
-                                                <!--</td>-->
-                                            <!--</tr>-->
-
-                                            <!--<tr>-->
-                                                <!--<td colspan="2"><strong>ORCID</strong></td>-->
-                                            <!--</tr>-->
-                                            <!--<tr>-->
-                                                <!--<td><i class="identifier-icon ai ai-orcid"></i>-->
-                                                <!--</td>-->
-                                                <!--<td><a href="#"-->
-                                                       <!--class="identifier-url">http://orcid.org/0000-0002-1998-3479</a>-->
-                                                <!--</td>-->
-                                            <!--</tr>-->
-
-                                            <!--<tr>-->
-                                                <!--<td colspan="2"><strong>ResearchGate</strong></td>-->
-                                            <!--</tr>-->
-                                            <!--<tr>-->
-                                                <!--<td><i class="identifier-icon ai ai-researchgate-square"></i>-->
-                                                <!--</td>-->
-                                                <!--<td><a href="#"-->
-                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
-                                                <!--</td>-->
-                                            <!--</tr>-->
-
-                                            <!--<tr>-->
-                                                <!--<td colspan="2"><strong>ResearcherID</strong></td>-->
-                                            <!--</tr>-->
-                                            <!--<tr>-->
-                                                <!--<td><img class="identifier-icon"-->
-                                                         <!--src="{{ STATIC_URL }}img/researcherID.png"-->
-                                                         <!--alt="ResearcherID icon"/></td>-->
-                                                <!--<td><a href="#"-->
-                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
-                                                <!--</td>-->
-                                            <!--</tr>-->
-
-                                            <!--<tr>-->
-                                                <!--<td colspan="2"><strong>Some other</strong></td>-->
-                                            <!--</tr>-->
-                                            <!--<tr>-->
-                                                <!--<td><i class="identifier-icon fa fa-address-card"-->
-                                                       <!--aria-hidden="true"></i></i>-->
-                                                <!--</td>-->
-                                                <!--<td><a href="#"-->
-                                                       <!--class="identifier-url">https://park.hydroshare.org/apps/</a>-->
-                                                <!--</td>-->
-                                            <!--</tr>-->
                                         </table>
                                     </div>
                                 </div>
@@ -1128,4 +1069,3 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/profile.js"></script>
 {% endblock %}
-
