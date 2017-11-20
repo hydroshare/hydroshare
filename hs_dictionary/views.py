@@ -16,7 +16,7 @@ class ListUniversities(APIView):
         Return a list of all vocabulary items
         :return:
         """
-        terms = request.GET.get('term', None)
+        terms = request.GET.get('term', '')
         term_list = terms.split(' ')
 
         if len(term_list):
