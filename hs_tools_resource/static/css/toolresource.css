@@ -34,3 +34,8 @@
 .dropdown-menu > li > a {
     padding: 0;
 }
+
+.tool-metadata-hr {
+    margin-top: 0px;
+    margin-bottom: 2px
+}
