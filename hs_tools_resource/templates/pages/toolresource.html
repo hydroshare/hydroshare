@@ -42,7 +42,7 @@
                 <div>
                     {% if source_code_url %}
                         <h4><strong>Source Code URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ source_code_url.value|urlize }}</div>
                         </div>
@@ -52,7 +52,7 @@
                 <div>
                     {% if issues_page_url %}
                         <h4><strong>Issues Page URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ issues_page_url.value|urlize }}</div>
                         </div>
@@ -62,7 +62,7 @@
                 <div>
                     {% if mailing_list_url %}
                         <h4><strong>Mailing List URL:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ mailing_list_url.value|urlize }}</div>
                         </div>
@@ -72,7 +72,7 @@
                 <div>
                     {% if roadmap %}
                         <h4><strong>Roadmap:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ roadmap.value|urlize }}</div>
                         </div>
@@ -82,7 +82,7 @@
                 <div>
                     {% if show_on_open_with_list %}
                         <h4><strong>Shown on Open With List:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ show_on_open_with_list.value|urlize }}</div>
                         </div>
@@ -92,7 +92,7 @@
                 <div>
                     {% if url_base %}
                         <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ url_base.value }}</div>
                         </div>
@@ -102,7 +102,7 @@
                 <div>
                     {% if version %}
                         <h4><strong>Version:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ version.value }}</div>
                         </div>
@@ -112,7 +112,7 @@
                 <div>
                     {% if supported_res_types %}
                         <h4><strong>Supported Resource Types:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
                         </div>
@@ -122,7 +122,7 @@
                 <div>
                     {% if supported_sharing_status %}
                         <h4><strong>Supported Resource Sharing Status:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_sharing_status }}</div>
                         </div>
@@ -132,7 +132,7 @@
                 <div>
                     {% if tool_icon_url %}
                         <h4><strong>App Icon:</strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <hr class="tool-metadata-hr">
                         <div class="row">
                             <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
                         </div>
