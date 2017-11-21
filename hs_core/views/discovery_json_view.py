@@ -44,21 +44,22 @@ class DiscoveryJsonView(FacetedSearchView):
                     json_obj['first_author_description'] = solr['author_description']
 
                 # iterate over all the coverage values
-                for coverage in solr['coverages']:
-                    json_coverage = json.loads(coverage)
-                    if 'east' in json_coverage:
-                        json_obj['coverage_type'] = 'point'
-                        json_obj['east'] = json_coverage['east']
-                        json_obj['north'] = json_coverage['north']
-                    elif 'northlimit' in json_coverage:
-                        json_obj['coverage_type'] = 'box'
-                        json_obj['northlimit'] = json_coverage['northlimit']
-                        json_obj['eastlimit'] = json_coverage['eastlimit']
-                        json_obj['southlimit'] = json_coverage['southlimit']
-                        json_obj['westlimit'] = json_coverage['westlimit']
-                    # else, skip
-                    else:
-                        continue
+                if solr['coverages'] is not None: 
+                    for coverage in solr['coverages']:
+                        json_coverage = json.loads(coverage)
+                        if 'east' in json_coverage:
+                            json_obj['coverage_type'] = 'point'
+                            json_obj['east'] = json_coverage['east']
+                            json_obj['north'] = json_coverage['north']
+                        elif 'northlimit' in json_coverage:
+                            json_obj['coverage_type'] = 'box'
+                            json_obj['northlimit'] = json_coverage['northlimit']
+                            json_obj['eastlimit'] = json_coverage['eastlimit']
+                            json_obj['southlimit'] = json_coverage['southlimit']
+                            json_obj['westlimit'] = json_coverage['westlimit']
+                        # else, skip
+                        else:
+                            continue
 
                 # encode object to JSON string format
                 coor_obj = json.dumps(json_obj)
