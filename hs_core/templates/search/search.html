@@ -242,11 +242,11 @@
                         </tbody>
                     </table>
                 
-                    {% if not page_object.page_object_list %}
+                    {% if not page_obj.object_list %}
                     <h4 class="text-muted">Sorry, no results match those criteria. Please try broadening your search.</h4>
                     {% endif %}
+                    <div id="discover-page-options">
                     {% if page_obj.has_previous or page_obj.has_next %}
-                        <div id="discover-page-options">
                             {% if page_obj.has_previous %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
                             {% endif %}&laquo; Previous
@@ -255,9 +255,11 @@
                             {% if page_obj.has_next %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
-                            {{ page_obj }} ( results {{ page_obj.start_index }} to {{ page_obj.end_index }} )  
-                        </div>
                     {% endif %}
+                    {% if page_obj.has_other_pages %}
+                        {{ page_obj }} ( results {{ page_obj.start_index }} to {{ page_obj.end_index }} )  
+                    {% endif %}
+                    </div>
                     
                     <br>
                     <div class="alert alert-info">
