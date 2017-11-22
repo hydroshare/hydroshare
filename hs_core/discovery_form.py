@@ -40,7 +40,7 @@ class DiscoveryForm(FacetedSearchForm):
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
             sqs = self.searchqueryset.all()\
-                .filter(SQ(text__startswith=cdata) | SQ(text=cdata))\
+                .filter(SQ(text_exact__startswith=cdata) | SQ(text=cdata))\
                 .filter(is_replaced_by=False)
 
         geo_sq = None
