@@ -29,8 +29,9 @@ class DiscoveryView(FacetedSearchView):
 
         sortfield = self.request.GET.get('sort_order')
         sortdir = self.request.GET.get('sort_direction')
+        # must use exact match or SOLR will use stemmed words with unpredictable results!
         if sortfield is not None and sortdir is not None: 
-            self.queryset = self.queryset.order_by(sortdir + sortfield)
+            self.queryset = self.queryset.order_by(sortdir + sortfield + '_exact')
 
         context = self.get_context_data(**{
             self.form_name: form,

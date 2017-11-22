@@ -11,7 +11,7 @@ class DiscoveryForm(FacetedSearchForm):
                           ('modified', 'Last Modified'))
 
     SORT_DIRECTION_VALUES = ('Ascending', 'Descending')
-    SORT_DIRECTION_CHOICES = (('+', 'Ascending'),
+    SORT_DIRECTION_CHOICES = (('', 'Ascending'),
                               ('-', 'Descending'))
 
     NElat = forms.CharField(widget=forms.HiddenInput(), required=False)
