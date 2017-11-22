@@ -27,6 +27,11 @@ class DiscoveryView(FacetedSearchView):
             else:
                 self.request.session['query_changed'] = False
 
+        sortfield = self.request.GET.get('sort_order')
+        sortdir = self.request.GET.get('sort_direction')
+        if sortfield is not None and sortdir is not None: 
+            self.queryset = self.queryset.order_by(sortdir + sortfield)
+
         context = self.get_context_data(**{
             self.form_name: form,
             'query': form.cleaned_data.get(self.search_field),

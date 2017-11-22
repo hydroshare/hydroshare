@@ -733,6 +733,12 @@ var formDateParameters = function() {
     return "&start_date="+start_date+"&end_date="+end_date;
 };
 
+var formOrderParameters = function() {
+    var sort_order = $("#id_sort_order").val();
+    var sort_direction = $("#id_end_date").val();
+    return "&sort_order="+sort_order+"&sort_direction="+sort_direction;
+};
+
 var buildURLOnCheckboxes = function () {
     var requestURL = '';
     $(".faceted-selections").each(function () {
@@ -779,8 +785,10 @@ var clearDates = function() {
     var geoSearchParams = formGeoParameters();
     var facetingParams = buildURLOnCheckboxes();
     var dateSearchParams = "&start_date=&end_date=";
+    var sortOrderParams = formOrderParameters();
     var windowPath = window.location.pathname;
-    var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams + dateSearchParams;
+    var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams 
+        + dateSearchParams + sortOrderParams;
     if (window.location.hash) {
         requestURL = requestURL + window.location.hash;
     }
@@ -854,13 +862,16 @@ $(document).ready(function () {
             var searchURL = "?q=" + textSearch;
             var geoSearchParams = formGeoParameters();
             var dateSearchParams = formDateParameters();
+            var sortOrderParams = formOrderParameters();
             var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+            var requestURL =  windowPath + searchURL + geoSearchParams 
+                + dateSearchParams + sortOrderParams;
             window.location = requestURL;
         }
     });
 
     $("#covereage-search-fields input, #date-search-fields input, #id_q").addClass("form-control");
+    $("#search-order-fields input").addClass("form-control");
 
     $("title").text("Discover | HydroShare");   // Set browser tab title
 
@@ -938,8 +949,10 @@ $(document).ready(function () {
         searchURL += buildURLOnCheckboxes();
         var geoSearchParams = formGeoParameters();
         var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters(); 
         var windowPath = window.location.pathname;
-        var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams;
+        var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams 
+            + sortOrderParams;
         if (window.location.hash) {
             requestURL = requestURL + window.location.hash;
         }
@@ -950,11 +963,16 @@ $(document).ready(function () {
         updateResults();
     });
 
+    $("#search-order-fields input").change(function () {
+        updateResults();
+    });
+
     $(".faceted-selections").click(function () {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
         var geoSearchParams = formGeoParameters();
         var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters();
         var windowPath = window.location.pathname;
         var requestURL =  windowPath + searchURL;
         if($(this).is(":checked")) {
@@ -962,14 +980,15 @@ $(document).ready(function () {
             var checkboxId = $(this).attr("id");
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
-            requestURL = requestURL + geoSearchParams + dateSearchParams;
+            requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
             updateFacetingItems(requestURL);
         }
         else {
             var checkboxId = $(this).attr("id");
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage.removeItem(sessionStorageCheckboxId);
-            var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
+            var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams 
+                + dateSearchParams + sortOrderParams;
             updateFacetingItems(updateURL);
         }
     });

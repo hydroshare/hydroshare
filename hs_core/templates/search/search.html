@@ -126,6 +126,7 @@
         </div>
         <div class="col-sm-9 col-xs-12" id="items">
             <div>
+                <table><tr><td>
                 <form id="date-search-fields" method="get" action=".">
                     <h4 class="text-muted">Temporal Coverage</h4>
 
@@ -147,6 +148,32 @@
                         </tr>
                     </table>
                 </form>
+                </td></tr><tr><td> 
+                <form id="search-order-fields" method="get" action="."> 
+                    <h4 class="text-muted">Sort Order</h4>
+
+                    <table>
+                        <tr>
+                            {% for field in form %}
+                                {% if field.auto_id == "id_sort_order" %}
+                                    <td>
+                                        <div class="fieldWrapper">
+                                           {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
+                                {% endif %}
+                                {% if field.auto_id == "id_sort_direction" %}
+                                    <td>
+                                        <div class="fieldWrapper">
+                                           {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    </table>
+                </form> 
+                </td></tr></table> 
                 <br>
                 <div id="resource-search" class="hidden">
                     <div id="coverages-master-list"></div>
