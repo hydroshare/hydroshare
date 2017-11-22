@@ -44,7 +44,7 @@ class DiscoveryJsonView(FacetedSearchView):
                     json_obj['first_author_description'] = solr['author_description']
 
                 # iterate over all the coverage values
-                if solr['coverages'] is not None: 
+                if solr['coverages'] is not None:
                     for coverage in solr['coverages']:
                         json_coverage = json.loads(coverage)
                         if 'east' in json_coverage:
