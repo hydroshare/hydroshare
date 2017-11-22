@@ -4,13 +4,13 @@ from django import forms
 
 
 class DiscoveryForm(FacetedSearchForm):
-    SORT_ORDER_VALUES = ('title', 'author', 'created', 'modified')
+    SORT_ORDER_VALUES = ('title', 'author_normalized', 'created', 'modified')
     SORT_ORDER_CHOICES = (('title', 'Title'),
-                          ('author', 'First Author'),
+                          ('author_normalized', 'First Author'),
                           ('created', 'Date Created'),
                           ('modified', 'Last Modified'))
 
-    SORT_DIRECTION_VALUES = ('Ascending', 'Descending')
+    SORT_DIRECTION_VALUES = ('', '-')
     SORT_DIRECTION_CHOICES = (('', 'Ascending'),
                               ('-', 'Descending'))
 
@@ -40,7 +40,7 @@ class DiscoveryForm(FacetedSearchForm):
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
             sqs = self.searchqueryset.all()\
-                .filter(SQ(text_exact__startswith=cdata) | SQ(text=cdata))\
+                .filter(SQ(text__startswith=cdata) | SQ(text=cdata))\
                 .filter(is_replaced_by=False)
 
         geo_sq = None
