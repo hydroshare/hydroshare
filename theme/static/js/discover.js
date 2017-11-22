@@ -565,40 +565,40 @@ var updateMapView = function() {
     setMarkers(filtered_results);
 };
 
-var updateListView = function (data) {
-    var requestURL = "/search/";
-
-    if (window.location.search.length == 0) {
-        requestURL += "?q=";
-    } else {
-        var textSearch = $("#id_q").val();
-        var searchURL = "?q=" + textSearch;
-        requestURL += searchURL;
-        requestURL += buildURLOnCheckboxes();
-    }
-    $("#discover-list-loading-spinner").show();
-    $.ajax({
-        type: "GET",
-        url: requestURL,
-        data: data,
-        dataType: 'html',
-        success: function (data) {
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
-            var tableDiv = $("#items-discovered", data);
-            $("#items-discovered_wrapper").html(tableDiv);
-            var pageOptionDiv = $("#discover-page-options", data);
-            $("#discover-page-options").html(pageOptionDiv);
-
-            initializeTable();
-            $("#discover-list-loading-spinner").hide();
-        },
-        failure: function (data) {
-            console.error("Ajax call for updating list-view data failed");
-            $("#discover-list-loading-spinner").hide();
-        }
-    });
-};
+// var updateListView = function (data) {
+//     var requestURL = "/search/";
+// 
+//     if (window.location.search.length == 0) {
+//         requestURL += "?q=";
+//     } else {
+//         var textSearch = $("#id_q").val();
+//         var searchURL = "?q=" + textSearch;
+//         requestURL += searchURL;
+//         requestURL += buildURLOnCheckboxes();
+//     }
+//     $("#discover-list-loading-spinner").show();
+//     $.ajax({
+//         type: "GET",
+//         url: requestURL,
+//         data: data,
+//         dataType: 'html',
+//         success: function (data) {
+//             $('#items-discovered_wrapper').empty();
+//             $("#discover-page-options").empty();
+//             var tableDiv = $("#items-discovered", data);
+//             $("#items-discovered_wrapper").html(tableDiv);
+//             var pageOptionDiv = $("#discover-page-options", data);
+//             $("#discover-page-options").html(pageOptionDiv);
+// 
+//             initializeTable();
+//             $("#discover-list-loading-spinner").hide();
+//         },
+//         failure: function (data) {
+//             console.error("Ajax call for updating list-view data failed");
+//             $("#discover-list-loading-spinner").hide();
+//         }
+//     });
+// };
 
 var updateFacetingItems = function (request_url) {
     $("#discover-list-loading-spinner").show();
@@ -729,7 +729,8 @@ var formGeoParameters = function() {
 var formDateParameters = function() {
     var start_date = $("#id_start_date").val();
     var end_date = $("#id_end_date").val();
-    return "&start_date="+start_date+"&end_date="+end_date;
+    if start_date <= end_date: 
+        return "&start_date="+start_date+"&end_date="+end_date;
 };
 
 var formOrderParameters = function() {

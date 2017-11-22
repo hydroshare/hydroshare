@@ -238,11 +238,13 @@
                                     <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
                                 </tr>
-                            {% empty %}
-                                <tr><td>No results found.</td></tr> 
                             {% endfor %}
                         </tbody>
                     </table>
+                
+                    {% if not page_object.page_object_list %}
+                    <h4 class="text-muted">Sorry, no results match those criteria. Please try broadening your search.</h4>
+                    {% endif %}
                     {% if page_obj.has_previous or page_obj.has_next %}
                         <div id="discover-page-options">
                             {% if page_obj.has_previous %}
