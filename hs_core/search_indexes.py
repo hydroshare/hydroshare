@@ -8,6 +8,7 @@ from ref_ts.models import RefTSMetadata
 from hs_app_timeseries.models import TimeSeriesMetaData
 from django.db.models import Q
 from datetime import datetime
+from nameparser import HumanName
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -17,6 +18,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(faceted=True)
+    author_normalized = indexes.CharField(faceted=True)
     author_description = indexes.CharField(indexed=False)
     title = indexes.CharField(faceted=True)
     abstract = indexes.CharField()
@@ -93,7 +95,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return none."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
-            return obj.metadata.title.value
+            return obj.metadata.title.value.lstrip()
         else:
             return 'none'
 
@@ -110,7 +112,29 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return first_creator.name
+                return first_creator.name.lstrip()
+            else:
+                return 'none'
+        else:
+            return 'none'
+
+    def prepare_author_normalized(self, obj):
+        """Return metadata author if exists, otherwise return none."""
+        if hasattr(obj, 'metadata'):
+            first_creator = obj.metadata.creators.filter(order=1).first()
+            if first_creator.name is not None:
+                nameparts = HumanName(first_creator.name.lstrip())
+                normalized = nameparts.last
+                if nameparts.suffix:
+                    normalized = normalized + ' ' + nameparts.suffix
+                normalized = normalized + ','
+                if nameparts.title:
+                    normalized = normalized + ' ' + nameparts.title
+                if nameparts.first:
+                    normalized = normalized + ' ' + nameparts.first
+                if nameparts.middle:
+                    normalized = ' ' + normalized + ' ' + nameparts.middle
+                return normalized
             else:
                 return 'none'
         else:
