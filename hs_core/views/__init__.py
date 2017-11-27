@@ -1180,7 +1180,7 @@ def create_resource(request, *args, **kwargs):
         return JsonResponse(ajax_response_data)
 
     request.session['just_created'] = True
-    if not ajax_response_data['message']:
+    if not ajax_response_data.get('message', False):
         if resource.files.all():
             ajax_response_data['file_upload_status'] = 'success'
         ajax_response_data['status'] = 'success'
