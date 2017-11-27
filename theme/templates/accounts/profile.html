@@ -67,24 +67,7 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
-
-                                    <div id="change_password" class="collapse text-left">
-                                        <fieldset>
-                                            <label>Password</label>
-                                            <input class="form-control" autocomplete="off" id="id_password1" name="password1"
-                                                   placeholder="Password"
-                                                   type="password">
-
-                                            <small class="text-muted">Leave blank unless you want to change your password</small>
-                                        </fieldset>
-                                        <fieldset>
-                                            <label>Password (again)</label>
-                                            <input class="form-control" autocomplete="off" id="id_password2" name="password2"
-                                                   placeholder="Password (again)" type="password">
-                                        </fieldset>
-                                        <hr>
-                                    </div>
+                                    <div><a href="/accounts/update">Change password</a></div>
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
