@@ -62,6 +62,12 @@ fieldset[disabled].form-group input {
     background-color: #eee;
 }
 
+.form-group.half fieldset {
+    width: 49%;
+    display: inline-block;
+    margin: 0 0.5% 0 0;
+}
+
 /*========================================
           MEZZANINE GENERIC
 ==========================================*/
@@ -288,4 +294,11 @@ float the buttons inside it. This prevents collapsing. */
 .noclose .ui-dialog-titlebar-close
 {
     display:none;
+}
+
+.ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
 }
