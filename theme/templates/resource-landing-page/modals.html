@@ -261,7 +261,7 @@
                     <button type="button" class="close" data-dismiss="modal"
                             aria-hidden="true">×
                     </button>
-                    <h4 class="modal-title" id="edit-creator"> Edit Author </h4>
+                    <h4 class="modal-title" id="edit-creator"> Edit Author</h4>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
@@ -357,6 +357,9 @@
                                         type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
                             </div>
                         </fieldset>
+
+                        <label class="control-label">Author Identifiers</label>
+                        {% include "includes/identifiers-form.html" with identifiers=author.identifiers %}
                     </div>
                 </div>
 
