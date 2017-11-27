@@ -8,7 +8,8 @@ def resource_level_tool_urls(resource_obj, request_obj):
 
     res_type_str = resource_obj.resource_type
 
-    relevant_tools = []
+    tool_list = []
+    open_with_app_counter = 0
 
     for choice_obj in SupportedResTypeChoices.objects.filter(description__iexact=res_type_str):
         for supported_res_types_obj in choice_obj.associated_with.all():
@@ -28,17 +29,22 @@ def resource_level_tool_urls(resource_obj, request_obj):
                     else "anonymous"
                 tool_url_new = parse_app_url_template(
                         tool_url, [resource_obj.get_hs_term_dict(), hs_term_dict_user])
+                is_open_with_app = _check_open_with_app(tool_res_obj, request_obj)
                 if tool_url_new is not None:
                         tl = {'title': str(tool_res_obj.metadata.title.value),
                               'icon_url': tool_icon_url,
                               'url': tool_url_new,
-                              'openwithlist': True if
-                              _check_webapp_in_user_open_with_list(tool_res_obj, request_obj) or
-                              _check_webapp_is_approved(tool_res_obj)
-                              else False
+                              'openwithlist': is_open_with_app
                               }
-                        relevant_tools.append(tl)
-    return relevant_tools
+                        tool_list.append(tl)
+                        if is_open_with_app:
+                            open_with_app_counter += 1
+
+    if len(tool_list) > 0:
+        return {"tool_list": tool_list,
+                "open_with_app_counter": open_with_app_counter}
+    else:
+        return None
 
 
 def _check_user_can_view_app(request_obj, tool_res_obj):
@@ -48,6 +54,12 @@ def _check_user_can_view_app(request_obj, tool_res_obj):
                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
     return user_can_view_app
+
+
+def _check_open_with_app(tool_res_obj, request_obj):
+
+    return _check_webapp_in_user_open_with_list(tool_res_obj, request_obj) or \
+            _check_webapp_is_approved(tool_res_obj)
 
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):
