@@ -198,16 +198,16 @@ class AbstractFileMetaData(models.Model):
                                 td(v)
                                 with td():
                                     span(data_toggle="modal", data_placement="auto", title="Edit",
-                                      cls="btn-edit-icon glyphicon glyphicon-pencil "
-                                          "icon-blue table-icon",
-                                      data_target="#edit-keyvalue-filetype-modal"
-                                                  "-{}".format(counter))
+                                         cls="btn-edit-icon glyphicon glyphicon-pencil "
+                                             "icon-blue table-icon",
+                                         data_target="#edit-keyvalue-filetype-modal"
+                                                     "-{}".format(counter))
                                     span(data_toggle="modal", data_placement="auto",
-                                      title="Remove",
-                                      cls="btn-remove-icon glyphicon glyphicon-trash "
-                                          "btn-remove table-icon",
-                                      data_target="#delete-keyvalue-filetype-modal"
-                                                  "-{}".format(counter))
+                                         title="Remove",
+                                         cls="btn-remove-icon glyphicon glyphicon-trash "
+                                             "btn-remove table-icon",
+                                         data_target="#delete-keyvalue-filetype-modal"
+                                                     "-{}".format(counter))
 
                     self._get_add_key_value_modal_form()
                     self._get_edit_key_value_modal_forms()
