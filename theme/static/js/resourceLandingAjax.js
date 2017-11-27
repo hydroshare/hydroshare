@@ -17,45 +17,45 @@ function label_ajax_submit() {
         data: datastring,
         success: function (result) {
             var json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-
+            if (json_response.status === "success") {
                 var action = form.find("input[name='action']");
-                if (json_response.action == "CREATE") {
+
+                if (json_response.action === "CREATE")
+                {
                     action.val("DELETE");
                     if (dataFormID == "form-add-to-my-resources")
                     {
                         $("#btnMyResources").removeClass("btn-resource-add");
                         $("#btnMyResources").addClass("btn-resource-remove");
-                        $("#btnMyResources").attr("title", "Remove from my resources");
+                        $("#btnMyResources").attr("data-original-title", "Remove from my resources");
                     }
                     else if (dataFormID == "form-add-open-with-app")
                     {
                         $("#btnOpenWithApp").removeClass("btn-resource-add");
                         $("#btnOpenWithApp").addClass("btn-resource-remove");
-                        $("#btnOpenWithApp").attr("title", "Remove from Open-With list");
-                        $("#btnOpenWithApp").attr("data-original-title", "Remove from Open-With list");
-
+                        $("#btnOpenWithApp").attr("data-original-title", "Remove WebApp from OpenWith list");
                     }
                 }
-                else {
+                else
+                {
                     action.val("CREATE");
-                     if (dataFormID == "form-add-to-my-resources") {
-                         $("#btnMyResources").addClass("btn-resource-add");
-                         $("#btnMyResources").removeClass("btn-resource-remove");
-                         $("#btnMyResources").attr("title", "Add to my resources");
-                     }
+                    if (dataFormID == "form-add-to-my-resources") {
+                        $("#btnMyResources").addClass("btn-resource-add");
+                        $("#btnMyResources").removeClass("btn-resource-remove");
+                        $("#btnMyResources").attr("data-original-title", "Add to my resources");
+                    }
                     else if (dataFormID == "form-add-open-with-app")
-                     {
+                    {
                          $("#btnOpenWithApp").addClass("btn-resource-add");
                          $("#btnOpenWithApp").removeClass("btn-resource-remove");
-                         $("#btnOpenWithApp").attr("title", "Add to Open-With list");
-                         $("#btnOpenWithApp").attr("data-original-title", "Add to Open-With list");
-                     }
+                         $("#btnOpenWithApp").attr("data-original-title", "Add WebApp to OpenWith list");
+                    }
                 }
+                $("#btnMyResources").tooltip('show')
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+            console.log(errorThrown);
         }
     });
     //don't submit the form

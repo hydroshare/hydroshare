@@ -102,12 +102,15 @@ class TestWebAppFeature(TransactionTestCase):
         # no SupportedResTypes obj
         self.assertEqual(SupportedResTypes.objects.all().count(), 0)
 
-        # create 2 SupportedResTypes obj with required params
+        # create 1 SupportedResTypes obj with required params
         resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
                                          supported_res_types=['NetcdfResource'])
-        resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
-                                         supported_res_types=['NetcdfResource'])
-        self.assertEqual(SupportedResTypes.objects.all().count(), 2)
+        self.assertEqual(SupportedResTypes.objects.all().count(), 1)
+        # Try creating the 2nd SupportedResTypes obj with required params
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
+                                             supported_res_types=['NetcdfResource'])
+        self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
@@ -120,7 +123,7 @@ class TestWebAppFeature(TransactionTestCase):
         with self.assertRaises(Exception):
             resource.delete_metadata_element(self.resWebApp.short_id, 'SupportedResTypes',
                                              element_id=SupportedResTypes.objects.first().id)
-        self.assertEqual(SupportedResTypes.objects.all().count(), 2)
+        self.assertEqual(SupportedResTypes.objects.all().count(), 1)
 
         # Class: ToolIcon
         # verify no ToolIcon obj

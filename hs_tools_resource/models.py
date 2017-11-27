@@ -89,6 +89,10 @@ class SupportedResTypes(AbstractMetaDataElement):
                                                  blank=True,
                                                  related_name="associated_with")
 
+    class Meta:
+        # SupportedResTypes element is not repeatable
+        unique_together = ("content_type", "object_id")
+
     def get_supported_res_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
 
@@ -168,6 +172,10 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     sharing_status = models.ManyToManyField(SupportedSharingStatusChoices,
                                             blank=True,
                                             related_name="associated_with")
+
+    class Meta:
+        # SupportedSharingStatus element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     def get_sharing_status_str(self):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])

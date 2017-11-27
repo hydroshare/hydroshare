@@ -3,6 +3,7 @@
 <div class="col-sm-12">
     <div class="custom-btn-toolbar height-fix">
         {% if not metadata_form %}
+
             {# "add to open with list" for WebApp resource only #}
             {% if cm.resource_type == "ToolResource" and user.is_authenticated%}
                 {% if cm|app_on_open_with_list:user %}
@@ -14,7 +15,7 @@
                         <input type="hidden" name="label_type" value="OPENWITHAPP">
                         <input type="hidden" name="action" value="DELETE">
                         <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Remove from Open-With list" data-form-id="form-add-open-with-app"
+                                title="Remove WebApp from OpenWith list" data-form-id="form-add-open-with-app"
                                 class="glyphicon glyphicon-th icon-button btn-resource-remove"></button>
                     </form>
                 {% else %}
@@ -26,13 +27,13 @@
                         <input type="hidden" name="label_type" value="OPENWITHAPP">
                         <input type="hidden" name="action" value="CREATE">
                         <button id="btnOpenWithApp" data-toggle="tooltip" data-placement="bottom"
-                                title="Add to Open-With list" data-form-id="form-add-open-with-app"
+                                title="Add WebApp to OpenWith list" data-form-id="form-add-open-with-app"
                                 class="glyphicon glyphicon-th icon-button btn-resource-add"></button>
                     </form>
                 {% endif %}
-            {% endif %}
+            {% endif %} 
 
-            {% if not is_owner_user and not is_edit_user and not is_view_user %}
+            {% if not is_owner_user and not is_edit_user and not is_view_user and cm.raccess.public %}
                 {% if resource_is_mine %}
                     <form data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
