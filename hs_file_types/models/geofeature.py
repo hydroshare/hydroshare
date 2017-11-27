@@ -162,6 +162,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoFeatureFileMetaData, related_name="logical_file")
     data_type = "GeographicFeature"
 
+    class Meta:
+        verbose_name = 'Geographic Feature File Type'
+
     @classmethod
     def get_allowed_uploaded_file_types(cls):
         """only .zip or .shp file can be set to this logical file group"""

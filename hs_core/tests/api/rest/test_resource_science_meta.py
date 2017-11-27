@@ -1289,7 +1289,10 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             "supportedrestypes": {
                 "supported_res_types": ["NetcdfResource", "TimeSeriesResource"]
             },
-            "supportedsharingstatuses": {
+            "supportedfiletypes": {
+                "supported_res_types": ["GenericLogicalFile", "GeoFeatureLogicalFile"]
+            },
+            "supportedsharingstatus": {
                 "sharing_status": ["Public", "Discoverable"]
             },
             "toolicon": {
@@ -1322,8 +1325,11 @@ class TestResourceScienceMetadata(HSRESTTestCase):
             "supportedrestypes": {
                 "supported_res_types": ["NetcdfResource", "TimeSeriesResource"]
             },
-            "supportedsharingstatuses": {
+            "supportedsharingstatus": {
                 "sharing_status": ["Public", "Discoverable"]
+            },
+            "supportedfiletypes": {
+                "supported_res_types": ["GenericLogicalFile", "GeoFeatureLogicalFile"]
             },
             "toolicon": {
                 "value": "https://www.hydroshare.org/static/img/logo-sm.png"

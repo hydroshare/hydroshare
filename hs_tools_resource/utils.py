@@ -1,6 +1,7 @@
 from string import Template
 import logging
 from hs_core.hydroshare.utils import get_resource_types
+from hs_file_types.utils import get_file_types
 
 logger = logging.getLogger(__name__)
 
@@ -49,4 +50,25 @@ def get_SupportedResTypes_choices():
         verbose_name = r_type._meta.verbose_name
         if "toolresource" != class_name.lower():
             result_list.append([class_name, verbose_name])
+    return result_list
+
+
+def get_SupportedFileTypes_choices():
+    """
+    This function harvests all existing file types in system,
+    and puts them in a list:
+    [
+        ["FILE_TYPE_CLASS_NAME_1", "FILE_TYPE_VERBOSE_NAME_1"],
+        ["FILE_TYPE_CLASS_NAME_2", "FILE_TYPE_VERBOSE_NAME_2"],
+        ...
+        ["FILE_TYPE_CLASS_NAME_N", "FILE_TYPE_VERBOSE_NAME_N"],
+    ]
+    """
+
+    result_list = []
+    file_types_list = get_file_types()
+    for r_type in file_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type._meta.verbose_name
+        result_list.append([class_name, verbose_name])
     return result_list

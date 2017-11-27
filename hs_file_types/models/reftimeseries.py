@@ -706,6 +706,9 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(RefTimeseriesFileMetaData, related_name="logical_file")
     data_type = "referenceTimeseriesData"
 
+    class Meta:
+        verbose_name = 'Reference Timeseries File Type'
+
     @classmethod
     def get_allowed_uploaded_file_types(cls):
         """only .refts file can be set to this logical file group"""

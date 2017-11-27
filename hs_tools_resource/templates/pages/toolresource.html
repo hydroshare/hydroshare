@@ -20,16 +20,6 @@
                     {%  endif %}
                 </div>
                 <div>
-                    {% if url_base %}
-                        <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr style="margin-top: 0px;margin-bottom: 2px">
-                        <div class="row">
-                            <div class="col-sm-8">{{ url_base.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
                     {% if version %}
                         <h4><strong>Version:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
@@ -48,6 +38,36 @@
                         </div>
                         <hr style="border:0">
                     {% endif %}
+                </div>
+                <div>
+                    {% if url_base %}
+                        <h4><strong>Resource-level App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ url_base.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if supported_file_types %}
+                        <h4><strong>Supported File Types:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_file_types }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if url_template_file_type %}
+                        <h4><strong>FileType-level App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ url_template_file_type.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
                 </div>
                 <div>
                     {% if supported_sharing_status %}

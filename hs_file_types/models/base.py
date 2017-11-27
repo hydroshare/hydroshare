@@ -591,6 +591,7 @@ class AbstractLogicalFile(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = 'Abstract Logical File Type'
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
@@ -767,3 +768,20 @@ class AbstractLogicalFile(models.Model):
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
             metadata.delete()
+
+    def get_hs_term_dict(self):
+        """Return a dict of HS Terms and their values.
+
+        Will be used to parse webapp url templates
+
+        NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        resource types that inherit this class should add/merge their resource-specific HS Terms
+        into this dict
+        """
+        hs_term_dict = {}
+
+        hs_term_dict["HS_FILE_TYPE"] = self.__class__.__name__
+        hs_term_dict["HS_FT_DNAME"] = self.dataset_name
+        hs_term_dict["HS_FT_FID"] = self.id
+
+        return hs_term_dict

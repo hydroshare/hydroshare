@@ -1,6 +1,8 @@
 import json
 from dateutil import parser
 from operator import lt, gt
+from django.apps import apps
+from .models import AbstractLogicalFile
 
 
 def update_resource_coverage_element(resource):
@@ -126,3 +128,14 @@ def update_resource_coverage_element(resource):
         # delete the temporal coverage for the resource since the content files don't have
         # temporal coverage
         temp_cov.delete()
+
+
+def get_file_types():
+    # get a list of available "file-type" classes
+    # modified from hs_core.hydroshare.utils.get_resource_types()
+    file_types = []
+    for model in apps.get_models():
+        if issubclass(model, AbstractLogicalFile):
+            if not getattr(model, 'archived_model', False):
+                file_types.append(model)
+    return file_types

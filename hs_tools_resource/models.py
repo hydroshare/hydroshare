@@ -11,7 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-from .utils import get_SupportedResTypes_choices
+from .utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
 
 class ToolResource(BaseResource):
@@ -47,6 +47,22 @@ class ToolResource(BaseResource):
 
 
 processor_for(ToolResource)(resource_processor)
+
+SupportedResourcePermission_choices = (
+        ('2', 'Edit Resource Metadata and Files'),
+        ('1', 'Read Resource Metadata and Files'),
+        ('0', 'Read Resource Metadata'),
+    )
+
+
+class SupportedResourcePermission(AbstractMetaDataElement):
+    term = "SupportedResourcePermission"
+    value = models.CharField(max_length=1024, default="1",
+                             choices=SupportedResourcePermission_choices)
+
+    class Meta:
+        # UserPermissionOverAssociatedResource element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 
 class AppHomePageUrl(AbstractMetaDataElement):
@@ -85,7 +101,9 @@ class SupportedResTypeChoices(models.Model):
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
-    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, blank=True)
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices,
+                                                 blank=True,
+                                                 related_name="associated_with")
 
     class Meta:
         # SupportedResTypes element is not repeatable
@@ -157,6 +175,10 @@ class SupportedResTypes(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("SupportedResTypes element can't be deleted.")
 
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
+
 
 class SupportedSharingStatusChoices(models.Model):
     description = models.CharField(max_length=128)
@@ -167,7 +189,9 @@ class SupportedSharingStatusChoices(models.Model):
 
 class SupportedSharingStatus(AbstractMetaDataElement):
     term = 'SupportedSharingStatus'
-    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, blank=True)
+    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices,
+                                            blank=True,
+                                            related_name="associated_with")
 
     class Meta:
         # SupportedSharingStatus element is not repeatable
@@ -239,6 +263,106 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("SupportedSharingStatus element can't be deleted.")
 
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class SupportedFileTypeChoices(models.Model):
+    description = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return self.description
+
+
+class SupportedFileTypes(AbstractMetaDataElement):
+    term = 'SupportedFileTypes'
+    supported_file_types = models.ManyToManyField(SupportedFileTypeChoices,
+                                                  blank=True,
+                                                  related_name="associated_with")
+
+    def get_supported_file_types_str(self):
+        return ','.join([parameter.description for parameter in self.supported_file_types.all()])
+
+    @classmethod
+    def _add_supported_file_type(cls, meta_instance, supported_file_types):
+
+        for file_type in supported_file_types:
+            # there are two possibilities for file_type_str values:
+            # list of string (during normal create or update) or
+            # integer (during creating new version of the resource)
+            if isinstance(file_type, int):
+                # "copy res" or "create a new version"
+                qs = SupportedFileTypeChoices.objects.filter(id=file_type)
+                if not qs.exists():
+                    raise
+                meta_instance.supported_file_types.add(qs[0])
+
+            elif isinstance(file_type, basestring):
+                # create or update res
+                qs = SupportedFileTypeChoices.objects.filter(description__iexact=file_type)
+                if qs.exists():
+                    meta_instance.supported_file_types.add(qs[0])
+                else:
+                    meta_instance.supported_file_types.create(description=file_type)
+            else:
+                raise ValidationError("No supported_file_types parameter "
+                                      "was found in the **kwargs list")
+
+    @classmethod
+    def _validate_supported_file_types(cls, supported_file_types):
+        for file_type in supported_file_types:
+            if isinstance(file_type, basestring) \
+                    and file_type not in [supported_file_type[0]
+                                          for supported_file_type in
+                                          get_SupportedFileTypes_choices()]:
+                raise ValidationError('Invalid supported_file_types:%s' % file_type)
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'supported_file_types' in kwargs:
+            cls._validate_supported_file_types(kwargs['supported_file_types'])
+
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedFileTypes.objects.create(content_object=metadata_obj)
+
+            cls._add_supported_file_type(new_meta_instance, kwargs['supported_file_types'])
+            return new_meta_instance
+        else:
+            raise ValidationError("No supported_file_types parameter was "
+                                  "found in the **kwargs list")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = SupportedFileTypes.objects.get(id=element_id)
+
+        if 'supported_file_types' in kwargs:
+            cls._validate_supported_file_types(kwargs['supported_file_types'])
+
+            meta_instance.supported_file_types.clear()
+            cls._add_supported_file_type(meta_instance, kwargs['supported_file_types'])
+            meta_instance.save()
+        else:
+            raise ValidationError("No supported_file_types parameter "
+                                  "was found in the **kwargs list")
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("SupportedFileTypes element can't be deleted.")
+
+    class Meta:
+        # RequestUrlBase element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class URLTemplateFileType(AbstractMetaDataElement):
+    term = 'URLTemplateFileType'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # URLTemplateFileType element is not repeatable
+        unique_together = ("content_type", "object_id")
+
 
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
@@ -267,7 +391,7 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs:
+        if 'value' in kwargs and "data_url" not in kwargs:
             url = kwargs["value"]
             data_url = cls._validate_tool_icon(url)
 
@@ -275,6 +399,13 @@ class ToolIcon(AbstractMetaDataElement):
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
             new_meta_instance.data_url = data_url
+            new_meta_instance.save()
+            return new_meta_instance
+        elif "data_url" in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
+            new_meta_instance.data_url = kwargs["data_url"]
             new_meta_instance.save()
             return new_meta_instance
         else:
@@ -298,12 +429,19 @@ class ToolIcon(AbstractMetaDataElement):
 
 
 class ToolMetaData(CoreMetaData):
-    url_bases = GenericRelation(RequestUrlBase)
-    versions = GenericRelation(ToolVersion)
-    supported_res_types = GenericRelation(SupportedResTypes)
-    tool_icon = GenericRelation(ToolIcon)
-    supported_sharing_status = GenericRelation(SupportedSharingStatus)
-    homepage_url = GenericRelation(AppHomePageUrl)
+    _url_base = GenericRelation(RequestUrlBase)
+    _url_template_file_type = GenericRelation(URLTemplateFileType)
+    _version = GenericRelation(ToolVersion)
+    _supported_res_types = GenericRelation(SupportedResTypes)
+    _supported_file_types = GenericRelation(SupportedFileTypes)
+    _tool_icon = GenericRelation(ToolIcon)
+    _supported_sharing_status = GenericRelation(SupportedSharingStatus)
+    _homepage_url = GenericRelation(AppHomePageUrl)
+    _supported_resource_permission = GenericRelation(SupportedResourcePermission)
+
+    @property
+    def supported_resource_permission(self):
+        return self._supported_resource_permission.all().first()
 
     @property
     def resource(self):
@@ -311,27 +449,35 @@ class ToolMetaData(CoreMetaData):
 
     @property
     def url_base(self):
-        return self.url_bases.all().first()
+        return self._url_base.all().first()
+
+    @property
+    def url_template_file_type(self):
+        return self._url_template_file_type.first()
 
     @property
     def version(self):
-        return self.versions.all().first()
+        return self._version.all().first()
 
     @property
-    def supported_resource_types(self):
-        return self.supported_res_types.all().first()
+    def supported_res_types(self):
+        return self._supported_res_types.all().first()
 
     @property
-    def supported_sharing_statuses(self):
-        return self.supported_sharing_status.all().first()
+    def supported_file_types(self):
+        return self._supported_file_types.all().first()
+
+    @property
+    def supported_sharing_status(self):
+        return self._supported_sharing_status.all().first()
 
     @property
     def app_home_page_url(self):
-        return self.homepage_url.all().first()
+        return self._homepage_url.all().first()
 
     @property
     def app_icon(self):
-        return self.tool_icon.all().first()
+        return self._tool_icon.all().first()
 
     @property
     def serializer(self):
@@ -348,6 +494,9 @@ class ToolMetaData(CoreMetaData):
         if 'requesturlbase' in keys_to_update:
             parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
 
+        if 'urltemplatefiletype' in keys_to_update:
+            parsed_metadata.append({"urltemplatefiletype": metadata.pop('urltemplatefiletype')})
+
         if 'toolversion' in keys_to_update:
             parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
 
@@ -360,19 +509,29 @@ class ToolMetaData(CoreMetaData):
         if 'supportedrestypes' in keys_to_update:
             parsed_metadata.append({"supportedrestypes": metadata.pop('supportedrestypes')})
 
-        if 'supportedsharingstatuses' in keys_to_update:
+        if 'supportedfiletypes' in keys_to_update:
+            parsed_metadata.append({"supportedfiletypes": metadata.pop('supportedfiletypes')})
+
+        if 'supportedsharingstatus' in keys_to_update:
             parsed_metadata.append({"supportedsharingstatus":
-                                    metadata.pop('supportedsharingstatuses')})
+                                    metadata.pop('supportedsharingstatus')})
+
+        if 'supportedresourcepermission' in keys_to_update:
+            parsed_metadata.append({"supportedresourcepermission":
+                                    metadata.pop('supportedresourcepermission')})
 
     @classmethod
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()
         elements.append('RequestUrlBase')
+        elements.append('URLTemplateFileType')
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
+        elements.append('SupportedFileTypes')
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
         elements.append('AppHomePageUrl')
+        elements.append('SupportedResourcePermission')
         return elements
 
     def has_all_required_elements(self):
@@ -384,45 +543,49 @@ class ToolMetaData(CoreMetaData):
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
-        if (not self.url_bases.all().first() or not self.url_bases.all().first().value) \
-           and (not self.homepage_url.all().first() or not self.homepage_url.all().first().value):
+        if (not self.url_base or not self.url_base.value) \
+           and (not self.app_home_page_url or not self.app_home_page_url.value):
                 missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
         else:
             # If one between App-launching URL Pattern and Supported Res Type presents,
             # the other must present as well
-            if self.url_bases.all().first() and self.url_bases.all().first().value:
-                if not self.supported_res_types.all().first() \
-                   or not self.supported_res_types.all().first().supported_res_types.count() > 0:
+            if self.url_base and self.url_base.value:
+                if not self.supported_res_types \
+                   or not self.supported_res_types.supported_res_types.count() > 0:
                     missing_required_elements.append('Supported Resource Types')
 
-            if self.supported_res_types.all().first() \
-               and self.supported_res_types.all().first().supported_res_types.count() > 0:
-                if not self.url_bases.all().first() or not self.url_bases.all().first().value:
+            if self.supported_res_types \
+               and self.supported_res_types.supported_res_types.count() > 0:
+                if not self.url_base or not self.url_base.value:
                     missing_required_elements.append('App-launching URL Pattern')
 
             # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
-            if self.supported_res_types.all().first() \
-               and self.supported_res_types.all().first().supported_res_types.count() > 0:
-                if not self.supported_sharing_status.all().first() \
-                   or not self.supported_sharing_status.all().first().sharing_status.count() > 0:
+            if self.supported_res_types \
+               and self.supported_res_types.supported_res_types.count() > 0:
+                if not self.supported_sharing_status \
+                   or not self.supported_sharing_status.sharing_status.count() > 0:
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
 
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()
-        self.url_bases.all().delete()
-        self.versions.all().delete()
-        self.supported_res_types.all().delete()
-        self.tool_icon.all().delete()
-        self.supported_sharing_status.all().delete()
-        self.homepage_url.all().delete()
+        self._url_base.all().delete()
+        self._url_template_file_type.all().delete()
+        self._version.all().delete()
+        self._supported_res_types.all().delete()
+        self._supported_file_types.all().delete()
+        self._tool_icon.all().delete()
+        self._supported_sharing_status.all().delete()
+        self._homepage_url.all().delete()
+        self._supported_resource_permission.all().delete()
 
     def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
         from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
-            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm, \
+            SupportedResourcePermissionValidationForm
 
         # update any core metadata
         super(ToolMetaData, self).update(metadata, user)
@@ -450,7 +613,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'requesturlbase' in dict_item:
                     validation_form = UrlValidationForm(dict_item['requesturlbase'])
                     validate_form(validation_form)
-                    request_url = self.url_bases.all().first()
+                    request_url = self.url_base
                     if request_url is not None:
                         self.update_element('requesturlbase', request_url.id,
                                             value=dict_item['requesturlbase'])
@@ -459,7 +622,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'toolversion' in dict_item:
                     validation_form = VersionValidationForm(dict_item['toolversion'])
                     validate_form(validation_form)
-                    tool_version = self.versions.all().first()
+                    tool_version = self.version
                     if tool_version is not None:
                         self.update_element('toolversion', tool_version.id,
                                             **dict_item['toolversion'])
@@ -468,7 +631,7 @@ class ToolMetaData(CoreMetaData):
                 elif 'toolicon' in dict_item:
                     validation_form = ToolIconValidationForm(dict_item['toolicon'])
                     validate_form(validation_form)
-                    tool_icon = self.tool_icon.all().first()
+                    tool_icon = self.app_icon
                     if tool_icon is not None:
                         self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
                     else:
@@ -476,9 +639,29 @@ class ToolMetaData(CoreMetaData):
                 elif 'apphomepageurl' in dict_item:
                     validation_form = UrlValidationForm(dict_item['apphomepageurl'])
                     validate_form(validation_form)
-                    app_url = self.homepage_url.all().first()
+                    app_url = self.app_home_page_url
                     if app_url is not None:
                         self.update_element('apphomepageurl', app_url.id,
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+                elif 'urltemplatefiletype' in dict_item:
+                    validation_form = UrlValidationForm(dict_item['urltemplatefiletype'])
+                    validate_form(validation_form)
+                    url_template_file_type = self.url_template_file_type
+                    if url_template_file_type is not None:
+                        self.update_element('urltemplatefiletype', url_template_file_type.id,
+                                            value=dict_item['urltemplatefiletype'])
+                    else:
+                        self.create_element('urltemplatefiletype',
+                                            value=dict_item['urltemplatefiletype'])
+                elif 'supportedresourcepermission' in dict_item:
+                    validation_form = SupportedResourcePermissionValidationForm(dict_item['supportedresourcepermission'])
+                    validate_form(validation_form)
+                    supported_resource_permission = self.supported_resource_permission
+                    if supported_resource_permission is not None:
+                        self.update_element('supportedresourcepermission', supported_resource_permission.id,
+                                            value=dict_item['supportedresourcepermission'])
+                    else:
+                        self.create_element('supportedresourcepermission',
+                                            value=dict_item['supportedresourcepermission'])

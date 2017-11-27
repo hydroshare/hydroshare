@@ -211,6 +211,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
     data_type = "GeographicRaster"
 
+    class Meta:
+        verbose_name = 'Geographic Raster File Type'
+
     @classmethod
     def get_allowed_uploaded_file_types(cls):
         """only .zip and .tif file can be set to this logical file group"""

@@ -3,10 +3,11 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field, HTML
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
-    SupportedSharingStatus, AppHomePageUrl
+from models import RequestUrlBase, ToolVersion, SupportedResTypes, SupportedFileTypes, ToolIcon,\
+    SupportedSharingStatus, AppHomePageUrl, URLTemplateFileType, SupportedResourcePermission, \
+    SupportedResourcePermission_choices
 from hs_core.forms import BaseFormHelper
-from utils import get_SupportedResTypes_choices
+from utils import get_SupportedResTypes_choices, get_SupportedFileTypes_choices
 
 
 # TODO: reference hs_core.forms
@@ -21,7 +22,8 @@ class UrlBaseFormHelper(BaseFormHelper):
             Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = \
-            "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "Resource-level App-launching URL Pattern "\
+            "<a href='/terms#AppURLPattern' target='_blank'>" \
             "<font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).\
@@ -124,8 +126,8 @@ class ToolIconFormHelper(BaseFormHelper):
         data_url = ""
         if "instance" in kwargs:
             webapp_obj = kwargs.pop("instance")
-            if webapp_obj and webapp_obj.metadata.tool_icon.first():
-                data_url = webapp_obj.metadata.tool_icon.first().data_url
+            if webapp_obj and webapp_obj.metadata.app_icon:
+                data_url = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
                     Field('value', css_class=field_width),
@@ -220,6 +222,128 @@ class SupportedResTypesForm(ModelForm):
 class SupportedResTypesValidationForm(forms.Form):
     supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                                                     required=False)
+
+
+class SupportedResourcePermissionFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True,
+                 res_short_id=None,
+                 element_id=None,
+                 element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('value'))
+        kwargs['element_name_label'] = 'Minimum Permission Required over Supported Resource'
+        super(SupportedResourcePermissionFormHelper, self).__init__(allow_edit, res_short_id,
+                                                                    element_id,
+                                                                    element_name, layout,
+                                                                    *args, **kwargs)
+
+
+class SupportedResourcePermissionForm(ModelForm):
+    value = forms.\
+        ChoiceField(choices=SupportedResourcePermission_choices,
+                    widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SupportedResourcePermissionForm, self).__init__(*args, **kwargs)
+        self.helper = \
+            SupportedResourcePermissionFormHelper(allow_edit, res_short_id, element_id,
+                                                  element_name='SupportedResourcePermission')
+        self.fields['value'].label = "Choose Permission:"
+
+    class Meta:
+        model = SupportedResourcePermission
+        fields = ('value',)
+
+
+class SupportedResourcePermissionValidationForm(forms.Form):
+    value = forms.CharField(max_length=100, required=True)
+
+
+class SupportedFileTypeFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True,
+                 res_short_id=None,
+                 element_id=None,
+                 element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('supported_file_types'))
+        kwargs['element_name_label'] = 'Supported File Types (Composite Resource)'
+        super(SupportedFileTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                          element_name, layout,  *args, **kwargs)
+
+
+class SupportedFileTypesForm(ModelForm):
+    supported_file_types = forms.\
+        MultipleChoiceField(choices=get_SupportedFileTypes_choices(),
+                            widget=forms.CheckboxSelectMultiple(
+                                    attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
+        super(SupportedFileTypesForm, self).__init__(*args, **kwargs)
+        self.fields['supported_file_types'].label = "Choose File Types:"
+        self.helper = SupportedFileTypeFormHelper(allow_edit, res_short_id, element_id,
+                                                  element_name='SupportedFileTypes')
+
+        if model_instance:
+            supported_file_types = model_instance.supported_file_types.all()
+            if len(supported_file_types) > 0:
+                # NOTE: The following code works for SWAT res type but does not work here!!!
+                # self.fields['supported_res_types'].initial =
+                #   [parameter.description for parameter in supported_res_types]
+
+                self.initial['supported_file_types'] = \
+                    [parameter.description for parameter in supported_file_types]
+            else:
+                self.initial['supported_file_types'] = []
+
+    class Meta:
+        model = SupportedFileTypes
+        fields = ('supported_file_types',)
+
+
+class SupportedFileTypesValidationForm(forms.Form):
+    supported_file_types = forms.MultipleChoiceField(choices=get_SupportedFileTypes_choices(),
+                                                     required=False)
+
+
+class URLTemplateFileTypeFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = \
+            "FileType-level App-launching URL Pattern " \
+            "<a href='/terms#AppURLPattern' target='_blank'>" \
+            "<font size='3'>Help</font></a>"
+
+        super(URLTemplateFileTypeFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class URLTemplateFileTypeForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(URLTemplateFileTypeForm, self).__init__(*args, **kwargs)
+        self.helper = URLTemplateFileTypeFormHelper(allow_edit,
+                                                    res_short_id,
+                                                    element_id,
+                                                    element_name='urltemplatefiletype')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = URLTemplateFileType
+        fields = ['value']
+        exclude = ['content_object']
 
 
 SupportedSharingStatus_choices = (

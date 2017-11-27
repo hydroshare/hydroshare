@@ -90,7 +90,19 @@
 
                     <li id="open-separator" role="separator" class="divider"></li>
                     {% endif %}
-
+                    {% if not resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                    <li class="ux-dropdown-menu-item" id="file-type-open-with-div">
+                            <a href="#">Open With</a>
+{#                            https://stackoverflow.com/questions/45620996/css-cascade-menu-position-div-relative-to-li#}
+                            <div class="ux-dropdown-menu-containerItem">
+                                  <ul class="ux-dropdown-menu" id="file-type-open-with-list">
+{#                                    <li class="ux-dropdown-menu-item"><a href="#">SubMenu Item 1</a></li>#}
+{#                                    <li class="ux-dropdown-menu-item"><a href="#">SubMenu Item 2</a></li>#}
+{#                                    <li class="ux-dropdown-menu-item"><a href="#">SubMenu Item 3</a></li>#}
+                                  </ul>
+                          </div>
+                        </li>
+                     {% endif %}
                         {% if page.perms.change and metadata_form %}
                             {% if cm|resource_type == "Generic" or cm.resource_type == "CompositeResource" %}
                                 <li id="btn-cut" data-menu-name="cut">
