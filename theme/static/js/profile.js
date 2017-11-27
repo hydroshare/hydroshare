@@ -332,4 +332,24 @@ $(document).ready(function () {
             }
         }
     );
+
+    $('.tagsinput').tagsInput({
+      interactive: true,
+      placeholder: "Organization(s)",
+      autocomplete: {
+        source: "/hsapi/dictionary/universities/",
+        minLength: 3,
+        delay: 500,
+        classes: {
+            "ui-autocomplete": "minHeight"
+        }
+      }
+    });
+
+    $('.ui-autocomplete-input').on('keydown', function(e) {
+      if(e.keyCode === 9 && $(this).val() !== '') {
+        e.preventDefault();
+        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+      }
+    });
 });

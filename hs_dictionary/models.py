@@ -11,3 +11,13 @@ class University(models.Model):
 
     class Meta:
         verbose_name_plural = "universities"
+
+
+class UncategorizedTerm(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "uncategorized terms"
