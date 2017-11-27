@@ -32,6 +32,7 @@ def resource_level_tool_urls(resource_obj, request_obj):
                 is_open_with_app = _check_open_with_app(tool_res_obj, request_obj)
                 if tool_url_new is not None:
                         tl = {'title': str(tool_res_obj.metadata.title.value),
+                              'res_id': tool_res_obj.short_id,
                               'icon_url': tool_icon_url,
                               'url': tool_url_new,
                               'openwithlist': is_open_with_app
