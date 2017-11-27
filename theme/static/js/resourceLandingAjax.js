@@ -1411,6 +1411,7 @@ function updateEditCoverageState() {
     // Set state for composite resource file metadata editing
     chkBox = $("#id-coverage-spatial-filetype #id_type_1");
     chkPoint = $("#id-coverage-spatial-filetype #id_type_2");
+
     if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
         $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
     }
