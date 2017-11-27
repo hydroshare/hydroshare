@@ -6,7 +6,7 @@ from crispy_forms.layout import Layout, Field, HTML
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
     SupportedSharingStatus, AppHomePageUrl
 from hs_core.forms import BaseFormHelper
-from utils import get_SupportedResTypes_choices
+from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 
 # TODO: reference hs_core.forms
@@ -124,8 +124,8 @@ class ToolIconFormHelper(BaseFormHelper):
         data_url = ""
         if "instance" in kwargs:
             webapp_obj = kwargs.pop("instance")
-            if webapp_obj and webapp_obj.metadata.tool_icon.first():
-                data_url = webapp_obj.metadata.tool_icon.first().data_url
+            if webapp_obj and webapp_obj.metadata.app_icon:
+                data_url = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
                     Field('value', css_class=field_width),
@@ -222,14 +222,6 @@ class SupportedResTypesValidationForm(forms.Form):
                                                     required=False)
 
 
-SupportedSharingStatus_choices = (
-    ('Published', 'Published'),
-    ('Public', 'Public'),
-    ('Discoverable', 'Discoverable'),
-    ('Private', 'Private'),
-)
-
-
 class SupportedSharingStatusFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
                  element_id=None, element_name=None,  *args, **kwargs):
@@ -244,7 +236,7 @@ class SupportedSharingStatusFormHelper(BaseFormHelper):
 
 
 class SupportedSharingStatusForm(ModelForm):
-    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+    sharing_status = forms.MultipleChoiceField(choices=get_SupportedSharingStatus_choices(),
                                                widget=forms.CheckboxSelectMultiple(
                                                 attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -268,5 +260,5 @@ class SupportedSharingStatusForm(ModelForm):
 
 
 class SupportedSharingStatusValidationForm(forms.Form):
-    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+    sharing_status = forms.MultipleChoiceField(choices=get_SupportedSharingStatus_choices(),
                                                required=False)

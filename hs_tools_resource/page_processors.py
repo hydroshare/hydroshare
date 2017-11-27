@@ -15,10 +15,10 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if content_model.metadata.supported_sharing_status.first() is None:
-        content_model.metadata.create_element('SupportedSharingStatus',
-                                              sharing_status=['Published', 'Public',
-                                                              'Discoverable', 'Private'],)
+    # if content_model.metadata.supported_sharing_status.first() is None:
+    #     content_model.metadata.create_element('SupportedSharingStatus',
+    #                                           sharing_status=['Published', 'Public',
+    #                                                           'Discoverable', 'Private'],)
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -26,14 +26,14 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None,
                                                    request=request)
         extended_metadata_exists = False
-        if content_model.metadata.url_bases.first() or content_model.metadata.versions.first():
+        if content_model.metadata.url_base or content_model.metadata.version:
             extended_metadata_exists = True
 
         new_supported_res_types_array = []
-        if content_model.metadata.supported_res_types.first():
+        if content_model.metadata.supported_resource_types:
             extended_metadata_exists = True
             supported_res_types_str = content_model.metadata.\
-                supported_res_types.first().get_supported_res_types_str()
+                supported_resource_types.get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
                 for class_verbose_list in get_SupportedResTypes_choices():
@@ -43,54 +43,54 @@ def landing_page(request, page):
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
-        if content_model.metadata.supported_sharing_status.first() is not None:
+        if content_model.metadata.supported_sharing_status is not None:
             extended_metadata_exists = True
-            sharing_status_str = content_model.metadata.supported_sharing_status.first()\
+            sharing_status_str = content_model.metadata.supported_sharing_status \
                 .get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
-        if content_model.metadata.tool_icon.first():
-            context['tool_icon_url'] = content_model.metadata.tool_icon.first().data_url
+        if content_model.metadata.app_icon:
+            context['tool_icon_url'] = content_model.metadata.app_icon.data_url
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['url_base'] = content_model.metadata.url_bases.first()
-        context['version'] = content_model.metadata.versions.first()
-        context['homepage_url'] = content_model.metadata.homepage_url.first()
+        context['url_base'] = content_model.metadata.url_base
+        context['version'] = content_model.metadata.version
+        context['homepage_url'] = content_model.metadata.app_home_page_url
 
     else:
-        url_base = content_model.metadata.url_bases.first()
+        url_base = content_model.metadata.url_base
         url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
                                     if url_base else None)
 
-        homepage_url = content_model.metadata.homepage_url.first()
+        homepage_url = content_model.metadata.app_home_page_url
         homepage_url_form = \
             AppHomePageUrlForm(instance=homepage_url,
                                res_short_id=content_model.short_id,
                                element_id=homepage_url.id
                                if homepage_url else None)
 
-        version = content_model.metadata.versions.first()
+        version = content_model.metadata.version
         version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
                                    element_id=version.id
                                    if version else None)
 
-        supported_res_types_obj = content_model.metadata.supported_res_types.first()
+        supported_res_types_obj = content_model.metadata.supported_resource_types
         supported_res_types_form = SupportedResTypesForm(instance=supported_res_types_obj,
                                                          res_short_id=content_model.short_id,
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
-        sharing_status_obj = content_model.metadata.supported_sharing_status.first()
+        sharing_status_obj = content_model.metadata.supported_sharing_status
         sharing_status_obj_form = \
             SupportedSharingStatusForm(instance=sharing_status_obj,
                                        res_short_id=content_model.short_id,
                                        element_id=sharing_status_obj.id
                                        if sharing_status_obj else None)
 
-        tool_icon_obj = content_model.metadata.tool_icon.first()
+        tool_icon_obj = content_model.metadata.app_icon
         tool_icon_form = ToolIconForm(instance=tool_icon_obj,
                                       res_short_id=content_model.short_id,
                                       element_id=tool_icon_obj.id

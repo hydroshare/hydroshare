@@ -31,6 +31,12 @@ def user_permission(content, arg):
 
 @register.filter
 def app_on_open_with_list(content, arg):
+    """
+    Check whether a webapp resource is on current user's open-with list
+    content: resource object
+    arg: user object
+    """
+
     user_obj = arg
     res_obj = content
     result = res_obj.rlabels.is_open_with_app(user_obj)
