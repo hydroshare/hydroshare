@@ -16,6 +16,7 @@
     width: 100px;
     height: 100px;
 }
+
 .dropdown-user-webapp-icon {
     width: 40px;
     height: 40px;
@@ -33,4 +34,9 @@
 }
 .dropdown-menu > li > a {
     padding: 0;
+}
+
+.tool-metadata-hr {
+    margin-top: 0px;
+    margin-bottom: 2px
 }
