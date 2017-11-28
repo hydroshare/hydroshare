@@ -31,7 +31,11 @@
             <a class="webapp-link"
                href="{{resource.metadata.app_home_page_url.value}}"
                target="_blank" title="Open {{ resource.title }} in new tab">
-              <img src="{{ resource.metadata.app_icon.value }}" alt="" />
+                {% if resource.metadata.app_icon.data_url %}
+                    <img src="{{ resource.metadata.app_icon.data_url }}" alt="" />
+                {% else %}
+                    <img src="/static/img/web-app-default-icon.png" alt="" />
+                {% endif %}
               <h3>
                 {{ resource.title }}
               </h3>

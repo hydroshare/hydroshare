@@ -531,7 +531,6 @@ class ToolMetaData(CoreMetaData):
         self._supported_sharing_status.all().delete()
         self._homepage_url.all().delete()
 
-        self.approved.delete()
         self.testing_protocol_url.all().delete()
         self.help_page_url.all().delete()
         self.source_code_url.all().delete()

@@ -213,3 +213,8 @@
     </div>
 {% endif %}
 
+{% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
+    <div class="col-xs-12">
+        <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp resource has been approved by HydroShare admin.</i></div>
+    </div>
+{% endif %}

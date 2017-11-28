@@ -1087,19 +1087,28 @@
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
                                     {% if not metadata_form %}
-                                        {% for tool in relevant_tools.tool_list %}
-                                            <div title="{{ tool.title }}" id="web-app-item">
-                                                <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip" title="View WebApp landing page">i</a>
-						                        <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" title="Open resource with this WebApp">
-                                                    {% if tool.title|length > 20 %}
-                                                        <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                    {% else %}
-                                                        <h4>{{ tool.title }}</h4>
-                                                    {% endif %}
-                                                    <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                                </a>
-                                            </div>
-                                        {% endfor %}
+                                        <div class="row">
+                                            {% for tool in relevant_tools.tool_list %}
+                                                <div class="col-lg-3 col-md-4 col-sm-12">
+                                                    <div title="{{ tool.title }}" id="web-app-item">
+                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
+    						                         {% if tool.approved %}
+                                                         <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
+                                                             <img class="app-approved-icon-img" src="/static/img/approved_app.png">
+                                                         </a>
+                                                     {% endif %}
+                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                        {% if tool.title|length > 20 %}
+                                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
+                                                        {% else %}
+                                                            <h4>{{ tool.title }}</h4>
+                                                        {% endif %}
+                                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                                    </a>
+                                                </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     {% else %}
                                         ------- Relevant tools form here -------
                                     {%  endif %}
