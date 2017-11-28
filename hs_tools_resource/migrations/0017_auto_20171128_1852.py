@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_tools_resource', '0012_auto_20171110_1559'),
+        ('hs_tools_resource', '0016_merge'),
     ]
 
     operations = [

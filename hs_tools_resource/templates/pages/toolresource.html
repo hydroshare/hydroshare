@@ -20,6 +20,55 @@
                     {%  endif %}
                 </div>
                 <div>
+                    {% if url_base %}
+                        <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ url_base.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {%  endif %}
+                </div>
+                <div>
+                    {% if supported_res_types %}
+                        <h4><strong>Supported Resource Types:</strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_res_types }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if supported_sharing_status %}
+                        <h4><strong>Supported Resource Sharing Status:</strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_sharing_status }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if version %}
+                        <h4><strong>Version:</strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8">{{ version.value }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if tool_icon_url %}
+                        <h4><strong>App Icon:</strong></h4>
+                        <hr class="tool-metadata-hr">
+                        <div class="row">
+                            <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
                     {% if testing_protocol_url %}
                         <h4><strong>Testing Protocol URL:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
@@ -79,65 +128,16 @@
                         <hr style="border:0">
                     {%  endif %}
                 </div>
-                <div>
-                    {% if show_on_open_with_list %}
-                        <h4><strong>Shown on Open With List:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ show_on_open_with_list.value|urlize }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if url_base %}
-                        <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ url_base.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {%  endif %}
-                </div>
-                <div>
-                    {% if version %}
-                        <h4><strong>Version:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ version.value }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if supported_res_types %}
-                        <h4><strong>Supported Resource Types:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_res_types }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if supported_sharing_status %}
-                        <h4><strong>Supported Resource Sharing Status:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8">{{ supported_sharing_status }}</div>
-                        </div>
-                        <hr style="border:0">
-                    {% endif %}
-                </div>
-                <div>
-                    {% if tool_icon_url %}
-                        <h4><strong>App Icon:</strong></h4>
-                        <hr class="tool-metadata-hr">
-                        <div class="row">
-                            <div class="col-sm-8"><img id="tool-icon" src="{{ tool_icon_url }}"/></div>
-                        </div>
-                    {% endif %}
-                </div>
+{#                <div>#}
+{#                    {% if show_on_open_with_list %}#}
+{#                        <h4><strong>Shown on Open With List:</strong></h4>#}
+{#                        <hr class="tool-metadata-hr">#}
+{#                        <div class="row">#}
+{#                            <div class="col-sm-8">{{ show_on_open_with_list.value|urlize }}</div>#}
+{#                        </div>#}
+{#                        <hr style="border:0">#}
+{#                    {%  endif %}#}
+{#                </div>#}
             </div>
         </div>
     {%  endif %}

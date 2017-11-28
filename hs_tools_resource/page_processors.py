@@ -6,7 +6,7 @@ from hs_core.views import add_generic_context
 
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
-    ShowOnOpenWithListForm, VersionForm, SupportedResTypesForm, \
+    VersionForm, SupportedResTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
@@ -70,7 +70,6 @@ def landing_page(request, page):
                                     element_id=url_base.id
                                     if url_base else None)
 
-
         homepage_url = content_model.metadata.app_home_page_url
         homepage_url_form = \
             AppHomePageUrlForm(instance=homepage_url,
@@ -120,7 +119,6 @@ def landing_page(request, page):
         #                                                      element_id=show_on_open_with_list.id
         #                                                      if show_on_open_with_list else None)
 
-
         version = content_model.metadata.version
         version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
@@ -163,6 +161,14 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_base_form %} '
                      '</div>'),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy version_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy tool_icon_form %} '
+                     '</div> '),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='testing_protocol_url'> "
                      '{% load crispy_forms_tags %} '
                      '{% crispy testing_protocol_url_form %} '
@@ -191,14 +197,6 @@ def landing_page(request, page):
                 #      '{% load crispy_forms_tags %} '
                 #      '{% crispy show_on_open_with_list_form %} '
                 #      '</div>'),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy version_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy tool_icon_form %} '
-                     '</div> '),
         )
 
         # get the context from hs_core
