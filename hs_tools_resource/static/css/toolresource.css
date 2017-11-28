@@ -10,7 +10,7 @@
     width:80px;
     height:80px;
     border-radius: 7px;
-    margin: 10px;
+    /*margin: 10px;*/
 }
 .default-webapp-icon {
     width: 100px;
@@ -33,4 +33,19 @@
 }
 .dropdown-menu > li > a {
     padding: 0;
+}
+
+.app-info-toggle {
+  position: relative;
+  display: inline-block;
+  left: 45px;
+  top: 50px;
+  height: 12px;
+  width: 12px;
+  font-size: 9px;
+  background: white;
+  border-radius: 50%;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 0 1px #000;
 }
