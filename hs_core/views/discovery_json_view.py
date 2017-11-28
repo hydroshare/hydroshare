@@ -72,5 +72,5 @@ class DiscoveryJsonView(FacetedSearchView):
             # return JSON response
 
             return HttpResponse(the_data, content_type='application/json')
-        # else:
-            # return HttpResponse(json.dumps('[]'), content_type='application/json')
+        else:
+            return HttpResponse(json.dumps('[]'), content_type='application/json')
