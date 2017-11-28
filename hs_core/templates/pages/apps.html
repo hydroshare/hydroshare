@@ -1,0 +1,68 @@
+{% extends "pages/page.html" %}
+{% load pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
+{% block meta_title %}HydroShare Apps{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/apps_page.css" />
+{% endblock %}
+
+{% block main %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>HydroShare Apps Library</h1>
+        <p>
+          HydroShare apps allow you to visualize, analyze, and work with resources
+          (data and models) in HydroShare. Apps are hosted on separate web servers
+          from the HydroShare website (www.hydroshare.org) and access HydroShare
+          resources using web services via the REST applications programmers
+          interface (API). Anyone can write an app an then create a "Web App" resource
+          that holds the configuration information for launching the App from HydroShare.
+          This page lists CUAHSI approved web apps that are supported as part of HydroShare.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container apps-container">
+    <div class="row">
+      {% for resource in webapp_resources %}
+        <div class="webapp col-lg-3 col-md-4 col-sm-12">
+          <div class="webapp-listing">
+            <a class="webapp-link"
+               href="{{resource.metadata.app_home_page_url.value}}"
+               target="_blank" title="Open {{ resource.title }} in new tab">
+              <img src="{{ resource.metadata.app_icon.value }}" alt="" />
+              <h3>
+                {{ resource.title }}
+              </h3>
+            </a>
+            <p class="app-description">
+              {{ resource.metadata.description|truncatewords:35 }}
+              <br /><br />
+              <a href="/resource/{{ resource.short_id }}">View Resource Page</a>
+            </p>
+
+            <a href="#" class="app-info-toggle">i</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    $(document).ready(function() {
+      $('.app-info-toggle').on('click', function() {
+        $(this).parent().find('.app-description').toggle("fast");
+        var text = $(this).html();
+        if(text === "i") {
+          $(this).html('X');
+        } else {
+          $(this).html('i');
+        }
+        return false;
+      });
+    });
+  </script>
+{% endblock %}

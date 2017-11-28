@@ -4,8 +4,10 @@ from crispy_forms.layout import Layout, HTML
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
-                  SupportedSharingStatusForm, AppHomePageUrlForm
+from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
+    SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
+    ShowOnOpenWithListForm, VersionForm, SupportedResTypesForm, \
+    SupportedSharingStatusForm, ToolIconForm, UrlBaseForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
 
@@ -15,10 +17,6 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    # if content_model.metadata.supported_sharing_status.first() is None:
-    #     content_model.metadata.create_element('SupportedSharingStatus',
-    #                                           sharing_status=['Published', 'Public',
-    #                                                           'Discoverable', 'Private'],)
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -53,9 +51,17 @@ def landing_page(request, page):
             context['tool_icon_url'] = content_model.metadata.app_icon.data_url
 
         context['extended_metadata_exists'] = extended_metadata_exists
+
         context['url_base'] = content_model.metadata.url_base
         context['version'] = content_model.metadata.version
         context['homepage_url'] = content_model.metadata.app_home_page_url
+        context['testing_protocol_url'] = content_model.metadata.testing_protocol_url.first()
+        context['help_page_url'] = content_model.metadata.help_page_url.first()
+        context['source_code_url'] = content_model.metadata.source_code_url.first()
+        context['issues_page_url'] = content_model.metadata.issues_page_url.first()
+        context['mailing_list_url'] = content_model.metadata.mailing_list_url.first()
+        context['roadmap'] = content_model.metadata.roadmap.first()
+        # context['show_on_open_with_list'] = content_model.metadata.show_on_open_with_list.first()
 
     else:
         url_base = content_model.metadata.url_base
@@ -64,12 +70,56 @@ def landing_page(request, page):
                                     element_id=url_base.id
                                     if url_base else None)
 
+
         homepage_url = content_model.metadata.app_home_page_url
         homepage_url_form = \
             AppHomePageUrlForm(instance=homepage_url,
                                res_short_id=content_model.short_id,
                                element_id=homepage_url.id
                                if homepage_url else None)
+
+        testing_protocol_url = content_model.metadata.testing_protocol_url.first()
+        testing_protocol_url_form = TestingProtocolUrlForm(instance=testing_protocol_url,
+                                                           res_short_id=content_model.short_id,
+                                                           element_id=testing_protocol_url.id
+                                                           if testing_protocol_url else None)
+
+        help_page_url = content_model.metadata.help_page_url.first()
+        help_page_url_form = HelpPageUrlForm(instance=help_page_url,
+                                             res_short_id=content_model.short_id,
+                                             element_id=help_page_url.id
+                                             if help_page_url else None)
+
+        source_code_url = content_model.metadata.source_code_url.first()
+        source_code_url_form = SourceCodeUrlForm(instance=source_code_url,
+                                                 res_short_id=content_model.short_id,
+                                                 element_id=source_code_url.id
+                                                 if source_code_url else None)
+
+        issues_page_url = content_model.metadata.issues_page_url.first()
+        issues_page_url_form = IssuesPageUrlForm(instance=issues_page_url,
+                                                 res_short_id=content_model.short_id,
+                                                 element_id=issues_page_url.id
+                                                 if issues_page_url else None)
+
+        mailing_list_url = content_model.metadata.mailing_list_url.first()
+        mailing_list_url_form = MailingListUrlForm(instance=mailing_list_url,
+                                                   res_short_id=content_model.short_id,
+                                                   element_id=mailing_list_url.id
+                                                   if mailing_list_url else None)
+
+        roadmap = content_model.metadata.roadmap.first()
+        roadmap_form = RoadmapForm(instance=roadmap,
+                                   res_short_id=content_model.short_id,
+                                   element_id=roadmap.id
+                                   if roadmap else None)
+
+        # show_on_open_with_list = content_model.metadata.show_on_open_with_list.first()
+        # show_on_open_with_list_form = ShowOnOpenWithListForm(instance=show_on_open_with_list,
+        #                                                      res_short_id=content_model.short_id,
+        #                                                      element_id=show_on_open_with_list.id
+        #                                                      if show_on_open_with_list else None)
+
 
         version = content_model.metadata.version
         version_form = VersionForm(instance=version,
@@ -113,6 +163,34 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_base_form %} '
                      '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='testing_protocol_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy testing_protocol_url_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='help_page_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy help_page_url_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='source_code_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy source_code_url_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='issues_page_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy issues_page_url_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='mailing_list_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy mailing_list_url_form %} '
+                     '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='roadmap'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy roadmap_form %} '
+                     '</div>'),
+                # HTML("<div class='form-group col-lg-6 col-xs-12' id='show_on_open_with_list'> "
+                #      '{% load crispy_forms_tags %} '
+                #      '{% crispy show_on_open_with_list_form %} '
+                #      '</div>'),
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy version_form %} '
@@ -134,6 +212,13 @@ def landing_page(request, page):
         context['supported_res_types_form'] = supported_res_types_form
         context['tool_icon_form'] = tool_icon_form
         context['sharing_status_obj_form'] = sharing_status_obj_form
+        context['testing_protocol_url_form'] = testing_protocol_url_form
+        context['help_page_url_form'] = help_page_url_form
+        context['source_code_url_form'] = source_code_url_form
+        context['issues_page_url_form'] = issues_page_url_form
+        context['mailing_list_url_form'] = mailing_list_url_form
+        context['roadmap_form'] = roadmap_form
+        # context['show_on_open_with_list_form'] = show_on_open_with_list_form
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

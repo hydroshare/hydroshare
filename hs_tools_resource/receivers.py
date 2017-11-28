@@ -6,7 +6,8 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
-                                    SupportedSharingStatusValidationForm
+                                    SupportedSharingStatusValidationForm, RoadmapForm, \
+                                    ShowOnOpenWithListForm
 
 from default_icon import default_icon_data_url
 
@@ -50,6 +51,22 @@ def validate_form(request, element_name):
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
         element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'testingprotocolurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'helppageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'sourcecodeurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'helppageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'issuespageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'mailinglisturl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'roadmap':
+        element_form = RoadmapForm(data=request.POST)
+    elif element_name == 'showonopenwithlist':
+        element_form = ShowOnOpenWithListForm(data=request.POST)
     else:
         return {'is_valid': False, 'element_data_dict': None}
 
