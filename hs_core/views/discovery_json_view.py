@@ -38,6 +38,7 @@ class DiscoveryJsonView(FacetedSearchView):
                 solr = result.get_stored_fields()
 
                 # assign title and url values to the object
+                json_obj['short_id'] = solr['short_id']
                 json_obj['title'] = solr['title']
                 json_obj['resource_type'] = solr['resource_type']
 
@@ -79,5 +80,5 @@ class DiscoveryJsonView(FacetedSearchView):
             output_file.write("solr query time: " + str(elapsed_time1) + " json building time:  "  + str(elapsed_time2) + '\n')
             output_file.close()
             return HttpResponse(the_data, content_type='application/json')
-        else:
-            return HttpResponse(json.dumps('[]'), content_type='application/json')
+       # else:
+           # return HttpResponse(json.dumps('[]'), content_type='application/json')
