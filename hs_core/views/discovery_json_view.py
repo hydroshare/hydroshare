@@ -34,6 +34,7 @@ class DiscoveryJsonView(FacetedSearchView):
                 solr = result.get_stored_fields()
 
                 # assign title and url values to the object
+                json_obj['short_id'] = solr['short_id']
                 json_obj['title'] = solr['title']
                 json_obj['resource_type'] = solr['resource_type']
 
