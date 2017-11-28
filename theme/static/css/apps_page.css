@@ -6,13 +6,12 @@
 }
 
 .webapp-listing {
-  min-height: 250px;
-  position: relative;
-  background: white;
-  border: 1px solid #cdcdcd;
-  width: 250px;
-  margin: 15px auto 30px auto;
-  padding: 1em;
+    min-height: 250px;
+    position: relative;
+    background: white;
+    border: 1px solid #cdcdcd;
+    width: 250px;
+    margin: 15px auto 30px auto;
 }
 
 .webapp-listing .app-description {
@@ -28,20 +27,30 @@
 }
 
 .webapp-listing img {
-  max-height: 210px;
-  margin: 0 auto;
-  display: block;
+    max-height: 205px;
+    max-width: 100%;
+    background-position: 50% 50%;
+    position: absolute;
+    top: calc(50% - 23px);
+    left: 50%;
+    margin: auto;
+    transform: translate(-50%, -50%);
 }
 
 .webapp-listing h3 {
-  position: absolute;
-  background: #093e54;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  margin: 0;
-  padding: .5em;
-  color: #B5E655;
+    position: absolute;
+    background: #093e54;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: .5em;
+    color: #B5E655;
+    height: 45px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 20px;
 }
 
 .webapp-listing .app-info-toggle {
@@ -59,5 +68,9 @@
 }
 
 a.webapp-link {
-  color: #B5E655;
+    color: #B5E655;
+    position: relative;
+    height: 250px;
+    display: block;
 }
+
