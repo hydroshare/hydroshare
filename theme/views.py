@@ -2,6 +2,7 @@ from json import dumps, loads
 import requests
 import time
 import os
+from urllib2 import urlopen
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -494,4 +495,15 @@ def create_scidas_virtual_app(request, res_id, cluster):
 
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
-    return HttpResponseRedirect(app_url)
+    # make sure the new directed url is loaded and working before redirecting
+    try:
+        ret = urlopen(app_url, timeout=10)
+    except Exception as ex:
+        messages.error(request, ex.message)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    if ret.code == 200:
+        return HttpResponseRedirect(app_url)
+    else:
+        messages.error(request, 'time out error')
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
