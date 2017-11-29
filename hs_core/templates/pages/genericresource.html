@@ -804,14 +804,14 @@
                                                     <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
                                                            data-target="#edit-creator-dialog{{ author.id }}"
                                                         ></a>
 
                                                         {# Prevent deletion of last creator#}
                                                         {% if creator_formset.initial|length > 1 %}
                                                             <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
                                                                data-target="#delete-creator-dialog{{ author.id }}"></a>
                                                         {% endif %}
                                                     </td>
@@ -864,11 +864,11 @@
                                                         {{ contributor.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
                                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                         <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                           class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
                                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                     </td>
@@ -888,29 +888,30 @@
                             {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                 <div class="tab-pane" id="relatedResourcesTab">
                                     {% if not metadata_form %}
-                                        {% if sources %}
-                                            <h4><strong>Sources</strong></h4>
-                                            <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    {% if sources %}
+                                        <table class="table hs-table">
+                                            <legend>Sources</legend>
                                             {% for source in sources %}
-                                                <div class="row">
-                                                    <div class="col-sm-4"><strong>Derived From:</strong></div>
-                                                    <div class="col-sm-8">{{ source.derived_from|urlize }}</div>
-                                                </div>
+                                            <tr>
+                                                <th class="dataset-label"><strong>Derived From:</strong></th>
+                                                <td class="dataset-details">{{ source.derived_from|urlize }}</td>
+                                            </tr>
                                             {% endfor %}
-                                        {% endif %}
-                                        {% if show_relations_section %}
-                                            <hr style="border: 0;">
-                                            <h4><strong>Relations</strong></h4>
-                                            <hr style="margin-top: 0;margin-bottom: 2px">
+                                        </table>
+                                    {% endif %}
+                                    {% if show_relations_section %}
+                                        <table class="table hs-table" style="margin-bottom: 0;">
+                                            <legend>Relations</legend>
                                             {% for relation in relations %}
-                                                {% if  relation.type|lower != "haspart"%}
-                                                    <div class="row">
-                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value|urlize }}</div>
-                                                    </div>
-                                                {% endif %}
+                                            {% if relation.type|lower != "haspart"%}
+                                            <tr>
+                                                <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
+                                                <td class="dataset-details">{{ relation.value|urlize }}</td>
+                                            </tr>
+                                            {% endif %}
                                             {% endfor %}
-                                        {% endif %}
+                                        </table>
+                                    {% endif %}
                                     {% else %}
                                         <div>
                                             <table class="table hs-table" style="margin-bottom: 0;">
@@ -922,16 +923,14 @@
                                                         <td class="dataset-details">{{ source.derived_from|urlize }}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                               data-target="#edit-source-dialog{{ source.id }}"
-                                                               style="top: -5px; "></a>
+                                                               class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
+                                                               data-target="#edit-source-dialog{{ source.id }}"></a>
                                                         </td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto"
                                                                title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                               data-target="#delete-source-element-dialog{{ source.id }}"
-                                                               style="top: -5px; right:20px;"></a>
+                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
+                                                               data-target="#delete-source-element-dialog{{ source.id }}"></a>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -957,16 +956,14 @@
                                                             <td class="dataset-details">{{ relation.value|urlize }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                   style="top: -5px; "></a>
+                                                                   class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"></a>
                                                             </td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto"
                                                                    title="Remove"
-                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                   style="top: -5px; right:20px;"></a>
+                                                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
                                                             </td>
                                                         </tr>
                                                     {% endif %}
