@@ -1,4 +1,5 @@
 (function ($) {
+    // Used to instantiate clickable urls in dynamically generated items
     $.fn.urlClickable = function () {
         var item = $(this);
 
@@ -148,11 +149,6 @@ $(document).ready(function () {
     }
 
     $("#keywords").remove();
-
-    // Make URLs inside text clickable
-    $(".url-clickable").each(function () {
-        $(this).urlClickable();
-    });
 
     // Make apps link open in new tab
     $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
