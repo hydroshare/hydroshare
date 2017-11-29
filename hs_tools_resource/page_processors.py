@@ -6,7 +6,7 @@ from hs_core.views import add_generic_context
 
 from forms import AppHomePageUrlForm, TestingProtocolUrlForm, HelpPageUrlForm, \
     SourceCodeUrlForm, IssuesPageUrlForm, MailingListUrlForm, RoadmapForm, \
-    ShowOnOpenWithListForm, VersionForm, SupportedResTypesForm, \
+    VersionForm, SupportedResTypesForm, \
     SupportedSharingStatusForm, ToolIconForm, UrlBaseForm
 from models import ToolResource
 from utils import get_SupportedResTypes_choices
@@ -17,10 +17,6 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if content_model.metadata.supported_sharing_status.first() is None:
-        content_model.metadata.create_element('SupportedSharingStatus',
-                                              sharing_status=['Published', 'Public',
-                                                              'Discoverable', 'Private'],)
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -28,14 +24,14 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None,
                                                    request=request)
         extended_metadata_exists = False
-        if content_model.metadata.url_bases.first() or content_model.metadata.versions.first():
+        if content_model.metadata.url_base or content_model.metadata.version:
             extended_metadata_exists = True
 
         new_supported_res_types_array = []
-        if content_model.metadata.supported_res_types.first():
+        if content_model.metadata.supported_resource_types:
             extended_metadata_exists = True
             supported_res_types_str = content_model.metadata.\
-                supported_res_types.first().get_supported_res_types_str()
+                supported_resource_types.get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
                 for class_verbose_list in get_SupportedResTypes_choices():
@@ -45,39 +41,41 @@ def landing_page(request, page):
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
-        if content_model.metadata.supported_sharing_status.first() is not None:
+        if content_model.metadata.supported_sharing_status is not None:
             extended_metadata_exists = True
-            sharing_status_str = content_model.metadata.supported_sharing_status.first()\
+            sharing_status_str = content_model.metadata.supported_sharing_status \
                 .get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
-        if content_model.metadata.tool_icon.first():
-            context['tool_icon_url'] = content_model.metadata.tool_icon.first().data_url
+        if content_model.metadata.app_icon:
+            context['tool_icon_url'] = content_model.metadata.app_icon.data_url
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['url_base'] = content_model.metadata.url_bases.first()
-        context['version'] = content_model.metadata.versions.first()
-        context['homepage_url'] = content_model.metadata.homepage_url.first()
+
+        context['url_base'] = content_model.metadata.url_base
+        context['version'] = content_model.metadata.version
+        context['homepage_url'] = content_model.metadata.app_home_page_url
         context['testing_protocol_url'] = content_model.metadata.testing_protocol_url.first()
         context['help_page_url'] = content_model.metadata.help_page_url.first()
         context['source_code_url'] = content_model.metadata.source_code_url.first()
         context['issues_page_url'] = content_model.metadata.issues_page_url.first()
         context['mailing_list_url'] = content_model.metadata.mailing_list_url.first()
         context['roadmap'] = content_model.metadata.roadmap.first()
-        context['show_on_open_with_list'] = content_model.metadata.show_on_open_with_list.first()
+        # context['show_on_open_with_list'] = content_model.metadata.show_on_open_with_list.first()
 
     else:
-        url_base = content_model.metadata.url_bases.first()
+        url_base = content_model.metadata.url_base
         url_base_form = UrlBaseForm(instance=url_base,
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
                                     if url_base else None)
 
-        homepage_url = content_model.metadata.homepage_url.first()
-        homepage_url_form = AppHomePageUrlForm(instance=homepage_url,
-                                               res_short_id=content_model.short_id,
-                                               element_id=homepage_url.id
-                                               if homepage_url else None)
+        homepage_url = content_model.metadata.app_home_page_url
+        homepage_url_form = \
+            AppHomePageUrlForm(instance=homepage_url,
+                               res_short_id=content_model.short_id,
+                               element_id=homepage_url.id
+                               if homepage_url else None)
 
         testing_protocol_url = content_model.metadata.testing_protocol_url.first()
         testing_protocol_url_form = TestingProtocolUrlForm(instance=testing_protocol_url,
@@ -115,32 +113,32 @@ def landing_page(request, page):
                                    element_id=roadmap.id
                                    if roadmap else None)
 
-        show_on_open_with_list = content_model.metadata.show_on_open_with_list.first()
-        show_on_open_with_list_form = ShowOnOpenWithListForm(instance=show_on_open_with_list,
-                                                             res_short_id=content_model.short_id,
-                                                             element_id=show_on_open_with_list.id
-                                                             if show_on_open_with_list else None)
+        # show_on_open_with_list = content_model.metadata.show_on_open_with_list.first()
+        # show_on_open_with_list_form = ShowOnOpenWithListForm(instance=show_on_open_with_list,
+        #                                                      res_short_id=content_model.short_id,
+        #                                                      element_id=show_on_open_with_list.id
+        #                                                      if show_on_open_with_list else None)
 
-        version = content_model.metadata.versions.first()
+        version = content_model.metadata.version
         version_form = VersionForm(instance=version,
                                    res_short_id=content_model.short_id,
                                    element_id=version.id
                                    if version else None)
 
-        supported_res_types_obj = content_model.metadata.supported_res_types.first()
+        supported_res_types_obj = content_model.metadata.supported_resource_types
         supported_res_types_form = SupportedResTypesForm(instance=supported_res_types_obj,
                                                          res_short_id=content_model.short_id,
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
-        sharing_status_obj = content_model.metadata.supported_sharing_status.first()
+        sharing_status_obj = content_model.metadata.supported_sharing_status
         sharing_status_obj_form = \
             SupportedSharingStatusForm(instance=sharing_status_obj,
                                        res_short_id=content_model.short_id,
                                        element_id=sharing_status_obj.id
                                        if sharing_status_obj else None)
 
-        tool_icon_obj = content_model.metadata.tool_icon.first()
+        tool_icon_obj = content_model.metadata.app_icon
         tool_icon_form = ToolIconForm(instance=tool_icon_obj,
                                       res_short_id=content_model.short_id,
                                       element_id=tool_icon_obj.id
@@ -159,6 +157,18 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy homepage_url_form %} '
                      '</div>'),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy url_base_form %} '
+                     '</div>'),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy version_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy tool_icon_form %} '
+                     '</div> '),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='testing_protocol_url'> "
                      '{% load crispy_forms_tags %} '
                      '{% crispy testing_protocol_url_form %} '
@@ -183,22 +193,10 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy roadmap_form %} '
                      '</div>'),
-                HTML("<div class='form-group col-lg-6 col-xs-12' id='show_on_open_with_list'> "
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy show_on_open_with_list_form %} '
-                     '</div>'),
-                HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy url_base_form %} '
-                     '</div>'),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="version"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy version_form %} '
-                     '</div> '),
-                HTML('<div class="form-group col-lg-6 col-xs-12" id="tool_icon"> '
-                     '{% load crispy_forms_tags %} '
-                     '{% crispy tool_icon_form %} '
-                     '</div> '),
+                # HTML("<div class='form-group col-lg-6 col-xs-12' id='show_on_open_with_list'> "
+                #      '{% load crispy_forms_tags %} '
+                #      '{% crispy show_on_open_with_list_form %} '
+                #      '</div>'),
         )
 
         # get the context from hs_core
@@ -218,7 +216,7 @@ def landing_page(request, page):
         context['issues_page_url_form'] = issues_page_url_form
         context['mailing_list_url_form'] = mailing_list_url_form
         context['roadmap_form'] = roadmap_form
-        context['show_on_open_with_list_form'] = show_on_open_with_list_form
+        # context['show_on_open_with_list_form'] = show_on_open_with_list_form
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

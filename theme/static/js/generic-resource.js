@@ -546,6 +546,8 @@ $(document).ready(function () {
     $("#btn-lic-agreement").on("change", license_agreement_ajax_submit);
     $("#btnMyResources").click(label_ajax_submit);
 
+    $("#btnOpenWithApp").click(label_ajax_submit);
+
     // Apply theme to comment's submit button
     $("#comment input[type='submit']").removeClass();
     $("#comment input[type='submit']").addClass("btn btn-default");

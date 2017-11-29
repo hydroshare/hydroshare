@@ -9,6 +9,8 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     SupportedSharingStatusValidationForm, RoadmapForm, \
                                     ShowOnOpenWithListForm
 
+from default_icon import default_icon_data_url
+
 
 @receiver(pre_create_resource, sender=ToolResource)
 def webapp_pre_create_resource(sender, **kwargs):
@@ -16,6 +18,10 @@ def webapp_pre_create_resource(sender, **kwargs):
     all_sharing_status = {'SupportedSharingStatus': {'sharing_status':
                           ["Published", "Public", "Discoverable", "Private"]}}
     metadata.append(all_sharing_status)
+
+    # a default app icon
+    tool_icon_meta = {"ToolIcon": {"data_url": default_icon_data_url}}
+    metadata.append(tool_icon_meta)
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)

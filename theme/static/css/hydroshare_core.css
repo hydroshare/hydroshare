@@ -1353,6 +1353,22 @@ body > .main-container {
 	color: #D9534F;
 }
 
+#btnOpenWithApp.btn-resource-add {
+	color: #D9534F;
+}
+
+#btnOpenWithApp.btn-resource-add:hover {
+	color: #84B85C;
+}
+
+#btnOpenWithApp.btn-resource-remove {
+	color: #84B85C;
+}
+
+#btnOpenWithApp.btn-resource-remove:hover {
+	color: #D9534F;
+}
+
 .custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
 	border: 0;
 	outline: 0;
