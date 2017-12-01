@@ -3043,6 +3043,22 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.logical_file is not None
 
     @property
+    def get_or_create_logical_file(self):
+        """ create a logical file on the fly if necessary """
+        # prevent import loops
+        from hs_file_types.models.generic import GenericLogicalFile
+        if self.content_object.resource_type == "CompositeResource":
+            if not self.has_logical_file:
+                logical_file = GenericLogicalFile.create()
+                self.logical_file_content_object = logical_file
+                self.save()
+                logger = logging.getLogger(__name__)
+                logger.warn("auto-create logical file for {}".format(self.storage_path))
+            return self.logical_file
+        else:
+            return None
+
+    @property
     def logical_file(self):
         """Return content_object of logical file."""
         return self.logical_file_content_object
