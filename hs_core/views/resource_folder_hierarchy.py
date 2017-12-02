@@ -105,9 +105,10 @@ def data_store_structure(request):
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # THIS EXCEPTION HANDLER made file problems exceedingly difficult to find!
     # except Exception as ex:
-    # logger.error("unknown exception querying store_path {} for {}".format(store_path, res_id))
-    # return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #     logger.error("unknown exception querying store_path {} for {}".format(store_path, res_id))
+    #     return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
                      'folders': store[0],
