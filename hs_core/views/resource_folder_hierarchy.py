@@ -105,23 +105,18 @@ def data_store_structure(request):
     except SessionException as ex:
         logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    # THIS EXCEPTION HANDLER made file problems exceedingly difficult to find!
-    # except Exception as ex:
-    #     logger.error("unknown exception querying store_path {} for {}".format(store_path, res_id))
-    #     return HttpResponse(ex.message, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
                      'folders': store[0],
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
-        logger.debug("resource {}: begin CompositeResource handling".format(res_id))
-        logger.debug("begin composite resource handling")
+        # logger.debug("resource {}: begin CompositeResource handling".format(res_id))
         spatial_coverage_dict = get_coverage_data_dict(resource)
         temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
         return_object['spatial_coverage'] = spatial_coverage_dict
         return_object['temporal_coverage'] = temporal_coverage_dict
-        logger.debug("resource {}: end CompositeResource handling".format(res_id))
+        # logger.debug("resource {}: end CompositeResource handling".format(res_id))
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
