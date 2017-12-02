@@ -3044,7 +3044,12 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def get_or_create_logical_file(self):
-        """ create a logical file on the fly if necessary """
+        """
+        Create a logical file on the fly if it does not exist
+
+        This is a temporary fix just for release 1.14. It is expected that further
+        work on logical files will make this unnecessary.
+        """
         # prevent import loops
         from hs_file_types.models.generic import GenericLogicalFile
         if self.content_object.resource_type == "CompositeResource":
