@@ -157,6 +157,7 @@ class Command(BaseCommand):
                     print(msg)
                     continue
 
+                # Pabitra: Not sure why are we skipping other resource types
                 if resource.resource_type != 'CompositeResource' and \
                    resource.resource_type != 'GenericResource':
                     print("resource {} has type {}: skipping".format(resource.short_id,
@@ -164,6 +165,8 @@ class Command(BaseCommand):
                 else:
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(rid, str(resource.files.all().count())))
+                    # get the typed resource
+                    resource = resource.get_content_model()
                     ingest_irods_files(resource,
                                        logger,
                                        stop_on_error=False,
@@ -174,10 +177,13 @@ class Command(BaseCommand):
         else:  # check all resources
             print("LOOKING FOR UNREGISTERED IRODS FILES FOR ALL RESOURCES")
             for r in BaseResource.objects.all():
+                # Pabitra: Not sure why are we skipping other resource types
                 if r.resource_type == 'CompositeResource' or \
                    r.resource_type == 'GenericResource':
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
+                    # get the typed resource
+                    r = r.get_content_model()
                     ingest_irods_files(r,
                                        logger,
                                        stop_on_error=False,
