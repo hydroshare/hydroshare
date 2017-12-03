@@ -6,7 +6,7 @@
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_access_control.models import PrivilegeCodes
+
 
 def debug_resource(short_id):
     """ Debug view for resource depicts output of various integrity checking scripts """
@@ -14,7 +14,7 @@ def debug_resource(short_id):
     try:
         res = BaseResource.objects.get(short_id=short_id)
     except BaseResource.DoesNotExist:
-        print("{} does not exist\n".format(shortkey))
+        print("{} does not exist".format(short_id))
 
     resource = res.get_content_model()
     assert resource, (res, res.content_model)
@@ -85,5 +85,3 @@ class Command(BaseCommand):
 
             else:
                 print("No resources to check.")
-
-
