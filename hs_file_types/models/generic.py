@@ -1,9 +1,13 @@
+import logging
+
 from django.db import models
 from django.template import Template, Context
+from django.core.exceptions import ValidationError
 
 from dominate.tags import div, form, button, h4
 
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
+from hs_core.hydroshare import utils
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
@@ -122,3 +126,22 @@ class GenericLogicalFile(AbstractLogicalFile):
         # this custom method MUST be used to create an instance of this class
         generic_metadata = GenericFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=generic_metadata)
+
+    @classmethod
+    def set_file_type(cls, resource, file_id, user):
+        """Makes any physical file part of a generic  logical file type. The physical file must
+        not be already be a part of any logical file type"""
+
+        # had to import it here to avoid import loop
+        from hs_core.views.utils import create_folder, remove_folder
+
+        log = logging.getLogger()
+
+        # get the resource file
+        res_file = utils.get_resource_file_by_id(resource, file_id)
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file is already part of a file type")
+        logical_file = GenericLogicalFile.create()
+        res_file.logical_file_content_object = logical_file
+        res_file.save()
+        log.info("Generic file type was set for file:{}.".format(res_file.storage_path))

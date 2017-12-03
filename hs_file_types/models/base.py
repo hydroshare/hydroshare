@@ -612,6 +612,16 @@ class AbstractLogicalFile(models.Model):
     def type_name(cls):
         return cls.__name__
 
+    @classmethod
+    def set_file_type(cls, resource, file_id, user):
+        """Sub classes must implement this method to create specific logical file type
+        :param resource: an instance of resource type CompositeResource
+        :param file_id: id of the resource file to be set as GeoRasterFile type
+        :param user: user who is setting the file type
+        :return:
+        """
+        raise NotImplementedError()
+
     @property
     def has_metadata(self):
         return hasattr(self, 'metadata')

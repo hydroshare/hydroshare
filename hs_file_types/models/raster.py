@@ -262,7 +262,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
         log = logging.getLogger()
 
-        # get the file from irods
+        # get the resource file
         res_file = utils.get_resource_file_by_id(resource, file_id)
 
         # base file name (no path included)
