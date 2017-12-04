@@ -1,6 +1,7 @@
 from haystack.forms import FacetedSearchForm
 from haystack.query import SQ
 from django import forms
+from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, UnhandledException
 
 
 class DiscoveryForm(FacetedSearchForm):
@@ -39,9 +40,15 @@ class DiscoveryForm(FacetedSearchForm):
             # Thus "Industrial" does not match "Industrial" in the document according to
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
-            sqs = self.searchqueryset.all()\
-                .filter(SQ(text__startswith=cdata) | SQ(text=cdata))\
-                .filter(is_replaced_by=False)
+            sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+            try:
+                parser = ParseSQ()
+                parsed = parser.parse(cdata)
+                sqs = sqs.filter(parsed)
+            except UnhandledException:
+                sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+            except NoMatchingBracketsFound:
+                sqs = self.searchqueryset.all().filter(is_replaced_by=False)
 
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
