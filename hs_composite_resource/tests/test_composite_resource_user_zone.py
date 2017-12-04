@@ -71,8 +71,9 @@ class CompositeResourceTest(TestCaseCommonUtilities, TransactionTestCase):
                                                 user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
         self.assertEqual(self.composite_resource.resource_federation_path, fed_path)
 
-        # there should not be any GenericLogicalFile object at this point
-        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # Deprecated: there should not be any GenericLogicalFile object at this point
+        # Issue 2456 Create composite with uploaded file now part of logical file
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
         # set the logical file - which get sets as part of the post resource creation signal
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
