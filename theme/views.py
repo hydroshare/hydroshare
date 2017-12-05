@@ -1,4 +1,4 @@
-from json import dumps, loads
+from json import dumps, loads, load
 import requests
 import time
 import os
@@ -36,7 +36,7 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command, authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey
+from hs_core.hydroshare.utils import get_resource_by_shortkey, get_file_from_irods
 from hs_core.models import ResourceFile
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
@@ -427,6 +427,7 @@ def create_scidas_virtual_app(request, res_id, cluster):
     if cluster_name != 'chameleon' and cluster_name != 'aws' and cluster_name != 'azure':
         cluster_name = ''
     file_data_list = []
+    p_data = {}
     file_path = '/'+ds.IRODS_ZONE+'/home/'+ds.IRODS_USERNAME
     for rf in ResourceFile.objects.filter(object_id=res.id):
         fname = ''
@@ -436,38 +437,48 @@ def create_scidas_virtual_app(request, res_id, cluster):
             fname = rf.fed_resource_file.name
         if fname:
             file_data_list.append(fname)
+            if fname.endswith('.json') and not p_data:
+                temp_json_file = get_file_from_irods(rf)
+                with open(temp_json_file, 'r') as fp:
+                    jdata = load(fp)
+                    if 'id' in jdata and 'containers' in jdata:
+                        p_data = jdata
 
     if not file_data_list:
         # for an empty resource, use the default scidasZone path for network-aware placement
         file_data_list.append("/scidasZone/home/wpoehlm/test.txt")
 
-    app_id = 'hs-jupyter'
     url = "http://sc17demo1.scidas.org:9090/appliance"
-    p_data = {
-        "id": app_id,
-         "containers": [
-            {
-              "id": app_id,
-              "image": "scidas/irods-jupyter-hydroshare",
-              "resources": {
-                "cpus": 2,
-                "mem": 2048
-              },
-              "port_mappings": [
+    app_id = 'hs-jupyter'
+    if not p_data:
+        p_data = {
+            "id": app_id,
+             "containers": [
                 {
-                  "container_port": 8888,
-                  "host_port": 0,
-                  "protocol": "tcp"
+                  "id": app_id,
+                  "image": "scidas/irods-jupyter-hydroshare",
+                  "resources": {
+                    "cpus": 2,
+                    "mem": 2048
+                  },
+                  "port_mappings": [
+                    {
+                      "container_port": 8888,
+                      "host_port": 0,
+                      "protocol": "tcp"
+                    }
+                  ],
+                  "args": [
+                    "--ip=0.0.0.0",
+                    "--NotebookApp.token=\"\""
+                  ],
+                  "data": file_data_list
                 }
-              ],
-              "args": [
-                "--ip=0.0.0.0",
-                "--NotebookApp.token=\"\""
-              ],
-              "data": file_data_list
-            }
-        ]
-    }
+            ]
+        }
+    else:
+        app_id = p_data['id']
+        p_data['containers'][0]['data'] = file_data_list
 
     if cluster_name:
         p_data['containers'][0]['cluster'] = cluster_name
