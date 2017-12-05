@@ -33,6 +33,7 @@ local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_setti
 #
 # DASHBOARD_TAGS = (
 #     ("blog_tags.quick_blog", "mezzanine_tags.app_list"),
+#     ("comment_tags.recent_comments",),
 #     ("mezzanine_tags.recent_actions",),
 # )
 
@@ -240,6 +241,12 @@ MEDIA_ROOT = os.path.join(PROJECT_ROOT, *MEDIA_URL.strip("/").split("/"))
 
 # Package/module name to import the root urlpatterns from for the project.
 ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
+
+# Put strings here, like "/home/html/django_templates"
+# or "C:/www/django/templates".
+# Always use forward slashes, even on Windows.
+# Don't forget to use absolute paths, not relative paths.
+TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
 ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
 INPLACE_SAVE_URL = '/hsapi/save_inline/'
@@ -473,6 +480,7 @@ DEBUG_TOOLBAR_CONFIG = {"INTERCEPT_REDIRECTS": False}
 local_settings = __import__(local_settings_module, globals(), locals(), ['*'])
 for k in dir(local_settings):
     locals()[k] = getattr(local_settings, k)
+
 
 ####################
 # DYNAMIC SETTINGS #

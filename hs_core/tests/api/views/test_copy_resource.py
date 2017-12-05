@@ -49,7 +49,7 @@ class TestCopyResource(MockIRODSTestCaseMixin, ViewTestCase):
         request.user = self.user
 
         self.add_session_to_request(request)
-        response = copy_resource(request, shortkey=self.gen_res.short_id)
+        response = copy_resource(request, short_id=self.gen_res.short_id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         res_id = response.url.split('/')[2]
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)

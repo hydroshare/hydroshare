@@ -63,6 +63,7 @@ from . import resource_folder_rest_api
 from . import debug_resource_view
 
 __all__ = [
+    'copy_resource',
     'short_url',
     'discovery_view',
     'discovery_json_view',
@@ -608,7 +609,6 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
             content_type="application/json"
         )
 
-@api_view(['POST'])
 def copy_resource(request, short_id):
     res, authorized, user = authorize(request, short_id,
                                       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
