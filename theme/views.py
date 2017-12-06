@@ -36,8 +36,8 @@ from mezzanine.accounts.forms import LoginForm
 from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command, authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_file_from_irods
-from hs_core.models import ResourceFile
+from hs_core.hydroshare.utils import get_file_from_irods
+from hs_core.models import ResourceFile, get_user
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
@@ -422,6 +422,11 @@ def create_irods_account(request):
 
 
 def create_scidas_virtual_app(request, res_id, cluster):
+    user = get_user(request)
+    if not user.is_authenticated() or not user.is_active:
+        messages.error(request, "Only authorized user can make appliance provision request.")
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     res, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     cluster_name = cluster
     if cluster_name != 'chameleon' and cluster_name != 'aws' and cluster_name != 'azure':
