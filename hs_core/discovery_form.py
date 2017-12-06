@@ -183,4 +183,3 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(units_names_sq)
 
         return sqs
-
