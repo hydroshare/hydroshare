@@ -21,11 +21,14 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from celery import shared_task
 
-from hs_core.models import BaseResource
+from hs_core.models import BaseResource, FedStorage
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
+from django_irods.storage import IrodsStorage
+from theme.models import UserQuota, QuotaMessage
+from theme.utils import get_quota_message
 
 from django_irods.icommands import SessionException
 
@@ -259,3 +262,104 @@ def create_bag_by_irods(resource_id):
     else:
         logger.error('Resource does not exist.')
         return False
+
+@shared_task
+def update_quota_usage(username):
+    """update quota usage. This function runs as a celery task, invoked asynchronously with 1
+    minute delay to give enough time for iRODS real time quota update micro-services to update
+    quota usage AVU for the user before this celery task to check this AVU to get the updated
+    quota usage for the user. Note iRODS micro-service quota update only happens on HydroShare
+    iRODS data zone and user zone independently, so the aggregation of usage in both zones need
+    to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
+    internal zone.
+    :param
+    username: the name of the user that needs to update quota usage for.
+    :return: True if quota usage update succeeds;
+             False if there is an exception raised or quota cannot be updated. See log for details.
+    """
+    if not username:
+        return False
+
+    hs_internal_zone = "hydroshare_internal"
+    uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
+    if uq is None:
+        # the quota row does not exist in Django
+        logger.error('quota row does not exist in Django for hydroshare_internal zone for user '
+                     + username)
+        return False
+
+    if not QuotaMessage.objects.exists():
+        QuotaMessage.objects.create()
+    qmsg = QuotaMessage.objects.first()
+
+    attname = username + '-quota'
+    # get quota size for the user in iRODS data zone
+    try:
+        istorage = IrodsStorage()
+        uqDataZoneSize = istorage.getAVU(settings.IRODS_USERNAME, attname, type='-u')
+        uqDataZoneSize = float(uqDataZoneSize)
+        if uqDataZoneSize is None:
+            # user may not have resources in data zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqDataZoneSize = -1
+    except SessionException as ex:
+        # user may not have resources in data zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqDataZoneSize = -1
+
+    # get quota size for the user in iRODS user zone
+    try:
+        istorage = FedStorage()
+        uqUserZoneSize = istorage.getAVU(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                         attname, type='-u')
+        uqUserZoneSize = float(uqUserZoneSize)
+        if uqUserZoneSize is None:
+            # user may not have resources in user zone, so corresponding quota size AVU may not
+            # exist for this user
+            uqUserZoneSize = -1
+    except SessionException as ex:
+        # user may not have resources in user zone, so corresponding quota size AVU may not exist
+        # for this user
+        uqUserZoneSize = -1
+
+    if uqDataZoneSize < 0 and uqUserZoneSize < 0:
+        logger.error('no quota size AVU in data zone and user zone for the user ' + username)
+        return False
+    elif uqUserZoneSize < 0:
+        used_val = uqDataZoneSize
+    elif uqDataZoneSize < 0:
+        used_val = uqUserZoneSize
+    else:
+        used_val = uqDataZoneSize + uqUserZoneSize
+
+    uq.update_used_value(used_val)
+
+    used_percent = uq.used_percent
+    if used_percent >= qmsg.soft_limit_percent:
+        if used_percent >= 100 and used_percent < qmsg.hard_limit_percent:
+            if uq.remaining_grace_period < 0:
+                # triggers grace period counting
+                uq.remaining_grace_period = qmsg.grace_period
+            elif uq.remaining_grace_period > 0:
+                # reduce remaining_grace_period by one day
+                uq.remaining_grace_period -= 1
+        elif used_percent >= qmsg.hard_limit_percent:
+            # set grace period to 0 when user quota exceeds hard limit
+            uq.remaining_grace_period = 0
+        uq.save()
+        user = uq.user
+        uemail = user.email
+        msg_str = 'Dear ' + username + ':\n\n'
+        msg_str += get_quota_message(user)
+
+        msg_str += '\n\nHydroShare Support'
+        subject = 'Quota warning'
+        # send email for people monitoring and follow-up as needed
+        send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
+                  [uemail])
+    else:
+        if uq.remaining_grace_period >= 0:
+            # turn grace period off now that the user is below quota soft limit
+            uq.remaining_grace_period = -1
+            uq.save()
+    return True
