@@ -152,40 +152,41 @@
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
+        {% if request.user.is_authenticated or relevant_tools %}
         <span id="apps-dropdown"/>
-        {% if request.user.is_authenticated %}
-            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
+          <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
                 <span class="caret"></span></button>
-            <ul class="dropdown-menu">
-              <li title="scidas-optimal">
-                <a href="{% url 'scidas_virtual_app' cm.short_id 'optimal' %}">
-                    <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
-                    <span>JupyterHub Appliance (Optimal)</span>
-                </a>
-              </li>
-              <li title="scidas-aws">
-                <a href="{% url 'scidas_virtual_app' cm.short_id 'aws' %}">
-                    <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
-                    <span>JupyterHub Appliance (AWS)</span>
-                </a>
-              </li>
-              <li title="scidas-azure">
-                <a href="{% url 'scidas_virtual_app' cm.short_id 'azure' %}">
-                    <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
-                    <span>JupyterHub Appliance (Azure)</span>
-                </a>
-              </li>
-              <li title="scidas">
-                <a href="{% url 'scidas_virtual_app' cm.short_id 'chameleon' %}">
-                    <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
-                    <span>JupyterHub Appliance (Chameleon)</span>
-                </a>
-              </li>
-          {% endif %}
-          {% if relevant_tools %}
-            {% for tool in relevant_tools %}
+          <ul class="dropdown-menu">
+            {% if request.user.is_authenticated %}
+                <li title="scidas-optimal">
+                  <a href="{% url 'scidas_virtual_app' cm.short_id 'optimal' %}">
+                      <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                      <span>JupyterHub Appliance (Optimal)</span>
+                  </a>
+                </li>
+                <li title="scidas-aws">
+                  <a href="{% url 'scidas_virtual_app' cm.short_id 'aws' %}">
+                      <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                      <span>JupyterHub Appliance (AWS)</span>
+                  </a>
+                </li>
+                <li title="scidas-azure">
+                  <a href="{% url 'scidas_virtual_app' cm.short_id 'azure' %}">
+                      <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                      <span>JupyterHub Appliance (Azure)</span>
+                  </a>
+                </li>
+                <li title="scidas">
+                  <a href="{% url 'scidas_virtual_app' cm.short_id 'chameleon' %}">
+                      <img class="dropdown-user-webapp-icon" src="/static/img/scidas_logo.jpg">
+                      <span>JupyterHub Appliance (Chameleon)</span>
+                  </a>
+                </li>
+            {% endif %}
+            {% if relevant_tools %}
+              {% for tool in relevant_tools %}
                 <li title="{{ tool.title }}">
-        <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
+                <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
                         <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
                         {% if tool.title|length > 20 %}
                             <span>{{ tool.title|slice:":21"|add:"..." }}</span>
@@ -194,10 +195,10 @@
                         {% endif %}
                     </a>
                 </li>
-            {% endfor %}
-          {% endif %}
-        </ul>
-
+              {% endfor %}
+            {% endif %}
+          </ul>
+        {% endif %}
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"
