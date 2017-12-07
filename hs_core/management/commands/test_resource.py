@@ -1,8 +1,12 @@
 """This does a comprehensive test of a resource.
 
-It checks iRODS synchronization, logical files, and bag function
+This checks:
+* IRODS files
+* IRODS AVU values
+* Existence of Logical files
 
-* By default, prints errors on stdout.
+Notes:
+* By default, this script prints errors on stdout.
 * Optional argument --log: logs output to system log.
 """
 
@@ -31,13 +35,13 @@ class TestResource(object):
             return value
         except SessionException:
             self.label()
-            print("  AVU {} WAS NOT FOUND.".format(label))
+            print("  AVU {} NOT FOUND.".format(label))
             return None
 
     def test(self):
         """ Test view for resource depicts output of various integrity checking scripts """
 
-        # print("TESTING {}".format(self.short_id))
+        # print("TESTING {}".format(self.short_id))  # leave this for debugging
 
         try:
             res = BaseResource.objects.get(short_id=self.short_id)
@@ -58,11 +62,11 @@ class TestResource(object):
             value = self.test_avu(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
-                print("  resourceType is {}, should be {}".format(value,
-                                                                  self.resource.resource_type))
+                print("  AVU resourceType is {}, should be {}".format(value,
+                                                                      self.resource.resource_type))
             if a == 'isPublic' and value is not None and value != self.resource.raccess.public:
                 self.label()
-                print("  isPublic AVU is {}, but public is {}".format(value,
+                print("  AVU isPublic is {}, but public is {}".format(value,
                                                                       self.resource.raccess.public))
 
         irods_issues, irods_errors = self.resource.check_irods_files(log_errors=False,
