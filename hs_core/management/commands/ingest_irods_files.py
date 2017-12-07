@@ -159,7 +159,9 @@ class Command(BaseCommand):
 
                 # Pabitra: Not sure why are we skipping other resource types
                 if resource.resource_type != 'CompositeResource' and \
-                   resource.resource_type != 'GenericResource':
+                   resource.resource_type != 'GenericResource' and \
+                   resource.resource_type != 'ModelInstanceResource' and \
+                   resource.resource_type != 'ModelProgramResource':
                     print("resource {} has type {}: skipping".format(resource.short_id,
                                                                      resource.resource_type))
                 else:
@@ -179,7 +181,9 @@ class Command(BaseCommand):
             for r in BaseResource.objects.all():
                 # Pabitra: Not sure why are we skipping other resource types
                 if r.resource_type == 'CompositeResource' or \
-                   r.resource_type == 'GenericResource':
+                   r.resource_type == 'GenericResource' or \
+                   r.resource_type == 'ModelInstanceResource' or \
+                   r.resource_type == 'ModelProgramResource': 
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
                     # get the typed resource
