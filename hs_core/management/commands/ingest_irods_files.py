@@ -183,7 +183,7 @@ class Command(BaseCommand):
                 if r.resource_type == 'CompositeResource' or \
                    r.resource_type == 'GenericResource' or \
                    r.resource_type == 'ModelInstanceResource' or \
-                   r.resource_type == 'ModelProgramResource': 
+                   r.resource_type == 'ModelProgramResource':
                     print("LOOKING FOR UNREGISTERED IRODS FILES FOR RESOURCE {} (current files {})"
                           .format(r.short_id, str(r.files.all().count())))
                     # get the typed resource
