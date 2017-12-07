@@ -397,22 +397,14 @@ def create_resource(
             resource.extra_metadata = extra_metadata
             resource.save()
 
-        fed_zone_home_path = ''
         if fed_res_path:
             resource.resource_federation_path = fed_res_path
-            fed_zone_home_path = fed_res_path
             resource.save()
 
         # TODO: It would be safer to require an explicit zone path rather than harvesting file path
         elif len(source_names) > 0:
-            fed_zone_home_path = utils.get_federated_zone_home_path(source_names[0])
-            resource.resource_federation_path = fed_zone_home_path
+            resource.resource_federation_path = utils.get_federated_zone_home_path(source_names[0])
             resource.save()
-
-        # set quota of this resource to this creator - have to set quota holder on the resource
-        # before adding files to the resource so that iRODS quota usage computation services
-        # can attribute the newly added files to the right quota holder
-        resource.set_quota_holder(owner, owner)
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
@@ -474,6 +466,7 @@ def create_resource(
 
             resource.title = resource.metadata.title.value
             resource.save()
+
         if create_bag:
             hs_bagit.create_bag(resource)
 
@@ -482,6 +475,9 @@ def create_resource(
 
     # set the resource type (which is immutable)
     resource.setAVU("resourceType", resource._meta.object_name)
+
+    # set quota of this resource to this creator
+    resource.set_quota_holder(owner, owner)
 
     return resource
 

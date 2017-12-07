@@ -1145,18 +1145,25 @@ def create_resource(request, *args, **kwargs):
         ajax_response_data['message'] = ex.message
         return JsonResponse(ajax_response_data)
 
-    resource = hydroshare.create_resource(
-            resource_type=request.POST['resource-type'],
-            owner=request.user,
-            title=res_title,
-            metadata=metadata,
-            files=resource_files,
-            source_names=source_names,
-            # TODO: should probably be resource_federation_path like it is set to.
-            fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
-            move=(fed_copy_or_move == 'move'),
-            content=res_title
-    )
+    try:
+        resource = hydroshare.create_resource(
+                resource_type=request.POST['resource-type'],
+                owner=request.user,
+                title=res_title,
+                metadata=metadata,
+                files=resource_files,
+                source_names=source_names,
+                # TODO: should probably be resource_federation_path like it is set to.
+                fed_res_path=fed_res_path[0] if len(fed_res_path) == 1 else '',
+                move=(fed_copy_or_move == 'move'),
+                content=res_title
+        )
+    except SessionException as ex:
+        ajax_response_data['message'] = ex.stderr
+        return JsonResponse(ajax_response_data)
+    except Exception as ex:
+        ajax_response_data['message'] = ex.message
+        return JsonResponse(ajax_response_data)
 
     try:
         utils.resource_post_create_actions(request=request, resource=resource,
