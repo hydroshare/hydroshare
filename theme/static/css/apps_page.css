@@ -1,0 +1,76 @@
+.apps-container {
+  border-top: 1px solid #cdcdcd;
+  border-bottom: 1px solid #cdcdcd;
+  background: #efefef;
+  margin-bottom: 0;
+}
+
+.webapp-listing {
+    min-height: 250px;
+    position: relative;
+    background: white;
+    border: 1px solid #cdcdcd;
+    width: 250px;
+    margin: 15px auto 30px auto;
+}
+
+.webapp-listing .app-description {
+  display: none;
+  position: absolute;
+  top: 0px;
+  font-size: 12px;
+  left: 0px;
+  right: 0;
+  bottom: 0;
+  background: white;
+  padding: 29px 9px 17px 9px;
+}
+
+.webapp-listing img {
+    max-height: 205px;
+    max-width: 100%;
+    background-position: 50% 50%;
+    position: absolute;
+    top: calc(50% - 23px);
+    left: 50%;
+    margin: auto;
+    transform: translate(-50%, -50%);
+}
+
+.webapp-listing h3 {
+    position: absolute;
+    background: #093e54;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: .5em;
+    color: #B5E655;
+    height: 45px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 20px;
+}
+
+.webapp-listing .app-info-toggle {
+  position: absolute;
+  left: 10px;
+  top: 6px;
+  height: 18px;
+  width: 18px;
+  font-size: 13px;
+  background: white;
+  border-radius: 50%;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 0 1px #000;
+}
+
+a.webapp-link {
+    color: #B5E655;
+    position: relative;
+    height: 250px;
+    display: block;
+}
+

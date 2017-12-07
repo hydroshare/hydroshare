@@ -50,6 +50,7 @@ from . import resource_folder_hierarchy
 from . import resource_access_api
 from . import resource_folder_rest_api
 from . import debug_resource_view
+from . import apps
 
 from hs_core.hydroshare import utils
 
@@ -328,6 +329,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
                     if is_add_success:
                         resource_modified(res, request.user, overwrite_bag=False)
+                        if res.resource_type == "TimeSeriesResource" and element_name != "subject":
+                            res.metadata.is_dirty = True
+                            res.metadata.save()
                 elif "errors" in response:
                     err_msg = err_msg.format(element_name, response['errors'])
 
@@ -418,6 +422,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.update_public_and_discoverable()
                 if is_update_success:
                     resource_modified(res, request.user, overwrite_bag=False)
+                    if res.resource_type == "TimeSeriesResource" and element_name != "subject":
+                        res.metadata.is_dirty = True
+                        res.metadata.save()
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -430,7 +437,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
-            if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
+            if element_name.lower() == 'site' and (res.resource_type == 'TimeSeriesResource' or
+                                                   res.resource_type == 'CompositeResource'):
                 # get the spatial coverage element
                 spatial_coverage_dict = get_coverage_data_dict(res)
                 ajax_response_data = {'status': 'success',

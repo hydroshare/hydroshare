@@ -17,25 +17,45 @@ function label_ajax_submit() {
         data: datastring,
         success: function (result) {
             var json_response = JSON.parse(result);
-            if (json_response.status == "success") {
-
+            if (json_response.status === "success") {
                 var action = form.find("input[name='action']");
-                if (json_response.action == "CREATE") {
+
+                if (json_response.action === "CREATE")
+                {
                     action.val("DELETE");
-                    $("#btnMyResources").removeClass("btn-resource-add");
-                    $("#btnMyResources").addClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Remove from my resources");
+                    if (dataFormID == "form-add-to-my-resources")
+                    {
+                        $("#btnMyResources").removeClass("btn-resource-add");
+                        $("#btnMyResources").addClass("btn-resource-remove");
+                        $("#btnMyResources").attr("data-original-title", "Remove from my resources");
+                    }
+                    else if (dataFormID == "form-add-open-with-app")
+                    {
+                        $("#btnOpenWithApp").removeClass("btn-resource-add");
+                        $("#btnOpenWithApp").addClass("btn-resource-remove");
+                        $("#btnOpenWithApp").attr("data-original-title", "Remove WebApp from OpenWith list");
+                    }
                 }
-                else {
+                else
+                {
                     action.val("CREATE");
-                    $("#btnMyResources").addClass("btn-resource-add");
-                    $("#btnMyResources").removeClass("btn-resource-remove");
-                    $("#btnMyResources").attr("title", "Add to my resources");
+                    if (dataFormID == "form-add-to-my-resources") {
+                        $("#btnMyResources").addClass("btn-resource-add");
+                        $("#btnMyResources").removeClass("btn-resource-remove");
+                        $("#btnMyResources").attr("data-original-title", "Add to my resources");
+                    }
+                    else if (dataFormID == "form-add-open-with-app")
+                    {
+                         $("#btnOpenWithApp").addClass("btn-resource-add");
+                         $("#btnOpenWithApp").removeClass("btn-resource-remove");
+                         $("#btnOpenWithApp").attr("data-original-title", "Add WebApp to OpenWith list");
+                    }
                 }
+                $("#btnMyResources").tooltip('show')
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-
+            console.log(errorThrown);
         }
     });
     //don't submit the form
@@ -568,7 +588,11 @@ function metadata_update_ajax_submit(form_id){
                 if (json_response.logical_file_type === "NetCDFLogicalFile"){
                     $("#div-netcdf-file-update").show();
                 }
-
+                // show update sqlite file update option for TimeSeriesLogicalFile
+                if (json_response.logical_file_type === "TimeSeriesLogicalFile"  &&
+                    json_response.is_dirty && json_response.can_update_sqlite) {
+                    $("#div-sqlite-file-update").show();
+                }
                 // show update netcdf resource
                 if (resourceType === 'Multidimensional (NetCDF)' &&
                     json_response.is_dirty) {
@@ -576,16 +600,16 @@ function metadata_update_ajax_submit(form_id){
                 }
 
                 // start timeseries resource specific DOM manipulation
-                if ($("#can-update-sqlite-file").val() === "True") {
-                    $("#sql-file-update").show();
-                }
-                else if(json_response.metadata_status === "Sufficient to publish or make public"){
-                    $("#sql-file-update").show();
+                if(resourceType === 'Time Series') {
+                    if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True" || json_response.is_dirty)) {
+                        $("#sql-file-update").show();
+                    }
                 }
 
                 // dynamically update resource coverage when timeseries 'site' element gets updated or
                 // file type 'coverage' element gets updated for composite resource
-                if ((json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series') ||
+                if ((json_response.element_name.toLowerCase() === 'site' && (resourceType === 'Time Series' ||
+                        json_response.logical_file_type === "TimeSeriesLogicalFile" )) ||
                     (json_response.element_name.toLowerCase() === 'coverage' && resourceType === 'Composite Resource')){
                     if (json_response.hasOwnProperty('temporal_coverage') && resourceType === 'Composite Resource'){
                         var temporalCoverage = json_response.temporal_coverage;
@@ -597,16 +621,16 @@ function metadata_update_ajax_submit(form_id){
                         updateResourceSpatialCoverage(spatialCoverage);
                     }
                 }
-                if (($form.attr("id") == "id-site")){
+                if ($form.attr("id") == "id-site" || $form.attr("id") == "id-site-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
                 }
-                else if (($form.attr("id") == "id-variable")){
+                else if ($form.attr("id") == "id-variable" || $form.attr("id") == "id-variable-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_variable");
                 }
-                else if (($form.attr("id") == "id-method")){
+                else if ($form.attr("id") == "id-method" || $form.attr("id") == "id-method-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_method");
                 }
-                else if (($form.attr("id") == "id-processinglevel")){
+                else if ($form.attr("id") == "id-processinglevel" || $form.attr("id") == "id-processinglevel-file-type"){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_processinglevel");
                 }
                 // end of timeseries specific DOM manipulation
@@ -662,6 +686,7 @@ function metadata_update_ajax_submit(form_id){
                                 }
                             }
                             $("#missing-metadata-or-file:not(.persistent)").fadeOut();
+                            $("#missing-metadata-file-type:not(.persistent)").fadeOut();
                         }
                     }
                 }
@@ -863,7 +888,38 @@ function update_netcdf_file_ajax_submit() {
                     $(".alert-success").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
-                showFileTypeMetadata();
+                 showFileTypeMetadata(false, "");
+            }
+            else {
+                display_error_message("File update.", json_response.message);
+            }
+        }
+    });
+}
+
+function update_sqlite_file_ajax_submit() {
+    var $alert_success = '<div class="alert alert-success" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Success! </strong> \
+        File update was successful.\
+    </div>';
+
+    var url = $('#update-sqlite-file').attr("action");
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            json_response = JSON.parse(result);
+            if (json_response.status === 'success') {
+                $("#div-sqlite-file-update").hide();
+                $alert_success = $alert_success.replace("File update was successful.", json_response.message);
+                $("#fb-inner-controls").before($alert_success);
+                $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-success").alert('close');
+                });
+                // refetch file metadata to show the updated header file info
+                showFileTypeMetadata(false, "");
             }
             else {
                 display_error_message("File update.", json_response.message);
@@ -1371,6 +1427,38 @@ function initializeDatePickers(){
     });
 }
 
+function updateEditCoverageState() {
+    // Set state for composite resource file metadata editing
+    chkBox = $("#id-coverage-spatial-filetype #id_type_1");
+    chkPoint = $("#id-coverage-spatial-filetype #id_type_2");
+
+    if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
+        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
+    }
+    else {
+        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
+    }
+
+    if (chkBox.prop("checked")) {
+        // coverage type is box
+        $("#id_north_filetype").parent().closest("#div_id_north").hide();
+        $("#id_east_filetype").parent().closest("#div_id_east").hide();
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
+    }
+    else {
+        // coverage type is point
+        $("#id_north_filetype").parent().closest("#div_id_north").show();
+        $("#id_east_filetype").parent().closest("#div_id_east").show();
+        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+    }
+}
+
 // act on spatial coverage type change
 function setFileTypeSpatialCoverageFormFields(logical_type){
     // Don't allow the user to change the coverage type
@@ -1389,31 +1477,12 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
-        $id_type_filetype_div.find("input:radio").change(function () {
-        if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
-            // coverage type is box
-            $("#id_north_filetype").parent().closest("#div_id_north").hide();
-            $("#id_east_filetype").parent().closest("#div_id_east").hide();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
-        }
-        else {
-            // coverage type is point
-            $("#id_north_filetype").parent().closest("#div_id_north").show();
-            $("#id_east_filetype").parent().closest("#div_id_east").show();
-            $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
-            $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
-            $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
-            $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
-        }
-        });
+        $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
     }
 
     // #id_type_1 is the box radio button
     if ($id_type_filetype_div.find("#id_type_1").attr("checked") == "checked" ||
-        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile')) {
+        (logical_type != 'GeoFeatureLogicalFile' && logical_type != 'RefTimeseriesLogicalFile' && logical_type != 'GenericLogicalFile')) {
         // coverage type is box
         $("#id_north_filetype").parent().closest("#div_id_north").hide();
         $("#id_east_filetype").parent().closest("#div_id_east").hide();
@@ -1493,7 +1562,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
 function setFileTypeMetadataFormsClickHandlers(){
     $("#fileTypeMetaDataTab").find('form').each(function () {
         var formId = $(this).attr('id');
-        if (formId !== "update-netcdf-file" && formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
+        if (formId !== "update-netcdf-file" && formId !== "update-sqlite-file"&& formId !== "id-keywords-filetype" && formId !== "add-keyvalue-filetype-metadata") {
               $(this).find("button.btn-primary").click(function () {
                 metadata_update_ajax_submit(formId);
               });

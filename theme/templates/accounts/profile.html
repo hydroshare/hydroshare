@@ -67,24 +67,7 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
-
-                                    <div id="change_password" class="collapse text-left">
-                                        <fieldset>
-                                            <label>Password</label>
-                                            <input class="form-control" autocomplete="off" id="id_password1" name="password1"
-                                                   placeholder="Password"
-                                                   type="password">
-
-                                            <small class="text-muted">Leave blank unless you want to change your password</small>
-                                        </fieldset>
-                                        <fieldset>
-                                            <label>Password (again)</label>
-                                            <input class="form-control" autocomplete="off" id="id_password2" name="password2"
-                                                   placeholder="Password (again)" type="password">
-                                        </fieldset>
-                                        <hr>
-                                    </div>
+                                    <div><a href="/accounts/update">Change password</a></div>
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
@@ -162,8 +145,8 @@
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
                                         <label>Organization *</label>
-                                        <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-                                        <small class="text-muted">The name of the organization you work for.</small>
+                                        <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                        <br /><small class="text-muted">The names of the organizations you are associated with.</small><br />
                                     </fieldset>
 
                                     {# Title #}
@@ -319,7 +302,9 @@
 
                                     <div class="panel-body">
                                         <div data-page-mode="view">
-                                            {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
+                                            {% if profile.details %}
+                                            <div id="profile-description">{{ profile.details }}</div><hr>
+                                            {% endif %}
 
                                             <table class="overview" data-page-mode="view">
                                                 <tbody>
@@ -342,7 +327,11 @@
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
-                                                    <td><span class="text-muted">User (username: <strong>{{ profile_user.username }}</strong>) since</span></td>
+                                                    <td class="text-muted">Username: </td>
+                                                    <td>{{ profile_user.username }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><span class="text-muted">User since: </span></td>
                                                     <td>{{ profile_user.date_joined }}</td>
                                                 </tr>
                                                 </tbody>
@@ -350,11 +339,11 @@
                                             {% if profile_user.id == user.id %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
-                                                    <div class="text-muted">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% else %}
-                                                    <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
-                                                <div class="text-muted">{{ quota_message }}</div>
+                                                {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}    
                                         </div>
 
@@ -880,9 +869,28 @@
     </div>
 {% endblock %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
+  <style>
+    .tagsinput {
+      border: 1px solid #ccc;
+    }
+
+    .tagsinput div input::-webkit-input-placeholder {
+      color: #777;
+    }
+
+    .tagsinput .tag {
+      background: #DDD;
+      color: #111;
+    }
+  </style>
+{%  endblock %}
+
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/profile.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
 {% endblock %}
 

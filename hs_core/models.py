@@ -1752,8 +1752,23 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
 
                 # TODO: why does this only run when something becomes public?
                 # TODO: Should it be run when a NetcdfResource becomes private?
-                # run script to update hyrax input files when private netCDF resource changes state
-                if value and settings.RUN_HYRAX_UPDATE and self.resource_type == 'NetcdfResource':
+                # Answer to TODO above: it is intentional not to run it when a target resource
+                # becomes private for performance reasons. The nightly script run will clean up
+                # to make sure all private resources are not available to hyrax server as well as
+                # to make sure all resources files available to hyrax server are up to date with
+                # the HydroShare iRODS data store.
+
+                # run script to update hyrax input files when private netCDF resource becomes
+                # public or private composite resource that includes netCDF files becomes public
+
+                is_netcdf_to_public = False
+                if self.resource_type == 'NetcdfResource':
+                    is_netcdf_to_public = True
+                elif self.resource_type == 'CompositeResource' and \
+                        self.get_logical_files('NetCDFLogicalFile'):
+                    is_netcdf_to_public = True
+
+                if value and settings.RUN_HYRAX_UPDATE and is_netcdf_to_public:
                     run_script_to_update_hyrax_input_files(self.short_id)
 
     def set_require_download_agreement(self, user, value):
@@ -3028,6 +3043,27 @@ class ResourceFile(ResourceFileIRODSMixin):
         return self.logical_file is not None
 
     @property
+    def get_or_create_logical_file(self):
+        """
+        Create a logical file on the fly if it does not exist
+
+        This is a temporary fix just for release 1.14. It is expected that further
+        work on logical files will make this unnecessary.
+        """
+        # prevent import loops
+        from hs_file_types.models.generic import GenericLogicalFile
+        if self.content_object.resource_type == "CompositeResource":
+            if not self.has_logical_file:
+                logical_file = GenericLogicalFile.create()
+                self.logical_file_content_object = logical_file
+                self.save()
+                logger = logging.getLogger(__name__)
+                logger.warn("auto-create logical file for {}".format(self.storage_path))
+            return self.logical_file
+        else:
+            return None
+
+    @property
     def logical_file(self):
         """Return content_object of logical file."""
         return self.logical_file_content_object
@@ -3667,6 +3703,8 @@ class CoreMetaData(models.Model):
         missing_required_elements = []
 
         if not self.title:
+            missing_required_elements.append('Title')
+        elif self.title.value.lower() == 'untitled resource':
             missing_required_elements.append('Title')
         if not self.description:
             missing_required_elements.append('Abstract')
