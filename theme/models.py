@@ -186,6 +186,9 @@ class QuotaMessage(models.Model):
     hard_limit_percent = models.IntegerField(default=125)
     # grace period, default is 7 days
     grace_period = models.IntegerField(default=7)
+    # whether to enforce quota or not. Default is False, which can be changed to true from
+    # admin panel when needed
+    enforce_quota = models.BooleanField(default=False)
 
 
 class UserQuota(models.Model):

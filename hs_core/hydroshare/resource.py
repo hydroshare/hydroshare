@@ -29,6 +29,18 @@ METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 logger = logging.getLogger(__name__)
 
 
+def update_quota_usage(res):
+    from hs_core.tasks import update_quota_usage_task
+    quser = res.get_quota_holder()
+    if quser is None:
+        # no quota holder for this resource, this should not happen, but check just in case
+        logger.error('no quota holder is found for resource' + res.short_id)
+        return
+    # update quota usage by a celery task in 1 minute to give iRODS quota usage computation
+    # services enough time to finish before reflecting the quota usage in django DB
+    update_quota_usage_task.apply_async((quser.username,), countdown=60)
+
+
 def get_resource(pk):
     """
     Retrieve an instance of type Bags associated with the resource identified by **pk**
@@ -397,6 +409,11 @@ def create_resource(
             resource.resource_federation_path = fed_zone_home_path
             resource.save()
 
+        # set quota of this resource to this creator - have to set quota holder on the resource
+        # before adding files to the resource so that iRODS quota usage computation services
+        # can attribute the newly added files to the right quota holder
+        resource.set_quota_holder(owner, owner)
+
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -465,9 +482,6 @@ def create_resource(
 
     # set the resource type (which is immutable)
     resource.setAVU("resourceType", resource._meta.object_name)
-
-    # set quota of this resource to this creator
-    resource.set_quota_holder(owner, owner)
 
     return resource
 
@@ -649,7 +663,9 @@ def add_resource_files(pk, *files, **kwargs):
     if not ret:
         # no file has been added, make sure data/contents directory exists if no file is added
         utils.create_empty_contents_directory(resource)
-
+    else:
+        # some file(s) added, need to update quota usage
+        update_quota_usage(resource)
     return ret
 
 
@@ -751,6 +767,10 @@ def delete_resource(pk):
             # also make this obsoleted resource editable now that it becomes the latest version
             obsolete_res.raccess.immutable = False
             obsolete_res.raccess.save()
+
+    # need to update quota usage when a resource is deleted
+    update_quota_usage(res)
+
     res.delete()
     return pk
 
@@ -780,6 +800,8 @@ def delete_resource_file_only(resource, f):
     """
     short_path = f.short_path
     f.delete()
+    # need to update quota usage when a file is deleted
+    update_quota_usage(resource)
     return short_path
 
 
@@ -865,6 +887,9 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
             # Pabitra: better to use f.delete() here and get rid of the
             # delete_resource_file_only() util function
+            # Hong: now that I am adding update_quota_usage() call in delete_resource_file_only(),
+            # there is merit to keep file deletion call in a util function so that some action
+            # can be bundled together with a file deletion operation
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django

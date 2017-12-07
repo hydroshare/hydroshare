@@ -263,8 +263,9 @@ def create_bag_by_irods(resource_id):
         logger.error('Resource does not exist.')
         return False
 
+
 @shared_task
-def update_quota_usage(username):
+def update_quota_usage_task(username):
     """update quota usage. This function runs as a celery task, invoked asynchronously with 1
     minute delay to give enough time for iRODS real time quota update micro-services to update
     quota usage AVU for the user before this celery task to check this AVU to get the updated
@@ -273,13 +274,10 @@ def update_quota_usage(username):
     to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
     internal zone.
     :param
-    username: the name of the user that needs to update quota usage for.
+    username: the name of the uuser that needs to update quota usage for.
     :return: True if quota usage update succeeds;
              False if there is an exception raised or quota cannot be updated. See log for details.
     """
-    if not username:
-        return False
-
     hs_internal_zone = "hydroshare_internal"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
