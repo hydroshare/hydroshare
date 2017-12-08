@@ -4,6 +4,7 @@
 
 {% block extra_head %}
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block meta_title %}Create resource{% endblock %}
@@ -369,6 +370,19 @@
                     </div>
 
                     <div class="col-xs-12 col-sm-4 col-md-3">
+                        <ul id="constraints" class="list-group">
+                            <li id="required-types" class="list-group-item list-group-item-success">The following file types are required:
+                                <span>
+                                </span>
+                            </li>
+                            <li id="res-empty" class="list-group-item list-group-item-danger">This resource must have content files.</li>
+                            <li id="single-file" class="list-group-item">
+                                Single file to upload must be of type <span id="single-file-type"></span>
+                            </li>
+                            <li id="same-file-names" class="list-group-item" >Your files must share the same file name.
+                            </li>
+                        </ul>
+
                         <ul class="list-group">
                             <li class="list-group-item">Files you upload here will be grouped together into a
                                 "Resource" in HydroShare.
