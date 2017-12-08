@@ -295,11 +295,12 @@ def update_quota_usage_task(username):
     try:
         istorage = IrodsStorage()
         uqDataZoneSize = istorage.getAVU(settings.IRODS_USERNAME, attname, type='-u')
-        uqDataZoneSize = float(uqDataZoneSize)
         if uqDataZoneSize is None:
             # user may not have resources in data zone, so corresponding quota size AVU may not
             # exist for this user
             uqDataZoneSize = -1
+        else:
+            uqDataZoneSize = float(uqDataZoneSize)
     except SessionException as ex:
         # user may not have resources in data zone, so corresponding quota size AVU may not exist
         # for this user
@@ -310,11 +311,12 @@ def update_quota_usage_task(username):
         istorage = FedStorage()
         uqUserZoneSize = istorage.getAVU(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                          attname, type='-u')
-        uqUserZoneSize = float(uqUserZoneSize)
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
             # exist for this user
             uqUserZoneSize = -1
+        else:
+            uqUserZoneSize = float(uqUserZoneSize)
     except SessionException as ex:
         # user may not have resources in user zone, so corresponding quota size AVU may not exist
         # for this user
