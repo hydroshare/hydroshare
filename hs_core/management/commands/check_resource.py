@@ -12,7 +12,7 @@ Notes:
 
 from django.core.management.base import BaseCommand
 from hs_core.models import BaseResource
-from hs_core.management.utils import TestResource
+from hs_core.management.utils import CheckResource
 
 
 class Command(BaseCommand):
@@ -34,7 +34,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
-                TestResource(rid).test()
+                CheckResource(rid).test()
         else:
             for r in BaseResource.objects.all():
-                TestResource(r.short_id).test()
+                CheckResource(r.short_id).test()

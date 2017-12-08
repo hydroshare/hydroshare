@@ -150,7 +150,7 @@ def check_for_dangling_irods(echo_errors=True, log_errors=False, return_errors=F
     return errors
 
 
-class TestResource(object):
+class CheckResource(object):
     header = False
 
     def __init__(self, short_id):
@@ -161,7 +161,7 @@ class TestResource(object):
             print("resource {}:".format(self.resource.short_id))
             self.header = True
 
-    def test_avu(self, label):
+    def check_avu(self, label):
         try:
             value = self.resource.getAVU(label)
             if value is None:
@@ -188,7 +188,7 @@ class TestResource(object):
 
         # skip federated resources if not configured to handle these
         if self.resource.is_federated and not settings.REMOTE_USE_IRODS:
-            msg = "test_resource: skipping check of federated resource {} in unfederated mode"\
+            msg = "check_resource: skipping check of federated resource {} in unfederated mode"\
                 .format(self.resource.short_id)
             print(msg)
 
@@ -200,7 +200,7 @@ class TestResource(object):
             return
 
         for a in ('bag_modified', 'isPublic', 'resourceType', 'quotaUserName'):
-            value = self.test_avu(a)
+            value = self.check_avu(a)
             if a == 'resourceType' and value is not None and value != self.resource.resource_type:
                 self.label()
                 print("  AVU resourceType is {}, should be {}".format(value,
