@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='identifiers',
-            field=django.contrib.postgres.fields.hstore.HStoreField(default={}),
+            field=django.contrib.postgres.fields.hstore.HStoreField(default={}, null=True, blank=True),
         ),
     ]
