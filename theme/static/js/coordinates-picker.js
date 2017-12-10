@@ -161,14 +161,10 @@ $(document).ready(function () {
                 currentInstance.find("input[data-map-item='northlimit']").val(bounds.north.toFixed(4));
                 currentInstance.find("input[data-map-item='eastlimit']").val(bounds.east.toFixed(4));
                 currentInstance.find("input[data-map-item='southlimit']").val(bounds.south.toFixed(4));
-                currentInstance.find("input[data-map-item='westlimit']").val(bounds.west.toFixed(4));
-
-                // Issue a text change
-                currentInstance.find("input[data-map-item='northlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='eastlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='southlimit']").trigger("change");
-                currentInstance.find("input[data-map-item='westlimit']").trigger("change");
-
+                var west_input_element = currentInstance.find("input[data-map-item='westlimit']");
+                west_input_element.val(bounds.west.toFixed(4));
+                // this trigger is needed to show the Save changes button
+                west_input_element.trigger('change');
                 $('#coordinates-picker-modal').modal('hide')
             });
         }
@@ -176,12 +172,10 @@ $(document).ready(function () {
             $("#btn-confirm-coordinates").unbind("click");
             $("#btn-confirm-coordinates").click(function () {
                 currentInstance.find("input[data-map-item='longitude']").val(coordinates.lng().toFixed(4));
-                currentInstance.find("input[data-map-item='latitude']").val(coordinates.lat().toFixed(4));
-
-                // Issue a text change
-                currentInstance.find("input[data-map-item='longitude']").trigger("change");
-                currentInstance.find("input[data-map-item='latitude']").trigger("change");
-
+                var lat_input_element = currentInstance.find("input[data-map-item='latitude']");
+                lat_input_element.val(coordinates.lat().toFixed(4));
+                // this trigger is needed to show the Save changes button
+                lat_input_element.trigger('change');
                 $('#coordinates-picker-modal').modal('hide')
             });
         }

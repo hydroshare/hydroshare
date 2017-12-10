@@ -4,62 +4,50 @@
 
 {% block main_cols %}col-md-6{% endblock %}
 
-{% block meta_title %}Sign In{% endblock %}
-
 {% block main %}
-<div class="container">
-    <div class="row">
-        {% if request.user.is_authenticated %}
-        <div class="col-xs-12 col-sm-6">
-            <p>{% trans "You're already signed in. If you'd like to sign in as a different user, you'll need to sign out first." %}</p>
-        </div>
-        {% else %}
-            {{ block.super }}
+    <div class="container">
+    {% if request.user.is_authenticated %}
+        <p>{% trans "You're already signed in. If you'd like to sign in as a different user, you'll need to sign out first." %}</p>
+    {% else %}
+        {{ block.super }}
 
-        <div class="col-xs-12">
-            <h2 class="page-title">Sign In</h2>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-            <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
-                {% csrf_token %}
+        <h2>Sign In</h2>
+        <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+            {% csrf_token %}
 
-                {% if form.non_field_errors %}
-                    <div class="form-errors">
-                        <div class="alert alert-danger non-field-error">
-                            {{ form.non_field_errors }}
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    <div class="alert alert-danger non-field-error">
+                        {{ form.non_field_errors }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <fieldset>
+                <div class="row">
+                    {% include "includes/checkbox_field.html" with field=form.username  field_classes="col-md-12" %}
+                </div>
+
+                <div class="row">
+                    {% include "includes/checkbox_field.html" with field=form.password  field_classes="col-md-12" %}
+                </div>
+
+                <input type="hidden" name="next" value="{{ request.GET.next }}" />
+
+                {% block account_form_actions %}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <input class="btn btn-primary" type="submit" value="Sign In">
                         </div>
                     </div>
-                {% endif %}
+                {% endblock %}
+            </fieldset>
+        </form>
 
-                <fieldset>
-                    <div class="row">
-                        {% include "includes/checkbox_field.html" with field=form.username  field_classes="col-md-12" %}
-                    </div>
-
-                    <div class="row">
-                        {% include "includes/checkbox_field.html" with field=form.password  field_classes="col-md-12" %}
-                    </div>
-
-                    <input type="hidden" name="next" value="{{ request.GET.next }}" />
-
-                    {% block account_form_actions %}
-                        <div class="row">
-                            <div class="col-md-12">
-                                <input class="btn btn-primary" type="submit" value="Sign In">
-                            </div>
-                        </div>
-                    {% endblock %}
-                </fieldset>
-            </form>
-
-            <p>{% blocktrans with request.GET.next as next %}If you don't have an account you can <a href="/sign-up/?next={{ next }}">join HydroShare</a> now.{% endblocktrans %}</p>
-            {% url "mezzanine_password_reset" as password_reset_url %}
-            {% url "profile_update" as profile_update_url %}
-            {% blocktrans %}<p>You can also <a href="{{ password_reset_url }}?next={{ profile_update_url }}">reset your password</a> if you've forgotten it.</p>{% endblocktrans %}</p>
-        </div>
-
-        {% endif %}
+        <p>{% blocktrans with request.GET.next as next %}If you don't have an account you can <a href="/sign-up/?next={{ next }}">join HydroShare</a> now.{% endblocktrans %}</p>
+        {% url "mezzanine_password_reset" as password_reset_url %}
+        {% url "profile_update" as profile_update_url %}
+        {% blocktrans %}<p>You can also <a href="{{ password_reset_url }}?next={{ profile_update_url }}">reset your password</a> if you've forgotten it.</p>{% endblocktrans %}</p>
+    {% endif %}
     </div>
-
-</div>
 {% endblock %}

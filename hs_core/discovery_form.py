@@ -4,29 +4,12 @@ from django import forms
 
 
 class DiscoveryForm(FacetedSearchForm):
-    SORT_ORDER_VALUES = ('title', 'author_normalized', 'created', 'modified')
-    SORT_ORDER_CHOICES = (('title', 'Title'),
-                          ('author_normalized', 'First Author'),
-                          ('created', 'Date Created'),
-                          ('modified', 'Last Modified'))
-
-    SORT_DIRECTION_VALUES = ('', '-')
-    SORT_DIRECTION_CHOICES = (('', 'Ascending'),
-                              ('-', 'Descending'))
-
     NElat = forms.CharField(widget=forms.HiddenInput(), required=False)
     NElng = forms.CharField(widget=forms.HiddenInput(), required=False)
     SWlat = forms.CharField(widget=forms.HiddenInput(), required=False)
     SWlng = forms.CharField(widget=forms.HiddenInput(), required=False)
     start_date = forms.DateField(label='From Date', required=False)
     end_date = forms.DateField(label='To Date', required=False)
-    coverage_type = forms.CharField(widget=forms.HiddenInput(), required=False)
-    sort_order = forms.CharField(label='Sort By:',
-                                 widget=forms.Select(choices=SORT_ORDER_CHOICES),
-                                 required=False)
-    sort_direction = forms.CharField(label='Sort Direction:',
-                                     widget=forms.Select(choices=SORT_DIRECTION_CHOICES),
-                                     required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):
@@ -72,9 +55,6 @@ class DiscoveryForm(FacetedSearchForm):
         # Check to see if an end_date was chosen.
         if self.cleaned_data['end_date']:
             sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
-
-        if self.cleaned_data['coverage_type']:
-            sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
         authors_sq = None
         subjects_sq = None

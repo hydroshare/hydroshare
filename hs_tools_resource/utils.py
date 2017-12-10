@@ -50,11 +50,3 @@ def get_SupportedResTypes_choices():
         if "toolresource" != class_name.lower():
             result_list.append([class_name, verbose_name])
     return result_list
-
-
-def get_SupportedSharingStatus_choices():
-    return [['Published', 'Published'],
-            ['Public', 'Public'],
-            ['Discoverable', 'Discoverable'],
-            ['Private', 'Private'],
-            ]

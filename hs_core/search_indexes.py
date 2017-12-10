@@ -8,7 +8,6 @@ from ref_ts.models import RefTSMetadata
 from hs_app_timeseries.models import TimeSeriesMetaData
 from django.db.models import Q
 from datetime import datetime
-from nameparser import HumanName
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -18,8 +17,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(faceted=True)
-    author_normalized = indexes.CharField(faceted=True)
-    author_description = indexes.CharField(indexed=False)
     title = indexes.CharField(faceted=True)
     abstract = indexes.CharField()
     creators = indexes.MultiValueField(faceted=True)
@@ -28,7 +25,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     public = indexes.BooleanField(faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
     published = indexes.BooleanField(faceted=True)
-    # TODO: We might need more information than a bool in the future
     is_replaced_by = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created', faceted=True)
     modified = indexes.DateTimeField(model_attr='updated', faceted=True)
@@ -81,7 +77,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     units_names = indexes.MultiValueField(faceted=True)
     units_types = indexes.MultiValueField(faceted=True)
     aggregation_statistics = indexes.MultiValueField(faceted=True)
-    absolute_url = indexes.CharField(indexed=False)
 
     def get_model(self):
         """Return BaseResource model."""
@@ -95,7 +90,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_title(self, obj):
         """Return metadata title if exists, otherwise return none."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
-            return obj.metadata.title.value.lstrip()
+            return obj.metadata.title.value
         else:
             return 'none'
 
@@ -112,41 +107,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return first_creator.name.lstrip()
-            else:
-                return 'none'
-        else:
-            return 'none'
-
-    def prepare_author_normalized(self, obj):
-        """Return metadata author if exists, otherwise return none."""
-        if hasattr(obj, 'metadata'):
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None:
-                nameparts = HumanName(first_creator.name.lstrip())
-                normalized = nameparts.last
-                if nameparts.suffix:
-                    normalized = normalized + ' ' + nameparts.suffix
-                normalized = normalized + ','
-                if nameparts.title:
-                    normalized = normalized + ' ' + nameparts.title
-                if nameparts.first:
-                    normalized = normalized + ' ' + nameparts.first
-                if nameparts.middle:
-                    normalized = ' ' + normalized + ' ' + nameparts.middle
-                return normalized
-            else:
-                return 'none'
-        else:
-            return 'none'
-
-    # stored, unindexed field
-    def prepare_author_description(self, obj):
-        """Return metadata author description if exists, otherwise return none."""
-        if hasattr(obj, 'metadata'):
-            first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.description is not None:
-                return first_creator.description
+                return first_creator.name
             else:
                 return 'none'
         else:
@@ -267,7 +228,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'point':
                     return float(coverage.value["east"])
-                # TODO: this returns the box center, not the extent
                 elif coverage.type == 'box':
                     return (float(coverage.value["eastlimit"]) +
                             float(coverage.value["westlimit"])) / 2
@@ -280,7 +240,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'point':
                     return float(coverage.value["north"])
-                # TODO: This returns the box center, not the extent
                 elif coverage.type == 'box':
                     return (float(coverage.value["northlimit"]) +
                             float(coverage.value["southlimit"])) / 2
@@ -290,7 +249,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_northlimit(self, obj):
         """Return resource coverage north limit if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
-            # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["northlimit"]
@@ -300,7 +258,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_eastlimit(self, obj):
         """Return resource coverage east limit if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
-            # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["eastlimit"]
@@ -310,7 +267,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_southlimit(self, obj):
         """Return resource coverage south limit if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
-            # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["southlimit"]
@@ -320,14 +276,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_westlimit(self, obj):
         """Return resource coverage west limit if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
-            # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["westlimit"]
         else:
             return 'none'
-
-    # TODO: time coverages do not specify timezone, and timezone support is active.
 
     def prepare_coverage_start_date(self, obj):
         """Return resource coverage start date if exists, otherwise return none."""
@@ -672,7 +625,3 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 for time_series_result in obj.metadata.time_series_results:
                     aggregation_statistics.append(time_series_result.aggregation_statistics)
         return aggregation_statistics
-
-    def prepare_absolute_url(self, obj):
-        """Return absolute URL of object."""
-        return obj.get_absolute_url()
