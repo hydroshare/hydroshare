@@ -8,6 +8,7 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError
+from django.contrib.postgres.fields import HStoreField
 
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
@@ -291,6 +292,11 @@ class UserProfile(models.Model):
                                                               '(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).'
                                                               'Uncheck to delete your iRODS user account. Note that deletion of your iRODS user '
                                                               'account deletes all of your files under this account as well.')
+
+    # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
+    # each identifier is stored as a key/value pair {name:link}
+    identifiers = HStoreField(default={}, null=True, blank=True)
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:

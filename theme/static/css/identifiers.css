@@ -1,0 +1,60 @@
+/*AUTHOR IDENTIFIERS*/
+
+#edit-identifiers-container .well {
+    padding-top: 5px;
+}
+
+table.identifiers {
+    width: 100%;
+}
+
+table.identifiers tr td:first-child {
+    width: 20px;
+}
+
+table.identifiers tr:nth-child(even) td {
+    padding-bottom: 12px;
+}
+
+table.identifiers tr:nth-child(odd):not(:first-child) td {
+    padding-top: 12px;
+}
+
+table.identifiers tr:nth-child(even):not(:last-child) {
+    border-bottom: 1px solid #DDD;
+}
+
+table.identifiers tr:nth-child(even) td:first-child {
+    text-align: center;
+}
+
+table.identifiers tr td {
+    word-break: break-word;
+}
+
+i.identifier-icon {
+    font-size: 36px;
+    margin-right: 12px;
+}
+
+img.identifier-icon {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+}
+
+i.identifier-icon.ai-orcid {
+    color: #a6ce39;
+}
+
+i.identifier-icon.ai-google-scholar-square {
+    color: #367df3;
+}
+
+i.identifier-icon.ai-researchgate-square {
+    color: #00CCBB;
+}
+
+i.identifier-icon.fa-address-card {
+    color: #b7b7b7;
+}

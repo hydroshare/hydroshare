@@ -128,7 +128,10 @@ urlpatterns = patterns(
         core_views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 
     url(r'^dictionary/universities/$',
-        dict_views.ListUniversities.as_view(), name="get_dictionary"),
+        dict_views.ListUniversities.as_view(), name="get_controlled_vocabulary"),
+
+    url(r'^dictionary/universities/(?P<query>.*)/$',
+        dict_views.ListUniversities.as_view(), name="get_controlled_vocabulary"),
 
     # Resource Access
     url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',

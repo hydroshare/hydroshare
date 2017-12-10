@@ -5,7 +5,7 @@ from unittest import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, User
-from django.db import Error
+
 from hs_core.hydroshare import resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
@@ -315,84 +315,93 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(Contributor.objects.filter(id=con_mike.id).first(), None)
 
         # number of contributors at this point should be 0
-        self.assertEqual(self.res.metadata.contributors.all().count(), 0, msg='Number of contributors not equal to 0')
+        self.assertEqual(self.res.metadata.contributors.all().count(), 0,
+                         msg='Number of contributors not equal to 0')
 
     def test_party_external_links(self):
-        # TESTING LINKS FOR CREATOR: add creator element with profile links
-        kwargs = {'name':'Lisa Howard', 'email':'lasah@yahoo.com', 'profile_links': [{'type': 'yahooProfile',
-                                                                                      'url': 'http://yahoo.com/LH001'}]}
-        resource.create_metadata_element(self.res.short_id,'creator', **kwargs)
-        # test external link
+        # TESTING LINKS FOR CREATOR: add creator element with profile links (identifiers)
+        kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
+                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+        resource.create_metadata_element(self.res.short_id, 'creator', **kwargs)
+        # test external link (identifiers)
         cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
 
         # lisa should have one external profile link
-        self.assertEqual(cr_lisa.external_links.all().count(), 1, msg="Creator Lisa does not have 1 external link.")
+        self.assertEqual(len(cr_lisa.identifiers), 1,
+                         msg="Creator Lisa does not have 1 identifier.")
 
-        # test that trying to add another link of the same type should raise exception
-        kwargs = {'profile_links': [{'type':'yahooProfile', 'url': 'http://yahoo.com/LH002'}]}
-        self.assertRaises(Exception, lambda : resource.update_metadata_element(self.res.short_id,'creator',
-                                                                               cr_lisa.id, **kwargs))
+        # test that trying to add an identifier that doesn't have a valid url value should
+        # raise exception
+        kwargs = {'identifiers': {'ResearchGate': 'researchgate.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator',
+                                             cr_lisa.id, **kwargs)
 
-        # test that trying to add another link of the same url should raise exception
-        kwargs = {'profile_links': [{'type':'yahooProfile2', 'url': 'http://yahoo.com/LH001'}]}
-        self.assertRaises(Exception, lambda : resource.update_metadata_element(self.res.short_id,'creator',
-                                                                               cr_lisa.id, **kwargs))
+        # test that multiple identifiers can be created for one creator
+        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
+                                 'ORCID': 'http://orcid.org/LH001'}}
 
-        # test a link of different type can be added
-        kwargs = {'profile_links': [{'type':'usuProfile', 'url': 'http://usu.edu/profile/LH001'}]}
-        resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
+        resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
+        # lisa should have 2 external profile link
+        cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
+        self.assertEqual(len(cr_lisa.identifiers), 2,
+                         msg="Creator Lisa does not have 2 identifier.")
 
-        # lisa should have 2 external profile links at this point
-        self.assertEqual(cr_lisa.external_links.all().count(), 2, msg="Creator Lisa does not have 2 external link.")
+        for name, link in cr_lisa.identifiers.iteritems():
+            self.assertIn(name, ['ResearchGate', 'ORCID'])
+            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
 
-        self.assertIn('yahooProfile', [link.type for link in cr_lisa.external_links.all()],
-                      msg="Creator 'Lisa' does not have link type: yahooProfile")
-        self.assertIn('usuProfile', [link.type for link in cr_lisa.external_links.all()],
-                      msg="Creator 'Lisa' does not have link type: usuProfile")
-        self.assertIn('http://yahoo.com/LH001', [link.url for link in cr_lisa.external_links.all()],
-                      msg="Creator 'Lisa' does not have link url: 'http://yahoo.com/LH001'")
-        self.assertIn('http://usu.edu/profile/LH001', [link.url for link in cr_lisa.external_links.all()],
-                      msg="Creator 'Lisa' does not have link url: 'http://usu.edu/profile/LH001'")
+        # test that duplicate identifier name is not allowed - should raise validation error
+        kwargs = {'identifiers': {'ORCID': 'http://researchgate.org/LH001',
+                                 'orcid': 'http://orcid.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
+
+        # test that duplicate identifier link is not allowed - should raise validation error
+        kwargs = {'identifiers': {'researchGate': 'http://researchgate.org/LH001',
+                                 'ORCID': 'http://researchgate.org/LH001'}}
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
 
         # test deleting a link
-        usu_link = cr_lisa.external_links.all().filter(type='usuProfile').first()
-        kwargs = {'profile_links': [{'link_id':usu_link.id}]}
-        resource.update_metadata_element(self.res.short_id,'creator', cr_lisa.id, **kwargs)
-        # lisa should have one external profile link
-        self.assertEqual(cr_lisa.external_links.all().count(), 1, msg="Creator Lisa does not have 1 external link.")
+        # usu_link = cr_lisa.external_links.all().filter(type='usuProfile').first()
+        kwargs = {'identifiers': {}}
+        resource.update_metadata_element(self.res.short_id, 'creator', cr_lisa.id, **kwargs)
+        # lisa should have no external profile link
+        cr_lisa = self.res.metadata.creators.all().filter(email='lasah@yahoo.com').first()
+        self.assertEqual(len(cr_lisa.identifiers), 0,
+                         msg="Creator Lisa does not have 0 identifier.")
 
         # TESTING LINKS FOR CONTRIBUTOR: add contributor element with profile links
-        kwargs = {'name':'Lisa Howard', 'email':'lasah@yahoo.com', 'profile_links': [{'type': 'yahooProfile',
-                                                                                      'url': 'http://yahoo.com/LH001'}]}
-        resource.create_metadata_element(self.res.short_id,'contributor', **kwargs)
+        kwargs = {'name': 'Lisa Howard', 'email': 'lasah@yahoo.com',
+                  'identifiers': {'yahooProfile': 'http://yahoo.com/LH001'}}
+        resource.create_metadata_element(self.res.short_id, 'contributor', **kwargs)
         # test external link
         con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
 
         # lisa should have one external profile link
-        self.assertEqual(con_lisa.external_links.all().count(), 1,
+        self.assertEqual(len(con_lisa.identifiers), 1,
                          msg="contributor Lisa does not have 1 external link.")
 
-        # test that trying to add another link of the same type should raise exception
-        kwargs = {'profile_links': [{'type':'yahooProfile', 'url': 'http://yahoo.com/LH002'}]}
-        self.assertRaises(Exception, lambda : resource.update_metadata_element(self.res.short_id, 'contributor',
-                                                                               con_lisa.id, **kwargs))
+        # test that multiple identifiers can be created for one contributor
+        kwargs = {'identifiers': {'ResearchGate': 'http://researchgate.org/LH001',
+                                  'ORCID': 'http://orcid.org/LH001'}}
+        resource.update_metadata_element(self.res.short_id, 'contributor', con_lisa.id, **kwargs)
+        con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
+        self.assertEqual(len(con_lisa.identifiers), 2,
+                         msg="Contributor Lisa does not have 2 identifier.")
 
-        # test a link of different type can be added
-        kwargs = {'profile_links': [{'type':'usuProfile', 'url': 'http://usu.edu/profile/LH001'}]}
-        resource.update_metadata_element(self.res.short_id,'contributor', con_lisa.id, **kwargs)
+        for name, link in con_lisa.identifiers.iteritems():
+            self.assertIn(name, ['ResearchGate', 'ORCID'])
+            self.assertIn(link, ['http://researchgate.org/LH001', 'http://orcid.org/LH001'])
 
-        # lisa should have 2 external profile links at this point
-        self.assertEqual(con_lisa.external_links.all().count(), 2,
-                         msg="Contributor Lisa does not have 2 external link.")
-
-        self.assertIn('yahooProfile', [link.type for link in con_lisa.external_links.all()],
-                      msg="Contributor 'Lisa' does not have link type: yahooProfile")
-        self.assertIn('usuProfile', [link.type for link in con_lisa.external_links.all()],
-                      msg="Contributor 'Lisa' does not have link type: usuProfile")
-        self.assertIn('http://yahoo.com/LH001', [link.url for link in con_lisa.external_links.all()],
-                      msg="Contributor 'Lisa' does not have link url: 'http://yahoo.com/LH001'")
-        self.assertIn('http://usu.edu/profile/LH001', [link.url for link in con_lisa.external_links.all()],
-                      msg="Contributor 'Lisa' does not have link url: 'http://usu.edu/profile/LH001'")
+        # test deleting all identifiers for the contributor
+        kwargs = {'identifiers': {}}
+        resource.update_metadata_element(self.res.short_id, 'contributor', con_lisa.id, **kwargs)
+        # lisa should have no external profile link
+        con_lisa = self.res.metadata.contributors.all().filter(email='lasah@yahoo.com').first()
+        self.assertEqual(len(con_lisa.identifiers), 0,
+                         msg="Contributor Lisa does not have 0 identifier.")
 
     def test_title(self):
         # test that a 2nd title can't be added
@@ -1396,7 +1405,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         cr_address = "11 River Drive, Logan UT-84321, USA"
         cr_phone = '435-567-0989'
         cr_homepage = 'http://usu.edu/homepage/001'
-
+        identifiers = {'researchID': 'http://research.org/001',
+                       'researchGateID': 'http://research-gate.org/001'}
         self.res.metadata.create_element('creator',
                                          name=cr_name,
                                          description=cr_des,
@@ -1405,8 +1415,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                          address=cr_address,
                                          phone=cr_phone,
                                          homepage=cr_homepage,
-                                         profile_links=[{'type': 'researchID', 'url': 'http://research.org/001'},
-                                               {'type': 'researchGateID', 'url': 'http://research-gate.org/001'}]
+                                         identifiers=identifiers
                                         )
 
         # add another creator with only the name

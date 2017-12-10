@@ -559,6 +559,7 @@ var resetMapZoom = function() {
     }
 };
 
+
 var updateMapView = function() {
     var filtered_results = [];
     clientUpdateMarkers(filtered_results);
@@ -732,12 +733,6 @@ var formDateParameters = function() {
     return "&start_date="+start_date+"&end_date="+end_date;
 };
 
-var formOrderParameters = function() {
-    var sort_order = $("#id_sort_order").val();
-    var sort_direction = $("#id_sort_direction").val();
-    return "&sort_order="+sort_order+"&sort_direction="+sort_direction;
-};
-
 var buildURLOnCheckboxes = function () {
     var requestURL = '';
     $(".faceted-selections").each(function () {
@@ -784,10 +779,8 @@ var clearDates = function() {
     var geoSearchParams = formGeoParameters();
     var facetingParams = buildURLOnCheckboxes();
     var dateSearchParams = "&start_date=&end_date=";
-    var sortOrderParams = formOrderParameters();
     var windowPath = window.location.pathname;
-    var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams 
-        + dateSearchParams + sortOrderParams;
+    var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams + dateSearchParams;
     if (window.location.hash) {
         requestURL = requestURL + window.location.hash;
     }
@@ -861,16 +854,13 @@ $(document).ready(function () {
             var searchURL = "?q=" + textSearch;
             var geoSearchParams = formGeoParameters();
             var dateSearchParams = formDateParameters();
-            var sortOrderParams = formOrderParameters();
             var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL + geoSearchParams 
-                + dateSearchParams + sortOrderParams;
+            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
             window.location = requestURL;
         }
     });
 
     $("#covereage-search-fields input, #date-search-fields input, #id_q").addClass("form-control");
-    $("#search-order-fields select").addClass("form-control");
 
     $("title").text("Discover | HydroShare");   // Set browser tab title
 
@@ -948,30 +938,23 @@ $(document).ready(function () {
         searchURL += buildURLOnCheckboxes();
         var geoSearchParams = formGeoParameters();
         var dateSearchParams = formDateParameters();
-        var sortOrderParams = formOrderParameters(); 
         var windowPath = window.location.pathname;
-        var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams 
-            + sortOrderParams;
+        var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams;
         if (window.location.hash) {
             requestURL = requestURL + window.location.hash;
         }
         window.location = requestURL;
     }
 
-    $("#date-search-fields input").change(function () { 
-        updateResults(); 
+    $("#date-search-fields input").change(function () {
+        updateResults();
     });
-
-    $("#search-order-fields select").change(function () {
-        updateResults(); 
-    })
 
     $(".faceted-selections").click(function () {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
         var geoSearchParams = formGeoParameters();
         var dateSearchParams = formDateParameters();
-        var sortOrderParams = formOrderParameters();
         var windowPath = window.location.pathname;
         var requestURL =  windowPath + searchURL;
         if($(this).is(":checked")) {
@@ -979,18 +962,18 @@ $(document).ready(function () {
             var checkboxId = $(this).attr("id");
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
-            requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
+            requestURL = requestURL + geoSearchParams + dateSearchParams;
             updateFacetingItems(requestURL);
         }
         else {
             var checkboxId = $(this).attr("id");
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage.removeItem(sessionStorageCheckboxId);
-            var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams 
-                + dateSearchParams + sortOrderParams;
+            var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
             updateFacetingItems(updateURL);
         }
     });
+
 
     // $("#solr-help-info").popover({
     //     html: true,
@@ -998,8 +981,4 @@ $(document).ready(function () {
     //     content: '<p>Search here to find all public and discoverable resources. This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
     //     trigger: 'click'
     // });
-
-    $("#btn-show-all").click(clearAllFaceted);
-    $("#clear-dates-options").click(clearDates);
-
 });

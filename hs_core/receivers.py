@@ -2,7 +2,7 @@
 
 from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
-from hs_core.models import GenericResource
+from hs_core.models import GenericResource, Party
 from forms import SubjectsForm, AbstractValidationForm, CreatorValidationForm, \
     ContributorValidationForm, RelationValidationForm, SourceValidationForm, RightsValidationForm, \
     LanguageValidationForm, ValidDateValidationForm, FundingAgencyValidationForm, \
@@ -22,9 +22,21 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     elif element_name == "description":   # abstract
         element_form = AbstractValidationForm(request.POST)
     elif element_name == "creator":
-        element_form = CreatorValidationForm(request.POST)
+        try:
+            post_data_dict = Party.get_post_data_with_identifiers(request=request)
+        except Exception as ex:
+            return {'is_valid': False, 'element_data_dict': None,
+                    "errors": {"identifiers": [ex.message]}}
+
+        element_form = CreatorValidationForm(post_data_dict)
+
     elif element_name == "contributor":
-        element_form = ContributorValidationForm(request.POST)
+        try:
+            post_data_dict = Party.get_post_data_with_identifiers(request=request)
+        except Exception as ex:
+            return {'is_valid': False, 'element_data_dict': None,
+                    "errors": {"identifiers": [ex.message]}}
+        element_form = ContributorValidationForm(post_data_dict)
     elif element_name == 'relation':
         element_form = RelationValidationForm(request.POST)
     elif element_name == 'source':

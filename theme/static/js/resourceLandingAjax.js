@@ -17,45 +17,25 @@ function label_ajax_submit() {
         data: datastring,
         success: function (result) {
             var json_response = JSON.parse(result);
-            if (json_response.status === "success") {
-                var action = form.find("input[name='action']");
+            if (json_response.status == "success") {
 
-                if (json_response.action === "CREATE")
-                {
+                var action = form.find("input[name='action']");
+                if (json_response.action == "CREATE") {
                     action.val("DELETE");
-                    if (dataFormID == "form-add-to-my-resources")
-                    {
-                        $("#btnMyResources").removeClass("btn-resource-add");
-                        $("#btnMyResources").addClass("btn-resource-remove");
-                        $("#btnMyResources").attr("data-original-title", "Remove from my resources");
-                    }
-                    else if (dataFormID == "form-add-open-with-app")
-                    {
-                        $("#btnOpenWithApp").removeClass("btn-resource-add");
-                        $("#btnOpenWithApp").addClass("btn-resource-remove");
-                        $("#btnOpenWithApp").attr("data-original-title", "Remove WebApp from OpenWith list");
-                    }
+                    $("#btnMyResources").removeClass("btn-resource-add");
+                    $("#btnMyResources").addClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Remove from my resources");
                 }
-                else
-                {
+                else {
                     action.val("CREATE");
-                    if (dataFormID == "form-add-to-my-resources") {
-                        $("#btnMyResources").addClass("btn-resource-add");
-                        $("#btnMyResources").removeClass("btn-resource-remove");
-                        $("#btnMyResources").attr("data-original-title", "Add to my resources");
-                    }
-                    else if (dataFormID == "form-add-open-with-app")
-                    {
-                         $("#btnOpenWithApp").addClass("btn-resource-add");
-                         $("#btnOpenWithApp").removeClass("btn-resource-remove");
-                         $("#btnOpenWithApp").attr("data-original-title", "Add WebApp to OpenWith list");
-                    }
+                    $("#btnMyResources").addClass("btn-resource-add");
+                    $("#btnMyResources").removeClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Add to my resources");
                 }
-                $("#btnMyResources").tooltip('show')
             }
         },
         error: function (XMLHttpRequest, textStatus, errorThrown) {
-            console.log(errorThrown);
+
         }
     });
     //don't submit the form
@@ -479,6 +459,7 @@ function share_resource_ajax_submit(form_id) {
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
                 rowTemplate.find(".share-form-edit a").attr("data-arg", "share-edit-" + share_with);
+
                 if (shareType == "user") {
                     rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
                     rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
@@ -490,21 +471,23 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (json_response.name) {
-                    rowTemplate.find("span[data-col='name']").text(json_response.name);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.name);
                 }
                 else {
-                    rowTemplate.find("span[data-col='name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='name'] a").text(json_response.username);
                 }
+
+                rowTemplate.find("div[data-col='name'] a").attr("href", "/" + shareType + "/" + share_with);
 
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
 
                 if (shareType == "user") {
-                    rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                    rowTemplate.find("div[data-col='user-name']").text(json_response.username);
                 }
                 else {
-                    rowTemplate.find("span[data-col='user-name']").text("(Group)");
+                    rowTemplate.find("div[data-col='user-name']").text("(Group)");
                 }
 
                 if (shareType == "user") {
@@ -516,7 +499,14 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     rowTemplate.find(".profile-pic-thumbnail").remove();
-                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    if (json_response.group_pic != "No picture provided") {
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
+                    }
+                    else {
+                        // Set default group picture
+                        var defaultImgURL = $("#templateRow .group-preview-image-default")[0].style.backgroundImage;
+                        rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: " + defaultImgURL);
+                    }
                 }
 
                 if (access_type == "view") {
@@ -534,7 +524,7 @@ function share_resource_ajax_submit(form_id) {
                     rowTemplate.find("span[data-col='current-access']").append(" <span class='caret'></span>");
                     rowTemplate.find(".share-form-owner").parent().addClass("active");
                 }
-                $(".access-table tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
+                $(".access-table > tbody").append($("<tr id='row-id-" + share_with + "'>" + rowTemplate.html() + "</tr>"));
 
                 updateActionsState(json_response.current_user_privilege);
             }
@@ -888,7 +878,7 @@ function update_netcdf_file_ajax_submit() {
                     $(".alert-success").alert('close');
                 });
                 // refetch file metadata to show the updated header file info
-                 showFileTypeMetadata(false, "");
+                showFileTypeMetadata(false, "");
             }
             else {
                 display_error_message("File update.", json_response.message);
@@ -1427,38 +1417,6 @@ function initializeDatePickers(){
     });
 }
 
-function updateEditCoverageState() {
-    // Set state for composite resource file metadata editing
-    chkBox = $("#id-coverage-spatial-filetype #id_type_1");
-    chkPoint = $("#id-coverage-spatial-filetype #id_type_2");
-
-    if ($("#id-coverage-spatial-filetype #id_type_1").prop("checked")) {
-        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "rectangle");
-    }
-    else {
-        $("#id-coverage-spatial-filetype").attr("data-coordinates-type", "point");
-    }
-
-    if (chkBox.prop("checked")) {
-        // coverage type is box
-        $("#id_north_filetype").parent().closest("#div_id_north").hide();
-        $("#id_east_filetype").parent().closest("#div_id_east").hide();
-        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
-        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
-        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
-        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
-    }
-    else {
-        // coverage type is point
-        $("#id_north_filetype").parent().closest("#div_id_north").show();
-        $("#id_east_filetype").parent().closest("#div_id_east").show();
-        $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
-        $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
-        $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
-        $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
-    }
-}
-
 // act on spatial coverage type change
 function setFileTypeSpatialCoverageFormFields(logical_type){
     // Don't allow the user to change the coverage type
@@ -1477,7 +1435,26 @@ function setFileTypeSpatialCoverageFormFields(logical_type){
     }
     else {
         // file type is "GenericLogicalFile" - allow changing coverage type
-        $id_type_filetype_div.find("input:radio").change(updateEditCoverageState);
+        $id_type_filetype_div.find("input:radio").change(function () {
+            if ($(this).val() == 'box' && $(this).attr("checked") == "checked"){
+                // coverage type is box
+                $("#id_north_filetype").parent().closest("#div_id_north").hide();
+                $("#id_east_filetype").parent().closest("#div_id_east").hide();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").show();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").show();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").show();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").show();
+            }
+            else {
+                // coverage type is point
+                $("#id_north_filetype").parent().closest("#div_id_north").show();
+                $("#id_east_filetype").parent().closest("#div_id_east").show();
+                $("#id_northlimit_filetype").parent().closest("#div_id_northlimit").hide();
+                $("#id_eastlimit_filetype").parent().closest("#div_id_eastlimit").hide();
+                $("#id_southlimit_filetype").parent().closest("#div_id_southlimit").hide();
+                $("#id_westlimit_filetype").parent().closest("#div_id_westlimit").hide();
+            }
+            });
     }
 
     // #id_type_1 is the box radio button

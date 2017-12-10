@@ -13,10 +13,10 @@ class TestUniversities(APITestCase):
         response = self.client.get('/hsapi/dictionary/universities/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
-        self.assertEqual(len(content), 1)
+        self.assertEqual(len(content), 9363)
 
     def test_universities_query(self):
-        response = self.client.get('/hsapi/dictionary/universities/?term=dubai', format='json')
+        response = self.client.get('/hsapi/dictionary/universities/dubai/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(len(content), 9)

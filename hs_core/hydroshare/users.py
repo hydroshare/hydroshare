@@ -1,7 +1,7 @@
 import json
 import logging
 
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import Polygon, Point
 from django.core.files import File
@@ -12,8 +12,7 @@ from django.db.models import Q
 from hs_core.models import BaseResource, Contributor, Creator, Subject, Description, Title, \
     Coverage, Relation
 from .utils import user_from_id, group_from_id, get_profile
-from theme.models import UserQuota, UserProfile
-from hs_dictionary.models import University, UncategorizedTerm
+from theme.models import UserQuota
 
 DO_NOT_DISTRIBUTE = 'donotdistribute'
 EDIT = 'edit'
@@ -25,7 +24,7 @@ log = logging.getLogger(__name__)
 
 def create_account(
         email, username=None, first_name=None, last_name=None, superuser=None, groups=None,
-        password=None, active=True, organization=None
+        password=None, active=True
 ):
     """
     Create a new user within the HydroShare system.
@@ -73,22 +72,6 @@ def create_account(
     user_access.save()
     user_labels = UserLabels(user=u)
     user_labels.save()
-    user_profile = get_profile(u)
-
-    if organization:
-        user_profile.organization = organization
-        user_profile.save()
-
-        dict_items = organization.split(",")
-
-        for dict_item in dict_items:
-            # Update Dictionaries
-            try:
-                University.objects.get(name=dict_item)
-            except ObjectDoesNotExist:
-                new_term = UncategorizedTerm(name=dict_item)
-                new_term.save()
-
     # create default UserQuota object for the new user
     uq = UserQuota.objects.create(user=u)
     uq.save()

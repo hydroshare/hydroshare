@@ -22,9 +22,12 @@ function readURL(input) {
 
 function validateForm() {
     var flagRequiredElements = validateRequiredElements();
+    var flagPasswords = validatePasswords();
     var flagEmail = validateEmail();
 
-    return  flagRequiredElements && flagEmail;
+    cleanIdentifiers();
+
+    return  flagRequiredElements && flagPasswords && flagEmail;
 }
 
 function validateRequiredElements() {
@@ -36,6 +39,21 @@ function validateRequiredElements() {
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));
             return false;
         }
+    }
+
+    return true;
+}
+
+function validatePasswords() {
+    // Password
+    var password1 = $("#id_password1");
+    var password2 = $("#id_password2");
+    if (password1.val() != password2.val()) {
+        password1.addClass("form-invalid");
+        password2.addClass("form-invalid");
+        password2.parent().find(".error-label").remove();
+        password2.parent().append(errorLabel("Passwords do not match."));
+        return false;
     }
 
     return true;
@@ -59,9 +77,8 @@ function validateEmail() {
 }
 
 function errorLabel(message) {
-    return "<div class='error-label'><div class='label label-danger'>" + message + "</div></div>";
+    return "<div class='label label-danger error-label'>" + message + "</div>";
 }
-
 
 function setEditMode() {
     $("[data-page-mode='view']").hide();
@@ -245,11 +262,12 @@ $(document).ready(function () {
     });
 
     $("[data-page-mode='edit']").hide();
+
     $("#btn-edit-profile").click(function () {
         setEditMode();
     });
 
-    $("#btn-cancel-profile-edit").click(function () {
+    $(".btn-cancel-profile-edit").click(function () {
         setViewMode();
     });
 
@@ -308,7 +326,6 @@ $(document).ready(function () {
 
     $("tr[data-type='all']").find(".badge").text(collection["total"]);
 
-
     // Unspecified goes away as soon as a user clicks.
     $("input[name='state']").click(function () {
             if ($(this).val() == "Unspecified") {
@@ -316,24 +333,4 @@ $(document).ready(function () {
             }
         }
     );
-
-    $('.tagsinput').tagsInput({
-      interactive: true,
-      placeholder: "Organization(s)",
-      autocomplete: {
-        source: "/hsapi/dictionary/universities/",
-        minLength: 3,
-        delay: 500,
-        classes: {
-            "ui-autocomplete": "minHeight"
-        }
-      }
-    });
-
-    $('.ui-autocomplete-input').on('keydown', function(e) {
-      if(e.keyCode === 9 && $(this).val() !== '') {
-        e.preventDefault();
-        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
-      }
-    });
 });

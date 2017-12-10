@@ -625,7 +625,7 @@
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
-                            {% if relevant_tools %}
+                            {% if relevant_tools  %}
                                 <li class="col-xs-2 col-md-2">
                                     <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
                                         <span class="glyphicon glyphicon-wrench"></span>
@@ -804,14 +804,14 @@
                                                     <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
+                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                            data-target="#edit-creator-dialog{{ author.id }}"
                                                         ></a>
 
                                                         {# Prevent deletion of last creator#}
                                                         {% if creator_formset.initial|length > 1 %}
                                                             <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
+                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
                                                                data-target="#delete-creator-dialog{{ author.id }}"></a>
                                                         {% endif %}
                                                     </td>
@@ -864,11 +864,11 @@
                                                         {{ contributor.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                         <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                                           class="glyphicon glyphicon-trash icon-button btn-remove"
                                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                     </td>
@@ -888,30 +888,29 @@
                             {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                 <div class="tab-pane" id="relatedResourcesTab">
                                     {% if not metadata_form %}
-                                    {% if sources %}
-                                        <table class="table hs-table">
-                                            <legend>Sources</legend>
+                                        {% if sources %}
+                                            <h4><strong>Sources</strong></h4>
+                                            <hr style="margin-top: 0px;margin-bottom: 2px">
                                             {% for source in sources %}
-                                            <tr>
-                                                <th class="dataset-label"><strong>Derived From:</strong></th>
-                                                <td class="dataset-details">{{ source.derived_from|urlize }}</td>
-                                            </tr>
+                                                <div class="row">
+                                                    <div class="col-sm-4"><strong>Derived From:</strong></div>
+                                                    <div class="col-sm-8 url-clickable">{{ source.derived_from }}</div>
+                                                </div>
                                             {% endfor %}
-                                        </table>
-                                    {% endif %}
-                                    {% if show_relations_section %}
-                                        <table class="table hs-table" style="margin-bottom: 0;">
-                                            <legend>Relations</legend>
+                                        {% endif %}
+                                        {% if show_relations_section %}
+                                            <hr style="border: 0;">
+                                            <h4><strong>Relations</strong></h4>
+                                            <hr style="margin-top: 0;margin-bottom: 2px">
                                             {% for relation in relations %}
-                                            {% if relation.type|lower != "haspart"%}
-                                            <tr>
-                                                <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
-                                                <td class="dataset-details">{{ relation.value|urlize }}</td>
-                                            </tr>
-                                            {% endif %}
+                                                {% if  relation.type|lower != "haspart"%}
+                                                    <div class="row">
+                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                                        <div class="col-sm-8 url-clickable">{{ relation.value }}</div>
+                                                    </div>
+                                                {% endif %}
                                             {% endfor %}
-                                        </table>
-                                    {% endif %}
+                                        {% endif %}
                                     {% else %}
                                         <div>
                                             <table class="table hs-table" style="margin-bottom: 0;">
@@ -920,17 +919,19 @@
                                                 {% for source in source_formset.initial %}
                                                     <tr>
                                                         <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details">{{ source.derived_from|urlize }}</td>
+                                                        <td class="dataset-details url-clickable">{{ source.derived_from }}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
-                                                               data-target="#edit-source-dialog{{ source.id }}"></a>
+                                                               class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                               data-target="#edit-source-dialog{{ source.id }}"
+                                                               style="top: -5px; "></a>
                                                         </td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto"
                                                                title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
-                                                               data-target="#delete-source-element-dialog{{ source.id }}"></a>
+                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                               data-target="#delete-source-element-dialog{{ source.id }}"
+                                                               style="top: -5px; right:20px;"></a>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -953,17 +954,19 @@
                                                     {% if  relation.type|lower != "haspart"%}
                                                         <tr>
                                                             <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value|urlize }}</td>
+                                                            <td class="dataset-details url-clickable">{{ relation.value }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"></a>
+                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                                   style="top: -5px; "></a>
                                                             </td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto"
                                                                    title="Remove"
-                                                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
+                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                                   style="top: -5px; right:20px;"></a>
                                                             </td>
                                                         </tr>
                                                     {% endif %}
@@ -1084,28 +1087,18 @@
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
                                     {% if not metadata_form %}
-                                        <div class="row">
-                                            {% for tool in relevant_tools.tool_list %}
-                                                <div class="col-lg-3 col-md-4 col-sm-12">
-                                                    <div title="{{ tool.title }}" id="web-app-item">
-                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
-    						                         {% if tool.approved %}
-                                                         <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
-                                                             <img class="app-approved-icon-img" src="/static/img/approved_app.png">
-                                                         </a>
-                                                     {% endif %}
-                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
-                                                        {% if tool.title|length > 20 %}
-                                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                        {% else %}
-                                                            <h4>{{ tool.title }}</h4>
-                                                        {% endif %}
-                                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                                    </a>
-                                                </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
+                                        {% for tool in relevant_tools %}
+                                            <div title="{{ tool.title }}" id="web-app-item">
+						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
+                                                    {% if tool.title|length > 20 %}
+                                                        <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
+                                                    {% else %}
+                                                        <h4>{{ tool.title }}</h4>
+                                                    {% endif %}
+                                                    <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                                </a>
+                                            </div>
+                                        {% endfor %}
                                     {% else %}
                                         ------- Relevant tools form here -------
                                     {%  endif %}
@@ -1136,8 +1129,8 @@
                                                     <td>
                                                         {{ extra_meta_name }}
                                                     </td>
-                                                    <td>
-                                                        {{ extra_meta_value|urlize }}
+                                                    <td class="url-clickable">
+                                                        {{ extra_meta_value }}
                                                     </td>
                                                     {% if metadata_form %}
                                                         <td>

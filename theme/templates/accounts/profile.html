@@ -3,28 +3,42 @@
 
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
+{% block extra_head %}
+    <link href="{{ STATIC_URL }}css/profile.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/academicons.min.css" rel="stylesheet"/>
+{% endblock %}
+
 {% block main %}
     <div class="container">
         {% with profile_user.userprofile as profile %}
-            <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
-            <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
-            {% if profile_user.id == user.id %}
-                <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
-                      enctype="multipart/form-data" onsubmit="return validateForm()">
-            {% csrf_token %}
-            {% endif %}
+        <input type="hidden" id="url-create-irods-account" value="{% url 'create_irods_account' %}">
+        <input type="hidden" id="url-delete-irods-account" value="{% url 'delete_irods_account' %}">
+        {% if profile_user.id == user.id %}
+        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+              enctype="multipart/form-data" onsubmit="return validateForm()">
+        {% csrf_token %}
+        {% endif %}
             <div class="row">
                 {% if profile_user.id == user.id %}
-                <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
+                    <div data-page-mode="edit" class="alert alert-info" role="alert">
+                        Information entered here may be publicly visible. Do not enter information that you want to keep
+                        private.
+                    </div>
                 {% endif %}
 
                 <div class="col-sm-12">
                     <div class="row">
                         {% if profile_user.id == user.id %}
                             <div class="col-xs-12 col-sm-3 height-fix pull-right">
-                                <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button icon-blue" title="Edit profile"></span>
-                                <button type="submit" data-page-mode="edit" id="btn-save-profile" class="btn btn-primary pull-right">Save changes</button>
-                                <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
+                                <span data-page-mode="view" id="btn-edit-profile" data-toggle="tooltip"
+                                      data-placement="left"
+                                      class="glyphicon glyphicon-pencil pull-right icon-button icon-blue"
+                                      title="Edit profile"></span>
+                                <button type="submit" data-page-mode="edit"
+                                        class="btn btn-primary pull-right btn-save-profile">Save changes
+                                </button>
+                                <span data-page-mode="edit"
+                                      class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
                             </div>
                         {% endif %}
 
@@ -67,7 +81,24 @@
                             <div data-page-mode="edit">
                                 <hr>
                                 <div class="profile-picture-controls text-center">
-                                    <div><a href="/accounts/update">Change password</a></div>
+                                    <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
+
+                                    <div id="change_password" class="collapse text-left">
+                                        <fieldset>
+                                            <label>Password</label>
+                                            <input class="form-control" autocomplete="off" id="id_password1" name="password1"
+                                                   placeholder="Password"
+                                                   type="password">
+
+                                            <small class="text-muted">Leave blank unless you want to change your password</small>
+                                        </fieldset>
+                                        <fieldset>
+                                            <label>Password (again)</label>
+                                            <input class="form-control" autocomplete="off" id="id_password2" name="password2"
+                                                   placeholder="Password (again)" type="password">
+                                        </fieldset>
+                                        <hr>
+                                    </div>
 
                                     {#        Account deactivation       #}
                                     <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
@@ -145,8 +176,8 @@
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
                                         <label>Organization *</label>
-                                        <input class="form-control form-required tagsinput" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-                                        <br /><small class="text-muted">The names of the organizations you are associated with.</small><br />
+                                        <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                        <small class="text-muted">The name of the organization you work for.</small>
                                     </fieldset>
 
                                     {# Title #}
@@ -180,7 +211,7 @@
                                             <hr>
                                             <span><a href="{{ profile.cv.url }}" class="btn btn-default"
                                                     target="_blank"><span
-                                                    class="glyphicon glyphicon-file"></span>View CV</a></span>
+                                                    class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></span>
 
                                             <div id="group-cv" class="btn-group text-center" role="group"
                                                  aria-label="CV">
@@ -189,7 +220,8 @@
                                                 <span class="glyphicon glyphicon-refresh"></span>
                                                 <input type="file" name="cv">
                                             </span>
-                                                <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
+                                                <button id="btn-delete-cv" class="no-style icon-button btn-remove"
+                                                        data-toggle="modal"
                                                         data-target="#delete-cv" title="Delete CV"><span
                                                         class="glyphicon glyphicon-trash"></span>
                                                 </button>
@@ -217,7 +249,7 @@
                                     <hr>
                                     <div><a href="{{ profile.cv.url }}" class="btn btn-default"
                                                                 target="_blank"><span
-                                            class="glyphicon glyphicon-file"></span>View CV</a></div>
+                                            class="glyphicon glyphicon-file"></span>&nbsp;View CV</a></div>
                                 </div>
                             {% endif %}
                         </div>
@@ -344,7 +376,7 @@
                                                     <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
                                                 {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
-                                            {% endif %}    
+                                            {% endif %}
                                         </div>
 
                                         {% if profile_user.id == user.id %}
@@ -353,7 +385,7 @@
                                             <fieldset>
                                                 <label>Description</label>
                                                 <textarea class="form-control"
-                                                          name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
+                                                          name="details" rows="4">{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
                                             </fieldset>
 
                                             <hr>
@@ -407,122 +439,175 @@
 
                                 {#  CONTACT #}
                                 {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
-                                    <div class="panel panel-default">
-                                        <div class="panel-heading">
-                                            <h3 class="panel-title"><span
-                                                    class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
-                                        </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
+                                    </div>
 
-                                        <div class="panel-body">
-                                            <table class="overview" data-page-mode="view">
-                                                <tbody>
-                                                {#        Phone 1       #}
-                                                {% if profile.phone_1 %}
-                                                    <tr>
-                                                        <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                            {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                                        <td>{{ profile.phone_1 }}</td>
-                                                    </tr>
-                                                {% endif %}
-
-                                                {#        Phone 2       #}
-                                                {% if profile.phone_2 %}
-                                                    <tr>
-                                                        <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                                        <td>{{ profile.phone_2 }}</td>
-                                                    </tr>
-                                                {% endif %}
-
-                                                {#        Email       #}
-                                                {% if profile_user.email %}
-                                                    {% if not user.is_anonymous %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Email</span></td>
-                                                            <td>
-                                                                <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
-                                                                    {% if profile_user.first_name or profile_user.last_name %}
-                                                                        {{ profile_user.first_name }}
-                                                                        {{ profile_user.last_name }}
-                                                                    {% else %}
-                                                                        {{ profile_user.username }}
-                                                                    {% endif %}
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    {% else %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Email</span></td>
-                                                            <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                                        </tr>
-                                                    {% endif %}
-                                                {% endif %}
-
-                                                {#        Website       #}
-                                                {% if profile.website %}
-                                                        <tr>
-                                                            <td><span class="text-muted">Website</span></td>
-                                                            <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
-                                                        </tr>
-                                                {% endif %}
-                                                </tbody>
-                                            </table>
-
-                                            {% if profile_user.id == user.id %}
-                                            <div class="row" data-page-mode="edit">
-                                                <fieldset>
-                                                    <div class="col-sm-12"><label>Phone 1</label></div>
-
-                                                    <div class="col-sm-6">
-                                                        <select name="phone_1_type" class="form-control">
-                                                            <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
-                                                                    value="Mobile">Mobile
-                                                            </option>
-                                                            <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
-                                                                Home
-                                                            </option>
-                                                            <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
-                                                                Work
-                                                            </option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-sm-6">
-                                                        <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
-                                                    </div>
-                                                </fieldset>
-
-                                                <fieldset>
-                                                    <div class="col-sm-12"><label>Phone 2</label></div>
-
-                                                    <div class="col-sm-6">
-                                                        <select name="phone_2_type" class="form-control">
-                                                            <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
-                                                                    value="Mobile">Mobile
-                                                            </option>
-                                                            <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
-                                                                Home
-                                                            </option>
-                                                            <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
-                                                                Work
-                                                            </option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-sm-6">
-                                                        <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
-                                                    </div>
-                                                </fieldset>
-                                                <fieldset class="col-sm-12">
-                                                    <label>Email address *</label>
-                                                    <input class="form-control form-required" id="id_email"
-                                                           value="{{ profile_user.email }}" name="email">
-                                                </fieldset>
-
-                                                <fieldset class="col-sm-12">
-                                                    <label>Website</label>
-                                                    <input class="form-control"
-                                                           {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
-                                                </fieldset>
-                                            </div>
+                                    <div class="panel-body">
+                                        <table class="overview" data-page-mode="view">
+                                            <tbody>
+                                            {#        Phone 1       #}
+                                            {% if profile.phone_1 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                        {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                    <td>{{ profile.phone_1 }}</td>
+                                                </tr>
                                             {% endif %}
+
+                                            {#        Phone 2       #}
+                                            {% if profile.phone_2 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                    <td>{{ profile.phone_2 }}</td>
+                                                </tr>
+                                            {% endif %}
+
+                                            {#        Email       #}
+                                            {% if profile_user.email %}
+                                                {% if not user.is_anonymous %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>
+                                                            <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
+                                                                {% if profile_user.first_name or profile_user.last_name %}
+                                                                    {{ profile_user.first_name }}
+                                                                    {{ profile_user.last_name }}
+                                                                {% else %}
+                                                                    {{ profile_user.username }}
+                                                                {% endif %}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {#        Website       #}
+                                            {% if profile.website %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Website</span></td>
+                                                        <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
+                                                    </tr>
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+
+                                        {% if profile_user.id == user.id %}
+                                        <div class="row" data-page-mode="edit">
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 1</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_1_type" class="form-control">
+                                                        <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 2</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_2_type" class="form-control">
+                                                        <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset class="col-sm-12">
+                                                <label>Email address *</label>
+                                                <input class="form-control form-required" id="id_email"
+                                                       value="{{ profile_user.email }}" name="email">
+                                            </fieldset>
+
+                                            <fieldset class="col-sm-12">
+                                                <label>Website</label>
+                                                <input class="form-control"
+                                                       {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
+                                            </fieldset>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {# AUTHOR IDENTIFIERS #}
+                                <div class="panel panel-default {% if not profile.identifiers %}hidden{% endif %}"
+                                     data-page-mode="view">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author
+                                            Identifiers</h3>
+                                    </div>
+
+                                    <div class="panel-body">
+                                        <table class="identifiers">
+                                            {% for name, link in profile.identifiers.items %}
+                                            <tr>
+                                                <td colspan="2"><strong>{{ name }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    {% if name == "Google Scholar" %}
+                                                    <i class="identifier-icon ai ai-google-scholar-square"></i>
+                                                    {% elif name == "ORCID" %}
+                                                    <i class="identifier-icon ai ai-orcid"></i>
+                                                    {% elif name == "ResearchGate" %}
+                                                    <i class="identifier-icon ai ai-researchgate-square"></i>
+                                                    {% elif name == "ResearcherID" %}
+                                                    <img class="identifier-icon"
+                                                         src="{{ STATIC_URL }}img/researcherID.png"
+                                                         alt="ResearcherID icon"/>
+                                                    {% else %}
+                                                    <i class="identifier-icon fa fa-address-card"></i>
+                                                    {% endif %}
+                                                </td>
+                                                <td><a href="{{ link }}" target="_blank"
+                                                       class="identifier-url">{{ link }}</a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {% if profile_user.id == user.id %}
+                                <div class="panel panel-default"  data-page-mode="edit">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="fa fa-address-card-o" style="width:32px;">&nbsp;</span>Author
+                                            Identifiers</h3>
+                                    </div>
+
+                                    <div class="panel-body">
+                                        {% include "includes/identifiers-form.html" with identifiers=profile.identifiers %}
                                     </div>
                                 </div>
                                 {% endif %}
@@ -703,7 +788,16 @@
                 </div>
             </div>
 
-            {% if profile_user.id == user.id %}
+        {% if profile_user.id == user.id %}
+            <div class="col-xs-12 col-sm-3 height-fix pull-right">
+            <button type="submit" class="btn btn-primary pull-right
+                btn-save-profile" data-page-mode="edit">
+                Save changes
+            </button>
+            <span data-page-mode="edit"
+                  class="btn btn-default pull-right btn-cancel-profile-edit">Cancel</span>
+        </div>
+
             <!-- Deactivate Account Modal -->
             <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="Deactivate account">
@@ -794,6 +888,38 @@
                 </div>
             </div>
 
+            <!-- Delete iRODS User Account Modal -->
+            <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
+                 aria-labelledby="Create iRODS user account">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-sm-2 col-xs-12 text-center">
+                                    <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
+                                </div>
+                                <div class="col-sm-10 col-xs-12">
+                                    <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
+                                        HydroShare user zone as well as all data you have under that account. You cannot recover
+                                        your data after this action.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Create iRODS User Account Modal -->
             <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
                  aria-labelledby="myModalLabel" aria-hidden="true">
@@ -831,66 +957,14 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Delete iRODS User Account Modal -->
-            <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
-                 aria-labelledby="Create iRODS user account">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-sm-2 col-xs-12 text-center">
-                                    <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
-                                </div>
-                                <div class="col-sm-10 col-xs-12">
-                                    <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
-                                        HydroShare user zone as well as all data you have under that account. You cannot recover
-                                        your data after this action.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button id="btn-delete-irods-account" class="btn btn-danger">Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </form>
+        {% endif %}
         {% endwith %}
     </div>
 {% endblock %}
-
-{% block extra_css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.tagsinput-revisited.min.css" />
-  <style>
-    .tagsinput {
-      border: 1px solid #ccc;
-    }
-
-    .tagsinput div input::-webkit-input-placeholder {
-      color: #777;
-    }
-
-    .tagsinput .tag {
-      background: #DDD;
-      color: #111;
-    }
-  </style>
-{%  endblock %}
 
 {% block extra_js %}
     {{ block.super }}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/profile.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tagsinput-revisited.min.js"></script>
 {% endblock %}
-
