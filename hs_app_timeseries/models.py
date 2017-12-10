@@ -1223,7 +1223,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         else:
             # self must be TimeSeriesFileMetaData
             ds_title = self.logical_file.dataset_name
-            ds_abstract = self.abstract
+            ds_abstract = self.abstract if self.abstract is not None else ''
 
         cur.execute(update_sql, (ds_title, ds_abstract), )
         con.commit()
@@ -1244,7 +1244,7 @@ class TimeSeriesMetaDataMixin(models.Model):
         else:
             # self must be TimeSeriesFileMetaData
             ds_title = self.logical_file.dataset_name
-            ds_abstract = self.abstract
+            ds_abstract = self.abstract if self.abstract is not None else ''
             ds_code = self.logical_file.resource.short_id
 
         cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
