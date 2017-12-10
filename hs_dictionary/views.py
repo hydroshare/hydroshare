@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -14,11 +16,18 @@ class ListUniversities(APIView):
         Return a list of all vocabulary items
         :return:
         """
+        terms = request.GET.get('term', '')
+        term_list = terms.split(' ')
 
-        if query:
-            filtered_unis = University.objects.filter(name__icontains=query)
+        if len(term_list):
+            filtered_unis = University.objects.filter(
+                reduce(lambda x, y: x & y, [Q(name__icontains=word) for word in term_list])
+            )
             universities = [uni.name for uni in filtered_unis]
         else:
-            universities = [uni.name for uni in University.objects.all()]
+            universities = []
+
+        if len(universities) > 50:
+            universities = ['Too many items to list, please continue typing...']
 
         return Response(universities)
