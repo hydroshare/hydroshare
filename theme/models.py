@@ -295,7 +295,7 @@ class UserProfile(models.Model):
 
     # to store one or more external identifier (Google Scholar, ResearchGate, ORCID etc)
     # each identifier is stored as a key/value pair {name:link}
-    identifiers = HStoreField(default={})
+    identifiers = HStoreField(default={}, null=True, blank=True)
 
 
 def force_unique_emails(sender, instance, **kwargs):
