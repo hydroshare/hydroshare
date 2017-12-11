@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_file_types', '0005_reftimeseriesfilemetadata_reftimeserieslogicalfile'),
+        ('hs_file_types', '0006_auto_20170812_1621'),
     ]
 
     operations = [

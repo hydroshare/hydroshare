@@ -658,6 +658,8 @@ class MODFLOWModelInstanceResource(BaseResource):
                     name_file = res_file.resource_file.file
                     for row in name_file:
                         row = row.strip()
+                        row = row.replace("'", "")
+                        row = row.replace('"', "")
                         row = row.split(" ")
                         r = row[0].strip()
                         if not r.startswith('#') and r != '' and r.lower() != 'list' \

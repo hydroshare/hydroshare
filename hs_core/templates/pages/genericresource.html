@@ -6,6 +6,7 @@
     <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
     <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
     <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/hs-file-icons.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -167,6 +168,10 @@
                             <span class="glyphicon glyphicon-check icon-blue"></span>
                             <span>Set Reference Timeseries File Type</span>
                         </li>
+                        <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
+                            <span class="glyphicon glyphicon-check icon-blue"></span>
+                            <span>Set Timeseries File Type</span>
+                        </li>
                     {%  endif %}
                 </ul>
 
@@ -310,7 +315,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-12 col-sm-5 col-md-6">
+                                            <div class="col-xs-12 col-sm-5 col-md-6" style="display: inline-block;">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                 <span id="btn-clear-search-input"
@@ -396,32 +401,6 @@
                                                         title="Get file URL">
                                                     <span class="fa fa-link icon-blue"></span>
                                                 </button>
-
-                                                {% if page.perms.change and resource_edit_mode %}
-                                                    <button id="fb-set-geo-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Raster File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Raster</span>
-                                                    </button>
-                                                    <button id="fb-set-netcdf-file-type"
-                                                            class="disabled"
-                                                            title="Set Multidimensional Data File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Multidimensional</span>
-                                                    </button>
-                                                    <button id="fb-set-geofeature-file-type"
-                                                            class="disabled"
-                                                            title="Set Geographic Feature File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                        <span class="caption-file-type">Geographic Feature</span>
-                                                    </button>
-                                                    <button id="fb-set-refts-file-type"
-                                                            class="disabled"
-                                                            title="Set Reference Timeseries File Type">
-                                                        <span class="glyphicon glyphicon-check icon-blue"></span>
-                                                    </button>
-                                                 {% endif %}
 
                                                 {% if page.perms.change and metadata_form %}
                                                     <button id="fb-delete"
@@ -575,7 +554,7 @@
                             {% endif %}
                                 <span class="glyphicon glyphicon-download-alt">
                                     <span title='Download All Content as Zipped BagIt Archive'
-                                          class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                          class="button-label"> Download All Content as Zipped BagIt Archive</span>
                                 </span>
                                 </a>
                             </div>
@@ -646,7 +625,7 @@
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
-                            {% if relevant_tools  %}
+                            {% if relevant_tools %}
                                 <li class="col-xs-2 col-md-2">
                                     <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
                                         <span class="glyphicon glyphicon-wrench"></span>
@@ -825,14 +804,14 @@
                                                     <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                           class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
                                                            data-target="#edit-creator-dialog{{ author.id }}"
                                                         ></a>
 
                                                         {# Prevent deletion of last creator#}
                                                         {% if creator_formset.initial|length > 1 %}
                                                             <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
                                                                data-target="#delete-creator-dialog{{ author.id }}"></a>
                                                         {% endif %}
                                                     </td>
@@ -885,11 +864,11 @@
                                                         {{ contributor.phone }}{% endif %}</td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                           class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                           class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
                                                            data-target="#edit-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                         <a data-toggle="modal" data-placement="auto" title="Remove"
-                                                           class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                           class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
                                                            data-target="#delete-contributor-dialog{{ contributor.id }}"
                                                         ></a>
                                                     </td>
@@ -909,29 +888,30 @@
                             {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                 <div class="tab-pane" id="relatedResourcesTab">
                                     {% if not metadata_form %}
-                                        {% if sources %}
-                                            <h4><strong>Sources</strong></h4>
-                                            <hr style="margin-top: 0px;margin-bottom: 2px">
+                                    {% if sources %}
+                                        <table class="table hs-table">
+                                            <legend>Sources</legend>
                                             {% for source in sources %}
-                                                <div class="row">
-                                                    <div class="col-sm-4"><strong>Derived From:</strong></div>
-                                                    <div class="col-sm-8 url-clickable">{{ source.derived_from }}</div>
-                                                </div>
+                                            <tr>
+                                                <th class="dataset-label"><strong>Derived From:</strong></th>
+                                                <td class="dataset-details">{{ source.derived_from|urlize }}</td>
+                                            </tr>
                                             {% endfor %}
-                                        {% endif %}
-                                        {% if show_relations_section %}
-                                            <hr style="border: 0;">
-                                            <h4><strong>Relations</strong></h4>
-                                            <hr style="margin-top: 0;margin-bottom: 2px">
+                                        </table>
+                                    {% endif %}
+                                    {% if show_relations_section %}
+                                        <table class="table hs-table" style="margin-bottom: 0;">
+                                            <legend>Relations</legend>
                                             {% for relation in relations %}
-                                                {% if  relation.type|lower != "haspart"%}
-                                                    <div class="row">
-                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8 url-clickable">{{ relation.value }}</div>
-                                                    </div>
-                                                {% endif %}
+                                            {% if relation.type|lower != "haspart"%}
+                                            <tr>
+                                                <th class="dataset-label"><strong>{{ relation.type }}:</strong></th>
+                                                <td class="dataset-details">{{ relation.value|urlize }}</td>
+                                            </tr>
+                                            {% endif %}
                                             {% endfor %}
-                                        {% endif %}
+                                        </table>
+                                    {% endif %}
                                     {% else %}
                                         <div>
                                             <table class="table hs-table" style="margin-bottom: 0;">
@@ -940,19 +920,17 @@
                                                 {% for source in source_formset.initial %}
                                                     <tr>
                                                         <th scope="row" class="dataset-label">Derived From:</th>
-                                                        <td class="dataset-details url-clickable">{{ source.derived_from }}</td>
+                                                        <td class="dataset-details">{{ source.derived_from|urlize }}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                               data-target="#edit-source-dialog{{ source.id }}"
-                                                               style="top: -5px; "></a>
+                                                               class="glyphicon glyphicon-pencil icon-button table-icon icon-blue"
+                                                               data-target="#edit-source-dialog{{ source.id }}"></a>
                                                         </td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto"
                                                                title="Remove"
-                                                               class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                               data-target="#delete-source-element-dialog{{ source.id }}"
-                                                               style="top: -5px; right:20px;"></a>
+                                                               class="glyphicon glyphicon-trash icon-button table-icon btn-remove"
+                                                               data-target="#delete-source-element-dialog{{ source.id }}"></a>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -975,19 +953,17 @@
                                                     {% if  relation.type|lower != "haspart"%}
                                                         <tr>
                                                             <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details url-clickable">{{ relation.value }}</td>
+                                                            <td class="dataset-details">{{ relation.value|urlize }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                   style="top: -5px; "></a>
+                                                                   class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"
+                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"></a>
                                                             </td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto"
                                                                    title="Remove"
-                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                   style="top: -5px; right:20px;"></a>
+                                                                   class="glyphicon glyphicon-trash table-icon icon-button btn-remove"
+                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"></a>
                                                             </td>
                                                         </tr>
                                                     {% endif %}
@@ -1108,18 +1084,28 @@
                             {% if relevant_tools %}
                                 <div class="tab-pane" id="relevantTools">
                                     {% if not metadata_form %}
-                                        {% for tool in relevant_tools %}
-                                            <div title="{{ tool.title }}" id="web-app-item">
-						<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" >
-                                                    {% if tool.title|length > 20 %}
-                                                        <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
-                                                    {% else %}
-                                                        <h4>{{ tool.title }}</h4>
-                                                    {% endif %}
-                                                    <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                                </a>
-                                            </div>
-                                        {% endfor %}
+                                        <div class="row">
+                                            {% for tool in relevant_tools.tool_list %}
+                                                <div class="col-lg-3 col-md-4 col-sm-12">
+                                                    <div title="{{ tool.title }}" id="web-app-item">
+                                                    <a href="/resource/{{ tool.res_id }}/" class="app-info-toggle" target="_blank" data-toggle="tooltip"  title="View WebApp landing page">i</a>
+    						                         {% if tool.approved %}
+                                                         <a class="app-approved-icon-a" data-toggle="tooltip" title="Approved App">
+                                                             <img class="app-approved-icon-img" src="/static/img/approved_app.png">
+                                                         </a>
+                                                     {% endif %}
+                                                    <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank" data-toggle="tooltip" data-placement="bottom" title="Open resource with this WebApp">
+                                                        {% if tool.title|length > 20 %}
+                                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
+                                                        {% else %}
+                                                            <h4>{{ tool.title }}</h4>
+                                                        {% endif %}
+                                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                                    </a>
+                                                </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     {% else %}
                                         ------- Relevant tools form here -------
                                     {%  endif %}
@@ -1150,8 +1136,8 @@
                                                     <td>
                                                         {{ extra_meta_name }}
                                                     </td>
-                                                    <td class="url-clickable">
-                                                        {{ extra_meta_value }}
+                                                    <td>
+                                                        {{ extra_meta_value|urlize }}
                                                     </td>
                                                     {% if metadata_form %}
                                                         <td>

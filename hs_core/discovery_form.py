@@ -4,12 +4,29 @@ from django import forms
 
 
 class DiscoveryForm(FacetedSearchForm):
+    SORT_ORDER_VALUES = ('title', 'author_normalized', 'created', 'modified')
+    SORT_ORDER_CHOICES = (('title', 'Title'),
+                          ('author_normalized', 'First Author'),
+                          ('created', 'Date Created'),
+                          ('modified', 'Last Modified'))
+
+    SORT_DIRECTION_VALUES = ('', '-')
+    SORT_DIRECTION_CHOICES = (('', 'Ascending'),
+                              ('-', 'Descending'))
+
     NElat = forms.CharField(widget=forms.HiddenInput(), required=False)
     NElng = forms.CharField(widget=forms.HiddenInput(), required=False)
     SWlat = forms.CharField(widget=forms.HiddenInput(), required=False)
     SWlng = forms.CharField(widget=forms.HiddenInput(), required=False)
     start_date = forms.DateField(label='From Date', required=False)
     end_date = forms.DateField(label='To Date', required=False)
+    coverage_type = forms.CharField(widget=forms.HiddenInput(), required=False)
+    sort_order = forms.CharField(label='Sort By:',
+                                 widget=forms.Select(choices=SORT_ORDER_CHOICES),
+                                 required=False)
+    sort_direction = forms.CharField(label='Sort Direction:',
+                                     widget=forms.Select(choices=SORT_DIRECTION_CHOICES),
+                                     required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):
@@ -29,21 +46,16 @@ class DiscoveryForm(FacetedSearchForm):
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
             if float(self.cleaned_data['NElng']) > float(self.cleaned_data['SWlng']):
-                if geo_sq is None:
-                    geo_sq = SQ(coverage_east__lte=float(self.cleaned_data['NElng']))
-                else:
-                    geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
+                geo_sq = SQ(coverage_east__lte=float(self.cleaned_data['NElng']))
                 geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
             else:
-                if geo_sq is None:
-                    geo_sq = SQ(coverage_east__gte=float(self.cleaned_data['SWlng']))
-                else:
-                    geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
+                geo_sq = SQ(coverage_east__gte=float(self.cleaned_data['SWlng']))
                 geo_sq.add(SQ(coverage_east__lte=float(180)), SQ.OR)
                 geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
                 geo_sq.add(SQ(coverage_east__gte=float(-180)), SQ.AND)
 
         if self.cleaned_data['NElat'] and self.cleaned_data['SWlat']:
+            # latitude might be specified without longitude
             if geo_sq is None:
                 geo_sq = SQ(coverage_north__lte=float(self.cleaned_data['NElat']))
             else:
@@ -61,17 +73,19 @@ class DiscoveryForm(FacetedSearchForm):
         if self.cleaned_data['end_date']:
             sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
 
+        if self.cleaned_data['coverage_type']:
+            sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
+
         authors_sq = None
         subjects_sq = None
         resource_type_sq = None
         public_sq = None
-        owners_names = None
+        owners_names_sq = None
         discoverable_sq = None
         published_sq = None
         variable_names_sq = None
         sample_mediums_sq = None
         units_names_sq = None
-        owners_names_sq = None
 
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
@@ -155,8 +169,8 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(resource_type_sq)
         if public_sq is not None:
             sqs = sqs.filter(public_sq)
-        if owners_names is not None:
-            sqs = sqs.filter(owners_names)
+        if owners_names_sq is not None:
+            sqs = sqs.filter(owners_names_sq)
         if discoverable_sq is not None:
             sqs = sqs.filter(discoverable_sq)
         if published_sq is not None:

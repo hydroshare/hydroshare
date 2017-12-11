@@ -230,6 +230,7 @@ class SignupForm(forms.ModelForm):
     Captcha = forms.CharField(required=False)
     challenge = forms.CharField()
     response = forms.CharField()
+    organization = forms.CharField(required=True)
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -264,6 +265,7 @@ class SignupForm(forms.ModelForm):
         return create_account(
             email=data['email'],
             username=data['username'],
+            organization=data['organization'],
             first_name=data['first_name'],
             last_name=data['last_name'],
             superuser=False,
