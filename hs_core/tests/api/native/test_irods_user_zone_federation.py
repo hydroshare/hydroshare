@@ -269,3 +269,69 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
                           msg='Number of resources not equal to 0')
         # test to make sure original file still exist after resource deletion
         self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
+
+def test_quota_update_in_user_zone(self):
+    # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
+    # are set up properly
+    if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
+        return
+    # create a resource in the default HydroShare data iRODS zone for aggregated quota
+    # update testing
+    res = resource.create_resource(
+        'GenericResource',
+        self.user,
+        'My Test Resource in Data Zone'
+    )
+
+    # create a resource in federated user zone
+    fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
+        zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
+    fed_res = resource.create_resource(
+        resource_type='GenericResource',
+        owner=self.user,
+        title='My Test Generic Resource in User Zone',
+        source_names=[fed_test_file_full_path]
+    )
+
+    self.assertEqual(fed_res.files.all().count(), 1,
+                     msg="Number of content files is not equal to 1")
+
+    self.assertTrue(res.creator == self.user)
+    self.assertTrue(res.get_quota_holder() == self.user)
+    self.assertTrue(fed_res.creator == self.user)
+    self.assertTrue(fed_res.get_quota_holder() == self.user)
+    # COMMENTED THE FOLLOWING TEST CODE FOR NOW SINCE IRODS PROXY USER DOES NOT HAVE PERMISSION
+    # TO SET USER TYPE AVU ON IT ALTHOUGH RODS SERVICE USER HAS PERMISSION TO DO SO. WILL
+    # UPDATE THE TEST ACCORDINGLY AFTER THIS PERMISSION ISSUE IS WORKED OUT
+    # attname = self.user.username + '-quota'
+    # test_qsize = 2 # unit: GB
+    # this quota size AVU will be set by real time iRODS quota usage update micro-services.
+    # For testing, setting it programmatically to test the quota size will be picked up
+    # automatically when files are added into this resource
+    # istorage = res.get_irods_storage()
+    # data_proxy_name = settings.IRODS_USERNAME + '#' + settings.HS_WWW_IRODS_ZONE
+    # istorage.setAVU(data_proxy_name, attname, str(test_qsize), type='-u')
+    # get_qsize = istorage.getAVU(data_proxy_name, attname, type='-u')
+    # self.assertEqual(test_qsize, int(get_qsize))
+
+    # istorage = fed_res.get_irods_storage()
+    # user_proxy_name = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
+    # istorage.setAVU(user_proxy_name, attname, str(test_qsize), type='-u')
+    # get_qsize = istorage.getAVU(user_proxy_name, attname, type='-u')
+    # self.assertEqual(test_qsize, int(get_qsize))
+
+    # add_resource_files(res.short_id, self.file_one)
+    # wait up to 70 seconds to accommodate celery quota update task being triggered in 60
+    # seconds in order to give some time for iRODS micro-services to finish updating quota
+    # calculation and update
+    # target_qsize = test_qsize * 2
+    # for i in range(35):
+    #    uquota = self.user.quotas.first()
+    #    if uquota == target_qsize:
+    #        break
+    #    time.sleep(2)
+    # self.assertEqual(uquota.used_value, target_qsize)
+
+    # delete test resources
+    resource.delete_resource(res.short_id)
+    resource.delete_resource(fed_res.short_id)
