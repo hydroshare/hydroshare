@@ -2,6 +2,7 @@
 
 from dateutil import parser
 import tempfile
+import subprocess
 
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -108,6 +109,60 @@ class TestCaseCommonUtilities(object):
         self.irods_storage = IrodsStorage('federated')
         for file_name, target_name in file_name_to_target_name_dict.iteritems():
             self.irods_storage.saveFile(file_name, target_name)
+
+    def set_user_type_avu(self, name, attrname, attrval):
+        # since only rodsadmin users have permissions to set user type AVUs, need to run
+        # docker exec system call as subprocess to run iRODS command as rods admin user for this
+        if settings.IRODS_USERNAME in name:
+            host = settings.IRODS_HOST
+            zone = settings.IRODS_ZONE
+            env_fname = 'irods/env-files/rods@data.local.org.env'
+            s_id = 'data_rods_session'
+        elif settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE in name:
+            host = settings.HS_USER_ZONE_HOST
+            zone = settings.HS_USER_IRODS_ZONE
+            env_fname = 'irods/env-files/rods@users.local.org.env'
+            s_id = 'users_rods_session'
+        else:
+            self.fail('pass in name input argument has to be a iRODS proxy user name in the '
+                      'data zone or user zone set up in federated iRODS docker containers')
+        uname = 'rods'
+        pwd = 'rods'
+        uname_key = 'IRODS_USER_NAME='
+        pwd_key = 'IRODS_PASSWORD='
+        # read local environment file to get user name and password
+        with open(env_fname) as f:
+            content = f.readlines()
+            for x in content:
+                if x.startswith(uname_key):
+                    uname = x[len(uname_key):len(x)-1]
+                elif x.startswith(pwd_key):
+                    pwd = x[len(pwd_key):len(x)]
+
+        istorage = IrodsStorage()
+        istorage.set_user_session(username=uname, password=pwd, host=host,
+                                  port=settings.IRODS_PORT, zone=zone, sess_id=s_id)
+        istorage.setAVU(name, attrname, attrval, type='-u')
+        return
+
+    def verify_user_quota_usage_avu_in_user_zone(self, attname, qsize):
+        '''
+        Have to use HS_USER_ZONE_PROXY_USER with rodsadmin role to get user type AVU in user zone
+        and verify its quota usage is set correctly
+        :param attname: quota usage attribute name set on iRODS proxy user in user zone
+        :param qsize: quota size (type string) to be verified to equal to the value set for attname.
+        '''
+        istorage = IrodsStorage()
+        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
+                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                  host=settings.HS_USER_ZONE_HOST,
+                                  port=settings.IRODS_PORT,
+                                  zone=settings.HS_USER_IRODS_ZONE,
+                                  sess_id='user_proxy_session')
+        user_proxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + \
+                           settings.HS_USER_IRODS_ZONE
+        get_qsize = istorage.getAVU(user_proxy_uname, attname, type='-u')
+        self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):
         """Test common iRODS file operations.

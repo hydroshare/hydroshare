@@ -4,10 +4,11 @@ from django.test import TransactionTestCase
 from django.conf import settings
 from django.contrib.auth.models import Group
 
-from hs_core.models import BaseResource
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 from hs_core.testing import TestCaseCommonUtilities
+from hs_core.tasks import update_quota_usage_task
+from hs_core.hydroshare.utils import convert_file_size_to_unit
 
 
 class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
@@ -85,253 +86,67 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         os.remove(self.file_three)
         os.remove(self.file_to_be_deleted)
 
-    def test_resource_operations_in_user_zone(self):
+    def test_quota_update_in_fed_zones(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
         if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
             return
-        # test resource creation and "move" option in federated user zone
-        fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_to_be_deleted)
+        # create a resource in the default HydroShare data iRODS zone for aggregated quota
+        # update testing
         res = resource.create_resource(
+            'GenericResource',
+            self.user,
+            'My Test Resource in Data Zone'
+        )
+        self.assertTrue(res.creator == self.user)
+        self.assertTrue(res.get_quota_holder() == self.user)
+
+        # IRODS PROXY USER DOES NOT HAVE PERMISSION TO SET USER TYPE AVU ON IT since only rodsadmin
+        # can set up user type AVUs. As a result, use docker exec subprocess to set user type AVU
+        # using rodsadmin for testing purpose
+        attname = self.user.username + '-quota'
+        test_qsize = '2000000000'  # 2GB
+        # this quota size AVU will be set by real time iRODS quota usage update micro-services.
+        # For testing, setting it programmatically to test the quota size will be picked up
+        # automatically when files are added into this resource
+        data_proxy_name = settings.IRODS_USERNAME + '#' + settings.IRODS_ZONE
+        super(TestUserZoneIRODSFederation, self).set_user_type_avu(data_proxy_name, attname,
+                                                                   test_qsize)
+        istorage = res.get_irods_storage()
+        get_qsize = istorage.getAVU(data_proxy_name, attname, type='-u')
+        self.assertEqual(test_qsize, get_qsize)
+
+        user_proxy_name = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + \
+                          settings.HS_USER_IRODS_ZONE
+        super(TestUserZoneIRODSFederation, self).set_user_type_avu(user_proxy_name, attname,
+                                                                   str(test_qsize))
+        super(TestUserZoneIRODSFederation, self).verify_user_quota_usage_avu_in_user_zone(
+            attname, test_qsize)
+
+        # create a resource in federated user zone which should trigger quota usage update
+        fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
+            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
+        fed_res = resource.create_resource(
             resource_type='GenericResource',
             owner=self.user,
             title='My Test Generic Resource in User Zone',
-            source_names=[fed_test_file_full_path],
-            move=True
+            source_names=[fed_test_file_full_path]
         )
-
-        self.assertEqual(res.files.all().count(), 1,
+        self.assertEqual(fed_res.files.all().count(), 1,
                          msg="Number of content files is not equal to 1")
-        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
-                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-        user_path = '/{zone}/home/testuser/'.format(zone=settings.HS_USER_IRODS_ZONE)
-        self.assertEqual(res.resource_federation_path, fed_path)
-        # test original file in user test zone is removed after resource creation
-        # since True is used for move when creating the resource
-        self.assertFalse(self.irods_storage.exists(user_path + self.file_to_be_deleted))
 
-        # test resource file deletion
-        res.files.all().delete()
-        self.assertEqual(res.files.all().count(), 0,
-                         msg="Number of content files is not equal to 0")
+        self.assertTrue(fed_res.creator == self.user)
+        self.assertTrue(fed_res.get_quota_holder() == self.user)
 
-        # test add multiple files and 'copy' option in federated user zone
-        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-        fed_test_file2_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_two)
-        hydroshare.add_resource_files(
-            res.short_id,
-            source_names=[fed_test_file1_full_path, fed_test_file2_full_path],
-            move=False)
-        # test resource has two files
-        self.assertEqual(res.files.all().count(), 2,
-                         msg="Number of content files is not equal to 2")
+        # Although the resource creation operation above will trigger quota update celery task,
+        # in the test environment, celery task is not really executed, so have to test quota update
+        # task explicitely here
+        update_quota_usage_task(self.user.username)
+        uquota = self.user.quotas.first()
+        target_qsize = convert_file_size_to_unit(float(test_qsize) * 2, uquota.unit)
+        error = abs(uquota.used_value - target_qsize)
+        self.assertLessEqual(error, 0.5, msg='error is ' + str(error))
 
-        file_list = []
-        for f in res.files.all():
-            file_list.append(f.storage_path.split('/')[-1])
-        self.assertTrue(self.file_one in file_list,
-                        msg='file 1 has not been added in the resource in user zone')
-        self.assertTrue(self.file_two in file_list,
-                        msg='file 2 has not been added in the resource in user zone')
-        # test original two files in user test zone still exist after adding them to the resource
-        # since False  is used for move when creating the resource
-        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
-        self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
-
-        # test resource deletion
+        # delete test resources
         resource.delete_resource(res.short_id)
-        self.assertEquals(BaseResource.objects.all().count(), 0,
-                          msg='Number of resources not equal to 0')
-
-        # test create new version resource in user zone
-        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-        ori_res = resource.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Original Generic Resource in User Zone',
-            source_names=[fed_test_file1_full_path],
-            move=False
-        )
-        # make sure ori_res is created in federated user zone
-        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
-                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-        self.assertEqual(ori_res.resource_federation_path, fed_path)
-        self.assertEqual(ori_res.files.all().count(), 1,
-                         msg="Number of content files is not equal to 1")
-
-        new_res = hydroshare.create_empty_resource(ori_res.short_id, self.user)
-        new_res = hydroshare.create_new_version_resource(ori_res, new_res, self.user)
-        # only need to test file-related attributes
-        # ensure new versioned resource is created in the same federation zone as original resource
-        self.assertEqual(ori_res.resource_federation_path, new_res.resource_federation_path)
-        # ensure new versioned resource has the same number of content files as original resource
-        self.assertEqual(ori_res.files.all().count(), new_res.files.all().count())
-        # delete resources to clean up
-        resource.delete_resource(new_res.short_id)
-        resource.delete_resource(ori_res.short_id)
-
-        # test copy resource in user zone
-        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-        ori_res = resource.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Original Generic Resource in User Zone',
-            source_names=[fed_test_file1_full_path],
-            move=False
-        )
-        # make sure ori_res is created in federated user zone
-        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
-                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-        self.assertEqual(ori_res.resource_federation_path, fed_path)
-        self.assertEqual(ori_res.files.all().count(), 1,
-                         msg="Number of content files is not equal to 1")
-
-        new_res = hydroshare.create_empty_resource(ori_res.short_id, self.user, action='copy')
-        new_res = hydroshare.copy_resource(ori_res, new_res)
-        # only need to test file-related attributes
-        # ensure new copied resource is created in the same federation zone as original resource
-        self.assertEqual(ori_res.resource_federation_path, new_res.resource_federation_path)
-        # ensure new copied resource has the same number of content files as original resource
-        self.assertEqual(ori_res.files.all().count(), new_res.files.all().count())
-        # delete resources to clean up
-        resource.delete_resource(new_res.short_id)
-        resource.delete_resource(ori_res.short_id)
-
-        # test folder operations in user zone
-        fed_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-        fed_file2_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_two)
-        fed_file3_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_three)
-        self.res = resource.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Original Generic Resource in User Zone',
-            source_names=[fed_file1_full_path, fed_file2_full_path, fed_file3_full_path],
-            move=False
-        )
-        # make sure self.res is created in federated user zone
-        fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
-                                                user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-        self.assertEqual(self.res.resource_federation_path, fed_path)
-        # resource should has only three files at this point
-        self.assertEqual(self.res.files.all().count(), 3,
-                         msg="resource file count didn't match")
-
-        self.file_name_list = [self.file_one, self.file_two, self.file_three]
-        super(TestUserZoneIRODSFederation, self).resource_file_oprs()
-
-        # delete resources to clean up
-        resource.delete_resource(self.res.short_id)
-
-        # test adding files from federated user zone to an empty resource
-        # created in hydroshare zone
-        res = resource.create_resource(
-            resource_type='GenericResource',
-            owner=self.user,
-            title='My Test Generic Resource in HydroShare Zone'
-        )
-        self.assertEqual(res.files.all().count(), 0,
-                         msg="Number of content files is not equal to 0")
-        fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
-            zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-        hydroshare.add_resource_files(
-            res.short_id,
-            source_names=[fed_test_file1_full_path],
-            move=False)
-        # test resource has one file
-        self.assertEqual(res.files.all().count(), 1,
-                         msg="Number of content files is not equal to 1")
-
-        file_list = []
-        for f in res.files.all():
-            file_list.append(os.path.basename(f.storage_path))
-        self.assertTrue(self.file_one in file_list,
-                        msg='file 1 has not been added in the resource in hydroshare zone')
-        # test original file in user test zone still exist after adding it to the resource
-        # since 'copy' is used for fed_copy_or_move when adding the file to the resource
-        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
-
-        # test replication of this resource to user zone
-        hydroshare.replicate_resource_bag_to_user_zone(self.user, res.short_id)
-        self.assertTrue(self.irods_storage.exists(user_path + res.short_id + '.zip'),
-                        msg='replicated resource bag is not in the user zone')
-
-        # test resource deletion
-        resource.delete_resource(res.short_id)
-        self.assertEquals(BaseResource.objects.all().count(), 0,
-                          msg='Number of resources not equal to 0')
-        # test to make sure original file still exist after resource deletion
-        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
-
-def test_quota_update_in_user_zone(self):
-    # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
-    # are set up properly
-    if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
-        return
-    # create a resource in the default HydroShare data iRODS zone for aggregated quota
-    # update testing
-    res = resource.create_resource(
-        'GenericResource',
-        self.user,
-        'My Test Resource in Data Zone'
-    )
-
-    # create a resource in federated user zone
-    fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
-        zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
-    fed_res = resource.create_resource(
-        resource_type='GenericResource',
-        owner=self.user,
-        title='My Test Generic Resource in User Zone',
-        source_names=[fed_test_file_full_path]
-    )
-
-    self.assertEqual(fed_res.files.all().count(), 1,
-                     msg="Number of content files is not equal to 1")
-
-    self.assertTrue(res.creator == self.user)
-    self.assertTrue(res.get_quota_holder() == self.user)
-    self.assertTrue(fed_res.creator == self.user)
-    self.assertTrue(fed_res.get_quota_holder() == self.user)
-    # COMMENTED THE FOLLOWING TEST CODE FOR NOW SINCE IRODS PROXY USER DOES NOT HAVE PERMISSION
-    # TO SET USER TYPE AVU ON IT ALTHOUGH RODS SERVICE USER HAS PERMISSION TO DO SO. WILL
-    # UPDATE THE TEST ACCORDINGLY AFTER THIS PERMISSION ISSUE IS WORKED OUT
-    # attname = self.user.username + '-quota'
-    # test_qsize = 2 # unit: GB
-    # this quota size AVU will be set by real time iRODS quota usage update micro-services.
-    # For testing, setting it programmatically to test the quota size will be picked up
-    # automatically when files are added into this resource
-    # istorage = res.get_irods_storage()
-    # data_proxy_name = settings.IRODS_USERNAME + '#' + settings.HS_WWW_IRODS_ZONE
-    # istorage.setAVU(data_proxy_name, attname, str(test_qsize), type='-u')
-    # get_qsize = istorage.getAVU(data_proxy_name, attname, type='-u')
-    # self.assertEqual(test_qsize, int(get_qsize))
-
-    # istorage = fed_res.get_irods_storage()
-    # user_proxy_name = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
-    # istorage.setAVU(user_proxy_name, attname, str(test_qsize), type='-u')
-    # get_qsize = istorage.getAVU(user_proxy_name, attname, type='-u')
-    # self.assertEqual(test_qsize, int(get_qsize))
-
-    # add_resource_files(res.short_id, self.file_one)
-    # wait up to 70 seconds to accommodate celery quota update task being triggered in 60
-    # seconds in order to give some time for iRODS micro-services to finish updating quota
-    # calculation and update
-    # target_qsize = test_qsize * 2
-    # for i in range(35):
-    #    uquota = self.user.quotas.first()
-    #    if uquota == target_qsize:
-    #        break
-    #    time.sleep(2)
-    # self.assertEqual(uquota.used_value, target_qsize)
-
-    # delete test resources
-    resource.delete_resource(res.short_id)
-    resource.delete_resource(fed_res.short_id)
+        resource.delete_resource(fed_res.short_id)

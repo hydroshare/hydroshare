@@ -21,7 +21,7 @@ from celery.task import periodic_task
 from celery.schedules import crontab
 from celery import shared_task
 
-from hs_core.models import BaseResource, FedStorage
+from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
@@ -282,8 +282,8 @@ def update_quota_usage_task(username):
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
         # the quota row does not exist in Django
-        logger.error('quota row does not exist in Django for hydroshare_internal zone for user '
-                     + username)
+        logger.error('quota row does not exist in Django for hydroshare_internal zone for '
+                     'user ' + username)
         return False
 
     if not QuotaMessage.objects.exists():
@@ -294,23 +294,34 @@ def update_quota_usage_task(username):
     # get quota size for the user in iRODS data zone
     try:
         istorage = IrodsStorage()
-        uqDataZoneSize = istorage.getAVU(settings.IRODS_USERNAME, attname, type='-u')
+        data_proxy_uname = settings.IRODS_USERNAME + '#' + settings.IRODS_ZONE
+        uqDataZoneSize = istorage.getAVU(data_proxy_uname, attname, type='-u')
         if uqDataZoneSize is None:
             # user may not have resources in data zone, so corresponding quota size AVU may not
             # exist for this user
             uqDataZoneSize = -1
         else:
             uqDataZoneSize = float(uqDataZoneSize)
-    except SessionException as ex:
+    except SessionException:
         # user may not have resources in data zone, so corresponding quota size AVU may not exist
         # for this user
         uqDataZoneSize = -1
 
     # get quota size for the user in iRODS user zone
     try:
-        istorage = FedStorage()
-        uqUserZoneSize = istorage.getAVU(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
-                                         attname, type='-u')
+        # cannot use FedStorage() since the proxy iRODS account in data zone cannot access
+        # user type metadata for the proxy iRODS user in the user zone. Have to create an iRODS
+        # environment session using HS_USER_ZONE_PROXY_USER with an rodsadmin role
+        istorage = IrodsStorage()
+        istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
+                                  password=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                  host=settings.HS_USER_ZONE_HOST,
+                                  port=settings.IRODS_PORT,
+                                  zone=settings.HS_USER_IRODS_ZONE,
+                                  sess_id='user_proxy_session')
+        user_proxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + \
+                           settings.HS_USER_IRODS_ZONE
+        uqUserZoneSize = istorage.getAVU(user_proxy_uname, attname, type='-u')
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
             # exist for this user

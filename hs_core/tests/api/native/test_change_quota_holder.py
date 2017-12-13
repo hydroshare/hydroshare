@@ -8,6 +8,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_access_control.models import PrivilegeCodes
 from hs_core.hydroshare.utils import QuotaException
+from theme.models import QuotaMessage
 
 
 class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
@@ -64,9 +65,23 @@ class TestChangeQuotaHolder(MockIRODSTestCaseMixin, TestCase):
         # make user1's quota over hard limit 125%
         uquota.used_value = uquota.allocated_value * 1.3
         uquota.save()
-        # QuotaException should be raised when attempting to change quota holder to user1
+
+        if not QuotaMessage.objects.exists():
+            QuotaMessage.objects.create()
+        qmsg = QuotaMessage.objects.first()
+        qmsg.enforce_quota = True
+        qmsg.save()
+
+        # QuotaException should be raised when attempting to change quota holder to user1 when
+        # quota is enforced
         with self.assertRaises(QuotaException):
             res.set_quota_holder(self.user2, self.user1)
+
+        qmsg.enforce_quota = False
+        qmsg.save()
+
+        # QuotaException should NOT be raised now that quota is not enforced
+        res.set_quota_holder(self.user2, self.user1)
 
         if res:
             res.delete()
