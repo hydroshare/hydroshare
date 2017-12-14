@@ -781,31 +781,27 @@ $.fn.dataTable.ext.search.push (
         // Extract the pieces of information
         for (var item in collection) {
             if (collection[item][0].toUpperCase() == "TYPE") {
-                isFiltered = true;
                 inputType = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "AUTHOR") {
-                isFiltered = true;
                 inputAuthor = collection[item][1];
             }
             else if (collection[item][0].toUpperCase() == "SUBJECT") {
-                isFiltered = true;
                 inputSubject = collection[item][1];
             }
         }
 
         // Filter the table for each value
-
-        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) >= 0) {
-            return true;
+        if (inputType && data[RESOURCE_TYPE_COL].toUpperCase().indexOf(inputType.toUpperCase()) < 0) {
+            return false;
         }
 
-        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) >= 0) {
-            return true;
+        if (inputSubject && data[SUBJECT_COL].toUpperCase().indexOf(inputSubject.toUpperCase()) < 0) {
+            return false;
         }
 
-        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) >= 0) {
-            return true;
+        if (inputAuthor && data[AUTHORS_COL].toUpperCase().indexOf(inputAuthor.toUpperCase()) < 0) {
+            return false;
         }
 
         //---------------- Facet filters --------------------

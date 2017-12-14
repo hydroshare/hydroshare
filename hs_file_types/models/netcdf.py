@@ -423,9 +423,17 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                         for f in files_to_add_to_resource:
                             uploaded_file = UploadedFile(file=open(f, 'rb'),
                                                          name=os.path.basename(f))
+                            # the added resource file will be part of a new generic logical file
+                            # by default
                             new_res_file = utils.add_file_to_resource(
                                 resource, uploaded_file, folder=upload_folder
                             )
+
+                            # delete the generic logical file object
+                            if new_res_file.logical_file is not None:
+                                # deleting the file level metadata object will delete the associated
+                                # logical file object
+                                new_res_file.logical_file.metadata.delete()
 
                             # make each resource file we added part of the logical file
                             logical_file.add_resource_file(new_res_file)
