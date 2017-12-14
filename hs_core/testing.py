@@ -2,7 +2,6 @@
 
 from dateutil import parser
 import tempfile
-import subprocess
 
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -159,9 +158,8 @@ class TestCaseCommonUtilities(object):
                                   port=settings.IRODS_PORT,
                                   zone=settings.HS_USER_IRODS_ZONE,
                                   sess_id='user_proxy_session')
-        user_proxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + \
-                           settings.HS_USER_IRODS_ZONE
-        get_qsize = istorage.getAVU(user_proxy_uname, attname, type='-u')
+        uproxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
+        get_qsize = istorage.getAVU(uproxy_uname, attname, type='-u')
         self.assertEqual(qsize, get_qsize)
 
     def resource_file_oprs(self):

@@ -319,16 +319,15 @@ def update_quota_usage_task(username):
                                   port=settings.IRODS_PORT,
                                   zone=settings.HS_USER_IRODS_ZONE,
                                   sess_id='user_proxy_session')
-        user_proxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + \
-                           settings.HS_USER_IRODS_ZONE
-        uqUserZoneSize = istorage.getAVU(user_proxy_uname, attname, type='-u')
+        uproxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
+        uqUserZoneSize = istorage.getAVU(uproxy_uname, attname, type='-u')
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
             # exist for this user
             uqUserZoneSize = -1
         else:
             uqUserZoneSize = float(uqUserZoneSize)
-    except SessionException as ex:
+    except SessionException:
         # user may not have resources in user zone, so corresponding quota size AVU may not exist
         # for this user
         uqUserZoneSize = -1
