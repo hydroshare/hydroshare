@@ -67,8 +67,11 @@ def _check_open_with_app(tool_res_obj, request_obj):
 
 def _check_webapp_in_user_open_with_list(tool_res_obj, request_obj):
 
-    user_obj = get_user(request_obj)
-    return tool_res_obj.rlabels.is_open_with_app(user_obj)
+    if request_obj.user.is_authenticated():
+        user_obj = get_user(request_obj)
+        return tool_res_obj.rlabels.is_open_with_app(user_obj)
+    else:
+        return False
 
 
 def _check_webapp_is_approved(tool_res_obj):
