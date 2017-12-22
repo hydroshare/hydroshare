@@ -154,23 +154,26 @@
             <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open Web App</a>
         {% endif %}
 
-        {% if relevant_tools %}
+        {% if relevant_tools and relevant_tools.open_with_app_counter > 0 %}
             <span id="apps-dropdown"/>
             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
                 <span class="caret"></span></button>
             <ul class="dropdown-menu">
-                {% for tool in relevant_tools %}
-                    <li title="{{ tool.title }}">
-			<a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
-                            <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
-                            {% if tool.title|length > 20 %}
-                                <span>{{ tool.title|slice:":21"|add:"..." }}</span>
-                            {% else %}
-                                <span>{{ tool.title }}</span>
-                            {% endif %}
-                        </a>
-                    </li>
+                {% for tool in relevant_tools.tool_list %}
+                    {% if tool.openwithlist  %}
+                        <li title="{{ tool.title }}">
+                                <a href="{% url 'tracking-applaunch' %}?url={{tool.url|urlencode}};name={{tool.title}}" target="_blank">
+                                <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
+                                {% if tool.title|length > 20 %}
+                                    <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                {% else %}
+                                    <span>{{ tool.title }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endfor %}
+
             </ul>
         {% endif %}
     {% else %}
@@ -210,3 +213,8 @@
     </div>
 {% endif %}
 
+{% if cm.resource_type == "ToolResource" and cm.metadata.approved %}
+    <div class="col-xs-12">
+        <div class="clear-fix"><img class="app-approved-icon-img" src="/static/img/approved_app.png"><i>This WebApp resource has been approved by HydroShare admin.</i></div>
+    </div>
+{% endif %}

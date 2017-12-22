@@ -22,12 +22,11 @@ function readURL(input) {
 
 function validateForm() {
     var flagRequiredElements = validateRequiredElements();
-    var flagPasswords = validatePasswords();
     var flagEmail = validateEmail();
 
     cleanIdentifiers();
 
-    return  flagRequiredElements && flagPasswords && flagEmail;
+    return  flagRequiredElements && flagEmail;
 }
 
 function validateRequiredElements() {
@@ -39,21 +38,6 @@ function validateRequiredElements() {
             $(requiredElements[i]).parent().append(errorLabel("This field is required."));
             return false;
         }
-    }
-
-    return true;
-}
-
-function validatePasswords() {
-    // Password
-    var password1 = $("#id_password1");
-    var password2 = $("#id_password2");
-    if (password1.val() != password2.val()) {
-        password1.addClass("form-invalid");
-        password2.addClass("form-invalid");
-        password2.parent().find(".error-label").remove();
-        password2.parent().append(errorLabel("Passwords do not match."));
-        return false;
     }
 
     return true;
@@ -77,7 +61,7 @@ function validateEmail() {
 }
 
 function errorLabel(message) {
-    return "<div class='label label-danger error-label'>" + message + "</div>";
+    return "<div class='error-label'><div class='label label-danger'>" + message + "</div></div>";
 }
 
 function setEditMode() {
@@ -333,4 +317,30 @@ $(document).ready(function () {
             }
         }
     );
+
+    $('.tagsinput').tagsInput({
+      interactive: true,
+      placeholder: "Organization(s)",
+      autocomplete: {
+        source: "/hsapi/dictionary/universities/",
+        minLength: 3,
+        delay: 500,
+        classes: {
+            "ui-autocomplete": "minHeight"
+        }
+      }
+    });
+
+    $('.ui-autocomplete-input').on('blur', function(e) {
+      e.preventDefault();
+      $('.ui-autocomplete-input').trigger(jQuery.Event('keypress', { which: 13 }));
+    });
+
+    $('.ui-autocomplete-input').on('keydown', function(e) {
+      if(e.keyCode === 9 && $(this).val() !== '') {
+        e.preventDefault();
+        $(this).trigger(jQuery.Event('keypress', { which: 13 }));
+      }
+    });
 });
+

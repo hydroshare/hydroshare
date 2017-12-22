@@ -126,6 +126,7 @@
         </div>
         <div class="col-sm-9 col-xs-12" id="items">
             <div>
+                <table cellpadding='20'><tr><td>
                 <form id="date-search-fields" method="get" action=".">
                     <h4 class="text-muted">Temporal Coverage</h4>
 
@@ -147,6 +148,32 @@
                         </tr>
                     </table>
                 </form>
+                </td><td> 
+                <form id="search-order-fields" method="get" action="."> 
+                    <h4 class="text-muted">Sort Order</h4>
+
+                    <table>
+                        <tr>
+                            {% for field in form %}
+                                {% if field.auto_id == "id_sort_order" %}
+                                    <td>
+                                        <div class="fieldWrapper">
+                                           {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
+                                {% endif %}
+                                {% if field.auto_id == "id_sort_direction" %}
+                                    <td>
+                                        <div class="fieldWrapper">
+                                           {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    </table>
+                </form> 
+                </td></tr></table> 
                 <br>
                 <div id="resource-search" class="hidden">
                     <div id="coverages-master-list"></div>
@@ -211,13 +238,15 @@
                                     <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
                                 </tr>
-                            {% empty %}
-                                <p>No results found.</p>
                             {% endfor %}
                         </tbody>
                     </table>
+                
+                    {% if not page_obj.object_list %}
+                    <h4 class="text-muted">Sorry, no results match those criteria. Please try broadening your search.</h4>
+                    {% endif %}
+                    <div id="discover-page-options">
                     {% if page_obj.has_previous or page_obj.has_next %}
-                        <div id="discover-page-options">
                             {% if page_obj.has_previous %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
                             {% endif %}&laquo; Previous
@@ -226,8 +255,12 @@
                             {% if page_obj.has_next %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
-                        </div>
                     {% endif %}
+                    {% if page_obj.has_other_pages %}
+                        {{ page_obj }} ( results {{ page_obj.start_index }} to {{ page_obj.end_index }} )  
+                    {% endif %}
+                    </div>
+                    
                     <br>
                     <div class="alert alert-info">
                         <strong>

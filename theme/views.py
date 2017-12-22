@@ -1,7 +1,7 @@
 from json import dumps
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
@@ -30,8 +30,8 @@ from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_core.hydroshare.utils import user_from_id
-from hs_core.models import Party
 from hs_access_control.models import GroupMembershipRequest
+from hs_dictionary.models import University, UncategorizedTerm
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
@@ -214,32 +214,23 @@ def update_user_profile(request):
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
-    # create a dict of identifier names and links for the identifiers field of the  UserProfile
-    try:
-        post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
-        identifiers = post_data_dict['identifiers']
-    except Exception as ex:
-        messages.error(request, "Update failed. {}".format(ex.message))
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
+    dict_items = request.POST['organization'].split(",")
+    for dict_item in dict_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=dict_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=dict_item)
+            new_term.save()
+
+    profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
-
-                password1 = request.POST['password1']
-                password2 = request.POST['password2']
-                if len(password1) > 0:
-                    if password1 == password2:
-                        user.set_password(password1)
-                        user.save()
-                    else:
-                        raise ValidationError("Passwords do not match.")
-
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
-                profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation
@@ -273,7 +264,8 @@ def update_user_profile(request):
                     send_mail(subject="Change of HydroShare email address.",
                               message=message,
                               html_message=message,
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
+                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email],
+                              fail_silently=True)
             else:
                 errors = {}
                 if not user_form.is_valid():

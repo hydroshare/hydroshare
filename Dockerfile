@@ -8,7 +8,8 @@ RUN pip install \
   django-ipware \
   django-test-without-migrations \
   django-rest-swagger \
-  jsonschema
+  jsonschema \
+  nameparser
 ### End - HydroShare Development Image Additions ###
 
 USER root
