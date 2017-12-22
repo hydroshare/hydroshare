@@ -21,13 +21,11 @@ var ACCESS_GRANTOR_COL =    14;
 var colDefs = [
     {
         "targets": [RESOURCE_TYPE_COL],     // Resource type
-        "width": "100px"
     },
     {
         "targets": [ACTIONS_COL],           // Actions
         "orderable": false,
         "searchable": false,
-        "width": "70px"
     },
     {
         "targets": [LAST_MODIFIED_COL],     // Last modified

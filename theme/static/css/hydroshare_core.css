@@ -2808,10 +2808,15 @@ span.you-flag {
     border-top: 1px solid #DDD;
 }
 
-#item-selectors tr > td:first-child {
+#item-selectors tr > td[data-col='actions'] {
 	padding-right: 0;
-    max-width: 80px;
-	min-width: 80px;
+    max-width: 70px;
+	min-width: 70px;
+}
+
+#item-selectors tr > td[data-col='resource-type'], #items-discovered tr > td[data-col='resource-type'] {
+    max-width: 135px;
+	min-width: 135px;
 }
 
 #item-selectors.group-resource-list tr > td:first-child {
