@@ -30,6 +30,7 @@ from mezzanine.utils.views import render
 
 from hs_core.views.utils import run_ssh_command
 from hs_core.hydroshare.utils import user_from_id
+from hs_core.models import Party
 from hs_access_control.models import GroupMembershipRequest
 from hs_dictionary.models import University, UncategorizedTerm
 from theme.forms import ThreadedCommentForm
@@ -215,6 +216,14 @@ def update_user_profile(request):
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
 
+    # create a dict of identifier names and links for the identifiers field of the  UserProfile
+    try:
+        post_data_dict = Party.get_post_data_with_identifiers(request=request, as_json=False)
+        identifiers = post_data_dict['identifiers']
+    except Exception as ex:
+        messages.error(request, "Update failed. {}".format(ex.message))
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     dict_items = request.POST['organization'].split(",")
     for dict_item in dict_items:
         # Update Dictionaries
@@ -224,13 +233,14 @@ def update_user_profile(request):
             new_term = UncategorizedTerm(name=dict_item)
             new_term.save()
 
-    profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
+    profile_form = UserProfileForm(post_data_dict, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
+                profile.identifiers = identifiers
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation
