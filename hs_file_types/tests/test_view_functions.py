@@ -90,9 +90,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,
@@ -124,9 +123,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,
@@ -158,9 +156,8 @@ class TestFileTypeViewFunctions(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         url_params = {'resource_id': self.composite_resource.short_id,
                       'file_id': res_file.id,

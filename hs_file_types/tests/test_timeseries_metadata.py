@@ -75,11 +75,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file at this point
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no TimeSeriesLogicalFile object
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
@@ -106,11 +103,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no TimeSeriesLogicalFile object
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
@@ -259,11 +253,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no TimeSeriesLogicalFile object
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
@@ -674,7 +665,7 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
             files=(file_to_upload,)
         )
 
-        # set the generic logical file as part of resource post create signal
+        # activate resource post create signal
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
                                      metadata=self.composite_resource.metadata)
 
@@ -682,9 +673,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with the generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # trying to set this invalid sqlite file to timeseries file type should raise
         # ValidationError
@@ -694,9 +684,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
-        # check that the resource file is not associated with generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
     def _test_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file_obj = self._get_invalid_csv_file_obj(invalid_csv_file_name)
@@ -708,11 +697,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no TimeSeriesLogicalFile object
         self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
@@ -725,9 +711,8 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
-        # check that the resource file is still associated with generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is still not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
         self.composite_resource.delete()
 
     def _get_invalid_csv_file_obj(self, invalid_csv_file_name):

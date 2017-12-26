@@ -67,11 +67,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
@@ -101,11 +98,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no NetCDFLogicalFile object
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
@@ -413,9 +407,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with the generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # trying to set this invalid tif file to NetCDF file type should raise
         # ValidationError
@@ -425,9 +418,8 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
-        # check that the resource file is not associated with generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
     def _test_file_metadata_on_file_delete(self, ext):
         self.netcdf_file_obj = open(self.netcdf_file, 'r')

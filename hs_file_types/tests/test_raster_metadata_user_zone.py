@@ -81,11 +81,9 @@ class RasterFileTypeMetaDataTest(TestCaseCommonUtilities, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
         fed_file_path = "{}/data/contents/{}".format(self.composite_resource.root_path,
                                                      self.raster_file_name)
         self.assertEqual(res_file.storage_path, fed_file_path)

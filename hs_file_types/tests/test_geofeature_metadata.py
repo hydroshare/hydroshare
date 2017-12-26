@@ -77,18 +77,11 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         expected_folder_name = res_file.file_name[:-4]
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file type
+        self.assertEqual(res_file.has_logical_file, False)
+
         res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.extension, '.zip')
-        logical_file = res_file.logical_file
-        self.assertTrue(isinstance(logical_file.metadata, GenericFileMetaData))
-        self.assertTrue(isinstance(logical_file, GenericLogicalFile))
-        # no keywords at this point for file
-        self.assertEqual(logical_file.metadata.keywords, [])
 
         # set the zip file to GeoFeatureFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
@@ -116,11 +109,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         expected_folder_name = res_file.file_name[:-4]
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file type
+        self.assertEqual(res_file.has_logical_file, False)
 
         # set the zip file to GeoFeatureFile type
         GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
@@ -206,11 +196,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 3)
         res_file = self.composite_resource.files.first()
         expected_folder_name = res_file.file_name[:-4]
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is 3 GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 3)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # set the shp file to GeoFeatureFile type
         shp_res_file = [f for f in self.composite_resource.files.all() if f.extension == '.shp'][0]
@@ -275,11 +262,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # set the tif file to GeoFeatureFile type
         with self.assertRaises(ValidationError):
@@ -291,11 +275,8 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
         self.composite_resource.delete()
 
     def test_logical_file_delete(self):

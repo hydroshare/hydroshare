@@ -50,7 +50,7 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_generic_logical_file(self):
         # test that when any file is uploaded to Composite Resource
-        # the file is assigned to GenericLogicalFile type
+        # the file is not assigned to GenericLogicalFile type
         # test that generic logical file type can have the following metadata (all optional:
         #   coverage (spatial and temporal)
         #   key/value metadata
@@ -63,7 +63,10 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
+        self.assertEqual(res_file.has_logical_file, False)
+        # set file to generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
 
         logical_file = res_file.logical_file
@@ -184,6 +187,9 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # is deleted all metadata associated with the file type also get deleted
         self.generic_file_obj = open(self.generic_file, 'r')
         self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+        # set the file to generic logical file
+        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
         gen_logical_file = res_file.logical_file
         self.assertEqual(GenericLogicalFile.objects.count(), 1)

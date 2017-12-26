@@ -55,11 +55,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no RefTimeseriesLogicalFile object
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
@@ -95,11 +92,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no RefTimeseriesLogicalFile object
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
@@ -334,9 +328,8 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with the generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # trying to set this invalid tif file to RefTimeseries file type should raise
         # ValidationError
@@ -346,19 +339,15 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         # test that the invalid file did not get deleted
         self.assertEqual(self.composite_resource.files.all().count(), 1)
 
-        # check that the resource file is not associated with generic logical file
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
     def _test_valid_missing_optional_elements(self):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # check that there is one GenericLogicalFile object
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
 
         # check that there is no RefTimeseriesLogicalFile object
         self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
@@ -384,6 +373,6 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
             files=(uploaded_file,)
         )
 
-        # set the generic logical file as part of resource post create signal
+        # activate resource post create signal
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
                                      metadata=self.composite_resource.metadata)

@@ -62,7 +62,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_create_composite_resource_with_file_upload(self):
         # test that when we create composite resource with an uploaded file, then the uploaded file
-        # is automatically set to genericlogicalfile type
+        # is automatically not set to genericlogicalfile type
         self.assertEqual(BaseResource.objects.count(), 0)
         self.raster_file_obj = open(self.raster_file, 'r')
 
@@ -73,9 +73,8 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             files=(self.raster_file_obj,)
         )
 
-        # Deprecated: there should not be a GenericLogicalFile object at this point
-        # Issue 2456 Create composite with uploaded file now part of logical file
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # There should not be a GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         # set the logical file
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
@@ -87,13 +86,13 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # there should be 1 GenericLogicalFile object at this point
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
-        # there should be 1 GenericFileMetaData object at this point
-        self.assertEqual(GenericFileMetaData.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+
+        # there should be no GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # there should be no GenericFileMetaData object at this point
+        self.assertEqual(GenericFileMetaData.objects.count(), 0)
         self.composite_resource.delete()
 
         # there should be no GenericLogicalFile object at this point
@@ -103,7 +102,7 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_file_add_to_composite_resource(self):
         # test that when we add file to an existing composite resource, the added file
-        # automatically set to genericlogicalfile type
+        # is not automatically set to genericlogicalfile type
         self.assertEqual(BaseResource.objects.count(), 0)
         self.raster_file_obj = open(self.raster_file, 'r')
 
@@ -122,11 +121,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
 
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # there should be 1 GenericLogicalFile object at this point
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # check that the resource file is not associated with any logical file
+        self.assertEqual(res_file.has_logical_file, False)
+        # there should be 0 GenericLogicalFile object at this point
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
         self.composite_resource.delete()
 
     def test_raster_file_type_folder_delete(self):
@@ -148,15 +146,20 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.generic_file_obj = open(self.generic_file, 'r')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.generic_file_obj,), user=self.user)
-        # there should be 2 GenericLogicalFile objects
-        self.assertEqual(GenericLogicalFile.objects.count(), 2)
+        # there should be no GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should not be any GeoRasterLogicalFile object
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         GeoRasterLogicalFile.set_file_type(self.composite_resource, tif_res_file.id, self.user)
-        # there should be 1 GenericLogicalFile objects
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # there should be no GenericLogicalFile objects
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
         # there should be 1 GeoRasterLogicalFile object
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        txt_res_file = [f for f in self.composite_resource.files.all()
+                        if f.extension == ".txt"][0]
+
+        # set generic logical file
+        GenericLogicalFile.set_file_type(self.composite_resource, txt_res_file.id, self.user)
         txt_res_file = [f for f in self.composite_resource.files.all()
                         if f.extension == ".txt"][0]
         self.assertEqual(txt_res_file.logical_file_type_name, "GenericLogicalFile")
@@ -432,10 +435,15 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         url_CUAHSI = 'https://www.cuahsi.org'
         metadata.create_element('publisher', name=publisher_CUAHSI, url=url_CUAHSI)
 
+        # create generic logical file
         # add generic logical file type metadata
         res_file = [f for f in self.composite_resource.files.all()
-                    if f.logical_file_type_name == "GenericLogicalFile"][0]
+                    if f.extension == ".txt"][0]
 
+        # crate a generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.logical_file_type_name == "GenericLogicalFile"][0]
         gen_logical_file = res_file.logical_file
         # add dataset name
         self.assertEqual(gen_logical_file.dataset_name, None)
@@ -565,6 +573,12 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.generic_file_obj = open(self.generic_file, 'r')
         resource_file_add_process(resource=self.composite_resource,
                                   files=(self.generic_file_obj,), user=self.user)
+
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.extension == ".txt"][0]
+
+        # crate a generic logical file type
+        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
 
         res_file = [f for f in self.composite_resource.files.all()
                     if f.logical_file_type_name == "GenericLogicalFile"][0]
