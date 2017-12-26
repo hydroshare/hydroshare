@@ -231,8 +231,8 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         if res_file.extension.lower() not in ('.zip', '.shp'):
             raise ValidationError("Not a valid geographic feature file.")
 
-        if not res_file.has_generic_logical_file:
-            raise ValidationError("Selected file must be part of a generic file type.")
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file is already part of a file type.")
 
         try:
             meta_dict, shape_files, shp_res_files = extract_metadata_and_files(resource, res_file)
@@ -459,11 +459,7 @@ def get_all_related_shp_files(resource, selected_resource_file, file_type):
                 if f.extension.lower() == '.xml' and not f.file_name.lower().endswith('.shp.xml'):
                     continue
                 if f.extension.lower() in GeoFeatureLogicalFile.get_allowed_storage_file_types():
-                    if file_type:
-                        if f.has_generic_logical_file:
-                            collect_shape_resource_files(f)
-                    else:
-                        collect_shape_resource_files(f)
+                    collect_shape_resource_files(f)
 
         for f in shape_res_files:
             temp_file = utils.get_file_from_irods(f)

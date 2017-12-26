@@ -264,6 +264,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
         # get the resource file
         res_file = utils.get_resource_file_by_id(resource, file_id)
+        if res_file is None:
+            raise ValidationError("The specified file doesn't exist")
+
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file is already part of a logical file")
 
         # base file name (no path included)
         file_name = utils.get_resource_file_name_and_extension(res_file)[1]
@@ -271,104 +276,92 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         file_name = file_name[:-len(res_file.extension)]
         file_folder = res_file.file_folder
         upload_folder = ''
-        if res_file is not None and res_file.has_generic_logical_file:
-            # get the file from irods to temp dir
-            temp_file = utils.get_file_from_irods(res_file)
-            # validate the file
-            error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file)
-            if not error_info:
-                log.info("Geo raster file type file validation successful.")
-                # extract metadata
-                temp_dir = os.path.dirname(temp_file)
-                temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
-                                      '.vrt' == os.path.splitext(f)[1]].pop()
-                metadata = extract_metadata(temp_vrt_file_path)
-                log.info("Geo raster file type metadata extraction was successful.")
-                with transaction.atomic():
-                    # create a geo raster logical file object to be associated with resource files
-                    logical_file = cls.create()
-                    # by default set the dataset_name attribute of the logical file to the
-                    # name of the file selected to set file type
-                    logical_file.dataset_name = file_name
-                    logical_file.save()
+        # get the file from irods to temp dir
+        temp_file = utils.get_file_from_irods(res_file)
+        # validate the file
+        error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file)
+        if not error_info:
+            log.info("Geo raster file type file validation successful.")
+            # extract metadata
+            temp_dir = os.path.dirname(temp_file)
+            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
+                                  '.vrt' == os.path.splitext(f)[1]].pop()
+            metadata = extract_metadata(temp_vrt_file_path)
+            log.info("Geo raster file type metadata extraction was successful.")
+            with transaction.atomic():
+                # create a geo raster logical file object to be associated with resource files
+                logical_file = cls.create()
+                # by default set the dataset_name attribute of the logical file to the
+                # name of the file selected to set file type
+                logical_file.dataset_name = file_name
+                logical_file.save()
 
-                    try:
-                        # create a folder for the raster file type using the base file name as the
-                        # name for the new folder
-                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                       file_name)
+                try:
+                    # create a folder for the raster file type using the base file name as the
+                    # name for the new folder
+                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                   file_name)
 
-                        log.info("Folder created:{}".format(new_folder_path))
-                        create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
+                    create_folder(resource.short_id, new_folder_path)
 
-                        new_folder_name = new_folder_path.split('/')[-1]
-                        if file_folder is None:
-                            upload_folder = new_folder_name
-                        else:
-                            upload_folder = os.path.join(file_folder, new_folder_name)
+                    new_folder_name = new_folder_path.split('/')[-1]
+                    if file_folder is None:
+                        upload_folder = new_folder_name
+                    else:
+                        upload_folder = os.path.join(file_folder, new_folder_name)
 
-                        # add all new files to the resource
-                        for f in files_to_add_to_resource:
-                            uploaded_file = UploadedFile(file=open(f, 'rb'),
-                                                         name=os.path.basename(f))
-                            # the added resource file will be part of a new generic logical file
-                            # by default
-                            new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder)
+                    # add all new files to the resource
+                    for f in files_to_add_to_resource:
+                        uploaded_file = UploadedFile(file=open(f, 'rb'),
+                                                     name=os.path.basename(f))
+                        # the added resource file will be part of a new generic logical file
+                        # by default
+                        new_res_file = utils.add_file_to_resource(
+                            resource, uploaded_file, folder=upload_folder)
 
-                            # delete the generic logical file object
-                            if new_res_file.logical_file is not None:
-                                # deleting the file level metadata object will delete the associated
-                                # logical file object
-                                new_res_file.logical_file.metadata.delete()
+                        # delete the generic logical file object
+                        if new_res_file.logical_file is not None:
+                            # deleting the file level metadata object will delete the associated
+                            # logical file object
+                            new_res_file.logical_file.metadata.delete()
 
-                            # make each resource file we added as part of the logical file
-                            logical_file.add_resource_file(new_res_file)
+                        # make each resource file we added as part of the logical file
+                        logical_file.add_resource_file(new_res_file)
 
-                        log.info("Geo raster file type - new files were added to the resource.")
+                    log.info("Geo raster file type - new files were added to the resource.")
 
-                        # use the extracted metadata to populate file metadata
-                        for element in metadata:
-                            # here k is the name of the element
-                            # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
-                            logical_file.metadata.create_element(k, **v)
-                        log.info("Geo raster file type - metadata was saved to DB")
-                        # set resource to private if logical file is missing required metadata
-                        resource.update_public_and_discoverable()
-                        # delete the original resource file
-                        delete_resource_file(resource.short_id, res_file.id, user)
-                        log.info("Deleted original resource file.")
-                    except Exception as ex:
-                        msg = "Geo raster file type. Error when setting file type. Error:{}"
-                        msg = msg.format(ex.message)
-                        log.exception(msg)
-                        if upload_folder:
-                            # delete any new files uploaded as part of setting file type
-                            folder_to_remove = os.path.join('data', 'contents', upload_folder)
-                            remove_folder(user, resource.short_id, folder_to_remove)
-                            log.info("Deleted newly created file type folder")
-                        raise ValidationError(msg)
-                    finally:
-                        # remove temp dir
-                        if os.path.isdir(temp_dir):
-                            shutil.rmtree(temp_dir)
-            else:
-                err_msg = "Geo raster file type file validation failed.{}".format(
-                    ' '.join(error_info))
-                log.info(err_msg)
-                raise ValidationError(err_msg)
+                    # use the extracted metadata to populate file metadata
+                    for element in metadata:
+                        # here k is the name of the element
+                        # v is a dict of all element attributes/field names and field values
+                        k, v = element.items()[0]
+                        logical_file.metadata.create_element(k, **v)
+                    log.info("Geo raster file type - metadata was saved to DB")
+                    # set resource to private if logical file is missing required metadata
+                    resource.update_public_and_discoverable()
+                    # delete the original resource file
+                    delete_resource_file(resource.short_id, res_file.id, user)
+                    log.info("Deleted original resource file.")
+                except Exception as ex:
+                    msg = "Geo raster file type. Error when setting file type. Error:{}"
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
+                    if upload_folder:
+                        # delete any new files uploaded as part of setting file type
+                        folder_to_remove = os.path.join('data', 'contents', upload_folder)
+                        remove_folder(user, resource.short_id, folder_to_remove)
+                        log.info("Deleted newly created file type folder")
+                    raise ValidationError(msg)
+                finally:
+                    # remove temp dir
+                    if os.path.isdir(temp_dir):
+                        shutil.rmtree(temp_dir)
         else:
-            if res_file is None:
-                err_msg = "Failed to set Geo raster file type. " \
-                          "Resource doesn't have the specified file."
-                log.error(err_msg)
-                raise ValidationError(err_msg)
-            else:
-                err_msg = "Failed to set Geo raster file type." \
-                          "The specified file doesn't have a generic logical file type."
-                log.error(err_msg)
-                raise ValidationError(err_msg)
+            err_msg = "Geo raster file type file validation failed.{}".format(
+                ' '.join(error_info))
+            log.info(err_msg)
+            raise ValidationError(err_msg)
 
 
 def raster_file_validation(raster_file):

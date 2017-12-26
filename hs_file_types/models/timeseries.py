@@ -509,8 +509,8 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         if res_file.extension.lower() not in ('.sqlite', '.csv'):
             raise ValidationError("Not a valid time series supported file.")
 
-        if not res_file.has_generic_logical_file:
-            raise ValidationError("Selected file must be part of a generic file type.")
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file is already part of a logical file.")
 
         # get the file from irods to temp dir
         temp_res_file = utils.get_file_from_irods(res_file)

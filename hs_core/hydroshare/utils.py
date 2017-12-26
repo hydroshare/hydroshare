@@ -986,13 +986,6 @@ def add_file_to_resource(resource, f, folder=None, source_name='',
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 
-    # if a file gets added successfully to composite resource, then better to set the generic
-    # logical file here
-    if resource.resource_type == "CompositeResource":
-        logical_file = GenericLogicalFile.create()
-        ret.logical_file_content_object = logical_file
-        ret.save()
-
     return ret
 
 

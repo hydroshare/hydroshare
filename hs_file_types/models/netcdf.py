@@ -363,6 +363,9 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         if res_file.extension != '.nc':
             raise ValidationError("Not a NetCDF file.")
 
+        if res_file.has_logical_file:
+            raise ValidationError("The selected file is already part of a logical file.")
+
         # base file name (no path included)
         file_name = res_file.file_name
         # file name without the extension
@@ -372,131 +375,131 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         file_type_metadata = []
         files_to_add_to_resource = []
         upload_folder = ''
-        if res_file.has_generic_logical_file:
-            # get the file from irods to temp dir
-            temp_file = utils.get_file_from_irods(res_file)
-            temp_dir = os.path.dirname(temp_file)
-            files_to_add_to_resource.append(temp_file)
-            # file validation and metadata extraction
-            nc_dataset = nc_utils.get_nc_dataset(temp_file)
-            if isinstance(nc_dataset, netCDF4.Dataset):
-                # Extract the metadata from netcdf file
-                res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
-                # populate resource_metadata and file_type_metadata lists with extracted metadata
-                add_metadata_to_list(resource_metadata, res_dublin_core_meta,
-                                     res_type_specific_meta, file_type_metadata, resource)
 
-                # create the ncdump text file
-                dump_file = create_header_info_txt_file(temp_file, nc_file_name)
-                files_to_add_to_resource.append(dump_file)
-                file_folder = res_file.file_folder
-                with transaction.atomic():
-                    # create a netcdf logical file object to be associated with
-                    # resource files
-                    logical_file = cls.create()
+        # get the file from irods to temp dir
+        temp_file = utils.get_file_from_irods(res_file)
+        temp_dir = os.path.dirname(temp_file)
+        files_to_add_to_resource.append(temp_file)
+        # file validation and metadata extraction
+        nc_dataset = nc_utils.get_nc_dataset(temp_file)
+        if isinstance(nc_dataset, netCDF4.Dataset):
+            # Extract the metadata from netcdf file
+            res_dublin_core_meta, res_type_specific_meta = nc_meta.get_nc_meta_dict(temp_file)
+            # populate resource_metadata and file_type_metadata lists with extracted metadata
+            add_metadata_to_list(resource_metadata, res_dublin_core_meta,
+                                 res_type_specific_meta, file_type_metadata, resource)
 
-                    # by default set the dataset_name attribute of the logical file to the
-                    # name of the file selected to set file type unless the extracted metadata
-                    # has a value for title
-                    dataset_title = res_dublin_core_meta.get('title', None)
-                    if dataset_title is not None:
-                        logical_file.dataset_name = dataset_title
+            # create the ncdump text file
+            dump_file = create_header_info_txt_file(temp_file, nc_file_name)
+            files_to_add_to_resource.append(dump_file)
+            file_folder = res_file.file_folder
+            with transaction.atomic():
+                # create a netcdf logical file object to be associated with
+                # resource files
+                logical_file = cls.create()
+
+                # by default set the dataset_name attribute of the logical file to the
+                # name of the file selected to set file type unless the extracted metadata
+                # has a value for title
+                dataset_title = res_dublin_core_meta.get('title', None)
+                if dataset_title is not None:
+                    logical_file.dataset_name = dataset_title
+                else:
+                    logical_file.dataset_name = nc_file_name
+                logical_file.save()
+
+                try:
+                    # create a folder for the netcdf file type using the base file
+                    # name as the name for the new folder
+                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                   nc_file_name)
+
+                    create_folder(resource.short_id, new_folder_path)
+                    log.info("Folder created:{}".format(new_folder_path))
+
+                    new_folder_name = new_folder_path.split('/')[-1]
+                    if file_folder is None:
+                        upload_folder = new_folder_name
                     else:
-                        logical_file.dataset_name = nc_file_name
-                    logical_file.save()
+                        upload_folder = os.path.join(file_folder, new_folder_name)
+                    # add all new files to the resource
+                    for f in files_to_add_to_resource:
+                        uploaded_file = UploadedFile(file=open(f, 'rb'),
+                                                     name=os.path.basename(f))
+                        # the added resource file will be part of a new generic logical file
+                        # by default
+                        new_res_file = utils.add_file_to_resource(
+                            resource, uploaded_file, folder=upload_folder
+                        )
 
-                    try:
-                        # create a folder for the netcdf file type using the base file
-                        # name as the name for the new folder
-                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                       nc_file_name)
+                        # delete the generic logical file object
+                        if new_res_file.logical_file is not None:
+                            # deleting the file level metadata object will delete the associated
+                            # logical file object
+                            new_res_file.logical_file.metadata.delete()
 
-                        create_folder(resource.short_id, new_folder_path)
-                        log.info("Folder created:{}".format(new_folder_path))
+                        # make each resource file we added part of the logical file
+                        logical_file.add_resource_file(new_res_file)
 
-                        new_folder_name = new_folder_path.split('/')[-1]
-                        if file_folder is None:
-                            upload_folder = new_folder_name
+                    log.info("NetCDF file type - new files were added to the resource.")
+
+                    # use the extracted metadata to populate resource metadata
+                    for element in resource_metadata:
+                        # here k is the name of the element
+                        # v is a dict of all element attributes/field names and field values
+                        k, v = element.items()[0]
+                        if k == 'title':
+                            # update title element
+                            title_element = resource.metadata.title
+                            resource.metadata.update_element('title', title_element.id, **v)
                         else:
-                            upload_folder = os.path.join(file_folder, new_folder_name)
-                        # add all new files to the resource
-                        for f in files_to_add_to_resource:
-                            uploaded_file = UploadedFile(file=open(f, 'rb'),
-                                                         name=os.path.basename(f))
-                            # the added resource file will be part of a new generic logical file
-                            # by default
-                            new_res_file = utils.add_file_to_resource(
-                                resource, uploaded_file, folder=upload_folder
-                            )
+                            resource.metadata.create_element(k, **v)
 
-                            # delete the generic logical file object
-                            if new_res_file.logical_file is not None:
-                                # deleting the file level metadata object will delete the associated
-                                # logical file object
-                                new_res_file.logical_file.metadata.delete()
+                    log.info("Resource - metadata was saved to DB")
 
-                            # make each resource file we added part of the logical file
-                            logical_file.add_resource_file(new_res_file)
-
-                        log.info("NetCDF file type - new files were added to the resource.")
-
-                        # use the extracted metadata to populate resource metadata
-                        for element in resource_metadata:
-                            # here k is the name of the element
-                            # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
-                            if k == 'title':
-                                # update title element
-                                title_element = resource.metadata.title
-                                resource.metadata.update_element('title', title_element.id, **v)
-                            else:
-                                resource.metadata.create_element(k, **v)
-
-                        log.info("Resource - metadata was saved to DB")
-
-                        # use the extracted metadata to populate file metadata
-                        for element in file_type_metadata:
-                            # here k is the name of the element
-                            # v is a dict of all element attributes/field names and field values
-                            k, v = element.items()[0]
-                            if k == 'subject':
-                                logical_file.metadata.keywords = v
-                                logical_file.metadata.save()
-                                # update resource level keywords
-                                resource_keywords = [subject.value.lower() for subject in
-                                                     resource.metadata.subjects.all()]
-                                for kw in logical_file.metadata.keywords:
-                                    if kw.lower() not in resource_keywords:
-                                        resource.metadata.create_element('subject', value=kw)
-                            else:
-                                logical_file.metadata.create_element(k, **v)
-                        log.info("NetCDF file type - metadata was saved to DB")
-                        # set resource to private if logical file is missing required metadata
-                        resource.update_public_and_discoverable()
-                        # delete the original resource file
-                        delete_resource_file(resource.short_id, res_file.id, user)
-                        log.info("Deleted original resource file.")
-                    except Exception as ex:
-                        msg = "NetCDF file type. Error when setting file type. Error:{}"
-                        msg = msg.format(ex.message)
-                        log.exception(msg)
-                        if upload_folder:
-                            # delete any new files uploaded as part of setting file type
-                            folder_to_remove = os.path.join('data', 'contents', upload_folder)
-                            remove_folder(user, resource.short_id, folder_to_remove)
-                            log.info("Deleted newly created file type folder")
-                        raise ValidationError(msg)
-                    finally:
-                        # remove temp dir
-                        if os.path.isdir(temp_dir):
-                            shutil.rmtree(temp_dir)
-            else:
-                err_msg = "Not a valid NetCDF file. File type file validation failed."
-                log.error(err_msg)
-                # remove temp dir
-                if os.path.isdir(temp_dir):
-                    shutil.rmtree(temp_dir)
-                raise ValidationError(err_msg)
+                    # use the extracted metadata to populate file metadata
+                    for element in file_type_metadata:
+                        # here k is the name of the element
+                        # v is a dict of all element attributes/field names and field values
+                        k, v = element.items()[0]
+                        if k == 'subject':
+                            logical_file.metadata.keywords = v
+                            logical_file.metadata.save()
+                            # update resource level keywords
+                            resource_keywords = [subject.value.lower() for subject in
+                                                 resource.metadata.subjects.all()]
+                            for kw in logical_file.metadata.keywords:
+                                if kw.lower() not in resource_keywords:
+                                    resource.metadata.create_element('subject', value=kw)
+                        else:
+                            logical_file.metadata.create_element(k, **v)
+                    log.info("NetCDF file type - metadata was saved to DB")
+                    # set resource to private if logical file is missing required metadata
+                    resource.update_public_and_discoverable()
+                    # delete the original resource file
+                    delete_resource_file(resource.short_id, res_file.id, user)
+                    log.info("Deleted original resource file.")
+                except Exception as ex:
+                    msg = "NetCDF file type. Error when setting file type. Error:{}"
+                    msg = msg.format(ex.message)
+                    log.exception(msg)
+                    if upload_folder:
+                        # delete any new files uploaded as part of setting file type
+                        folder_to_remove = os.path.join('data', 'contents', upload_folder)
+                        remove_folder(user, resource.short_id, folder_to_remove)
+                        log.info("Deleted newly created file type folder")
+                    raise ValidationError(msg)
+                finally:
+                    # remove temp dir
+                    if os.path.isdir(temp_dir):
+                        shutil.rmtree(temp_dir)
+        else:
+            err_msg = "Not a valid NetCDF file. File type file validation failed."
+            log.error(err_msg)
+            # remove temp dir
+            if os.path.isdir(temp_dir):
+                shutil.rmtree(temp_dir)
+            raise ValidationError(err_msg)
 
 
 def add_metadata_to_list(res_meta_list, extracted_core_meta, extracted_specific_meta,

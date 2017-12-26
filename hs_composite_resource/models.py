@@ -80,9 +80,10 @@ class CompositeResource(BaseResource):
                              res_file_obj.dir_path == path_to_check]
 
             for res_file_obj in res_file_objs:
-                if not res_file_obj.logical_file.supports_resource_file_rename or \
-                        not res_file_obj.logical_file.supports_resource_file_move:
-                    return False
+                if res_file_obj.has_logical_file:
+                    if not res_file_obj.logical_file.supports_resource_file_rename or \
+                            not res_file_obj.logical_file.supports_resource_file_move:
+                        return False
 
         return True
 
@@ -111,9 +112,10 @@ class CompositeResource(BaseResource):
                                  res_file_obj.dir_path == path_to_check]
 
                 for res_file_obj in res_file_objs:
-                    if not res_file_obj.logical_file.supports_resource_file_rename or \
-                            not res_file_obj.logical_file.supports_resource_file_move:
-                        return False
+                    if res_file_obj.has_logical_file:
+                        if not res_file_obj.logical_file.supports_resource_file_rename or \
+                                not res_file_obj.logical_file.supports_resource_file_move:
+                            return False
             return True
 
         res_file_objs = [res_file_obj for res_file_obj in self.files.all() if
@@ -122,9 +124,10 @@ class CompositeResource(BaseResource):
         if res_file_objs:
             res_file_obj = res_file_objs[0]
             # src_full_path contains file name
-            if not res_file_obj.logical_file.supports_resource_file_rename or \
-                    not res_file_obj.logical_file.supports_resource_file_move:
-                return False
+            if res_file_obj.has_logical_file:
+                if not res_file_obj.logical_file.supports_resource_file_rename or \
+                        not res_file_obj.logical_file.supports_resource_file_move:
+                    return False
 
             # check if the target directory allows stuff to be moved there
             return check_directory()
@@ -153,8 +156,9 @@ class CompositeResource(BaseResource):
                              res_file_obj.dir_path == path_to_check]
 
             for res_file_obj in res_file_objs:
-                if not res_file_obj.logical_file.supports_resource_file_add:
-                    return False
+                if res_file_obj.has_logical_file:
+                    if not res_file_obj.logical_file.supports_resource_file_add:
+                        return False
         return True
 
     def supports_zip(self, folder_to_zip):
@@ -176,8 +180,9 @@ class CompositeResource(BaseResource):
 
         # check any logical file associated with the resource file supports zip functionality
         for res_file in res_file_objects:
-            if not res_file.logical_file.supports_zip:
-                return False
+            if res_file.has_logical_file:
+                if not res_file.logical_file.supports_zip:
+                    return False
 
         return True
 
@@ -202,8 +207,9 @@ class CompositeResource(BaseResource):
         # check any logical file associated with the resource file supports deleting the folder
         # after its zipped
         for res_file in res_file_objects:
-            if not res_file.logical_file.supports_delete_folder_on_zip:
-                return False
+            if res_file.has_logical_file:
+                if not res_file.logical_file.supports_delete_folder_on_zip:
+                    return False
 
         return True
 

@@ -758,69 +758,67 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         if res_file.extension != '.refts':
             raise ValidationError("Not a Ref Time Series file.")
 
+        if res_file.has_logical_file:
+            raise ValidationError("Selected file is already part of a logical file")
+
         files_to_add_to_resource = []
-        if res_file.has_generic_logical_file:
+
+        try:
+            json_file_content = _validate_json_file(res_file)
+        except Exception as ex:
+            raise ValidationError(ex.message)
+
+        # get the file from irods to temp dir
+        temp_file = utils.get_file_from_irods(res_file)
+        temp_dir = os.path.dirname(temp_file)
+        files_to_add_to_resource.append(temp_file)
+        file_folder = res_file.file_folder
+        with transaction.atomic():
+            # first delete the json file that we retrieved from irods
+            # for setting it to reftimeseries file type
+            delete_resource_file(resource.short_id, res_file.id, user)
+
+            # create a reftiemseries logical file object to be associated with
+            # resource files
+            logical_file = cls.create()
+
+            logical_file.metadata.json_file_content = json_file_content
+            logical_file.metadata.save()
+
             try:
-                json_file_content = _validate_json_file(res_file)
-            except Exception as ex:
-                raise ValidationError(ex.message)
+                # add the json file back to the resource
+                uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
+                                             name=os.path.basename(temp_file))
+                # the added resource file will be part of a new generic logical file by default
+                new_res_file = utils.add_file_to_resource(
+                    resource, uploaded_file, folder=file_folder
+                )
 
-            # get the file from irods to temp dir
-            temp_file = utils.get_file_from_irods(res_file)
-            temp_dir = os.path.dirname(temp_file)
-            files_to_add_to_resource.append(temp_file)
-            file_folder = res_file.file_folder
-            with transaction.atomic():
-                # first delete the json file that we retrieved from irods
-                # for setting it to reftimeseries file type
-                delete_resource_file(resource.short_id, res_file.id, user)
+                # delete the generic logical file object
+                if new_res_file.logical_file is not None:
+                    # deleting the file level metadata object will delete the associated
+                    # logical file object
+                    new_res_file.logical_file.metadata.delete()
 
-                # create a reftiemseries logical file object to be associated with
-                # resource files
-                logical_file = cls.create()
-
-                logical_file.metadata.json_file_content = json_file_content
+                # make the resource file we added as part of the logical file
+                logical_file.add_resource_file(new_res_file)
                 logical_file.metadata.save()
+                logical_file.dataset_name = logical_file.metadata.get_title_from_json()
+                logical_file.save()
+                # extract metadata
+                _extract_metadata(resource, logical_file)
+                log.info("RefTimeseries file type - json file was added to the resource.")
+            except Exception as ex:
+                msg = "RefTimeseries file type. Error when setting file type. Error:{}"
+                msg = msg.format(ex.message)
+                log.exception(msg)
+                raise ValidationError(msg)
+            finally:
+                # remove temp dir
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
 
-                try:
-                    # add the json file back to the resource
-                    uploaded_file = UploadedFile(file=open(temp_file, 'rb'),
-                                                 name=os.path.basename(temp_file))
-                    # the added resource file will be part of a new generic logical file by default
-                    new_res_file = utils.add_file_to_resource(
-                        resource, uploaded_file, folder=file_folder
-                    )
-
-                    # delete the generic logical file object
-                    if new_res_file.logical_file is not None:
-                        # deleting the file level metadata object will delete the associated
-                        # logical file object
-                        new_res_file.logical_file.metadata.delete()
-
-                    # make the resource file we added as part of the logical file
-                    logical_file.add_resource_file(new_res_file)
-                    logical_file.metadata.save()
-                    logical_file.dataset_name = logical_file.metadata.get_title_from_json()
-                    logical_file.save()
-                    # extract metadata
-                    _extract_metadata(resource, logical_file)
-                    log.info("RefTimeseries file type - json file was added to the resource.")
-                except Exception as ex:
-                    msg = "RefTimeseries file type. Error when setting file type. Error:{}"
-                    msg = msg.format(ex.message)
-                    log.exception(msg)
-                    raise ValidationError(msg)
-                finally:
-                    # remove temp dir
-                    if os.path.isdir(temp_dir):
-                        shutil.rmtree(temp_dir)
-
-                log.info("RefTimeseries file type was created.")
-
-        else:
-            err_msg = "Selected file is not part of a GenericLogical file."
-            log.error(err_msg)
-            raise ValidationError(err_msg)
+            log.info("RefTimeseries file type was created.")
 
     def get_copy(self):
         """Overrides the base class method"""

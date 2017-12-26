@@ -89,9 +89,9 @@ def data_store_structure(request):
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
                     if resource.resource_type == "CompositeResource":
-                        f_logical = f.get_or_create_logical_file
-                        logical_file_type = f.logical_file_type_name
-                        logical_file_id = f_logical.id
+                        if f.has_logical_file:
+                            logical_file_type = f.logical_file_type_name
+                            logical_file_id = f.logical_file.id
                     break
 
             if f_pk:  # file is found in Django
