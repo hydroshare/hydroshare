@@ -622,6 +622,12 @@ class AbstractLogicalFile(models.Model):
         """
         raise NotImplementedError()
 
+    @staticmethod
+    def get_aggregation_name():
+        """Sub classes must implement this method to return a name for this
+        logical (aggregation) type used in UI"""
+        raise NotImplementedError()
+
     @property
     def has_metadata(self):
         return hasattr(self, 'metadata')

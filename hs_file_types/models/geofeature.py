@@ -187,6 +187,10 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         feature_metadata = GeoFeatureFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=feature_metadata)
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Geographic Feature Aggregation'
+
     @property
     def supports_resource_file_move(self):
         """resource files that are part of this logical file can't be moved"""

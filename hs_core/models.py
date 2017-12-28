@@ -3070,8 +3070,13 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     @property
     def logical_file_type_name(self):
-        """Return classname of logical file's content object."""
+        """Return class name of logical file's content object."""
         return self.logical_file_content_object.__class__.__name__
+
+    @property
+    def aggregation_display_name(self):
+        """Return a name for the logical file type (aggregation)- used in UI"""
+        return self.logical_file.get_aggregation_name()
 
     @property
     def has_generic_logical_file(self):

@@ -731,6 +731,10 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         """returns a list of serviceType controlled vocabulary terms"""
         return ['SOAP', 'REST']
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Reference Timeseries Aggregation'
+
     @classmethod
     def create(cls):
         # this custom method MUST be used to create an instance of this class

@@ -127,6 +127,10 @@ class GenericLogicalFile(AbstractLogicalFile):
         generic_metadata = GenericFileMetaData.objects.create(keywords=[])
         return cls.objects.create(metadata=generic_metadata)
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Generic Aggregation'
+
     @classmethod
     def set_file_type(cls, resource, file_id, user):
         """Makes any physical file part of a generic  logical file type. The physical file must

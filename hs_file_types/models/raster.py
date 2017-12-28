@@ -221,6 +221,10 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         """file types allowed in this logical file group are: .tif and .vrt"""
         return [".tif", ".vrt"]
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Geographic Raster Aggregation'
+
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""

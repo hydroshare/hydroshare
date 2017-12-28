@@ -20,7 +20,7 @@ function getFolderTemplateInstance(folderName) {
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_id, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_type, logical_file_id, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
 
     var iconTemplate;
@@ -35,7 +35,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_
     }
 
     if (logical_type.length > 0){
-        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Logical Type: " + logical_type;
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Aggregation Name: " + aggregation_name;
     }
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
@@ -155,21 +155,21 @@ function updateSelectionMenuContext() {
         if (fileExt.toUpperCase() != "ZIP") {
             flagDisableUnzip = true;
         }
-        if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+        if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
             flagDisableSetGeoRasterFileType = true;
         }
 
-        if (fileExt.toUpperCase() != "NC"  || logicalFileType != "GenericLogicalFile") {
+        if (fileExt.toUpperCase() != "NC"  || logicalFileType != "") {
             flagDisableSetNetCDFFileType = true;
         }
 
-        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
             flagDisableSetGeoFeatureFileType = true;
         }
-        if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "GenericLogicalFile") {
+        if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "") {
             flagDisableSetRefTimeseriesFileType = true;
         }
-        if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "GenericLogicalFile") {
+        if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "") {
             flagDisableSetTimeseriesFileType = true;
         }
         if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {

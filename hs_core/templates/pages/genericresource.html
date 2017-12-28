@@ -154,23 +154,23 @@
                     {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                         <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Raster File Type</span>
+                            <span>Set Geographic Raster Aggregation</span>
                         </li>
                         <li id="btn-set-netcdf-file-type" data-menu-name="setnetcdffiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Multidimensional Data File Type</span>
+                            <span>Set Multidimensional Aggregation</span>
                         </li>
                         <li id="btn-set-geofeature-file-type" data-menu-name="setgeofeaturefiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Geographic Feature File Type</span>
+                            <span>Set Geographic Feature Aggregation</span>
                         </li>
                         <li id="btn-set-refts-file-type" data-menu-name="setreftsfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Reference Timeseries File Type</span>
+                            <span>Set Reference Timeseries Aggregation</span>
                         </li>
                         <li id="btn-set-timeseris-file-type" data-menu-name="settimeseriesfiletype">
                             <span class="glyphicon glyphicon-check icon-blue"></span>
-                            <span>Set Timeseries File Type</span>
+                            <span>Set Timeseries Aggregation</span>
                         </li>
                     {%  endif %}
                 </ul>
@@ -651,9 +651,9 @@
                             {% endif %}
                             {% if cm.resource_type == "CompositeResource" %}
                                 <li class="col-xs-2 col-md-2">
-                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
+                                    <a href="#fileTypeMetaDataTab" data-toggle="tab" title="Aggregation Metadata">
                                         <span class="glyphicon glyphicon-list-alt"> </span>
-                                        &nbspFile Metadata
+                                        &nbspAggregation Metadata
                                     </a>
                                  </li>
                             {% endif %}

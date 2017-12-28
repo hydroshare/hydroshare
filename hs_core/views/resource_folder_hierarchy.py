@@ -84,6 +84,7 @@ def data_store_structure(request):
             f_url = ''
             logical_file_type = ''
             logical_file_id = ''
+            aggregation_name = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if name_with_full_path == f.storage_path:
                     f_pk = f.pk
@@ -92,10 +93,12 @@ def data_store_structure(request):
                         if f.has_logical_file:
                             logical_file_type = f.logical_file_type_name
                             logical_file_id = f.logical_file.id
+                            aggregation_name = f.aggregation_display_name
                     break
 
             if f_pk:  # file is found in Django
                 files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                              'aggregation_name': aggregation_name,
                               'logical_type': logical_file_type,
                               'logical_file_id': logical_file_id})
             else:  # file is not found in Django

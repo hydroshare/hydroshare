@@ -287,6 +287,10 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         """file types allowed in this logical file group are: .nc and .txt"""
         return [".nc", ".txt"]
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Multidimensional Aggregation'
+
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""

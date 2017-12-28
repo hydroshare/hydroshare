@@ -415,6 +415,10 @@ class TimeSeriesLogicalFile(AbstractLogicalFile):
         """file types allowed in this logical file group are: .csv and .sqlite"""
         return [".csv", ".sqlite"]
 
+    @staticmethod
+    def get_aggregation_name():
+        return 'Timeseries Aggregation'
+
     @classmethod
     def create(cls):
         """this custom method MUST be used to create an instance of this class"""
