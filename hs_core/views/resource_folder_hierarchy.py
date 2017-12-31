@@ -72,6 +72,21 @@ def data_store_structure(request):
     try:
         store = istorage.listdir(res_coll)
         files = []
+        folders = []
+        for folder in store[0]:
+            folder_aggregation_type = ''
+            folder_aggregation_name = ''
+            folder_aggregation_id = ''
+            aggregation_object = ResourceFile.get_folder_aggregation_object(resource, folder)
+            if aggregation_object is not None:
+                folder_aggregation_type = aggregation_object.get_aggregation_type_name()
+                folder_aggregation_name = aggregation_object.get_aggregation_name()
+                folder_aggregation_id = aggregation_object.id
+            folders.append({'folder_name': folder,
+                            'folder_aggregation_type': folder_aggregation_type,
+                            'folder_aggregation_name': folder_aggregation_name,
+                            'folder_aggregation_id': folder_aggregation_id})
+
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, fname)
@@ -110,7 +125,7 @@ def data_store_structure(request):
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,
-                     'folders': store[0],
+                     'folders': folders,
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":

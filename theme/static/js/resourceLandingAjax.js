@@ -1030,7 +1030,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v));
+                    $('#fb-files-container').append(getFolderTemplateInstance(v['folder_name'], v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id']));
                 });
             }
             if (!files.length && !folders.length) {

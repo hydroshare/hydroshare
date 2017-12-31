@@ -6,17 +6,28 @@ var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
 var isDragging = false;
-var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select a file to see file type metadata.</h4></div>';
+var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" role="alert"><h4>Select an aggregation to see aggregation type metadata.</h4></div>';
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
+function getFolderTemplateInstance(folderName, folderAgrregationType, folderAggregationName, folderAggregationID) {
+    if(folderAgrregationType.length >0){
+        return "<li class='fb-folder droppable draggable' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
+                "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID +  "'>" + folderAgrregationType + "</span>" +
                 "<span class='fb-file-size'></span>" +
             "</li>"
+    }
+    else {
+        return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
+            "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
+            "<span class='fb-file-name'>" + folderName + "</span>" +
+            "<span class='fb-file-type'>File Folder</span>" +
+            "<span class='fb-file-size'></span>" +
+            "</li>"
+    }
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
@@ -334,10 +345,10 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if ($(this).hasClass("fb-file")) {
+            if ($(this).hasClass("fb-folder")) {
                 // check if this is a left mouse button click
                 if(e.which == 1) {
-                    showFileTypeMetadata(false, "");
+                    // showFileTypeMetadata(false, "");
                     $("#id_northlimit_filetype").attr("data-map-item", "northlimit");
                     $("#id_eastlimit_filetype").attr("data-map-item", "eastlimit");
                     $("#id_southlimit_filetype").attr("data-map-item", "southlimit");
@@ -425,8 +436,22 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
         $(".selection-menu").hide();
     });
-
-    $("#hs-file-browser li.fb-folder").dblclick(onOpenFolder);
+    var timer = 0;
+    var delay = 200;
+    var prevent = false;
+    $("#hs-file-browser li.fb-folder").dblclick(function () {
+        clearTimeout(timer);
+        prevent = true;
+        onOpenFolder();
+    });
+    $("#hs-file-browser li.fb-folder").click(function () {
+         timer = setTimeout(function() {
+             if(!prevent){
+                 showFileTypeMetadata(false, "");
+             }
+             prevent = false;
+         }, delay)
+    });
     $("#hs-file-browser li.fb-file").dblclick(onOpenFile);
 
     // Right click menu for file browser
@@ -469,6 +494,8 @@ function bindFileBrowserItemEvents() {
 function showFileTypeMetadata(file_type_time_series, url){
     // when viewing timeseries file metadata by series id, *file_type_time_series* parameter must be
     // set to true and the *url* must be set
+    // remove anything displayed currently for the aggregation metadata
+    $("#fileTypeMetaDataTab").html(file_metadata_alert);
     var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
      if (!logical_file_id || (logical_file_id && logical_file_id.length == 0)){
          return;
@@ -780,6 +807,8 @@ function onOpenFolder() {
     pathLog.splice(pathLogIndex + 1, range);
     pathLog.push(targetPath);
     pathLogIndex = pathLog.length - 1;
+    // remove any aggregation metadata display
+    $("#fileTypeMetaDataTab").html(file_metadata_alert);
 
     var calls = [];
     calls.push(get_irods_folder_struct_ajax_submit(resID, targetPath));

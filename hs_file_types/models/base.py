@@ -628,6 +628,10 @@ class AbstractLogicalFile(models.Model):
         logical (aggregation) type used in UI"""
         raise NotImplementedError()
 
+    def get_aggregation_type_name(self):
+        """Return the class name of the logical type (aggregation type)"""
+        return self.__class__.__name__
+
     @property
     def has_metadata(self):
         return hasattr(self, 'metadata')
