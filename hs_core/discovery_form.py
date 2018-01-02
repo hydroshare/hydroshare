@@ -46,9 +46,9 @@ class DiscoveryForm(FacetedSearchForm):
                 parsed = parser.parse(cdata)
                 sqs = sqs.filter(parsed)
             except UnhandledException:
-                sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+                sqs = self.searchqueryset.none()
             except NoMatchingBracketsFound:
-                sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+                sqs = self.searchqueryset.none()
 
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
