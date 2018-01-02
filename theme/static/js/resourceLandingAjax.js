@@ -762,7 +762,7 @@ function set_file_type_ajax_submit(url) {
     var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
-        File type was successful.\
+        Aggregation type was successful.\
     </div>';
 
     var waitDialog = showWaitDialog();
@@ -776,7 +776,7 @@ function set_file_type_ajax_submit(url) {
             var json_response = JSON.parse(result);
             var spatialCoverage = json_response.spatial_coverage;
             updateResourceSpatialCoverage(spatialCoverage);
-            $alert_success = $alert_success.replace("File type was successful.", json_response.message);
+            $alert_success = $alert_success.replace("Aggregation type was successful.", json_response.message);
             $("#fb-inner-controls").before($alert_success);
             $(".alert-success").fadeTo(2000, 500).slideUp(1000, function(){
                 $(".alert-success").alert('close');
@@ -785,7 +785,7 @@ function set_file_type_ajax_submit(url) {
         error: function (xhr, textStatus, errorThrown) {
             waitDialog.dialog("close");
             var jsonResponse = JSON.parse(xhr.responseText);
-            display_error_message('Failed to set file type', jsonResponse.message);
+            display_error_message('Failed to set the selected aggregation type', jsonResponse.message);
             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
         }
     });
