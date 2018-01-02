@@ -344,7 +344,7 @@ rebuild_hs() {
     solr_schema_hs
     sleep 2s
     # rebuild_solr_index
-    # sleep 2s
+    sleep 2s
     solr_reload_hs
     sleep 2s
     rebuild_solr_index
