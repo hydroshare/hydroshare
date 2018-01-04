@@ -2,7 +2,7 @@ from json import dumps, loads, load
 import requests
 import time
 import os
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -618,13 +618,35 @@ def create_scidas_virtual_app(request, res_id, cluster):
         p_data['containers'][0]['cluster'] = cluster_name
 
     # delete the appliance before posting to create a new one in case it already exists
-    requests.delete(url+'/'+app_id)
+    app_url = url+'/'+app_id
+    response = requests.delete(app_url)
+    is_deleted = False
+    if response.status_code != status.HTTP_404_NOT_FOUND and \
+           response.status_code != status.HTTP_200_OK:
+        idx = 0
+        while idx < 2:
+            get_response = requests.get(app_url)
+            idx += 1
+            if get_response.status_code == status.HTTP_404_NOT_FOUND:
+                is_deleted = True
+                break
+            else:
+                # appliance is not deleted successfully yet, wait and poll 
+                # again one more time
+                time.sleep(2) 
+    else:
+        is_deleted = True
+    if not is_deleted:
+        errmsg = 'The old appliance '+app_id+' cannot be deleted successfully'
+        messages.error(request, errmsg)
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    
     response = requests.post(url, data=dumps(p_data))
     if response.status_code != status.HTTP_200_OK and \
             response.status_code != status.HTTP_201_CREATED:
         return HttpResponseBadRequest(content=response.text)
     while True:
-        response = requests.get(url+'/'+app_id)
+        response = requests.get(app_url)
         if not response.status_code == status.HTTP_200_OK:
             return HttpResponseBadRequest(content=response.text)
         return_data = loads(response.content)
@@ -640,11 +662,13 @@ def create_scidas_virtual_app(request, res_id, cluster):
 
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
+
     # make sure the new directed url is loaded and working before redirecting
     try:
         ret = urlopen(app_url, timeout=10)
-    except Exception as ex:
-        messages.error(request, ex.message)
+    except URLError as ex:
+        errmsg = ex.reason if hasattr(ex, 'reason') else 'URLError'
+        messages.error(request, errmsg)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     if ret.code == 200:
