@@ -274,7 +274,7 @@ def update_quota_usage_task(username):
     to be accounted for in this function to update Django DB as an aggregated usage for hydroshare
     internal zone.
     :param
-    username: the name of the uuser that needs to update quota usage for.
+    username: the name of the user that needs to update quota usage for.
     :return: True if quota usage update succeeds;
              False if there is an exception raised or quota cannot be updated. See log for details.
     """
