@@ -793,3 +793,24 @@ class AbstractLogicalFile(models.Model):
             # this should also delete on all metadata elements that have generic relations with
             # the metadata object
             metadata.delete()
+
+    def remove_aggregation(self):
+        """Deletes the aggregation object (logical file) *self* and the associated metadata
+        object. However, it doesn't delete any resource files that are part of the aggregation."""
+
+        # first need to set the aggregation for each of the associated resource files to None
+        # so that deleting the aggregation (logical file) does not cascade to deleting of
+        # resource files associated with the aggregation
+        for res_file in self.files.all():
+            res_file.logical_file_content_object = None
+            res_file.save()
+
+        # delete logical file (aggregation) first then delete the associated metadata file object
+        # deleting the logical file object will not automatically delete the associated
+        # metadata file object
+        metadata = self.metadata if self.has_metadata else None
+        super(AbstractLogicalFile, self).delete()
+        if metadata is not None:
+            # this should also delete on all metadata elements that have generic relations with
+            # the metadata object
+            metadata.delete()

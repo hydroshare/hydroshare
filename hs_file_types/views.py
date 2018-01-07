@@ -22,6 +22,13 @@ from hs_core.hydroshare.utils import resource_modified
 from .models import GeoRasterLogicalFile, NetCDFLogicalFile, GeoFeatureLogicalFile, \
     RefTimeseriesLogicalFile, TimeSeriesLogicalFile
 
+FILE_TYPE_MAP = {"GeoRasterLogicalFile": GeoRasterLogicalFile,
+                 "NetCDFLogicalFile": NetCDFLogicalFile,
+                 "GeoFeatureLogicalFile": GeoFeatureLogicalFile,
+                 "RefTimeseriesLogicalFile": RefTimeseriesLogicalFile,
+                 "TimeSeriesLogicalFile": TimeSeriesLogicalFile
+                 }
+
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
@@ -155,6 +162,43 @@ def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs)
     msg = "Geo Raster aggregation type was deleted."
     messages.success(request, msg)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def remove_aggregation(request, resource_id, hs_file_type, file_type_id, **kwargs):
+    """Deletes an instance of a specific file type (aggregation) and all the associated metadata.
+    However, it doesn't delete resource files associated with the aggregation.
+    """
+
+    response_data = {'status': 'error'}
+
+    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    if res.resource_type != "CompositeResource":
+        err_msg = "Aggregation type can be deleted only in composite resource."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if hs_file_type not in FILE_TYPE_MAP:
+        err_msg = "Unsupported aggregation type. Supported aggregation types are: {}"
+        err_msg = err_msg.format(FILE_TYPE_MAP.keys())
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    aggregation = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if aggregation is None:
+        err_msg = "No matching aggregation was found."
+        response_data['message'] = err_msg
+        return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    aggregation.remove_aggregation()
+    msg = "Aggregation was successfully removed."
+    response_data['status'] = 'success'
+    response_data['message'] = msg
+    spatial_coverage_dict = get_coverage_data_dict(res)
+    response_data['spatial_coverage'] = spatial_coverage_dict
+    return JsonResponse(response_data, status=status.HTTP_200_OK)
 
 
 @login_required
