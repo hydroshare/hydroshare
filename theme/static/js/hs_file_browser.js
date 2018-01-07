@@ -84,6 +84,7 @@ function updateSelectionMenuContext() {
     var flagDisableSetGeoFeatureFileType = false;
     var flagDisableSetRefTimeseriesFileType = false;
     var flagDisableSetTimeseriesFileType = false;
+    var flagDisableRemoveAggregation = false;
     var flagDisableGetLink = false;
     var flagDisableCreateFolder = false;
 
@@ -99,6 +100,7 @@ function updateSelectionMenuContext() {
         flagDisableSetGeoFeatureFileType = true;
         flagDisableSetRefTimeseriesFileType = true;
         flagDisableSetTimeseriesFileType = true;
+        flagDisableRemoveAggregation = true;
         flagDisableGetLink = true;
 
         for (var i = 0; i < selected.length; i++) {
@@ -115,6 +117,10 @@ function updateSelectionMenuContext() {
         var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
         if(resourceType === 'Composite Resource' && foldersSelected.length > 1) {
             flagDisableDelete = true;
+            flagDisableRemoveAggregation = true;
+        }
+        if(resourceType !== 'Composite Resource') {
+            flagDisableRemoveAggregation = true;
         }
     }
     else if (selected.length == 1) {    // Exactly one file selected
@@ -147,12 +153,16 @@ function updateSelectionMenuContext() {
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+        flagDisableRemoveAggregation = true;
     }
 
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
         flagDisableUnzip = true;
         flagDisableGetLink = true;
+        if (!selected.children('span').hasClass('fb-logical-file-type')){
+            flagDisableRemoveAggregation = true;
+        }
     }
 
     if (!sourcePaths.length) {
@@ -238,6 +248,9 @@ function updateSelectionMenuContext() {
     // set Timeseries file type
     menu.children("li[data-menu-name='settimeseriesfiletype']").toggleClass("disabled", flagDisableSetTimeseriesFileType);
     $("#fb-set-timeseries-file-type").toggleClass("disabled", flagDisableSetTimeseriesFileType);
+
+    // set Remove aggregation (file type)
+    menu.children("li[data-menu-name='removeaggregation']").toggleClass("disabled", flagDisableRemoveAggregation);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -1404,6 +1417,11 @@ $(document).ready(function () {
          setFileType("TimeSeries");
      });
 
+     // set remove aggregation (file type) method
+     $("#btn-remove-aggregation").click(function () {
+         removeAggregation();
+     });
+
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {
@@ -1499,6 +1517,28 @@ function setFileType(fileType){
        }
     });
 }
+
+// used for removing aggregation (file type) within composite resource
+function removeAggregation(){
+    var aggregationType = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    var aggregationID = $("#fb-files-container li.ui-selected").children('span.fb-logical-file-type').attr("data-logical-file-id");
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var url = "/hsapi/_internal/" + resID + "/" + aggregationType + "/" + aggregationID + "/remove-aggregation/";
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+    var calls = [];
+    calls.push(remove_aggregation_ajax_submit(url));
+    // Wait for the asynchronous calls to finish to get new folder structure
+    $.when.apply($, calls).done(function (result) {
+       $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+       var json_response = JSON.parse(result);
+       $("#fileTypeMetaDataTab").html(file_metadata_alert);
+       // page refresh is needed to show any extracted metadata used at the resource level
+       if (json_response.status === 'success'){
+            window.location = window.location.href;
+       }
+    });
+}
+
 // Used to set the previous scroll position after refresh
 function setCookie(name, value, expires, path, domain, secure) {
     if (!expires) {
