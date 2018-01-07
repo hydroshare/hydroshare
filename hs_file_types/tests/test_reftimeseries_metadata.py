@@ -12,7 +12,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_post_create_actions
 from utils import assert_ref_time_series_file_type_metadata
 
-from hs_file_types.models import RefTimeseriesLogicalFile, GenericLogicalFile
+from hs_file_types.models import RefTimeseriesLogicalFile, RefTimeseriesFileMetaData
 
 
 class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -322,6 +322,39 @@ class RefTimeseriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestC
         self.refts_file_obj = open(self.invalid_ref_type_file, 'r')
         self._create_composite_resource()
         self._test_invalid_file()
+        self.composite_resource.delete()
+
+    def test_remove_aggregation(self):
+        # test that when an instance RefTimeseriesLogicalFile (aggregation) is deleted
+        # all files associated with that aggregation is not deleted but the associated metadata
+        # is deleted
+        self.refts_file_obj = open(self.refts_file, 'r')
+        res_title = "Test Composite Resource"
+        self._create_composite_resource(title=res_title)
+        res_file = self.composite_resource.files.first()
+
+        # set the json file to RefTimeSeriesLogicalFile (aggregation) type
+        RefTimeseriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type RefTimeseriesLogicalFile as a result
+        # of setting aggregation
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 1)
+        self.assertEqual(RefTimeseriesFileMetaData.objects.count(), 1)
+        logical_file = RefTimeseriesLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 1)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no RefTimeseriesLogicalFile object
+        self.assertEqual(RefTimeseriesLogicalFile.objects.count(), 0)
+        # test there is no RefTimeseriesFileMetaData object
+        self.assertEqual(RefTimeseriesFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+
         self.composite_resource.delete()
 
     def _test_invalid_file(self):

@@ -304,6 +304,38 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         self.composite_resource.delete()
 
+    def test_remove_aggregation(self):
+        # test that when an instance GeoFeatureLogicalFile (aggregation) is deleted
+        # all resource files associated with that aggregation is not deleted but the associated
+        # metadata is deleted
+        self._create_composite_resource(self.states_required_zip_file)
+        res_file = self.composite_resource.files.first()
+
+        # set the zip file to GeoFeatureLogicalFile (aggregation) type
+        GeoFeatureLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file (aggregation) of type GeoFeatureLogicalFile
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 1)
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 1)
+        logical_file = GeoFeatureLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 3)
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no GeoFeatureLogicalFile object
+        self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
+        # test there is no GeoFeatureFileMetaData object
+        self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 3)
+        # check the file folder is not deleted
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, 'states_required_files')
+        self.composite_resource.delete()
+
     def test_content_file_delete(self):
         # test that when any file in GeoFeatureLogicalFile type is deleted
         # all metadata associated with GeoFeatureLogicalFile is deleted

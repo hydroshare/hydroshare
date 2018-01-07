@@ -263,6 +263,39 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_remove_aggregation(self):
+        # test that when an instance NetCDFLogicalFile Type (aggregation) is deleted
+        # all resource files associated with that aggregation is not deleted but the associated
+        # metadata is deleted
+        self.netcdf_file_obj = open(self.netcdf_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # set the nc file to NetCDFLogicalFile aggregation
+        NetCDFLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file (aggregation) of type NetCDFLogicalFile
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 1)
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 1)
+        logical_file = NetCDFLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no NetCDFLogicalFile object
+        self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
+        # test there is no NetCDFFileMetaData object
+        self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is not deleted
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, 'netcdf_valid')
+        self.composite_resource.delete()
+
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
         # all metadata associated with NetCDFFileType is deleted

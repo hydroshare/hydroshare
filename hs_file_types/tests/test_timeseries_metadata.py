@@ -507,6 +507,39 @@ class TimeSeriesFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
 
         self.composite_resource.delete()
 
+    def test_remove_aggregation(self):
+        # test that when an instance TimeSeriesLogicalFile (aggregation) is deleted
+        # all files associated with that aggregation is not deleted but the associated metadata
+        # is deleted
+        self.sqlite_file_obj = open(self.sqlite_file, 'r')
+        self._create_composite_resource(title='Untitled Resource')
+        res_file = self.composite_resource.files.first()
+
+        # set the sqlite file to TimeSeriesLogicalFile (aggregation)
+        TimeSeriesLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type TimeSeriesLogicalFile
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 1)
+        self.assertEqual(TimeSeriesFileMetaData.objects.count(), 1)
+        logical_file = TimeSeriesLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 1)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no TimeSeriesLogicalFile object
+        self.assertEqual(TimeSeriesLogicalFile.objects.count(), 0)
+        # test there is no TimeSeriesFileMetaData object
+        self.assertEqual(TimeSeriesFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        # check the file folder is not deleted
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, 'ODM2_Multi_Site_One_Variable')
+        self.composite_resource.delete()
+
     def test_timeseries_file_type_folder_delete(self):
         # when  a file is set to TimeSeriesLogicalFile type
         # system automatically creates folder using the name of the file

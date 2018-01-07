@@ -544,6 +544,39 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.composite_resource.delete()
 
+    def test_remove_aggregation(self):
+        # test that when an instance GeoRasterLogicalFile (aggregation) is deleted
+        # all files associated with that aggregation is not deleted but the associated metadata
+        # is deleted
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # set the tif file to GeoRasterLogicalFile (aggregation)
+        GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
+        logical_file = GeoRasterLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no GeoRasterLogicalFile object
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        # test there is no GeoRasterFileMetaData object
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
+        # check the files associated with the aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        # check the file folder is not deleted
+        for f in self.composite_resource.files.all():
+            self.assertEqual(f.file_folder, 'small_logan')
+        self.composite_resource.delete()
+
     def test_content_file_delete(self):
         # test that when any file that is part of an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted

@@ -159,6 +159,37 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be no GenericFileMetaData object at this point
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
 
+    def test_remove_aggregation(self):
+        # test that when an instance GenericLogicalFile Type (aggregation) is deleted
+        # all resource files associated with that aggregation is not deleted but the associated
+        # metadata is deleted
+        self.generic_file_obj = open(self.generic_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # create generic aggregation
+        GenericLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GenericLogicalFile Type as a result
+        # of setting file type (aggregation)
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        self.assertEqual(GenericFileMetaData.objects.count(), 1)
+        logical_file = GenericLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 1)
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the aggregation (logical file) object using the remove_aggregation function
+        logical_file.remove_aggregation()
+        # test there is no GenericLogicalFile object
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # test there is no GenericFileMetaData object
+        self.assertEqual(GenericFileMetaData.objects.count(), 0)
+        # check the files previously associated with the generic aggregation not deleted
+        self.assertEqual(self.composite_resource.files.all().count(), 1)
+        self.composite_resource.delete()
+
     def test_file_rename_or_move(self):
         # test that resource file that belongs to GenericLogicalFile object
         # can be moved or renamed
