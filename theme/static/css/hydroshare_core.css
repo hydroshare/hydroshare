@@ -2739,20 +2739,25 @@ span.you-flag {
 	left: -251px;
 	width: 284px;
 }
+
 .input-group-btn .btn-group {
     display: flex !important;
 }
+
 .btn-group .btn {
     margin-left: -1px;
 }
+
 .btn-group .btn:last-child {
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
 }
+
 .btn-group .form-horizontal .btn[type="submit"] {
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
 }
+
 .form-horizontal .form-group {
     margin-left: 0;
     margin-right: 0;
