@@ -90,7 +90,7 @@
                                data-value="CollectionResource">
                                 <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                      alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Collection</div>
+                                <div class="resource-type-name">&nbsp;Workspace</div>
                             </a>
                         </li>
                         <li>
@@ -100,100 +100,6 @@
                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                      alt="Web App Resource Icon" class="resource-type-icon"/>
                                 <div class="resource-type-name">&nbsp;Web App</div>
-                            </a>
-                        </li>
-
-                        {# GEOGRAPHIC RESOURCES #}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Geographic</li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A set of point, line, or polygon features stored in ESRI Shapefile format. "
-                               data-value="GeographicFeatureResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                     alt="Geographic Feature Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Feature (ESRI Shapefiles)</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Commonly used for representing and managing imagery, digital elevation, and other phenomena which is widely used in hydrological research."
-                               data-value="RasterResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                     alt="Geographic Raster Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Geographic Raster</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Multidimensional space-time data. One of the major data types used for hydrological modeling."
-                               data-value="NetcdfResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                     alt="Multidimensional Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Multidimensional (NetCDF)</div>
-                            </a>
-                        </li>
-
-                        {# MODELING #}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Modeling</li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Describes the software component of a generic model within the water domain."
-                               data-value="ModelProgramResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                     alt="Model Program Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Program</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Defines the input and output data for a generic hydrological model, for a specific time and place."
-                               data-value="ModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                     alt="Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to the Soil and Water Assessment Tool."
-                               data-value="SWATModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                     alt="SWAT Model Instance Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;SWAT Model Instance</div>
-                            </a>
-                        </li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions."
-                               data-value="MODFLOWModelInstanceResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
-                                     alt="Collection Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;MODFLOW Model Instance</div>
-                            </a>
-                        </li>
-
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="Stores a file containing the code for a script that was used to complete a hydrologic data analysis, modeling, or data management operation."
-                               data-value="ScriptResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                     alt="Script Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Script</div>
-                            </a>
-                        </li>
-
-                        {# TIME SERIES RESOURCES #}
-                        <li role="separator" class="divider"></li>
-                        <li class="dropdown-header">Time Series</li>
-                        <li>
-                            <a data-toggle="tooltip" data-placement="right"
-                               title="A sequence of individual data values that are ordered in time to record the changing trend of a certain phenomenon."
-                               data-value="TimeSeriesResource">
-                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                     alt="Time Series Resource Icon" class="resource-type-icon"/>
-                                <div class="resource-type-name">&nbsp;Time Series</div>
                             </a>
                         </li>
                     </ul>
