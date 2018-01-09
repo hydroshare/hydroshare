@@ -203,8 +203,8 @@ var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
         var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
         if (resource_bound.contains(latLng)) {
             var author_name = "";
-            if (resource.first_author_description) {
-                author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+            if (resource.first_author_url) {
+                author_name = '<a target="_blank" href="' + resource.first_author_url + '">' + resource.first_author + '</a>';
             } else {
                 author_name = resource.first_author;
             }
@@ -226,8 +226,8 @@ var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) 
         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
         var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
         var author_name = "";
-        if (resource.first_author_description) {
-            author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+        if (resource.first_author_url) {
+            author_name = '<a target="_blank" href="' + resource.first_author_url + '">' + resource.first_author + '</a>';
         } else {
             author_name = resource.first_author;
         }

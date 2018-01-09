@@ -8,9 +8,8 @@ from hs_core.discovery_form import DiscoveryForm
 # returned JSON objects array is used for building the map view
 class DiscoveryJsonView(FacetedSearchView):
     # set facet fields
-    facet_fields = ['creators', 'subjects', 'resource_type', 'public',
-                    'owners_names', 'discoverable', 'published', 'variable_names',
-                    'sample_mediums', 'units_names']
+    facet_fields = ['creator', 'subject', 'resource_type', 'public',
+                    'owner', 'accessibility', 'variable', 'units', 'sample_medium']
     # declare form class to use in this view
     form_class = DiscoveryForm
 
@@ -41,8 +40,8 @@ class DiscoveryJsonView(FacetedSearchView):
                 json_obj['get_absolute_url'] = solr['absolute_url']
                 json_obj['first_author'] = solr['author']
                 # TODO: this is redundant. The value always exists but oft has value 'none'.
-                if solr['author_description']:
-                    json_obj['first_author_description'] = solr['author_description']
+                if solr['author_url']:
+                    json_obj['first_author_url'] = solr['author_url']
 
                 # iterate over all the coverage values
                 if solr['coverages'] is not None:

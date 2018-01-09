@@ -5,9 +5,9 @@ from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, Unhandled
 
 
 class DiscoveryForm(FacetedSearchForm):
-    SORT_ORDER_VALUES = ('title', 'author_normalized', 'created', 'modified')
+    SORT_ORDER_VALUES = ('title', 'author', 'created', 'modified')
     SORT_ORDER_CHOICES = (('title', 'Title'),
-                          ('author_normalized', 'First Author'),
+                          ('author', 'First Author'),
                           ('created', 'Date Created'),
                           ('modified', 'Last Modified'))
 
@@ -83,16 +83,16 @@ class DiscoveryForm(FacetedSearchForm):
         if self.cleaned_data['coverage_type']:
             sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
-        authors_sq = None
-        subjects_sq = None
+        author_sq = None
+        subject_sq = None
         resource_type_sq = None
         public_sq = None
-        owners_names_sq = None
+        owner_sq = None
         discoverable_sq = None
         published_sq = None
-        variable_names_sq = None
-        sample_mediums_sq = None
-        units_names_sq = None
+        variable_sq = None
+        sample_medium_sq = None
+        units_sq = None
 
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
@@ -106,16 +106,16 @@ class DiscoveryForm(FacetedSearchForm):
 
             if value:
                 if "creators" in field:
-                    if authors_sq is None:
-                        authors_sq = SQ(creators=value)
+                    if author_sq is None:
+                        author_sq = SQ(creator=value)
                     else:
-                        authors_sq.add(SQ(creators=value), SQ.OR)
+                        author_sq.add(SQ(creator=value), SQ.OR)
 
                 elif "subjects" in field:
-                    if subjects_sq is None:
-                        subjects_sq = SQ(subjects=value)
+                    if subject_sq is None:
+                        subject_sq = SQ(subject=value)
                     else:
-                        subjects_sq.add(SQ(subjects=value), SQ.OR)
+                        subject_sq.add(SQ(subject=value), SQ.OR)
 
                 elif "resource_type" in field:
                     if resource_type_sq is None:
@@ -130,10 +130,10 @@ class DiscoveryForm(FacetedSearchForm):
                         public_sq.add(SQ(public=value), SQ.OR)
 
                 elif "owners_names" in field:
-                    if owners_names_sq is None:
-                        owners_names_sq = SQ(owners_names=value)
+                    if owner_sq is None:
+                        owner_sq = SQ(owner=value)
                     else:
-                        owners_names_sq.add(SQ(owners_names=value), SQ.OR)
+                        owner_sq.add(SQ(owner=value), SQ.OR)
 
                 elif "discoverable" in field:
                     if discoverable_sq is None:
@@ -148,45 +148,45 @@ class DiscoveryForm(FacetedSearchForm):
                         published_sq.add(SQ(published=value), SQ.OR)
 
                 elif 'variable_names' in field:
-                    if variable_names_sq is None:
-                        variable_names_sq = SQ(variable_names=value)
+                    if variable_sq is None:
+                        variable_sq = SQ(variable=value)
                     else:
-                        variable_names_sq.add(SQ(variable_names=value), SQ.OR)
+                        variable_sq.add(SQ(variable=value), SQ.OR)
 
                 elif 'sample_mediums' in field:
-                    if sample_mediums_sq is None:
-                        sample_mediums_sq = SQ(sample_mediums=value)
+                    if sample_medium_sq is None:
+                        sample_medium_sq = SQ(sample_medium=value)
                     else:
-                        sample_mediums_sq.add(SQ(sample_mediums=value), SQ.OR)
+                        sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
 
                 elif 'units_names' in field:
-                    if units_names_sq is None:
-                        units_names_sq = SQ(units_names=value)
+                    if units_sq is None:
+                        units_sq = SQ(units=value)
                     else:
-                        units_names_sq.add(SQ(units_names=value), SQ.OR)
+                        units_sq.add(SQ(units=value), SQ.OR)
 
                 else:
                     continue
 
-        if authors_sq is not None:
-            sqs = sqs.filter(authors_sq)
-        if subjects_sq is not None:
-            sqs = sqs.filter(subjects_sq)
+        if author_sq is not None:
+            sqs = sqs.filter(author_sq)
+        if subject_sq is not None:
+            sqs = sqs.filter(subject_sq)
         if resource_type_sq is not None:
             sqs = sqs.filter(resource_type_sq)
         if public_sq is not None:
             sqs = sqs.filter(public_sq)
-        if owners_names_sq is not None:
-            sqs = sqs.filter(owners_names_sq)
+        if owner_sq is not None:
+            sqs = sqs.filter(owner_sq)
         if discoverable_sq is not None:
             sqs = sqs.filter(discoverable_sq)
         if published_sq is not None:
             sqs = sqs.filter(published_sq)
-        if variable_names_sq is not None:
-            sqs = sqs.filter(variable_names_sq)
-        if sample_mediums_sq is not None:
-            sqs = sqs.filter(sample_mediums_sq)
-        if units_names_sq is not None:
-            sqs = sqs.filter(units_names_sq)
+        if variable_sq is not None:
+            sqs = sqs.filter(variable_sq)
+        if sample_medium_sq is not None:
+            sqs = sqs.filter(sample_medium_sq)
+        if units_sq is not None:
+            sqs = sqs.filter(units_sq)
 
         return sqs

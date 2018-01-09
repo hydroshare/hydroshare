@@ -5,9 +5,8 @@ from haystack.query import SearchQuerySet
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = ['creators', 'subjects', 'resource_type', 'public',
-                    'owners_names', 'discoverable', 'published', 'variable_names',
-                    'sample_mediums', 'units_names']
+    facet_fields = ['creator', 'subject', 'resource_type', 'accessibility',
+                    'owner', 'variable', 'units', 'sample_medium']
     form_class = DiscoveryForm
 
     def form_valid(self, form):

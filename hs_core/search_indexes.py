@@ -11,33 +11,49 @@ from datetime import datetime
 from nameparser import HumanName
 
 
+def normalize_human_name(name):
+    nameparts = HumanName(name.lstrip())
+    normalized = nameparts.last
+    if nameparts.suffix:
+        normalized = normalized + ' ' + nameparts.suffix
+    normalized = normalized + ','
+    if nameparts.title:
+        normalized = normalized + ' ' + nameparts.title
+    if nameparts.first:
+        normalized = normalized + ' ' + nameparts.first
+    if nameparts.middle:
+        normalized = ' ' + normalized + ' ' + nameparts.middle
+    return normalized
+
+
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     """Define base class for resource indexes."""
 
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(faceted=True)
-    author_normalized = indexes.CharField(faceted=True)
-    author_description = indexes.CharField(indexed=False)
+    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
+    author_raw = indexes.CharField(faceted=True)  # not normalized
+    author_url = indexes.CharField(indexed=False)
     title = indexes.CharField(faceted=True)
     abstract = indexes.CharField()
-    creators = indexes.MultiValueField(faceted=True)
-    contributors = indexes.MultiValueField()
-    subjects = indexes.MultiValueField(faceted=True)
+    creator = indexes.MultiValueField(faceted=True)
+    contributor = indexes.MultiValueField()
+    subject = indexes.MultiValueField(faceted=True)
     public = indexes.BooleanField(faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
     published = indexes.BooleanField(faceted=True)
+    accessibility = indexes.CharField()
     # TODO: We might need more information than a bool in the future
-    is_replaced_by = indexes.BooleanField()
+    replaced = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created', faceted=True)
     modified = indexes.DateTimeField(model_attr='updated', faceted=True)
-    organizations = indexes.MultiValueField(faceted=True)
-    author_emails = indexes.MultiValueField()
+    organization = indexes.MultiValueField(faceted=True)
+    creator_email = indexes.MultiValueField()
     publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
-    coverages = indexes.MultiValueField()
-    coverage_types = indexes.MultiValueField()
+    coverage = indexes.MultiValueField()
+    coverage_type = indexes.MultiValueField()
     coverage_east = indexes.FloatField()
     coverage_north = indexes.FloatField()
     coverage_northlimit = indexes.FloatField()
@@ -46,41 +62,41 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     coverage_westlimit = indexes.FloatField()
     coverage_start_date = indexes.DateField()
     coverage_end_date = indexes.DateField()
-    formats = indexes.MultiValueField()
-    identifiers = indexes.MultiValueField()
+    format = indexes.MultiValueField()
+    identifier = indexes.MultiValueField()
     language = indexes.CharField(faceted=True)
-    sources = indexes.MultiValueField()
-    relations = indexes.MultiValueField()
+    source = indexes.MultiValueField()
+    relation = indexes.MultiValueField()
     resource_type = indexes.CharField(faceted=True)
-    comments = indexes.MultiValueField()
+    comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
-    owners_logins = indexes.MultiValueField(faceted=True)
-    owners_names = indexes.MultiValueField(faceted=True)
+    owners_login = indexes.MultiValueField(faceted=True)
+    owners_name = indexes.MultiValueField(faceted=True)
     owners_count = indexes.IntegerField(faceted=True)
-    viewers_logins = indexes.MultiValueField(faceted=True)
-    viewers_names = indexes.MultiValueField(faceted=True)
+    viewers_login = indexes.MultiValueField(faceted=True)
+    viewers_name = indexes.MultiValueField(faceted=True)
     viewers_count = indexes.IntegerField(faceted=True)
-    editors_logins = indexes.MultiValueField(faceted=True)
-    editors_names = indexes.MultiValueField(faceted=True)
+    editors_login = indexes.MultiValueField(faceted=True)
+    editors_name = indexes.MultiValueField(faceted=True)
     editors_count = indexes.IntegerField(faceted=True)
     # non-core metadata
     geometry_type = indexes.CharField(faceted=True)
     field_name = indexes.CharField()
     field_type = indexes.CharField()
     field_type_code = indexes.CharField()
-    variable_names = indexes.MultiValueField(faceted=True)
-    variable_types = indexes.MultiValueField()
-    variable_shapes = indexes.MultiValueField()
-    variable_descriptive_names = indexes.MultiValueField()
-    variable_speciations = indexes.MultiValueField()
-    sites = indexes.MultiValueField()
-    methods = indexes.MultiValueField()
-    quality_levels = indexes.MultiValueField()
-    data_sources = indexes.MultiValueField()
-    sample_mediums = indexes.MultiValueField(faceted=True)
-    units_names = indexes.MultiValueField(faceted=True)
-    units_types = indexes.MultiValueField(faceted=True)
-    aggregation_statistics = indexes.MultiValueField(faceted=True)
+    variable_name = indexes.MultiValueField(faceted=True)
+    variable_type = indexes.MultiValueField()
+    variable_shape = indexes.MultiValueField()
+    variable_descriptive_name = indexes.MultiValueField()
+    variable_speciation = indexes.MultiValueField()
+    site = indexes.MultiValueField()
+    method = indexes.MultiValueField()
+    quality_level = indexes.MultiValueField()
+    data_source = indexes.MultiValueField()
+    sample_medium = indexes.MultiValueField(faceted=True)
+    units_name = indexes.MultiValueField(faceted=True)
+    units_type = indexes.MultiValueField(faceted=True)
+    aggregation_statistics = indexes.MultiValueField(faceted=False)
     absolute_url = indexes.CharField(indexed=False)
 
     def get_model(self):
@@ -107,7 +123,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_author(self, obj):
+    def prepare_author_raw(self, obj):
         """Return metadata author if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
@@ -118,22 +134,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_author_normalized(self, obj):
+    # TODO: it is confusing that the author is the first creator
+    # This is an artificial distinction
+    def prepare_author(self, obj):
         """Return metadata author if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                nameparts = HumanName(first_creator.name.lstrip())
-                normalized = nameparts.last
-                if nameparts.suffix:
-                    normalized = normalized + ' ' + nameparts.suffix
-                normalized = normalized + ','
-                if nameparts.title:
-                    normalized = normalized + ' ' + nameparts.title
-                if nameparts.first:
-                    normalized = normalized + ' ' + nameparts.first
-                if nameparts.middle:
-                    normalized = ' ' + normalized + ' ' + nameparts.middle
+                normalized = normalize_human_name(first_creator.name)
                 return normalized
             else:
                 return 'none'
@@ -141,8 +149,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return 'none'
 
     # stored, unindexed field
-    def prepare_author_description(self, obj):
-        """Return metadata author description if exists, otherwise return none."""
+    def prepare_author_url(self, obj):
+        """Return metadata author description url if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.description is not None:
@@ -152,7 +160,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_creators(self, obj):
+    def prepare_creator(self, obj):
         """Return metadata creators if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [creator.name for creator in obj.metadata.creators.all()
@@ -160,7 +168,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
-    def prepare_contributors(self, obj):
+    def prepare_contributor(self, obj):
         """Return metadata contributors if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [contributor.name for contributor in obj.metadata.contributors.all()
@@ -168,7 +176,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
-    def prepare_subjects(self, obj):
+    def prepare_subject(self, obj):
         """Return metadata subjects if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [subject.value for subject in obj.metadata.subjects.all()
@@ -176,7 +184,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
-    def prepare_organizations(self, obj):
+    def prepare_organization(self, obj):
         """Return metadata organizations if exists, otherwise return empty array."""
         organizations = []
         none = False  # only enter one value "none"
@@ -201,7 +209,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_author_emails(self, obj):
+    def prepare_creator_email(self, obj):
         """Return metadata emails if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [creator.email for creator in obj.metadata.creators.all()
@@ -239,14 +247,28 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return False
 
-    def prepare_is_replaced_by(self, obj):
+    def prepare_availability(self, obj):
+        """ availability is published, public, or discoverable"""
+        if hasattr(obj, 'raccess'):
+            if obj.raccess.published:
+                return 'published'
+            elif obj.raccess.public:
+                return 'public'
+            elif obj.raccess.discoverable:
+                return 'discoverable'
+            else:
+                return 'private'
+        else:
+            return 'private'
+
+    def prepare_replaced(self, obj):
         """Return 'isReplacedBy' attribute if exists, otherwise return False."""
         if hasattr(obj, 'metadata'):
             return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
         else:
             return False
 
-    def prepare_coverages(self, obj):
+    def prepare_coverage(self, obj):
         """Return resource coverage if exists, otherwise return empty array."""
         # TODO: reject empty coverages
         if hasattr(obj, 'metadata'):
@@ -254,7 +276,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
-    def prepare_coverage_types(self, obj):
+    def prepare_coverage_type(self, obj):
         """Return resource coverage types if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [coverage.type for coverage in obj.metadata.coverages.all()]
@@ -363,14 +385,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_formats(self, obj):
+    def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [format.value for format in obj.metadata.formats.all()]
         else:
             return []
 
-    def prepare_identifiers(self, obj):
+    def prepare_identifier(self, obj):
         """Return metadata identifiers if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [identifier.name for identifier in obj.metadata.identifiers.all()]
@@ -384,14 +406,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_sources(self, obj):
+    def prepare_source(self, obj):
         """Return resource sources if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [source.derived_from for source in obj.metadata.sources.all()]
         else:
             return []
 
-    def prepare_relations(self, obj):
+    def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [relation.value for relation in obj.metadata.relations.all()]
@@ -402,7 +424,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return verbose_name attribute of obj argument."""
         return obj.verbose_name
 
-    def prepare_comments(self, obj):
+    def prepare_comment(self, obj):
         """Return list of all comments on resource."""
         return [comment.comment for comment in obj.comments.all()]
 
@@ -410,14 +432,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return count of resource comments."""
         return obj.comments_count
 
-    def prepare_owners_logins(self, obj):
+    def prepare_owners_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
         if hasattr(obj, 'raccess'):
             return [owner.username for owner in obj.raccess.owners.all()]
         else:
             return []
 
-    def prepare_owners_names(self, obj):
+    def prepare_owners_name(self, obj):
         """Return list of names of resource owners."""
         names = []
         if hasattr(obj, 'raccess'):
@@ -433,14 +455,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    def prepare_viewers_logins(self, obj):
+    def prepare_viewers_login(self, obj):
         """Return usernames of users that can view resource, otherwise return empty array."""
         if hasattr(obj, 'raccess'):
             return [viewer.username for viewer in obj.raccess.view_users.all()]
         else:
             return []
 
-    def prepare_viewers_names(self, obj):
+    def prepare_viewers_name(self, obj):
         """Return full names of users that can view resource, otherwise return empty array."""
         names = []
         if hasattr(obj, 'raccess'):
@@ -456,14 +478,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    def prepare_editors_logins(self, obj):
+    def prepare_editors_login(self, obj):
         """Return usernames of editors of a resource, otherwise return 0."""
         if hasattr(obj, 'raccess'):
             return [editor.username for editor in obj.raccess.edit_users.all()]
         else:
             return 0
 
-    def prepare_editors_names(self, obj):
+    def prepare_editors_name(self, obj):
         """Return full names of editors of a resource, otherwise return empty array."""
         names = []
         if hasattr(obj, 'raccess'):
@@ -535,7 +557,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_variable_names(self, obj):
+    def prepare_variable_name(self, obj):
         """Return metadata variable names if exists, otherwise return empty array."""
         variable_names = []
         if hasattr(obj, 'metadata'):
@@ -550,7 +572,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     variable_names.append(variable.variable_name)
         return variable_names
 
-    def prepare_variable_types(self, obj):
+    def prepare_variable_type(self, obj):
         """Return metadata variable types if exists, otherwise return empty array."""
         variable_types = []
         if hasattr(obj, 'metadata'):
@@ -565,7 +587,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     variable_types.append(variable.variable_type)
         return variable_types
 
-    def prepare_variable_shapes(self, obj):
+    def prepare_variable_shape(self, obj):
         """Return metadata variable shapes if exists, otherwise return empty array."""
         variable_shapes = []
         if hasattr(obj, 'metadata'):
@@ -574,7 +596,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     variable_shapes.append(variable.shape)
         return variable_shapes
 
-    def prepare_variable_descriptive_names(self, obj):
+    def prepare_variable_descriptive_name(self, obj):
         """Return metadata variable descriptive names if exists, otherwise return empty array."""
         variable_descriptive_names = []
         if hasattr(obj, 'metadata'):
@@ -583,7 +605,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     variable_descriptive_names.append(variable.descriptive_name)
         return variable_descriptive_names
 
-    def prepare_variable_speciations(self, obj):
+    def prepare_variable_speciation(self, obj):
         """Return metadata variable speciations if exists, otherwise return empty array."""
         variable_speciations = []
         if hasattr(obj, 'metadata'):
@@ -592,7 +614,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     variable_speciations.append(variable.speciation)
         return variable_speciations
 
-    def prepare_sites(self, obj):
+    def prepare_site(self, obj):
         """Return metadata sites if exists, otherwise return empty array."""
         sites = []
         if hasattr(obj, 'metadata'):
@@ -604,7 +626,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     sites.append(site.site_name)
         return sites
 
-    def prepare_methods(self, obj):
+    def prepare_method(self, obj):
         """Return metadata methods if exists, otherwise return empty array."""
         methods = []
         if hasattr(obj, 'metadata'):
@@ -616,7 +638,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     methods.append(method.method_description)
         return methods
 
-    def prepare_quality_levels(self, obj):
+    def prepare_quality_level(self, obj):
         """Return metadata quality levels if exists, otherwise return empty array."""
         quality_levels = []
         if hasattr(obj, 'metadata'):
@@ -625,7 +647,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     quality_levels.append(quality_level.code)
         return quality_levels
 
-    def prepare_data_sources(self, obj):
+    def prepare_data_source(self, obj):
         """Return metadata datasources if exists, otherwise return empty array."""
         data_sources = []
         if hasattr(obj, 'metadata'):
@@ -634,7 +656,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     data_sources.append(data_source.code)
         return data_sources
 
-    def prepare_sample_mediums(self, obj):
+    def prepare_sample_medium(self, obj):
         """Return metadata sample mediums if exists, otherwise return empty array."""
         sample_mediums = []
         if hasattr(obj, 'metadata'):
@@ -646,7 +668,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     sample_mediums.append(variable.sample_medium)
         return sample_mediums
 
-    def prepare_units_names(self, obj):
+    def prepare_units_name(self, obj):
         """Return metadata units names if exists, otherwise return empty array."""
         units_names = []
         if hasattr(obj, 'metadata'):
@@ -655,7 +677,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     units_names.append(time_series_result.units_name)
         return units_names
 
-    def prepare_units_types(self, obj):
+    def prepare_units_type(self, obj):
         """Return metadata units types if exists, otherwise return empty array."""
         units_types = []
         if hasattr(obj, 'metadata'):
