@@ -32,6 +32,7 @@ def data_store_structure(request):
     """
     res_id = request.POST.get('res_id', None)
     if res_id is None:
+        logger.error("no resource id in request")
         return HttpResponse('Bad request - resource id is not included',
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     res_id = str(res_id).strip()
@@ -39,24 +40,30 @@ def data_store_structure(request):
         resource, _, _ = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     except NotFound:
+        logger.error("resource {} not found".format(res_id))
         return HttpResponse('Bad request - resource not found', status=status.HTTP_400_BAD_REQUEST)
     except PermissionDenied:
+        logger.error("permission denied for resource {}".format(res_id))
         return HttpResponse('Permission denied', status=status.HTTP_401_UNAUTHORIZED)
 
     store_path = request.POST.get('store_path', None)
     if store_path is None:
+        logger.error("store_path not included for resource {}".format(res_id))
         return HttpResponse('Bad request - store_path is not included',
                             status=status.HTTP_400_BAD_REQUEST)
     store_path = str(store_path).strip()
     if not store_path:
+        logger.error("store_path empty for resource {}".format(res_id))
         return HttpResponse('Bad request - store_path cannot be empty',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if not store_path.startswith('data/contents'):
+        logger.error("store_path doesn't start with data/contents for resource {}".format(res_id))
         return HttpResponse('Bad request - store_path must start with data/contents/',
                             status=status.HTTP_400_BAD_REQUEST)
 
     if store_path.find('/../') >= 0 or store_path.endswith('/..'):
+        logger.error("store_path cannot contain .. for resource {}".format(res_id))
         return HttpResponse('Bad request - store_path cannot contain /../',
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -66,6 +73,7 @@ def data_store_structure(request):
         store = istorage.listdir(res_coll)
         files = []
         for fname in store[1]:  # files
+            fname = fname.decode('utf-8')
             name_with_full_path = os.path.join(res_coll, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
@@ -81,8 +89,9 @@ def data_store_structure(request):
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
                     if resource.resource_type == "CompositeResource":
+                        f_logical = f.get_or_create_logical_file
                         logical_file_type = f.logical_file_type_name
-                        logical_file_id = f.logical_file.id
+                        logical_file_id = f_logical.id
                     break
 
             if f_pk:  # file is found in Django
@@ -94,6 +103,7 @@ def data_store_structure(request):
                              .format(name_with_full_path))
 
     except SessionException as ex:
+        logger.error("session exception querying store_path {} for {}".format(store_path, res_id))
         return HttpResponse(ex.stderr, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return_object = {'files': files,

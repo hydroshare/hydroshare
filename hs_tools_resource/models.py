@@ -11,7 +11,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-from .utils import get_SupportedResTypes_choices
+from .utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 
 class ToolResource(BaseResource):
@@ -20,6 +20,17 @@ class ToolResource(BaseResource):
     class Meta:
         proxy = True
         verbose_name = 'Web App Resource'
+
+    @classmethod
+    def get_approved_apps(cls):
+        webapp_resources = cls.objects.all()
+
+        final_resource_list = []
+        for resource in webapp_resources:
+            if resource.metadata.approved:
+                final_resource_list.append(resource)
+
+        return final_resource_list
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -58,6 +69,79 @@ class AppHomePageUrl(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
+class TestingProtocolUrl(AbstractMetaDataElement):
+    # should be a link to a page that gives repeatable steps to fully test the app
+
+    term = 'TestingProtocolUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # TestingProtocolUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class HelpPageUrl(AbstractMetaDataElement):
+    # should be a link to a page that gives full help documentation
+    term = 'HelpPageUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # HelpPageUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class SourceCodeUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'SourceCodeUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # SourceCodeUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class IssuesPageUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'IssuesPageUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # SourceCodeUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class MailingListUrl(AbstractMetaDataElement):
+    # preferably a GitHub or Bitbucket page
+    term = 'MailingListUrl'
+    value = models.CharField(max_length=1024, blank=True, default="")
+
+    class Meta:
+        # MailingListUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class Roadmap(AbstractMetaDataElement):
+    ''' should include information about why the app was developed, what's the development status,
+    future development plans, links to github issues, etc. - How we hope things will progress, etc
+    '''
+    term = 'Roadmap'
+    value = models.TextField(blank=True, default='')
+
+    class Meta:
+        # MailingListUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
+class ShowOnOpenWithList(AbstractMetaDataElement):
+    # Option to show or not show the icon on a landing page with the "open app" button.
+    term = 'ShowOnOpenWithList'
+    value = models.BooleanField(default=False)
+
+    class Meta:
+        # ShowOnOpenWithList element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
     value = models.CharField(max_length=1024, blank=True, default="")
@@ -85,7 +169,13 @@ class SupportedResTypeChoices(models.Model):
 
 class SupportedResTypes(AbstractMetaDataElement):
     term = 'SupportedResTypes'
-    supported_res_types = models.ManyToManyField(SupportedResTypeChoices, blank=True)
+    supported_res_types = models.ManyToManyField(SupportedResTypeChoices,
+                                                 blank=True,
+                                                 related_name="associated_with")
+
+    class Meta:
+        # SupportedResTypes element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     def get_supported_res_types_str(self):
         return ','.join([parameter.description for parameter in self.supported_res_types.all()])
@@ -163,7 +253,13 @@ class SupportedSharingStatusChoices(models.Model):
 
 class SupportedSharingStatus(AbstractMetaDataElement):
     term = 'SupportedSharingStatus'
-    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, blank=True)
+    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices,
+                                            blank=True,
+                                            related_name="associated_with")
+
+    class Meta:
+        # SupportedSharingStatus element is not repeatable
+        unique_together = ("content_type", "object_id")
 
     def get_sharing_status_str(self):
         return ', '.join([parameter.description for parameter in self.sharing_status.all()])
@@ -196,8 +292,9 @@ class SupportedSharingStatus(AbstractMetaDataElement):
     def _validate_sharing_status(cls, sharing_status_list):
         for sharing_status in sharing_status_list:
             if isinstance(sharing_status, basestring) and \
-                            sharing_status not in \
-                            ["Published", "Public", "Discoverable", "Private"]:
+                            sharing_status not in [sharing_status_choice_tuple[0]
+                                                   for sharing_status_choice_tuple in
+                                                   get_SupportedSharingStatus_choices()]:
                 raise ValidationError('Invalid sharing_status:%s' % sharing_status)
 
     @classmethod
@@ -245,7 +342,7 @@ class ToolIcon(AbstractMetaDataElement):
             raise ValidationError("Failed to read data from given url: {0}".format(ex.message))
         if response.status_code != 200:
             raise HttpResponse("Failed to read data from given url. HTTP_code {0}".
-                               fromat(response.status_code))
+                               format(response.status_code))
         image_size_mb = float(response.headers["content-length"])
         if image_size_mb > 1000000:  # 1mb
             raise ValidationError("Icon image size should be less than 1MB.")
@@ -259,7 +356,7 @@ class ToolIcon(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'value' in kwargs:
+        if 'value' in kwargs and "data_url" not in kwargs:
             url = kwargs["value"]
             data_url = cls._validate_tool_icon(url)
 
@@ -267,6 +364,13 @@ class ToolIcon(AbstractMetaDataElement):
             new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
             new_meta_instance.value = url
             new_meta_instance.data_url = data_url
+            new_meta_instance.save()
+            return new_meta_instance
+        elif "data_url" in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = ToolIcon.objects.create(content_object=metadata_obj)
+            new_meta_instance.value = kwargs["value"] if "value" in kwargs else ""
+            new_meta_instance.data_url = kwargs["data_url"]
             new_meta_instance.save()
             return new_meta_instance
         else:
@@ -290,16 +394,81 @@ class ToolIcon(AbstractMetaDataElement):
 
 
 class ToolMetaData(CoreMetaData):
-    url_bases = GenericRelation(RequestUrlBase)
-    versions = GenericRelation(ToolVersion)
-    supported_res_types = GenericRelation(SupportedResTypes)
-    tool_icon = GenericRelation(ToolIcon)
-    supported_sharing_status = GenericRelation(SupportedSharingStatus)
-    homepage_url = GenericRelation(AppHomePageUrl)
+
+    _url_base = GenericRelation(RequestUrlBase)
+    _version = GenericRelation(ToolVersion)
+    _supported_res_types = GenericRelation(SupportedResTypes)
+    _tool_icon = GenericRelation(ToolIcon)
+    _supported_sharing_status = GenericRelation(SupportedSharingStatus)
+    _homepage_url = GenericRelation(AppHomePageUrl)
+
+    approved = models.BooleanField(default=False)
+    testing_protocol_url = GenericRelation(TestingProtocolUrl)
+    help_page_url = GenericRelation(HelpPageUrl)
+    source_code_url = GenericRelation(SourceCodeUrl)
+    issues_page_url = GenericRelation(IssuesPageUrl)
+    mailing_list_url = GenericRelation(MailingListUrl)
+    roadmap = GenericRelation(Roadmap)
+    show_on_open_with_list = GenericRelation(ShowOnOpenWithList)
 
     @property
     def resource(self):
         return ToolResource.objects.filter(object_id=self.id).first()
+
+    @property
+    def url_base(self):
+        return self._url_base.first()
+
+    @property
+    def version(self):
+        return self._version.first()
+
+    @property
+    def supported_resource_types(self):
+        return self._supported_res_types.first()
+
+    @property
+    def supported_sharing_status(self):
+        return self._supported_sharing_status.first()
+
+    @property
+    def app_home_page_url(self):
+        return self._homepage_url.first()
+
+    @property
+    def app_icon(self):
+        return self._tool_icon.first()
+
+    @property
+    def serializer(self):
+        """Return an instance of rest_framework Serializer for self """
+        from serializers import ToolMetaDataSerializer
+        return ToolMetaDataSerializer(self)
+
+    @classmethod
+    def parse_for_bulk_update(cls, metadata, parsed_metadata):
+        """Overriding the base class method"""
+
+        CoreMetaData.parse_for_bulk_update(metadata, parsed_metadata)
+        keys_to_update = metadata.keys()
+        if 'requesturlbase' in keys_to_update:
+            parsed_metadata.append({"requesturlbase": metadata.pop('requesturlbase')})
+
+        if 'toolversion' in keys_to_update:
+            parsed_metadata.append({"toolversion": metadata.pop('toolversion')})
+
+        if 'toolicon' in keys_to_update:
+            parsed_metadata.append({"toolicon": metadata.pop('toolicon')})
+
+        if 'apphomepageurl' in keys_to_update:
+            parsed_metadata.append({"apphomepageurl": metadata.pop('apphomepageurl')})
+
+        if 'supportedrestypes' in keys_to_update:
+            parsed_metadata.append({"supportedrestypes": metadata.pop('supportedrestypes')})
+
+        if 'supportedsharingstatus' in keys_to_update:
+            parsed_metadata.append({"supportedsharingstatus":
+                                    metadata.pop('supportedsharingstatus')})
 
     @classmethod
     def get_supported_element_names(cls):
@@ -310,6 +479,13 @@ class ToolMetaData(CoreMetaData):
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
         elements.append('AppHomePageUrl')
+        elements.append('TestingProtocolUrl')
+        elements.append('SourceCodeUrl')
+        elements.append('HelpPageUrl')
+        elements.append('MailingListUrl')
+        elements.append('IssuesPageUrl')
+        elements.append('Roadmap')
+        elements.append('ShowOnOpenWithList')
         return elements
 
     def has_all_required_elements(self):
@@ -321,78 +497,116 @@ class ToolMetaData(CoreMetaData):
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
 
         # At least one of the two metadata must exist: Home Page URL or App-launching URL Pattern
-        if (not self.url_bases.all().first() or not self.url_bases.all().first().value) \
-           and (not self.homepage_url.all().first() or not self.homepage_url.all().first().value):
+        if (not self.url_base or not self.url_base.value) \
+           and (not self.app_home_page_url or not self.app_home_page_url.value):
                 missing_required_elements.append('App Home Page URL or App-launching URL Pattern')
         else:
             # If one between App-launching URL Pattern and Supported Res Type presents,
             # the other must present as well
-            if self.url_bases.all().first() and self.url_bases.all().first().value:
-                if not self.supported_res_types.all().first() \
-                   or not self.supported_res_types.all().first().supported_res_types.count() > 0:
+            if self.url_base and self.url_base.value:
+                if not self.supported_resource_types \
+                   or not self.supported_resource_types.supported_res_types.count() > 0:
                     missing_required_elements.append('Supported Resource Types')
 
-            if self.supported_res_types.all().first() \
-               and self.supported_res_types.all().first().supported_res_types.count() > 0:
-                if not self.url_bases.all().first() or not self.url_bases.all().first().value:
+            if self.supported_resource_types \
+               and self.supported_resource_types.supported_res_types.count() > 0:
+                if not self.url_base or not self.url_base.value:
                     missing_required_elements.append('App-launching URL Pattern')
 
             # if Supported Res Type presents, Supported Sharing Status must present, not vice versa
-            if self.supported_res_types.all().first() \
-               and self.supported_res_types.all().first().supported_res_types.count() > 0:
-                if not self.supported_sharing_status.all().first() \
-                   or not self.supported_sharing_status.all().first().sharing_status.count() > 0:
+            if self.supported_resource_types \
+               and self.supported_resource_types.supported_res_types.count() > 0:
+                if not self.supported_sharing_status \
+                   or not self.supported_sharing_status.sharing_status.count() > 0:
                     missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
 
     def delete_all_elements(self):
         super(ToolMetaData, self).delete_all_elements()
-        self.url_bases.all().delete()
-        self.versions.all().delete()
-        self.supported_res_types.all().delete()
-        self.tool_icon.all().delete()
-        self.supported_sharing_status.all().delete()
-        self.homepage_url.all().delete()
+        self._url_base.all().delete()
+        self._version.all().delete()
+        self._supported_res_types.all().delete()
+        self._tool_icon.all().delete()
+        self._supported_sharing_status.all().delete()
+        self._homepage_url.all().delete()
 
-    def update(self, metadata):
+        self.testing_protocol_url.all().delete()
+        self.help_page_url.all().delete()
+        self.source_code_url.all().delete()
+        self.issues_page_url.all().delete()
+        self.mailing_list_url.all().delete()
+        self.roadmap.all().delete()
+        self.show_on_open_with_list.all().delete()
+
+    def update(self, metadata, user):
         # overriding the base class update method for bulk update of metadata
 
+        from forms import SupportedResTypesValidationForm, SupportedSharingStatusValidationForm, \
+            UrlValidationForm, VersionValidationForm, ToolIconValidationForm
+
         # update any core metadata
-        super(ToolMetaData, self).update(metadata)
+        super(ToolMetaData, self).update(metadata, user)
+
         # update resource specific metadata
+
+        def validate_form(form):
+            if not form.is_valid():
+                err_string = self.get_form_errors_as_string(form)
+                raise ValidationError(err_string)
+
         with transaction.atomic():
             for dict_item in metadata:
                 if 'supportedrestypes' in dict_item:
+                    validation_form = SupportedResTypesValidationForm(
+                        dict_item['supportedrestypes'])
+                    validate_form(validation_form)
                     self.create_element('supportedrestypes', **dict_item['supportedrestypes'])
                 elif 'supportedsharingstatus' in dict_item:
+                    validation_form = SupportedSharingStatusValidationForm(
+                        dict_item['supportedsharingstatus'])
+                    validate_form(validation_form)
                     self.create_element('supportedsharingstatus',
                                         **dict_item['supportedsharingstatus'])
                 elif 'requesturlbase' in dict_item:
-                    request_url = self.url_bases.all().first()
+                    validation_form = UrlValidationForm(dict_item['requesturlbase'])
+                    validate_form(validation_form)
+                    request_url = self.url_base
                     if request_url is not None:
                         self.update_element('requesturlbase', request_url.id,
                                             value=dict_item['requesturlbase'])
                     else:
                         self.create_element('requesturlbase', value=dict_item['requesturlbase'])
                 elif 'toolversion' in dict_item:
-                    tool_version = self.versions.all().first()
+                    validation_form = VersionValidationForm(dict_item['toolversion'])
+                    validate_form(validation_form)
+                    tool_version = self.version
                     if tool_version is not None:
                         self.update_element('toolversion', tool_version.id,
                                             **dict_item['toolversion'])
                     else:
                         self.create_element('toolversion', **dict_item['toolversion'])
                 elif 'toolicon' in dict_item:
-                    tool_icon = self.tool_icon.all().first()
+                    validation_form = ToolIconValidationForm(dict_item['toolicon'])
+                    validate_form(validation_form)
+                    tool_icon = self.app_icon
                     if tool_icon is not None:
-                        self.update_element('toolicon', tool_icon.id,
-                                            **dict_item['toolicon'])
+                        self.update_element('toolicon', tool_icon.id, **dict_item['toolicon'])
                     else:
                         self.create_element('toolicon', **dict_item['toolicon'])
                 elif 'apphomepageurl' in dict_item:
-                    app_url = self.homepage_url.all().first()
+                    validation_form = UrlValidationForm(dict_item['apphomepageurl'])
+                    validate_form(validation_form)
+                    app_url = self.app_home_page_url
                     if app_url is not None:
                         self.update_element('apphomepageurl', app_url.id,
                                             **dict_item['apphomepageurl'])
                     else:
                         self.create_element('apphomepageurl', **dict_item['apphomepageurl'])
+
+    def __str__(self):
+        return self.title.value
+
+    class Meta:
+        verbose_name = "Application Approval"
+        verbose_name_plural = "Application Approvals"

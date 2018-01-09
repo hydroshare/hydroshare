@@ -73,8 +73,9 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
             files=(self.raster_file_obj,)
         )
 
-        # there should not be aby GenericLogicalFile object at this point
-        self.assertEqual(GenericLogicalFile.objects.count(), 0)
+        # Deprecated: there should not be a GenericLogicalFile object at this point
+        # Issue 2456 Create composite with uploaded file now part of logical file
+        self.assertEqual(GenericLogicalFile.objects.count(), 1)
 
         # set the logical file
         resource_post_create_actions(resource=self.composite_resource, user=self.user,

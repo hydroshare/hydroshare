@@ -31,6 +31,21 @@ def landing_page(request, page):
                 messages.info(request, msg)
             break
 
+    timeseries_logical_files = content_model.get_logical_files('TimeSeriesLogicalFile')
+    for lf in timeseries_logical_files:
+        if lf.metadata.is_dirty:
+            msg = "One or more SQLite files are out of sync with metadata changes."
+            # prevent same message being displayed more than once
+            msg_exists = False
+            storage = get_messages(request)
+            for message in storage:
+                if message.message == msg:
+                    msg_exists = True
+                    break
+            if not msg_exists:
+                messages.info(request, msg)
+            break
+
     edit_resource = page_processors.check_resource_mode(request)
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)

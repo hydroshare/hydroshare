@@ -174,11 +174,11 @@ class QuotaMessage(models.Model):
                                                        'currently have resources that consume '
                                                        '{used}{unit}, {percent}% of your quota. ')
     content = models.TextField(default='To request additional quota, please contact '
-                                       'support@hydroshare.org. We will try to accommodate '
+                                       'help@cuahsi.org. We will try to accommodate '
                                        'reasonable requests for additional quota. If you have a '
                                        'large quota request you may need to contribute toward the '
                                        'costs of providing the additional space you need. See '
-                                       'https://pages.hydroshare.org/about-hydroshare/policies/'
+                                       'https://help.hydroshare.org/about-hydroshare/policies/'
                                        'quota/ for more information about the quota policy.')
     # quota soft limit percent value for starting to show quota usage warning. Default is 80%
     soft_limit_percent = models.IntegerField(default=80)
@@ -201,8 +201,8 @@ class UserQuota(models.Model):
                              related_name='quotas',
                              related_query_name='quotas')
 
-    allocated_value = models.BigIntegerField(default=20)
-    used_value = models.BigIntegerField(default=0)
+    allocated_value = models.FloatField(default=20)
+    used_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
     zone = models.CharField(max_length=100, default="hydroshare_internal")
     # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
@@ -213,6 +213,31 @@ class UserQuota(models.Model):
         verbose_name = _("User quota")
         verbose_name_plural = _("User quotas")
         unique_together = ('user', 'zone')
+
+    @property
+    def used_percent(self):
+        return self.used_value*100.0/self.allocated_value
+
+    def update_used_value(self, size):
+        """
+        set self.used_value in self.unit with pass in size in bytes.
+        :param size: pass in size in bytes unit
+        :return:
+        """
+        from hs_core.hydroshare.utils import convert_file_size_to_unit
+        self.used_value = convert_file_size_to_unit(size, self.unit)
+        self.save()
+
+    def add_to_used_value(self, size):
+        """
+        return summation of used_value and pass in size in bytes. The returned value
+        is in unit specified by self.unit
+        :param size: pass in size in bytes unit
+        :return: summation of self.used_value and pass in size, converted to the same self.unit
+        """
+        from hs_core.hydroshare.utils import convert_file_size_to_unit
+        return self.used_value + convert_file_size_to_unit(size, self.unit)
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User)

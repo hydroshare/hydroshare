@@ -19,6 +19,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     FAVORITE = 'FAVORITE'
     MINE = 'MINE'
     SAVEDLABEL = 'SAVEDLABEL'
+    OPENWITHAPP = "OPENWITHAPP"
 
     # TODO: clear all labels, clear all saved labels
     res = None
@@ -37,13 +38,18 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     # validate post data
     if not user.is_authenticated():
         err_msg = "Permission denied"
-    elif label_type not in (LABEL, FAVORITE, MINE, SAVEDLABEL):
+    elif label_type not in (LABEL, FAVORITE, MINE, SAVEDLABEL, OPENWITHAPP):
         err_msg = "Invalid type of label"
     elif label_type == LABEL or label_type == SAVEDLABEL:
         if label is None:
             err_msg = "A value for label is missing"
     elif label_type != SAVEDLABEL and shortkey is None:
             err_msg = "Resource ID is missing"
+
+    # pre-check resource type for OPENWITHAPP action
+    if label_type == OPENWITHAPP:
+        if res.resource_type != "ToolResource":
+            err_msg = "Not a WebApp resource"
 
     if err_msg is None:
         try:
@@ -56,6 +62,8 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
                     user.ulabels.favorite_resource(res)
                 elif label_type == MINE:
                     user.ulabels.claim_resource(res)
+                elif label_type == OPENWITHAPP:
+                    user.ulabels.add_open_with_app(res)
             elif action == 'DELETE':
                 if label_type == LABEL:
                     user.ulabels.unlabel_resource(res, label)
@@ -65,6 +73,8 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
                     user.ulabels.unfavorite_resource(res)
                 elif label_type == MINE:
                     user.ulabels.unclaim_resource(res)
+                elif label_type == OPENWITHAPP:
+                    user.ulabels.remove_open_with_app(res)
         except Exception as exp:
             err_msg = exp.message
 

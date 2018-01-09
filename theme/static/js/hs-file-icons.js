@@ -31,10 +31,76 @@ function getFileIcons() {
     fileIcons.PPT = fileIcons.PPTX =
         "<span class='fb-file-icon fa " + "fa-file-powerpoint-o" + "'></span>";
 
-    fileIcons.JS = fileIcons.PY = fileIcons.PHP = fileIcons.JAVA = fileIcons.CS =
+    fileIcons.PHP = fileIcons.H =
         "<span class='fb-file-icon fa " + "fa-file-code-o" + "'></span>";
 
-    fileIcons.SQLITE =
+    fileIcons.PY = fileIcons.P = fileIcons.PYC  =
+        "<span class='fa-stack fb-stack fb-stack-py'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-python fa-stack-1x'></i>" +
+        "</span>";
+
+   fileIcons.IPYNB  =
+        "<span class='fa-stack fb-stack fb-stack-py fb-stack-ipynb'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-python fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.SHP =
+        "<span class='fa-stack fb-stack fb-stack-shape'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i class='fa fa-globe fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.JS =
+        "<span class='fa-stack fb-stack fb-stack-js'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-javascript-alt fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.CPP = fileIcons.CC = fileIcons.CXX = fileIcons.CP =
+        "<span class='fa-stack fb-stack fb-stack-cpp'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-cplusplus fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.C =
+        "<span class='fa-stack fb-stack fb-stack-c'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-c fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.CSS =
+        "<span class='fa-stack fb-stack fb-stack-css'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-css fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.HTML = fileIcons.HTM = fileIcons.SHTML = fileIcons.XHTML = fileIcons.TMPL = fileIcons.TPL =
+        "<span class='fa-stack fb-stack fb-stack-html'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-html fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.CS = fileIcons.CSX =
+        "<span class='fa-stack fb-stack fb-stack-cs'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-csharp fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.JAVA = fileIcons.JAR = fileIcons.JSP =
+        "<span class='fa-stack fb-stack fb-stack-java'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-java-bold fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.MYSQL =
+        "<span class='fa-stack fb-stack fb-stack-mysql'>" +
+        "<i class='fa fa-file-o fa-stack-2x'></i>" +
+        "<i data-icon class='icon-mysql-alt fa-stack-1x'></i>" +
+        "</span>";
+
+    fileIcons.SQLITE = fileIcons.SQL =
         "<span class='fa-stack fb-stack fb-stack-database'>" +
         "<i class='fa fa-file-o fa-stack-2x '></i>" +
         "<i class='fa fa-database fa-stack-1x'></i>" +

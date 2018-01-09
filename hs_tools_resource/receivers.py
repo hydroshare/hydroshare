@@ -6,7 +6,10 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     UrlValidationForm, \
-                                    SupportedSharingStatusValidationForm
+                                    SupportedSharingStatusValidationForm, RoadmapForm, \
+                                    ShowOnOpenWithListForm
+
+from default_icon import default_icon_data_url
 
 
 @receiver(pre_create_resource, sender=ToolResource)
@@ -15,6 +18,10 @@ def webapp_pre_create_resource(sender, **kwargs):
     all_sharing_status = {'SupportedSharingStatus': {'sharing_status':
                           ["Published", "Public", "Discoverable", "Private"]}}
     metadata.append(all_sharing_status)
+
+    # a default app icon
+    tool_icon_meta = {"ToolIcon": {"data_url": default_icon_data_url}}
+    metadata.append(tool_icon_meta)
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)
@@ -44,6 +51,22 @@ def validate_form(request, element_name):
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
     elif element_name == 'apphomepageurl':
         element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'testingprotocolurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'helppageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'sourcecodeurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'helppageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'issuespageurl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'mailinglisturl':
+        element_form = UrlValidationForm(data=request.POST)
+    elif element_name == 'roadmap':
+        element_form = RoadmapForm(data=request.POST)
+    elif element_name == 'showonopenwithlist':
+        element_form = ShowOnOpenWithListForm(data=request.POST)
     else:
         return {'is_valid': False, 'element_data_dict': None}
 

@@ -63,9 +63,11 @@ class FlagCodes(object):
     """
     FAVORITE = 1
     MINE = 2
+    OPEN_WITH_APP = 3
     FLAG_CHOICES = (
-        (FAVORITE, 'Favorite'), # marked as favorite in my resources page.
-        (MINE, 'Mine'),         # marked as mine in discovery page.
+        (FAVORITE, 'Favorite'),  # marked as favorite in my resources page.
+        (MINE, 'Mine'),          # marked as mine in discovery page.
+        (OPEN_WITH_APP, 'Open With App'),  # marked as a open_with app
     )
 
 
@@ -166,7 +168,9 @@ class UserLabels(models.Model):
         Get resources with a specific flag.
         """
         if __debug__:  # during testing only, check argument types and preconditions
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE
+            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
+                this_flagcode == FlagCodes.OPEN_WITH_APP
+
 
         return BaseResource.objects.filter(r2urf__user=self.user,
                                            r2urf__kind=this_flagcode)
@@ -296,7 +300,8 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE
+            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
+                this_flagcode == FlagCodes.OPEN_WITH_APP
 
         with transaction.atomic():  # empirically, get_or_create is not atomic.
             UserResourceFlags.objects.get_or_create(resource=this_resource,
@@ -312,7 +317,8 @@ class UserLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE
+            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
+                this_flagcode == FlagCodes.OPEN_WITH_APP
 
         UserResourceFlags.objects.filter(user=self.user,
                                           resource=this_resource,
@@ -369,6 +375,32 @@ class UserLabels(models.Model):
         This is not an access control problem because labeling information is private.
         """
         self.unflag_resource(this_resource, FlagCodes.MINE)
+
+    ##########################################
+    # open with app
+    ##########################################
+    def add_open_with_app(self, this_resource):
+        """
+        Mark a webapp resource as open-with-app
+
+        Users are allowed to flag any resource, including resources to which they do not have access.
+        This is not an access control problem because labeling information is private.
+
+        The calling function should make sure resource is a webapp resource
+        """
+        self.flag_resource(this_resource, FlagCodes.OPEN_WITH_APP)
+
+    def remove_open_with_app(self, this_resource):
+        """
+        Unmark a webapp resource as open-with-app
+
+        Users are allowed to flag any resource, including resources to which they do not have access.
+        This is not an access control problem because labeling information is private.
+
+        The calling function should make sure resource is a webapp resource
+        """
+        self.unflag_resource(this_resource, FlagCodes.OPEN_WITH_APP)
+
 
     ##########################################
     # routines that apply to all kinds of annotations
@@ -466,7 +498,8 @@ class ResourceLabels(models.Model):
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_user, User)
-            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE
+            assert this_flagcode == FlagCodes.FAVORITE or this_flagcode == FlagCodes.MINE or \
+                this_flagcode == FlagCodes.OPEN_WITH_APP
 
         return UserResourceFlags.objects.filter(user=this_user,
                                                  resource=self.resource,
@@ -483,4 +516,10 @@ class ResourceLabels(models.Model):
         Return True if this resource has been labeled as mine by a given user
         """
         return self.is_flagged(this_user, FlagCodes.MINE)
+
+    def is_open_with_app(self, this_user):
+        """
+        Return True if this resource has been set as open-with-app by a given user
+        """
+        return self.is_flagged(this_user, FlagCodes.OPEN_WITH_APP)
 

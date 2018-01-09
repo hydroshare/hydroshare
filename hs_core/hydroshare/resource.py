@@ -653,7 +653,7 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-def update_science_metadata(pk, metadata):
+def update_science_metadata(pk, metadata, user):
     """
     Updates science metadata for a resource
 
@@ -662,6 +662,7 @@ def update_science_metadata(pk, metadata):
         updated.
         metadata: a list of dictionary items containing data for each metadata element that needs to
         be updated
+        user: user who is updating metadata
         example metadata format:
         [
             {'title': {'value': 'Updated Resource Title'}},
@@ -692,13 +693,11 @@ def update_science_metadata(pk, metadata):
     Returns:
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.metadata.update(metadata)
+    resource.metadata.update(metadata, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     # set to private if metadata has become non-compliant
     resource.update_public_and_discoverable()  # set to False if necessary
-
-    # TODO: This is a bit of a lie since the user initiating this is not the creator
-    utils.resource_modified(resource, resource.creator, overwrite_bag=False)
 
 
 def delete_resource(pk):
@@ -864,6 +863,8 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f,
                                                        resource=resource, user=user)
 
+            # Pabitra: better to use f.delete() here and get rid of the
+            # delete_resource_file_only() util function
             file_name = delete_resource_file_only(resource, f)
 
             # This presumes that the file is no longer in django

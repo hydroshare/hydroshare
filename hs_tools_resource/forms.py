@@ -3,10 +3,12 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field, HTML
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
-    SupportedSharingStatus, AppHomePageUrl
+from models import RequestUrlBase, AppHomePageUrl, TestingProtocolUrl, \
+    HelpPageUrl, SourceCodeUrl, IssuesPageUrl, MailingListUrl, Roadmap, \
+    ShowOnOpenWithList, ToolVersion, ToolIcon, SupportedResTypes, SupportedSharingStatus
+
 from hs_core.forms import BaseFormHelper
-from utils import get_SupportedResTypes_choices
+from utils import get_SupportedResTypes_choices, get_SupportedSharingStatus_choices
 
 
 # TODO: reference hs_core.forms
@@ -78,6 +80,223 @@ class AppHomePageUrlForm(ModelForm):
         exclude = ['content_object']
 
 
+class TestingProtocolUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Testing Protocol URL"
+
+        super(TestingProtocolUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class TestingProtocolUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(TestingProtocolUrlForm, self).__init__(*args, **kwargs)
+        self.helper = TestingProtocolUrlFormHelper(allow_edit,
+                                                   res_short_id,
+                                                   element_id,
+                                                   element_name='TestingProtocolUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = TestingProtocolUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class HelpPageUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Help Page URL"
+
+        super(HelpPageUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class HelpPageUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(HelpPageUrlForm, self).__init__(*args, **kwargs)
+        self.helper = HelpPageUrlFormHelper(allow_edit,
+                                            res_short_id,
+                                            element_id,
+                                            element_name='HelpPageUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = HelpPageUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class SourceCodeUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Source Code URL"
+
+        super(SourceCodeUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class SourceCodeUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SourceCodeUrlForm, self).__init__(*args, **kwargs)
+        self.helper = SourceCodeUrlFormHelper(allow_edit,
+                                              res_short_id,
+                                              element_id,
+                                              element_name='SourceCodeUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = SourceCodeUrl
+        fields = ['value']
+        exclude = ['contednt_object']
+
+
+class IssuesPageUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Issues Page URL"
+
+        super(IssuesPageUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class IssuesPageUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(IssuesPageUrlForm, self).__init__(*args, **kwargs)
+        self.helper = IssuesPageUrlFormHelper(allow_edit,
+                                              res_short_id,
+                                              element_id,
+                                              element_name='IssuesPageUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = IssuesPageUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class MailingListUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Mailing List URL"
+
+        super(MailingListUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class MailingListUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(MailingListUrlForm, self).__init__(*args, **kwargs)
+        self.helper = MailingListUrlFormHelper(allow_edit,
+                                               res_short_id,
+                                               element_id,
+                                               element_name='MailingListUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = MailingListUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class RoadmapFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Roadmap"
+
+        super(RoadmapFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class RoadmapForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(RoadmapForm, self).__init__(*args, **kwargs)
+        self.helper = RoadmapFormHelper(allow_edit,
+                                        res_short_id,
+                                        element_id,
+                                        element_name='Roadmap')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = Roadmap
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class ShowOnOpenWithListFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "Show on 'Open With' List"
+
+        super(ShowOnOpenWithListFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class ShowOnOpenWithListForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ShowOnOpenWithListForm, self).__init__(*args, **kwargs)
+        self.helper = ShowOnOpenWithListFormHelper(allow_edit,
+                                                   res_short_id,
+                                                   element_id,
+                                                   element_name='ShowOnOpenWithList')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = ShowOnOpenWithList
+        fields = ['value']
+        exclude = ['content_object']
+
+
 class VersionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
                  element_id=None, element_name=None, *args, **kwargs):
@@ -124,8 +343,8 @@ class ToolIconFormHelper(BaseFormHelper):
         data_url = ""
         if "instance" in kwargs:
             webapp_obj = kwargs.pop("instance")
-            if webapp_obj and webapp_obj.metadata.tool_icon.first():
-                data_url = webapp_obj.metadata.tool_icon.first().data_url
+            if webapp_obj and webapp_obj.metadata.app_icon:
+                data_url = webapp_obj.metadata.app_icon.data_url
         field_width = 'form-control input-sm'
         layout = Layout(
                     Field('value', css_class=field_width),
@@ -159,6 +378,11 @@ class ToolIconForm(ModelForm):
         model = ToolIcon
         fields = ['value']
         exclude = ['content_object']
+
+
+class ToolIconValidationForm(forms.Form):
+    value = forms.CharField(max_length=1024, required=False)
+    data_url = forms.URLField(required=False)
 
 
 class MetadataField(Field):
@@ -217,14 +441,6 @@ class SupportedResTypesValidationForm(forms.Form):
                                                     required=False)
 
 
-SupportedSharingStatus_choices = (
-    ('Published', 'Published'),
-    ('Public', 'Public'),
-    ('Discoverable', 'Discoverable'),
-    ('Private', 'Private'),
-)
-
-
 class SupportedSharingStatusFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None,
                  element_id=None, element_name=None,  *args, **kwargs):
@@ -239,7 +455,7 @@ class SupportedSharingStatusFormHelper(BaseFormHelper):
 
 
 class SupportedSharingStatusForm(ModelForm):
-    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+    sharing_status = forms.MultipleChoiceField(choices=get_SupportedSharingStatus_choices(),
                                                widget=forms.CheckboxSelectMultiple(
                                                 attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -263,5 +479,5 @@ class SupportedSharingStatusForm(ModelForm):
 
 
 class SupportedSharingStatusValidationForm(forms.Form):
-    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+    sharing_status = forms.MultipleChoiceField(choices=get_SupportedSharingStatus_choices(),
                                                required=False)

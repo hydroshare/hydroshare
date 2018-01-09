@@ -51,6 +51,10 @@ $(document).ready(function() {
         rep_res_to_irods_user_zone_ajax_submit(resID);
     });
 
+    $("#download-bag-btn").click(function() {
+        $("#license-agree-dialog-bag").modal('hide');
+    });
+
     $("#btn-add-author, #btn-add-hydroshare-user").click(function() {
         get_user_info_ajax_submit('/hsapi/_internal/get-user-or-group-data/', this)
     });
