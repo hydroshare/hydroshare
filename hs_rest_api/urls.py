@@ -99,15 +99,15 @@ urlpatterns = patterns(
     # write disabled;change (?P<op>read) to (?P<op>read|write) when ready
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<op>read)/(?P<pathname>.*)/$',
-        views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
+        core_views.resource_ticket_rest_api.CreateResourceTicket.as_view(),
         name='create_ticket'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/bag/$',
-        views.resource_ticket_rest_api.CreateBagTicket.as_view(),
+        core_views.resource_ticket_rest_api.CreateBagTicket.as_view(),
         name='create_bag_ticket'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/ticket/(?P<ticket>.*)/$',
-        views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
+        core_views.resource_ticket_rest_api.ManageResourceTicket.as_view(),
         name='manage_ticket'),
 
     # public unzip endpoint
