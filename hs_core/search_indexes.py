@@ -43,7 +43,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     public = indexes.BooleanField(faceted=True)
     discoverable = indexes.BooleanField(faceted=True)
     published = indexes.BooleanField(faceted=True)
-    accessibility = indexes.CharField()
+    availability = indexes.CharField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created', faceted=True)
@@ -71,13 +71,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owners_login = indexes.MultiValueField(faceted=True)
-    owners_name = indexes.MultiValueField(faceted=True)
+    owner = indexes.MultiValueField(faceted=True)
     owners_count = indexes.IntegerField(faceted=True)
-    viewers_login = indexes.MultiValueField(faceted=True)
-    viewers_name = indexes.MultiValueField(faceted=True)
+    viewer_login = indexes.MultiValueField(faceted=True)
+    viewer = indexes.MultiValueField(faceted=True)
     viewers_count = indexes.IntegerField(faceted=True)
-    editors_login = indexes.MultiValueField(faceted=True)
-    editors_name = indexes.MultiValueField(faceted=True)
+    editor_login = indexes.MultiValueField(faceted=True)
+    editor = indexes.MultiValueField(faceted=True)
     editors_count = indexes.IntegerField(faceted=True)
     # non-core metadata
     geometry_type = indexes.CharField(faceted=True)
@@ -432,14 +432,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return count of resource comments."""
         return obj.comments_count
 
-    def prepare_owners_login(self, obj):
+    def prepare_owner_login(self, obj):
         """Return list of usernames that have ownership access to resource."""
         if hasattr(obj, 'raccess'):
             return [owner.username for owner in obj.raccess.owners.all()]
         else:
             return []
 
-    def prepare_owners_name(self, obj):
+    def prepare_owner(self, obj):
         """Return list of names of resource owners."""
         names = []
         if hasattr(obj, 'raccess'):
@@ -455,14 +455,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    def prepare_viewers_login(self, obj):
+    def prepare_viewer_login(self, obj):
         """Return usernames of users that can view resource, otherwise return empty array."""
         if hasattr(obj, 'raccess'):
             return [viewer.username for viewer in obj.raccess.view_users.all()]
         else:
             return []
 
-    def prepare_viewers_name(self, obj):
+    def prepare_viewer(self, obj):
         """Return full names of users that can view resource, otherwise return empty array."""
         names = []
         if hasattr(obj, 'raccess'):
@@ -478,14 +478,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    def prepare_editors_login(self, obj):
+    def prepare_editor_login(self, obj):
         """Return usernames of editors of a resource, otherwise return 0."""
         if hasattr(obj, 'raccess'):
             return [editor.username for editor in obj.raccess.edit_users.all()]
         else:
             return 0
 
-    def prepare_editors_name(self, obj):
+    def prepare_editor(self, obj):
         """Return full names of editors of a resource, otherwise return empty array."""
         names = []
         if hasattr(obj, 'raccess'):

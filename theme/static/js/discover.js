@@ -705,8 +705,8 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names',
-        'variable_names', 'sample_mediums', 'units_names', 'availability'];
+    var faceted_fields = ['creator', 'subject', 'resource_type', 'owner',
+        'variable', 'sample_medium', 'units', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
         var faceting_div = "faceting-"+field;

@@ -9,7 +9,7 @@ from hs_core.discovery_form import DiscoveryForm
 class DiscoveryJsonView(FacetedSearchView):
     # set facet fields
     facet_fields = ['creator', 'subject', 'resource_type', 'public',
-                    'owner', 'accessibility', 'variable', 'units', 'sample_medium']
+                    'owner', 'availability', 'variable', 'units', 'sample_medium']
     # declare form class to use in this view
     form_class = DiscoveryForm
 

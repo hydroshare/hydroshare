@@ -31,7 +31,7 @@ class DiscoveryForm(FacetedSearchForm):
 
     def search(self):
         if not self.cleaned_data.get('q'):
-            sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+            sqs = self.searchqueryset.all().filter(replaced=False)
         else:
             # This corrects for an failed match of complete words, as documented in issue #2308.
             # The text__startswith=cdata matches stemmed words in documents with an unstemmed cdata.
@@ -40,7 +40,7 @@ class DiscoveryForm(FacetedSearchForm):
             # Thus "Industrial" does not match "Industrial" in the document according to
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
-            sqs = self.searchqueryset.all().filter(is_replaced_by=False)
+            sqs = self.searchqueryset.all().filter(replaced=False)
             try:
                 parser = ParseSQ()
                 parsed = parser.parse(cdata)
@@ -73,8 +73,20 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(geo_sq)
 
         # Check to see if a start_date was chosen.
-        if self.cleaned_data['start_date']:
-            sqs = sqs.filter(coverage_start_date__gte=self.cleaned_data['start_date'])
+        start_date = self.cleaned_data['start_date']
+        end_date = self.cleaned_data['end_date']
+
+        # allow overlapping ranges
+        # cs < s < ce OR s < cs => s < ce
+        # AND
+        # cs < e < ce OR e > ce => cs < e
+        if start_date and end_date:
+            sqs = sqs.add(SQ(coverage_end_date__gte=start_date) &
+                          SQ(coverage_start_date__lte=end_date))
+        elif start_date:
+            sqs = sqs.add(SQ(coverage_end_date__gte=start_date))
+        elif end_date:
+            sqs = sqs.add(SQ(coverage_start_date__lte=end_date))
 
         # Check to see if an end_date was chosen.
         if self.cleaned_data['end_date']:
@@ -105,13 +117,13 @@ class DiscoveryForm(FacetedSearchForm):
             value = sqs.query.clean(value)
 
             if value:
-                if "creators" in field:
+                if "creator" in field:
                     if author_sq is None:
                         author_sq = SQ(creator=value)
                     else:
                         author_sq.add(SQ(creator=value), SQ.OR)
 
-                elif "subjects" in field:
+                elif "subject" in field:
                     if subject_sq is None:
                         subject_sq = SQ(subject=value)
                     else:
@@ -129,7 +141,7 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         public_sq.add(SQ(public=value), SQ.OR)
 
-                elif "owners_names" in field:
+                elif "owner" in field:
                     if owner_sq is None:
                         owner_sq = SQ(owner=value)
                     else:
@@ -147,19 +159,19 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         published_sq.add(SQ(published=value), SQ.OR)
 
-                elif 'variable_names' in field:
+                elif 'variable' in field:
                     if variable_sq is None:
                         variable_sq = SQ(variable=value)
                     else:
                         variable_sq.add(SQ(variable=value), SQ.OR)
 
-                elif 'sample_mediums' in field:
+                elif 'sample_medium' in field:
                     if sample_medium_sq is None:
                         sample_medium_sq = SQ(sample_medium=value)
                     else:
                         sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
 
-                elif 'units_names' in field:
+                elif 'units' in field:
                     if units_sq is None:
                         units_sq = SQ(units=value)
                     else:

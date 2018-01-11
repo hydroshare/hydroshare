@@ -40,19 +40,19 @@
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <a data-toggle="collapse" href="#{{ key }}">
-                                            {% if key == 'creators'%}
+                                            {% if key == 'creator'%}
                                                 &nbsp; Filter by Author
-                                            {% elif key ==  'subjects'%}
+                                            {% elif key ==  'subject'%}
                                                 &nbsp; Filter by Subject
                                             {% elif key ==  'resource_type'%}
                                                 &nbsp; Filter by Resource Type
-                                            {% elif key ==  'owners_names'%}
+                                            {% elif key ==  'owner'%}
                                                 &nbsp; Filter by Owner
-                                            {% elif key ==  'variable_names'%}
+                                            {% elif key ==  'variable'%}
                                                 &nbsp; Filter by Variable
-                                            {% elif key ==  'sample_mediums'%}
+                                            {% elif key ==  'sample_medium'%}
                                                 &nbsp; Filter by Sample Medium
-                                            {% elif key ==  'units_names'%}
+                                            {% elif key ==  'units'%}
                                                 &nbsp; Filter by Units Name
                                             {% endif %}
                                             <span class="glyphicon glyphicon-minus pull-left" >
@@ -103,14 +103,14 @@
                                                         <input type="checkbox" class="faceted-selections"
                                                                id="{{ key }}-{{ item.0 }}"
                                                                value="{{ key }},{{ item.0 }}">
+                                                        {% if key == 'published' and item.0 == 'true' %}
+                                                            Published
                                                         {% if key == 'public' and item.0 == 'true' %}
                                                             Public
-                                                        {% elif key == 'public' and item.0 == 'false' %}
-                                                            Private
-                                                        {% elif key == 'discoverable' %}
+                                                        {% elif key == 'discoverable' and item.0 == 'true' %}
                                                             Discoverable
-                                                        {% elif key == 'published' %}
-                                                            Published
+                                                        {% else %}
+                                                            Private
                                                         {% endif %}
                                                     </label>
                                                 </li>
