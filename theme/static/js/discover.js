@@ -1003,3 +1003,4 @@ $(document).ready(function () {
     $("#clear-dates-options").click(clearDates);
 
 });
+

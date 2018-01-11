@@ -7,7 +7,8 @@ part of a generic logical file.
 """
 
 from django.core.management.base import BaseCommand
-from hs_core.models import BaseResource
+
+from hs_composite_resource.models import CompositeResource
 
 
 class Command(BaseCommand):
@@ -30,14 +31,10 @@ class Command(BaseCommand):
         if len(options['resource_ids']) > 0:  # an array of resource short_id to check.
             for rid in options['resource_ids']:
                 try:
-                    resource = BaseResource.objects.get(short_id=rid)
-                except BaseResource.DoesNotExist:
+                    resource = CompositeResource.objects.get(short_id=rid)
+                except CompositeResource.DoesNotExist:
                     msg = "Resource with id {} not found in Django Resources".format(rid)
                     print(msg)
-                    continue
-                if resource.resource_type != 'CompositeResource':
-                    print("resource {} has type {}: skipping".format(resource.short_id,
-                                                                     resource.resource_type))
                     continue
 
                 print("SETTING GENERIC LOGICAL FILE FOR FILES IN RESOURCE {}".format(rid))
@@ -48,7 +45,7 @@ class Command(BaseCommand):
 
         else:  # check all composite resources
             print("SETTING GENERIC LOGICAL FILE FOR FILES IN ALL COMPOSITE RESOURCES")
-            for r in BaseResource.objects.filter(resource_type="CompositeResource"):
+            for r in CompositeResource.objects.all():
                 print("SETTING GENERIC LOGICAL FILE FOR FILES IN RESOURCE {}".format(r.short_id))
                 for res_file in r.files.all():
                     if not res_file.has_logical_file:
