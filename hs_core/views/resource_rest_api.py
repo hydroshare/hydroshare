@@ -678,7 +678,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
         scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
-        return redirect(scimeta_url)
+        return HttpResponseRedirect(scimeta_url)
 
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
