@@ -33,16 +33,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.CharField(faceted=True)  # not normalized
+    author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False)
     title = indexes.CharField(faceted=True)
     abstract = indexes.CharField()
     creator = indexes.MultiValueField(faceted=True)
     contributor = indexes.MultiValueField()
     subject = indexes.MultiValueField(faceted=True)
-    public = indexes.BooleanField(faceted=True)
-    discoverable = indexes.BooleanField(faceted=True)
-    published = indexes.BooleanField(faceted=True)
+    # These are REPLACED by availability 
+    # public = indexes.BooleanField(faceted=True)
+    # discoverable = indexes.BooleanField(faceted=True)
+    # published = indexes.BooleanField(faceted=True)
     availability = indexes.CharField()
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField()
@@ -70,7 +71,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     resource_type = indexes.CharField(faceted=True)
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
-    owners_login = indexes.MultiValueField(faceted=True)
+    owner_login = indexes.MultiValueField(faceted=True)
     owner = indexes.MultiValueField(faceted=True)
     owners_count = indexes.IntegerField(faceted=True)
     viewer_login = indexes.MultiValueField(faceted=True)
@@ -79,12 +80,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     editor_login = indexes.MultiValueField(faceted=True)
     editor = indexes.MultiValueField(faceted=True)
     editors_count = indexes.IntegerField(faceted=True)
+
     # non-core metadata
     geometry_type = indexes.CharField(faceted=True)
     field_name = indexes.CharField()
     field_type = indexes.CharField()
     field_type_code = indexes.CharField()
-    variable_name = indexes.MultiValueField(faceted=True)
+    variable = indexes.MultiValueField(faceted=True)
     variable_type = indexes.MultiValueField()
     variable_shape = indexes.MultiValueField()
     variable_descriptive_name = indexes.MultiValueField()
@@ -94,7 +96,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     quality_level = indexes.MultiValueField()
     data_source = indexes.MultiValueField()
     sample_medium = indexes.MultiValueField(faceted=True)
-    units_name = indexes.MultiValueField(faceted=True)
+    units = indexes.MultiValueField(faceted=True)
     units_type = indexes.MultiValueField(faceted=True)
     aggregation_statistics = indexes.MultiValueField(faceted=False)
     absolute_url = indexes.CharField(indexed=False)
@@ -140,7 +142,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata author if exists, otherwise return none."""
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
-            if first_creator.name is not None:
+            if first_creator.name is not None and first_creator.name != '':
                 normalized = normalize_human_name(first_creator.name)
                 return normalized
             else:
@@ -163,16 +165,17 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_creator(self, obj):
         """Return metadata creators if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [creator.name for creator in obj.metadata.creators.all()
-                    .exclude(name__isnull=True)]
+            return [normalize_human_name(creator.name) for creator in obj.metadata.creators.all()
+                    .exclude(name__isnull=True).exclude(name='')]
         else:
             return []
 
     def prepare_contributor(self, obj):
         """Return metadata contributors if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [contributor.name for contributor in obj.metadata.contributors.all()
-                    .exclude(name__isnull=True)]
+            return [normalize_human_name(contributor.name)
+                    for contributor in obj.metadata.contributors.all()
+                    .exclude(name__isnull=True).exclude(name='')]
         else:
             return []
 
@@ -213,39 +216,40 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata emails if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
             return [creator.email for creator in obj.metadata.creators.all()
-                    .exclude(email__isnull=True)]
+                    .exclude(email__isnull=True).exclude(email='')]
         else:
             return []
 
-    def prepare_discoverable(self, obj):
-        """Return resource discoverability if exists, otherwise return False."""
-        if hasattr(obj, 'raccess'):
-            if obj.raccess.public or obj.raccess.discoverable:
-                return True
-            else:
-                return False
-        else:
-            return False
+    # These are REPLACED by the availability field
+    # def prepare_discoverable(self, obj):
+    #     """Return resource discoverability if exists, otherwise return False."""
+    #     if hasattr(obj, 'raccess'):
+    #         if obj.raccess.public or obj.raccess.discoverable:
+    #             return True
+    #         else:
+    #             return False
+    #     else:
+    #         return False
 
-    def prepare_public(self, obj):
-        """Return resource access if exists, otherwise return False."""
-        if hasattr(obj, 'raccess'):
-            if obj.raccess.public:
-                return True
-            else:
-                return False
-        else:
-            return False
+    # def prepare_public(self, obj):
+    #     """Return resource access if exists, otherwise return False."""
+    #     if hasattr(obj, 'raccess'):
+    #         if obj.raccess.public:
+    #             return True
+    #         else:
+    #             return False
+    #     else:
+    #         return False
 
-    def prepare_published(self, obj):
-        """Return resource published status if exists, otherwise return False."""
-        if hasattr(obj, 'raccess'):
-            if obj.raccess.published:
-                return True
-            else:
-                return False
-        else:
-            return False
+    # def prepare_published(self, obj):
+    #     """Return resource published status if exists, otherwise return False."""
+    #     if hasattr(obj, 'raccess'):
+    #         if obj.raccess.published:
+    #             return True
+    #         else:
+    #             return False
+    #     else:
+    #         return False
 
     def prepare_availability(self, obj):
         """ availability is published, public, or discoverable"""
@@ -253,7 +257,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if obj.raccess.published:
                 return 'published'
             elif obj.raccess.public:
-                return 'public'
+                return 'MY public'
             elif obj.raccess.discoverable:
                 return 'discoverable'
             else:
@@ -444,7 +448,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = owner.first_name + ' ' + owner.last_name
+                name = owner.last_name + ', ' + owner.first_name
                 names.append(name)
         return names
 
@@ -467,7 +471,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for viewer in obj.raccess.view_users.all():
-                name = viewer.first_name + ' ' + viewer.last_name
+                name = viewer.last_name + ', ' + viewer.first_name
                 names.append(name)
         return names
 
@@ -490,7 +494,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for editor in obj.raccess.edit_users.all():
-                name = editor.first_name + ' ' + editor.last_name
+                name = editor.last_name + ', ' + editor.first_name
                 names.append(name)
         return names
 
@@ -557,7 +561,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
-    def prepare_variable_name(self, obj):
+    def prepare_variable(self, obj):
         """Return metadata variable names if exists, otherwise return empty array."""
         variable_names = []
         if hasattr(obj, 'metadata'):
@@ -668,7 +672,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     sample_mediums.append(variable.sample_medium)
         return sample_mediums
 
-    def prepare_units_name(self, obj):
+    def prepare_units(self, obj):
         """Return metadata units names if exists, otherwise return empty array."""
         units_names = []
         if hasattr(obj, 'metadata'):

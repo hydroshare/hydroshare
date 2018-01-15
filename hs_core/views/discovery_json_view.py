@@ -39,13 +39,13 @@ class DiscoveryJsonView(FacetedSearchView):
 
                 json_obj['get_absolute_url'] = solr['absolute_url']
                 json_obj['first_author'] = solr['author']
-                # TODO: this is redundant. The value always exists but oft has value 'none'.
+                # TODO: would be better for this to be derived than stored.
                 if solr['author_url']:
                     json_obj['first_author_url'] = solr['author_url']
 
                 # iterate over all the coverage values
-                if solr['coverages'] is not None:
-                    for coverage in solr['coverages']:
+                if solr['coverage'] is not None:
+                    for coverage in solr['coverage']:
                         json_coverage = json.loads(coverage)
                         if 'east' in json_coverage:
                             json_obj['coverage_type'] = 'point'

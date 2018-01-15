@@ -34,94 +34,53 @@
 
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
-                    {% if values and key != 'public' and key != 'discoverable' and key != 'published' %}
-                        <div id="faceting-{{ key }}">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title">
-                                        <a data-toggle="collapse" href="#{{ key }}">
-                                            {% if key == 'creator'%}
-                                                &nbsp; Filter by Author
-                                            {% elif key ==  'subject'%}
-                                                &nbsp; Filter by Subject
-                                            {% elif key ==  'resource_type'%}
-                                                &nbsp; Filter by Resource Type
-                                            {% elif key ==  'owner'%}
-                                                &nbsp; Filter by Owner
-                                            {% elif key ==  'variable'%}
-                                                &nbsp; Filter by Variable
-                                            {% elif key ==  'sample_medium'%}
-                                                &nbsp; Filter by Sample Medium
-                                            {% elif key ==  'units'%}
-                                                &nbsp; Filter by Units Name
-                                            {% endif %}
-                                            <span class="glyphicon glyphicon-minus pull-left" >
+                    <div id="faceting-{{ key }}">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" href="#{{ key }}">
+                                        {% if key == 'creator'%}
+                                            &nbsp; Filter by Author
+                                        {% elif key ==  'subject'%}
+                                            &nbsp; Filter by Subject
+                                        {% elif key ==  'resource_type'%}
+                                            &nbsp; Filter by Resource Type
+                                        {% elif key ==  'owner'%}
+                                            &nbsp; Filter by Owner
+                                        {% elif key ==  'variable'%}
+                                            &nbsp; Filter by Variable
+                                        {% elif key ==  'sample_medium'%}
+                                            &nbsp; Filter by Sample Medium
+                                        {% elif key ==  'units'%}
+                                            &nbsp; Filter by Units Name
+                                        {% elif key ==  'availability'%}
+                                            &nbsp; Filter by Availability
 
-                                            </span>
-                                        </a>
-                                    </h4>
-                                </div>
-
-                                <div id="{{ key }}" class="facet-list panel-collapse collapse in">
-                                    <ul class="list-group" id="list-group-{{ key }}">
-                                    {% for item in values %}
-                                        {% if item.1 > 0 %}
-                                            <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
-                                                <span class="badge">{{ item.1 }}</span>
-                                                <label class="checkbox noselect">
-                                                    <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
-                                            </li>
                                         {% endif %}
-                                    {% endfor %}
-                                    </ul>
-                                </div>
+                                        <span class="glyphicon glyphicon-minus pull-left" >
+
+                                        </span>
+                                    </a>
+                                </h4>
                             </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
 
-                <div id="faceting-availability">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" href="#availability">
-                                    &nbsp; Filter by Availability
-                                    <span class="glyphicon glyphicon-minus pull-left"></span>
-                                </a>
-                            </h4>
-                        </div>
-
-                        <div id="availability" class="facet-list panel-collapse collapse in">
-                            <ul class="list-group" id="list-group-availability">
-                                {% for key, values in facets.fields.items %}
-                                    {% if key == 'public' or key == 'discoverable' or key == 'published' %}
-                                        {% for item in values %}
-                                            {% if item.1 > 0 and item.0 != 'false' %}
-                                                <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
-                                                    <span class="badge">{{ item.1 }}</span>
-                                                    <label class="checkbox noselect">
-                                                        <input type="checkbox" class="faceted-selections"
-                                                               id="{{ key }}-{{ item.0 }}"
-                                                               value="{{ key }},{{ item.0 }}">
-                                                        {% if key == 'published' and item.0 == 'true' %}
-                                                            Published
-                                                        {% if key == 'public' and item.0 == 'true' %}
-                                                            Public
-                                                        {% elif key == 'discoverable' and item.0 == 'true' %}
-                                                            Discoverable
-                                                        {% else %}
-                                                            Private
-                                                        {% endif %}
-                                                    </label>
-                                                </li>
-                                            {% endif %}
-                                        {% endfor %}
+                            <div id="{{ key }}" class="facet-list panel-collapse collapse in">
+                                <ul class="list-group" id="list-group-{{ key }}">
+                                {% for item in values|dictsort:"0" %}
+                                    {% if item.1 > 0 %}
+                                        <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
+                                            <span class="badge">{{ item.1 }}</span>
+                                            <label class="checkbox noselect">
+                                                <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
+                                        </li>
                                     {% endif %}
                                 {% endfor %}
-                            </ul>
+                                </ul>
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% endfor %}
+
             </div>
         </div>
         <div class="col-sm-9 col-xs-12" id="items">
@@ -215,9 +174,7 @@
                                 <th>Title</th>
                                 <th>First Author</th>
                                 <th>Date Created</th>
-                                <th>Date Created</th>{# Used in table sorting #}
                                 <th>Last Modified</th>
-                                <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
 
@@ -227,16 +184,14 @@
                                     <td>
                                         {% include "includes/res_type_col.html" with resource=result.object %}
                                     </td>
-                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></strong></td>
-                                    {% if result.object.first_creator.description %}
-                                        <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
+                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.get_stored_fields.title }}</a></strong></td>
+                                    {% if result.get_stored_fields.author_url %}
+                                        <td><a href="{{ result.get_stored_fields.author_url }}">{{ result.get_stored_fields.author  }}</a></td>
                                     {% else %}
-                                        <td>{{ result.object.first_creator.name }}</td>
+                                        <td>{{ result.get_stored_fields.author }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.created|date:"M d, Y" }} at {{ result.object.created|time }}</td>
-                                    <td>{{ result.object.created|date:"U" }}</td> {# Used in table sorting #}
-                                    <td>{{ result.object.updated|date:"M d, Y" }} at {{ result.object.updated|time }}</td>
-                                    <td>{{ result.object.updated|date:"U" }}</td> {# Used in table sorting #}
+                                    <td>{{ result.get_stored_fields.created|date:"M d, Y" }} at {{ result.get_stored_fields.created|time }}</td>
+                                    <td>{{ result.get_stored_fields.modified|date:"M d, Y" }} at {{ result.get_stored_fields.modified|time }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
