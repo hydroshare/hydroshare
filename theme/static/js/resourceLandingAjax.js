@@ -1536,7 +1536,13 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $form = $("#id-coverage-spatial");
         var form_update_action = $form.attr('action');
         var res_short_id = form_update_action.split('/')[3];
-        var update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
+        var update_url;
+        if(!$.isEmptyObject(spatialCoverage)){
+            update_url = "/hsapi/_internal/" + res_short_id + "/coverage/" + spatialCoverage.element_id + "/update-metadata/";
+        }
+        else {
+            update_url = "/hsapi/_internal/" + res_short_id + "/coverage/add-metadata/";
+        }
         $form.attr('action', update_url);
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("#id_type_2");
