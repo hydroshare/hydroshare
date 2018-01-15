@@ -1,6 +1,7 @@
 """Define search indexes for hs_core module."""
 
 from haystack import indexes
+from haystack.utils.geo import Point
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from hs_app_netCDF.models import NetcdfMetaData
@@ -9,9 +10,29 @@ from hs_app_timeseries.models import TimeSeriesMetaData
 from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
+import probablepeople
 
 
-def normalize_human_name(name):
+def normalize_name(name):
+    """
+    Normalize a name for sorting.
+
+    This uses two powerful python libraries for differing reasons.
+
+    `probablepeople` contains a discriminator between company and person names.
+    This is used to determine whether to parse into last, first, middle or to
+    leave the name alone.
+
+    However, the actual name parser in `probablepeople` is unnecessarily complex,
+    so that strings that it determines to be human names are parsed instead by
+    `nameparser`.
+
+    """
+    _, type = probablepeople.tag(name)  # discard parser result
+    if type == 'Corporation':
+        return name  # do not parse and reorder company names
+
+    # treat anything else as a human name
     nameparts = HumanName(name.lstrip())
     normalized = nameparts.last
     if nameparts.suffix:
@@ -32,62 +53,69 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.CharField(indexed=False)  # not normalized
-    author_url = indexes.CharField(indexed=False)
-    title = indexes.CharField(faceted=True)
-    abstract = indexes.CharField()
+    author = indexes.MultiValueField(faceted=True)  # normalized to last, first, middle
+    author_raw = indexes.MultiValueField(indexed=False)  # not normalized
+    author_url = indexes.CharField(indexed=False, null=True)
+    title = indexes.CharField(null=True)
+    abstract = indexes.CharField(null=True)
     creator = indexes.MultiValueField(faceted=True)
     contributor = indexes.MultiValueField()
     subject = indexes.MultiValueField(faceted=True)
-    # These are REPLACED by availability 
+    # These are REPLACED by availability
     # public = indexes.BooleanField(faceted=True)
     # discoverable = indexes.BooleanField(faceted=True)
     # published = indexes.BooleanField(faceted=True)
-    availability = indexes.CharField()
+    # Availability is a MultiValueField due to faceting behavior; this turns off stemming
+    availability = indexes.MultiValueField(faceted=True)
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField()
     created = indexes.DateTimeField(model_attr='created', faceted=True)
     modified = indexes.DateTimeField(model_attr='updated', faceted=True)
     organization = indexes.MultiValueField(faceted=True)
     creator_email = indexes.MultiValueField()
-    publisher = indexes.CharField(faceted=True)
+    publisher = indexes.MultiValueField(faceted=True)  # single value
     rating = indexes.IntegerField(model_attr='rating_sum')
     coverage = indexes.MultiValueField()
     coverage_type = indexes.MultiValueField()
-    coverage_east = indexes.FloatField()
-    coverage_north = indexes.FloatField()
-    coverage_northlimit = indexes.FloatField()
-    coverage_eastlimit = indexes.FloatField()
-    coverage_southlimit = indexes.FloatField()
-    coverage_westlimit = indexes.FloatField()
-    coverage_start_date = indexes.DateField()
-    coverage_end_date = indexes.DateField()
+    coverage_east = indexes.FloatField(null=True)
+    coverage_north = indexes.FloatField(null=True)
+    coverage_northlimit = indexes.FloatField(null=True)
+    coverage_eastlimit = indexes.FloatField(null=True)
+    coverage_southlimit = indexes.FloatField(null=True)
+    coverage_westlimit = indexes.FloatField(null=True)
+    coverage_start_date = indexes.DateField(null=True)
+    coverage_end_date = indexes.DateField(null=True)
+
+    coverage_point = indexes.LocationField(null=True)
+    coverage_southwest = indexes.LocationField(null=True)
+    coverage_northeast = indexes.LocationField(null=True)
+
     format = indexes.MultiValueField()
     identifier = indexes.MultiValueField()
-    language = indexes.CharField(faceted=True)
+    language = indexes.MultiValueField(faceted=True)
     source = indexes.MultiValueField()
     relation = indexes.MultiValueField()
-    resource_type = indexes.CharField(faceted=True)
+    resource_type = indexes.MultiValueField(faceted=True)  # actually a single value
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owner_login = indexes.MultiValueField(faceted=True)
     owner = indexes.MultiValueField(faceted=True)
     owners_count = indexes.IntegerField(faceted=True)
-    viewer_login = indexes.MultiValueField(faceted=True)
-    viewer = indexes.MultiValueField(faceted=True)
-    viewers_count = indexes.IntegerField(faceted=True)
-    editor_login = indexes.MultiValueField(faceted=True)
-    editor = indexes.MultiValueField(faceted=True)
-    editors_count = indexes.IntegerField(faceted=True)
+    # # We might need these later for social discovery
+    # viewer_login = indexes.MultiValueField(faceted=True)
+    # viewer = indexes.MultiValueField(faceted=True)
+    # viewers_count = indexes.IntegerField(faceted=True)
+    # editor_login = indexes.MultiValueField(faceted=True)
+    # editor = indexes.MultiValueField(faceted=True)
+    # editors_count = indexes.IntegerField(faceted=True)
 
     # non-core metadata
-    geometry_type = indexes.CharField(faceted=True)
-    field_name = indexes.CharField()
-    field_type = indexes.CharField()
-    field_type_code = indexes.CharField()
+    geometry_type = indexes.MultiValueField(faceted=True)  # actually a single value
+    field_name = indexes.MultiValueField()  # actually a single value
+    field_type = indexes.MultiValueField()  # actually a single value
+    field_type_code = indexes.MultiValueField()  # actually a single value
     variable = indexes.MultiValueField(faceted=True)
-    variable_type = indexes.MultiValueField()
+    variable_type = indexes.MultiValueField(faceted=True)
     variable_shape = indexes.MultiValueField()
     variable_descriptive_name = indexes.MultiValueField()
     variable_speciation = indexes.MultiValueField()
@@ -98,7 +126,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     sample_medium = indexes.MultiValueField(faceted=True)
     units = indexes.MultiValueField(faceted=True)
     units_type = indexes.MultiValueField(faceted=True)
-    aggregation_statistics = indexes.MultiValueField(faceted=False)
+    aggregation_statistics = indexes.MultiValueField()
     absolute_url = indexes.CharField(indexed=False)
 
     def get_model(self):
@@ -111,76 +139,97 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                                                Q(raccess__public=True))
 
     def prepare_title(self, obj):
-        """Return metadata title if exists, otherwise return none."""
+        """Return metadata title if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
             return obj.metadata.title.value.lstrip()
         else:
-            return 'none'
+            return None
 
     def prepare_abstract(self, obj):
-        """Return metadata abstract if exists, otherwise return none."""
+        """Return metadata abstract if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and obj.metadata.description is not None and \
                 obj.metadata.description.abstract is not None:
             return obj.metadata.description.abstract
         else:
-            return 'none'
+            return None
 
     def prepare_author_raw(self, obj):
-        """Return metadata author if exists, otherwise return none."""
+        """
+        Return metadata author if exists, otherwise return None.
+
+        This is a single field, but represented as a multi-value field
+        to control faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return first_creator.name.lstrip()
+                return [first_creator.name.lstrip()]
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     # TODO: it is confusing that the author is the first creator
-    # This is an artificial distinction
     def prepare_author(self, obj):
-        """Return metadata author if exists, otherwise return none."""
+        """
+        Return first creator if exists, otherwise return empty list.
+
+        This is a single-value field but represented as a multi-value field
+        to insure appropriate faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None and first_creator.name != '':
-                normalized = normalize_human_name(first_creator.name)
-                return normalized
+                normalized = normalize_name(first_creator.name)
+                return [normalized]
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     # stored, unindexed field
     def prepare_author_url(self, obj):
-        """Return metadata author description url if exists, otherwise return none."""
+        """Return metadata author description url if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.description is not None:
                 return first_creator.description
             else:
-                return 'none'
+                return None
         else:
-            return 'none'
+            return None
 
     def prepare_creator(self, obj):
-        """Return metadata creators if exists, otherwise return empty array."""
+        """
+        Return metadata creators if they exist, otherwise return empty array.
+
+        This field can have multiple values
+        """
         if hasattr(obj, 'metadata'):
-            return [normalize_human_name(creator.name) for creator in obj.metadata.creators.all()
+            return [normalize_name(creator.name) for creator in obj.metadata.creators.all()
                     .exclude(name__isnull=True).exclude(name='')]
         else:
             return []
 
     def prepare_contributor(self, obj):
-        """Return metadata contributors if exists, otherwise return empty array."""
+        """
+        Return metadata contributors if they exist, otherwise return empty array.
+
+        This field can have multiple values
+        """
         if hasattr(obj, 'metadata'):
-            return [normalize_human_name(contributor.name)
+            return [normalize_name(contributor.name)
                     for contributor in obj.metadata.contributors.all()
                     .exclude(name__isnull=True).exclude(name='')]
         else:
             return []
 
     def prepare_subject(self, obj):
-        """Return metadata subjects if exists, otherwise return empty array."""
+        """
+        Return metadata subjects if they exist, otherwise return empty array.
+
+        This field can have multiple values.
+        """
         if hasattr(obj, 'metadata'):
             return [subject.value for subject in obj.metadata.subjects.all()
                     .exclude(value__isnull=True)]
@@ -188,29 +237,34 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return []
 
     def prepare_organization(self, obj):
-        """Return metadata organizations if exists, otherwise return empty array."""
+        """
+        Return metadata organization if it exists, otherwise return empty array.
+
+        This is a single-value field, but is represented as a multi-value
+        field in SOLR to turn off stemming and make faceting work properly.
+        """
         organizations = []
-        none = False  # only enter one value "none"
         if hasattr(obj, 'metadata'):
             for creator in obj.metadata.creators.all():
                 if(creator.organization is not None):
                     organizations.append(creator.organization)
-                else:
-                    if not none:
-                        none = True
-                        organizations.append('none')
         return organizations
 
     def prepare_publisher(self, obj):
-        """Return metadata publisher if exists, otherwise return none."""
+        """
+        Return metadata publisher if it exists; otherwise return empty array.
+
+        This is a single-value field, but is represented as a multi-value
+        field in SOLR to turn off stemming and make faceting work properly.
+        """
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return publisher
+                return [publisher]
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     def prepare_creator_email(self, obj):
         """Return metadata emails if exists, otherwise return empty array."""
@@ -252,21 +306,27 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     #         return False
 
     def prepare_availability(self, obj):
-        """ availability is published, public, or discoverable"""
+        """
+        availability is published, public, or discoverable
+
+        To make faceting work properly, all flags that are True are represented.
+        """
+        options = []
         if hasattr(obj, 'raccess'):
             if obj.raccess.published:
-                return 'published'
+                options.append('published')
             elif obj.raccess.public:
-                return 'MY public'
+                options.append('public')
             elif obj.raccess.discoverable:
-                return 'discoverable'
+                options.append('discoverable')
             else:
-                return 'private'
+                options.append('private')
         else:
-            return 'private'
+            options.append('private')
+        return options
 
     def prepare_replaced(self, obj):
-        """Return 'isReplacedBy' attribute if exists, otherwise return False."""
+        """Return True if 'isReplacedBy' attribute exists, otherwise return False."""
         if hasattr(obj, 'metadata'):
             return obj.metadata.relations.all().filter(type='isReplacedBy').exists()
         else:
@@ -281,14 +341,24 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return []
 
     def prepare_coverage_type(self, obj):
-        """Return resource coverage types if exists, otherwise return empty array."""
+        """
+        Return resource coverage types if exists, otherwise return empty array.
+
+        This field can have multiple values.
+        """
         if hasattr(obj, 'metadata'):
             return [coverage.type for coverage in obj.metadata.coverages.all()]
         else:
             return []
 
+    # TODO: THIS IS SIMPLY THE WRONG WAY TO DO THINGS.
+    # Should use geopy Point and Haystack LocationField throughout,
+    # instead of encoding limits literally.
+    # See http://django-haystack.readthedocs.io/en/v2.6.0/spatial.html
+
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_east(self, obj):
-        """Return resource coverage east bound if exists, otherwise return none."""
+        """Return resource coverage east bound if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'point':
@@ -298,10 +368,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return (float(coverage.value["eastlimit"]) +
                             float(coverage.value["westlimit"])) / 2
         else:
-            return 'none'
+            return None
 
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_north(self, obj):
-        """Return resource coverage north bound if exists, otherwise return none."""
+        """Return resource coverage north bound if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'point':
@@ -311,52 +382,57 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return (float(coverage.value["northlimit"]) +
                             float(coverage.value["southlimit"])) / 2
         else:
-            return 'none'
+            return None
 
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_northlimit(self, obj):
-        """Return resource coverage north limit if exists, otherwise return none."""
+        """Return resource coverage north limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["northlimit"]
         else:
-            return 'none'
+            return None
 
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_eastlimit(self, obj):
-        """Return resource coverage east limit if exists, otherwise return none."""
+        """Return resource coverage east limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["eastlimit"]
         else:
-            return 'none'
+            return None
 
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_southlimit(self, obj):
-        """Return resource coverage south limit if exists, otherwise return none."""
+        """Return resource coverage south limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["southlimit"]
         else:
-            return 'none'
+            return None
 
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_westlimit(self, obj):
-        """Return resource coverage west limit if exists, otherwise return none."""
+        """Return resource coverage west limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'box':
                     return coverage.value["westlimit"]
         else:
-            return 'none'
+            return None
 
     # TODO: time coverages do not specify timezone, and timezone support is active.
-
+    # TODO: Why aren't time coverages specified as Django DateTime objects?
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_start_date(self, obj):
-        """Return resource coverage start date if exists, otherwise return none."""
+        """Return resource coverage start date if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period':
@@ -370,10 +446,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
                     return start_date_object
         else:
-            return 'none'
+            return None
 
+    # TODO: time coverages do not specify timezone, and timezone support is active.
+    # TODO: Why aren't time coverages specified as Django DateTime objects?
+    # TODO: If there are multiple coverage objects with the same type, only first is returned.
     def prepare_coverage_end_date(self, obj):
-        """Return resource coverage end date if exists, otherwise return none."""
+        """Return resource coverage end date if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'period' and 'end' in coverage.value:
@@ -387,7 +466,34 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
                     return end_date_object
         else:
-            return 'none'
+            return None
+
+    def prepare_coverage_point(self, obj):
+        """ Return Point object associated with coverage, or None """
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'point':
+                    return Point(float(coverage.value["east"]),
+                                 float(coverage.value["north"]))
+        return None
+
+    def prepare_coverage_southwest(self, obj):
+        """ Return southwest limit of bounding box, or None """
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return Point(float(coverage.value["westlimit"]),
+                                 float(coverage.value["southlimit"]))
+        return None
+
+    def prepare_coverage_northeast(self, obj):
+        """ Return northeast limit of bounding box, or None """
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return Point(float(coverage.value["eastlimit"]),
+                                 float(coverage.value["northlimit"]))
+        return None
 
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
@@ -404,11 +510,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return []
 
     def prepare_language(self, obj):
-        """Return resource language if exists, otherwise return none."""
+        """Return resource language if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
-            return obj.metadata.language.code
+            return [obj.metadata.language.code]
         else:
-            return 'none'
+            return []
 
     def prepare_source(self, obj):
         """Return resource sources if exists, otherwise return empty array."""
@@ -426,7 +532,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_resource_type(self, obj):
         """Return verbose_name attribute of obj argument."""
-        return obj.verbose_name
+        return [obj.verbose_name]
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
@@ -443,6 +549,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
+   # TODO: should utilize name from user profile rather than from User field
     def prepare_owner(self, obj):
         """Return list of names of resource owners."""
         names = []
@@ -459,110 +566,133 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    def prepare_viewer_login(self, obj):
-        """Return usernames of users that can view resource, otherwise return empty array."""
-        if hasattr(obj, 'raccess'):
-            return [viewer.username for viewer in obj.raccess.view_users.all()]
-        else:
-            return []
+    # # We might need these later for social discovery
+    # def prepare_viewer_login(self, obj):
+    #     """Return usernames of users that can view resource, otherwise return empty array."""
+    #     if hasattr(obj, 'raccess'):
+    #         return [viewer.username for viewer in obj.raccess.view_users.all()]
+    #     else:
+    #         return []
 
-    def prepare_viewer(self, obj):
-        """Return full names of users that can view resource, otherwise return empty array."""
-        names = []
-        if hasattr(obj, 'raccess'):
-            for viewer in obj.raccess.view_users.all():
-                name = viewer.last_name + ', ' + viewer.first_name
-                names.append(name)
-        return names
+    # def prepare_viewer(self, obj):
+    #     """Return full names of users that can view resource, otherwise return empty array."""
+    #     names = []
+    #     if hasattr(obj, 'raccess'):
+    #         for viewer in obj.raccess.view_users.all():
+    #             name = viewer.last_name + ', ' + viewer.first_name
+    #             names.append(name)
+    #     return names
 
-    def prepare_viewers_count(self, obj):
-        """Return count of users who can view resource, otherwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return obj.raccess.view_users.all().count()
-        else:
-            return 0
+    # def prepare_viewers_count(self, obj):
+    #     """Return count of users who can view resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return obj.raccess.view_users.all().count()
+    #     else:
+    #         return 0
 
-    def prepare_editor_login(self, obj):
-        """Return usernames of editors of a resource, otherwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return [editor.username for editor in obj.raccess.edit_users.all()]
-        else:
-            return 0
+    # def prepare_editor_login(self, obj):
+    #     """Return usernames of editors of a resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return [editor.username for editor in obj.raccess.edit_users.all()]
+    #     else:
+    #         return 0
 
-    def prepare_editor(self, obj):
-        """Return full names of editors of a resource, otherwise return empty array."""
-        names = []
-        if hasattr(obj, 'raccess'):
-            for editor in obj.raccess.edit_users.all():
-                name = editor.last_name + ', ' + editor.first_name
-                names.append(name)
-        return names
+    # def prepare_editor(self, obj):
+    #     """Return full names of editors of a resource, otherwise return empty array."""
+    #     names = []
+    #     if hasattr(obj, 'raccess'):
+    #         for editor in obj.raccess.edit_users.all():
+    #             name = editor.last_name + ', ' + editor.first_name
+    #             names.append(name)
+    #     return names
 
-    def prepare_editors_count(self, obj):
-        """Return count of editors of a resource, otherwise return 0."""
-        if hasattr(obj, 'raccess'):
-            return obj.raccess.edit_users.all().count()
-        else:
-            return 0
+    # def prepare_editors_count(self, obj):
+    #     """Return count of editors of a resource, otherwise return 0."""
+    #     if hasattr(obj, 'raccess'):
+    #         return obj.raccess.edit_users.all().count()
+    #     else:
+    #         return 0
 
     def prepare_geometry_type(self, obj):
-        """Return geometry type if metadata exists, otherwise return 'none'."""
+        """
+        Return geometry type if metadata exists, otherwise return [].
+
+        This field can only contain one value, but is represented as a
+        multi-value field to insure appropriate faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 geometry_info = obj.metadata.geometryinformation
                 if geometry_info is not None:
-                    return geometry_info.geometryType
+                    return [geometry_info.geometryType]
                 else:
-                    return 'none'
+                    return []
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     def prepare_field_name(self, obj):
-        """Return metadata field name if exists, otherwise return 'none'."""
+        """
+        Return metadata field name if exists, otherwise return [].
+
+        This field can only contain one value, but is represented as a
+        multi-value field to insure appropriate faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return field_info.fieldName
+                    return [field_info.fieldName]
                 else:
-                    return 'none'
+                    return []
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     def prepare_field_type(self, obj):
-        """Return metadata field type if exists, otherwise return 'none'."""
+        """
+        Return metadata field type if exists, otherwise return None.
+
+        This field can only contain one value, but is represented as a
+        multi-value field to insure appropriate faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return field_info.fieldType
+                    return [field_info.fieldType]
                 else:
-                    return 'none'
+                    return []
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     def prepare_field_type_code(self, obj):
-        """Return metadata field type code if exists, otherwise return 'none'."""
+        """
+        Return metadata field type code if exists, otherwise return [].
+
+        This field can only contain one value, but is represented as a
+        multi-value field to insure appropriate faceting behavior.
+        """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return field_info.fieldTypeCode
+                    return [field_info.fieldTypeCode]
                 else:
-                    return 'none'
+                    return []
             else:
-                return 'none'
+                return []
         else:
-            return 'none'
+            return []
 
     def prepare_variable(self, obj):
-        """Return metadata variable names if exists, otherwise return empty array."""
+        """
+        Return metadata variable names if exists, otherwise return empty array.
+        """
         variable_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
@@ -577,7 +707,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return variable_names
 
     def prepare_variable_type(self, obj):
-        """Return metadata variable types if exists, otherwise return empty array."""
+        """
+        Return metadata variable types if exists, otherwise return empty array.
+        """
         variable_types = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
@@ -592,7 +724,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return variable_types
 
     def prepare_variable_shape(self, obj):
-        """Return metadata variable shapes if exists, otherwise return empty array."""
+        """
+        Return metadata variable shapes if exists, otherwise return empty array.
+        """
         variable_shapes = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
@@ -601,7 +735,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return variable_shapes
 
     def prepare_variable_descriptive_name(self, obj):
-        """Return metadata variable descriptive names if exists, otherwise return empty array."""
+        """
+        Return metadata variable descriptive names if exists, otherwise return empty array.
+        """
         variable_descriptive_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
@@ -610,7 +746,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return variable_descriptive_names
 
     def prepare_variable_speciation(self, obj):
-        """Return metadata variable speciations if exists, otherwise return empty array."""
+        """
+        Return metadata variable speciations if exists, otherwise return empty array.
+        """
         variable_speciations = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
@@ -619,7 +757,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return variable_speciations
 
     def prepare_site(self, obj):
-        """Return metadata sites if exists, otherwise return empty array."""
+        """
+        Return list of sites if exists, otherwise return empty array.
+        """
         sites = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
@@ -631,7 +771,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return sites
 
     def prepare_method(self, obj):
-        """Return metadata methods if exists, otherwise return empty array."""
+        """
+        Return list of methods if exists, otherwise return empty array.
+        """
         methods = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
@@ -643,7 +785,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return methods
 
     def prepare_quality_level(self, obj):
-        """Return metadata quality levels if exists, otherwise return empty array."""
+        """
+        Return list of quality levels if exists, otherwise return empty array.
+        """
         quality_levels = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
@@ -652,7 +796,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return quality_levels
 
     def prepare_data_source(self, obj):
-        """Return metadata datasources if exists, otherwise return empty array."""
+        """
+        Return list of data sources if exists, otherwise return empty array.
+        """
         data_sources = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
@@ -661,7 +807,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return data_sources
 
     def prepare_sample_medium(self, obj):
-        """Return metadata sample mediums if exists, otherwise return empty array."""
+        """
+        Return list of sample mediums if exists, otherwise return empty array.
+        """
         sample_mediums = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
@@ -673,7 +821,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return sample_mediums
 
     def prepare_units(self, obj):
-        """Return metadata units names if exists, otherwise return empty array."""
+        """
+        Return list of units names if exists, otherwise return empty array.
+        """
         units_names = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
@@ -682,7 +832,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return units_names
 
     def prepare_units_type(self, obj):
-        """Return metadata units types if exists, otherwise return empty array."""
+        """
+        Return list of units types if exists, otherwise return empty array.
+        """
         units_types = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
@@ -691,7 +843,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return units_types
 
     def prepare_aggregation_statistics(self, obj):
-        """Return metadata aggregation statistics if exists, otherwise return empty array."""
+        """
+        Return list of aggregation statistics if exists, otherwise return empty array.
+        """
         aggregation_statistics = []
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
