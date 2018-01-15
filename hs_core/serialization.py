@@ -348,7 +348,7 @@ class GenericResourceMeta(object):
         logger.debug("Resource ID is {0}".format(res_meta['id']))
 
         # Build URI reference for #aggregation section of resource map
-        res_root_uri = "http://{host}/resource/{res_id}".format(host=hydroshare_host, res_id=res_meta['id'])
+        res_root_uri = "https://{host}/resource/{res_id}".format(host=hydroshare_host, res_id=res_meta['id'])
         root_uri = res_root_uri
         res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
         res_agg = URIRef(res_agg_subj)
@@ -446,7 +446,7 @@ class GenericResourceMeta(object):
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
-        hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
+        hsterms = rdflib.namespace.Namespace('https://hydroshare.org/terms/')
 
         # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
