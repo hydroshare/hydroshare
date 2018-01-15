@@ -68,17 +68,17 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 3)
 
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=gen_pid)))
 
         self.assertEqual(content['results'][1]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][1]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
         self.assertEqual(content['results'][2]['resource_id'], app_pid)
-        self.assertTrue(content['results'][2]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][2]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][2]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
@@ -90,7 +90,7 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 1)
 
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
@@ -103,12 +103,12 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
         self.assertEqual(content['results'][1]['resource_id'], app_pid)
-        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][1]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
@@ -143,17 +143,17 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 3)
 
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=gen_pid)))
 
         self.assertEqual(content['results'][1]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][1]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
         self.assertEqual(content['results'][2]['resource_id'], app_pid)
-        self.assertTrue(content['results'][2]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][2]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][2]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 
@@ -164,7 +164,7 @@ class TestResourceList(HSRESTTestCase):
 
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
@@ -176,12 +176,12 @@ class TestResourceList(HSRESTTestCase):
         self.assertEqual(content['count'], 2)
 
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
-        self.assertTrue(content['results'][0]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][0]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][0]['resource_url']
                         .endswith(res_tail.format(res_id=geo_pid)))
 
         self.assertEqual(content['results'][1]['resource_id'], app_pid)
-        self.assertTrue(content['results'][1]['resource_url'].startswith("http://"))
+        self.assertTrue(content['results'][1]['resource_url'].startswith("https://"))
         self.assertTrue(content['results'][1]['resource_url']
                         .endswith(res_tail.format(res_id=app_pid)))
 

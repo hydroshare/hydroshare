@@ -110,7 +110,7 @@ class TestUtils(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_current_site_url(self):
         current_site = Site.objects.get_current()
-        protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
+        protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'https')
         url = '%s://%s' % (protocol, current_site.domain)
         self.assertEquals(utils.current_site_url(), url)
 
