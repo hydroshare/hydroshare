@@ -486,8 +486,9 @@ class GeoFeatureFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase
         self.assertEqual(GeoFeatureLogicalFile.objects.count(), 0)
         self.assertEqual(GeoFeatureFileMetaData.objects.count(), 0)
 
-        # test that all metadata got deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata got deleted - there should be still1 coverage at the resource level
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
+        self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(FieldInformation.objects.count(), 0)
         self.assertEqual(GeometryInformation.objects.count(), 0)
         self.assertEqual(OriginalCoverage.objects.count(), 0)

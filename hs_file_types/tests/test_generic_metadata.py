@@ -252,8 +252,8 @@ class GenericFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that we don't have logical file of type GenericLogicalFile
         self.assertEqual(GenericLogicalFile.objects.count(), 0)
         self.assertEqual(GenericFileMetaData.objects.count(), 0)
-        # test that all metadata deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that resource level coverage element exist - not got deleted
+        self.assertEqual(Coverage.objects.count(), 2)
 
     def _create_composite_resource(self):
         uploaded_file = UploadedFile(file=self.generic_file_obj,

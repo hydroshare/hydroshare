@@ -4,8 +4,25 @@ from operator import lt, gt
 
 
 def update_resource_coverage_element(resource):
-    # update resource spatial coverage based on coverage metadata from the
-    # logical files in the resource
+    """Update resource spatial and temporal coverage based on the corresponding coverages
+    from all the contained aggregations (logical file) only if the resource coverage is not
+    already set"""
+
+    # update resource spatial coverage only if it is empty
+    if resource.metadata.spatial_coverage is None:
+        update_resource_spatial_coverage(resource)
+
+    # update resource temporal coverage only if it empty
+    if resource.metadata.temporal_coverage is None:
+        update_resource_temporal_coverage(resource)
+
+
+def update_resource_spatial_coverage(resource):
+    """Updates resource spatial coverage based on the contained spatial coverages of
+    aggregations (file type). Note: This action will overwrite any existing resource spatial
+    coverage data.
+    :param  resource: an instance of composite resource
+    """
     spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
                          if lf.metadata.spatial_coverage is not None]
 
@@ -75,7 +92,7 @@ def update_resource_coverage_element(resource):
             bbox_value['north'] = sp_cov.value['north']
             bbox_value['east'] = sp_cov.value['east']
 
-    spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+    spatial_cov = resource.metadata.spatial_coverage
     if len(spatial_coverages) > 0:
         if spatial_cov:
             spatial_cov.type = cov_type
@@ -87,12 +104,19 @@ def update_resource_coverage_element(resource):
         else:
             resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
     else:
-        # delete spatial coverage element for the resource since the content files don't have any
-        # spatial coverage
+        # delete spatial coverage element for the resource since the content files don't
+        # have any spatial coverage
         if spatial_cov:
             spatial_cov.delete()
 
-    # update resource temporal coverage
+
+def update_resource_temporal_coverage(resource):
+    """Updates resource temporal coverage based on the contained temporal coverages of
+    aggregations (file type). Note: This action will overwrite any existing resource temporal
+    coverage data.
+    :param  resource: an instance of composite resource
+    """
+
     temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
                           if lf.metadata.temporal_coverage is not None]
 
@@ -115,7 +139,7 @@ def update_resource_coverage_element(resource):
         set_date_value(date_data, temp_cov, 'start')
         set_date_value(date_data, temp_cov, 'end')
 
-    temp_cov = resource.metadata.coverages.all().filter(type='period').first()
+    temp_cov = resource.metadata.temporal_coverage
     if date_data['start'] is not None and date_data['end'] is not None:
         if temp_cov:
             temp_cov._value = json.dumps(date_data)

@@ -1541,10 +1541,13 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         var $id_type_div = $("#div_id_type");
         var $point_radio = $id_type_div.find("#id_type_2");
         var $box_radio = $id_type_div.find("#id_type_1");
+        var resourceType = $("#resource-type").val();
         if (spatialCoverage.type === 'point') {
             $point_radio.attr('checked', 'checked');
-            $box_radio.parent().closest("label").addClass("text-muted");
-            $box_radio.attr('disabled', true);
+            if(resourceType !== "Composite Resource"){
+                $box_radio.attr('disabled', true);
+                $box_radio.parent().closest("label").addClass("text-muted");
+            }
             $point_radio.parent().closest("label").removeClass("text-muted");
             $point_radio.attr('disabled', false);
             $("#id_north").val(spatialCoverage.north);
@@ -1561,8 +1564,10 @@ function updateResourceSpatialCoverage(spatialCoverage) {
         }
         else { //coverage type is 'box'
             $box_radio.attr('checked', 'checked');
-            $point_radio.parent().closest("label").addClass("text-muted");
-            $point_radio.attr('disabled', true);
+            if(resourceType !== "Composite Resource"){
+                $point_radio.attr('disabled', true);
+                $point_radio.parent().closest("label").addClass("text-muted");
+            }
             $box_radio.parent().closest("label").removeClass("text-muted");
             $box_radio.attr('disabled', false);
             $("#id_eastlimit").val(spatialCoverage.eastlimit);
@@ -1590,6 +1595,7 @@ function updateResourceTemporalCoverage(temporalCoverage) {
     $("#id_end").val(temporalCoverage.end);
     $("#id_end").attr('data-date', temporalCoverage.end);
     $("#id-coverage-temporal").find("button.btn-primary").hide();
+    initializeDatePickers();
 }
 
 function setFileTypeMetadataFormsClickHandlers(){

@@ -91,7 +91,8 @@ class TestCreateResourceViewFunctions(MockIRODSTestCaseMixin, ViewTestCase):
         self.assertEqual(BaseResource.objects.filter(short_id=res_id).exists(), True)
         # at this point there should 1 resource file
         self.assertEqual(ResourceFile.objects.count(), 1)
-        # at this point there should be 1 generic logical file
-        self.assertEqual(GenericLogicalFile.objects.count(), 1)
+        # at this point there should not be any generic logical file as we not more
+        # by default making any uploaded file as part of generic logical file
+        self.assertEqual(GenericLogicalFile.objects.count(), 0)
 
         hydroshare.delete_resource(res_id)

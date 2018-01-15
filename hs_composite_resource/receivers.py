@@ -37,10 +37,10 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
 #     resource.set_default_logical_file()
 
 
-@receiver(post_delete_file_from_resource, sender=CompositeResource)
-def post_delete_file_from_resource_handler(sender, **kwargs):
-    """resource level coverage data needs to be updated when a content file
-    gets deleted from composite resource"""
-    from hs_file_types.utils import update_resource_coverage_element
-    resource = kwargs['resource']
-    update_resource_coverage_element(resource)
+# @receiver(post_delete_file_from_resource, sender=CompositeResource)
+# def post_delete_file_from_resource_handler(sender, **kwargs):
+#     """resource level coverage data needs to be updated when a content file
+#     gets deleted from composite resource"""
+#     from hs_file_types.utils import update_resource_coverage_element
+#     resource = kwargs['resource']
+#     update_resource_coverage_element(resource)

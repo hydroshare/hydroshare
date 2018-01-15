@@ -256,8 +256,9 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
 
-        # test that all metadata deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata deleted - there should be 2 resource level coverages
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
+        self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
 
@@ -379,8 +380,10 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
 
-        # test that all metadata associated with the logical file got deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata associated with the logical file got deleted - there still be
+        # 2 resource level coverages
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 2)
+        self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
 
@@ -494,8 +497,9 @@ class NetCDFFileTypeMetaDataTest(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(NetCDFLogicalFile.objects.count(), 0)
         self.assertEqual(NetCDFFileMetaData.objects.count(), 0)
 
-        # test that all metadata deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata deleted - there should be still 2 resource level coverages
+        self.assertEqual (self.composite_resource.metadata.coverages.all().count(), 2)
+        self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(Variable.objects.count(), 0)
 

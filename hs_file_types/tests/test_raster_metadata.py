@@ -430,16 +430,16 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.composite_resource.delete()
 
     def test_file_metadata_on_file_delete(self):
-        # test that when any file in GeoRasterFileType is deleted
-        # all metadata associated with GeoRasterFileType is deleted
+        # test that when any file in GeoRasterLogicalFile type is deleted
+        # all metadata associated with GeoRasterFileMetaData is deleted
         # test for both .tif and .vrt delete
 
         # test with deleting of 'tif' file
         self._test_file_metadata_on_file_delete(ext='.tif')
+        self.composite_resource.delete()
 
         # test with deleting of 'vrt' file
         self._test_file_metadata_on_file_delete(ext='.vrt')
-
         self.composite_resource.delete()
 
     def test_file_metadata_on_logical_file_delete(self):
@@ -475,8 +475,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
 
-        # test that all metadata deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata deleted - with resource coverage should still exist
+        self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
@@ -627,8 +627,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
 
-        # test that all metadata associated with the logical file got deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata associated with the logical file got deleted - with 1 resource
+        # level coverage still should exist
+        self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
@@ -688,23 +689,26 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.raster_file_obj = open(self.raster_file, 'r')
         self._create_composite_resource()
         res_file = self.composite_resource.files.first()
-
+        self.assertEqual(Coverage.objects.count(), 0)
         # extract metadata from the tif file
         GeoRasterLogicalFile.set_file_type(self.composite_resource, res_file.id, self.user)
-
-        # test that we have one logical file of type GeoRasterFileType
+        self.assertEqual(Coverage.objects.count(), 2)
+        # test that we have one logical file of type GeoRasterLogicalFile Type
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        # there should be 1 coverage element of type spatial
+        # there should be 1 coverage element of type spatial for the raster aggregation
         self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
+        self.assertEqual(logical_file.metadata.temporal_coverage, None)
         self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         self.assertNotEqual(logical_file.metadata.cellInformation, None)
         self.assertNotEqual(logical_file.metadata.bandInformations, None)
 
+        # there should be 1 coverage for the resource
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
         # there should be 2 coverage objects - one at the resource level
         # and the other one at the file type level
         self.assertEqual(Coverage.objects.count(), 2)
@@ -722,8 +726,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
 
-        # test that all metadata deleted
-        self.assertEqual(Coverage.objects.count(), 0)
+        # test that all metadata deleted - with one coverage element at the resource level should
+        # still exist
+        self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(OriginalCoverage.objects.count(), 0)
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)

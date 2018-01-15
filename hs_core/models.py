@@ -3591,6 +3591,14 @@ class CoreMetaData(models.Model):
         return self._publisher.all().first()
 
     @property
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
+
+    @property
     def serializer(self):
         """Return an instance of rest_framework Serializer for self
         Note: Subclass must override this property
