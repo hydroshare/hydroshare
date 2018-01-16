@@ -1,12 +1,11 @@
 from haystack.generic_views import FacetedSearchView
 from haystack.generic_views import FacetedSearchMixin
-from hs_core.discovery_form import DiscoveryForm
+from hs_core.discovery_form import DiscoveryForm, FACETED_FIELDS
 from haystack.query import SearchQuerySet
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = ['creator', 'subject', 'resource_type', 'availability',
-                    'owner', 'variable', 'units', 'sample_medium']
+    facet_fields = FACETED_FIELDS
     form_class = DiscoveryForm
 
     def form_valid(self, form):
@@ -31,7 +30,7 @@ class DiscoveryView(FacetedSearchView):
         sortdir = self.request.GET.get('sort_direction')
         # must use exact match or SOLR will use stemmed words with unpredictable results!
         if sortfield is not None and sortdir is not None:
-            self.queryset = self.queryset.order_by(sortdir + sortfield + '_exact')
+            self.queryset = self.queryset.order_by(sortdir + sortfield)
 
         context = self.get_context_data(**{
             self.form_name: form,

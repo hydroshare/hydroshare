@@ -1,7 +1,6 @@
 """Define search indexes for hs_core module."""
 
 from haystack import indexes
-from haystack.utils.geo import Point
 from hs_core.models import BaseResource
 from hs_geographic_feature_resource.models import GeographicFeatureMetaData
 from hs_app_netCDF.models import NetcdfMetaData
@@ -11,6 +10,9 @@ from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
+
+# # SOLR extension needs to be installed for this to work
+# from haystack.utils.geo import Point
 
 
 def normalize_name(name):
@@ -28,7 +30,11 @@ def normalize_name(name):
     `nameparser`.
 
     """
-    _, type = probablepeople.tag(name)  # discard parser result
+    try:
+        _, type = probablepeople.tag(name)  # discard parser result
+    except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
+        return name
+
     if type == 'Corporation':
         return name  # do not parse and reorder company names
 
@@ -53,27 +59,22 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.MultiValueField(faceted=True)  # normalized to last, first, middle
-    author_raw = indexes.MultiValueField(indexed=False)  # not normalized
+    author = indexes.CharField(faceted=True)  # normalized to last, first, middle
+    author_raw = indexes.CharField(indexed=False)  # not normalized
     author_url = indexes.CharField(indexed=False, null=True)
-    title = indexes.CharField(null=True)
-    abstract = indexes.CharField(null=True)
+    title = indexes.CharField()
+    abstract = indexes.CharField()
     creator = indexes.MultiValueField(faceted=True)
-    contributor = indexes.MultiValueField()
+    contributor = indexes.MultiValueField(faceted=True)
     subject = indexes.MultiValueField(faceted=True)
-    # These are REPLACED by availability
-    # public = indexes.BooleanField(faceted=True)
-    # discoverable = indexes.BooleanField(faceted=True)
-    # published = indexes.BooleanField(faceted=True)
-    # Availability is a MultiValueField due to faceting behavior; this turns off stemming
     availability = indexes.MultiValueField(faceted=True)
     # TODO: We might need more information than a bool in the future
     replaced = indexes.BooleanField()
-    created = indexes.DateTimeField(model_attr='created', faceted=True)
-    modified = indexes.DateTimeField(model_attr='updated', faceted=True)
+    created = indexes.DateTimeField(model_attr='created')
+    modified = indexes.DateTimeField(model_attr='updated')
     organization = indexes.MultiValueField(faceted=True)
     creator_email = indexes.MultiValueField()
-    publisher = indexes.MultiValueField(faceted=True)  # single value
+    publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
     coverage = indexes.MultiValueField()
     coverage_type = indexes.MultiValueField()
@@ -86,22 +87,23 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     coverage_start_date = indexes.DateField(null=True)
     coverage_end_date = indexes.DateField(null=True)
 
-    coverage_point = indexes.LocationField(null=True)
-    coverage_southwest = indexes.LocationField(null=True)
-    coverage_northeast = indexes.LocationField(null=True)
+    # # TODO: SOLR extension needs to be installed for these to work
+    # coverage_point = indexes.LocationField(null=True)
+    # coverage_southwest = indexes.LocationField(null=True)
+    # coverage_northeast = indexes.LocationField(null=True)
 
     format = indexes.MultiValueField()
     identifier = indexes.MultiValueField()
-    language = indexes.MultiValueField(faceted=True)
+    language = indexes.CharField(faceted=True)
     source = indexes.MultiValueField()
     relation = indexes.MultiValueField()
-    resource_type = indexes.MultiValueField(faceted=True)  # actually a single value
+    resource_type = indexes.CharField(faceted=True)
     comment = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owner_login = indexes.MultiValueField(faceted=True)
     owner = indexes.MultiValueField(faceted=True)
     owners_count = indexes.IntegerField(faceted=True)
-    # # We might need these later for social discovery
+    # # TODO: We might need these later for social discovery
     # viewer_login = indexes.MultiValueField(faceted=True)
     # viewer = indexes.MultiValueField(faceted=True)
     # viewers_count = indexes.IntegerField(faceted=True)
@@ -110,10 +112,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # editors_count = indexes.IntegerField(faceted=True)
 
     # non-core metadata
-    geometry_type = indexes.MultiValueField(faceted=True)  # actually a single value
-    field_name = indexes.MultiValueField()  # actually a single value
-    field_type = indexes.MultiValueField()  # actually a single value
-    field_type_code = indexes.MultiValueField()  # actually a single value
+    geometry_type = indexes.CharField(faceted=True)
+    field_name = indexes.CharField()
+    field_type = indexes.CharField()
+    field_type_code = indexes.CharField()
     variable = indexes.MultiValueField(faceted=True)
     variable_type = indexes.MultiValueField(faceted=True)
     variable_shape = indexes.MultiValueField()
@@ -139,11 +141,11 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                                                Q(raccess__public=True))
 
     def prepare_title(self, obj):
-        """Return metadata title if exists, otherwise return None."""
+        """Return metadata title if exists, otherwise return 'none'."""
         if hasattr(obj, 'metadata') and obj.metadata.title.value is not None:
             return obj.metadata.title.value.lstrip()
         else:
-            return None
+            return 'none'
 
     def prepare_abstract(self, obj):
         """Return metadata abstract if exists, otherwise return None."""
@@ -157,39 +159,40 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata author if exists, otherwise return None.
 
-        This is a single field, but represented as a multi-value field
-        to control faceting behavior.
+        This must be represented as a single-value field to enable sorting.
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return [first_creator.name.lstrip()]
+                return first_creator.name.lstrip()
             else:
-                return []
+                return 'none'
         else:
-            return []
+            return 'none'
 
-    # TODO: it is confusing that the author is the first creator
+    # TODO: it is confusing that the "author" is the first "creator"
     def prepare_author(self, obj):
         """
         Return first creator if exists, otherwise return empty list.
 
-        This is a single-value field but represented as a multi-value field
-        to insure appropriate faceting behavior.
+        This must be represented as a single-value field to enable sorting.
         """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None and first_creator.name != '':
                 normalized = normalize_name(first_creator.name)
-                return [normalized]
+                return normalized
             else:
-                return []
+                return 'none'
         else:
-            return []
+            return 'none'
 
-    # stored, unindexed field
     def prepare_author_url(self, obj):
-        """Return metadata author description url if exists, otherwise return None."""
+        """
+        Return metadata author description url if exists, otherwise return None.
+
+        This field is stored but not indexed, to avoid hitting the Django database during response.
+        """
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.description is not None:
@@ -239,9 +242,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_organization(self, obj):
         """
         Return metadata organization if it exists, otherwise return empty array.
-
-        This is a single-value field, but is represented as a multi-value
-        field in SOLR to turn off stemming and make faceting work properly.
         """
         organizations = []
         if hasattr(obj, 'metadata'):
@@ -253,18 +253,15 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_publisher(self, obj):
         """
         Return metadata publisher if it exists; otherwise return empty array.
-
-        This is a single-value field, but is represented as a multi-value
-        field in SOLR to turn off stemming and make faceting work properly.
         """
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return [publisher]
+                return publisher
             else:
-                return []
+                return None
         else:
-            return []
+            return None
 
     def prepare_creator_email(self, obj):
         """Return metadata emails if exists, otherwise return empty array."""
@@ -468,32 +465,33 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return None
 
-    def prepare_coverage_point(self, obj):
-        """ Return Point object associated with coverage, or None """
-        if hasattr(obj, 'metadata'):
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'point':
-                    return Point(float(coverage.value["east"]),
-                                 float(coverage.value["north"]))
-        return None
+    # # TODO: SOLR extension needs to be installed for these to work
+    # def prepare_coverage_point(self, obj):
+    #     """ Return Point object associated with coverage, or None """
+    #     if hasattr(obj, 'metadata'):
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'point':
+    #                 return Point(float(coverage.value["east"]),
+    #                              float(coverage.value["north"]))
+    #     return None
 
-    def prepare_coverage_southwest(self, obj):
-        """ Return southwest limit of bounding box, or None """
-        if hasattr(obj, 'metadata'):
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return Point(float(coverage.value["westlimit"]),
-                                 float(coverage.value["southlimit"]))
-        return None
+    # def prepare_coverage_southwest(self, obj):
+    #     """ Return southwest limit of bounding box, or None """
+    #     if hasattr(obj, 'metadata'):
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'box':
+    #                 return Point(float(coverage.value["westlimit"]),
+    #                              float(coverage.value["southlimit"]))
+    #     return None
 
-    def prepare_coverage_northeast(self, obj):
-        """ Return northeast limit of bounding box, or None """
-        if hasattr(obj, 'metadata'):
-            for coverage in obj.metadata.coverages.all():
-                if coverage.type == 'box':
-                    return Point(float(coverage.value["eastlimit"]),
-                                 float(coverage.value["northlimit"]))
-        return None
+    # def prepare_coverage_northeast(self, obj):
+    #     """ Return northeast limit of bounding box, or None """
+    #     if hasattr(obj, 'metadata'):
+    #         for coverage in obj.metadata.coverages.all():
+    #             if coverage.type == 'box':
+    #                 return Point(float(coverage.value["eastlimit"]),
+    #                              float(coverage.value["northlimit"]))
+    #     return None
 
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
@@ -512,9 +510,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_language(self, obj):
         """Return resource language if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
-            return [obj.metadata.language.code]
+            return obj.metadata.language.code
         else:
-            return []
+            return None
 
     def prepare_source(self, obj):
         """Return resource sources if exists, otherwise return empty array."""
@@ -531,8 +529,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return []
 
     def prepare_resource_type(self, obj):
-        """Return verbose_name attribute of obj argument."""
-        return [obj.verbose_name]
+        """Resource type is verbose_name attribute of obj argument."""
+        return obj.verbose_name
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
@@ -566,7 +564,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 0
 
-    # # We might need these later for social discovery
+    # # TODO: We might need these later for social discovery
     # def prepare_viewer_login(self, obj):
     #     """Return usernames of users that can view resource, otherwise return empty array."""
     #     if hasattr(obj, 'raccess'):
@@ -613,81 +611,70 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     #     else:
     #         return 0
 
+    # TODO: These should probably be multi-value fields and pick up all types.
     def prepare_geometry_type(self, obj):
         """
         Return geometry type if metadata exists, otherwise return [].
-
-        This field can only contain one value, but is represented as a
-        multi-value field to insure appropriate faceting behavior.
         """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 geometry_info = obj.metadata.geometryinformation
                 if geometry_info is not None:
-                    return [geometry_info.geometryType]
+                    return geometry_info.geometryType
                 else:
-                    return []
+                    return None
             else:
-                return []
+                return None
         else:
-            return []
+            return None
 
     def prepare_field_name(self, obj):
         """
         Return metadata field name if exists, otherwise return [].
-
-        This field can only contain one value, but is represented as a
-        multi-value field to insure appropriate faceting behavior.
         """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return [field_info.fieldName]
+                    return field_info.fieldName
                 else:
-                    return []
+                    return None
             else:
-                return []
+                return None
         else:
-            return []
+            return None
 
     def prepare_field_type(self, obj):
         """
         Return metadata field type if exists, otherwise return None.
-
-        This field can only contain one value, but is represented as a
-        multi-value field to insure appropriate faceting behavior.
         """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return [field_info.fieldType]
+                    return field_info.fieldType
                 else:
-                    return []
+                    return None
             else:
-                return []
+                return None
         else:
-            return []
+            return None
 
     def prepare_field_type_code(self, obj):
         """
         Return metadata field type code if exists, otherwise return [].
-
-        This field can only contain one value, but is represented as a
-        multi-value field to insure appropriate faceting behavior.
         """
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None:
-                    return [field_info.fieldTypeCode]
+                    return field_info.fieldTypeCode
                 else:
-                    return []
+                    return None
             else:
-                return []
+                return None
         else:
-            return []
+            return None
 
     def prepare_variable(self, obj):
         """

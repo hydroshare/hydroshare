@@ -6,8 +6,11 @@ import operator
 from haystack.query import SQ
 from django.conf import settings
 
+# # Optional more precise control of __exact keyword: disabled for now
 # Pattern_Field_Query = re.compile(r"^(\w+):(\w+)\s*", re.U)
 # Pattern_Field_Exact_Query = re.compile(r"^(\w+):\"(.+)\"\s*", re.U)
+
+# Paterns without more precise control of __exact keyword
 Pattern_Field_Query = re.compile(r"^(\w+):", re.U)
 Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
 Pattern_Operator = re.compile(r"^(AND|OR|NOT|\-|\+)\s*", re.U)
@@ -22,9 +25,13 @@ OP = {
     '+': operator.and_,
     '-': operator.inv,
 }
+KNOWN_FIELDS = ['title', 'author', 'creator', 'subject', 'variable', 'units',
+                'contributor', 'accessibility', 'created', 'modified', 'publisher',
+                'rating', 'resource_type', 'owner']
 
 
 class NoMatchingBracketsFound(Exception):
+    """ malformed parenthetic expression """
 
     def __init__(self, value=''):
         self.value = value
@@ -34,6 +41,16 @@ class NoMatchingBracketsFound(Exception):
 
 
 class UnhandledException(Exception):
+    """ fault during regular expression matching """
+    def __init__(self, value=''):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+
+class FieldNotKnownException(Exception):
+    """ Attempt to use unregistered field """
 
     def __init__(self, value=''):
         self.value = value
@@ -75,6 +92,10 @@ class ParseSQ(object):
     def handle_field_query(self):
         mat = re.search(Pattern_Field_Query, self.query)
         search_field = mat.group(1)
+        if search_field not in KNOWN_FIELDS:
+            raise FieldNotKnownException("field {} is not one of {}"
+                                         .format(search_field, ','.join(KNOWN_FIELDS)))
+
         self.query, n = re.subn(Pattern_Field_Query, '', self.query, 1)
         if re.search(Pattern_Quoted_Text, self.query):
             mat = re.search(Pattern_Quoted_Text, self.query)
@@ -133,6 +154,7 @@ class ParseSQ(object):
                 self.query = self.query.lstrip()
                 if re.search(Pattern_Field_Query, self.query):
                     self.handle_field_query()
+                # # Optional control of exact keyword: disabled for now
                 # elif re.search(Pattern_Field_Exact_Query, self.query):
                 #     self.handle_field_exact_query()
                 elif re.search(Pattern_Quoted_Text, self.query):

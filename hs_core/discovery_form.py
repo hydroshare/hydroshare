@@ -1,7 +1,11 @@
 from haystack.forms import FacetedSearchForm
 from haystack.query import SQ
 from django import forms
-from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, UnhandledException
+from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, UnhandledException, \
+    FieldNotKnownException
+
+FACETED_FIELDS = ['author', 'creator', 'subject', 'resource_type', 'availability',
+                  'owner', 'variable', 'units', 'sample_medium']
 
 
 class DiscoveryForm(FacetedSearchForm):
@@ -30,9 +34,8 @@ class DiscoveryForm(FacetedSearchForm):
                                      required=False)
 
     def search(self):
-        if not self.cleaned_data.get('q'):
-            sqs = self.searchqueryset.all().filter(replaced=False)
-        else:
+        sqs = self.searchqueryset.all().filter(replaced=False)
+        if self.cleaned_data.get('q'):
             # This corrects for an failed match of complete words, as documented in issue #2308.
             # The text__startswith=cdata matches stemmed words in documents with an unstemmed cdata.
             # The text=cdata matches stemmed words after stemming cdata as well.
@@ -40,15 +43,20 @@ class DiscoveryForm(FacetedSearchForm):
             # Thus "Industrial" does not match "Industrial" in the document according to
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
-            sqs = self.searchqueryset.all().filter(replaced=False)
+            # error = None
             try:
                 parser = ParseSQ()
                 parsed = parser.parse(cdata)
                 sqs = sqs.filter(parsed)
-            except UnhandledException:
+            except UnhandledException:  # as e:
                 sqs = self.searchqueryset.none()
-            except NoMatchingBracketsFound:
+                # error = "syntax error: {}".format(e.value)
+            except NoMatchingBracketsFound:  # as e:
                 sqs = self.searchqueryset.none()
+                # error = e.value
+            except FieldNotKnownException:  # as e:
+                sqs = self.searchqueryset.none()
+                # error = e.value
 
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
@@ -96,12 +104,11 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
         author_sq = None
+        creator_sq = None
+        owner_sq = None
         subject_sq = None
         resource_type_sq = None
-        public_sq = None
-        owner_sq = None
-        discoverable_sq = None
-        published_sq = None
+        accessibility_sq = None
         variable_sq = None
         sample_medium_sq = None
         units_sq = None
@@ -117,11 +124,23 @@ class DiscoveryForm(FacetedSearchForm):
             value = sqs.query.clean(value)
 
             if value:
-                if "creator" in field:
+                if "author" in field:
                     if author_sq is None:
-                        author_sq = SQ(creator=value)
+                        author_sq = SQ(author=value)
                     else:
-                        author_sq.add(SQ(creator=value), SQ.OR)
+                        author_sq.add(SQ(author=value), SQ.OR)
+
+                if "creator" in field:
+                    if creator_sq is None:
+                        creator_sq = SQ(creator=value)
+                    else:
+                        creator_sq.add(SQ(creator=value), SQ.OR)
+
+                elif "owner" in field:
+                    if owner_sq is None:
+                        owner_sq = SQ(owner=value)
+                    else:
+                        owner_sq.add(SQ(owner=value), SQ.OR)
 
                 elif "subject" in field:
                     if subject_sq is None:
@@ -135,29 +154,11 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         resource_type_sq.add(SQ(resource_type=value), SQ.OR)
 
-                elif "public" in field:
-                    if public_sq is None:
-                        public_sq = SQ(public=value)
+                elif "accessibility" in field:
+                    if accessibility_sq is None:
+                        accessibility_sq = SQ(accessibility=value)
                     else:
-                        public_sq.add(SQ(public=value), SQ.OR)
-
-                elif "owner" in field:
-                    if owner_sq is None:
-                        owner_sq = SQ(owner=value)
-                    else:
-                        owner_sq.add(SQ(owner=value), SQ.OR)
-
-                elif "discoverable" in field:
-                    if discoverable_sq is None:
-                        discoverable_sq = SQ(discoverable=value)
-                    else:
-                        discoverable_sq.add(SQ(discoverable=value), SQ.OR)
-
-                elif "published" in field:
-                    if published_sq is None:
-                        published_sq = SQ(published=value)
-                    else:
-                        published_sq.add(SQ(published=value), SQ.OR)
+                        accessibility_sq.add(SQ(accessibility=value), SQ.OR)
 
                 elif 'variable' in field:
                     if variable_sq is None:
@@ -182,18 +183,16 @@ class DiscoveryForm(FacetedSearchForm):
 
         if author_sq is not None:
             sqs = sqs.filter(author_sq)
+        if creator_sq is not None:
+            sqs = sqs.filter(creator_sq)
+        if owner_sq is not None:
+            sqs = sqs.filter(owner_sq)
         if subject_sq is not None:
             sqs = sqs.filter(subject_sq)
         if resource_type_sq is not None:
             sqs = sqs.filter(resource_type_sq)
-        if public_sq is not None:
-            sqs = sqs.filter(public_sq)
-        if owner_sq is not None:
-            sqs = sqs.filter(owner_sq)
-        if discoverable_sq is not None:
-            sqs = sqs.filter(discoverable_sq)
-        if published_sq is not None:
-            sqs = sqs.filter(published_sq)
+        if accessibility_sq is not None:
+            sqs = sqs.filter(accessibility_sq)
         if variable_sq is not None:
             sqs = sqs.filter(variable_sq)
         if sample_medium_sq is not None:

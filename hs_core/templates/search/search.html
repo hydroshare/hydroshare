@@ -39,8 +39,10 @@
                             <div class="panel-heading">
                                 <h4 class="panel-title">
                                     <a data-toggle="collapse" href="#{{ key }}">
-                                        {% if key == 'creator'%}
-                                            &nbsp; Filter by Author
+                                        {% if key == 'author'%}
+                                            &nbsp; Filter by First Author
+                                        {% elif key == 'creator'%}
+                                            &nbsp; Filter by Any Author
                                         {% elif key ==  'subject'%}
                                             &nbsp; Filter by Subject
                                         {% elif key ==  'resource_type'%}
@@ -66,7 +68,7 @@
 
                             <div id="{{ key }}" class="facet-list panel-collapse collapse in">
                                 <ul class="list-group" id="list-group-{{ key }}">
-                                {% for item in values|dictsort:"0" %}
+                                {% for item in values %}
                                     {% if item.1 > 0 %}
                                         <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
                                             <span class="badge">{{ item.1 }}</span>
