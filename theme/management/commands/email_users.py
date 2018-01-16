@@ -25,8 +25,8 @@ class Command(BaseCommand):
                     msg_str += get_quota_message(user)
 
                 if msg_str:
-                    msg_str += '\n\nHydroShare Support'
-                    subject = 'HydroShare Quota warning'
+                    msg_str += '\n\nCommonsShare Support'
+                    subject = 'CommonsShare Quota warning'
                     # send email for people monitoring and follow-up as needed
                     send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,
                               [uemail])

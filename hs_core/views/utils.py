@@ -495,7 +495,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     Recursively Link irods folder and all files and sub-folders inside the folder to Django
     Database after iRODS file and folder operations to get Django and iRODS in sync
 
-    :param resource: the BaseResource object representing a HydroShare resource
+    :param resource: the BaseResource object representing a CommonsShare resource
     :param istorage: REDUNDANT: IrodsStorage object
     :param foldername: the folder name, as a fully qualified path
     :param exclude: UNUSED: a tuple that includes file names to be excluded from
@@ -524,7 +524,7 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
 def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     """
     Rename file in Django DB after the file is renamed in Django side
-    :param resource: the BaseResource object representing a HydroShare resource
+    :param resource: the BaseResource object representing a CommonsShare resource
     :param src_name: the file or folder full path name to be renamed
     :param tgt_name: the file or folder full path name to be renamed to
     :return:
@@ -558,7 +558,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 def remove_irods_folder_in_django(resource, istorage, folderpath, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
-    :param resource: the BaseResource object representing a HydroShare resource
+    :param resource: the BaseResource object representing a CommonsShare resource
     :param istorage: IrodsStorage object (redundant; equal to resource.get_irods_storage())
     :param foldername: the folder name that has been removed from iRODS
     :user  user who initiated the folder delete operation
@@ -590,8 +590,8 @@ def remove_irods_folder_in_django(resource, istorage, folderpath, user):
 # TODO: shouldn't we be able to zip to a different subfolder?  Currently this is not possible.
 def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
     """
-    Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for HydroShare
-    resource backend store and modify HydroShare Django site accordingly.
+    Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for CommonsShare
+    resource backend store and modify CommonsShare Django site accordingly.
 
     :param user: the requesting user
     :param res_id: resource uuid
@@ -644,7 +644,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
 def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     """
     Unzip the input zip file while preserving folder structures in hydroshareZone or
-    any federated zone used for HydroShare resource backend store and keep Django DB in sync.
+    any federated zone used for CommonsShare resource backend store and keep Django DB in sync.
     :param user: requesting user
     :param res_id: resource uuid
     :param zip_with_rel_path: the zip file name with relative path under res_id collection to
@@ -678,7 +678,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
 def create_folder(res_id, folder_path):
     """
-    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param res_id: resource uuid
     :param folder_path: relative path for the new folder to be created under
@@ -700,7 +700,7 @@ def create_folder(res_id, folder_path):
 
 def remove_folder(user, res_id, folder_path):
     """
-    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
@@ -726,7 +726,7 @@ def remove_folder(user, res_id, folder_path):
 
 def list_folder(res_id, folder_path):
     """
-    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
@@ -746,7 +746,7 @@ def list_folder(res_id, folder_path):
 # TODO: modify this to take short paths not including data/contents
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
     """
-    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    Move or rename a file or folder in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
@@ -793,7 +793,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 # TODO: modify this to take short paths not including data/contents
 def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True):
     """
-    Rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    Rename a file or folder in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
@@ -831,7 +831,7 @@ def rename_file_or_folder(user, res_id, src_path, tgt_path, validate_rename=True
 # TODO: modify this to take short paths not including data/contents
 def move_to_folder(user, res_id, src_paths, tgt_path, validate_move=True):
     """
-    Move a file or folder to a folder in hydroshareZone or any federated zone used for HydroShare
+    Move a file or folder to a folder in hydroshareZone or any federated zone used for CommonsShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid

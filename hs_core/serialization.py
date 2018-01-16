@@ -254,7 +254,7 @@ class GenericResourceMeta(object):
     def read_metadata_from_resource_bag(cls, bag_content_path, hydroshare_host='www.hydroshare.org'):
         """
         Factory method for getting resource-specific metadata from an exploded BagIt archive.
-        To work with this factory, each HydroShare resource type must implement
+        To work with this factory, each CommonsShare resource type must implement
         a class that extends GenericResourceMeta stored in the following package/module:
         ${RESOURCE_PACKAGE}.serialization.${RESOURCE_NAME}Meta.  For example,
         the "RasterResource", with package "hs_geo_raster_resource" must implement its
@@ -262,7 +262,7 @@ class GenericResourceMeta(object):
 
         :param bag_content_path: String representing path of exploded bag
         content.
-        :param hydroshare_host: Host name of the HydroShare server.
+        :param hydroshare_host: Host name of the CommonsShare server.
 
         :return: An instance of GenericResourceMeta specific to the resource type with all
         metadata read from the exploded bag.
@@ -273,7 +273,7 @@ class GenericResourceMeta(object):
         # Read resource map so that we know the resource type
         (root_uri, res_meta_path, res_meta) = cls._read_resource_map(bag_content_path,
                                                                      hydroshare_host)
-        # Iterate over HydroShare resource types
+        # Iterate over CommonsShare resource types
         res_types = get_resource_types()
         for rt in res_types:
             rt_name = rt.__name__
@@ -320,7 +320,7 @@ class GenericResourceMeta(object):
 
         :param bag_content_path: String representing path of exploded bag
         content.
-        :param hydroshare_host: Host name of the HydroShare server.
+        :param hydroshare_host: Host name of the CommonsShare server.
 
         :return: Tuple<String, String, dict> representing: root URI of the resource metadata,
          path of the resourcemetadata.xml within the bag, dictionary containing metadata from resource map.
@@ -718,7 +718,7 @@ class GenericResourceMeta(object):
         """
         Write metadata to resource
 
-        :param resource: HydroShare resource instance
+        :param resource: CommonsShare resource instance
         :param update_creators: Update creator metadata if True.  Note, for general updates
         through the REST API this should be false as we don't want to allow users to change
         creator information behind the back of the authorization system.
@@ -746,13 +746,13 @@ class GenericResourceMeta(object):
                               'researcherID': c.researcherID,
                               'researchGateID': c.researchGateID}
                     if c.rel_uri:
-                        # HydroShare user URIs are stored as relative not absolute URIs
+                        # CommonsShare user URIs are stored as relative not absolute URIs
                         kwargs['description'] = c.rel_uri
                     else:
                         kwargs['description'] = None
 
                     if self.owner_is_hs_user and c.order == 1:
-                        # Use metadata from bag for owner if the owner is a HydroShare user
+                        # Use metadata from bag for owner if the owner is a CommonsShare user
                         # (because the metadata were inheritted from the user profile when we
                         # called create_resource above)
 
@@ -890,9 +890,9 @@ class GenericResourceMeta(object):
     class ResourceContributor(object):
 
         def __init__(self):
-            # HydroShare user ID of user specified by self.url (set by self.set_uri)
+            # CommonsShare user ID of user specified by self.url (set by self.set_uri)
             self.id = None
-            # Relative version of self.uri (applies only to HydroShare user URIs; set by self.set_uri)
+            # Relative version of self.uri (applies only to CommonsShare user URIs; set by self.set_uri)
             self.rel_uri = None
 
             self.uri = None
@@ -924,7 +924,7 @@ class GenericResourceMeta(object):
 
             :raise: GenericResourceMeta.ResourceMetaException if the user URI is malformed.
             """
-            # Make sure this is a HydroShare user URI
+            # Make sure this is a CommonsShare user URI
             is_hs_user_uri = False
             try:
                 validate_user_url(uri)
@@ -938,7 +938,7 @@ class GenericResourceMeta(object):
                 # Set rel_uri
                 self.rel_uri = parsed_uri.path
 
-                # Separate out the user ID for HydroShare users
+                # Separate out the user ID for CommonsShare users
                 contributor_pk = os.path.basename(self.rel_uri.strip('/'))
                 pk = None
                 try:
@@ -956,7 +956,7 @@ class GenericResourceMeta(object):
     class ResourceCreator(ResourceContributor):
         """
 
-        Fields beyond URI are ignored for creators that are HydroShare users (i.e. have valid URI).
+        Fields beyond URI are ignored for creators that are CommonsShare users (i.e. have valid URI).
         """
 
         def __init__(self):

@@ -1,7 +1,7 @@
 """
-Module extracting metadata from raster file to complete part of the required HydroShare Raster
+Module extracting metadata from raster file to complete part of the required CommonsShare Raster
 Science Metadata.
-The expected metadata elements are defined in the HydroShare raster resource specification.
+The expected metadata elements are defined in the CommonsShare raster resource specification.
 Reference code:
 http://gis.stackexchange.com/questions/6669/converting-projected-geotiff-to-wgs84-
 with-gdal-and-python

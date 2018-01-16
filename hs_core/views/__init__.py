@@ -79,7 +79,7 @@ def verify(request, *args, **kwargs):
         if not u.is_active:
             u.is_active=True
             u.save()
-            u.groups.add(Group.objects.get(name="Hydroshare Author"))
+            u.groups.add(Group.objects.get(name="CommonsShare Author"))
         from django.contrib.auth import login
         u.backend = settings.AUTHENTICATION_BACKENDS[0]
         login(request, u)
@@ -563,10 +563,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     '''
     This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
-    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
+    which is federated with hydroshare zone under the iRODS user account corresponding to a CommonsShare user. This function
     should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
-    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
-    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
+    user Zone exists. The purpose of this function is to allow CommonsShare resource bag that a CommonsShare user has access
+    to be copied to CommonsShare user's iRODS space in CommonsShare user zone so that users can do analysis or computations on
     the resource
     Args:
         request: an AJAX request
@@ -966,9 +966,9 @@ def resend_verification_email(request):
     try:
         token = signing.dumps('verify_user_email:{0}:{1}'.format(u.pk, u.email))
         u.email_user(
-            'Please verify your new Hydroshare account.',
+            'Please verify your new CommonsShare account.',
             """
-This is an automated email from Hydroshare.org. If you requested a Hydroshare account, please
+This is an automated email from CommonsShare.org. If you requested a CommonsShare account, please
 go to http://{domain}/verify/{token}/ and verify your account.
 """.format(
             domain=Site.objects.get_current().domain,
@@ -1071,7 +1071,7 @@ def add_generic_context(request, page):
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='CommonsShare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
@@ -1520,7 +1520,7 @@ def _send_email_on_group_membership_acceptance(membership_request):
         email_msg = """Dear {}
         <p>Your invitation to user '{}' to join the group '{}' has been accepted.</p>
         <p>Thank you</p>
-        <p>The HydroShare Team</p>
+        <p>The CommonsShare Team</p>
         """.format(membership_request.request_from.first_name,
                    membership_request.invitation_to.first_name, membership_request.group_to_join.name)
     else:
@@ -1529,10 +1529,10 @@ def _send_email_on_group_membership_acceptance(membership_request):
         email_msg = """Dear {}
         <p>Your request to join the group '{}' has been accepted.</p>
         <p>Thank you</p>
-        <p>The HydroShare Team</p>
+        <p>The CommonsShare Team</p>
         """.format(membership_request.request_from.first_name, membership_request.group_to_join.name)
 
-    send_mail(subject="HydroShare group membership",
+    send_mail(subject="CommonsShare group membership",
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,
@@ -1710,7 +1710,7 @@ class CollaborateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="CommonsShare Author")
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members

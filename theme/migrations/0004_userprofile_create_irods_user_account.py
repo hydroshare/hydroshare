@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='create_irods_user_account',
-            field=models.BooleanField(default=False, help_text=b'Check to create an iRODS user account in HydroShare user iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck (https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).Uncheck to delete your iRODS user account. Note that deletion of your iRODS user account deletes all of your files under this account as well.'),
+            field=models.BooleanField(default=False, help_text=b'Check to create an iRODS user account in CommonsShare user iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck (https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).Uncheck to delete your iRODS user account. Note that deletion of your iRODS user account deletes all of your files under this account as well.'),
         ),
     ]

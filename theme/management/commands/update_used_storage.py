@@ -14,12 +14,12 @@ input_fields = INPUT_FIELDS(0, 1, 2)
 
 
 class Command(BaseCommand):
-    help = "Update used storage space in UserQuota table for all users in HydroShare by reading " \
+    help = "Update used storage space in UserQuota table for all users in CommonsShare by reading " \
            "an input file with updated values for users. Each row of the input file should list" \
            "information in the format of 'User name' 'Used value' 'Storage zone' " \
            "separated by comma. A header may also be included for informational purposes." \
            "This input file is created by a quota calculation script that runs nightly on a " \
-           "HydroShare server."
+           "CommonsShare server."
 
     def add_arguments(self, parser):
         parser.add_argument('input_file_name_with_path', help='input file name with path')
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                         msg_str = 'Dear ' + uname + ':\n\n'
                         msg_str += get_quota_message(user)
 
-                        msg_str += '\n\nHydroShare Support'
+                        msg_str += '\n\nCommonsShare Support'
                         subject = 'Quota warning'
                         # send email for people monitoring and follow-up as needed
                         send_mail(subject, msg_str, settings.DEFAULT_FROM_EMAIL,

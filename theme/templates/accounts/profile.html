@@ -339,9 +339,9 @@
                                             {% if profile_user.id == user.id %}
                                                 <br>
                                                 {% if profile.create_irods_user_account %}
-                                                    <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-success">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in CommonsShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% else %}
-                                                    <div class="alert alert-warning">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                    <div class="alert alert-warning">You have not created an associated iRODS account in CommonsShare user zone (<strong>users.hydroshare.org</strong>). </div>
                                                 {% endif %}
                                                 {% if quota_message %}<div class="alert alert-info">{{ quota_message }}</div>{% endif %}
                                             {% endif %}    
@@ -723,8 +723,8 @@
                                 <div class="col-sm-10 col-xs-12">
                                     <div><strong>WARNING</strong>: This will <strong><u>permanently</u></strong> disable your account. You cannot undo
                                         this action. Please note that if you do choose to disable your account, your Resources
-                                        will remain in HydroShare and will be accessible to anyone who currently has access. If
-                                        you wish to remove your resources from HydroShare, you should do so <u>before</u> disabling
+                                        will remain in CommonsShare and will be accessible to anyone who currently has access. If
+                                        you wish to remove your resources from CommonsShare, you should do so <u>before</u> disabling
                                         your account.
                                     </div>
 
@@ -811,10 +811,10 @@
                                 <div class="row">
                                     <div class="col-sm-10 col-xs-12">
                                         <div>A corresponding iRODS user account with the same username <strong>{{ profile_user.username }}</strong> will be created
-                                            in the HydroShare user zone when you confirm this action. You will have to input a password below for your
-                                            iRODS user account, which does not have to be the same as your current HydroShare password. <strong>The password
+                                            in the CommonsShare user zone when you confirm this action. You will have to input a password below for your
+                                            iRODS user account, which does not have to be the same as your current CommonsShare password. <strong>The password
                                             is required to be composed of at least 8 characters.</strong> Please keep your iRODS user account password in a
-                                            secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
+                                            secure place and use it to access your account in the CommonsShare user zone using iRODS clients such as icommands or Cyberduck.
                                         </div>
                                         <div class="form-group">
                                             <label for="id_irods_password">Password: </label>
@@ -850,7 +850,7 @@
                                 </div>
                                 <div class="col-sm-10 col-xs-12">
                                     <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
-                                        HydroShare user zone as well as all data you have under that account. You cannot recover
+                                        CommonsShare user zone as well as all data you have under that account. You cannot recover
                                         your data after this action.
                                     </div>
                                 </div>

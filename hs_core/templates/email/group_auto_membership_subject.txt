@@ -1,2 +1,2 @@
 {% load i18n %}
-{% trans "HydroShare group membership" %}
+{% trans "CommonsShare group membership" %}

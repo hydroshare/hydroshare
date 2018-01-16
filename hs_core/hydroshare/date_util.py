@@ -20,7 +20,7 @@ HS_DATE_NOTZ_RE = re.compile(HS_DATE_NOTZ_PATT)
 
 def hs_date_to_datetime(datestr):
     """
-    Parse HydroShare (HS) formatted date from a String to a datetime.datetime.
+    Parse CommonsShare (HS) formatted date from a String to a datetime.datetime.
      Note: We use a weird TZ format, that does not appear to be ISO 8601
      compliant, e.g.: 2015-06-03T09:29:00T-00003
     :param datestr: String representing the date in HS format
@@ -48,7 +48,7 @@ def hs_date_to_datetime(datestr):
 
 def hs_date_to_datetime_iso(datestr):
     """
-    Parse the ISO 8601-formatted HydroShare (HS) date from a String to a datetime.datetime.
+    Parse the ISO 8601-formatted CommonsShare (HS) date from a String to a datetime.datetime.
     :param datestr: String representing the date in HS format
     :return: datetime.datetime with timezone set to UTC
     """
@@ -83,7 +83,7 @@ def hs_date_to_datetime_iso(datestr):
 
 def hs_date_to_datetime_notz(datestr):
     """
-    Parse HydroShare (HS) formatted datetime (without timezone information) from a String
+    Parse CommonsShare (HS) formatted datetime (without timezone information) from a String
     to a datetime.datetime.
     :param datestr: String representing the date in HS format (without timezone information)
     :return: datetime.datetime with timezone set to UTC

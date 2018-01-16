@@ -1,5 +1,5 @@
 """
-Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF
+Module extracts metadata from NetCDF file to complete the required CommonsShare NetCDF
 Science Metadata
 
 References

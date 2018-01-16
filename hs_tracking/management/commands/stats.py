@@ -38,7 +38,7 @@ def month_year_iter(start, end):
 
 
 class Command(BaseCommand):
-    help = "Output engagement stats about HydroShare"
+    help = "Output engagement stats about CommonsShare"
 
     option_list = BaseCommand.option_list + (
         make_option(

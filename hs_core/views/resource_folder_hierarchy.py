@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def data_store_structure(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
-    in hydroshareZone or any federated zone used for HydroShare resource backend store.
+    in hydroshareZone or any federated zone used for CommonsShare resource backend store.
     It is invoked by an AJAX call and returns json object that holds content for files
     and folders under the requested directory/collection/subcollection.
     The AJAX request must be a POST request with input data passed in for res_id and store_path
@@ -124,7 +124,7 @@ def data_store_structure(request):
 def data_store_folder_zip(request, res_id=None):
     """
     Zip requested files and folders into a zip file in hydroshareZone or any federated zone
-    used for HydroShare resource backend store. It is invoked by an AJAX call and returns
+    used for CommonsShare resource backend store. It is invoked by an AJAX call and returns
     json object that holds the created zip file name if it succeeds, and an empty string
     if it fails. The AJAX request must be a POST request with input data passed in for
     res_id, input_coll_path, output_zip_file_name, and remove_original_after_zip where
@@ -209,7 +209,7 @@ def data_store_folder_zip_public(request, pk):
 def data_store_folder_unzip(request, **kwargs):
     """
     Unzip requested zip file while preserving folder structures in hydroshareZone or
-    any federated zone used for HydroShare resource backend store. It is invoked by an AJAX call,
+    any federated zone used for CommonsShare resource backend store. It is invoked by an AJAX call,
     and returns json object that holds the root path that contains the zipped content if it
     succeeds, and an empty string if it fails. The AJAX request must be a POST request with
     input data passed in for res_id, zip_with_rel_path, and remove_original_zip where
@@ -293,7 +293,7 @@ def data_store_folder_unzip_public(request, pk, pathname):
 
 def data_store_create_folder(request):
     """
-    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for CommonsShare
     resource backend store. It is invoked by an AJAX call and returns json object that has the
     relative path of the new folder created if succeeds, and return empty string if fails. The
     AJAX request must be a POST request with input data passed in for res_id and folder_path
@@ -347,7 +347,7 @@ def data_store_create_folder(request):
 
 def data_store_remove_folder(request):
     """
-    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for CommonsShare
     resource backend store. It is invoked by an AJAX call and returns json object that include a
     status of 'success' if succeeds, and HttpResponse of status code of 403, 400, or 500 if fails.
     The AJAX request must be a POST request with input data passed in for res_id and folder_path
@@ -400,7 +400,7 @@ def data_store_remove_folder(request):
 
 def data_store_file_or_folder_move_or_rename(request, res_id=None):
     """
-    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    Move or rename a file or folder in hydroshareZone or any federated zone used for CommonsShare
     resource backend store. It is invoked by an AJAX call and returns json object that has the
     relative path of the target file or folder being moved to if succeeds, and return empty string
     if fails. The AJAX request must be a POST request with input data passed in for res_id,

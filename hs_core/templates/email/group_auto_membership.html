@@ -2,8 +2,8 @@
 {% block main %}
     {% if group_owner %}
         <p>{% trans "Dear " %}{{ group_owner.first_name }}</p>
-        <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} has joined your HydroShare group ({{ group.name }}).</p>
+        <p>{% trans "User " %}{{ user.first_name }} {{ user.last_name }} has joined your CommonsShare group ({{ group.name }}).</p>
     {%  endif %}
 
-    <p>{% trans "The HydroShare Team" %}</p>
+    <p>{% trans "The CommonsShare Team" %}</p>
 {% endblock %}

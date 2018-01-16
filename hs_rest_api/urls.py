@@ -6,7 +6,7 @@ from hs_file_types import views as file_type_views
 
 from rest_framework_swagger.views import get_swagger_view
 
-schema_view = get_swagger_view(title='Hydroshare API')
+schema_view = get_swagger_view(title='CommonsShare API')
 
 urlpatterns = patterns(
     '',
