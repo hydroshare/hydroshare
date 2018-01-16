@@ -111,12 +111,10 @@ def data_store_structure(request):
                      'can_be_public': resource.can_be_public_or_discoverable}
 
     if resource.resource_type == "CompositeResource":
-        # logger.debug("resource {}: begin CompositeResource handling".format(res_id))
         spatial_coverage_dict = get_coverage_data_dict(resource)
         temporal_coverage_dict = get_coverage_data_dict(resource, coverage_type='temporal')
         return_object['spatial_coverage'] = spatial_coverage_dict
         return_object['temporal_coverage'] = temporal_coverage_dict
-        # logger.debug("resource {}: end CompositeResource handling".format(res_id))
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"

@@ -30,16 +30,17 @@ def normalize_name(name):
     `nameparser`.
 
     """
+    sname = name.lstrip().rstrip()  # remove spaces
     try:
-        _, type = probablepeople.tag(name)  # discard parser result
+        _, type = probablepeople.tag(sname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return name
+        return sname
 
     if type == 'Corporation':
-        return name  # do not parse and reorder company names
+        return sname  # do not parse and reorder company names
 
     # treat anything else as a human name
-    nameparts = HumanName(name.lstrip())
+    nameparts = HumanName(sname)
     normalized = nameparts.last
     if nameparts.suffix:
         normalized = normalized + ' ' + nameparts.suffix
@@ -164,7 +165,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return first_creator.name.lstrip()
+                return first_creator.name.lstrip().rstrip()
             else:
                 return 'none'
         else:

@@ -1,7 +1,7 @@
 from json import dumps
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login as auth_login
@@ -31,6 +31,7 @@ from mezzanine.utils.views import render
 from hs_core.views.utils import run_ssh_command
 from hs_core.hydroshare.utils import user_from_id
 from hs_access_control.models import GroupMembershipRequest
+from hs_dictionary.models import University, UncategorizedTerm
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
@@ -213,6 +214,16 @@ def update_user_profile(request):
     old_email = user.email
     user_form = UserForm(request.POST, instance=user)
     user_profile = UserProfile.objects.filter(user=user).first()
+
+    dict_items = request.POST['organization'].split(",")
+    for dict_item in dict_items:
+        # Update Dictionaries
+        try:
+            University.objects.get(name=dict_item)
+        except ObjectDoesNotExist:
+            new_term = UncategorizedTerm(name=dict_item)
+            new_term.save()
+
     profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
