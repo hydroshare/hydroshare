@@ -152,7 +152,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return metadata abstract if exists, otherwise return None."""
         if hasattr(obj, 'metadata') and obj.metadata.description is not None and \
                 obj.metadata.description.abstract is not None:
-            return obj.metadata.description.abstract
+            return obj.metadata.description.abstract.lstrip()
         else:
             return None
 
@@ -165,7 +165,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             first_creator = obj.metadata.creators.filter(order=1).first()
             if first_creator.name is not None:
-                return first_creator.name.lstrip().rstrip()
+                return first_creator.name.lstrip()
             else:
                 return 'none'
         else:
@@ -210,7 +210,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values
         """
         if hasattr(obj, 'metadata'):
-            return [normalize_name(creator.name) for creator in obj.metadata.creators.all()
+            return [normalize_name(creator.name)
+                    for creator in obj.metadata.creators.all()
                     .exclude(name__isnull=True).exclude(name='')]
         else:
             return []
@@ -235,7 +236,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values.
         """
         if hasattr(obj, 'metadata'):
-            return [subject.value for subject in obj.metadata.subjects.all()
+            return [subject.value.lstrip() for subject in obj.metadata.subjects.all()
                     .exclude(value__isnull=True)]
         else:
             return []
@@ -248,7 +249,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             for creator in obj.metadata.creators.all():
                 if(creator.organization is not None):
-                    organizations.append(creator.organization)
+                    organizations.append(creator.organization.lstrip())
         return organizations
 
     def prepare_publisher(self, obj):
@@ -258,7 +259,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return publisher
+                return str(publisher).lstrip()
             else:
                 return None
         else:
@@ -267,7 +268,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_creator_email(self, obj):
         """Return metadata emails if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [creator.email for creator in obj.metadata.creators.all()
+            return [creator.email.lstrip() for creator in obj.metadata.creators.all()
                     .exclude(email__isnull=True).exclude(email='')]
         else:
             return []
@@ -334,7 +335,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return resource coverage if exists, otherwise return empty array."""
         # TODO: reject empty coverages
         if hasattr(obj, 'metadata'):
-            return [coverage._value for coverage in obj.metadata.coverages.all()]
+            return [coverage._value.lstrip() for coverage in obj.metadata.coverages.all()]
         else:
             return []
 
@@ -345,7 +346,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values.
         """
         if hasattr(obj, 'metadata'):
-            return [coverage.type for coverage in obj.metadata.coverages.all()]
+            return [coverage.type.lstrip() for coverage in obj.metadata.coverages.all()]
         else:
             return []
 
@@ -362,6 +363,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 if coverage.type == 'point':
                     return float(coverage.value["east"])
                 # TODO: this returns the box center, not the extent
+                # TODO: probably better to call this something different.
                 elif coverage.type == 'box':
                     return (float(coverage.value["eastlimit"]) +
                             float(coverage.value["westlimit"])) / 2
@@ -497,35 +499,35 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [format.value for format in obj.metadata.formats.all()]
+            return [format.value.lstrip() for format in obj.metadata.formats.all()]
         else:
             return []
 
     def prepare_identifier(self, obj):
         """Return metadata identifiers if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [identifier.name for identifier in obj.metadata.identifiers.all()]
+            return [identifier.name.lstrip() for identifier in obj.metadata.identifiers.all()]
         else:
             return []
 
     def prepare_language(self, obj):
         """Return resource language if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
-            return obj.metadata.language.code
+            return obj.metadata.language.code.lstrip()
         else:
             return None
 
     def prepare_source(self, obj):
         """Return resource sources if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [source.derived_from for source in obj.metadata.sources.all()]
+            return [source.derived_from.lstrip() for source in obj.metadata.sources.all()]
         else:
             return []
 
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [relation.value for relation in obj.metadata.relations.all()]
+            return [relation.value.lstrip() for relation in obj.metadata.relations.all()]
         else:
             return []
 
@@ -535,7 +537,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
-        return [comment.comment for comment in obj.comments.all()]
+        return [comment.comment.lstrip() for comment in obj.comments.all()]
 
     def prepare_comments_count(self, obj):
         """Return count of resource comments."""
@@ -555,7 +557,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
                 name = owner.last_name + ', ' + owner.first_name
-                names.append(name)
+                names.append(name.lstrip())
         return names
 
     def prepare_owners_count(self, obj):
@@ -636,8 +638,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None:
-                    return field_info.fieldName
+                if field_info is not None and field_info.fieldName is not None:
+                    return field_info.fieldName.lstrip()
                 else:
                     return None
             else:
@@ -652,8 +654,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None:
-                    return field_info.fieldType
+                if field_info is not None and field_info.fieldType is not None:
+                    return field_info.fieldType.lstrip()
                 else:
                     return None
             else:
@@ -668,8 +670,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
-                if field_info is not None:
-                    return field_info.fieldTypeCode
+                if field_info is not None and field_info.fieldTypeCode is not None:
+                    return field_info.fieldTypeCode.lstrip()
                 else:
                     return None
             else:
@@ -685,13 +687,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name)
+                    variable_names.append(variable.name.lstrip())
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name)
+                    variable_names.append(variable.name.lstrip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_names.append(variable.variable_name)
+                    variable_names.append(variable.variable_name.lstrip())
         return variable_names
 
     def prepare_variable_type(self, obj):
@@ -702,13 +704,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.type)
+                    variable_types.append(variable.type.lstrip())
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.data_type)
+                    variable_types.append(variable.data_type.lstrip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_types.append(variable.variable_type)
+                    variable_types.append(variable.variable_type.lstrip())
         return variable_types
 
     def prepare_variable_shape(self, obj):
@@ -719,7 +721,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_shapes.append(variable.shape)
+                    if variable.shape is not None:
+                        variable_shapes.append(variable.shape.lstrip())
         return variable_shapes
 
     def prepare_variable_descriptive_name(self, obj):
@@ -730,7 +733,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_descriptive_names.append(variable.descriptive_name)
+                    if variable.descriptive_name is not None:
+                        variable_descriptive_names.append(variable.descriptive_name.lstrip())
         return variable_descriptive_names
 
     def prepare_variable_speciation(self, obj):
@@ -741,7 +745,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_speciations.append(variable.speciation)
+                    variable_speciations.append(variable.speciation.lstrip())
         return variable_speciations
 
     def prepare_site(self, obj):
@@ -752,10 +756,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for site in obj.metadata.sites.all():
-                    sites.append(site.name)
+                    sites.append(site.name.lstrip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for site in obj.metadata.sites:
-                    sites.append(site.site_name)
+                    sites.append(site.site_name.lstrip())
         return sites
 
     def prepare_method(self, obj):
@@ -766,10 +770,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for method in obj.metadata.methods.all():
-                    methods.append(method.description)
+                    methods.append(method.description.lstrip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for method in obj.metadata.methods:
-                    methods.append(method.method_description)
+                    methods.append(method.method_description.lstrip())
         return methods
 
     def prepare_quality_level(self, obj):
@@ -780,7 +784,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for quality_level in obj.metadata.quality_levels.all():
-                    quality_levels.append(quality_level.code)
+                    quality_levels.append(quality_level.code.lstrip())
         return quality_levels
 
     def prepare_data_source(self, obj):
@@ -791,7 +795,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for data_source in obj.metadata.datasources.all():
-                    data_sources.append(data_source.code)
+                    data_sources.append(data_source.code.lstrip())
         return data_sources
 
     def prepare_sample_medium(self, obj):
@@ -827,7 +831,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for time_series_result in obj.metadata.time_series_results:
-                    units_types.append(time_series_result.units_type)
+                    units_types.append(str(time_series_result.units_type).lstrip())
         return units_types
 
     def prepare_aggregation_statistics(self, obj):

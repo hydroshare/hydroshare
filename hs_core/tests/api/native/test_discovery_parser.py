@@ -40,10 +40,10 @@ class SimpleTest(TestCase):
                                           SQ(content="papaya")),
             '"a AND b" OR (c AND d)': str(SQ(content__exact="a AND b") |
                                           (SQ(content="c") & SQ(content="d"))),
-            'labels:"exp>20"': str(SQ(labels__exact="exp>20")),
-            'labels:"HP employee"': str(SQ(labels__exact="HP employee")),
-            'labels:"HP employee" OR something': str(SQ(labels__exact="HP employee") |
-                                                     SQ(content='something')),
+            'subject:"exp>20"': str(SQ(subject__exact="exp>20")),
+            'subject:"HP employee"': str(SQ(subject__exact="HP employee")),
+            'subject:"HP employee" OR something': str(SQ(subject__exact="HP employee") |
+                                                      SQ(content='something')),
 
         }
         parser = ParseSQ()
@@ -75,12 +75,12 @@ class SimpleTest(TestCase):
             "need -note": str(SQ(content="need") & ~SQ(content="note")),
             "need +note": str(SQ(content="need") & SQ(content="note")),
             "need+note": str(SQ(content="need+note")),
-            "iphone AND NOT category:10": str(SQ(content="iphone") & ~SQ(
-                category="10")),
-            "NOT category:10": str(~SQ(category="10")),
-            "category:10": str(SQ(category="10")),
-            "-category:10": str(~SQ(category="10")),
-            "category:-10": str(SQ(category="-10")),
+            "iphone AND NOT subject:10": str(SQ(content="iphone") & ~SQ(
+                subject="10")),
+            "NOT subject:10": str(~SQ(subject="10")),
+            "subject:10": str(SQ(subject="10")),
+            "-subject:10": str(~SQ(subject="10")),
+            "subject:-10": str(SQ(subject="-10")),
         }
         parser = ParseSQ()
 
