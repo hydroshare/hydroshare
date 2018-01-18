@@ -288,7 +288,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # IRODS PROXY USER DOES NOT HAVE PERMISSION TO SET USER TYPE AVU ON IT since only rodsadmin
         # can set up user type AVUs. As a result, use docker exec subprocess to set user type AVU
         # using rodsadmin for testing purpose
-        attname = self.user.username + '-quota'
+        attname = self.user.username + '-usage'
         test_qsize = '2000000000'  # 2GB
         # this quota size AVU will be set by real time iRODS quota usage update micro-services.
         # For testing, setting it programmatically to test the quota size will be picked up

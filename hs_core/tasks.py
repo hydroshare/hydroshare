@@ -290,7 +290,7 @@ def update_quota_usage_task(username):
         QuotaMessage.objects.create()
     qmsg = QuotaMessage.objects.first()
 
-    attname = username + '-quota'
+    attname = username + '-usage'
     # get quota size for the user in iRODS data zone
     try:
         istorage = IrodsStorage()
