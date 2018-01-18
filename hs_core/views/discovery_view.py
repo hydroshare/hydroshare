@@ -76,5 +76,5 @@ class DiscoveryView(FacetedSearchView):
             qs = SearchQuerySet().all()
 
         for field in self.facet_fields:
-            qs = qs.facet(field, sort='index', limit=1000)
+            qs = qs.facet(field, limit=100)
         return qs

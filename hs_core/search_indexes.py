@@ -10,9 +10,17 @@ from django.db.models import Q
 from datetime import datetime
 from nameparser import HumanName
 import probablepeople
-
+from string import maketrans
+import logging
 # # SOLR extension needs to be installed for this to work
 # from haystack.utils.geo import Point
+
+
+def remove_whitespace(thing):
+    intab = ""
+    outtab = ""
+    trantab = maketrans(intab, outtab)
+    return str(thing).translate(trantab, " \t\r\n")
 
 
 def normalize_name(name):
@@ -30,28 +38,28 @@ def normalize_name(name):
     `nameparser`.
 
     """
-    sname = name.lstrip().rstrip()  # remove spaces
+    sname = name.strip()  # remove spaces
     try:
         _, type = probablepeople.tag(sname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return sname
+        return sname.capitalize()
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
 
     # treat anything else as a human name
     nameparts = HumanName(sname)
-    normalized = nameparts.last
+    normalized = nameparts.last.capitalize()
     if nameparts.suffix:
         normalized = normalized + ' ' + nameparts.suffix
     normalized = normalized + ','
     if nameparts.title:
         normalized = normalized + ' ' + nameparts.title
     if nameparts.first:
-        normalized = normalized + ' ' + nameparts.first
+        normalized = normalized + ' ' + nameparts.first.capitalize()
     if nameparts.middle:
-        normalized = ' ' + normalized + ' ' + nameparts.middle
-    return normalized
+        normalized = ' ' + normalized + ' ' + nameparts.middle.capitalize()
+    return normalized.strip()
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -220,12 +228,16 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """
         Return metadata contributors if they exist, otherwise return empty array.
 
-        This field can have multiple values
+        This field can have multiple values. Contributors include creators.
         """
         if hasattr(obj, 'metadata'):
-            return [normalize_name(contributor.name)
-                    for contributor in obj.metadata.contributors.all()
-                    .exclude(name__isnull=True).exclude(name='')]
+            output1 = [normalize_name(creator.name)
+                       for creator in obj.metadata.creators.all()
+                       .exclude(name__isnull=True).exclude(name='')]
+            output2 = [normalize_name(contributor.name)
+                       for contributor in obj.metadata.contributors.all()
+                       .exclude(name__isnull=True).exclude(name='')]
+            return list(set(output1 + output2))  # eliminate duplicates
         else:
             return []
 
@@ -236,7 +248,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values.
         """
         if hasattr(obj, 'metadata'):
-            return [subject.value.lstrip() for subject in obj.metadata.subjects.all()
+            return [subject.value.strip() for subject in obj.metadata.subjects.all()
                     .exclude(value__isnull=True)]
         else:
             return []
@@ -249,7 +261,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             for creator in obj.metadata.creators.all():
                 if(creator.organization is not None):
-                    organizations.append(creator.organization.lstrip())
+                    organizations.append(creator.organization.strip())
         return organizations
 
     def prepare_publisher(self, obj):
@@ -259,7 +271,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             publisher = obj.metadata.publisher
             if publisher is not None:
-                return str(publisher).lstrip()
+                return unicode(publisher).lstrip()
             else:
                 return None
         else:
@@ -268,7 +280,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_creator_email(self, obj):
         """Return metadata emails if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [creator.email.lstrip() for creator in obj.metadata.creators.all()
+            return [creator.email.strip() for creator in obj.metadata.creators.all()
                     .exclude(email__isnull=True).exclude(email='')]
         else:
             return []
@@ -335,7 +347,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         """Return resource coverage if exists, otherwise return empty array."""
         # TODO: reject empty coverages
         if hasattr(obj, 'metadata'):
-            return [coverage._value.lstrip() for coverage in obj.metadata.coverages.all()]
+            return [coverage._value.strip() for coverage in obj.metadata.coverages.all()]
         else:
             return []
 
@@ -346,7 +358,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values.
         """
         if hasattr(obj, 'metadata'):
-            return [coverage.type.lstrip() for coverage in obj.metadata.coverages.all()]
+            return [coverage.type.strip() for coverage in obj.metadata.coverages.all()]
         else:
             return []
 
@@ -443,7 +455,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     else:
                         parsed_date = clean_date.split("-")
                         start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                    start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
+                    start_date = remove_whitespace(start_date)  # no embedded spaces
+                    try:
+                        start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
+                    except ValueError:
+                        logger = logging.getLogger('django')
+                        logger.error("invalid start date {} in resource {}".format(obj.short_id,
+                                                                                   start_date))
+                        return None
                     return start_date_object
         else:
             return None
@@ -463,7 +482,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     else:
                         parsed_date = clean_date.split("-")
                         end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
-                    end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
+                    end_date = remove_whitespace(end_date)  # no embedded spaces
+                    try:
+                        end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
+                    except ValueError:
+                        logger = logging.getLogger('django')
+                        logger.error("invalid end date {} in resource {}".format(end_date,
+                                                                                 obj.short_id))
+                        return None
                     return end_date_object
         else:
             return None
@@ -499,35 +525,35 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_format(self, obj):
         """Return metadata formats if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [format.value.lstrip() for format in obj.metadata.formats.all()]
+            return [format.value.strip() for format in obj.metadata.formats.all()]
         else:
             return []
 
     def prepare_identifier(self, obj):
         """Return metadata identifiers if metadata exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [identifier.name.lstrip() for identifier in obj.metadata.identifiers.all()]
+            return [identifier.name.strip() for identifier in obj.metadata.identifiers.all()]
         else:
             return []
 
     def prepare_language(self, obj):
         """Return resource language if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
-            return obj.metadata.language.code.lstrip()
+            return obj.metadata.language.code.strip()
         else:
             return None
 
     def prepare_source(self, obj):
         """Return resource sources if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [source.derived_from.lstrip() for source in obj.metadata.sources.all()]
+            return [source.derived_from.strip() for source in obj.metadata.sources.all()]
         else:
             return []
 
     def prepare_relation(self, obj):
         """Return resource relations if exists, otherwise return empty array."""
         if hasattr(obj, 'metadata'):
-            return [relation.value.lstrip() for relation in obj.metadata.relations.all()]
+            return [relation.value.strip() for relation in obj.metadata.relations.all()]
         else:
             return []
 
@@ -537,7 +563,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_comment(self, obj):
         """Return list of all comments on resource."""
-        return [comment.comment.lstrip() for comment in obj.comments.all()]
+        return [comment.comment.strip() for comment in obj.comments.all()]
 
     def prepare_comments_count(self, obj):
         """Return count of resource comments."""
@@ -557,7 +583,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
                 name = owner.last_name + ', ' + owner.first_name
-                names.append(name.lstrip())
+                names.append(name.strip())
         return names
 
     def prepare_owners_count(self, obj):
@@ -639,7 +665,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None and field_info.fieldName is not None:
-                    return field_info.fieldName.lstrip()
+                    return field_info.fieldName.strip()
                 else:
                     return None
             else:
@@ -655,7 +681,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None and field_info.fieldType is not None:
-                    return field_info.fieldType.lstrip()
+                    return field_info.fieldType.strip()
                 else:
                     return None
             else:
@@ -671,7 +697,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if isinstance(obj.metadata, GeographicFeatureMetaData):
                 field_info = obj.metadata.fieldinformations.all().first()
                 if field_info is not None and field_info.fieldTypeCode is not None:
-                    return field_info.fieldTypeCode.lstrip()
+                    return field_info.fieldTypeCode.strip()
                 else:
                     return None
             else:
@@ -687,13 +713,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.lstrip())
+                    variable_names.append(variable.name.strip())
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    variable_names.append(variable.name.lstrip())
+                    variable_names.append(variable.name.strip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_names.append(variable.variable_name.lstrip())
+                    variable_names.append(variable.variable_name.strip())
         return variable_names
 
     def prepare_variable_type(self, obj):
@@ -704,13 +730,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.type.lstrip())
+                    variable_types.append(variable.type.strip())
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    variable_types.append(variable.data_type.lstrip())
+                    variable_types.append(variable.data_type.strip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_types.append(variable.variable_type.lstrip())
+                    variable_types.append(variable.variable_type.strip())
         return variable_types
 
     def prepare_variable_shape(self, obj):
@@ -722,7 +748,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
                     if variable.shape is not None:
-                        variable_shapes.append(variable.shape.lstrip())
+                        variable_shapes.append(variable.shape.strip())
         return variable_shapes
 
     def prepare_variable_descriptive_name(self, obj):
@@ -734,7 +760,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             if isinstance(obj.metadata, NetcdfMetaData):
                 for variable in obj.metadata.variables.all():
                     if variable.descriptive_name is not None:
-                        variable_descriptive_names.append(variable.descriptive_name.lstrip())
+                        variable_descriptive_names.append(variable.descriptive_name.strip())
         return variable_descriptive_names
 
     def prepare_variable_speciation(self, obj):
@@ -745,7 +771,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for variable in obj.metadata.variables:
-                    variable_speciations.append(variable.speciation.lstrip())
+                    if variable.speciation is not None:
+                        variable_speciations.append(variable.speciation.strip())
         return variable_speciations
 
     def prepare_site(self, obj):
@@ -756,10 +783,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for site in obj.metadata.sites.all():
-                    sites.append(site.name.lstrip())
+                    if site.name is not None and site.name != '':
+                        sites.append(site.name.strip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for site in obj.metadata.sites:
-                    sites.append(site.site_name.lstrip())
+                    if site.site_name is not None and site.site_name != '':
+                        sites.append(site.site_name.strip())
         return sites
 
     def prepare_method(self, obj):
@@ -770,10 +799,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for method in obj.metadata.methods.all():
-                    methods.append(method.description.lstrip())
+                    if method.description is not None:
+                        methods.append(method.description.strip())
             elif isinstance(obj.metadata, TimeSeriesMetaData):
                 for method in obj.metadata.methods:
-                    methods.append(method.method_description.lstrip())
+                    if method.method_description is not None:
+                        methods.append(method.method_description.strip())
         return methods
 
     def prepare_quality_level(self, obj):
@@ -784,7 +815,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for quality_level in obj.metadata.quality_levels.all():
-                    quality_levels.append(quality_level.code.lstrip())
+                    if quality_level.code is not None:
+                        quality_levels.append(quality_level.code.strip())
         return quality_levels
 
     def prepare_data_source(self, obj):
@@ -795,7 +827,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, RefTSMetadata):
                 for data_source in obj.metadata.datasources.all():
-                    data_sources.append(data_source.code.lstrip())
+                    if data_source.code is not None:
+                        data_sources.append(data_source.code.strip())
         return data_sources
 
     def prepare_sample_medium(self, obj):
@@ -806,11 +839,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for time_series_result in obj.metadata.time_series_results:
-                    sample_mediums.append(time_series_result.sample_medium)
+                    if time_series_result.sample_medium is not None:
+                        sample_mediums.append(time_series_result.sample_medium)
             elif isinstance(obj.metadata, RefTSMetadata):
                 for variable in obj.metadata.variables.all():
-                    sample_mediums.append(variable.sample_medium)
-        return sample_mediums
+                    if variable.sample_medium is not None:
+                        sample_mediums.append(variable.sample_medium)
+        return list(set(sample_mediums))
 
     def prepare_units(self, obj):
         """
@@ -820,7 +855,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for time_series_result in obj.metadata.time_series_results:
-                    units_names.append(time_series_result.units_name)
+                    if time_series_result.units_name is not None:
+                        units_names.append(time_series_result.units_name)
         return units_names
 
     def prepare_units_type(self, obj):
@@ -831,7 +867,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for time_series_result in obj.metadata.time_series_results:
-                    units_types.append(str(time_series_result.units_type).lstrip())
+                    if time_series_result.units_type is not None:
+                        units_types.append(time_series_result.units_type.strip())
         return units_types
 
     def prepare_aggregation_statistics(self, obj):
@@ -842,7 +879,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             if isinstance(obj.metadata, TimeSeriesMetaData):
                 for time_series_result in obj.metadata.time_series_results:
-                    aggregation_statistics.append(time_series_result.aggregation_statistics)
+                    if time_series_result.aggregation_statistics is not None:
+                        aggregation_statistics.append(time_series_result.aggregation_statistics)
         return aggregation_statistics
 
     def prepare_absolute_url(self, obj):
