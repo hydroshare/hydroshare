@@ -729,8 +729,9 @@ var formGeoParameters = function() {
 var formDateParameters = function() {
     var start_date = $("#id_start_date").val();
     var end_date = $("#id_end_date").val();
-    if start_date <= end_date: 
+    if (start_date <= end_date) {  
         return "&start_date="+start_date+"&end_date="+end_date;
+    }
 };
 
 var formOrderParameters = function() {
