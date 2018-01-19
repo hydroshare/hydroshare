@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from theme.models import UserQuota
 from hs_core.tasks import update_quota_usage_task
 
+
 class Command(BaseCommand):
     help = "Update used storage space in UserQuota table for all users in HydroShare by reading " \
            "quota usage AVUs for users which are updated by iRODS quota update micro-services." \
