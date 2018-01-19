@@ -4,7 +4,7 @@ from django import forms
 from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, UnhandledException, \
     FieldNotKnownException
 
-FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type', 
+FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type',
                   'subject', 'variable', 'sample_medium', 'availability']
 
 
