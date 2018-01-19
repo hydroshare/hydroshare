@@ -705,8 +705,8 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['creator', 'subject', 'resource_type', 'owner',
-        'variable', 'sample_medium', 'units', 'availability'];
+    var faceted_fields = ['author', 'contributor', 'owner', 'resource_type', 'subject', 
+        'variable', 'sample_medium', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
         var faceting_div = "faceting-"+field;
@@ -801,9 +801,7 @@ function initializeTable() {
     var TITLE_COL = 1;
     var OWNER_COL = 2;
     var DATE_CREATED_COL = 3;
-    var DATE_CREATED_SORT_COL = 4;
-    var LAST_MODIFIED_COL = 5;
-    var LAST_MODIF_SORT_COL = 6;
+    var LAST_MODIFIED_COL = 4;
 
     var colDefs = [
         {
@@ -818,14 +816,6 @@ function initializeTable() {
             "targets": [LAST_MODIFIED_COL],     // Last modified
             "iDataSort": LAST_MODIF_SORT_COL
         },
-        {
-            "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
-            "visible": false
-        },
-        {
-            "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
-            "visible": false
-        }
     ];
 
     $('#items-discovered').DataTable({
@@ -876,7 +866,7 @@ $(document).ready(function () {
 
     $("title").text("Discover | HydroShare");   // Set browser tab title
 
-    initializeTable();
+    // initializeTable();
     popCheckboxes();
 
     $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {

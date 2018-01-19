@@ -41,8 +41,8 @@
                                     <a data-toggle="collapse" href="#{{ key }}">
                                         {% if key == 'author'%}
                                             &nbsp; Filter by First Author
-                                        {% elif key == 'creator'%}
-                                            &nbsp; Filter by Any Author
+                                        {% elif key == 'contributor'%}
+                                            &nbsp; Filter by Contributor
                                         {% elif key ==  'subject'%}
                                             &nbsp; Filter by Subject
                                         {% elif key ==  'resource_type'%}
@@ -53,8 +53,6 @@
                                             &nbsp; Filter by Variable
                                         {% elif key ==  'sample_medium'%}
                                             &nbsp; Filter by Sample Medium
-                                        {% elif key ==  'units'%}
-                                            &nbsp; Filter by Units Name
                                         {% elif key ==  'availability'%}
                                             &nbsp; Filter by Availability
 
@@ -193,7 +191,12 @@
                                         <td>{{ result.get_stored_fields.author }}</td>
                                     {% endif %}
                                     <td>{{ result.get_stored_fields.created|date:"M d, Y" }} at {{ result.get_stored_fields.created|time }}</td>
+                                    {% if result.get_stored_fields.modified %}
                                     <td>{{ result.get_stored_fields.modified|date:"M d, Y" }} at {{ result.get_stored_fields.modified|time }}</td>
+                                    {% else %} 
+                                    <td></td> 
+                                    {% endif %} 
+                                    
                                 </tr>
                             {% endfor %}
                         </tbody>
