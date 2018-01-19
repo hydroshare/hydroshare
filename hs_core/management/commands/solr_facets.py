@@ -1,5 +1,6 @@
 """
 This prints the state of a facet query.
+It is used for debugging the faceting system. 
 """
 
 from django.core.management.base import BaseCommand
