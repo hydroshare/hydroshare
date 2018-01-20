@@ -29,6 +29,7 @@ OP = {
 # fields known to SOLR that are reasonably searchable.
 # This omits unindexed fields and JSON fields.
 KNOWN_FIELDS = [
+    'author', 
     'short_id',
     'doi',
     'title',
@@ -221,5 +222,6 @@ class ParseSQ(object):
                     self.query = self.query[1:]
         except:
             print self.sq, self.query, self.current
-            raise UnhandledException(sys.exc_info())
+            # raise UnhandledException(sys.exc_info())
+            raise 
         return self.sq

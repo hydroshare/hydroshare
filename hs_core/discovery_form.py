@@ -104,7 +104,7 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
         author_sq = None
-        creator_sq = None
+        contributor_sq = None
         owner_sq = None
         subject_sq = None
         resource_type_sq = None
@@ -130,11 +130,11 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         author_sq.add(SQ(author=value), SQ.OR)
 
-                if "creator" in field:
-                    if creator_sq is None:
-                        creator_sq = SQ(creator=value)
+                if "contributor" in field:
+                    if contributor_sq is None:
+                        contributor_sq = SQ(contributor=value)
                     else:
-                        creator_sq.add(SQ(creator=value), SQ.OR)
+                        contributor_sq.add(SQ(contributor=value), SQ.OR)
 
                 elif "owner" in field:
                     if owner_sq is None:
@@ -172,19 +172,13 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
 
-                elif 'units' in field:
-                    if units_sq is None:
-                        units_sq = SQ(units=value)
-                    else:
-                        units_sq.add(SQ(units=value), SQ.OR)
-
                 else:
                     continue
 
         if author_sq is not None:
             sqs = sqs.filter(author_sq)
-        if creator_sq is not None:
-            sqs = sqs.filter(creator_sq)
+        if contributor_sq is not None:
+            sqs = sqs.filter(contributor_sq)
         if owner_sq is not None:
             sqs = sqs.filter(owner_sq)
         if subject_sq is not None:

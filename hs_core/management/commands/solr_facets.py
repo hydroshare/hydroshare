@@ -1,13 +1,12 @@
 """
 This prints the state of a facet query.
-It is used for debugging the faceting system. 
+It is used for debugging the faceting system.
 """
 
 from django.core.management.base import BaseCommand
 from hs_core.discovery_form import FACETED_FIELDS
 from haystack.query import SearchQuerySet
-import json
-from pprint import pprint 
+from pprint import pprint
 
 
 def debug_facets(facets):

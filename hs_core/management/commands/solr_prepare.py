@@ -1,7 +1,7 @@
 """
-This calls all preparation routines involved in creating SOLR records. 
-It is used to debug SOLR harvesting. If any of these routines fails on 
-any resource, all harvesting ceases. This has caused many bugs. 
+This calls all preparation routines involved in creating SOLR records.
+It is used to debug SOLR harvesting. If any of these routines fails on
+any resource, all harvesting ceases. This has caused many bugs.
 """
 
 from django.core.management.base import BaseCommand
