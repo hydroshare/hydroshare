@@ -55,7 +55,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
         iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type=" + logical_type + ">" + logical_type + "</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type='" + logical_type + "' data-logical-file-id='" + logical_file_id +  "'>" + logical_type + "</span>" +
         "<span class='fb-file-size' data-file-size=" + fileSize + ">" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
 
@@ -159,7 +159,17 @@ function updateSelectionMenuContext() {
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
-        flagDisableRemoveAggregation = true;
+        if (!selected.children('span').hasClass('fb-logical-file-type')){
+            flagDisableRemoveAggregation = true;
+        }
+        else {
+            var logicalFileType = selected.children('span.fb-logical-file-type').text();
+            // if the selected file is part of the RefTimeseriesLogical file (aggregation) we
+            // want the remove aggregation option to show up
+            if(logicalFileType !== 'RefTimeseriesLogicalFile'){
+                flagDisableRemoveAggregation = true;
+            }
+        }
     }
 
     if (selected.hasClass("fb-folder")) {
@@ -209,12 +219,8 @@ function updateSelectionMenuContext() {
                 flagDisableDelete = true;
             }
 
-            flagDisableRename = true;
             flagDisableCut = true;
             flagDisablePaste = true;
-        }
-        else if(logicalFileType === "RefTimeseriesLogicalFile") {
-            flagDisableRename = true;
         }
     }
 
@@ -222,6 +228,7 @@ function updateSelectionMenuContext() {
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableCreateFolder = true;
+            flagDisableRename = true;
         }
     // set Create folder toolbar option
     $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
