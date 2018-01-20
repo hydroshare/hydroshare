@@ -16,7 +16,7 @@ from mezzanine.pages.models import Page
 from mezzanine.utils.models import upload_to
 
 
-DEFAULT_COPYRIGHT = '&copy {% now "Y" %} {{ settings.SITE_TITLE }}'
+DEFAULT_COPYRIGHT = '&copy; {% now "Y" %} {{ settings.SITE_TITLE }}'
 
 
 class SiteConfiguration(SiteRelated):
