@@ -18,18 +18,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if len(options['queries']) > 0:  # an array of resource short_id to check.
-            for query in options['queries']:
-                sqs = SearchQuerySet().all()
-                parser = ParseSQ()
-                parsed = parser.parse(query)
-                sqs = sqs.filter(parsed)
-                for result in list(sqs):
-                    stored = result.get_stored_fields()
-                    print("  {}: {} {} {} {}".format(stored['short_id'],
-                                                     stored['title'],
-                                                     stored['author'],
-                                                     stored['created'],
-                                                     stored['modified']))
+            query = ' '.join(options['queries'])
+            sqs = SearchQuerySet().all()
+            parser = ParseSQ()
+            parsed = parser.parse(query)
+            sqs = sqs.filter(parsed)
+            print("QUERY '{}' PARSED {}".format(query, str(parsed)))
+            for result in list(sqs):
+                stored = result.get_stored_fields()
+                print("  {}: {} {} {} {}".format(stored['short_id'],
+                                                 stored['title'],
+                                                 stored['author'],
+                                                 stored['created'],
+                                                 stored['modified']))
 
         else:
             print("no queries to try")
+            query = 'author:"Tarboton, David"'
+            parser = ParseSQ()
+            parsed = parser.parse(query)
+            print("QUERY '{}' PARSED {}".format(query, str(parsed)))
