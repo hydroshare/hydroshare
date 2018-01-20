@@ -145,7 +145,13 @@ function updateSelectionMenuContext() {
         flagDisableSetGeoRasterFileType = true;
         flagDisableSetGeoFeatureFileType = true;
         flagDisableSetTimeseriesFileType = true;
-
+        // Multiple folder deletion is not allowed for composite resource
+        // to avoid race condition that can occur with logical file objects especially
+        // if a folder has many files
+        var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
+        if(resourceType === 'Composite Resource' && foldersSelected.length == 1) {
+            flagDisableDelete = false;
+        }
         $("#fb-download-help").toggleClass("hidden", true);
     }
 
@@ -193,8 +199,16 @@ function updateSelectionMenuContext() {
         if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "") {
             flagDisableSetTimeseriesFileType = true;
         }
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            flagDisableDelete = true;
+        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+            logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
+            var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
+            if(foldersSelected.length == 1) {
+                flagDisableDelete = false;
+            }
+            else {
+                flagDisableDelete = true;
+            }
+
             flagDisableRename = true;
             flagDisableCut = true;
             flagDisablePaste = true;
@@ -204,11 +218,12 @@ function updateSelectionMenuContext() {
         }
     }
 
-    var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" || logicalFileType === "GeoFeatureLogicalFile") {
+    var logicalFileType = $("#fb-files-container li.fb-file").children('span.fb-logical-file-type').attr("data-logical-file-type");
+    if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+        logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableCreateFolder = true;
         }
-    // Show Create folder toolbar option
+    // set Create folder toolbar option
     $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
 
     var menu = $("#right-click-menu");
@@ -272,6 +287,9 @@ function updateSelectionMenuContext() {
     menu.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
     menu2.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
     $("#fb-paste").toggleClass("disabled", flagDisablePaste);
+
+    // set create folder right click menu option
+    menu2.children("li[data-menu-name='new-folder']").toggleClass("disabled", flagDisableCreateFolder);
 
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
@@ -829,9 +847,13 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
         var logicalFileType = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
-        if (logicalFileType === "GeoRasterLogicalFile"){
+        if (logicalFileType.length > 0){
             flagDisableCreateFolder = true;
         }
+        else {
+            flagDisableCreateFolder = false;
+        }
+
         // Set Create folder toolbar option
         $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
     });
