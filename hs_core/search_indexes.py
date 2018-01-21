@@ -576,7 +576,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return []
 
-   # TODO: should utilize name from user profile rather than from User field
+    # TODO: should utilize name from user profile rather than from User field
     def prepare_owner(self, obj):
         """Return list of names of resource owners."""
         names = []

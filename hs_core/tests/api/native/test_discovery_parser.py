@@ -32,12 +32,12 @@ class SimpleTest(TestCase):
             # "need note ?????": str(SQ(content="need") & SQ(content="note") &
             #                        SQ(content=u"?") & SQ(content=u"?") & SQ(content=u"?") &
             #                        SQ(content=u"?") & SQ(content=u"?")),
-            "need note NOT used": str(SQ(content="need") & SQ(content="note") &
-                                      ~SQ(content="used")),
+            "need note NOT used": str(SQ(content="need") &
+                                      SQ(content="note") & ~ SQ(content="used")),
             "(a AND b) OR (c AND d)": str((SQ(content="a") & SQ(content="b")) |
                                           (SQ(content="c") & SQ(content="d"))),
             "a AND b OR (c AND d)": str(SQ(content="a") & SQ(content="b") |
-                                       (SQ(content="c") & SQ(content="d"))),
+                                        (SQ(content="c") & SQ(content="d"))),
             '"a AND b" OR "(c AND d)"': str(SQ(content__exact="a AND b") |
                                             SQ(content__exact="(c AND d)")),
             '"notes done" OR papaya': str(SQ(content__exact="notes done") |
