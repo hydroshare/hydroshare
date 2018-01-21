@@ -3043,9 +3043,11 @@ class ResourceFile(ResourceFileIRODSMixin):
          file type aggregation (logical file), otherwise None.
 
          :param resource: An instance of CompositeResource
-         :param folder: Resource folder for which the file type aggregation object to be retrieved
+         :param folder: Resource file folder (full folder path starting with resource id) for which
+         the file type aggregation object to be retrieved
         """
-        files_in_folder = cls.list_folder(resource, folder)
+        files_in_folder = [res_file for res_file in resource.files.all()
+                           if res_file.storage_path == os.path.join(folder, res_file.file_name)]
         for fl in files_in_folder:
             if fl.has_logical_file:
                 return fl.logical_file
