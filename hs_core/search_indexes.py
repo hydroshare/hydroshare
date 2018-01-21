@@ -87,14 +87,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     rating = indexes.IntegerField(model_attr='rating_sum')
     coverage = indexes.MultiValueField()
     coverage_type = indexes.MultiValueField()
-    coverage_east = indexes.FloatField(null=True)
-    coverage_north = indexes.FloatField(null=True)
-    coverage_northlimit = indexes.FloatField(null=True)
-    coverage_eastlimit = indexes.FloatField(null=True)
-    coverage_southlimit = indexes.FloatField(null=True)
-    coverage_westlimit = indexes.FloatField(null=True)
-    coverage_start_date = indexes.DateField(null=True)
-    coverage_end_date = indexes.DateField(null=True)
+    east = indexes.FloatField(null=True)
+    north = indexes.FloatField(null=True)
+    northlimit = indexes.FloatField(null=True)
+    eastlimit = indexes.FloatField(null=True)
+    southlimit = indexes.FloatField(null=True)
+    westlimit = indexes.FloatField(null=True)
+    start_date = indexes.DateField(null=True)
+    end_date = indexes.DateField(null=True)
 
     # # TODO: SOLR extension needs to be installed for these to work
     # coverage_point = indexes.LocationField(null=True)
@@ -368,7 +368,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # See http://django-haystack.readthedocs.io/en/v2.6.0/spatial.html
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_east(self, obj):
+    def prepare_east(self, obj):
         """Return resource coverage east bound if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
@@ -383,7 +383,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_north(self, obj):
+    def prepare_north(self, obj):
         """Return resource coverage north bound if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
@@ -397,7 +397,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_northlimit(self, obj):
+    def prepare_northlimit(self, obj):
         """Return resource coverage north limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
@@ -408,7 +408,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_eastlimit(self, obj):
+    def prepare_eastlimit(self, obj):
         """Return resource coverage east limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
@@ -419,7 +419,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_southlimit(self, obj):
+    def prepare_southlimit(self, obj):
         """Return resource coverage south limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
@@ -430,7 +430,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return None
 
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_westlimit(self, obj):
+    def prepare_westlimit(self, obj):
         """Return resource coverage west limit if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             # TODO: does not index properly if there are multiple coverages of the same type.
@@ -443,7 +443,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: time coverages do not specify timezone, and timezone support is active.
     # TODO: Why aren't time coverages specified as Django DateTime objects?
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_start_date(self, obj):
+    def prepare_start_date(self, obj):
         """Return resource coverage start date if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
@@ -470,7 +470,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # TODO: time coverages do not specify timezone, and timezone support is active.
     # TODO: Why aren't time coverages specified as Django DateTime objects?
     # TODO: If there are multiple coverage objects with the same type, only first is returned.
-    def prepare_coverage_end_date(self, obj):
+    def prepare_end_date(self, obj):
         """Return resource coverage end date if exists, otherwise return None."""
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():

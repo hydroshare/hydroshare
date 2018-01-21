@@ -9,7 +9,11 @@ Test common search query syntax.
 
 from unittest import TestCase
 from haystack.query import SQ
-from hs_core.discovery_parser import ParseSQ
+from hs_core.discovery_parser import ParseSQ, \
+    FieldNotRecognizedError, \
+    MalformedDateError, \
+    InequalityNotAllowedError, \
+    MatchingBracketsNotFoundError
 
 
 class SimpleTest(TestCase):
@@ -17,7 +21,7 @@ class SimpleTest(TestCase):
     def setUp(self):
         pass
 
-    def test_parse(self):
+    def test_basic_parse(self):
         testcase = {
             "note": str(SQ(content="note")),
             '"need note"': str(SQ(content__exact="need note")),
@@ -83,11 +87,57 @@ class SimpleTest(TestCase):
             "subject:-10": str(SQ(subject="-10")),
         }
         parser = ParseSQ()
-
         for case in testcase.keys():
             self.assertEqual(str(parser.parse(case)), testcase[case])
 
+    def test_dates(self):
+        testcase = {
+            "created:2017-05-02": str(SQ(created='2017-05-02T00:00:00Z')),
+            "created:2017-05": str(SQ(created='2017-05-01T00:00:00Z')),
+            "created:2017": str(SQ(created='2017-01-01T00:00:00Z')),
+            "modified:2017-05-02": str(SQ(modified='2017-05-02T00:00:00Z')),
+            "modified:2017-05": str(SQ(modified='2017-05-01T00:00:00Z')),
+            "modified:2017": str(SQ(modified='2017-01-01T00:00:00Z')),
+            "start_date:2017-05-02": str(SQ(start_date='2017-05-02T00:00:00Z')),
+            "start_date:2017-05": str(SQ(start_date='2017-05-01T00:00:00Z')),
+            "start_date:2017": str(SQ(start_date='2017-01-01T00:00:00Z')),
+            "end_date:2017-05-02": str(SQ(end_date='2017-05-02T00:00:00Z')),
+            "end_date:2017-05": str(SQ(end_date='2017-05-01T00:00:00Z')),
+            "end_date:2017": str(SQ(end_date='2017-01-01T00:00:00Z')),
+        }
+        parser = ParseSQ()
+        for case in testcase.keys():
+            self.assertEqual(str(parser.parse(case)), testcase[case])
 
-# def main():
-#     suite = TestLoader().loadTestsFromTestCase(SimpleTest)
-#     TextTestRunner(verbosity=2).run(suite)
+    def test_inequalities(self):
+        testcase = {
+            "north:<=50.0": str(SQ(north__lte='50.0')),
+            "north:<50.0": str(SQ(north__lt='50.0')),
+            "north:>=50.0": str(SQ(north__gte='50.0')),
+            "north:>50.0": str(SQ(north__gt='50.0')),
+            "east:<=50.0": str(SQ(east__lte='50.0')),
+            "east:<50.0": str(SQ(east__lt='50.0')),
+            "east:>=50.0": str(SQ(east__gte='50.0')),
+            "east:>50.0": str(SQ(east__gt='50.0')),
+            "created:>2017-05-02": str(SQ(created__gt='2017-05-02T00:00:00Z')),
+            "created:>=2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z')),
+            "created:<2017-05-02": str(SQ(created__lt='2017-05-02T00:00:00Z')),
+            "created:<=2017-05-02": str(SQ(created__lte='2017-05-02T00:00:00Z')),
+        }
+        parser = ParseSQ()
+        for case in testcase.keys():
+            self.assertEqual(str(parser.parse(case)), testcase[case])
+
+    def test_exceptions(self):
+        testcase = {
+            "foo:bar": FieldNotRecognizedError,
+            "created:20170": MalformedDateError,
+            "created:2017-30": MalformedDateError,
+            "created:2017-12-64": MalformedDateError,
+            "abstract:>foo": InequalityNotAllowedError,
+            "(abstract:something": MatchingBracketsNotFoundError
+        }
+        parser = ParseSQ()
+        for case in testcase.keys():
+            with self.assertRaises(testcase[case]):
+                parser.parse(case)

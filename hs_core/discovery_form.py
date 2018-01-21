@@ -1,8 +1,8 @@
 from haystack.forms import FacetedSearchForm
 from haystack.query import SQ
 from django import forms
-from hs_core.discovery_parser import ParseSQ, NoMatchingBracketsFound, UnhandledException, \
-    FieldNotKnownException
+from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
+    FieldNotRecognizedError, InequalityNotAllowedError
 
 FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type',
                   'subject', 'variable', 'sample_medium', 'availability']
@@ -47,35 +47,39 @@ class DiscoveryForm(FacetedSearchForm):
             try:
                 parser = ParseSQ()
                 parsed = parser.parse(cdata)
-                sqs = sqs.filter(parsed)
-            except UnhandledException:  # as e:
+            except ValueError:  # as e:
                 sqs = self.searchqueryset.none()
-                # error = "syntax error: {}".format(e.value)
-            except NoMatchingBracketsFound:  # as e:
-                sqs = self.searchqueryset.none()
-                # error = e.value
-            except FieldNotKnownException:  # as e:
+                # error = "value error: {}".format(e.value)
+            except MatchingBracketsNotFoundError:  # as e:
                 sqs = self.searchqueryset.none()
                 # error = e.value
+            except FieldNotRecognizedError:  # as e:
+                sqs = self.searchqueryset.none()
+                # error = e.value
+            except InequalityNotAllowedError:  # as e:
+                sqs = self.searchqueryset.none()
+                # error = e.value
+            # TODO: report errors somewhere
+            sqs = sqs.filter(parsed)
 
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
             if float(self.cleaned_data['NElng']) > float(self.cleaned_data['SWlng']):
-                geo_sq = SQ(coverage_east__lte=float(self.cleaned_data['NElng']))
-                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
+                geo_sq = SQ(east__lte=float(self.cleaned_data['NElng']))
+                geo_sq.add(SQ(east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
             else:
-                geo_sq = SQ(coverage_east__gte=float(self.cleaned_data['SWlng']))
-                geo_sq.add(SQ(coverage_east__lte=float(180)), SQ.OR)
-                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
-                geo_sq.add(SQ(coverage_east__gte=float(-180)), SQ.AND)
+                geo_sq = SQ(east__gte=float(self.cleaned_data['SWlng']))
+                geo_sq.add(SQ(east__lte=float(180)), SQ.OR)
+                geo_sq.add(SQ(east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
+                geo_sq.add(SQ(east__gte=float(-180)), SQ.AND)
 
         if self.cleaned_data['NElat'] and self.cleaned_data['SWlat']:
             # latitude might be specified without longitude
             if geo_sq is None:
-                geo_sq = SQ(coverage_north__lte=float(self.cleaned_data['NElat']))
+                geo_sq = SQ(north__lte=float(self.cleaned_data['NElat']))
             else:
-                geo_sq.add(SQ(coverage_north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
-            geo_sq.add(SQ(coverage_north__gte=float(self.cleaned_data['SWlat'])), SQ.AND)
+                geo_sq.add(SQ(north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
+            geo_sq.add(SQ(north__gte=float(self.cleaned_data['SWlat'])), SQ.AND)
 
         if geo_sq is not None:
             sqs = sqs.filter(geo_sq)
@@ -89,16 +93,13 @@ class DiscoveryForm(FacetedSearchForm):
         # AND
         # cs < e < ce OR e > ce => cs < e
         if start_date and end_date:
-            sqs = sqs.add(SQ(coverage_end_date__gte=start_date) &
-                          SQ(coverage_start_date__lte=end_date))
+            sqs = sqs.filter(SQ(end_date__gte=start_date) &
+                             SQ(start_date__lte=end_date))
         elif start_date:
-            sqs = sqs.add(SQ(coverage_end_date__gte=start_date))
-        elif end_date:
-            sqs = sqs.add(SQ(coverage_start_date__lte=end_date))
+            sqs = sqs.filter(SQ(end_date__gte=start_date))
 
-        # Check to see if an end_date was chosen.
-        if self.cleaned_data['end_date']:
-            sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
+        elif end_date:
+            sqs = sqs.filter(SQ(start_date__lte=end_date))
 
         if self.cleaned_data['coverage_type']:
             sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
