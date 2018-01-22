@@ -16,7 +16,7 @@ function getFolderTemplateInstance(folderName, folderAgrregationType, folderAggr
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
                 "<span class='fb-file-name'>" + folderName + "</span>" +
                 "<span class='fb-file-type'>File Folder</span>" +
-                "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID +  "'>" + folderAgrregationType + "</span>" +
+                "<span class='fb-logical-file-type' data-logical-file-type='" + folderAgrregationType + "' data-logical-file-id='" + folderAggregationID +  "'>" + folderAggregationName + "</span>" +
                 "<span class='fb-file-size'></span>" +
             "</li>"
     }
@@ -55,7 +55,7 @@ function getFileTemplateInstance(fileName, fileType, aggregation_name, logical_t
         iconTemplate +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
-        "<span class='fb-logical-file-type' data-logical-file-type='" + logical_type + "' data-logical-file-id='" + logical_file_id +  "'>" + logical_type + "</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type='" + logical_type + "' data-logical-file-id='" + logical_file_id +  "'>" + aggregation_name + "</span>" +
         "<span class='fb-file-size' data-file-size=" + fileSize + ">" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
 
@@ -218,7 +218,6 @@ function updateSelectionMenuContext() {
             else {
                 flagDisableDelete = true;
             }
-
             flagDisableCut = true;
             flagDisablePaste = true;
         }
@@ -229,6 +228,8 @@ function updateSelectionMenuContext() {
         logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
             flagDisableCreateFolder = true;
             flagDisableRename = true;
+            flagDisableDelete = true;
+            flagDisableCut = true;
         }
     // set Create folder toolbar option
     $("#fb-create-folder").toggleClass("disabled", flagDisableCreateFolder);
