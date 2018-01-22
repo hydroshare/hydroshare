@@ -285,24 +285,23 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         self.assertTrue(res.creator == self.user)
         self.assertTrue(res.get_quota_holder() == self.user)
 
-        # IRODS PROXY USER DOES NOT HAVE PERMISSION TO SET USER TYPE AVU ON IT since only rodsadmin
-        # can set up user type AVUs. As a result, use docker exec subprocess to set user type AVU
-        # using rodsadmin for testing purpose
+        istorage = res.get_irods_storage()
         attname = self.user.username + '-usage'
         test_qsize = '2000000000'  # 2GB
         # this quota size AVU will be set by real time iRODS quota usage update micro-services.
         # For testing, setting it programmatically to test the quota size will be picked up
         # automatically when files are added into this resource
-        data_proxy_name = settings.IRODS_USERNAME + '#' + settings.IRODS_ZONE
-        super(TestUserZoneIRODSFederation, self).set_user_type_avu(data_proxy_name, attname,
-                                                                   test_qsize)
-        istorage = res.get_irods_storage()
-        get_qsize = istorage.getAVU(data_proxy_name, attname, type='-u')
+        # programmatically set quota size for the test user in data zone
+        istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
+
+        get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 
-        uproxy_name = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
-        super(TestUserZoneIRODSFederation, self).set_user_type_avu(uproxy_name, attname,
-                                                                   str(test_qsize))
+        # programmatically set quota size for the test user in user zone
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE,
+                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        istorage.setAVU(uz_bagit_path, attname, test_qsize)
         super(TestUserZoneIRODSFederation, self).verify_user_quota_usage_avu_in_user_zone(
             attname, test_qsize)
 

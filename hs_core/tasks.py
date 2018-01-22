@@ -291,11 +291,11 @@ def update_quota_usage_task(username):
     qmsg = QuotaMessage.objects.first()
 
     attname = username + '-usage'
-    # get quota size for the user in iRODS data zone
+    istorage = IrodsStorage()
+    # get quota size for user in iRODS data zone by retrieving AVU set on irods bagit path
+    # collection
     try:
-        istorage = IrodsStorage()
-        data_proxy_uname = settings.IRODS_USERNAME + '#' + settings.IRODS_ZONE
-        uqDataZoneSize = istorage.getAVU(data_proxy_uname, attname, type='-u')
+        uqDataZoneSize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
         if uqDataZoneSize is None:
             # user may not have resources in data zone, so corresponding quota size AVU may not
             # exist for this user
@@ -312,15 +312,16 @@ def update_quota_usage_task(username):
         # cannot use FedStorage() since the proxy iRODS account in data zone cannot access
         # user type metadata for the proxy iRODS user in the user zone. Have to create an iRODS
         # environment session using HS_USER_ZONE_PROXY_USER with an rodsadmin role
-        istorage = IrodsStorage()
         istorage.set_user_session(username=settings.HS_USER_ZONE_PROXY_USER,
                                   password=settings.HS_USER_ZONE_PROXY_USER_PWD,
                                   host=settings.HS_USER_ZONE_HOST,
                                   port=settings.IRODS_PORT,
                                   zone=settings.HS_USER_IRODS_ZONE,
                                   sess_id='user_proxy_session')
-        uproxy_uname = settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + '#' + settings.HS_USER_IRODS_ZONE
-        uqUserZoneSize = istorage.getAVU(uproxy_uname, attname, type='-u')
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE,
+                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        uqUserZoneSize = istorage.getAVU(uz_bagit_path, attname)
         if uqUserZoneSize is None:
             # user may not have resources in user zone, so corresponding quota size AVU may not
             # exist for this user
