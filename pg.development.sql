@@ -12342,7 +12342,7 @@ COPY hs_access_control_useraccess (id, user_id) FROM stdin;
 -- Name: hs_access_control_useraccess_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('hs_access_control_useraccess_id_seq', 1, false);
+SELECT pg_catalog.setval('hs_access_control_useraccess_id_seq', 1, true);
 
 
 --
