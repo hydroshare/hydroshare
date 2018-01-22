@@ -221,6 +221,14 @@
                             Previous 
                         {% endif %}
                         |
+                        {% for pnum in page_obj|five_options_around %}
+                            {% if pnum == page_obj.number %}
+                               {{ pnum }}
+                            {% else %} 
+                                <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}">{{ pnum }}</a> 
+                            {% endif %} 
+                        {% endfor %} 
+                        |
                         {% if page_obj.has_next %}
                             <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">Next</a> 
                         {% else %}

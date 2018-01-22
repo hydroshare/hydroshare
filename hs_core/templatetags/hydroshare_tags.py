@@ -153,3 +153,15 @@ def res_uuid_from_res_path(path):
 @register.filter
 def remove_last_char(statement):
     return statement[:len(statement)-1]
+
+
+@register.filter
+def five_options_around(page):
+    if page.number <= 3:
+        return range(1, min(5, page.paginator.num_pages) + 1)
+    elif page.number >= (page.paginator.num_pages - 2):
+        return range(max((page.paginator.num_pages - 4), 1),
+                     page.paginator.num_pages + 1)
+    else:
+        return range(max(1, (page.number - 2)),
+                     min((page.number + 2), page.paginator.num_pages) + 1)
