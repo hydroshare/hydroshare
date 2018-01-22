@@ -45,6 +45,7 @@ class CreateResourceTicket(APIView):
 
     Error returns 400, 403, 404 return a string with the error message instead of JSON.
     """
+
     allowed_methods = ('GET',)
 
     def get(self, request, pk, op, pathname):
