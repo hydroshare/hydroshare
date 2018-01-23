@@ -125,7 +125,7 @@ class TestCaseCommonUtilities(object):
                                   zone=settings.HS_USER_IRODS_ZONE,
                                   sess_id='user_proxy_session')
 
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE,
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                      settings.IRODS_BAGIT_PATH)
         get_qsize = istorage.getAVU(uz_bagit_path, attname)

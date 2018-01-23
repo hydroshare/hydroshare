@@ -299,16 +299,6 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
         self.assertEqual(test_qsize, get_qsize)
 
-        # programmatically set quota size for the test user in user zone
-        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE,
-                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
-                                     settings.IRODS_BAGIT_PATH)
-        if not istorage.exists(uz_bagit_path):
-            istorage.session.run("imkdir", None, '-p', uz_bagit_path)
-        istorage.setAVU(uz_bagit_path, attname, test_qsize)
-        super(TestUserZoneIRODSFederation, self).verify_user_quota_usage_avu_in_user_zone(
-            attname, test_qsize)
-
         # create a resource in federated user zone which should trigger quota usage update
         fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
@@ -323,6 +313,17 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
 
         self.assertTrue(fed_res.creator == self.user)
         self.assertTrue(fed_res.get_quota_holder() == self.user)
+
+        fed_istorage = fed_res.get_irods_storage()
+        # programmatically set quota size for the test user in user zone
+        uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE, 'home',
+                                     settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
+                                     settings.IRODS_BAGIT_PATH)
+        if not fed_istorage.exists(uz_bagit_path):
+            fed_istorage.session.run("imkdir", None, '-p', uz_bagit_path)
+        fed_istorage.setAVU(uz_bagit_path, attname, test_qsize)
+        super(TestUserZoneIRODSFederation, self).verify_user_quota_usage_avu_in_user_zone(
+            attname, test_qsize)
 
         # Although the resource creation operation above will trigger quota update celery task,
         # in the test environment, celery task is not really executed, so have to test quota update
