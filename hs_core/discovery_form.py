@@ -36,12 +36,9 @@ class DiscoveryForm(FacetedSearchForm):
         self.parse_error = None  # error return from parser
         sqs = self.searchqueryset.all().filter(replaced=False)
         if self.cleaned_data.get('q'):
-            # This corrects for an failed match of complete words, as documented in issue #2308.
-            # The text__startswith=cdata matches stemmed words in documents with an unstemmed cdata.
-            # The text=cdata matches stemmed words after stemming cdata as well.
-            # The stem of "Industrial", according to the aggressive default stemmer, is "industri".
-            # Thus "Industrial" does not match "Industrial" in the document according to
-            # startswith, but does match according to text=cdata.
+            # The prior code corrected for an failed match of complete words, as documented
+            # in issue #2308. This version instead uses an advanced query syntax in which
+            # "word" indicates an exact match and the bare word indicates a stemmed match.
             cdata = self.cleaned_data.get('q')
             try:
                 parser = ParseSQ()
