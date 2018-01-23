@@ -304,8 +304,8 @@ class ParseSQ(object):
                 self.handle_operator_query()
             elif re.search(self.Pattern_Normal_Query, self.query):
                 self.handle_normal_query()
-            elif self.query[0] == "(":
+            elif self.query and self.query[0] == "(":
                 self.handle_brackets()
-            else:
+            elif self.query:
                 self.query = self.query[1:]
         return self.sq
