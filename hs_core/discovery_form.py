@@ -4,8 +4,7 @@ from django import forms
 from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
     FieldNotRecognizedError, InequalityNotAllowedError, MalformedDateError
 
-FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type',
-                  'subject', 'variable', 'sample_medium', 'availability']
+FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type', 'subject', 'availability']
 
 
 class DiscoveryForm(FacetedSearchForm):
