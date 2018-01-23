@@ -292,6 +292,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         # For testing, setting it programmatically to test the quota size will be picked up
         # automatically when files are added into this resource
         # programmatically set quota size for the test user in data zone
+        if not istorage.exists(settings.IRODS_BAGIT_PATH):
+            istorage.session.run("imkdir", None, '-p', settings.IRODS_BAGIT_PATH)
         istorage.setAVU(settings.IRODS_BAGIT_PATH, attname, test_qsize)
 
         get_qsize = istorage.getAVU(settings.IRODS_BAGIT_PATH, attname)
@@ -301,6 +303,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         uz_bagit_path = os.path.join('/', settings.HS_USER_IRODS_ZONE,
                                      settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE,
                                      settings.IRODS_BAGIT_PATH)
+        if not istorage.exists(uz_bagit_path):
+            istorage.session.run("imkdir", None, '-p', uz_bagit_path)
         istorage.setAVU(uz_bagit_path, attname, test_qsize)
         super(TestUserZoneIRODSFederation, self).verify_user_quota_usage_avu_in_user_zone(
             attname, test_qsize)
