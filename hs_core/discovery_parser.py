@@ -210,7 +210,7 @@ class ParseSQ(object):
                 "Query qualifier '{}' is not recognized."
                 .format(search_field))
 
-        if search_field not in self.INEQUALITY_FIELDS:
+        if search_inequality and search_field not in self.INEQUALITY_FIELDS:
             raise InequalityNotAllowedError(
                 "Inequality is not meaningful for '{}' qualifier."
                 .format(search_field))
@@ -231,7 +231,9 @@ class ParseSQ(object):
             word = head(self.query)  # This has no field specifier
 
             # Append __lt, __lte, etc to query as needed
-            inequality_operator = self.HAYSTACK_INEQUALITY[search_inequality]
+            inequality_operator = ''
+            if search_inequality:
+                inequality_operator = self.HAYSTACK_INEQUALITY[search_inequality]
 
             # Parse date in one of a limited number of common formats.
             # TODO: SOLR requires GMT; convert from GMT to local locale for date.
