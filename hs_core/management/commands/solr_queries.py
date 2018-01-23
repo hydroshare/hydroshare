@@ -35,7 +35,3 @@ class Command(BaseCommand):
 
         else:
             print("no queries to try")
-            query = 'author:"Tarboton, David"'
-            parser = ParseSQ()
-            parsed = parser.parse(query)
-            print("QUERY '{}' PARSED {}".format(query, str(parsed)))
