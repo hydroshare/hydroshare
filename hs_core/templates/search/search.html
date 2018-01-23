@@ -23,6 +23,11 @@
                     {% endfor %}
                 </form>
             </div>
+            <div> 
+                {% if parse_error %}
+                    <em><font color='red'>{{ parse_error }}</font></em> 
+                {% endif %}
+            </div> 
             <br>
         </div>
         <div class="col-sm-3 col-xs-12" id="facets">
@@ -240,10 +245,7 @@
                         {% else %} 
                             Last
                         {% endif %}
-
                         &raquo;
-                    {% else %}
-                        &laquo;results 1 to {{ page_obj.paginator.count }}&raquo; 
                     {% endif %}
 
                     {% if page_obj.has_other_pages %}

@@ -2,7 +2,7 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SQ
 from django import forms
 from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
-    FieldNotRecognizedError, InequalityNotAllowedError
+    FieldNotRecognizedError, InequalityNotAllowedError, MalformedDateError
 
 FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type',
                   'subject', 'variable', 'sample_medium', 'availability']
@@ -34,6 +34,7 @@ class DiscoveryForm(FacetedSearchForm):
                                      required=False)
 
     def search(self):
+        self.parse_error = None  # error return from parser
         sqs = self.searchqueryset.all().filter(replaced=False)
         if self.cleaned_data.get('q'):
             # This corrects for an failed match of complete words, as documented in issue #2308.
@@ -43,24 +44,32 @@ class DiscoveryForm(FacetedSearchForm):
             # Thus "Industrial" does not match "Industrial" in the document according to
             # startswith, but does match according to text=cdata.
             cdata = self.cleaned_data.get('q')
-            # error = None
             try:
                 parser = ParseSQ()
                 parsed = parser.parse(cdata)
-            except ValueError:  # as e:
+                sqs = sqs.filter(parsed)
+            except ValueError as e:
                 sqs = self.searchqueryset.none()
-                # error = "value error: {}".format(e.value)
-            except MatchingBracketsNotFoundError:  # as e:
+                self.parse_error = "Value error: {}. No matches. Please try again".format(e.value)
+                return sqs
+            except MatchingBracketsNotFoundError as e:
                 sqs = self.searchqueryset.none()
-                # error = e.value
-            except FieldNotRecognizedError:  # as e:
+                self.parse_error = "{} No matches. Please try again.".format(e.value)
+                return sqs
+            except MalformedDateError as e:
                 sqs = self.searchqueryset.none()
-                # error = e.value
-            except InequalityNotAllowedError:  # as e:
+                self.parse_error = "{} No matches. Please try again.".format(e.value)
+                return sqs
+            except FieldNotRecognizedError as e:
                 sqs = self.searchqueryset.none()
-                # error = e.value
-            # TODO: report errors somewhere
-            sqs = sqs.filter(parsed)
+                self.parse_error = \
+                    "{} Qualifiers include title:, author:, and others. Please try again." \
+                    .format(e.value)
+                return sqs
+            except InequalityNotAllowedError as e:
+                sqs = self.searchqueryset.none()
+                self.parse_error = "{} No matches. Please try again.".format(e.value)
+                return sqs
 
         geo_sq = None
         if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:

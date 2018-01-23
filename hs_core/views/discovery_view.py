@@ -32,11 +32,19 @@ class DiscoveryView(FacetedSearchView):
         if sortfield is not None and sortdir is not None:
             self.queryset = self.queryset.order_by(sortdir + sortfield)
 
-        context = self.get_context_data(**{
-            self.form_name: form,
-            'query': form.cleaned_data.get(self.search_field),
-            'object_list': self.queryset
-        })
+        if form.parse_error is not None:
+            context = self.get_context_data(**{
+                self.form_name: form,
+                'query': form.cleaned_data.get(self.search_field),
+                'object_list': self.queryset,
+                'parse_error': form.parse_error  # if not None, then show error message
+            })
+        else:
+            context = self.get_context_data(**{
+                self.form_name: form,
+                'query': form.cleaned_data.get(self.search_field),
+                'object_list': self.queryset,
+            })
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):

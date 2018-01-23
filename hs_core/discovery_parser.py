@@ -66,7 +66,7 @@ def parse_date(word):
             return datetime_object
         except ValueError:
             pass
-    raise MalformedDateError("{} is not a well-formed date".format(word))
+    raise MalformedDateError("'{}' is not a properly formatted date.".format(word))
 
 
 class ParseSQ(object):
@@ -206,9 +206,14 @@ class ParseSQ(object):
         search_field = mat.group(1)
         search_inequality = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
-            raise FieldNotRecognizedError("qualifier '{}' is not recognized"
-                                          .format(search_field))
+            raise FieldNotRecognizedError(
+                "Query qualifier '{}' is not recognized."
+                .format(search_field))
 
+        if search_field not in self.INEQUALITY_FIELDS:
+            raise InequalityNotAllowedError(
+                "Inequality is not meaningful for '{}' qualifier."
+                .format(search_field))
         # Strip the qualifier off the query, leaving only the match text
         self.query = re.sub(self.Pattern_Field_Query, '', self.query, 1)
 
@@ -216,21 +221,17 @@ class ParseSQ(object):
         if mat:
             text_in_quotes = mat.group(1)
             if (search_inequality):
-                raise InequalityNotAllowedError("Inequality is not allowed for quoted text \"{}\""
-                                                .format(text_in_quotes))
+                raise InequalityNotAllowedError(
+                    "Inequality is not meaningful for quoted text \"{}\"."
+                    .format(text_in_quotes))
             self.sq = self.apply_operand(SQ(**{search_field+"__exact": text_in_quotes}))
             # remove quoted text from query
             self.query = re.sub(self.Pattern_Quoted_Text, '', self.query, 1)
         else:  # no quotes
             word = head(self.query)  # This has no field specifier
+
             # Append __lt, __lte, etc to query as needed
-            inequality_operator = ''
-            if search_inequality:
-                if search_field in self.INEQUALITY_FIELDS:
-                    inequality_operator = self.HAYSTACK_INEQUALITY[search_inequality]
-                else:
-                    raise InequalityNotAllowedError("Inequality is not meaningful for '{}:'"
-                                                    .format(search_field))
+            inequality_operator = self.HAYSTACK_INEQUALITY[search_inequality]
 
             # Parse date in one of a limited number of common formats.
             # TODO: SOLR requires GMT; convert from GMT to local locale for date.
@@ -259,7 +260,8 @@ class ParseSQ(object):
             parser = ParseSQ(self.Default_Operator)
             self.sq = self.apply_operand(parser.parse(self.query[1:i-1]))
         else:
-            raise MatchingBracketsNotFoundError(self.query)
+            raise MatchingBracketsNotFoundError("Parentheses must match in '{}'."
+                                                .format(self.query))
         self.query, self.current = self.query[i:], self.Default_Operator
 
     def handle_normal_query(self):
