@@ -578,10 +578,6 @@ def create_scidas_virtual_app(request, res_id, cluster):
                     if 'id' in jdata and 'containers' in jdata:
                         p_data = jdata
 
-    if not file_data_list:
-        # for an empty resource, use the default scidasZone path for network-aware placement
-        file_data_list.append("/scidasZone/home/wpoehlm/test.txt")
-
     url = "http://sc17demo1.scidas.org:9090/appliance"
     app_id = 'hs-jupyter'
     if not p_data:
@@ -663,13 +659,23 @@ def create_scidas_virtual_app(request, res_id, cluster):
     ep_data = ep_data_list[0]
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
 
-    # make sure the new directed url is loaded and working before redirecting
-    try:
-        ret = urlopen(app_url, timeout=10)
-    except URLError as ex:
-        errmsg = ex.reason if hasattr(ex, 'reason') else 'URLError'
-        messages.error(request, errmsg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    # make sure the new directed url is loaded and working before redirecting.
+    # Since scidas will install dependencies included in requirements.txt, it will take some time
+    # before the app_url is ready to go after the appliance is provisioned, hence wait for up to 30 seconds
+    # before erroring out if connection to the url keeps being refused.
+    idx = 0
+    while True:
+        try:
+            ret = urlopen(app_url, timeout=10)
+            break
+        except URLError as ex:
+            errmsg = ex.reason if hasattr(ex, 'reason') else 'URLError'
+            idx += 1
+            time.sleep(5)
+        
+        if idx > 6:
+            messages.error(request, errmsg)
+            return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     if ret.code == 200:
         return HttpResponseRedirect(app_url)
