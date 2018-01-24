@@ -2,9 +2,9 @@
 {% block extra_css %}
 <link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
 {% endblock %}
-<div id="edit-identifiers-container">
+<div class="edit-identifiers-container">
     <!--Template use for dynamic instances-->
-    <div id="identifier-template" class="well hidden">
+    <div class="well identifier-template hidden">
         <div style="height:22px;">
             <button type="button" class="close">&times;</button>
         </div>
@@ -34,7 +34,7 @@
         </fieldset>
     </div>
 
-    {% for name, link in identifiers.items %}
+    {% for name, link in author.identifiers.items %}
     <div class="well">
         <div style="height:22px;">
             <button type="button" class="close">&times;</button>
@@ -56,7 +56,8 @@
                     Google Scholar
                 </option>
                 <option value="ORCID"
-                        {% if name == "ORCID" %}selected{% endif %}>ORCID
+                        {% if name == "ORCID" %}selected{% endif %}>
+                    ORCID
                 </option>
                 <option value="ResearchGate"
                         {% if name == "ResearchGate" %}selected{% endif %}>
@@ -101,7 +102,7 @@
     {% endfor %}
 </div>
 
-<button id="btn-add-identifier" type="button" class="btn btn-success">
+<button type="button" class="btn btn-success btn-add-identifier">
     <i class="fa fa-plus" aria-hidden="true"></i> Add New
 </button>
 

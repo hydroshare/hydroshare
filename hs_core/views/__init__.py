@@ -1496,6 +1496,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
         user_data['address'] = address
         user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+        user_data['identifiers'] = user.userprofile.identifiers
     else:
         group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name

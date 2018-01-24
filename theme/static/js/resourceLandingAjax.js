@@ -971,6 +971,20 @@ function get_user_info_ajax_submit(url, obj) {
                 formContainer.find("input[name='address']").val(json_response.address);
                 formContainer.find("input[name='phone']").val(json_response.phone);
                 formContainer.find("input[name='homepage']").val(json_response.website);
+
+                for (var identif in json_response.identifiers) {
+                    modalBody = formContainer.find(".modal-body");
+                    modalBody.append(
+                        $('<input />').attr('type', 'hidden')
+                            .attr('name', "identifier_name")
+                            .attr('value', identif));
+
+                    modalBody.append(
+                        $('<input />').attr('type', 'hidden')
+                            .attr('name', "identifier_link")
+                            .attr('value', json_response.identifiers[identif]));
+                }
+
             }
             formContainer.submit();
         },

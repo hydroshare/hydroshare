@@ -359,7 +359,7 @@
                         </fieldset>
 
                         <label class="control-label">Author Identifiers</label>
-                        {% include "includes/identifiers-form.html" with identifiers=author.identifiers %}
+                        {% include "includes/identifiers-form.html" with author=author %}
                     </div>
                 </div>
 
@@ -868,68 +868,14 @@
                         {% csrf_token %}
                         <input name="resource-mode" type="hidden" value="edit">
                         <div class="modal-body" style="display:none;">
-                            <div class="form-group">
-                                <fieldset>
-                                    <div id="div_id_name" class="control-group">
-                                        <label for="id_name" class="control-label requiredField">Name<span
-                                                class="asteriskField">*</span></label>
-
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_name" maxlength="100" name="name"
-                                                                     type="text"></div>
-                                    </div>
-
-                                    <div id="div_id_description" class="control-group">
-                                        <label for="id_description" class="control-label">HydroShare User Identifier
-                                            (URL)</label>
-                                        <div class="controls"><input class="form-control input-sm urlinput"
-                                                                     id="id_description" maxlength="200"
-                                                                     name="description" type="url"></div>
-                                    </div>
-
-                                    <div id="div_id_organization" class="control-group">
-                                        <label for="id_organization" class="control-label">Organization</label>
-                                        <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_organization" maxlength="200"
-                                                                     name="organization" type="text"></div>
-                                    </div>
-
-                                    <div id="div_id_email" class="control-group">
-                                        <label for="id_email" class="control-label">Email</label>
-
-                                        <div class="controls">
-                                            <input class="form-control input-sm emailinput"
-                                                   id="id_email" maxlength="75" name="email"
-                                                   type="email">
-                                        </div>
-                                    </div>
-
-                                    <div id="div_id_address" class="control-group">
-                                        <label for="id_address" class="control-label">Address</label>
-                                        <div class="controls">
-                                            <input class="form-control input-sm textinput textInput"
-                                                   id="id_address" maxlength="250" name="address"
-                                                   type="text">
-                                        </div>
-                                    </div>
-
-                                    <div id="div_id_phone" class="control-group">
-                                        <label for="id_phone" class="control-label">Phone</label>
-                                        <div class="controls">
-                                            <input class="form-control input-sm textinput textInput"
-                                                   id="id_phone" maxlength="25" name="phone"
-                                                   type="text">
-                                        </div>
-                                    </div>
-
-                                    <div id="div_id_homepage" class="control-group">
-                                        <label for="id_homepage" class="control-label">Homepage</label>
-                                        <div class="controls"><input class="form-control input-sm urlinput"
-                                                                     id="id_homepage" maxlength="200" name="homepage"
-                                                                     type="url"></div>
-                                    </div>
-                                </fieldset>
-                            </div>
+                            <input maxlength="100" name="name" type="text">
+                            <input name="description" type="url">
+                            <input name="organization" type="text">
+                            <input name="email" type="email">
+                            <input maxlength="250" name="address" type="text">
+                            <input maxlength="25" name="phone" type="text">
+                            <input maxlength="200" name="homepage" type="url">
+                            <div id="identifiers"></div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -938,7 +884,7 @@
                     </form>
                 </div>
                 {# Other Person #}
-                <div data-hs-person-type="other_person", style="display:none;">
+                <div data-hs-person-type="other_person" style="display:none;">
                     <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
                           enctype="multipart/form-data">
                         {% csrf_token %}
