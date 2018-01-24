@@ -1835,6 +1835,11 @@ class AbstractResource(ResourcePermissionsMixin, ResourceIRODSMixin):
             value = str(value).lower()  # normalize boolean values to strings
         istorage = self.get_irods_storage()
         root_path = self.root_path
+        # has to create the resource collection directory if it does not exist already due to
+        # the need for setting quota holder on the resource collection before adding files into
+        # the resource collection in order for the real-time iRODS quota micro-services to work
+        if not istorage.exists(root_path):
+            istorage.session.run("imkdir", None, '-p', root_path)
         istorage.setAVU(root_path, attribute, value)
 
     def getAVU(self, attribute):

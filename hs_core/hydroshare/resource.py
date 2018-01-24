@@ -406,20 +406,6 @@ def create_resource(
             resource.resource_federation_path = utils.get_federated_zone_home_path(source_names[0])
             resource.save()
 
-        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
-            # Add contents of zipfile as resource files asynchronously
-            # Note: this is done asynchronously as unzipping may take
-            # a long time (~15 seconds to many minutes).
-            add_zip_file_contents_to_resource_async(resource, files[0])
-        else:
-            # Add resource file(s) now
-            # Note: this is done synchronously as it should only take a
-            # few seconds.  We may want to add the option to do this
-            # asynchronously if the file size is large and would take
-            # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, source_names=source_names,
-                               move=move)
-
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
@@ -450,6 +436,25 @@ def create_resource(
                 group = utils.group_from_id(group)
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
+        # set quota of this resource to this creator
+        # quota holder has to be set before the files are added in order for real time iRODS
+        # quota micro-services to work
+        resource.set_quota_holder(owner, owner)
+
+        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile as resource files asynchronously
+            # Note: this is done asynchronously as unzipping may take
+            # a long time (~15 seconds to many minutes).
+            add_zip_file_contents_to_resource_async(resource, files[0])
+        else:
+            # Add resource file(s) now
+            # Note: this is done synchronously as it should only take a
+            # few seconds.  We may want to add the option to do this
+            # asynchronously if the file size is large and would take
+            # more than ~15 seconds to complete.
+            add_resource_files(resource.short_id, *files, source_names=source_names,
+                               move=move)
+
         if create_metadata:
             # prepare default metadata
             utils.prepare_resource_default_metadata(resource=resource, metadata=metadata,
@@ -475,9 +480,6 @@ def create_resource(
 
     # set the resource type (which is immutable)
     resource.setAVU("resourceType", resource._meta.object_name)
-
-    # set quota of this resource to this creator
-    resource.set_quota_holder(owner, owner)
 
     return resource
 
