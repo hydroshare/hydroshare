@@ -59,7 +59,8 @@ class DiscoveryForm(FacetedSearchForm):
             except FieldNotRecognizedError as e:
                 sqs = self.searchqueryset.none()
                 self.parse_error = \
-                    "{} Qualifiers include title:, author:, and others. Please try again." \
+                    ("{} Field delimiters include title, contributor, subject, etc. " +
+                     "Please try again.")\
                     .format(e.value)
                 return sqs
             except InequalityNotAllowedError as e:
@@ -114,10 +115,11 @@ class DiscoveryForm(FacetedSearchForm):
         owner_sq = None
         subject_sq = None
         resource_type_sq = None
-        accessibility_sq = None
-        variable_sq = None
-        sample_medium_sq = None
-        units_sq = None
+        availability_sq = None
+
+        # spammed facets eliminated due to poor metadata quality
+        # variable_sq = None
+        # sample_medium_sq = None
 
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
@@ -160,23 +162,25 @@ class DiscoveryForm(FacetedSearchForm):
                     else:
                         resource_type_sq.add(SQ(resource_type=value), SQ.OR)
 
-                elif "accessibility" in field:
-                    if accessibility_sq is None:
-                        accessibility_sq = SQ(accessibility=value)
+                elif "availability" in field:
+                    if availability_sq is None:
+                        availability_sq = SQ(availability=value)
                     else:
-                        accessibility_sq.add(SQ(accessibility=value), SQ.OR)
+                        availability_sq.add(SQ(availability=value), SQ.OR)
 
-                elif 'variable' in field:
-                    if variable_sq is None:
-                        variable_sq = SQ(variable=value)
-                    else:
-                        variable_sq.add(SQ(variable=value), SQ.OR)
+                # spammed facets eliminated due to poor metadata quality
 
-                elif 'sample_medium' in field:
-                    if sample_medium_sq is None:
-                        sample_medium_sq = SQ(sample_medium=value)
-                    else:
-                        sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
+                # elif 'variable' in field:
+                #     if variable_sq is None:
+                #         variable_sq = SQ(variable=value)
+                #     else:
+                #         variable_sq.add(SQ(variable=value), SQ.OR)
+
+                # elif 'sample_medium' in field:
+                #     if sample_medium_sq is None:
+                #         sample_medium_sq = SQ(sample_medium=value)
+                #     else:
+                #         sample_medium_sq.add(SQ(sample_medium=value), SQ.OR)
 
                 else:
                     continue
@@ -191,13 +195,14 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(subject_sq)
         if resource_type_sq is not None:
             sqs = sqs.filter(resource_type_sq)
-        if accessibility_sq is not None:
-            sqs = sqs.filter(accessibility_sq)
-        if variable_sq is not None:
-            sqs = sqs.filter(variable_sq)
-        if sample_medium_sq is not None:
-            sqs = sqs.filter(sample_medium_sq)
-        if units_sq is not None:
-            sqs = sqs.filter(units_sq)
+        if availability_sq is not None:
+            sqs = sqs.filter(availability_sq)
+
+        # spammed facets eliminated due to poor metadata quality
+
+        # if variable_sq is not None:
+        #     sqs = sqs.filter(variable_sq)
+        # if sample_medium_sq is not None:
+        #     sqs = sqs.filter(sample_medium_sq)
 
         return sqs

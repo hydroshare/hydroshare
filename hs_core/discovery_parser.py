@@ -207,7 +207,7 @@ class ParseSQ(object):
         search_inequality = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
             raise FieldNotRecognizedError(
-                "Query qualifier '{}' is not recognized."
+                "Field delimiter '{}' is not recognized."
                 .format(search_field))
 
         if search_inequality and search_field not in self.INEQUALITY_FIELDS:
