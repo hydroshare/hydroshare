@@ -5,7 +5,7 @@ from haystack.query import SearchQuerySet
 
 
 class DiscoveryView(FacetedSearchView):
-    facet_fields = FACETED_FIELDS
+    facet_fields = FACETED_FIELDS  # interpreted by FacetedSearchView; must be attribute
     form_class = DiscoveryForm
 
     def form_valid(self, form):

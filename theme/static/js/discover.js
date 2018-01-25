@@ -600,7 +600,8 @@ var updateMapView = function() {
 //     });
 // };
 
-var updateFacetingItems = function (request_url) {
+var updateListItems = function (request_url) {
+    // TODO: not sure why we need list spinner when map is visible?
     $("#discover-list-loading-spinner").show();
     if (map != null) {
         $("#discover-map-loading-spinner").show();
@@ -622,11 +623,14 @@ var updateListFaceting = function (request_url) {
         dataType: 'html',
         success: function (data) {
             $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
+            $("#discover-page-options-1").empty();
+            $("#discover-page-options-2").empty();
             var tableDiv = $("#items-discovered", data);
             $("#items-discovered_wrapper").html(tableDiv);
-            var pageOptionDiv = $("#discover-page-options", data);
-            $("#discover-page-options").html(pageOptionDiv);
+            var pageOptionDiv1 = $("#discover-page-options-1", data);
+            $("#discover-page-options-1").html(pageOptionDiv1);
+            var pageOptionDiv2 = $("#discover-page-options-2", data);
+            $("#discover-page-options-2").html(pageOptionDiv2);
             initializeTable();
         },
         failure: function (data) {
@@ -729,9 +733,9 @@ var formGeoParameters = function() {
 var formDateParameters = function() {
     var start_date = $("#id_start_date").val();
     var end_date = $("#id_end_date").val();
-    if (start_date <= end_date) {  
-        return "&start_date="+start_date+"&end_date="+end_date;
-    }
+    // if (start_date <= end_date or not start_date or not end_date) {  
+    return "&start_date="+start_date+"&end_date="+end_date;
+    // }
 };
 
 var formOrderParameters = function() {
@@ -932,6 +936,7 @@ $(document).ready(function () {
         $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
     });
 
+    // This forces a page reload and should only be done when updating queries
     function updateResults () {
         var textSearch = $("#id_q").val();
         var searchURL = "?q=" + textSearch;
@@ -949,12 +954,28 @@ $(document).ready(function () {
     }
 
     $("#date-search-fields input").change(function () { 
-        updateResults(); 
+        var textSearch = $("#id_q").val();
+        var searchURL = "?q=" + textSearch;
+        var geoSearchParams = formGeoParameters();
+        var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters();
+        var windowPath = window.location.pathname;
+        var requestURL =  windowPath + searchURL;
+        requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
+        updateListItems(requestURL);
     });
 
     $("#search-order-fields select").change(function () {
-        updateResults(); 
-    })
+        var textSearch = $("#id_q").val();
+        var searchURL = "?q=" + textSearch;
+        var geoSearchParams = formGeoParameters();
+        var dateSearchParams = formDateParameters();
+        var sortOrderParams = formOrderParameters();
+        var windowPath = window.location.pathname;
+        var requestURL =  windowPath + searchURL;
+        requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
+        updateListItems(requestURL);
+    });
 
     $(".faceted-selections").click(function () {
         var textSearch = $("#id_q").val();
@@ -970,7 +991,7 @@ $(document).ready(function () {
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL = requestURL + geoSearchParams + dateSearchParams + sortOrderParams;
-            updateFacetingItems(requestURL);
+            updateListItems(requestURL);
         }
         else {
             var checkboxId = $(this).attr("id");
@@ -978,7 +999,7 @@ $(document).ready(function () {
             sessionStorage.removeItem(sessionStorageCheckboxId);
             var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams 
                 + dateSearchParams + sortOrderParams;
-            updateFacetingItems(updateURL);
+            updateListItems(updateURL);
         }
     });
 

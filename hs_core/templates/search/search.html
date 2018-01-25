@@ -168,6 +168,46 @@
 
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
+                    <div id="discover-page-options-1">
+                    {% if page_obj.has_other_pages %}
+                        &laquo;
+
+                        {% if page_obj.number != 1 %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page=1"); return false;'>First</a> 
+                        {% else %} 
+                            First
+                        {% endif %}
+                        |
+                        {% if page_obj.has_previous %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.prev_page_number }}"); return false;'>Previous</a> 
+                        {% else %} 
+                            Previous 
+                        {% endif %}
+                        |
+                        {% for pnum in page_obj|five_options_around %}
+                            {% if pnum == page_obj.number %}
+                               {{ pnum }}
+                            {% else %} 
+                                <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}"); return false;'>{{ pnum }}</a> 
+                            {% endif %} 
+                        {% endfor %} 
+                        |
+                        {% if page_obj.has_next %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}"); return false;'>Next</a> 
+                        {% else %}
+                            Next 
+                        {% endif %} 
+                        |
+                        {% if page_obj.number != page_obj.paginator.num_pages %}
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.paginator.num_pages }}"); return false;'>Last</a> 
+                        {% else %} 
+                            Last
+                        {% endif %}
+                        &raquo;
+                    {% endif %}
+
+                    {{ page_obj }} &laquo;results {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}&raquo;  
+                    </div>
                     <span id="discover-list-loading-spinner" class="discover-loading-icon icon-blue">
                           <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
                     </span>
@@ -210,18 +250,18 @@
                     {% if not page_obj.object_list %}
                     <h4 class="text-muted">Sorry, no results match those criteria. Please try broadening your search.</h4>
                     {% endif %}
-                    <div id="discover-page-options">
+                    <div id="discover-page-options-2">
                     {% if page_obj.has_other_pages %}
                         &laquo;
 
                         {% if page_obj.number != 1 %}
-                            <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page=1">First</a> 
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page=1"); return false;'>First</a> 
                         {% else %} 
                             First
                         {% endif %}
                         |
                         {% if page_obj.has_previous %}
-                            <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">Previous</a> 
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.prev_page_number }}"); return false;'>Previous</a> 
                         {% else %} 
                             Previous 
                         {% endif %}
@@ -230,27 +270,25 @@
                             {% if pnum == page_obj.number %}
                                {{ pnum }}
                             {% else %} 
-                                <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}">{{ pnum }}</a> 
+                                <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ pnum }}"); return false;'>{{ pnum }}</a> 
                             {% endif %} 
                         {% endfor %} 
                         |
                         {% if page_obj.has_next %}
-                            <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">Next</a> 
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}"); return false;'>Next</a> 
                         {% else %}
                             Next 
                         {% endif %} 
                         |
                         {% if page_obj.number != page_obj.paginator.num_pages %}
-                            <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.paginator.num_pages }}">Last</a> 
+                            <a onclick='updateListItems("{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.paginator.num_pages }}"); return false;'>Last</a> 
                         {% else %} 
                             Last
                         {% endif %}
                         &raquo;
                     {% endif %}
 
-                    {% if page_obj.has_other_pages %}
-                        {{ page_obj }} &lt;results {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}&gt;  
-                    {% endif %}
+                    {{ page_obj }} &laquo;results {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}&raquo;  
                     </div>
                     
                     <br>
