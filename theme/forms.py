@@ -1,5 +1,3 @@
-import requests
-
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_comments.signals import comment_was_posted
