@@ -122,6 +122,8 @@ def debug_harvest():
         pprint(ind.prepare_aggregation_statistics(obj))
         print('absolute_url')
         pprint(ind.prepare_absolute_url(obj))
+        print('extra')
+        pprint(ind.prepare_extra(obj))
 
 
 class Command(BaseCommand):

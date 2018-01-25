@@ -140,6 +140,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     aggregation_statistics = indexes.MultiValueField()
     absolute_url = indexes.CharField(indexed=False)
 
+    # extra metadata
+    extra = indexes.MultiValueField()
+
     def get_model(self):
         """Return BaseResource model."""
         return BaseResource
@@ -886,3 +889,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_absolute_url(self, obj):
         """Return absolute URL of object."""
         return obj.get_absolute_url()
+
+    def prepare_extra(self, obj):
+        """ For extra metadata, include both key and value """
+        extra = []
+        for key, value in obj.extra_metadata.items():
+            extra.append(key + ': ' + value)
+        return extra

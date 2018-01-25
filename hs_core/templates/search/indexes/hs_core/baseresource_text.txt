@@ -1,155 +1,22 @@
+{% load hydroshare_tags %} 
 {% if object.short_id %} {{ object.short_id }} {% endif %} 
 {% if object.doi %} {{ object.doi }} {% endif %} 
 {% if object.metadata.title.value %} {{ object.metadata.title.value }} {% endif %} 
 {% if object.metadata.description %} {{ object.metadata.description }} {% endif %} 
-{{ object.public }}
-{{ object.discoverable }}
-{{ object.published }}
-{{ object.created }}
-{{ object.modified }}
-{% if object.rating_sum %} {{ object.rating_sum }} {% endif %} 
 {% if object.metadata.publisher.name %} {{ object.metadata.publisher.name }} {% endif %} 
-{% if object.metadata.language.code %} {{ object.metadata.language.code }} {% endif %} 
 {% if object.resource_type %} {{ object.resource_type }} {% endif %} 
-{% if object.verbose_name %} {{ object.verbose_name }} {% endif %} 
-{% if object.owners_count %} {{ object.owners_count }} {% endif %} 
-{% if object.viewers_count %} {{ object.viewers_count }} {% endif %} 
-{% if object.editors_count %} {{ object.editors_count }} {% endif %} 
-{% if object.comments_count %} {{ object.comments_count }} {% endif %} 
 {% for creator in object.metadata.creators.all %}
-    {% if creator.name %} {{ creator.name }} {% endif %} 
+    {% if creator.name %} {{ creator.name }} {{ creator.normalize_human_name }} {% endif %} 
+    {% if creator.organization %} {{ creator.organization }} {% endif %} 
 {% endfor %}
 {% for contributor in object.metadata.contributors.all %}
-    {% if contributor.name %} {{ contributor.name }} {% endif %} 
+    {% if contributor.name %} {{ contributor.name }} {{ contributor.name|normalize_human_name
+    {% if contributor.organization %} {{ contributor.organization }} {% endif %} 
+{% endif %} 
 {% endfor %}
 {% for subject in object.metadata.subjects.all %}
     {% if subject %} {{ subject }} {% endif %} 
 {% endfor %}
-{% for creator in object.metadata.creators.all %}
-    {% if creator.organization %} {{ creator.organization }} {% endif %} 
-{% endfor %}
-{% for creator in object.metadata.creators.all %}
-    {% if creator.email %} {{ creator.email }} {% endif %}
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value %} {{ coverage.value }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.type %} {{ coverage.type }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.east %} {{ coverage.value.east }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.north %} {{ coverage.value.north }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.eastlimit %} {{ coverage.value.eastlimit }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.northlimit %} {{ coverage.value.northlimit }} {% endif %}
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.southlimit %} {{ coverage.value.southlimit }} {% endif %} 
-{% endfor %}
-{% for coverage in object.metadata.coverages.all %}
-    {% if coverage.value.westlimit %} {{ coverage.value.westlimit }} {% endif %} 
-{% endfor %}
-{% for format in object.metadata.formats.all %}
-    {{ format.value }}
-{% endfor %}
-{% for identifier in object.metadata.identifiers.all %}
-    {{ identifier.name }}
-{% endfor %}
-{% for source in object.metadata.sources.all %}
-    {{ source.derived_from }}
-{% endfor %}
-{% for relation in object.metadata.relations.all %}
-    {{ relation.value }}
-{% endfor %}
 {% for owner in object.raccess.owners.all %}
-    {{ owner.username }}
+    {{ owner.username }} {{ owner.first_name }} {{owner.last_name}}, {{owner.first_name}}
 {% endfor %}
-{% for owner in object.raccess.owners.all %}
-    {{ owner.first_name }} {{owner.last_name}}
-{% endfor %}
-{% for viewer in object.raccess.view_users.all %}
-    {{ viewer.username }}
-{% endfor %}
-{% for viewer in object.raccess.view_users.all %}
-    {{ viewer.first_name }} {{viewer.last_name}}
-{% endfor %}
-{% for editor in object.raccess.edit_users.all %}
-    {{ editor.username }}
-{% endfor %}
-{% for editor in object.raccess.edit_users.all %}
-    {{ editor.first_name }} {{editor.last_name}}
-{% endfor %}
-{% for comment in object.comments.all %}
-    {% if comment %} {{ comment }} {% endif %} 
-{% endfor %}
-{% if object.metadata.geometryinformation.geometryType  %} {{ object.metadata.geometryinformation.geometryType }} {% endif %}
-{% if object.metadata.fieldinformation.fieldName  %} {{ object.metadata.fieldinformation.fieldName }} {% endif %}
-{% if object.metadata.fieldinformation.fieldType  %} {{ object.metadata.fieldinformation.fieldType }} {% endif %}
-{% if object.metadata.fieldinformation.fieldTypeCode  %} {{ object.metadata.fieldinformation.fieldTypeCode }} {% endif %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.name %}
-        {{ variable.name }}
-    {% elif variable.variable_name %}
-        {{ variable.variable_name }}
-    {% endif %}
-{% endfor %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.type %}
-        {{ variable.type }}
-    {% elif variable.variable_type %}
-        {{ variable.variable_type }}
-    {% endif  %}
-{% endfor %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.shape %}
-        {{ variable.shape }}
-    {% endif  %}
-{% endfor %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.descriptive_name %} {{ variable.descriptive_name }} {% endif  %}
-{% endfor %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.speciation %} {{ variable.speciation }} {% endif  %}
-{% endfor %}
-{% for site in object.metadata.sites.all %}
-    {% if site.name %}
-        {{ site.name }}
-    {% elif site.site_name %}
-        {{ site.site_name }}
-    {% endif  %}
-{% endfor %}
-{% for method in object.metadata.methods.all %}
-    {% if method.description %}
-        {{ method.description }}
-    {% elif method.method_description %}
-        {{ method.method_description }}
-    {% endif  %}
-{% endfor %}
-{% for quality_level in object.metadata.quality_levels.all %}
-    {% if quality_level.code %} {{ quality_level.code }} {% endif  %}
-{% endfor %}
-{% for data_source in object.metadata.data_sources.all %}
-    {% if data_source.code %} {{ data_source.code }} {% endif  %}
-{% endfor %}
-{% for time_series_result in object.metadata.time_series_results.all %}
-    {% if time_series_result.sample_medium %} {{ time_series_result.sample_medium }} {% endif  %}
-{% endfor %}
-{% for variable in object.metadata.variables.all %}
-    {% if variable.sample_medium %} {{ variable.sample_medium }} {% endif  %}
-{% endfor %}
-{% for time_series_result in object.metadata.time_series_results.all %}
-    {% if time_series_result.units_name %} {{ time_series_result.units_name }} {% endif  %}
-{% endfor %}
-{% for time_series_result in object.metadata.time_series_results.all %}
-    {% if time_series_result.units_type %} {{ time_series_result.units_type }} {% endif  %}
-{% endfor %}
-{% for time_series_result in object.metadata.time_series_results.all %}
-    {% if time_series_result.aggregation_statistics %} {{ time_series_result.aggregation_statistics }} {% endif  %}
-{% endfor %}
-{% if object.body %} {{ object.body }} {% endif %}
