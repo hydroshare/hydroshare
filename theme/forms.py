@@ -1,5 +1,3 @@
-import requests
-
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_comments.signals import comment_was_posted
@@ -227,9 +225,9 @@ class SignupForm(forms.ModelForm):
 
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
-    Captcha = forms.CharField(required=False)
-    challenge = forms.CharField()
-    response = forms.CharField()
+    # Captcha = forms.CharField(required=False)
+    # challenge = forms.CharField()
+    # response = forms.CharField()
     organization = forms.CharField(required=True)
 
     def __init__(self, request, *args, **kwargs):
@@ -237,15 +235,17 @@ class SignupForm(forms.ModelForm):
         super(SignupForm, self).__init__(*args, **kwargs)
 
     def verify_captcha(self):
-        params = dict(self.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY',
-                                       "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
-        params['remoteip'] = self.request.META['REMOTE_ADDR']
-        resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
-        lines = resp.text.split('\n')
-        if not lines[0].startswith('false'):
-            return True
-        return False
+        return True
+
+        # params = dict(self.cleaned_data)
+        # params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY',
+        #                               "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
+        # params['remoteip'] = self.request.META['REMOTE_ADDR']
+        # resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
+        # lines = resp.text.split('\n')
+        # if not lines[0].startswith('false'):
+        #     return True
+        # return False
 
     def clean(self):
         if not self.verify_captcha():
