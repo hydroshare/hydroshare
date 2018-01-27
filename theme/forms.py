@@ -21,7 +21,7 @@ from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
 
-from hydroshare import settings
+from hydroshare import settings as hydroshare_settings
 
 COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
 
@@ -236,9 +236,9 @@ class SignupForm(forms.ModelForm):
         super(SignupForm, self).__init__(*args, **kwargs)
 
     def verify_captcha(self):
-        url = settings.RECAPTCHA_VERIFY_URL
+        url = hydroshare_settings.RECAPTCHA_VERIFY_URL
         values = {
-            'secret': settings.RECAPTCHA_SECRET_KEY,
+            'secret': hydroshare_settings.RECAPTCHA_SECRET_KEY,
             'response': self.request.POST.get('g-recaptcha-response')
         }
         response = requests.post(url, values)
