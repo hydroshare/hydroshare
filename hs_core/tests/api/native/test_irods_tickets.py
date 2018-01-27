@@ -6,8 +6,6 @@ from django.core.exceptions import ValidationError
 
 from hs_core import hydroshare
 
-from pprint import pprint
-
 
 class TestTickets(TestCase):
     def setUp(self):
@@ -49,8 +47,7 @@ class TestTickets(TestCase):
 
     def test_get_file_read_ticket(self):
         file = self.res.files.all()[0]
-        print(file.storage_path)
-        ticket = file.create_ticket(self.user)
+        ticket, path = file.create_ticket(self.user)
         attrs = self.res.list_ticket(ticket)
         self.assertTrue(attrs['full_path'].endswith(file.storage_path))
         self.assertEqual(file.short_path, attrs['filename'])
@@ -59,8 +56,7 @@ class TestTickets(TestCase):
             self.res.list_ticket(ticket)
 
     def test_get_dir_read_ticket(self):
-        print(self.res.file_path)
-        ticket = self.res.create_ticket(self.user, self.res.file_path)
+        ticket, path = self.res.create_ticket(self.user, self.res.file_path)
         attrs = self.res.list_ticket(ticket)
         self.assertTrue(attrs['full_path'].endswith(self.res.file_path))
         self.res.delete_ticket(self.user, ticket)
@@ -68,10 +64,7 @@ class TestTickets(TestCase):
             self.res.list_ticket(ticket)
 
     def test_get_meta_read_ticket(self):
-        istorage = self.res.get_irods_storage()
-        stuff = istorage.listdir(os.path.join(self.res.root_path, 'data'))
-        pprint(stuff)
-        ticket = self.res.create_ticket(self.user, self.res.scimeta_path)
+        ticket, path = self.res.create_ticket(self.user, self.res.scimeta_path)
         attrs = self.res.list_ticket(ticket)
         self.assertTrue(attrs['full_path'].endswith(self.res.scimeta_path))
         self.res.delete_ticket(self.user, ticket)
@@ -79,22 +72,15 @@ class TestTickets(TestCase):
             self.res.list_ticket(ticket)
 
     def test_get_map_read_ticket(self):
-        istorage = self.res.get_irods_storage()
-        stuff = istorage.listdir(os.path.join(self.res.root_path, 'data'))
-        pprint(stuff)
-        ticket = self.res.create_ticket(self.user, self.res.resmap_path)
+        ticket, path = self.res.create_ticket(self.user, self.res.resmap_path)
         attrs = self.res.list_ticket(ticket)
-        print("full_path = {}, resmap_path = {}".format(attrs['full_path'], self.res.resmap_path))
         self.assertTrue(attrs['full_path'].endswith(self.res.resmap_path))
         self.res.delete_ticket(self.user, ticket)
         with self.assertRaises(ValidationError):
             self.res.list_ticket(ticket)
 
     def test_get_bag_read_ticket(self):
-        istorage = self.res.get_irods_storage()
-        stuff = istorage.listdir('bags')
-        pprint(stuff)
-        ticket = self.res.create_ticket(self.user, self.res.bag_path)
+        ticket, path = self.res.create_ticket(self.user, self.res.bag_path)
         attrs = self.res.list_ticket(ticket)
         self.assertTrue(attrs['full_path'].endswith(self.res.bag_path))
         self.res.delete_ticket(self.user, ticket)
