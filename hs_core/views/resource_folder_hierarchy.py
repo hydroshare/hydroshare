@@ -77,13 +77,15 @@ def data_store_structure(request):
             folder_aggregation_type = ''
             folder_aggregation_name = ''
             folder_aggregation_id = ''
-            dir_path = os.path.join(res_coll, folder)
-            # find if this folder *dir_path* represents (contains) an aggregation object
-            aggregation_object = ResourceFile.get_folder_aggregation_object(resource, dir_path)
-            if aggregation_object is not None:
-                folder_aggregation_type = aggregation_object.get_aggregation_type_name()
-                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
-                folder_aggregation_id = aggregation_object.id
+            if resource.resource_type == "CompositeResource":
+                dir_path = os.path.join(res_coll, folder)
+                # find if this folder *dir_path* represents (contains) an aggregation object
+                aggregation_object = resource.get_folder_aggregation_object(dir_path)
+                if aggregation_object is not None:
+                    folder_aggregation_type = aggregation_object.get_aggregation_type_name()
+                    folder_aggregation_name = aggregation_object.get_aggregation_display_name()
+                    folder_aggregation_id = aggregation_object.id
+
             folders.append({'folder_name': folder,
                             'folder_aggregation_type': folder_aggregation_type,
                             'folder_aggregation_name': folder_aggregation_name,

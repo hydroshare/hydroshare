@@ -37,6 +37,20 @@ class CompositeResource(BaseResource):
                 res_file.logical_file_content_object = logical_file
                 res_file.save()
 
+    def get_folder_aggregation_object(self, dir_path):
+        """Returns a aggregation (file type) object if the specified folder *dir_path* represents a
+         file type aggregation (logical file), otherwise None.
+
+         :param dir_path: Resource file directory path (full folder path starting with resource id)
+         for which the file type aggregation object to be retrieved
+        """
+        files_in_folder = [res_file for res_file in self.files.all()
+                           if res_file.dir_path == dir_path]
+        for fl in files_in_folder:
+            if fl.has_logical_file:
+                return fl.logical_file
+        return None
+
     @property
     def supports_logical_file(self):
         """ if this resource allows associating resource file objects with logical file"""
