@@ -128,7 +128,7 @@ class GenericLogicalFile(AbstractLogicalFile):
         return cls.objects.create(metadata=generic_metadata)
 
     @staticmethod
-    def get_aggregation_name():
+    def get_aggregation_display_name():
         return 'Generic Aggregation'
 
     @classmethod

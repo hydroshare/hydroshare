@@ -732,7 +732,7 @@ class RefTimeseriesLogicalFile(AbstractLogicalFile):
         return ['SOAP', 'REST']
 
     @staticmethod
-    def get_aggregation_name():
+    def get_aggregation_display_name():
         return 'Reference Timeseries Aggregation'
 
     @classmethod

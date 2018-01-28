@@ -288,7 +288,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         return [".nc", ".txt"]
 
     @staticmethod
-    def get_aggregation_name():
+    def get_aggregation_display_name():
         return 'Multidimensional Aggregation'
 
     @classmethod

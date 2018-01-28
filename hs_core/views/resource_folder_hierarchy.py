@@ -82,7 +82,7 @@ def data_store_structure(request):
             aggregation_object = ResourceFile.get_folder_aggregation_object(resource, dir_path)
             if aggregation_object is not None:
                 folder_aggregation_type = aggregation_object.get_aggregation_type_name()
-                folder_aggregation_name = aggregation_object.get_aggregation_name()
+                folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                 folder_aggregation_id = aggregation_object.id
             folders.append({'folder_name': folder,
                             'folder_aggregation_type': folder_aggregation_type,

@@ -188,7 +188,7 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         return cls.objects.create(metadata=feature_metadata)
 
     @staticmethod
-    def get_aggregation_name():
+    def get_aggregation_display_name():
         return 'Geographic Feature Aggregation'
 
     @property

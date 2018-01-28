@@ -623,7 +623,7 @@ class AbstractLogicalFile(models.Model):
         raise NotImplementedError()
 
     @staticmethod
-    def get_aggregation_name():
+    def get_aggregation_display_name():
         """Sub classes must implement this method to return a name for this
         logical (aggregation) type used in UI"""
         raise NotImplementedError()
@@ -679,6 +679,14 @@ class AbstractLogicalFile(models.Model):
     def supports_unzip(self):
         """allows a zip file that is part of this logical file type to get unzipped"""
         return True
+
+    @property
+    def aggregation_name(self):
+        """Returns aggregation name as per the aggregation naming rule defined in issue#2568"""
+        if self.files.count() > 1:
+            return self.files.first().file_folder
+        else:
+            return self.files.first().short_path
 
     def add_resource_file(self, res_file):
         """Makes a ResourceFile (res_file) object part of this logical file object. If res_file
