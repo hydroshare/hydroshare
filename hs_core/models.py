@@ -3038,16 +3038,16 @@ class ResourceFile(ResourceFileIRODSMixin):
         remove_folder(user, resource.short_id, os.path.join('data', 'contents', folder))
 
     @classmethod
-    def get_folder_aggregation_object(cls, resource, folder):
+    def get_folder_aggregation_object(cls, resource, dir_path):
         """Returns a file type aggregation object if the specified folder *folder* represents a
          file type aggregation (logical file), otherwise None.
 
          :param resource: An instance of CompositeResource
-         :param folder: Resource file folder (full folder path starting with resource id) for which
-         the file type aggregation object to be retrieved
+         :param dir_path: Resource file directory path (full folder path starting with resource id)
+         for which the file type aggregation object to be retrieved
         """
         files_in_folder = [res_file for res_file in resource.files.all()
-                           if res_file.storage_path == os.path.join(folder, res_file.file_name)]
+                           if res_file.dir_path == dir_path]
         for fl in files_in_folder:
             if fl.has_logical_file:
                 return fl.logical_file
