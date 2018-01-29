@@ -48,6 +48,7 @@ class ResourceToListItemMixin(object):
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
+                                                          abstract=r.metadata.description,
                                                           creator=r.first_creator.name,
                                                           public=r.raccess.public,
                                                           discoverable=r.raccess.discoverable,

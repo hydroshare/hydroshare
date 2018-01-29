@@ -226,7 +226,7 @@
                         <tbody>
                             {% for result in page_obj.object_list %}
                                 <tr>
-                                    <td>
+                                    <td data-col="resource-type">
                                         {% include "includes/res_type_col.html" with resource=result.object %}
                                     </td>
                                     <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.get_stored_fields.title }}</a></strong></td>

@@ -200,15 +200,17 @@
                     {% for res in collection %}
                         <tr class="data-row">
                             {# Selection controls #}
-                            <td>
+                            <td  data-col="actions">
                                 <input class="row-selector" type="checkbox">
                                 {# Delete resource forms #}
-                                <form class="hidden-form" data-id="form-delete-{{ res.short_id }}" data-form-type="delete-resource" method="POST"
+                                <form class="hidden-form" data-id="form-delete-{{ res.short_id }}"
+                                      data-form-type="delete-resource" method="POST"
                                       action="/hsapi/_internal/{{ res.short_id }}/delete-resource/">
                                     {% csrf_token %}
                                 </form>
                                 {% if res.is_favorite %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                          data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>
 
                                     <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
@@ -219,7 +221,8 @@
                                         <input type="hidden" name="label_type" value="FAVORITE">
                                     </form>
                                 {% else %}
-                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                    <span data-form-id="form-favorite-{{ res.short_id }}"
+                                          data-form-type="toggle-favorite"
                                           class="glyphicon glyphicon-star btn-inline-favorite"></span>
 
                                     <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"
@@ -231,7 +234,8 @@
                                     </form>
                                 {% endif %}
 
-                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>
+                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown"
+                                      aria-expanded="false"></span>
 
                                 <div class="dropdown-menu inline-dropdown" role="menu">
                                     <div class="panel-body" role="form">
@@ -241,7 +245,7 @@
                                 </div>
                             </td>
                             {# Type #}
-                            <td>
+                            <td data-col="resource-type">
                                 {% include "includes/res_type_col.html" with resource=res %}
                             </td>
                             {# Title #}

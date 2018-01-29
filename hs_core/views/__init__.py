@@ -50,6 +50,7 @@ from . import resource_folder_hierarchy
 from . import resource_access_api
 from . import resource_folder_rest_api
 from . import debug_resource_view
+from . import resource_ticket_rest_api
 from . import apps
 
 from hs_core.hydroshare import utils
