@@ -240,12 +240,17 @@ class ParseSQ(object):
             if search_field in self.DATE_FIELDS:
                 thisday_object = parse_date(word)
                 thisday = thisday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                if inequality_operator:
-                    if inequality_operator == '<=':  # include whole day of target date
+                if search_inequality:
+                    if search_inequality == '<=':  # include whole day of target date
                         nextday_object = thisday_object + timedelta(days=1)
                         nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                         self.sq = self.apply_operand(
                             SQ(**{search_field+"__lt": nextday}))
+                    elif search_inequality == '>':  # include whole day of target date
+                        nextday_object = thisday_object + timedelta(days=1)
+                        nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        self.sq = self.apply_operand(
+                            SQ(**{search_field+"__gte": nextday}))
                     else:
                         self.sq = self.apply_operand(
                             SQ(**{search_field+inequality_operator: thisday}))

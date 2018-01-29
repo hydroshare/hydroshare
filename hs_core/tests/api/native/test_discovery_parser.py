@@ -92,18 +92,30 @@ class SimpleTest(TestCase):
 
     def test_dates(self):
         testcase = {
-            "created:2017-05-02": str(SQ(created='2017-05-02T00:00:00Z')),
-            "created:2017-05": str(SQ(created='2017-05-01T00:00:00Z')),
-            "created:2017": str(SQ(created='2017-01-01T00:00:00Z')),
-            "modified:2017-05-02": str(SQ(modified='2017-05-02T00:00:00Z')),
-            "modified:2017-05": str(SQ(modified='2017-05-01T00:00:00Z')),
-            "modified:2017": str(SQ(modified='2017-01-01T00:00:00Z')),
-            "start_date:2017-05-02": str(SQ(start_date='2017-05-02T00:00:00Z')),
-            "start_date:2017-05": str(SQ(start_date='2017-05-01T00:00:00Z')),
-            "start_date:2017": str(SQ(start_date='2017-01-01T00:00:00Z')),
-            "end_date:2017-05-02": str(SQ(end_date='2017-05-02T00:00:00Z')),
-            "end_date:2017-05": str(SQ(end_date='2017-05-01T00:00:00Z')),
-            "end_date:2017": str(SQ(end_date='2017-01-01T00:00:00Z')),
+            "created:2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z') &
+                                      SQ(created__lt='2017-05-03T00:00:00Z')),
+            "created:2017-05": str(SQ(created__gte='2017-05-01T00:00:00Z') &
+                                   SQ(created__lt='2017-05-02T00:00:00Z')),
+            "created:2017": str(SQ(created__gte='2017-01-01T00:00:00Z') &
+                                SQ(created__lt='2017-01-02T00:00:00Z')),
+            "modified:2017-05-02": str(SQ(modified__gte='2017-05-02T00:00:00Z') &
+                                       SQ(modified__lt='2017-05-03T00:00:00Z')),
+            "modified:2017-05": str(SQ(modified__gte='2017-05-01T00:00:00Z') &
+                                    SQ(modified__lt='2017-05-02T00:00:00Z')),
+            "modified:2017": str(SQ(modified__gte='2017-01-01T00:00:00Z') &
+                                 SQ(modified__lt='2017-01-02T00:00:00Z')),
+            "start_date:2017-05-02": str(SQ(start_date__gte='2017-05-02T00:00:00Z') &
+                                         SQ(start_date__lt='2017-05-03T00:00:00Z')),
+            "start_date:2017-05": str(SQ(start_date__gte='2017-05-01T00:00:00Z') &
+                                      SQ(start_date__lt='2017-05-02T00:00:00Z')),
+            "start_date:2017": str(SQ(start_date__gte='2017-01-01T00:00:00Z') &
+                                   SQ(start_date__lt='2017-01-02T00:00:00Z')),
+            "end_date:2017-05-02": str(SQ(end_date__gte='2017-05-02T00:00:00Z') &
+                                       SQ(end_date__lt='2017-05-03T00:00:00Z')),
+            "end_date:2017-05": str(SQ(end_date__gte='2017-05-01T00:00:00Z') &
+                                    SQ(end_date__lt='2017-05-02T00:00:00Z')),
+            "end_date:2017": str(SQ(end_date__gte='2017-01-01T00:00:00Z') &
+                                 SQ(end_date__lt='2017-01-02T00:00:00Z')),
         }
         parser = ParseSQ()
         for case in testcase.keys():
@@ -119,10 +131,10 @@ class SimpleTest(TestCase):
             "east:<50.0": str(SQ(east__lt='50.0')),
             "east:>=50.0": str(SQ(east__gte='50.0')),
             "east:>50.0": str(SQ(east__gt='50.0')),
-            "created:>2017-05-02": str(SQ(created__gt='2017-05-02T00:00:00Z')),
+            "created:>2017-05-02": str(SQ(created__gte='2017-05-03T00:00:00Z')),
             "created:>=2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z')),
             "created:<2017-05-02": str(SQ(created__lt='2017-05-02T00:00:00Z')),
-            "created:<=2017-05-02": str(SQ(created__lte='2017-05-03T00:00:00Z')),
+            "created:<=2017-05-02": str(SQ(created__lt='2017-05-03T00:00:00Z')),
         }
         parser = ParseSQ()
         for case in testcase.keys():
