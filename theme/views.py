@@ -579,7 +579,8 @@ def create_scidas_virtual_app(request, res_id, cluster):
                         p_data = jdata
 
     url = "http://sc17demo1.scidas.org:9090/appliance"
-    app_id = 'hs-jupyter'
+    app_id = user.username + '_cs_app_id'
+    preset_url = ''
     if not p_data:
         p_data = {
             "id": app_id,
@@ -612,6 +613,10 @@ def create_scidas_virtual_app(request, res_id, cluster):
 
     if cluster_name:
         p_data['containers'][0]['cluster'] = cluster_name
+
+    if p_data['containers'][0]['endpoints']:
+        preset_url = p_data['containers'][0]['endpoints'][0]
+
 
     # delete the appliance before posting to create a new one in case it already exists
     app_url = url+'/'+app_id
@@ -650,20 +655,17 @@ def create_scidas_virtual_app(request, res_id, cluster):
         con_ret_data = con_ret_data_list[0]
         con_state = con_ret_data['state']
         ep_data_list = con_ret_data['endpoints']
-        if con_state=='running':
+        if con_state=='running' and (ep_data_list or preset_url):
             break
         else:
             # the jupyter appliance is not ready yet, need to wait and poll again
             time.sleep(2)
 
-    if not ep_data_list:
-        # if no endpoint is returned, no URL redirect is needed and we just need to notify users
-        messages.error(request, 'The appliance has been provisioned and is up and running')
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
-    ep_data = ep_data_list[0]
-
-    app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
+    if preset_url:
+        app_url = preset_url
+    else:
+        ep_data = ep_data_list[0]
+        app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
 
     # make sure the new directed url is loaded and working before redirecting.
     # Since scidas will install dependencies included in requirements.txt, it will take some time
