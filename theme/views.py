@@ -650,13 +650,19 @@ def create_scidas_virtual_app(request, res_id, cluster):
         con_ret_data = con_ret_data_list[0]
         con_state = con_ret_data['state']
         ep_data_list = con_ret_data['endpoints']
-        if ep_data_list and con_state=='running':
+        if con_state=='running':
             break
         else:
             # the jupyter appliance is not ready yet, need to wait and poll again
             time.sleep(2)
 
+    if not ep_data_list:
+        # if no endpoint is returned, no URL redirect is needed and we just need to notify users
+        messages.error(request, 'The appliance has been provisioned and is up and running')
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     ep_data = ep_data_list[0]
+
     app_url = 'http://' + ep_data['host'] + ':' + str(ep_data['host_port'])
 
     # make sure the new directed url is loaded and working before redirecting.
