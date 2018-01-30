@@ -215,8 +215,11 @@
                                         id="id_contributor-{{ contributor.order|add:"-1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"-1" }}-homepage"
                                         type="url" value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}"></div>
                             </div>
-
                         </fieldset>
+                        <label class="control-label">Author Identifiers</label>
+                        <div class="modal-identifiers-container height-fix">
+                            {% include "includes/identifiers-form.html" with identifiers=contributor.identifiers %}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

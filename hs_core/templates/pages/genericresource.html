@@ -726,6 +726,7 @@
                                                 <th>Organization</th>
                                                 <th>Address</th>
                                                 <th>Phone</th>
+                                                <th>Author Identifiers</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -738,6 +739,14 @@
                                                         {{ cont.organization }}{% endif %}</td>
                                                     <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
                                                     <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                                                    <td>
+                                                        {% for name, link in cont.identifiers.items %}
+                                                            {{ identif.name }}
+                                                            <a href="{{ link }}"
+                                                               target="_blank">{{ name }}</a>
+                                                            {% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                             </tbody>
@@ -865,6 +874,7 @@
                                                 <th>Organization</th>
                                                 <th>Address</th>
                                                 <th>Phone</th>
+                                                <th>Author Identifiers</th>
                                                 <th></th>
                                             </tr>
                                             </thead>
@@ -880,6 +890,14 @@
                                                         {{ contributor.address }}{% endif %}</td>
                                                     <td>{% if  contributor.phone %}
                                                         {{ contributor.phone }}{% endif %}</td>
+                                                   <td>
+                                                        {% for name, link in contributor.identifiers.items %}
+                                                            {{ identif.name }}
+                                                            <a href="{{ link }}"
+                                                               target="_blank">{{ name }}</a>
+                                                            {% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    </td>
                                                     <td>
                                                         <a data-toggle="modal" data-placement="auto" title="Edit"
                                                            class="glyphicon glyphicon-pencil table-icon icon-button icon-blue"

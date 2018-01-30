@@ -17,7 +17,8 @@
 }
 
 .modal-identifiers-container .btn-add-identifier {
-    margin-top: 10px;
+    margin-top: 6px;
+    margin-left: 5px;
 }
 
 table.identifiers {
