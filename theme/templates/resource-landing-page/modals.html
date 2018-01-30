@@ -359,7 +359,9 @@
                         </fieldset>
 
                         <label class="control-label">Author Identifiers</label>
-                        {% include "includes/identifiers-form.html" with author=author %}
+                        <div class="modal-identifiers-container height-fix">
+                            {% include "includes/identifiers-form.html" with identifiers=author.identifiers %}
+                        </div>
                     </div>
                 </div>
 
@@ -1893,4 +1895,5 @@
 
 {% block extra_js %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/modals.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
 {% endblock %}

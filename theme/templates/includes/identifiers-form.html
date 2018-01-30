@@ -1,5 +1,6 @@
 {% load mezzanine_tags hydroshare_tags %}
 {% block extra_css %}
+
 <link href="{{ STATIC_URL }}css/identifiers.css" rel="stylesheet"/>
 {% endblock %}
 <div class="edit-identifiers-container">
@@ -34,7 +35,7 @@
         </fieldset>
     </div>
 
-    {% for name, link in author.identifiers.items %}
+    {% for name, link in identifiers.items %}
     <div class="well">
         <div style="height:22px;">
             <button type="button" class="close">&times;</button>
@@ -105,7 +106,3 @@
 <button type="button" class="btn btn-success btn-add-identifier">
     <i class="fa fa-plus" aria-hidden="true"></i> Add New
 </button>
-
-{% block extra_js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/identifiers-form.js"></script>
-{% endblock %}

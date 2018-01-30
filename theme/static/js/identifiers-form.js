@@ -36,7 +36,7 @@ $(document).ready(function () {
     $(".btn-add-identifier").click(function () {
         var templateInstance = $(this).parent().find(".identifier-template").clone();
         templateInstance.toggleClass("hidden", false);
-        templateInstance.removeAttr("id");
+        templateInstance.toggleClass("identifier-template", false);
 
         templateInstance.find("#selectIdentifier").attr("name", "identifier_name");
         templateInstance.find(".identifier-link-container input").attr("name", "identifier_link");

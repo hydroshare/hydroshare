@@ -4,6 +4,22 @@
     padding-top: 5px;
 }
 
+.modal-identifiers-container {
+    border: 1px solid #DDD;
+    padding: 12px;
+}
+
+.modal-identifiers-container .edit-identifiers-container .well {
+    width: 45%;
+    margin: 5px;
+    padding: 12px;
+    float: left;
+}
+
+.modal-identifiers-container .btn-add-identifier {
+    margin-top: 10px;
+}
+
 table.identifiers {
     width: 100%;
 }
