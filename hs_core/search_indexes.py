@@ -119,6 +119,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     # editor_login = indexes.MultiValueField(faceted=True)
     # editor = indexes.MultiValueField(faceted=True)
     # editors_count = indexes.IntegerField(faceted=True)
+    person = indexes.MultiValueField(faceted=True)
 
     # non-core metadata
     geometry_type = indexes.CharField(faceted=True)
@@ -588,6 +589,26 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 name = owner.last_name + ', ' + owner.first_name
                 names.append(name.strip())
         return names
+
+    # TODO: should utilize name from user profile rather than from User field
+    def prepare_person(self, obj):
+        """Return list of normalized names of resource contributors and owners."""
+        output0 = []
+        output1 = []
+        output2 = []
+        if hasattr(obj, 'raccess'):
+            for owner in obj.raccess.owners.all():
+                name = owner.last_name + ', ' + owner.first_name
+                output0.append(name.strip())
+
+        if hasattr(obj, 'metadata'):
+            output1 = [normalize_name(creator.name)
+                       for creator in obj.metadata.creators.all()
+                       .exclude(name__isnull=True).exclude(name='')]
+            output2 = [normalize_name(contributor.name)
+                       for contributor in obj.metadata.contributors.all()
+                       .exclude(name__isnull=True).exclude(name='')]
+        return list(set(output0 + output1 + output2))  # eliminate duplicates
 
     def prepare_owners_count(self, obj):
         """Return count of resource owners if 'raccess' attribute exists, othrerwise return 0."""

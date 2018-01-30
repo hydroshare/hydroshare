@@ -1003,12 +1003,13 @@ $(document).ready(function () {
         }
     });
 
-    // $("#solr-help-info").popover({
-    //     html: true,
-    //     container: '#body',
-    //     content: '<p>Search here to find all public and discoverable resources. This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
-    //     trigger: 'click'
-    // });
+    $("#solr-help-info").popover({
+        html: true,
+        container: '#body',
+        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Field names person:Couch, subject:water, resource_type:"Composite Resource", and others limit search to specific metadata fields. </p>',
+
+        trigger: 'click'
+    });
 
     $("#btn-show-all").click(clearAllFaceted);
     $("#clear-dates-options").click(clearDates);
