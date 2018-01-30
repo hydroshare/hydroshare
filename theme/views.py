@@ -614,9 +614,10 @@ def create_scidas_virtual_app(request, res_id, cluster):
     if cluster_name:
         p_data['containers'][0]['cluster'] = cluster_name
 
-    if p_data['containers'][0]['endpoints']:
-        preset_ep_data = p_data['containers'][0]['endpoints'][0]
-        preset_url = 'http://' + preset_ep_data['host'] + ':' + str(preset_ep_data['host_port'])
+    if 'endpoints' in p_data['containers'][0]:
+        if p_data['containers'][0]['endpoints']:
+            preset_ep_data = p_data['containers'][0]['endpoints'][0]
+            preset_url = 'http://' + preset_ep_data['host'] + ':' + str(preset_ep_data['host_port'])
 
 
     # delete the appliance before posting to create a new one in case it already exists
