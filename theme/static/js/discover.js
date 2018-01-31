@@ -709,7 +709,7 @@ var setLatLngLabels = function() {
 };
 
 var reorderDivs = function() {
-    var faceted_fields = ['author', 'contributor', 'owner', 
+    var faceted_fields = ['creator', 'contributor', 'owner', 
         'resource_type', 'subject', 'availability'];
     var div_ordering = [];
     faceted_fields.forEach(function(field) {
@@ -1006,7 +1006,7 @@ $(document).ready(function () {
     $("#solr-help-info").popover({
         html: true,
         container: '#body',
-        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Field names person:Couch, subject:water, resource_type:"Composite Resource", and others limit search to specific metadata fields. </p>',
+        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Adding a field name limits search to a specific metadata field, e.g., person:Couch, subject:water, resource_type:Composite, and others. </p>',
 
         trigger: 'click'
     });

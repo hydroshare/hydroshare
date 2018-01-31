@@ -4,7 +4,7 @@ from django import forms
 from hs_core.discovery_parser import ParseSQ, MatchingBracketsNotFoundError, \
     FieldNotRecognizedError, InequalityNotAllowedError, MalformedDateError
 
-FACETED_FIELDS = ['author', 'contributor', 'owner', 'resource_type', 'subject', 'availability']
+FACETED_FIELDS = ['creator', 'contributor', 'owner', 'resource_type', 'subject', 'availability']
 
 
 class DiscoveryForm(FacetedSearchForm):
@@ -110,7 +110,7 @@ class DiscoveryForm(FacetedSearchForm):
         if self.cleaned_data['coverage_type']:
             sqs = sqs.filter(coverage_types__in=[self.cleaned_data['coverage_type']])
 
-        author_sq = None
+        creator_sq = None
         contributor_sq = None
         owner_sq = None
         subject_sq = None
@@ -132,11 +132,11 @@ class DiscoveryForm(FacetedSearchForm):
             value = sqs.query.clean(value)
 
             if value:
-                if "author" in field:
-                    if author_sq is None:
-                        author_sq = SQ(author=value)
+                if "creator" in field:
+                    if creator_sq is None:
+                        creator_sq = SQ(creator=value)
                     else:
-                        author_sq.add(SQ(author=value), SQ.OR)
+                        creator_sq.add(SQ(creator=value), SQ.OR)
 
                 if "contributor" in field:
                     if contributor_sq is None:
@@ -185,8 +185,8 @@ class DiscoveryForm(FacetedSearchForm):
                 else:
                     continue
 
-        if author_sq is not None:
-            sqs = sqs.filter(author_sq)
+        if creator_sq is not None:
+            sqs = sqs.filter(creator_sq)
         if contributor_sq is not None:
             sqs = sqs.filter(contributor_sq)
         if owner_sq is not None:

@@ -11,11 +11,11 @@
             </h2>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-xs-12">
+            <button id="solr-help-info" class="btn btn-info" data-toggle="popover" 
+                    data-placement="right">
+                    <i class="glyphicon glyphicon-info-sign"></i>
+            </button>
             <div id="discover-resource-search" class="resource-search">
-                <button id="solr-help-info" class="btn btn-info" data-toggle="popover" 
-                        data-placement="right">
-                        <i class="glyphicon glyphicon-info-sign"></i>
-                </button>
 
                 <form id="search-field" method="get" action="." class="search-field">
                     {% for field in form %}
@@ -49,23 +49,18 @@
                             <div class="panel-heading">
                                 <h4 class="panel-title">
                                     <a data-toggle="collapse" href="#{{ key }}">
-                                        {% if key == 'author'%}
-                                            &nbsp; Most frequent first authors
+                                        {% if key == 'creator'%}
+                                            &nbsp; Frequent authors
                                         {% elif key == 'contributor'%}
-                                            &nbsp; Most frequent contributors
+                                            &nbsp; Frequent contributors
                                         {% elif key ==  'subject'%}
-                                            &nbsp; Most frequent subjects
+                                            &nbsp; Frequent subjects
                                         {% elif key ==  'resource_type'%}
                                             &nbsp; Resource types
                                         {% elif key ==  'owner'%}
-                                            &nbsp; Most frequent owners
-                                        {% elif key ==  'variable'%}
-                                            &nbsp; Most frequent Variables
-                                        {% elif key ==  'sample_medium'%}
-                                            &nbsp; Most frequent Sample Mediums
+                                            &nbsp; Frequent owners
                                         {% elif key ==  'availability'%}
                                             &nbsp; Availability
-
                                         {% endif %}
                                         <span class="glyphicon glyphicon-minus pull-left" >
 
