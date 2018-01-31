@@ -94,6 +94,7 @@ class ParseSQ(object):
     # fields known to SOLR that are reasonably searchable.
     # This omits unindexed fields and JSON fields.
     KNOWN_FIELDS = [
+        'person',
         'author',
         'short_id',
         'doi',
