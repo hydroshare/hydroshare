@@ -1006,7 +1006,7 @@ $(document).ready(function () {
     $("#solr-help-info").popover({
         html: true,
         container: '#body',
-        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Adding a field name limits search to a specific metadata field, e.g., person:Couch, subject:water, resource_type:Composite, and others. </p>',
+        content: '<p>Type a word to search for all variations of the word. Place a word within double-quotes (e.g.,"word") to search for an exact spelling. Type a "word phrase" in double quotes to search for a phrase. Adding a field name limits search to a specific metadata field, e.g., author:Tarboton, subject:water, resource_type:Composite, and others. </p>',
 
         trigger: 'click'
     });
