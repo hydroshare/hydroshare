@@ -4,7 +4,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor
 
-from hs_file_types.models import GenericLogicalFile
+from hs_file_types.models import GenericLogicalFile, GeoFeatureFileMetaData, GeoRasterLogicalFile, \
+    NetCDFLogicalFile, TimeSeriesFileMetaData
 
 
 class CompositeResource(BaseResource):
@@ -38,11 +39,11 @@ class CompositeResource(BaseResource):
                 res_file.save()
 
     def get_folder_aggregation_object(self, dir_path):
-        """Returns a aggregation (file type) object if the specified folder *dir_path* represents a
+        """Returns an aggregation (file type) object if the specified folder *dir_path* represents a
          file type aggregation (logical file), otherwise None.
 
          :param dir_path: Resource file directory path (full folder path starting with resource id)
-         for which the file type aggregation object to be retrieved
+         for which the aggregation object to be retrieved
         """
         files_in_folder = [res_file for res_file in self.files.all()
                            if res_file.dir_path == dir_path]
@@ -50,6 +51,60 @@ class CompositeResource(BaseResource):
             if fl.has_logical_file:
                 return fl.logical_file
         return None
+
+    def get_folder_aggregation_type_to_set(self, dir_path):
+        """Returns an aggregation (file type) type that the specified folder *dir_path* can
+        possibly be set to.
+
+        :param dir_path: Resource file directory path (full folder path starting with resource id)
+        for which the possible aggregation type that can be set needs to be determined
+
+        :return If the specified folder is already represents an aggregation or does
+        not contain suitable file(s) then returns "" (empty string). If the specified folder
+        contains files that meet the requirements of a supported aggregation type then return the
+        class name of that matching aggregation type.
+        """
+        aggregation_type_to_set = ""
+        if self.get_folder_aggregation_object(dir_path) is not None:
+            # target folder is already an aggregation
+            return aggregation_type_to_set
+
+        istorage = self.get_irods_storage()
+        store = istorage.listdir(dir_path)
+        if store[0]:
+            # seems there are folders under dir_path - no aggregation type can be set if the target
+            # folder contains other folders
+            return aggregation_type_to_set
+
+        files_in_folder = [res_file for res_file in self.files.all()
+                           if res_file.dir_path == dir_path]
+        if not files_in_folder:
+            # folder is empty
+            return aggregation_type_to_set
+        if len(files_in_folder) > 1:
+            # check for raster and geo feature
+            aggregation_type_to_set = GeoFeatureFileMetaData.check_files_for_aggregation_type(
+                files_in_folder)
+            if aggregation_type_to_set:
+                return aggregation_type_to_set
+
+            aggregation_type_to_set = GeoRasterLogicalFile.check_files_for_aggregation_type(
+                files_in_folder)
+            if aggregation_type_to_set:
+                return aggregation_type_to_set
+        else:
+            # check for NetCDF aggregation type
+            aggregation_type_to_set = NetCDFLogicalFile.check_files_for_aggregation_type(
+                files_in_folder)
+            if aggregation_type_to_set:
+                return aggregation_type_to_set
+            # check for TimeSeries aggregation type
+            aggregation_type_to_set = TimeSeriesFileMetaData.check_files_for_aggregation_type(
+                files_in_folder)
+            if aggregation_type_to_set:
+                return aggregation_type_to_set
+
+        return aggregation_type_to_set
 
     @property
     def supports_logical_file(self):

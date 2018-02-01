@@ -613,6 +613,17 @@ class AbstractLogicalFile(models.Model):
         return cls.__name__
 
     @classmethod
+    def check_files_for_aggregation_type(cls, files):
+        """Checks if the specified files can be used to set this aggregation type. Sub classes may
+        need to override this.
+        :param  files: a list of ResourceFile objects
+
+        :return If the files meet the requirements of this aggregation type, then returns this
+        aggregation class name, otherwise empty string.
+        """
+        return ""
+
+    @classmethod
     def set_file_type(cls, resource, file_id, user):
         """Sub classes must implement this method to create specific logical file type
         :param resource: an instance of resource type CompositeResource

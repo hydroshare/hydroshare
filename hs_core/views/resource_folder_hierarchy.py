@@ -77,6 +77,8 @@ def data_store_structure(request):
             folder_aggregation_type = ''
             folder_aggregation_name = ''
             folder_aggregation_id = ''
+            folder_aggregation_type_to_set = ''
+            folder_short_path = os.path.join(store_path, folder)
             if resource.resource_type == "CompositeResource":
                 dir_path = os.path.join(res_coll, folder)
                 # find if this folder *dir_path* represents (contains) an aggregation object
@@ -85,11 +87,16 @@ def data_store_structure(request):
                     folder_aggregation_type = aggregation_object.get_aggregation_type_name()
                     folder_aggregation_name = aggregation_object.get_aggregation_display_name()
                     folder_aggregation_id = aggregation_object.id
+                else:
+                    folder_aggregation_type_to_set = resource.get_folder_aggregation_type_to_set(
+                        dir_path)
 
             folders.append({'folder_name': folder,
                             'folder_aggregation_type': folder_aggregation_type,
                             'folder_aggregation_name': folder_aggregation_name,
-                            'folder_aggregation_id': folder_aggregation_id})
+                            'folder_aggregation_id': folder_aggregation_id,
+                            'folder_aggregation_type_to_set': folder_aggregation_type_to_set,
+                            'folder_short_path': folder_short_path})
 
         for fname in store[1]:  # files
             fname = fname.decode('utf-8')

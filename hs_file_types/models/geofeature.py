@@ -212,6 +212,26 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         return False
 
     @classmethod
+    def check_files_for_aggregation_type(cls, files):
+        """Checks if the specified files can be used to set this aggregation type
+        :param  files: a list of ResourceFile objects
+
+        :return If the files meet the requirements of this aggregation type, then returns this
+        aggregation class name, otherwise empty string.
+        """
+        if len(files) < 3:
+            # minimum 3 files required
+            return ""
+        for fl in files:
+            if fl.extension == ".zip":
+                return ""
+            if fl.extension not in cls.get_allowed_uploaded_file_types():
+                return ""
+
+        return cls.__name__
+
+
+    @classmethod
     def set_file_type(cls, resource, file_id, user):
         """
         Sets a .shp or .zip resource file to GeoFeatureFile type

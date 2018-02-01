@@ -344,6 +344,23 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         netcdf_file_update(self, nc_res_file, txt_res_file, user)
 
     @classmethod
+    def check_files_for_aggregation_type(cls, files):
+        """Checks if the specified files can be used to set this aggregation type
+        :param  files: a list of ResourceFile objects
+
+        :return If the files meet the requirements of this aggregation type, then returns this
+        aggregation class name, otherwise empty string.
+        """
+        if len(files) != 1:
+            # no files or more than 1 file
+            return ""
+
+        if files[0].extension not in cls.get_allowed_uploaded_file_types():
+            return ""
+
+        return cls.__name__
+
+    @classmethod
     def set_file_type(cls, resource, file_id, user):
         """
             Sets a tif or zip raster resource file to GeoRasterFile type
