@@ -1063,7 +1063,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    $('#fb-files-container').append(getFolderTemplateInstance(v['folder_name'], v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id']));
+                    $('#fb-files-container').append(getFolderTemplateInstance(v['folder_name'], v['folder_aggregation_type'], v['folder_aggregation_name'], v['folder_aggregation_id'], v['folder_aggregation_type_to_set'], v['folder_short_path']));
                 });
             }
             if (!files.length && !folders.length) {

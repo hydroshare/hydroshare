@@ -10,7 +10,7 @@ var file_metadata_alert = '<div class="alert alert-warning alert-dismissible" ro
 
 const MAX_FILE_SIZE = 1024; // MB
 
-function getFolderTemplateInstance(folderName, folderAgrregationType, folderAggregationName, folderAggregationID) {
+function getFolderTemplateInstance(folderName, folderAgrregationType, folderAggregationName, folderAggregationID, folderAggregationTypeToSet, folderShortPath) {
     if(folderAgrregationType.length >0){
         return "<li class='fb-folder droppable draggable' data-logical-file-id='" + folderAggregationID+ "' title='" + folderName + "&#13;Aggregation Type: " + folderAggregationName + "' >" +
                 "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
@@ -24,7 +24,8 @@ function getFolderTemplateInstance(folderName, folderAgrregationType, folderAggr
         return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
             "<span class='fb-file-icon fa fa-folder icon-blue'></span>" +
             "<span class='fb-file-name'>" + folderName + "</span>" +
-            "<span class='fb-file-type'>File Folder</span>" +
+            "<span class='fb-file-type' data-folder-short-path='" + folderShortPath + "'>File Folder</span>" +
+            "<span class='fb-logical-file-type' data-logical-file-type-to-set='" + folderAggregationTypeToSet + "'></span>" +
             "<span class='fb-file-size'></span>" +
             "</li>"
     }
@@ -176,9 +177,30 @@ function updateSelectionMenuContext() {
         flagDisableDownload = true;
         flagDisableUnzip = true;
         flagDisableGetLink = true;
-        if (!selected.children('span').hasClass('fb-logical-file-type')){
+        if(!selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type") ||
+            selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type-to-set") ){
             flagDisableRemoveAggregation = true;
         }
+        if(selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type-to-set")){
+            var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
+            if(logicalFileTypeToSet.length){
+                if(logicalFileTypeToSet !== "NetCDFLogicalFile"){
+                    flagDisableSetNetCDFFileType = true;
+                }
+                else if(logicalFileTypeToSet !== "GeoRasterLogicalFile"){
+                    flagDisableSetGeoRasterFileType = true;
+                }
+                else if(logicalFileTypeToSet !== "GeoFeatureLogicalFile"){
+                    flagDisableSetGeoFeatureFileType = true;
+                }
+                else if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
+                    flagDisableSetTimeseriesFileType = true;
+                }
+            }
+        }
+        // if (!selected.children('span').hasClass('fb-logical-file-type')){
+        //     flagDisableRemoveAggregation = true;
+        // }
     }
 
     if (!sourcePaths.length) {
