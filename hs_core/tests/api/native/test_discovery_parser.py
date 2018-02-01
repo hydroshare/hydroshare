@@ -25,9 +25,10 @@ class SimpleTest(TestCase):
         testcase = {
             "note": str(SQ(content="note")),
             '"need note"': str(SQ(content__exact="need note")),
-            "author:admin": str(SQ(author="admin")),
-            "author:admin notes": str(SQ(author="admin") & SQ(content="notes")),
-            "author:admin OR notes": str(SQ(author="admin") | SQ(content="notes")),
+            "author:admin": str(SQ(creator="admin")),
+            "first_author:admin": str(SQ(author="admin")),
+            "author:admin notes": str(SQ(creator="admin") & SQ(content="notes")),
+            "author:admin OR notes": str(SQ(creator="admin") | SQ(content="notes")),
             'title:"need note"': str(SQ(title__exact="need note")),
             # "need note ?????": str(SQ(content="need") & SQ(content="note") &
             #                        SQ(content=u"?") & SQ(content=u"?") & SQ(content=u"?") &
