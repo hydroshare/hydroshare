@@ -96,6 +96,7 @@ class ParseSQ(object):
     KNOWN_FIELDS = [
         'person',
         'author',
+        'first_author',
         'short_id',
         'doi',
         'title',
@@ -147,6 +148,14 @@ class ParseSQ(object):
         'units',
         'units_type'
     ]
+
+    # This makes the query more friendly to humans
+    # The names follow the dublin core names.
+    # But humans know 'creator' as 'author'.
+    REPLACE_BY = {
+        'author': 'creator',
+        'first_author': 'author'
+    }
 
     INEQUALITY_FIELDS = [
         'rating',
@@ -210,6 +219,8 @@ class ParseSQ(object):
             raise FieldNotRecognizedError(
                 "Field delimiter '{}' is not recognized."
                 .format(search_field))
+        if search_field in self.REPLACE_BY:
+            search_field = self.REPLACE_BY[search_field]
 
         if search_inequality and search_field not in self.INEQUALITY_FIELDS:
             raise InequalityNotAllowedError(

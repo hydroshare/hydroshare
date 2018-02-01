@@ -42,7 +42,7 @@ def normalize_name(name):
     try:
         _, type = probablepeople.tag(sname)  # discard parser result
     except probablepeople.RepeatedLabelError:  # if it can't understand the name, punt
-        return sname.capitalize()
+        return sname
 
     if type == 'Corporation':
         return sname  # do not parse and reorder company names
@@ -235,13 +235,10 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         This field can have multiple values. Contributors include creators.
         """
         if hasattr(obj, 'metadata'):
-            output1 = [normalize_name(creator.name)
-                       for creator in obj.metadata.creators.all()
-                       .exclude(name__isnull=True).exclude(name='')]
-            output2 = [normalize_name(contributor.name)
+            output1 = [normalize_name(contributor.name)
                        for contributor in obj.metadata.contributors.all()
                        .exclude(name__isnull=True).exclude(name='')]
-            return list(set(output1 + output2))  # eliminate duplicates
+            return list(set(output1))  # eliminate duplicates
         else:
             return []
 
@@ -288,37 +285,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     .exclude(email__isnull=True).exclude(email='')]
         else:
             return []
-
-    # These are REPLACED by the availability field
-    # def prepare_discoverable(self, obj):
-    #     """Return resource discoverability if exists, otherwise return False."""
-    #     if hasattr(obj, 'raccess'):
-    #         if obj.raccess.public or obj.raccess.discoverable:
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return False
-
-    # def prepare_public(self, obj):
-    #     """Return resource access if exists, otherwise return False."""
-    #     if hasattr(obj, 'raccess'):
-    #         if obj.raccess.public:
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return False
-
-    # def prepare_published(self, obj):
-    #     """Return resource published status if exists, otherwise return False."""
-    #     if hasattr(obj, 'raccess'):
-    #         if obj.raccess.published:
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return False
 
     def prepare_availability(self, obj):
         """
@@ -586,8 +552,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         names = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = owner.last_name + ', ' + owner.first_name
-                names.append(name.strip())
+                name = normalize_name(owner.first_name.capitalize() +
+                                      ' ' + owner.last_name.capitalize())
+                names.append(name)
         return names
 
     # TODO: should utilize name from user profile rather than from User field
@@ -598,8 +565,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         output2 = []
         if hasattr(obj, 'raccess'):
             for owner in obj.raccess.owners.all():
-                name = owner.last_name + ', ' + owner.first_name
-                output0.append(name.strip())
+                name = normalize_name(owner.first_name.capitalize() +
+                                      ' ' + owner.last_name.capitalize())
+                output0.append(name)
 
         if hasattr(obj, 'metadata'):
             output1 = [normalize_name(creator.name)
