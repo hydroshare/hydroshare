@@ -275,6 +275,7 @@ class PartyValidationForm(forms.Form):
                 data = json.loads(data)
             except ValueError as ex:
                 raise forms.ValidationError("Invalid data found for identifiers.")
+
             # validate identifier values - check for duplicate links
             links = [l.lower() for l in data.values()]
             if len(links) != len(set(links)):
