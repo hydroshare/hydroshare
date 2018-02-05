@@ -1,14 +1,9 @@
 from django.contrib.auth.models import User, Group
-from hs_access_control.models import PrivilegeCodes, \
-    UserResourcePrivilege, UserGroupPrivilege, GroupResourcePrivilege
+from hs_access_control.models import PrivilegeCodes
 from hs_core.models import BaseResource
-from django.db.models import Q
-from hs_tracking.models import Variable, Session
-from datetime import datetime
-from hs_core.hydroshare.utils import user_from_id
+from hs_tracking.models import Variable
+# from hs_core.hydroshare.utils import user_from_id
 import re
-
-from pprint import pprint
 
 
 class Features(object):
@@ -64,17 +59,17 @@ class Features(object):
     def resource_viewers(fromdate, todate):
         """ map of users who viewed each resource, according to date of access """
         resource_visited_by_user = {}
-        for v in Variable.objects.filter(name='visit', 
+        for v in Variable.objects.filter(name='visit',
                                          timestamp__gte=fromdate, timestamp__lte=todate):
             user = v.session.visitor.user
             if user is not None and \
-               user.username != 'test' and user.username != 'demo' and v.name == 'visit':
+               user.username != 'test' and user.username != 'demo':
                 value = v.get_value()
                 m = re.search('/resource/([^/]+)/', value)  # home page of resource
                 if m and m.group(1):
                     resource_id = m.group(1)
                     user_id = user.username
-                    # print("user={} resource={} when={}".format(user_id, resource_id, 
+                    # print("user={} resource={} when={}".format(user_id, resource_id,
                     #     str(v.timestamp)))
                     if resource_id not in resource_visited_by_user:
                         resource_visited_by_user[resource_id] = set([user_id])
@@ -86,20 +81,62 @@ class Features(object):
     def visited_resources(fromdate, todate):
         """ map of users who viewed each resource, according to date of access """
         user_visiting_resource = {}
-        for v in Variable.objects.filter(name='visit', 
+        for v in Variable.objects.filter(name='visit',
                                          timestamp__gte=fromdate, timestamp__lte=todate):
             user = v.session.visitor.user
             if user is not None and \
-               user.username != 'test' and user.username != 'demo' and v.name == 'visit':
+               user.username != 'test' and user.username != 'demo':
                 value = v.get_value()
                 m = re.search('/resource/([^/]+)/', value)  # home page of resource
                 if m and m.group(1):
                     resource_id = m.group(1)
                     user_id = user.username
-                    # print("user={} resource={} when={}".format(user_id, resource_id, 
+                    # print("user={} resource={} when={}".format(user_id, resource_id,
                     #     str(v.timestamp)))
                     if user_id not in user_visiting_resource:
                         user_visiting_resource[user_id] = set([resource_id])
                     else:
                         user_visiting_resource[user_id].add(resource_id)
         return user_visiting_resource
+
+    @staticmethod
+    def resource_downloads(fromdate, todate):
+        downloads = {}
+        for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
+            user = v.session.visitor.user
+            if user is not None and \
+               user.username != 'test' and user.username != 'demo':
+                user_id = user.username
+                if v.name == 'download':
+                    value = v.get_value()
+                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
+                    m = re.search('\|resource_guid=([^|]+)\|', value)  # resource short id
+                    if m and m.group(1):
+                        resource_id = m.group(1)
+                        user_id = user.username
+                        if resource_id not in downloads:
+                            downloads[resource_id] = set([user_id])
+                        else:
+                            downloads[resource_id].add(user_id)
+        return downloads
+
+    @staticmethod
+    def user_downloads(fromdate, todate):
+        downloads = {}
+        for v in Variable.objects.filter(timestamp__gte=fromdate, timestamp__lte=todate):
+            user = v.session.visitor.user
+            if user is not None and \
+               user.username != 'test' and user.username != 'demo':
+                user_id = user.username
+                if v.name == 'download':
+                    value = v.get_value()
+                    # print("user:{} value:{} action:{}".format(user_id, value, v.name))
+                    m = re.search('\|resource_guid=([^|]+)\|', value)  # resource short id
+                    if m and m.group(1):
+                        resource_id = m.group(1)
+                        user_id = user.username
+                        if resource_id not in downloads:
+                            downloads[user_id] = set([resource_id])
+                        else:
+                            downloads[user_id].add(resource_id)
+        return downloads

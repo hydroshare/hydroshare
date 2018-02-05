@@ -8,9 +8,9 @@ class Command(BaseCommand):
     help = "Print information about a user."
 
     def handle(self, *args, **options):
-        x = Features.visited_resources(datetime(2017, 11, 20, 0, 0, 0, 0),
-                                       datetime(2018, 1, 1, 0, 0, 0, 0))
-        pprint(x)
+        # x = Features.visited_resources(datetime(2017, 11, 20, 0, 0, 0, 0),
+        #                                datetime(2018, 1, 1, 0, 0, 0, 0))
+        # pprint(x)
         # x = Features.resource_viewers(datetime(2017, 11, 20, 0, 0, 0, 0),
         #                               datetime(2018, 1, 1, 0, 0, 0, 0))
         # pprint(x)
@@ -18,3 +18,9 @@ class Command(BaseCommand):
         # pprint(x)
         # x = Features.resource_editors()
         # pprint(x)
+        # x = Features.resource_downloads(datetime(2017, 11, 20, 0, 0, 0, 0),
+        #                                 datetime(2018, 1, 1, 0, 0, 0, 0))
+        # pprint(x)
+        x = Features.user_downloads(datetime(2017, 11, 20, 0, 0, 0, 0),
+                                    datetime(2018, 1, 1, 0, 0, 0, 0))
+        pprint(x)
