@@ -3,6 +3,11 @@ from hs_access_control.models import PrivilegeCodes, \
     UserResourcePrivilege, UserGroupPrivilege, GroupResourcePrivilege
 from hs_core.models import BaseResource
 from django.db.models import Q
+from hs_tracking.models import Variable, Session
+from datetime import datetime
+from hs_core.hydroshare.utils import user_from_id
+import re
+
 from pprint import pprint
 
 
@@ -12,25 +17,25 @@ class Features(object):
     """
 
     @staticmethod
-    def resource_ownership():
-        """ return (user, resource) tuples representing resource ownership """
+    def resource_owners():
+        """ return (user, resource) tuples representing resource owners """
         records = []
         for u in User.objects.all():
             owned = BaseResource.objects.filter(r2urp__user=u,
                                                 r2urp__privilege=PrivilegeCodes.OWNER)
             for r in owned:
-                records.append((u, r,))
+                records.append((u.username, r.short_id,))
         return records
 
     @staticmethod
-    def group_ownership():
+    def group_owners():
         """ return (user, group) tuples representing group ownership """
         records = []
         for u in User.objects.all():
             owned = Group.objects.filter(g2ugp__user=u,
                                          g2ugp__privilege=PrivilegeCodes.OWNER)
             for g in owned:
-                records.append((u, g,))
+                records.append((u.username, g.name,))
         return records
 
     @staticmethod
@@ -41,7 +46,7 @@ class Features(object):
             editable = BaseResource.objects.filter(r2urp__user=u,
                                                    r2urp__privilege__lte=PrivilegeCodes.CHANGE)
             for r in editable:
-                records.append((u, r,))
+                records.append((u.username, r.short_id,))
         return records
 
     @staticmethod
@@ -52,5 +57,49 @@ class Features(object):
             editable = Group.objects.filter(g2ugp__user=u,
                                             g2ugp__privilege__lte=PrivilegeCodes.CHANGE)
             for g in editable:
-                records.append((u, g,))
+                records.append((u.username, g.name,))
         return records
+
+    @staticmethod
+    def resource_viewers(fromdate, todate):
+        """ map of users who viewed each resource, according to date of access """
+        resource_visited_by_user = {}
+        for v in Variable.objects.filter(name='visit', 
+                                         timestamp__gte=fromdate, timestamp__lte=todate):
+            user = v.session.visitor.user
+            if user is not None and \
+               user.username != 'test' and user.username != 'demo' and v.name == 'visit':
+                value = v.get_value()
+                m = re.search('/resource/([^/]+)/', value)  # home page of resource
+                if m and m.group(1):
+                    resource_id = m.group(1)
+                    user_id = user.username
+                    # print("user={} resource={} when={}".format(user_id, resource_id, 
+                    #     str(v.timestamp)))
+                    if resource_id not in resource_visited_by_user:
+                        resource_visited_by_user[resource_id] = set([user_id])
+                    else:
+                        resource_visited_by_user[resource_id].add(user_id)
+        return resource_visited_by_user
+
+    @staticmethod
+    def visited_resources(fromdate, todate):
+        """ map of users who viewed each resource, according to date of access """
+        user_visiting_resource = {}
+        for v in Variable.objects.filter(name='visit', 
+                                         timestamp__gte=fromdate, timestamp__lte=todate):
+            user = v.session.visitor.user
+            if user is not None and \
+               user.username != 'test' and user.username != 'demo' and v.name == 'visit':
+                value = v.get_value()
+                m = re.search('/resource/([^/]+)/', value)  # home page of resource
+                if m and m.group(1):
+                    resource_id = m.group(1)
+                    user_id = user.username
+                    # print("user={} resource={} when={}".format(user_id, resource_id, 
+                    #     str(v.timestamp)))
+                    if user_id not in user_visiting_resource:
+                        user_visiting_resource[user_id] = set([resource_id])
+                    else:
+                        user_visiting_resource[user_id].add(resource_id)
+        return user_visiting_resource
