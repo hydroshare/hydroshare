@@ -947,6 +947,10 @@
                                                                      type="url"></div>
                                     </div>
                                 </fieldset>
+                                <label class="control-label">Author Identifiers</label>
+                                <div class="modal-identifiers-container height-fix">
+                                    {% include "includes/identifiers-form.html" with identifiers=contributor.identifiers %}
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -1317,6 +1321,11 @@
                                                                  type="url"></div>
                                 </div>
                             </fieldset>
+
+                            <label class="control-label">Author Identifiers</label>
+                            <div class="modal-identifiers-container height-fix">
+                                {% include "includes/identifiers-form.html" with identifiers=contributor.identifiers %}
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
