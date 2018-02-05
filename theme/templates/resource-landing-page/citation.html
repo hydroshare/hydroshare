@@ -14,7 +14,15 @@
                 </button>
             </div>
 
-            <br>
+            {% if is_owner_user and not cm.raccess.published %}
+            <br />
+
+            <div>
+                <em>When published, this resource will have a DOI of http://dx.doi.org/10.4211/hs.{{ cm.short_id }} </em>
+            </div>
+            {% endif %}
+
+            <br />
 
             {# ======= Sharing ======= #}
             {% if not metadata_form %}
