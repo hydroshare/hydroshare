@@ -30,7 +30,6 @@ $(document).ready(function () {
 
     $(".edit-identifiers-container").on("click", ".close", function () {
         $(this).closest(".well").remove();
-        updateIdentifierFormIndexes(this);
     });
 
     $(".btn-add-identifier").click(function () {
@@ -38,26 +37,9 @@ $(document).ready(function () {
         templateInstance.toggleClass("hidden", false);
         templateInstance.toggleClass("identifier-template", false);
 
-        templateInstance.find("#selectIdentifier").attr("name", "identifier_name");
+        templateInstance.find(".select-identifier").attr("name", "identifier_name");
         templateInstance.find(".identifier-link-container input").attr("name", "identifier_link");
 
-
         $(this).parent().find(".edit-identifiers-container").append(templateInstance).hide().fadeIn(350);
-        updateIdentifierFormIndexes(this);
     });
-
-    function updateIdentifierFormIndexes(obj) {
-        var identifiers = $(obj).closest(".edit-identifiers-container").find(".well:not(.dentifier-template)");
-        identifiers.each(function (index, item) {
-            // Set labels and references for screen readers
-            $(item).find(".identifier-specify input").attr("id", "identifier_name" + index);
-            $(item).find(".identifier-specify label").attr("for", "identifier_name" + index);
-
-            $(item).find(".select-identifier-fieldset select").attr("id", "select_identifier" + index);
-            $(item).find(".select-identifier-fieldset label").attr("for", "select_identifier" + index);
-
-            $(item).find(".identifier-link-container input").attr("id", "identifier_link" + index);
-            $(item).find(".identifier-link-container label").attr("for", "identifier_link" + index);
-        });
-    }
 });

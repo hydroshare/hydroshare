@@ -11,9 +11,8 @@
         </div>
 
         <fieldset class="select-identifier-fieldset">
-            <label for="selectIdentifier">Identifier Name</label>
-            <select class="form-control select-identifier"
-                    id="selectIdentifier">
+            <label>Identifier Name</label>
+            <select class="form-control select-identifier">
                 <option disabled selected> -- Select an option -- </option>
                 <option value="Google Scholar">Google Scholar</option>
                 <option value="ORCID">ORCID</option>
@@ -24,14 +23,13 @@
         </fieldset>
 
         <fieldset class="hidden identifier-specify">
-            <label for="identifier_name">Specify</label>
-            <input id="identifier_name" class="form-control">
+            <label>Specify</label>
+            <input class="form-control">
         </fieldset>
 
         <fieldset class="identifier-link-container">
-            <label for="identifier_link">Identifier Link</label>
-            <input id="identifier_link"
-                   class="form-control identifier-link">
+            <label>Identifier Link</label>
+            <input class="form-control identifier-link">
         </fieldset>
     </div>
 
@@ -42,9 +40,8 @@
         </div>
 
         <fieldset class="select-identifier-fieldset">
-            <label for="select_identifier{{ forloop.counter }}">Identifier Name</label>
+            <label>Identifier Name</label>
             <select class="form-control select-identifier"
-                    id="select_identifier{{ forloop.counter }}"
                     {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
                     name="identifier_name"
                     value="{{ name }}"
@@ -80,23 +77,21 @@
 
         {% if name == "Google Scholar" or name == "ORCID" or name == "ResearchGate" or name == "ResearcherID" %}
         <fieldset class="hidden identifier-specify">
-            <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
-            <input id="identifier_specify_name{{ forloop.counter }}"
-                   class="form-control">
+            <label>Specify</label>
+            <input class="form-control">
         </fieldset>
         {% else %}
         <fieldset class="identifier-specify">
-            <label for="identifier_specify_name{{ forloop.counter }}">Specify</label>
-            <input id="identifier_specify_name{{ forloop.counter }}"
-                   name="identifier_name"
+            <label>Specify</label>
+            <input name="identifier_name"
                    value="{{ name }}"
                    class="form-control">
         </fieldset>
         {% endif %}
 
         <fieldset>
-            <label for="identifier_link{{ forloop.counter }}">Identifier Link</label>
-            <input id="identifier_link{{ forloop.counter }}" name="identifier_link"
+            <label>Identifier Link</label>
+            <input name="identifier_link"
                    class="form-control identifier-link" value="{{ link }}">
         </fieldset>
     </div>
