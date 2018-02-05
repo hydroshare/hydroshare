@@ -888,6 +888,7 @@
                         </div>
                     </form>
                 </div>
+
                 {# Other Person #}
                 <div data-hs-person-type="other_person" style="display:none;">
                     <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
@@ -949,7 +950,7 @@
                                 </fieldset>
                                 <label class="control-label">Author Identifiers</label>
                                 <div class="modal-identifiers-container height-fix">
-                                    {% include "includes/identifiers-form.html" with identifiers=contributor.identifiers %}
+                                    {% include "includes/identifiers-form.html" %}
                                 </div>
                             </div>
                         </div>
@@ -1181,7 +1182,6 @@
                         <hr>
                     </div>
                 </div>
-
             </div>
 
             {#  Existing HydroShare User  #}
@@ -1265,7 +1265,7 @@
                 </form>
             </div>
 
-            {#  Other  #}
+            {#  Other Person #}
             <div data-hs-user-type="other" style="display:none">
                 <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/" method="POST"
                       enctype="multipart/form-data">
@@ -1324,7 +1324,7 @@
 
                             <label class="control-label">Author Identifiers</label>
                             <div class="modal-identifiers-container height-fix">
-                                {% include "includes/identifiers-form.html" with identifiers=contributor.identifiers %}
+                                {% include "includes/identifiers-form.html" %}
                             </div>
                         </div>
                     </div>
