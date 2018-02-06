@@ -2998,24 +2998,39 @@ class ResourceFile(ResourceFileIRODSMixin):
 
     # TODO: move to BaseResource as instance method
     @classmethod
-    def list_folder(cls, resource, folder):
-        """List a given folder.
+    def list_folder(cls, resource, folder, sub_folders=True):
+        """List files (instances of ResourceFile) in a given folder.
 
         :param resource: resource for which to list the folder
         :param folder: folder listed as either short_path or fully qualified path
+        :param sub_folders: if true files from sub folders of *folder* will be included in the list
         """
+        file_folder_to_match = folder
         if folder is None:
             folder = resource.file_path
         elif not folder.startswith(resource.file_path):
             folder = os.path.join(resource.file_path, folder)
-        if resource.is_federated:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                fed_resource_file__startswith=folder)
         else:
-            return ResourceFile.objects.filter(
-                object_id=resource.id,
-                resource_file__startswith=folder)
+            file_folder_to_match = folder[len(resource.file_path):]
+
+        if resource.is_federated:
+            if sub_folders:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    fed_resource_file__startswith=folder)
+            else:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    file_folder=file_folder_to_match)
+        else:
+            if sub_folders:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    resource_file__startswith=folder)
+            else:
+                return ResourceFile.objects.filter(
+                    object_id=resource.id,
+                    file_folder=file_folder_to_match)
 
     # TODO: move to BaseResource as instance method
     @classmethod
