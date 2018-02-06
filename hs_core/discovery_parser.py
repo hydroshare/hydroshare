@@ -85,6 +85,7 @@ class ParseSQ(object):
 
     # Translation table for inequalities
     HAYSTACK_INEQUALITY = {
+        ':': '',
         '<': '__lt',
         '>': '__gt',
         '<=': '__lte',
@@ -185,7 +186,7 @@ class ParseSQ(object):
     # Pattern_Field_Exact_Query = re.compile(r"^(\w+):\"(.+)\"\s*", re.U)
 
     # Paterns without more precise control of __exact keyword
-    Pattern_Field_Query = re.compile(r"^(\w+):(([<>]=?)?)", re.U)
+    Pattern_Field_Query = re.compile(r"^(\w+)(:|[<>]=?)", re.U)
     Pattern_Normal_Query = re.compile(r"^(\w+)\s*", re.U)
     Pattern_Operator = re.compile(r"^(AND|OR|NOT|\-|\+)\s*", re.U)
     Pattern_Quoted_Text = re.compile(r"^\"([^\"]*)\"\s*", re.U)
@@ -214,7 +215,7 @@ class ParseSQ(object):
     def handle_field_query(self):
         mat = re.search(self.Pattern_Field_Query, self.query)
         search_field = mat.group(1)
-        search_inequality = mat.group(2)
+        search_operator = mat.group(2)
         if search_field not in self.KNOWN_FIELDS:
             raise FieldNotRecognizedError(
                 "Field delimiter '{}' is not recognized."
@@ -222,7 +223,7 @@ class ParseSQ(object):
         if search_field in self.REPLACE_BY:
             search_field = self.REPLACE_BY[search_field]
 
-        if search_inequality and search_field not in self.INEQUALITY_FIELDS:
+        if search_operator != ':' and search_field not in self.INEQUALITY_FIELDS:
             raise InequalityNotAllowedError(
                 "Inequality is not meaningful for '{}' qualifier."
                 .format(search_field))
@@ -232,7 +233,7 @@ class ParseSQ(object):
         mat = re.search(self.Pattern_Quoted_Text, self.query)
         if mat:
             text_in_quotes = mat.group(1)
-            if (search_inequality):
+            if (search_operator != ':'):
                 raise InequalityNotAllowedError(
                     "Inequality is not meaningful for quoted text \"{}\"."
                     .format(text_in_quotes))
@@ -243,37 +244,34 @@ class ParseSQ(object):
             word = head(self.query)  # This has no field specifier
 
             # Append __lt, __lte, etc to query as needed
-            inequality_operator = ''
-            if search_inequality:
-                inequality_operator = self.HAYSTACK_INEQUALITY[search_inequality]
+            inequality_qualifier = self.HAYSTACK_INEQUALITY[search_operator]
 
             # Parse date in one of a limited number of common formats.
             # TODO: SOLR requires GMT; convert from GMT to local locale for date.
             if search_field in self.DATE_FIELDS:
                 thisday_object = parse_date(word)
                 thisday = thisday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                if search_inequality:
-                    if search_inequality == '<=':  # include whole day of target date
-                        nextday_object = thisday_object + timedelta(days=1)
-                        nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                        self.sq = self.apply_operand(
-                            SQ(**{search_field+"__lt": nextday}))
-                    elif search_inequality == '>':  # include whole day of target date
-                        nextday_object = thisday_object + timedelta(days=1)
-                        nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
-                        self.sq = self.apply_operand(
-                            SQ(**{search_field+"__gte": nextday}))
-                    else:
-                        self.sq = self.apply_operand(
-                            SQ(**{search_field+inequality_operator: thisday}))
-                else:
+                if search_operator == ':':
                     # limit creation date to one day by generating two inequalities
                     nextday_object = thisday_object + timedelta(days=1)
                     nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
                     self.sq = self.apply_operand(SQ(**{search_field+'__gte': thisday}) &
                                                  SQ(**{search_field+'__lt': nextday}))
+                elif search_operator == '<=':  # include whole day of target date
+                    nextday_object = thisday_object + timedelta(days=1)
+                    nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    self.sq = self.apply_operand(
+                        SQ(**{search_field+"__lt": nextday}))
+                elif search_operator == '>':  # include whole day of target date
+                    nextday_object = thisday_object + timedelta(days=1)
+                    nextday = nextday_object.strftime("%Y-%m-%dT%H:%M:%SZ")
+                    self.sq = self.apply_operand(
+                        SQ(**{search_field+"__gte": nextday}))
+                else:
+                    self.sq = self.apply_operand(
+                        SQ(**{search_field+inequality_qualifier: thisday}))
             else:
-                self.sq = self.apply_operand(SQ(**{search_field+inequality_operator: word}))
+                self.sq = self.apply_operand(SQ(**{search_field+inequality_qualifier: word}))
             # remove unquoted text from query
             self.query = tail(self.query)
 
