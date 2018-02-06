@@ -124,18 +124,18 @@ class SimpleTest(TestCase):
 
     def test_inequalities(self):
         testcase = {
-            "north:<=50.0": str(SQ(north__lte='50.0')),
-            "north:<50.0": str(SQ(north__lt='50.0')),
-            "north:>=50.0": str(SQ(north__gte='50.0')),
-            "north:>50.0": str(SQ(north__gt='50.0')),
-            "east:<=50.0": str(SQ(east__lte='50.0')),
-            "east:<50.0": str(SQ(east__lt='50.0')),
-            "east:>=50.0": str(SQ(east__gte='50.0')),
-            "east:>50.0": str(SQ(east__gt='50.0')),
-            "created:>2017-05-02": str(SQ(created__gte='2017-05-03T00:00:00Z')),
-            "created:>=2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z')),
-            "created:<2017-05-02": str(SQ(created__lt='2017-05-02T00:00:00Z')),
-            "created:<=2017-05-02": str(SQ(created__lt='2017-05-03T00:00:00Z')),
+            "north<=50.0": str(SQ(north__lte='50.0')),
+            "north<50.0": str(SQ(north__lt='50.0')),
+            "north>=50.0": str(SQ(north__gte='50.0')),
+            "north>50.0": str(SQ(north__gt='50.0')),
+            "east<=50.0": str(SQ(east__lte='50.0')),
+            "east<50.0": str(SQ(east__lt='50.0')),
+            "east>=50.0": str(SQ(east__gte='50.0')),
+            "east>50.0": str(SQ(east__gt='50.0')),
+            "created>2017-05-02": str(SQ(created__gte='2017-05-03T00:00:00Z')),
+            "created>=2017-05-02": str(SQ(created__gte='2017-05-02T00:00:00Z')),
+            "created<2017-05-02": str(SQ(created__lt='2017-05-02T00:00:00Z')),
+            "created<=2017-05-02": str(SQ(created__lt='2017-05-03T00:00:00Z')),
         }
         parser = ParseSQ()
         for case in testcase.keys():
@@ -147,7 +147,7 @@ class SimpleTest(TestCase):
             "created:20170": MalformedDateError,
             "created:2017-30": MalformedDateError,
             "created:2017-12-64": MalformedDateError,
-            "abstract:>foo": InequalityNotAllowedError,
+            "abstract>foo": InequalityNotAllowedError,
             "(abstract:something": MatchingBracketsNotFoundError
         }
         parser = ParseSQ()
