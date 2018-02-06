@@ -758,7 +758,7 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
     }
 }
 
-function set_file_type_ajax_submit(url) {
+function set_file_type_ajax_submit(url, folder_path) {
     var $alert_success = '<div class="alert alert-success" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
@@ -771,6 +771,9 @@ function set_file_type_ajax_submit(url) {
         url: url,
         dataType: 'html',
         async: true,
+        data: {
+            folder_path: folder_path
+        },
         success: function (result) {
             waitDialog.dialog("close");
             var json_response = JSON.parse(result);

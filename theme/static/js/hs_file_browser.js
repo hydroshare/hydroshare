@@ -172,78 +172,92 @@ function updateSelectionMenuContext() {
             }
         }
     }
-
+    var isFolderSelected = false;
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
         flagDisableUnzip = true;
         flagDisableGetLink = true;
-        if(!selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type") ||
-            selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type-to-set") ){
+        isFolderSelected = true;
+        flagDisableSetRefTimeseriesFileType = true;
+        if(!selected.children('span.fb-logical-file-type').attr("data-logical-file-type") ||
+            selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set") ){
             flagDisableRemoveAggregation = true;
         }
-        if(selected.children('span.fb-logical-file-type').hasAttribute("data-logical-file-type-to-set")){
+        if(selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set")){
             var logicalFileTypeToSet = selected.children('span.fb-logical-file-type').attr("data-logical-file-type-to-set");
             if(logicalFileTypeToSet.length){
                 if(logicalFileTypeToSet !== "NetCDFLogicalFile"){
                     flagDisableSetNetCDFFileType = true;
                 }
-                else if(logicalFileTypeToSet !== "GeoRasterLogicalFile"){
+                if(logicalFileTypeToSet !== "GeoRasterLogicalFile"){
                     flagDisableSetGeoRasterFileType = true;
                 }
-                else if(logicalFileTypeToSet !== "GeoFeatureLogicalFile"){
+                if(logicalFileTypeToSet !== "GeoFeatureLogicalFile"){
                     flagDisableSetGeoFeatureFileType = true;
                 }
-                else if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
+                if(logicalFileTypeToSet !== "TimeSeriesLogicalFile"){
                     flagDisableSetTimeseriesFileType = true;
                 }
             }
+            else {
+                flagDisableSetNetCDFFileType = true;
+                flagDisableSetGeoRasterFileType = true;
+                flagDisableSetGeoFeatureFileType = true;
+                flagDisableSetTimeseriesFileType = true;
+            }
         }
-        // if (!selected.children('span').hasClass('fb-logical-file-type')){
-        //     flagDisableRemoveAggregation = true;
-        // }
+        else {
+            flagDisableSetNetCDFFileType = true;
+            flagDisableSetGeoRasterFileType = true;
+            flagDisableSetGeoFeatureFileType = true;
+            flagDisableSetTimeseriesFileType = true;
+        }
     }
 
     if (!sourcePaths.length) {
         flagDisablePaste = true;
     }
 
-    for (var i = 0; i < selected.length; i++) {
-        var fileName = $(selected[i]).children(".fb-file-name").text();
-        var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-        var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
-        if (fileExt.toUpperCase() != "ZIP") {
-            flagDisableUnzip = true;
-        }
-        if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
-            flagDisableSetGeoRasterFileType = true;
-        }
-
-        if (fileExt.toUpperCase() != "NC"  || logicalFileType != "") {
-            flagDisableSetNetCDFFileType = true;
-        }
-
-        if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
-            flagDisableSetGeoFeatureFileType = true;
-        }
-        if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "") {
-            flagDisableSetRefTimeseriesFileType = true;
-        }
-        if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "") {
-            flagDisableSetTimeseriesFileType = true;
-        }
-        if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
-            logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
-            var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
-            if(foldersSelected.length == 1) {
-                flagDisableDelete = false;
+    if(!isFolderSelected){
+        for (var i = 0; i < selected.length; i++) {
+            var fileName = $(selected[i]).children(".fb-file-name").text();
+            var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+            var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
+            if (fileExt.toUpperCase() != "ZIP") {
+                flagDisableUnzip = true;
             }
-            else {
-                flagDisableDelete = true;
+            if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
+                flagDisableSetGeoRasterFileType = true;
             }
-            flagDisableCut = true;
-            flagDisablePaste = true;
+
+            if (fileExt.toUpperCase() != "NC"  || logicalFileType != "") {
+                flagDisableSetNetCDFFileType = true;
+            }
+
+            if ((fileExt.toUpperCase() != "SHP" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "") {
+                flagDisableSetGeoFeatureFileType = true;
+            }
+            if (fileExt.toUpperCase() != "REFTS"  || logicalFileType != "") {
+                flagDisableSetRefTimeseriesFileType = true;
+            }
+            if ((fileExt.toUpperCase() != "SQLITE" && fileExt.toUpperCase() != "CSV") || logicalFileType != "") {
+                flagDisableSetTimeseriesFileType = true;
+            }
+            if(logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
+                logicalFileType === "GeoFeatureLogicalFile" || logicalFileType === "TimeSeriesLogicalFile") {
+                var foldersSelected = $("#fb-files-container li.fb-folder.ui-selected");
+                if(foldersSelected.length == 1) {
+                    flagDisableDelete = false;
+                }
+                else {
+                    flagDisableDelete = true;
+                }
+                flagDisableCut = true;
+                flagDisablePaste = true;
+            }
         }
     }
+
 
     var logicalFileType = $("#fb-files-container li.fb-file").children('span.fb-logical-file-type').attr("data-logical-file-type");
     if (logicalFileType === "GeoRasterLogicalFile" || logicalFileType === "NetCDFLogicalFile" ||
@@ -1552,12 +1566,22 @@ var expdays = 365;
 
 // used for setting various file types within composite resource
 function setFileType(fileType){
-    var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
     var resID = $("#hs-file-browser").attr("data-res-id");
-    var url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
+    var url;
+    var folderPath = "";
+    if($("#fb-files-container li.ui-selected").hasClass('fb-file')){
+        var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+        url = "/hsapi/_internal/" + resID + "/" + file_id + "/" + fileType + "/set-file-type/";
+    }
+    else {
+        // this must be folder selection for aggregation creation
+        var folderPath = $("#fb-files-container li.ui-selected").children('span.fb-file-type').attr("data-folder-short-path");
+        url = "/hsapi/_internal/" + resID + "/" + fileType + "/set-file-type/";
+    }
+
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
     var calls = [];
-    calls.push(set_file_type_ajax_submit(url));
+    calls.push(set_file_type_ajax_submit(url, folderPath));
     // Wait for the asynchronous calls to finish to get new folder structure
     $.when.apply($, calls).done(function (result) {
        $(".file-browser-container, #fb-files-container").css("cursor", "auto");
