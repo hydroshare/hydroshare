@@ -21,6 +21,12 @@ class Command(BaseCommand):
         # x = Features.resource_downloads(datetime(2017, 11, 20, 0, 0, 0, 0),
         #                                 datetime(2018, 1, 1, 0, 0, 0, 0))
         # pprint(x)
-        x = Features.user_downloads(datetime(2017, 11, 20, 0, 0, 0, 0),
-                                    datetime(2018, 1, 1, 0, 0, 0, 0))
+        # x = Features.user_downloads(datetime(2017, 11, 20, 0, 0, 0, 0),
+        #                             datetime(2018, 1, 1, 0, 0, 0, 0))
+        # pprint(x)
+        x = Features.resource_apps(datetime(2017, 11, 20, 0, 0, 0, 0),
+                                   datetime(2018, 1, 1, 0, 0, 0, 0))
+        pprint(x)
+        x = Features.user_apps(datetime(2017, 11, 20, 0, 0, 0, 0),
+                               datetime(2018, 1, 1, 0, 0, 0, 0))
         pprint(x)
