@@ -16,9 +16,8 @@ from django.forms.models import formset_factory, BaseFormSet
 from dominate.tags import div, legend, form, button, p, textarea, strong, input
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import delete_resource_file
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
-from hs_core.models import Creator, Contributor
+from hs_core.models import Creator, Contributor, ResourceFile
 
 from hs_app_netCDF.models import NetCDFMetaDataMixin, OriginalCoverage, Variable
 from hs_app_netCDF.forms import VariableForm, VariableValidationForm, OriginalCoverageForm
@@ -361,22 +360,47 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """
             Sets a tif or zip raster resource file to GeoRasterFile type
             :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as GeoRasterFile type
+            :param file_id: (optional) id of the resource file to be set as NetCDFLogicalFile type
+            :param folder_path: (optional) path of the folder to be set as NetCDFLogicalFile type
             :param user: user who is setting the file type
             :return:
             """
 
         # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        from hs_core.views.utils import create_folder, remove_folder, move_or_rename_file_or_folder
 
         log = logging.getLogger()
+        if file_id is None and folder_path is None:
+            raise ValueError("Must specify id of the file or path of the folder to set as an "
+                             "aggregation type")
 
-        # get the file from irods
-        res_file = utils.get_resource_file_by_id(resource, file_id)
+        if file_id is not None:
+            # get the file from irods
+            res_file = utils.get_resource_file_by_id(resource, file_id)
+        else:
+            # check if the specified folder exists
+            storage = resource.get_irods_storage()
+            if folder_path.startswith("data/contents/"):
+                folder_path = folder_path[len("data/contents/"):]
+            path_to_check = os.path.join(resource.file_path, folder_path)
+            if not storage.exists(path_to_check):
+                raise ValidationError("Specified folder path does not exist in irods.")
+
+            # get the nc file from the specified folder location
+            res_files = ResourceFile.list_folder(resource=resource, folder=folder_path,
+                                                 sub_folders=False)
+            if not res_files:
+                raise ValidationError("The specified folder does not contain any file.")
+            else:
+                # check if the specified folder is suitable for aggregation
+                if cls.check_files_for_aggregation_type(res_files):
+                    res_file = res_files[0]
+                else:
+                    res_file = None
 
         if res_file is None:
             raise ValidationError("File not found.")
@@ -400,7 +424,7 @@ class NetCDFLogicalFile(AbstractLogicalFile):
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         temp_dir = os.path.dirname(temp_file)
-        files_to_add_to_resource.append(temp_file)
+
         # file validation and metadata extraction
         nc_dataset = nc_utils.get_nc_dataset(temp_file)
         if isinstance(nc_dataset, netCDF4.Dataset):
@@ -430,19 +454,32 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                 logical_file.save()
 
                 try:
-                    # create a folder for the netcdf file type using the base file
-                    # name as the name for the new folder
-                    new_folder_path = cls.compute_file_type_folder(resource, file_folder,
-                                                                   nc_file_name)
+                    if folder_path is None:
+                        # we are here means aggregation is being created by selecting a file
 
-                    create_folder(resource.short_id, new_folder_path)
-                    log.info("Folder created:{}".format(new_folder_path))
+                        # create a folder for the netcdf file type using the base file
+                        # name as the name for the new folder
+                        new_folder_path = cls.compute_file_type_folder(resource, file_folder,
+                                                                       nc_file_name)
 
-                    new_folder_name = new_folder_path.split('/')[-1]
+                        create_folder(resource.short_id, new_folder_path)
+                        log.info("Folder created:{}".format(new_folder_path))
+                        # first make the selected file as part of the aggregation/file type
+                        logical_file.add_resource_file(res_file)
+
+                        # then move file to the new folder location
+                        tgt_file_path = os.path.join(new_folder_path, res_file.file_name)
+                        src_file_path = os.path.join('data/contents', res_file.short_path)
+                        move_or_rename_file_or_folder(user, resource.short_id, src_file_path,
+                                                      tgt_file_path, validate_move_rename=False)
+
+                        new_folder_name = new_folder_path.split('/')[-1]
                     if file_folder is None:
                         upload_folder = new_folder_name
                     else:
-                        upload_folder = os.path.join(file_folder, new_folder_name)
+                        upload_folder = folder_path
+                        logical_file.add_resource_file(res_file)
+
                     # add all new files to the resource
                     for f in files_to_add_to_resource:
                         uploaded_file = UploadedFile(file=open(f, 'rb'),
@@ -497,9 +534,6 @@ class NetCDFLogicalFile(AbstractLogicalFile):
                     log.info("NetCDF file type - metadata was saved to DB")
                     # set resource to private if logical file is missing required metadata
                     resource.update_public_and_discoverable()
-                    # delete the original resource file
-                    delete_resource_file(resource.short_id, res_file.id, user)
-                    log.info("Deleted original resource file.")
                 except Exception as ex:
                     msg = "NetCDF file type. Error when setting file type. Error:{}"
                     msg = msg.format(ex.message)

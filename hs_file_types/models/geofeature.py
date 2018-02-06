@@ -232,11 +232,12 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
 
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """
-        Sets a .shp or .zip resource file to GeoFeatureFile type
+        Sets a .shp or .zip resource file, or a folder to GeoFeatureLogicalFile type
         :param resource: an instance of resource type CompositeResource
-        :param file_id: id of the resource file to be set as GeoFeatureFile type
+        :param file_id: (optional) id of the resource file to be set as GeoFeatureLogicalFile type
+        :param folder_path: (optional) path of the folder to be set as GeoFeatureLogicalFile type
         :param user: user who is setting the file type
         :return:
         """
@@ -245,7 +246,9 @@ class GeoFeatureLogicalFile(AbstractLogicalFile):
         from hs_core.views.utils import create_folder, remove_folder
 
         log = logging.getLogger()
-
+        if file_id is None and folder_path is None:
+            raise ValueError("Must specify id of the file or path of the folder to set as an "
+                             "aggregation type")
         # get the file from irods
         res_file = utils.get_resource_file_by_id(resource, file_id)
 

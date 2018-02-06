@@ -132,15 +132,15 @@ class GenericLogicalFile(AbstractLogicalFile):
         return 'Generic Aggregation'
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """Makes any physical file part of a generic  logical file type. The physical file must
-        not be already be a part of any logical file type"""
-
-        # had to import it here to avoid import loop
-        from hs_core.views.utils import create_folder, remove_folder
+        not be already be a part of any logical file type
+        note: parameter folder_path is ignored here
+        """
 
         log = logging.getLogger()
-
+        if file_id is None:
+            raise ValueError("Must specify id of the file to be set as an aggregation type")
         # get the resource file
         res_file = utils.get_resource_file_by_id(resource, file_id)
         if res_file.has_logical_file:

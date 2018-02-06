@@ -624,10 +624,13 @@ class AbstractLogicalFile(models.Model):
         return ""
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """Sub classes must implement this method to create specific logical file type
         :param resource: an instance of resource type CompositeResource
-        :param file_id: id of the resource file to be set as GeoRasterFile type
+        :param file_id: (optional) id of the resource file to be set as an aggregation type -
+        if this is missing then folder_path must be specified
+        :param folder_path: (optional) path of the folder which needs to be set to an aggregation
+        type - if this is missing then file_id must be specified
         :param user: user who is setting the file type
         :return:
         """

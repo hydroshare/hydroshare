@@ -269,11 +269,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         return cls.__name__
 
     @classmethod
-    def set_file_type(cls, resource, file_id, user):
+    def set_file_type(cls, resource, user, file_id=None, folder_path=None):
         """
             Sets a tif or zip raster resource file to GeoRasterFile type
             :param resource: an instance of resource type CompositeResource
-            :param file_id: id of the resource file to be set as GeoRasterFile type
+            :param file_id: (optional) id of the resource file to be set as GeoRasterLogicalFile type
+            :param folder_path: (optional) path of the folder to be set as GeoRasterLogicalFile type
             :param user: user who is setting the file type
             :return:
             """
@@ -282,7 +283,9 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         from hs_core.views.utils import create_folder, remove_folder
 
         log = logging.getLogger()
-
+        if file_id is None and folder_path is None:
+            raise ValueError("Must specify id of the file or path of the folder to set as an "
+                             "aggregation type")
         # get the resource file
         res_file = utils.get_resource_file_by_id(resource, file_id)
         if res_file is None:
