@@ -31,14 +31,25 @@ FILE_TYPE_MAP = {"GeoRasterLogicalFile": GeoRasterLogicalFile,
 
 
 @login_required
-def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
+def set_file_type(request, resource_id, hs_file_type, file_id=None, **kwargs):
     """Set a file (*file_id*) to a specific file type (*hs_file_type*)
     :param  request: an instance of HttpRequest
     :param  resource_id: id of the resource in which this file type needs to be set
     :param  file_id: id of the file which needs to be set to a file type
+    :param  folder_path: path of the folder which needs to be set to a file type
     :param  hs_file_type: file type to be set (e.g, NetCDF, GeoRaster, GeoFeature etc)
     :return an instance of JsonResponse type
     """
+
+    response_data = {'status': 'error'}
+    folder_path = None
+    if file_id is None:
+        folder_path = request.POST.get('folder_path', "")
+        if not folder_path:
+            err_msg = "Must provide id of the file or folder path for setting aggregation type."
+            response_data['message'] = err_msg
+            return JsonResponse(response_data, status=status.HTTP_400_BAD_REQUEST)
+
     res, authorized, _ = authorize(request, resource_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                    raises_exception=False)
@@ -67,7 +78,8 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
 
     try:
         logical_file_type_class = file_type_map[hs_file_type]
-        logical_file_type_class.set_file_type(resource=res, file_id=file_id, user=request.user)
+        logical_file_type_class.set_file_type(resource=res, user=request.user, file_id=file_id,
+                                              folder_path=folder_path)
         resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to the selected aggregation type. " \
               "Metadata extraction was successful."
