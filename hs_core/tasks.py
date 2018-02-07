@@ -278,11 +278,11 @@ def update_quota_usage_task(username):
     :return: True if quota usage update succeeds;
              False if there is an exception raised or quota cannot be updated. See log for details.
     """
-    hs_internal_zone = "hydroshare_internal"
+    hs_internal_zone = "hydroshare"
     uq = UserQuota.objects.filter(user__username=username, zone=hs_internal_zone).first()
     if uq is None:
         # the quota row does not exist in Django
-        logger.error('quota row does not exist in Django for hydroshare_internal zone for '
+        logger.error('quota row does not exist in Django for hydroshare zone for '
                      'user ' + username)
         return False
 

@@ -195,7 +195,7 @@ class UserQuota(models.Model):
     # ForeignKey relationship makes it possible to associate multiple UserQuota models to
     # a User with each UserQuota model defining quota for a set of iRODS zones. By default,
     # the UserQuota model instance defines quota in hydroshareZone and hydroshareuserZone,
-    # categorized as hydroshare_internal in zone field in UserQuota model, however,
+    # categorized as hydroshare in zone field in UserQuota model, however,
     # another UserQuota model instance could be defined in a third-party federated zone as needed.
     user = models.ForeignKey(User,
                              editable=False,
@@ -207,7 +207,7 @@ class UserQuota(models.Model):
     allocated_value = models.FloatField(default=20)
     used_value = models.FloatField(default=0)
     unit = models.CharField(max_length=10, default="GB")
-    zone = models.CharField(max_length=100, default="hydroshare_internal")
+    zone = models.CharField(max_length=100, default="hydroshare")
     # remaining_grace_period to be quota-enforced. Default is -1 meaning the user is below
     # soft quota limit and thus grace period has not started. When grace period is 0, quota
     # enforcement takes place

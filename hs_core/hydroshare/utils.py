@@ -684,7 +684,7 @@ def validate_user_quota(user, size):
     """
     if user:
         # validate it is within quota hard limit
-        uq = user.quotas.filter(zone='hydroshare_internal').first()
+        uq = user.quotas.filter(zone='hydroshare').first()
         if uq:
             if not QuotaMessage.objects.exists():
                 QuotaMessage.objects.create()
