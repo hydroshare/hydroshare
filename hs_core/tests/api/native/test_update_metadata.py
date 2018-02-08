@@ -35,7 +35,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
             {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
             {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
                              'organization': 'Utah State University',
-                             'profile_links': [{'type': 'yahooProfile', 'url': 'http://yahoo.com/LH001'}]}},
+                             'identifiers': {'ORCID': 'http://orcid.org/john', 'ResearchGate': 'http://researchgate.org/john'}}},
             {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                       'end': '12/12/2012'}}},
             {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
@@ -94,10 +94,10 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(contributor.name, 'Kelvin Marshal')
         self.assertEquals(contributor.email, 'kmarshal@yahoo.com')
         self.assertEquals(contributor.organization, 'Utah State University')
-        self.assertEquals(contributor.external_links.all().count(), 1)
-        profile_link = contributor.external_links.first()
-        self.assertEquals(profile_link.type, 'yahooProfile')
-        self.assertEquals(profile_link.url, 'http://yahoo.com/LH001')
+        self.assertEquals(contributor.identifiers, {'ORCID': 'http://orcid.org/john', 'ResearchGate': 'http://researchgate.org/john'})
+        # profile_link = contributor.external_links.first()
+        # self.assertEquals(profile_link.type, 'yahooProfile')
+        # self.assertEquals(profile_link.url, 'http://yahoo.com/LH001')
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Number of coverages not equal to 2.")
