@@ -59,10 +59,9 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          address=cr_address,
                                          phone=cr_phone,
                                          homepage=cr_homepage,
-                                         profile_links=[{'type': 'researchID',
-                                                         'url': cr_res_id},
-                                                        {'type': 'researchGateID',
-                                                         'url': cr_res_gate_id}])
+                                         identifiers={'ORCID': 'http://orcid.org/john',
+                                                      'ResearchGate':
+                                                          'http://researchgate.org/john'})
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id, 'creator', name='Creator B')
@@ -86,10 +85,9 @@ class TestGeoFeature(MockIRODSTestCaseMixin, TransactionTestCase):
                                          address=con_address,
                                          phone=con_phone,
                                          homepage=con_homepage,
-                                         profile_links=[{'type': 'researchID',
-                                                         'url': con_res_id},
-                                                        {'type': 'researchGateID',
-                                                         'url': con_res_gate_id}])
+                                         identifiers={'ORCID': 'http://orcid.org/john',
+                                                        'ResearchGate':
+                                                            'http://researchgate.org/john'})
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id,
